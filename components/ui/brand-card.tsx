@@ -7,8 +7,8 @@ interface BrandCardProps {
   name: string;
   image: string;
   category: string;
-  location: string;
-  isVerified: boolean;
+  location?: string;
+  isVerified?: boolean;
   rating?: number;
   isPortrait?: boolean;
   className?: string;
@@ -20,7 +20,7 @@ export function BrandCard({
   image,
   category,
   location,
-  isVerified,
+  isVerified = false,
   rating,
   isPortrait = false,
   className,
