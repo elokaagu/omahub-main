@@ -687,12 +687,11 @@ export async function generateStaticParams() {
   }));
 }
 
-interface Props {
+export default async function BrandProfile({
+  params,
+}: {
   params: { id: string };
-  searchParams: { [key: string]: string | string[] | undefined };
-}
-
-export default function BrandProfile({ params }: Props) {
+}) {
   const brandData = brandsData[params.id as keyof typeof brandsData];
 
   if (!brandData) {
