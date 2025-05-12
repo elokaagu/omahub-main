@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "./button";
 import { Input } from "./input";
@@ -17,22 +16,21 @@ export function NewsletterForm({ location, className }: NewsletterFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!email) return;
-    
+
     setLoading(true);
-    
-    // Simulate API call
+
     try {
       // In production, this would be an API call to your newsletter service
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await new Promise((resolve) => setTimeout(resolve, 1500));
       setSuccess(true);
       toast({
         title: "Successfully subscribed",
         description: "Thank you for joining our fashion community.",
       });
       setEmail("");
-    } catch (error) {
+    } catch {
       toast({
         title: "Something went wrong",
         description: "Please try again later.",
@@ -44,16 +42,17 @@ export function NewsletterForm({ location, className }: NewsletterFormProps) {
   };
 
   return (
-    <section 
+    <section
       className={`w-full py-12 bg-gradient-to-br from-[#d4b285] via-[#e6ceb5] to-[#fde1d3] ${className}`}
     >
       <div className="container px-4 mx-auto text-center max-w-3xl">
         <h2 className="font-source text-3xl md:text-4xl text-white mb-3">
           Join Our Fashion Community
         </h2>
-        
+
         <p className="text-white/90 mx-auto max-w-xl mb-6">
-          Get exclusive previews, designer spotlights, and early access to new collections straight to your inbox.
+          Get exclusive previews, designer spotlights, and early access to new
+          collections straight to your inbox.
         </p>
 
         <div className="bg-white/95 rounded-lg shadow-md p-6">
@@ -75,35 +74,35 @@ export function NewsletterForm({ location, className }: NewsletterFormProps) {
                   </h4>
                   <ul className="space-y-2 text-sm text-oma-cocoa">
                     <li className="flex items-start gap-2">
-                      <span className="w-1 h-1 rounded-full bg-oma-gold mt-2"/>
+                      <span className="w-1 h-1 rounded-full bg-oma-gold mt-2" />
                       <span>Early access to new collections</span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <span className="w-1 h-1 rounded-full bg-oma-gold mt-2"/>
+                      <span className="w-1 h-1 rounded-full bg-oma-gold mt-2" />
                       <span>Exclusive designer interviews</span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <span className="w-1 h-1 rounded-full bg-oma-gold mt-2"/>
+                      <span className="w-1 h-1 rounded-full bg-oma-gold mt-2" />
                       <span>Special event invitations</span>
                     </li>
                   </ul>
                 </div>
-                
+
                 <div className="text-left">
                   <h4 className="font-medium text-oma-plum border-b border-oma-gold/30 pb-2 mb-3">
                     Member Benefits
                   </h4>
                   <ul className="space-y-2 text-sm text-oma-cocoa">
                     <li className="flex items-start gap-2">
-                      <span className="w-1 h-1 rounded-full bg-oma-gold mt-2"/>
+                      <span className="w-1 h-1 rounded-full bg-oma-gold mt-2" />
                       <span>VIP access to sales</span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <span className="w-1 h-1 rounded-full bg-oma-gold mt-2"/>
+                      <span className="w-1 h-1 rounded-full bg-oma-gold mt-2" />
                       <span>Trend forecasts & style tips</span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <span className="w-1 h-1 rounded-full bg-oma-gold mt-2"/>
+                      <span className="w-1 h-1 rounded-full bg-oma-gold mt-2" />
                       <span>Styling consultation invites</span>
                     </li>
                   </ul>
@@ -120,8 +119,8 @@ export function NewsletterForm({ location, className }: NewsletterFormProps) {
                     required
                     className="bg-white border-oma-gold/20 focus-visible:ring-oma-plum flex-grow"
                   />
-                  <Button 
-                    type="submit" 
+                  <Button
+                    type="submit"
                     disabled={loading}
                     className="bg-[#391c25] hover:bg-[#391c25]/90 text-white"
                   >
@@ -136,13 +135,17 @@ export function NewsletterForm({ location, className }: NewsletterFormProps) {
                   </Button>
                 </div>
                 <p className="text-xs text-oma-cocoa/70 mt-3">
-                  Join our community to discover new designers and collections. No spam—just style.
+                  Join our community to discover new designers and collections.
+                  No spam&mdash;just style.
                   {location && <span className="ml-1">From {location}.</span>}
                 </p>
               </form>
             </>
           )}
         </div>
+        <p className="text-center text-xs leading-5 text-gray-500">
+          We&apos;ll never share your email. Unsubscribe at any time.
+        </p>
       </div>
     </section>
   );
