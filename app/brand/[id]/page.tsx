@@ -689,6 +689,7 @@ export async function generateStaticParams() {
 
 interface Props {
   params: { id: string };
+  searchParams: { [key: string]: string | string[] | undefined };
 }
 
 export default function BrandProfile({ params }: Props) {
