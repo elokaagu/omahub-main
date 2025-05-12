@@ -16,7 +16,8 @@ export const useToast = () => {
         sonnerToast.error(message, { duration });
         break;
       case "warning":
-        sonnerToast.warning(message, { duration });
+        // Use default toast with custom style for warnings
+        sonnerToast(message, { duration });
         break;
       default:
         sonnerToast(message, { duration });

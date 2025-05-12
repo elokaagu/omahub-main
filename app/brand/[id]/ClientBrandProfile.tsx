@@ -6,32 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, MapPin, Star } from "lucide-react";
 import ContactDesignerModal from "@/components/ContactDesignerModal";
-
-interface Review {
-  author: string;
-  comment: string;
-  rating: number;
-  date: string;
-}
-
-interface Collection {
-  id: number;
-  title: string;
-  image: string;
-}
-
-interface BrandData {
-  name: string;
-  description: string;
-  longDescription: string;
-  location: string;
-  priceRange: string;
-  category: string;
-  rating: number;
-  reviews: Review[];
-  isVerified: boolean;
-  collections: Collection[];
-}
+import type { BrandData } from "@/lib/data/brands";
 
 interface ClientBrandProfileProps {
   brandData: BrandData;

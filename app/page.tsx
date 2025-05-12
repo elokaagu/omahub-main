@@ -6,6 +6,17 @@ import { CheckCircle } from "lucide-react";
 import { SectionHeader } from "@/components/ui/section-header";
 import { Carousel } from "@/components/ui/carousel-custom";
 import { CategoryCard } from "@/components/ui/category-card";
+import { brandsData } from "@/lib/data/brands";
+
+interface Brand {
+  id: string;
+  name: string;
+  image: string;
+  location: string;
+  rating: number;
+  isVerified: boolean;
+  category: string;
+}
 
 const carouselItems = [
   {
@@ -37,13 +48,19 @@ const carouselItems = [
   },
 ];
 
+// Helper function to filter brands that exist in brandsData
+const filterExistingBrands = (brands: Brand[]) => {
+  return brands.filter((brand) => brand.id in brandsData);
+};
+
+// Update categories to only include existing brands
 const categories = [
   {
     title: "Bridal",
     image: "/lovable-uploads/57cc6a40-0f0d-4a7d-8786-41f15832ebfb.png",
     href: "/directory?category=Bridal",
     customCta: 'Tailored for "Yes."',
-    brands: [
+    brands: filterExistingBrands([
       {
         id: "zora-atelier",
         name: "Zora Atelier",
@@ -80,14 +97,14 @@ const categories = [
         isVerified: true,
         category: "Bridal",
       },
-    ],
+    ]),
   },
   {
     title: "Ready to Wear",
     image: "/lovable-uploads/4a7c7e86-6cde-4d07-a246-a5aa4cb6fa51.png",
     href: "/directory?category=Ready to Wear",
     customCta: "Looks for the every day that isn't.",
-    brands: [
+    brands: filterExistingBrands([
       {
         id: "dakar-fashion",
         name: "Dakar Fashion House",
@@ -124,7 +141,7 @@ const categories = [
         isVerified: false,
         category: "Ready to Wear",
       },
-    ],
+    ]),
   },
   {
     title: "Tailoring",
@@ -175,7 +192,7 @@ const categories = [
     image: "/lovable-uploads/25c3fe26-3fc4-43ef-83ac-6931a74468c0.png",
     href: "/directory?category=Accessories",
     customCta: "The extras that make it extra.",
-    brands: [
+    brands: filterExistingBrands([
       {
         id: "beads-by-nneka",
         name: "Beads by Nneka",
@@ -212,7 +229,7 @@ const categories = [
         isVerified: true,
         category: "Accessories",
       },
-    ],
+    ]),
   },
 ];
 

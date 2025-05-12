@@ -13,15 +13,12 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
+import { collections } from "@/lib/data/directory";
 
-const collectionItems = [
-  { name: "Wedding", href: "/directory?category=Wedding" },
-  { name: "Formal", href: "/directory?category=Formal" },
-  { name: "Casual", href: "/directory?category=Casual" },
-  { name: "Traditional", href: "/directory?category=Traditional" },
-  { name: "Business", href: "/directory?category=Business" },
-  { name: "Special Occasion", href: "/directory?category=Special+Occasion" },
-];
+const collectionItems = collections.map((category) => ({
+  name: category,
+  href: `/directory?category=${category.replace(/ /g, "+")}`,
+}));
 
 const navigation = [
   { name: "Home", href: "/" },
