@@ -681,31 +681,28 @@ const brandsData = {
   },
 };
 
-export function generateStaticParams() {
+export async function generateStaticParams() {
   return Object.keys(brandsData).map((id) => ({
     id,
   }));
 }
 
-interface PageProps {
-  params: {
-    id: string;
-  };
+interface Props {
+  params: { id: string };
 }
 
-export default function BrandProfile({ params }: PageProps) {
+export default function BrandProfile({ params }: Props) {
   const brandData = brandsData[params.id as keyof typeof brandsData];
 
   if (!brandData) {
     return (
-      <div className="pt-32 pb-16 px-6 text-center">
-        <h1 className="heading-lg mb-4">Designer Not Found</h1>
-        <p className="text-oma-cocoa mb-8">
-          We couldn&apos;t find the designer you&apos;re looking for.
-        </p>
-        <Button asChild className="bg-oma-plum hover:bg-oma-plum/90">
-          <Link href="/directory">Browse All Designers</Link>
-        </Button>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-semibold mb-4">Brand Not Found</h1>
+          <Button asChild>
+            <Link href="/directory">Return to Directory</Link>
+          </Button>
+        </div>
       </div>
     );
   }
