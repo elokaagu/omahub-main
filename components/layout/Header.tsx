@@ -1,7 +1,9 @@
+"use client";
+
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Menu, X, Search, ChevronDown } from "lucide-react";
+import { Menu, X, Search, ChevronDown, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { SearchModal } from "@/components/ui/search-modal";
@@ -14,6 +16,7 @@ import {
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
 import { collections } from "@/lib/data/directory";
+import { useAuth } from "@/lib/context/AuthContext";
 
 const collectionItems = collections.map((category) => ({
   name: category,
@@ -27,6 +30,7 @@ const navigation = [
 ];
 
 export default function Header() {
+  const { user } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isCollectionsOpen, setIsCollectionsOpen] = useState(false);
@@ -115,9 +119,75 @@ export default function Header() {
           >
             <Link href="/directory">Explore the Directory</Link>
           </Button>
-          <Button asChild className="bg-oma-plum hover:bg-oma-plum/90">
-            <Link href="/join">Join as a Designer</Link>
-          </Button>
+
+          {user ? (
+            <NavigationMenu>
+              <NavigationMenuList>
+                <NavigationMenuItem>
+                  <NavigationMenuTrigger className="bg-oma-plum text-white hover:bg-oma-plum/90 hover:text-white">
+                    <User className="h-4 w-4 mr-2" />
+                    My Account
+                  </NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <ul className="grid w-[200px] gap-1 p-2 bg-white/80 backdrop-blur-sm">
+                      <li>
+                        <NavigationMenuLink asChild>
+                          <Link
+                            href="/profile"
+                            className="block select-none rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-oma-beige/50 hover:text-oma-plum focus:bg-oma-beige/50 focus:text-oma-plum"
+                          >
+                            <div className="text-sm font-semibold leading-none">
+                              Profile
+                            </div>
+                          </Link>
+                        </NavigationMenuLink>
+                      </li>
+                      <li>
+                        <NavigationMenuLink asChild>
+                          <Link
+                            href="/favorites"
+                            className="block select-none rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-oma-beige/50 hover:text-oma-plum focus:bg-oma-beige/50 focus:text-oma-plum"
+                          >
+                            <div className="text-sm font-semibold leading-none">
+                              Favorites
+                            </div>
+                          </Link>
+                        </NavigationMenuLink>
+                      </li>
+                      <li>
+                        <NavigationMenuLink asChild>
+                          <Link
+                            href="/orders"
+                            className="block select-none rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-oma-beige/50 hover:text-oma-plum focus:bg-oma-beige/50 focus:text-oma-plum"
+                          >
+                            <div className="text-sm font-semibold leading-none">
+                              Orders
+                            </div>
+                          </Link>
+                        </NavigationMenuLink>
+                      </li>
+                      <li className="border-t border-gray-200 mt-1 pt-1">
+                        <NavigationMenuLink asChild>
+                          <Link
+                            href="/profile"
+                            className="block select-none rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-red-50 hover:text-red-600 focus:bg-red-50 focus:text-red-600"
+                          >
+                            <div className="text-sm font-semibold leading-none">
+                              Sign Out
+                            </div>
+                          </Link>
+                        </NavigationMenuLink>
+                      </li>
+                    </ul>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
+              </NavigationMenuList>
+            </NavigationMenu>
+          ) : (
+            <Button asChild className="bg-oma-plum hover:bg-oma-plum/90">
+              <Link href="/login">Sign In</Link>
+            </Button>
+          )}
         </div>
       </nav>
 
@@ -204,12 +274,39 @@ export default function Header() {
               >
                 <Link href="/directory">Explore the Directory</Link>
               </Button>
-              <Button
-                asChild
-                className="w-full bg-oma-plum hover:bg-oma-plum/90"
-              >
-                <Link href="/join">Join as a Designer</Link>
-              </Button>
+
+              {user ? (
+                <>
+                  <Link
+                    href="/profile"
+                    className="block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-oma-black hover:bg-oma-beige"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    My Profile
+                  </Link>
+                  <Link
+                    href="/favorites"
+                    className="block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-oma-black hover:bg-oma-beige"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Favorites
+                  </Link>
+                  <Link
+                    href="/profile"
+                    className="block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-red-600 hover:bg-red-50"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Sign Out
+                  </Link>
+                </>
+              ) : (
+                <Button
+                  asChild
+                  className="w-full bg-oma-plum hover:bg-oma-plum/90"
+                >
+                  <Link href="/login">Sign In</Link>
+                </Button>
+              )}
             </div>
           </div>
         </div>
