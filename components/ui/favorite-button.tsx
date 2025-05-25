@@ -5,7 +5,12 @@ import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/lib/context/AuthContext";
 import useFavorites from "@/lib/hooks/useFavorites";
 
-const FavoriteButton = ({ brandId, className = "" }) => {
+interface FavoriteButtonProps {
+  brandId: string;
+  className?: string;
+}
+
+const FavoriteButton = ({ brandId, className = "" }: FavoriteButtonProps) => {
   const { toast } = useToast();
   const { user } = useAuth();
   const { isFavorite, toggleFavorite } = useFavorites();
@@ -13,7 +18,7 @@ const FavoriteButton = ({ brandId, className = "" }) => {
 
   const isFavorited = isFavorite(brandId);
 
-  const handleToggleFavorite = async (e) => {
+  const handleToggleFavorite = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 

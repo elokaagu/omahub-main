@@ -47,19 +47,33 @@ export async function signIn(email: string, password: string) {
  * Sign in with OAuth provider (Google, Facebook, etc.)
  */
 export async function signInWithOAuth(provider: Provider) {
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider,
-    options: {
-      redirectTo: `${window.location.origin}/auth/callback`,
-    },
-  });
+  try {
+    // Simplified approach: let Supabase handle the redirect
+    // This bypasses client-side URL construction which can cause issues
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        // Don't specify redirectTo to let Supabase handle it automatically with Site URL
+        // Optional: Add scopes for more user info
+        scopes: provider === "google" ? "email profile" : undefined,
+        // Use a simple query param to track the flow
+        queryParams: {
+          access_type: "offline",
+          prompt: "consent",
+        },
+      },
+    });
 
-  if (error) {
-    console.error(`Error signing in with ${provider}:`, error);
-    throw error;
+    if (error) {
+      console.error(`Error signing in with ${provider}:`, error);
+      throw error;
+    }
+
+    return data;
+  } catch (err) {
+    console.error(`Error in signInWithOAuth:`, err);
+    throw err;
   }
-
-  return data;
 }
 
 /**

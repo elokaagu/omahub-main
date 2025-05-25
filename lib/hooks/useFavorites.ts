@@ -1,11 +1,26 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../context/AuthContext";
 
+interface Brand {
+  id: string;
+  name: string;
+  image: string;
+  category: string;
+  location: string;
+  is_verified: boolean;
+  rating: number;
+}
+
+interface FavoriteResult {
+  success: boolean;
+  message?: string;
+}
+
 const useFavorites = () => {
   const { user } = useAuth();
-  const [favorites, setFavorites] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [favorites, setFavorites] = useState<Brand[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Fetch favorites
   const fetchFavorites = useCallback(async () => {
@@ -36,7 +51,7 @@ const useFavorites = () => {
 
   // Add to favorites
   const addFavorite = useCallback(
-    async (brandId) => {
+    async (brandId: string): Promise<FavoriteResult> => {
       if (!user) {
         return {
           success: false,
@@ -66,7 +81,10 @@ const useFavorites = () => {
         return { success: true };
       } catch (err) {
         console.error("Error adding favorite:", err);
-        return { success: false, message: err.message };
+        return {
+          success: false,
+          message: err instanceof Error ? err.message : "Unknown error",
+        };
       }
     },
     [user, fetchFavorites]
@@ -74,7 +92,7 @@ const useFavorites = () => {
 
   // Remove from favorites
   const removeFavorite = useCallback(
-    async (brandId) => {
+    async (brandId: string): Promise<FavoriteResult> => {
       if (!user) {
         return {
           success: false,
@@ -100,7 +118,10 @@ const useFavorites = () => {
         return { success: true };
       } catch (err) {
         console.error("Error removing favorite:", err);
-        return { success: false, message: err.message };
+        return {
+          success: false,
+          message: err instanceof Error ? err.message : "Unknown error",
+        };
       }
     },
     [user, fetchFavorites]
@@ -108,7 +129,7 @@ const useFavorites = () => {
 
   // Check if a brand is favorited
   const isFavorite = useCallback(
-    (brandId) => {
+    (brandId: string): boolean => {
       return favorites.some((favorite) => favorite.id === brandId);
     },
     [favorites]
@@ -116,7 +137,7 @@ const useFavorites = () => {
 
   // Toggle favorite
   const toggleFavorite = useCallback(
-    async (brandId) => {
+    async (brandId: string): Promise<FavoriteResult> => {
       if (isFavorite(brandId)) {
         return removeFavorite(brandId);
       } else {

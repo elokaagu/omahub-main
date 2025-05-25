@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CheckCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import FavoriteButton from "./favorite-button";
 
 interface BrandCardProps {
   id: string;
@@ -29,7 +30,7 @@ export function BrandCard({
     <Link
       href={`/brand/${id}`}
       className={cn(
-        "group block bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow",
+        "group block bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow relative",
         isPortrait ? "flex gap-6" : "",
         className
       )}
@@ -45,6 +46,9 @@ export function BrandCard({
             isPortrait ? "object-center object-top" : ""
           )}
         />
+        <div className="absolute top-2 right-2 z-10">
+          <FavoriteButton brandId={id} />
+        </div>
       </div>
       <div
         className={cn(

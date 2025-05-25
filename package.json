@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@heroicons/react": "^2.2.0",
     "@radix-ui/react-accordion": "1.1.2",
     "@radix-ui/react-alert-dialog": "1.0.5",
     "@radix-ui/react-aspect-ratio": "1.0.3",
@@ -40,11 +41,9 @@
     "@radix-ui/react-tooltip": "1.0.7",
     "@supabase/auth-helpers-nextjs": "^0.10.0",
     "@supabase/ssr": "^0.6.1",
-    "@supabase/supabase-js": "^2.49.8",
     "class-variance-authority": "0.7.0",
     "clsx": "2.1.0",
     "cmdk": "0.2.0",
-    "dotenv": "^16.5.0",
     "embla-carousel": "8.0.0",
     "embla-carousel-react": "8.0.0",
     "framer-motion": "10.18.0",
@@ -65,14 +64,17 @@
     "vaul": "0.9.0"
   },
   "devDependencies": {
+    "@supabase/supabase-js": "^2.49.8",
     "@types/node": "20.11.24",
     "@types/react": "18.2.61",
     "@types/react-dom": "18.2.19",
     "autoprefixer": "10.4.18",
+    "dotenv": "^16.5.0",
     "eslint": "8.57.0",
     "eslint-config-next": "14.1.0",
     "postcss": "8.4.35",
     "tailwindcss": "3.4.1",
-    "typescript": "5.3.3"
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
   }
 }
