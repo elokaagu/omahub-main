@@ -187,10 +187,218 @@ const brandsData = {
       },
     ],
   },
+  "algiers-style": {
+    name: "Algiers Style",
+    description:
+      "Algiers Style crafts exquisite bridal wear that combines North African traditional craftsmanship with contemporary silhouettes, creating unforgettable pieces for the modern bride.",
+    longDescription:
+      "Established in 2015 by Algerian designer Leila Benali, Algiers Style has become North Africa's premier destination for luxury bridal wear. The brand is known for its intricate handwork, including traditional Algerian embroidery techniques that have been practiced for centuries.\n\nThe atelier's signature style incorporates elements of both Eastern and Western design traditions, resulting in pieces that feel both timeless and contemporary. Their gowns often feature delicate beadwork, hand-embroidered details, and sumptuous textiles sourced from across the Mediterranean region.\n\nThe brand's workshop in Algiers employs over twenty skilled artisans, many of whom come from families with generations of experience in textile arts. This commitment to preserving traditional craft while embracing innovation has earned Algiers Style clients from across Africa, Europe, and the Middle East.",
+    location: "Algiers, Algeria",
+    priceRange: "DA 250,000 - DA 1,200,000",
+    category: "Bridal",
+    rating: 4.5,
+    reviews: [
+      {
+        author: "Amina Khalid",
+        comment:
+          "My wedding dress from Algiers Style was everything I dreamed of. The handwork was exquisite, and they incorporated my mother's veil into the design beautifully.",
+        rating: 5,
+        date: "2024-01-15",
+      },
+      {
+        author: "Sophie Benoit",
+        comment:
+          "As a French woman marrying into an Algerian family, I wanted something that honored both traditions. Algiers Style created a perfect fusion that made everyone happy, especially me!",
+        rating: 4,
+        date: "2023-11-20",
+      },
+      {
+        author: "Farida Taleb",
+        comment:
+          "The craftsmanship was stunning, though the multiple fittings required were sometimes difficult with my schedule. But the end result was worth the effort.",
+        rating: 4,
+        date: "2024-03-05",
+      },
+    ],
+    isVerified: true,
+    collections: [
+      {
+        id: 1,
+        title: "Mediterranean Dreams",
+        image: "/lovable-uploads/90f81e12-d22e-4e01-b75b-d3bad4db5e45.png",
+      },
+      {
+        id: 2,
+        title: "Casbah Collection",
+        image: "/lovable-uploads/abb12cfd-a40d-4890-bfd6-76feb4764069.png",
+      },
+      {
+        id: 3,
+        title: "Modern Oasis",
+        image: "/lovable-uploads/8bd685d2-cad8-4639-982a-cb5c7087443c.png",
+      },
+    ],
+  },
+  "cairo-couture": {
+    name: "Cairo Couture",
+    description:
+      "Cairo Couture creates luxury bridal wear that combines Egyptian heritage with contemporary design, specializing in intricate beadwork and embroidery that celebrates Middle Eastern artistry.",
+    longDescription:
+      "Cairo Couture was founded in 2010 by Egyptian designer Nour El Masri after training at prestigious fashion schools in Paris and Milan. The brand has established itself as a leader in luxury bridal wear across North Africa and the Middle East.\n\nDrawing inspiration from Egypt's rich architectural and artistic heritage, Cairo Couture creates gowns that feature intricate beadwork, detailed embroidery, and delicate appliqués. Each piece is handcrafted in their Cairo atelier by skilled artisans who specialize in traditional techniques passed down through generations.\n\nThe brand is known for its meticulous attention to detail, with some bridal gowns requiring over 1,000 hours of handwork to complete. This dedication to craftsmanship has attracted an elite clientele, including celebrities and royal family members from across the region.",
+    location: "Cairo, Egypt",
+    priceRange: "EGP 50,000 - EGP 500,000",
+    category: "Bridal",
+    rating: 4.8,
+    reviews: [
+      {
+        author: "Yasmine Fawzi",
+        comment:
+          "My Cairo Couture wedding dress was a masterpiece. The beadwork captured the light so beautifully, and the design perfectly complemented our venue at the historic Mena House.",
+        rating: 5,
+        date: "2023-10-15",
+      },
+      {
+        author: "Layla Ibrahim",
+        comment:
+          "The attention to detail was extraordinary. Every fitting was a delight, and they were so accommodating with the changes I requested. The final result was breathtaking.",
+        rating: 5,
+        date: "2024-02-08",
+      },
+      {
+        author: "Joanna Miller",
+        comment:
+          "As an American marrying in Egypt, I wanted something that respected local traditions while still feeling like me. Cairo Couture struck that balance perfectly, though the process took longer than expected.",
+        rating: 4,
+        date: "2023-12-20",
+      },
+    ],
+    isVerified: true,
+    collections: [
+      {
+        id: 1,
+        title: "Pharaonic Elegance",
+        image: "/lovable-uploads/592425d5-0327-465c-990c-c63a73645792.png",
+      },
+      {
+        id: 2,
+        title: "Nile Goddess",
+        image: "/lovable-uploads/023ba098-0109-4738-9baf-1321bc3d2fe1.png",
+      },
+      {
+        id: 3,
+        title: "Modern Cairo",
+        image: "/lovable-uploads/53ab4ec9-fd54-4aa8-a292-70669af33185.png",
+      },
+    ],
+  },
+  "lagos-bridal": {
+    name: "Lagos Bridal House",
+    description:
+      "Lagos Bridal House creates contemporary bridal wear that honors Nigerian traditions while embracing modern design elements, offering bespoke services to brides seeking unique cultural expressions.",
+    longDescription:
+      "Founded in 2017 by designer duo Folake and Tunde Adeleke, Lagos Bridal House has quickly become Nigeria's premier destination for bespoke bridal wear. The brand specializes in creating wedding attire that honors the rich cultural heritage of Nigeria while incorporating contemporary design elements.\n\nThe brand is known for its innovative use of traditional Nigerian textiles such as aso-oke, adire, and akwete, which are masterfully incorporated into modern silhouettes. Their designs often feature intricate beadwork and embroidery that tell stories of the couple's heritage and personal journey.\n\nLagos Bridal House offers a fully customized experience, with multiple consultations to ensure that each bride's vision is perfectly realized. Their flagship atelier in Victoria Island serves as both a studio and a creative hub where brides can explore various design possibilities.",
+    location: "Lagos, Nigeria",
+    priceRange: "₦300,000 - ₦2,500,000",
+    category: "Bridal",
+    rating: 4.7,
+    reviews: [
+      {
+        author: "Chioma Okonkwo",
+        comment:
+          "Lagos Bridal House created the perfect fusion of my Igbo heritage and modern style. The way they incorporated my grandmother's aso-oke into the design was nothing short of magical.",
+        rating: 5,
+        date: "2024-01-12",
+      },
+      {
+        author: "Adebola Fadipe",
+        comment:
+          "I had both my white wedding gown and traditional attire made by Lagos Bridal House. Both were stunning and photographed beautifully. The team was professional throughout.",
+        rating: 4,
+        date: "2023-11-25",
+      },
+      {
+        author: "Jennifer Osei",
+        comment:
+          "As a Ghanaian marrying a Nigerian, I wanted something that honored both our cultures. The design team was very thoughtful in their approach, though some of the final details were rushed.",
+        rating: 4,
+        date: "2024-02-18",
+      },
+    ],
+    isVerified: true,
+    collections: [
+      {
+        id: 1,
+        title: "Lagos Royalty",
+        image: "/lovable-uploads/ee92bbfa-4f54-4567-b4ef-8aebd0bca695.png",
+      },
+      {
+        id: 2,
+        title: "Ancestral Heritage",
+        image: "/lovable-uploads/8bd685d2-cad8-4639-982a-cb5c7087443c.png",
+      },
+      {
+        id: 3,
+        title: "Contemporary Bride",
+        image: "/lovable-uploads/abb12cfd-a40d-4890-bfd6-76feb4764069.png",
+      },
+    ],
+  },
+  "beads-by-nneka": {
+    name: "Beads by Nneka",
+    description:
+      "Exquisite handcrafted bead jewelry that celebrates Nigerian cultural heritage through contemporary designs, created by master artisan Nneka Okafor.",
+    longDescription:
+      "Beads by Nneka was founded in 2014 by master beader Nneka Okafor, who has dedicated her life to preserving and innovating the ancient Nigerian tradition of bead artistry. Each piece is handcrafted in her Lagos workshop, where she combines traditional techniques with contemporary design sensibilities.\n\nThe brand is known for its meticulous craftsmanship, with some elaborate pieces taking weeks to complete. Nneka sources traditional materials such as coral, brass, and recycled glass beads, often combining them with modern elements to create pieces that honor heritage while remaining relevant to contemporary fashion.\n\nBeads by Nneka has gained international recognition for bridging the gap between traditional craft and fine jewelry, with exhibitions in galleries across Africa, Europe, and North America. The brand offers both everyday pieces and elaborate ceremonial jewelry for special occasions such as weddings and traditional ceremonies.",
+    location: "Lagos, Nigeria",
+    priceRange: "₦10,000 - ₦350,000",
+    category: "Accessories",
+    rating: 5.0,
+    reviews: [
+      {
+        author: "Folake Johnson",
+        comment:
+          "The craftsmanship of my Beads by Nneka necklace is extraordinary. It's become my signature piece, and I receive compliments every time I wear it.",
+        rating: 5,
+        date: "2024-01-15",
+      },
+      {
+        author: "Chinyere Obi",
+        comment:
+          "I purchased a full set for my traditional wedding, and the pieces were absolutely stunning. Nneka took the time to understand our cultural background and incorporated meaningful symbols.",
+        rating: 5,
+        date: "2023-12-20",
+      },
+      {
+        author: "Maya Lewis",
+        comment:
+          "As an African American connecting with my heritage, finding Beads by Nneka was a gift. The pieces are beautiful, and the cultural context provided makes them even more special.",
+        rating: 5,
+        date: "2024-02-05",
+      },
+    ],
+    isVerified: true,
+    collections: [
+      {
+        id: 1,
+        title: "Royal Niger Collection",
+        image: "/lovable-uploads/b3fb585e-93cf-4aa7-9204-0a1b477fcb06.png",
+      },
+      {
+        id: 2,
+        title: "Contemporary Coral",
+        image: "/lovable-uploads/abb12cfd-a40d-4890-bfd6-76feb4764069.png",
+      },
+      {
+        id: 3,
+        title: "Abuja Nights",
+        image: "/lovable-uploads/8bd685d2-cad8-4639-982a-cb5c7087443c.png",
+      },
+    ],
+  },
 };
 
 // For security, use a secure seed key
-const SEED_KEY = process.env.SEED_KEY || "secure-seed-key-for-database";
+const SEED_KEY = process.env.SEED_KEY || "omahub-seed-c74b91e83df9";
 
 export async function GET(request) {
   // Add security to prevent unauthorized seeding
