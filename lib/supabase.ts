@@ -23,10 +23,13 @@ export type Brand = {
 export type Review = {
   id: string;
   brand_id: string;
+  user_id?: string | null;
   author: string;
   comment: string;
   rating: number;
   date: string;
+  created_at?: string;
+  updated_at?: string;
 };
 
 export type Collection = {

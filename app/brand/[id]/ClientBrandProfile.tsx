@@ -1,12 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, MapPin, Star } from "lucide-react";
 import ContactDesignerModal from "@/components/ContactDesignerModal";
+import { ReviewForm } from "@/components/ui/review-form";
+import useReviews from "@/lib/hooks/useReviews";
 import type { BrandData } from "@/lib/data/brands";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/lib/context/AuthContext";
+import { useParams } from "next/navigation";
 
 interface ClientBrandProfileProps {
   brandData: BrandData;
@@ -15,7 +20,45 @@ interface ClientBrandProfileProps {
 export default function ClientBrandProfile({
   brandData,
 }: ClientBrandProfileProps) {
+  const { user } = useAuth();
+  const params = useParams();
+  const id =
+    typeof params.id === "string"
+      ? params.id
+      : Array.isArray(params.id)
+      ? params.id[0]
+      : null;
+
+  console.log("Brand params:", params);
+  console.log("Extracted brand ID:", id);
+
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
+  const { reviews, loading, error, fetchReviews } = useReviews(id as string);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+
+  // Fetch reviews when component mounts
+  useEffect(() => {
+    console.log("Fetching reviews for brand ID:", id);
+    if (id) {
+      fetchReviews();
+    }
+  }, [fetchReviews, id]);
+
+  const handleReviewSubmitted = () => {
+    // Hide the review form and refresh reviews
+    setShowReviewForm(false);
+    fetchReviews();
+  };
+
+  const handleShowReviewForm = () => {
+    console.log("Opening review form for brand ID:", id);
+    setShowReviewForm(true);
+  };
+
+  const handleOpenContactModal = () => {
+    console.log("Opening contact modal for brand:", brandData.name);
+    setIsContactModalOpen(true);
+  };
 
   return (
     <section className="pt-24 pb-16 px-6 fade-in">
@@ -41,7 +84,7 @@ export default function ClientBrandProfile({
             <div className="flex items-center ml-6">
               <Star size={16} className="mr-1 text-oma-gold" />
               <span>
-                {brandData.rating} ({brandData.reviews.length} reviews)
+                {brandData.rating} ({reviews.length} reviews)
               </span>
             </div>
           </div>
@@ -111,7 +154,7 @@ export default function ClientBrandProfile({
             <Separator className="my-6 bg-oma-gold/20" />
 
             <Button
-              onClick={() => setIsContactModalOpen(true)}
+              onClick={handleOpenContactModal}
               className="w-full bg-oma-plum hover:bg-oma-plum/90"
             >
               Contact Designer
@@ -124,36 +167,82 @@ export default function ClientBrandProfile({
           className="my-12 border border-oma-gold/20 rounded-lg p-6 bg-oma-beige/30 slide-up"
           style={{ animationDelay: "300ms" }}
         >
-          <h2 className="heading-sm mb-6">Customer Reviews</h2>
-          <div className="space-y-6">
-            {brandData.reviews?.map((review, index) => (
-              <div
-                key={index}
-                className="border-b border-oma-gold/10 last:border-0 pb-4 last:pb-0"
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="heading-sm">Customer Reviews</h2>
+            {!showReviewForm && (
+              <Button
+                onClick={handleShowReviewForm}
+                className="bg-oma-plum hover:bg-oma-plum/90 text-white"
               >
-                <div className="flex items-center mb-2">
-                  <div className="flex items-center">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        size={16}
-                        className={
-                          i < review.rating
-                            ? "text-oma-gold fill-oma-gold"
-                            : "text-oma-gold/20"
-                        }
-                      />
-                    ))}
-                  </div>
-                  <span className="ml-2 text-sm text-oma-cocoa">
-                    {review.date}
-                  </span>
-                </div>
-                <p className="text-oma-black mb-2">{review.comment}</p>
-                <p className="text-sm text-oma-cocoa">- {review.author}</p>
-              </div>
-            ))}
+                Write a Review
+              </Button>
+            )}
           </div>
+
+          {showReviewForm && (
+            <div className="mb-8">
+              <ReviewForm
+                brandId={id as string}
+                onReviewSubmitted={handleReviewSubmitted}
+                className="mb-6"
+              />
+              <Button
+                variant="outline"
+                onClick={() => setShowReviewForm(false)}
+                className="mb-6"
+              >
+                Cancel
+              </Button>
+            </div>
+          )}
+
+          {loading ? (
+            <div className="space-y-6">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="space-y-2">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-1/2" />
+                </div>
+              ))}
+            </div>
+          ) : error ? (
+            <div className="p-4 bg-red-50 text-red-500 rounded">{error}</div>
+          ) : reviews.length > 0 ? (
+            <div className="space-y-6">
+              {reviews.map((review) => (
+                <div
+                  key={review.id}
+                  className="border-b border-oma-gold/10 last:border-0 pb-4 last:pb-0"
+                >
+                  <div className="flex items-center mb-2">
+                    <div className="flex items-center">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          size={16}
+                          className={
+                            i < review.rating
+                              ? "text-oma-gold fill-oma-gold"
+                              : "text-oma-gold/20"
+                          }
+                        />
+                      ))}
+                    </div>
+                    <span className="ml-2 text-sm text-oma-cocoa">
+                      {review.date}
+                    </span>
+                  </div>
+                  <p className="text-oma-black mb-2">{review.comment}</p>
+                  <p className="text-sm text-oma-cocoa">- {review.author}</p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-oma-cocoa">
+              <p>No reviews yet. Be the first to share your experience!</p>
+            </div>
+          )}
         </div>
       </div>
 

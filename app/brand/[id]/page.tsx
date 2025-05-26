@@ -12,6 +12,8 @@ import { Brand, Review, Collection } from "@/lib/supabase";
 import { CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/context/AuthContext";
+import ContactDesignerModal from "@/components/ContactDesignerModal";
+import { ReviewForm } from "@/components/ui/review-form";
 
 export default function BrandPage() {
   const { id } = useParams();
@@ -21,6 +23,8 @@ export default function BrandPage() {
   const [collections, setCollections] = useState<Collection[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [isContactModalOpen, setIsContactModalOpen] = useState(false);
+  const [showReviewForm, setShowReviewForm] = useState(false);
 
   useEffect(() => {
     async function fetchBrandData() {
@@ -51,6 +55,18 @@ export default function BrandPage() {
 
     fetchBrandData();
   }, [id]);
+
+  const handleReviewSubmitted = () => {
+    // Hide the review form and refresh reviews
+    setShowReviewForm(false);
+
+    // Refetch reviews
+    if (id && typeof id === "string") {
+      getBrandReviews(id).then((reviewsData) => {
+        setReviews(reviewsData);
+      });
+    }
+  };
 
   if (loading) {
     return (
@@ -123,7 +139,10 @@ export default function BrandPage() {
               </div>
 
               <div className="flex flex-wrap gap-4">
-                <Button className="bg-oma-plum hover:bg-oma-plum/90">
+                <Button
+                  className="bg-oma-plum hover:bg-oma-plum/90"
+                  onClick={() => setIsContactModalOpen(true)}
+                >
                   Contact Designer
                 </Button>
                 <Button
@@ -182,12 +201,32 @@ export default function BrandPage() {
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between mb-8">
             <h2 className="text-2xl font-canela">Customer Reviews</h2>
-            {user && (
-              <Button className="bg-oma-plum hover:bg-oma-plum/90">
+            {!showReviewForm && user && (
+              <Button
+                className="bg-oma-plum hover:bg-oma-plum/90"
+                onClick={() => setShowReviewForm(true)}
+              >
                 Write a Review
               </Button>
             )}
           </div>
+
+          {showReviewForm && (
+            <div className="mb-8 bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+              <ReviewForm
+                brandId={id as string}
+                onReviewSubmitted={handleReviewSubmitted}
+                className="mb-4"
+              />
+              <Button
+                variant="outline"
+                onClick={() => setShowReviewForm(false)}
+                className="mt-2"
+              >
+                Cancel
+              </Button>
+            </div>
+          )}
 
           {reviews.length === 0 ? (
             <div className="text-center py-8 bg-oma-beige/20 rounded-lg">
@@ -217,6 +256,13 @@ export default function BrandPage() {
           )}
         </div>
       </section>
+
+      {/* Contact Designer Modal */}
+      <ContactDesignerModal
+        isOpen={isContactModalOpen}
+        onClose={() => setIsContactModalOpen(false)}
+        brandName={brand.name}
+      />
     </div>
   );
 }
