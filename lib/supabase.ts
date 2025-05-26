@@ -1,10 +1,18 @@
 import { createBrowserClient } from "@supabase/ssr";
 
+// Safely access environment variables with fallbacks
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 
-// Create a single supabase client for interacting with your database on the client side
+// Create a single supabase client for interacting with your database
+// This handles both client and server-side environments
 export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey);
+
+// For debugging in development
+if (process.env.NODE_ENV !== "production") {
+  console.log("Supabase URL:", supabaseUrl ? "Set correctly" : "Missing");
+  console.log("Supabase Key:", supabaseAnonKey ? "Set correctly" : "Missing");
+}
 
 // Types based on your current data model
 export type Brand = {
