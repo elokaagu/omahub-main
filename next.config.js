@@ -25,6 +25,16 @@ const nextConfig = {
   },
   reactStrictMode: true,
   swcMinify: true,
+  webpack: (config, { isServer }) => {
+    // Handle the punycode deprecation warning
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        punycode: false,
+      };
+    }
+    return config;
+  },
 };
 
 module.exports = nextConfig;
