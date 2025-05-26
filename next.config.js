@@ -33,7 +33,17 @@ const nextConfig = {
         punycode: false,
       };
     }
+
+    // Disable webpack warnings for cleaner build logs
+    config.infrastructureLogging = {
+      level: "error",
+    };
+
     return config;
+  },
+  // Force exact Node.js version
+  experimental: {
+    // Add any experimental features you want to enable
   },
 };
 
