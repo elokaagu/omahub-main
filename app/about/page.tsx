@@ -15,7 +15,7 @@ export default function About() {
   return (
     <>
       {/* Hero Section */}
-      <motion.section
+      <motion.div
         initial="hidden"
         animate="visible"
         variants={staggerChildren}
@@ -47,10 +47,10 @@ export default function About() {
             />
           </motion.div>
         </div>
-      </motion.section>
+      </motion.div>
 
       {/* Our Story Section */}
-      <motion.section
+      <motion.div
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true }}
@@ -79,10 +79,10 @@ export default function About() {
             </motion.p>
           </div>
         </div>
-      </motion.section>
+      </motion.div>
 
       {/* Mission & Values Section */}
-      <motion.section
+      <motion.div
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true }}
@@ -134,10 +134,10 @@ export default function About() {
             </p>
           </motion.div>
         </div>
-      </motion.section>
+      </motion.div>
 
       {/* Community Section */}
-      <motion.section
+      <motion.div
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true }}
@@ -173,7 +173,7 @@ export default function About() {
             </motion.div>
           </div>
         </div>
-      </motion.section>
+      </motion.div>
     </>
   );
 }
