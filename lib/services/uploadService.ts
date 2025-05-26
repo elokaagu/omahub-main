@@ -25,7 +25,7 @@ export async function uploadFile(
       .from(bucket)
       .upload(filePath, file, {
         cacheControl: "3600",
-        upsert: false,
+        upsert: true,
       });
 
     if (error) {

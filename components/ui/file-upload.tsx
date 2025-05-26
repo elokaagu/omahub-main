@@ -47,12 +47,31 @@ export function FileUpload({
     // Upload file
     setUploading(true);
     try {
+      console.log(
+        `Attempting to upload file to bucket: ${bucket}, path: ${path}`
+      );
       const url = await uploadFile(file, bucket, path);
       onUploadComplete(url);
       toast.success("File uploaded successfully");
     } catch (error) {
       console.error("Error uploading file:", error);
-      toast.error("Failed to upload file. Please try again.");
+
+      // More detailed error message
+      let errorMessage = "Failed to upload file. Please try again.";
+      if (error instanceof Error) {
+        if (error.message.includes("storage/object-too-large")) {
+          errorMessage = `File too large. Maximum size is ${maxSizeMB}MB.`;
+        } else if (error.message.includes("bucket_not_found")) {
+          errorMessage = "Storage location not found. Please contact support.";
+        } else if (error.message.includes("permission_denied")) {
+          errorMessage =
+            "Permission denied. You may not have access to upload files.";
+        } else {
+          errorMessage = `Upload error: ${error.message}`;
+        }
+      }
+
+      toast.error(errorMessage);
       setPreview(defaultValue || null);
     } finally {
       setUploading(false);
