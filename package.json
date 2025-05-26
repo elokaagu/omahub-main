@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "NODE_OPTIONS='--no-warnings' next build",
+    "build": "node build-override.js",
     "start": "next start",
     "lint": "next lint",
     "postinstall": "patch-package"
