@@ -16,5 +16,8 @@
     "env": {
       "NODE_OPTIONS": "--no-warnings"
     }
+  },
+  "env": {
+    "NODE_OPTIONS": "--no-warnings"
   }
 }
