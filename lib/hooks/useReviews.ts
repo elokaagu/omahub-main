@@ -77,7 +77,10 @@ const useReviews = (brandId?: string) => {
       setSubmitting(true);
       try {
         const payload = {
-          ...reviewData,
+          brandId: reviewData.brand_id,
+          author: reviewData.author,
+          comment: reviewData.comment,
+          rating: reviewData.rating,
           userId: user?.id || null,
           date: new Date().toISOString().split("T")[0], // YYYY-MM-DD
         };

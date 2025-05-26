@@ -1,0 +1,151 @@
+"use client";
+
+import { useEffect } from "react";
+import { useAuth } from "@/lib/context/AuthContext";
+import { useRouter } from "next/navigation";
+import { isAdmin } from "@/lib/services/studioService";
+import { Toaster } from "sonner";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Home, Package, Image, User, LogOut, Menu, X } from "lucide-react";
+import { useState } from "react";
+
+export default function StudioLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const { user, loading, signOut } = useAuth();
+  const router = useRouter();
+  const [hasAccess, setHasAccess] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    const checkAccess = async () => {
+      if (!loading && user) {
+        const adminAccess = await isAdmin(user.id);
+        setHasAccess(adminAccess);
+
+        if (!adminAccess) {
+          router.push("/");
+        }
+      } else if (!loading && !user) {
+        router.push("/login?redirect=/studio");
+      }
+    };
+
+    checkAccess();
+  }, [user, loading, router]);
+
+  if (loading || !hasAccess) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
+
+  const handleSignOut = async () => {
+    await signOut();
+    router.push("/");
+  };
+
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Mobile sidebar toggle */}
+      <div className="lg:hidden fixed top-4 left-4 z-50">
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={toggleSidebar}
+          className="bg-white"
+        >
+          {sidebarOpen ? (
+            <X className="h-5 w-5" />
+          ) : (
+            <Menu className="h-5 w-5" />
+          )}
+        </Button>
+      </div>
+
+      {/* Sidebar */}
+      <aside
+        className={`bg-white w-64 border-r border-gray-200 fixed inset-y-0 left-0 z-40 transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="p-6 h-full flex flex-col">
+          <div className="mb-8">
+            <h1 className="text-2xl font-canela text-oma-plum">
+              OmaHub Studio
+            </h1>
+          </div>
+
+          <nav className="space-y-1 flex-1">
+            <Link
+              href="/studio"
+              className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <Home className="h-5 w-5" />
+              <span>Dashboard</span>
+            </Link>
+            <Link
+              href="/studio/brands"
+              className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <Package className="h-5 w-5" />
+              <span>Brands</span>
+            </Link>
+            <Link
+              href="/studio/collections"
+              className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <Image className="h-5 w-5" />
+              <span>Collections</span>
+            </Link>
+            <Link
+              href="/studio/profile"
+              className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <User className="h-5 w-5" />
+              <span>Profile</span>
+            </Link>
+          </nav>
+
+          <div className="pt-6 border-t border-gray-200 mt-auto">
+            <button
+              onClick={handleSignOut}
+              className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100 w-full"
+            >
+              <LogOut className="h-5 w-5" />
+              <span>Sign Out</span>
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      {/* Main content */}
+      <main className="flex-1 ml-0 lg:ml-64 min-h-screen">
+        <div className="p-6">{children}</div>
+      </main>
+
+      {/* Overlay for mobile */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        ></div>
+      )}
+
+      <Toaster position="top-right" />
+    </div>
+  );
+}
