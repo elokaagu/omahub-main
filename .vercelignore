@@ -1,0 +1,12 @@
+# Ignore API routes with database access during build
+app/api/repair-images
+app/api/migrate-images
+
+# Ignore test files
+**/*.test.*
+**/*.spec.*
+
+# Ignore development files
+.env.local
+.env.development.local
+.env.test.local 

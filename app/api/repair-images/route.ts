@@ -7,6 +7,9 @@ const isBuildTime =
   process.env.NODE_ENV === "production" &&
   process.env.NEXT_PHASE === "phase-production-build";
 
+// Mark this route as server-side only
+export const dynamic = "force-dynamic";
+
 export async function GET(request: NextRequest) {
   // During build time, just return a dummy response
   if (isBuildTime) {
