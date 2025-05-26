@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/context/AuthContext";
 import { getProfile, updateProfile, User } from "@/lib/services/authService";
+import setupStorage from "@/lib/supabase-storage-setup";
 import { toast } from "sonner";
 import {
   Card,
@@ -29,7 +30,15 @@ export default function ProfilePage() {
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
 
   useEffect(() => {
-    const fetchProfile = async () => {
+    const initialize = async () => {
+      // Setup storage buckets to ensure they exist
+      try {
+        await setupStorage();
+        console.log("Storage initialized successfully");
+      } catch (error) {
+        console.error("Error initializing storage:", error);
+      }
+
       if (!user) return;
 
       setLoading(true);
@@ -64,7 +73,7 @@ export default function ProfilePage() {
       }
     };
 
-    fetchProfile();
+    initialize();
   }, [user]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {

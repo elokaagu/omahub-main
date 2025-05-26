@@ -3,7 +3,7 @@
 import React, { useState, useRef } from "react";
 import { Button } from "./button";
 import { Upload, X, Image as ImageIcon } from "lucide-react";
-import { uploadFile } from "@/lib/services/uploadService";
+import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
 interface FileUploadProps {
@@ -29,6 +29,38 @@ export function FileUpload({
   const [preview, setPreview] = useState<string | null>(defaultValue || null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Direct upload to Supabase
+  const uploadToSupabase = async (file: File): Promise<string> => {
+    // Create a unique file name with original extension
+    const fileExt = file.name.split(".").pop();
+    const fileName = `${Math.random()
+      .toString(36)
+      .substring(2, 15)}_${Date.now()}.${fileExt}`;
+    const filePath = path ? `${path}/${fileName}` : fileName;
+
+    console.log(`Uploading to bucket: ${bucket}, path: ${filePath}`);
+
+    // Upload the file directly with Supabase client
+    const { data, error } = await supabase.storage
+      .from(bucket)
+      .upload(filePath, file, {
+        cacheControl: "3600",
+        upsert: true,
+      });
+
+    if (error) {
+      console.error("Error uploading file to Supabase:", error);
+      throw error;
+    }
+
+    // Get public URL
+    const { data: urlData } = supabase.storage
+      .from(bucket)
+      .getPublicUrl(data.path);
+
+    return urlData.publicUrl;
+  };
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -47,28 +79,19 @@ export function FileUpload({
     // Upload file
     setUploading(true);
     try {
-      console.log(
-        `Attempting to upload file to bucket: ${bucket}, path: ${path}`
-      );
-      const url = await uploadFile(file, bucket, path);
+      // Use direct Supabase upload
+      const url = await uploadToSupabase(file);
+      console.log("Upload successful, URL:", url);
       onUploadComplete(url);
       toast.success("File uploaded successfully");
     } catch (error) {
-      console.error("Error uploading file:", error);
+      console.error("Error in file upload:", error);
 
       // More detailed error message
       let errorMessage = "Failed to upload file. Please try again.";
       if (error instanceof Error) {
-        if (error.message.includes("storage/object-too-large")) {
-          errorMessage = `File too large. Maximum size is ${maxSizeMB}MB.`;
-        } else if (error.message.includes("bucket_not_found")) {
-          errorMessage = "Storage location not found. Please contact support.";
-        } else if (error.message.includes("permission_denied")) {
-          errorMessage =
-            "Permission denied. You may not have access to upload files.";
-        } else {
-          errorMessage = `Upload error: ${error.message}`;
-        }
+        errorMessage = `Upload error: ${error.message}`;
+        console.log("Full error:", error);
       }
 
       toast.error(errorMessage);
