@@ -12,15 +12,14 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
-    domains: [
-      "images.unsplash.com",
-      "pmplsnilqglvdqlkgjfq.supabase.co",
-      "gswduyodzdgucjscjtvz.supabase.co",
-    ],
     remotePatterns: [
       {
         protocol: "https",
         hostname: "**.supabase.co",
+      },
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
       },
     ],
   },
