@@ -18,6 +18,11 @@ export type Brand = {
   rating: number;
   is_verified: boolean;
   image: string;
+  website?: string;
+  instagram?: string;
+  founded_year?: string;
+  created_at?: string;
+  updated_at?: string;
 };
 
 export type Review = {

@@ -33,6 +33,12 @@ export default function StudioDashboard() {
       const brandsData = await getAllBrands();
       setBrands(brandsData);
 
+      // Log brand IDs to debug
+      console.log(
+        "Brand IDs in dashboard:",
+        brandsData.map((brand) => ({ id: brand.id, name: brand.name }))
+      );
+
       // Calculate stats
       const collectionsCount = brandsData.reduce((acc, brand) => {
         // This is a placeholder since we don't have collection counts in the brand object
@@ -179,7 +185,20 @@ export default function StudioDashboard() {
                   variant="outline"
                   className="w-full text-oma-plum border-oma-plum hover:bg-oma-plum hover:text-white"
                 >
-                  <Link href={`/studio/brands/${brand.id}`}>Manage Brand</Link>
+                  <Link
+                    href={`/studio/brands/${encodeURIComponent(
+                      brand.id.trim().toLowerCase()
+                    )}`}
+                    onClick={(e) => {
+                      // Log when Manage Brand is clicked
+                      console.log(
+                        `Manage Brand clicked for: ${brand.id}`,
+                        brand
+                      );
+                    }}
+                  >
+                    Manage Brand
+                  </Link>
                 </Button>
               </CardContent>
             </Card>

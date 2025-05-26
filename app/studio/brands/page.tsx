@@ -67,7 +67,9 @@ export default function BrandsPage() {
   };
 
   const handleBrandClick = (brandId: string) => {
-    router.push(`/studio/brands/${brandId}`);
+    router.push(
+      `/studio/brands/${encodeURIComponent(brandId.trim().toLowerCase())}`
+    );
   };
 
   return (
@@ -183,7 +185,11 @@ export default function BrandsPage() {
                       className="text-oma-plum border-oma-plum hover:bg-oma-plum hover:text-white"
                       onClick={(e) => {
                         e.stopPropagation();
-                        router.push(`/studio/brands/${brand.id}`);
+                        router.push(
+                          `/studio/brands/${encodeURIComponent(
+                            brand.id.trim().toLowerCase()
+                          )}`
+                        );
                       }}
                     >
                       Edit

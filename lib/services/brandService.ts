@@ -18,18 +18,74 @@ export async function getAllBrands(): Promise<Brand[]> {
  * Fetch a single brand by ID
  */
 export async function getBrandById(id: string): Promise<Brand | null> {
+  // Normalize the brand ID
+  const normalizedId = id
+    .toString()
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9-]/g, "");
+
+  console.log(
+    `Attempting to fetch brand with ID: "${id}" (normalized: "${normalizedId}")`
+  );
+
   const { data, error } = await supabase
     .from("brands")
     .select("*")
-    .eq("id", id)
+    .eq("id", normalizedId)
     .single();
 
   if (error) {
-    console.error(`Error fetching brand ${id}:`, error);
+    console.error(`Error fetching brand ${normalizedId}:`, error);
     return null;
   }
 
+  if (!data) {
+    console.log(`No brand found with ID: "${normalizedId}"`);
+    return null;
+  }
+
+  console.log(`Successfully fetched brand: ${data.name} (${data.id})`);
   return data;
+}
+
+/**
+ * Alias for getBrandById to match the naming in the brand edit page
+ */
+export const getBrand = getBrandById;
+
+/**
+ * Update a brand
+ */
+export async function updateBrand(
+  id: string,
+  brandData: Partial<Brand>
+): Promise<Brand | null> {
+  const { data, error } = await supabase
+    .from("brands")
+    .update(brandData)
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error(`Error updating brand ${id}:`, error);
+    throw error;
+  }
+
+  return data;
+}
+
+/**
+ * Delete a brand
+ */
+export async function deleteBrand(id: string): Promise<void> {
+  const { error } = await supabase.from("brands").delete().eq("id", id);
+
+  if (error) {
+    console.error(`Error deleting brand ${id}:`, error);
+    throw error;
+  }
 }
 
 /**
