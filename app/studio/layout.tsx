@@ -55,7 +55,34 @@ export default function StudioLayout({
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      {/* Studio Header */}
+      <header className="w-full bg-white border-b border-gray-200 shadow-sm fixed top-0 left-0 right-0 z-50 h-16 flex items-center">
+        <div className="container mx-auto px-4 flex justify-between items-center">
+          <Link href="/" className="text-2xl font-canela text-oma-plum">
+            OmaHub
+          </Link>
+          <div className="hidden md:flex items-center space-x-4">
+            <Link
+              href="/"
+              className="text-sm text-gray-600 hover:text-oma-plum"
+            >
+              Back to Site
+            </Link>
+            {user && (
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-gray-600">{user.email}</span>
+                <img
+                  src={user.avatar_url || "https://via.placeholder.com/32"}
+                  alt="User"
+                  className="w-8 h-8 rounded-full"
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      </header>
+
       {/* Mobile sidebar toggle */}
       <div className="lg:hidden fixed top-4 left-4 z-50">
         <Button
@@ -76,13 +103,11 @@ export default function StudioLayout({
       <aside
         className={`bg-white w-64 border-r border-gray-200 fixed inset-y-0 left-0 z-40 transition-transform duration-300 ease-in-out lg:translate-x-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
+        } mt-16`}
       >
         <div className="p-6 h-full flex flex-col">
           <div className="mb-8">
-            <h1 className="text-2xl font-canela text-oma-plum">
-              OmaHub Studio
-            </h1>
+            <h1 className="text-2xl font-canela text-oma-plum">Studio</h1>
           </div>
 
           <nav className="space-y-1 flex-1">
@@ -133,7 +158,7 @@ export default function StudioLayout({
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 ml-0 lg:ml-64 min-h-screen">
+      <main className="flex-1 ml-0 lg:ml-64 min-h-screen mt-16">
         <div className="p-6">{children}</div>
       </main>
 

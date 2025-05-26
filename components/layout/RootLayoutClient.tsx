@@ -13,12 +13,15 @@ interface RootLayoutClientProps {
 export default function RootLayoutClient({ children }: RootLayoutClientProps) {
   const pathname = usePathname();
   const isHomePage = pathname === "/";
+  const isStudioPage = pathname.startsWith("/studio");
 
   return (
     <AuthProvider>
-      <Header />
-      <main className={isHomePage ? "" : "pt-20"}>{children}</main>
-      <Footer />
+      {!isStudioPage && <Header />}
+      <main className={isHomePage || isStudioPage ? "" : "pt-20"}>
+        {children}
+      </main>
+      {!isStudioPage && <Footer />}
     </AuthProvider>
   );
 }
