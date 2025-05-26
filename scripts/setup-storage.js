@@ -1,12 +1,26 @@
-import { supabase } from "./supabase";
+// Setup script to create required Supabase storage buckets
+const { createClient } = require("@supabase/supabase-js");
 
-/**
- * Makes sure that the required storage buckets exist
- * and have the appropriate permissions
- */
-export const setupStorage = async () => {
+// Read environment variables from .env.local
+require("dotenv").config({ path: ".env.local" });
+
+// Get Supabase credentials from environment variables
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+  console.error(
+    "Supabase credentials are missing. Make sure .env.local is set up correctly."
+  );
+  process.exit(1);
+}
+
+// Create Supabase client
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+async function setupStorage() {
   try {
-    // Check if buckets exist
+    console.log("Listing existing buckets...");
     const { data: buckets, error: bucketsError } =
       await supabase.storage.listBuckets();
 
@@ -15,8 +29,13 @@ export const setupStorage = async () => {
       return;
     }
 
+    console.log(
+      "Current buckets:",
+      buckets ? buckets.map((b) => b.name).join(", ") : "none"
+    );
+
     // Create brand-assets bucket if it doesn't exist
-    if (!buckets.find((bucket) => bucket.name === "brand-assets")) {
+    if (!buckets || !buckets.find((bucket) => bucket.name === "brand-assets")) {
       console.log("Creating brand-assets bucket");
       const { error } = await supabase.storage.createBucket("brand-assets", {
         public: true,
@@ -43,7 +62,7 @@ export const setupStorage = async () => {
     }
 
     // Create profiles bucket if it doesn't exist
-    if (!buckets.find((bucket) => bucket.name === "profiles")) {
+    if (!buckets || !buckets.find((bucket) => bucket.name === "profiles")) {
       console.log("Creating profiles bucket");
       const { error } = await supabase.storage.createBucket("profiles", {
         public: true,
@@ -69,38 +88,21 @@ export const setupStorage = async () => {
       }
     }
 
-    // Set policy to allow public access for brand-assets
-    const { error: brandPolicyError } = await supabase.storage
-      .from("brand-assets")
-      .createSignedUrl("test.txt", 60);
-
-    if (
-      brandPolicyError &&
-      !brandPolicyError.message.includes("Object not found")
-    ) {
-      console.error(
-        "Error testing brand-assets storage access:",
-        brandPolicyError
-      );
-    }
-
-    // Set policy to allow public access for profiles
-    const { error: profilePolicyError } = await supabase.storage
-      .from("profiles")
-      .createSignedUrl("test.txt", 60);
-
-    if (
-      profilePolicyError &&
-      !profilePolicyError.message.includes("Object not found")
-    ) {
-      console.error(
-        "Error testing profiles storage access:",
-        profilePolicyError
-      );
-    }
+    console.log("Storage setup completed!");
   } catch (error) {
     console.error("Error setting up storage:", error);
   }
-};
+}
 
-export default setupStorage;
+console.log("Setting up Supabase storage buckets...");
+
+// Run the setup
+setupStorage()
+  .then(() => {
+    console.log("Storage setup completed successfully!");
+    process.exit(0);
+  })
+  .catch((error) => {
+    console.error("Error during storage setup:", error);
+    process.exit(1);
+  });

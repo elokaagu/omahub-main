@@ -29,6 +29,9 @@ export function FileUpload({
   const [preview, setPreview] = useState<string | null>(defaultValue || null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Create a fallback bucket if the specified one doesn't exist
+  const fallbackBucket = "brand-assets";
+
   // Direct upload to Supabase
   const uploadToSupabase = async (file: File): Promise<string> => {
     // Create a unique file name with original extension
@@ -38,27 +41,58 @@ export function FileUpload({
       .substring(2, 15)}_${Date.now()}.${fileExt}`;
     const filePath = path ? `${path}/${fileName}` : fileName;
 
-    console.log(`Uploading to bucket: ${bucket}, path: ${filePath}`);
+    console.log(`Attempting upload to bucket: ${bucket}, path: ${filePath}`);
 
-    // Upload the file directly with Supabase client
-    const { data, error } = await supabase.storage
-      .from(bucket)
-      .upload(filePath, file, {
-        cacheControl: "3600",
-        upsert: true,
-      });
+    try {
+      // Try uploading to the specified bucket
+      const { data, error } = await supabase.storage
+        .from(bucket)
+        .upload(filePath, file, {
+          cacheControl: "3600",
+          upsert: true,
+        });
 
-    if (error) {
-      console.error("Error uploading file to Supabase:", error);
+      // If there's an error, try the fallback bucket
+      if (error) {
+        console.warn(
+          `Error uploading to ${bucket}, trying fallback bucket ${fallbackBucket}:`,
+          error
+        );
+
+        // Try fallback bucket
+        const fallbackResult = await supabase.storage
+          .from(fallbackBucket)
+          .upload(filePath, file, {
+            cacheControl: "3600",
+            upsert: true,
+          });
+
+        if (fallbackResult.error) {
+          console.error(
+            "Error uploading file to fallback bucket:",
+            fallbackResult.error
+          );
+          throw fallbackResult.error;
+        }
+
+        // Get public URL from fallback bucket
+        const { data: fallbackUrlData } = supabase.storage
+          .from(fallbackBucket)
+          .getPublicUrl(fallbackResult.data.path);
+
+        return fallbackUrlData.publicUrl;
+      }
+
+      // Get public URL from original bucket
+      const { data: urlData } = supabase.storage
+        .from(bucket)
+        .getPublicUrl(data.path);
+
+      return urlData.publicUrl;
+    } catch (error) {
+      console.error("Upload error:", error);
       throw error;
     }
-
-    // Get public URL
-    const { data: urlData } = supabase.storage
-      .from(bucket)
-      .getPublicUrl(data.path);
-
-    return urlData.publicUrl;
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {

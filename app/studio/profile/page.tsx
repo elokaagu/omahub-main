@@ -246,8 +246,8 @@ export default function ProfilePage() {
               <FileUpload
                 onUploadComplete={handleAvatarUpload}
                 defaultValue={profileData.avatar_url}
-                bucket="brand-assets"
-                path="profile-avatars"
+                bucket="profiles"
+                path="avatars"
               />
             </CardContent>
           </Card>
