@@ -16,6 +16,7 @@ import {
   Menu,
   X,
   ShoppingBag,
+  Settings,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -159,6 +160,14 @@ export default function StudioLayout({
             >
               <User className="h-5 w-5" />
               <span>Profile</span>
+            </Link>
+            <Link
+              href="/studio/settings"
+              className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <Settings className="h-5 w-5" />
+              <span>Settings</span>
             </Link>
           </nav>
 

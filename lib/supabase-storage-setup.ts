@@ -6,6 +6,8 @@ import { supabase } from "./supabase";
  */
 export const setupStorage = async () => {
   try {
+    console.log("Setting up storage buckets...");
+
     // Check if buckets exist
     const { data: buckets, error: bucketsError } =
       await supabase.storage.listBuckets();
@@ -14,6 +16,11 @@ export const setupStorage = async () => {
       console.error("Error listing buckets:", bucketsError);
       return;
     }
+
+    console.log(
+      "Found existing buckets:",
+      buckets.map((b) => b.name).join(", ") || "none"
+    );
 
     // Create brand-assets bucket if it doesn't exist
     if (!buckets.find((bucket) => bucket.name === "brand-assets")) {
@@ -39,6 +46,8 @@ export const setupStorage = async () => {
 
       if (error) {
         console.error("Error updating brand-assets bucket:", error);
+      } else {
+        console.log("Updated brand-assets bucket successfully");
       }
     }
 
@@ -66,38 +75,53 @@ export const setupStorage = async () => {
 
       if (error) {
         console.error("Error updating profiles bucket:", error);
+      } else {
+        console.log("Updated profiles bucket successfully");
       }
     }
 
-    // Set policy to allow public access for brand-assets
-    const { error: brandPolicyError } = await supabase.storage
-      .from("brand-assets")
-      .createSignedUrl("test.txt", 60);
+    // Test that the buckets are accessible
+    console.log("Testing storage access...");
 
-    if (
-      brandPolicyError &&
-      !brandPolicyError.message.includes("Object not found")
-    ) {
+    // Set policy to allow public access for brand-assets
+    const { data: brandTestData, error: brandPolicyError } =
+      await supabase.storage
+        .from("brand-assets")
+        .upload("test-access.txt", new Blob(["test"]), {
+          upsert: true,
+        });
+
+    if (brandPolicyError) {
       console.error(
         "Error testing brand-assets storage access:",
         brandPolicyError
       );
+    } else {
+      console.log("Successfully accessed brand-assets bucket");
+      // Clean up test file
+      await supabase.storage.from("brand-assets").remove(["test-access.txt"]);
     }
 
     // Set policy to allow public access for profiles
-    const { error: profilePolicyError } = await supabase.storage
-      .from("profiles")
-      .createSignedUrl("test.txt", 60);
+    const { data: profileTestData, error: profilePolicyError } =
+      await supabase.storage
+        .from("profiles")
+        .upload("test-access.txt", new Blob(["test"]), {
+          upsert: true,
+        });
 
-    if (
-      profilePolicyError &&
-      !profilePolicyError.message.includes("Object not found")
-    ) {
+    if (profilePolicyError) {
       console.error(
         "Error testing profiles storage access:",
         profilePolicyError
       );
+    } else {
+      console.log("Successfully accessed profiles bucket");
+      // Clean up test file
+      await supabase.storage.from("profiles").remove(["test-access.txt"]);
     }
+
+    console.log("Storage setup completed successfully");
   } catch (error) {
     console.error("Error setting up storage:", error);
   }

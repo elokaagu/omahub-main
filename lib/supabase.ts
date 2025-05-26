@@ -51,3 +51,57 @@ export type Collection = {
   title: string;
   image: string;
 };
+
+export type Product = {
+  id: string;
+  title: string;
+  description: string;
+  price: number;
+  sale_price?: number;
+  image: string;
+  brand_id: string;
+  collection_id?: string;
+  category: string;
+  in_stock: boolean;
+  sizes?: string[];
+  colors?: string[];
+  created_at: string;
+};
+
+export type Profile = {
+  id: string;
+  updated_at: string;
+  username: string;
+  avatar_url: string;
+  first_name: string;
+  last_name: string;
+  bio: string;
+  location: string;
+  website: string;
+  role: string; // 'user', 'designer', 'admin'
+};
+
+export type Order = {
+  id: string;
+  user_id: string;
+  status: string;
+  total: number;
+  created_at: string;
+};
+
+export type OrderItem = {
+  id: string;
+  order_id: string;
+  product_id: string;
+  quantity: number;
+  price: number;
+  size?: string;
+  color?: string;
+};
+
+export type Favorite = {
+  id: string;
+  user_id: string;
+  product_id: string;
+  created_at: string;
+};
