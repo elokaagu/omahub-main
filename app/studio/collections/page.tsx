@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { getAllBrands } from "@/lib/services/brandService";
 import { Brand, Collection } from "@/lib/supabase";
 import { getBrandCollections } from "@/lib/services/brandService";
+import { deleteCollection } from "@/lib/services/collectionService";
 import {
   Card,
   CardContent,
@@ -22,6 +23,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { PlusCircle, Search, Edit, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -37,6 +48,11 @@ export default function CollectionsPage() {
   const [loading, setLoading] = useState(true);
   const [selectedBrand, setSelectedBrand] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [collectionToDelete, setCollectionToDelete] = useState<string | null>(
+    null
+  );
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -100,6 +116,39 @@ export default function CollectionsPage() {
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
+  };
+
+  const handleEditCollection = (collectionId: string) => {
+    router.push(`/studio/collections/${collectionId}/edit`);
+  };
+
+  const confirmDeleteCollection = (collectionId: string) => {
+    setCollectionToDelete(collectionId);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDeleteCollection = async () => {
+    if (!collectionToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      await deleteCollection(collectionToDelete);
+
+      // Remove the deleted collection from state
+      const updatedCollections = collections.filter(
+        (collection) => collection.id !== collectionToDelete
+      );
+      setCollections(updatedCollections);
+
+      toast.success("Collection deleted successfully");
+    } catch (error) {
+      console.error("Error deleting collection:", error);
+      toast.error("Failed to delete collection");
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteDialogOpen(false);
+      setCollectionToDelete(null);
+    }
   };
 
   return (
@@ -202,9 +251,7 @@ export default function CollectionsPage() {
                     variant="outline"
                     size="sm"
                     className="flex-1 flex items-center justify-center gap-1"
-                    onClick={() =>
-                      router.push(`/studio/collections/${collection.id}/edit`)
-                    }
+                    onClick={() => handleEditCollection(collection.id)}
                   >
                     <Edit className="h-4 w-4" />
                     Edit
@@ -213,6 +260,7 @@ export default function CollectionsPage() {
                     variant="outline"
                     size="sm"
                     className="flex-1 flex items-center justify-center gap-1 text-red-500 hover:text-white hover:bg-red-500 hover:border-red-500"
+                    onClick={() => confirmDeleteCollection(collection.id)}
                   >
                     <Trash2 className="h-4 w-4" />
                     Delete
@@ -223,6 +271,32 @@ export default function CollectionsPage() {
           ))}
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the
+              collection.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteCollection}
+              disabled={isDeleting}
+              className="bg-red-500 hover:bg-red-600 text-white"
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
