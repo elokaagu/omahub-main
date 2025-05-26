@@ -7,7 +7,16 @@ import { isAdmin } from "@/lib/services/studioService";
 import { Toaster } from "sonner";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Home, Package, Image, User, LogOut, Menu, X } from "lucide-react";
+import {
+  Home,
+  Package,
+  Image,
+  User,
+  LogOut,
+  Menu,
+  X,
+  ShoppingBag,
+} from "lucide-react";
 import { useState } from "react";
 
 export default function StudioLayout({
@@ -134,6 +143,14 @@ export default function StudioLayout({
             >
               <Image className="h-5 w-5" />
               <span>Collections</span>
+            </Link>
+            <Link
+              href="/studio/products"
+              className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <ShoppingBag className="h-5 w-5" />
+              <span>Products</span>
             </Link>
             <Link
               href="/studio/profile"
