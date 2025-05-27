@@ -5,6 +5,7 @@ import { Button } from "./button";
 import { Upload, X, Image as ImageIcon } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import { debugLog, LogLevel, extractErrorDetails } from "@/lib/debug-utils";
 
 interface FileUploadProps {
   onUploadComplete: (url: string) => void;
@@ -27,6 +28,7 @@ export function FileUpload({
 }: FileUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState<string | null>(defaultValue || null);
+  const [debugInfo, setDebugInfo] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Create a fallback bucket if the specified one doesn't exist
@@ -41,10 +43,20 @@ export function FileUpload({
       .substring(2, 15)}_${Date.now()}.${fileExt}`;
     const filePath = path ? `${path}/${fileName}` : fileName;
 
-    console.log(`Attempting upload to bucket: ${bucket}, path: ${filePath}`);
+    debugLog(`Starting file upload`, LogLevel.INFO, {
+      file: file.name,
+      size: `${(file.size / 1024 / 1024).toFixed(2)} MB`,
+      type: file.type,
+      bucket,
+      path: filePath,
+    });
 
     try {
       // Try uploading to the specified bucket
+      debugLog(
+        `Attempting upload to primary bucket: ${bucket}`,
+        LogLevel.DEBUG
+      );
       const { data, error } = await supabase.storage
         .from(bucket)
         .upload(filePath, file, {
@@ -54,12 +66,17 @@ export function FileUpload({
 
       // If there's an error, try the fallback bucket
       if (error) {
-        console.warn(
-          `Error uploading to ${bucket}, trying fallback bucket ${fallbackBucket}:`,
-          error
+        debugLog(
+          `Error uploading to ${bucket}, trying fallback bucket ${fallbackBucket}`,
+          LogLevel.WARNING,
+          extractErrorDetails(error)
         );
 
         // Try fallback bucket
+        debugLog(
+          `Attempting upload to fallback bucket: ${fallbackBucket}`,
+          LogLevel.DEBUG
+        );
         const fallbackResult = await supabase.storage
           .from(fallbackBucket)
           .upload(filePath, file, {
@@ -68,29 +85,43 @@ export function FileUpload({
           });
 
         if (fallbackResult.error) {
-          console.error(
-            "Error uploading file to fallback bucket:",
-            fallbackResult.error
+          debugLog(
+            "Error uploading file to fallback bucket",
+            LogLevel.ERROR,
+            extractErrorDetails(fallbackResult.error)
           );
           throw fallbackResult.error;
         }
 
         // Get public URL from fallback bucket
+        debugLog(`Getting public URL from fallback bucket`, LogLevel.DEBUG);
         const { data: fallbackUrlData } = supabase.storage
           .from(fallbackBucket)
           .getPublicUrl(fallbackResult.data.path);
 
+        debugLog(
+          `Public URL retrieved successfully`,
+          LogLevel.INFO,
+          fallbackUrlData
+        );
         return fallbackUrlData.publicUrl;
       }
 
       // Get public URL from original bucket
+      debugLog(`Getting public URL from primary bucket`, LogLevel.DEBUG);
       const { data: urlData } = supabase.storage
         .from(bucket)
         .getPublicUrl(data.path);
 
+      debugLog(`Public URL retrieved successfully`, LogLevel.INFO, urlData);
       return urlData.publicUrl;
     } catch (error) {
-      console.error("Upload error:", error);
+      const errorDetails = extractErrorDetails(error);
+      debugLog("Upload error", LogLevel.ERROR, errorDetails);
+
+      // Save debug info to state for displaying to user
+      setDebugInfo(JSON.stringify(errorDetails, null, 2));
+
       throw error;
     }
   };
@@ -99,12 +130,21 @@ export function FileUpload({
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Reset debug info
+    setDebugInfo(null);
+
     // Validate file size
     const fileSizeMB = file.size / (1024 * 1024);
     if (fileSizeMB > maxSizeMB) {
       toast.error(`File is too large. Maximum size is ${maxSizeMB}MB.`);
       return;
     }
+
+    debugLog(`File selected`, LogLevel.INFO, {
+      name: file.name,
+      type: file.type,
+      size: `${fileSizeMB.toFixed(2)} MB`,
+    });
 
     // Create preview
     const objectUrl = URL.createObjectURL(file);
@@ -114,21 +154,24 @@ export function FileUpload({
     setUploading(true);
     try {
       // Use direct Supabase upload
+      debugLog(`Starting upload process`, LogLevel.INFO);
       const url = await uploadToSupabase(file);
-      console.log("Upload successful, URL:", url);
+      debugLog(`Upload completed successfully`, LogLevel.INFO, { url });
       onUploadComplete(url);
       toast.success("File uploaded successfully");
     } catch (error) {
-      console.error("Error in file upload:", error);
+      debugLog(`Upload failed`, LogLevel.ERROR, error);
 
       // More detailed error message
       let errorMessage = "Failed to upload file. Please try again.";
       if (error instanceof Error) {
         errorMessage = `Upload error: ${error.message}`;
-        console.log("Full error:", error);
       }
 
-      toast.error(errorMessage);
+      toast.error(errorMessage, {
+        description: "Check browser console for details",
+        duration: 5000,
+      });
       setPreview(defaultValue || null);
     } finally {
       setUploading(false);
@@ -142,9 +185,25 @@ export function FileUpload({
 
   const handleRemove = () => {
     setPreview(null);
+    setDebugInfo(null);
     onUploadComplete("");
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
+    }
+  };
+
+  const toggleDebugInfo = () => {
+    // If debug info is not already set, gather system info
+    if (!debugInfo) {
+      const info = {
+        browser: navigator.userAgent,
+        supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL || "Not configured",
+        bucketRequested: bucket,
+        timestamp: new Date().toISOString(),
+      };
+      setDebugInfo(JSON.stringify(info, null, 2));
+    } else {
+      setDebugInfo(null);
     }
   };
 
@@ -216,6 +275,27 @@ export function FileUpload({
               {uploading ? "Uploading..." : "Select Image"}
             </Button>
           </div>
+        </div>
+      )}
+
+      {/* Debug Button */}
+      <div className="mt-2 text-right">
+        <button
+          type="button"
+          onClick={toggleDebugInfo}
+          className="text-xs text-gray-400 hover:text-gray-600 underline"
+        >
+          {debugInfo ? "Hide Debug Info" : "Show Debug Info"}
+        </button>
+      </div>
+
+      {/* Debug Information */}
+      {debugInfo && (
+        <div className="mt-2 p-3 bg-gray-100 rounded-md border border-gray-200 overflow-auto">
+          <h4 className="text-xs font-bold mb-1">Debug Information:</h4>
+          <pre className="text-xs text-gray-700 whitespace-pre-wrap">
+            {debugInfo}
+          </pre>
         </div>
       )}
     </div>

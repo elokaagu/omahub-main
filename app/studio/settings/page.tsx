@@ -11,17 +11,21 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { RefreshCw, Database, Image } from "lucide-react";
+import { RefreshCw, Database, Image, Wrench } from "lucide-react";
 import setupStorage from "@/lib/supabase-storage-setup";
+import { debugFetch, inspectJSON } from "@/lib/debug-utils";
 
 export default function SettingsPage() {
   const [isStorageLoading, setIsStorageLoading] = useState(false);
   const [isMigrationLoading, setIsMigrationLoading] = useState(false);
+  const [isDiagnosticLoading, setIsDiagnosticLoading] = useState(false);
   const [migrationResult, setMigrationResult] = useState<Record<
     string,
     number
   > | null>(null);
+  const [diagnosticResult, setDiagnosticResult] = useState<any>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [diagnosticError, setDiagnosticError] = useState<string | null>(null);
 
   const handleStorageSetup = async () => {
     setIsStorageLoading(true);
@@ -148,6 +152,54 @@ export default function SettingsPage() {
     }
   };
 
+  const runDiagnostics = async () => {
+    setIsDiagnosticLoading(true);
+    setDiagnosticResult(null);
+    setDiagnosticError(null);
+
+    try {
+      toast.info("Running upload diagnostics...");
+
+      // Use our debug-enhanced fetch
+      const timestamp = new Date().getTime();
+      const response = await debugFetch(
+        `/api/debug/upload-test?t=${timestamp}`,
+        {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+          },
+          cache: "no-store",
+        }
+      );
+
+      // Get the response text
+      const responseText = await response.text();
+
+      // Inspect and clean the JSON
+      const { valid, parsed, error } = inspectJSON(responseText);
+
+      if (!valid) {
+        throw new Error(`Invalid JSON response: ${error}`);
+      }
+
+      if (!response.ok) {
+        throw new Error(`Diagnostic failed with status ${response.status}`);
+      }
+
+      setDiagnosticResult(parsed);
+      toast.success("Diagnostics completed successfully");
+    } catch (error) {
+      console.error("Error during diagnostics:", error);
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      setDiagnosticError(errorMsg);
+      toast.error(`Diagnostics failed: ${errorMsg}`);
+    } finally {
+      setIsDiagnosticLoading(false);
+    }
+  };
+
   return (
     <div>
       <h1 className="text-3xl font-canela text-gray-900 mb-8">
@@ -237,6 +289,195 @@ export default function SettingsPage() {
                 }`}
               />
               {isMigrationLoading ? "Repairing URLs..." : "Repair Image URLs"}
+            </Button>
+          </CardFooter>
+        </Card>
+
+        <Card className="md:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Wrench className="h-5 w-5" />
+              Diagnostics
+            </CardTitle>
+            <CardDescription>
+              Run diagnostics to identify image upload issues
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-gray-500 mb-4">
+              This tool performs comprehensive diagnostics of your image upload
+              system. It checks storage buckets, permissions, and RLS policies
+              to identify potential issues preventing uploads from working
+              correctly.
+            </p>
+
+            {diagnosticError && (
+              <div className="mt-4 p-4 bg-red-50 text-red-600 rounded-md border border-red-200">
+                <h3 className="font-medium text-sm mb-2">Diagnostic Error:</h3>
+                <p className="text-sm">{diagnosticError}</p>
+              </div>
+            )}
+
+            {diagnosticResult && (
+              <div className="mt-4 p-4 bg-gray-50 rounded-md overflow-auto max-h-[400px]">
+                <h3 className="font-medium text-sm mb-2">
+                  Diagnostic Results:
+                </h3>
+
+                <div className="mb-4">
+                  <h4 className="text-xs font-bold uppercase text-gray-500 mb-1">
+                    Environment
+                  </h4>
+                  <div className="bg-white p-2 rounded border border-gray-200 mb-2">
+                    <pre className="text-xs">
+                      {JSON.stringify(
+                        diagnosticResult.diagnostics.environment,
+                        null,
+                        2
+                      )}
+                    </pre>
+                  </div>
+                </div>
+
+                <div className="mb-4">
+                  <h4 className="text-xs font-bold uppercase text-gray-500 mb-1">
+                    Storage Buckets
+                  </h4>
+                  <div className="text-xs">
+                    <div
+                      className={`px-2 py-1 rounded ${
+                        diagnosticResult.diagnostics.bucketTests.success
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                      }`}
+                    >
+                      Status:{" "}
+                      {diagnosticResult.diagnostics.bucketTests.success
+                        ? "OK"
+                        : "Issues Detected"}
+                    </div>
+                    <div className="bg-white p-2 rounded border border-gray-200 mt-2">
+                      <pre className="text-xs">
+                        {JSON.stringify(
+                          diagnosticResult.diagnostics.bucketTests,
+                          null,
+                          2
+                        )}
+                      </pre>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mb-4">
+                  <h4 className="text-xs font-bold uppercase text-gray-500 mb-1">
+                    Storage Permissions
+                  </h4>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span>Brand Assets Bucket:</span>
+                      <span
+                        className={
+                          diagnosticResult.diagnostics.permissionTests
+                            .brandAssets.success
+                            ? "text-green-600"
+                            : "text-red-600"
+                        }
+                      >
+                        {diagnosticResult.diagnostics.permissionTests
+                          .brandAssets.success
+                          ? "Working"
+                          : "Not Working"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Avatars Bucket:</span>
+                      <span
+                        className={
+                          diagnosticResult.diagnostics.permissionTests.avatars
+                            .success
+                            ? "text-green-600"
+                            : "text-red-600"
+                        }
+                      >
+                        {diagnosticResult.diagnostics.permissionTests.avatars
+                          .success
+                          ? "Working"
+                          : "Not Working"}
+                      </span>
+                    </div>
+                    <div className="bg-white p-2 rounded border border-gray-200 mt-2">
+                      <pre className="text-xs">
+                        {JSON.stringify(
+                          diagnosticResult.diagnostics.permissionTests,
+                          null,
+                          2
+                        )}
+                      </pre>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="text-xs font-bold uppercase text-gray-500 mb-1">
+                    RLS Policies
+                  </h4>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span>Storage Objects Access:</span>
+                      <span
+                        className={
+                          diagnosticResult.diagnostics.rlsTests.objects.success
+                            ? "text-green-600"
+                            : "text-red-600"
+                        }
+                      >
+                        {diagnosticResult.diagnostics.rlsTests.objects.success
+                          ? "Accessible"
+                          : "Restricted"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Storage Buckets Access:</span>
+                      <span
+                        className={
+                          diagnosticResult.diagnostics.rlsTests.buckets.success
+                            ? "text-green-600"
+                            : "text-red-600"
+                        }
+                      >
+                        {diagnosticResult.diagnostics.rlsTests.buckets.success
+                          ? "Accessible"
+                          : "Restricted"}
+                      </span>
+                    </div>
+                    <div className="bg-white p-2 rounded border border-gray-200 mt-2">
+                      <pre className="text-xs">
+                        {JSON.stringify(
+                          diagnosticResult.diagnostics.rlsTests,
+                          null,
+                          2
+                        )}
+                      </pre>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </CardContent>
+          <CardFooter>
+            <Button
+              onClick={runDiagnostics}
+              disabled={isDiagnosticLoading}
+              className="bg-oma-plum hover:bg-oma-plum/90 flex items-center gap-2"
+            >
+              <RefreshCw
+                className={`h-4 w-4 ${
+                  isDiagnosticLoading ? "animate-spin" : ""
+                }`}
+              />
+              {isDiagnosticLoading
+                ? "Running Diagnostics..."
+                : "Run Diagnostics"}
             </Button>
           </CardFooter>
         </Card>
