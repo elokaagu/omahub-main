@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "node build-override.js",
+    "build": "next build",
+    "build:custom": "node build-override.js",
     "start": "next start",
     "lint": "next lint",
     "postinstall": "patch-package",
