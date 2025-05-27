@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/navigation-menu";
 import { collections } from "@/lib/data/directory";
 import { useAuth } from "@/lib/context/AuthContext";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 const collectionItems = collections.map((category) => ({
   name: category,
@@ -125,8 +126,22 @@ export default function Header() {
               <NavigationMenuList>
                 <NavigationMenuItem>
                   <NavigationMenuTrigger className="bg-oma-plum text-white hover:bg-oma-plum/90 hover:text-white">
-                    <User className="h-4 w-4 mr-2" />
-                    My Account
+                    {user.avatar_url ? (
+                      <Avatar className="h-6 w-6 mr-2">
+                        <AvatarImage
+                          src={user.avatar_url}
+                          alt={`${user.first_name || ""} ${
+                            user.last_name || ""
+                          }`}
+                        />
+                        <AvatarFallback>
+                          <User className="h-4 w-4" />
+                        </AvatarFallback>
+                      </Avatar>
+                    ) : (
+                      <User className="h-4 w-4 mr-2" />
+                    )}
+                    {user.first_name ? `${user.first_name}` : "My Account"}
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
                     <ul className="grid w-[200px] gap-1 p-2 bg-white/80 backdrop-blur-sm">
@@ -277,6 +292,28 @@ export default function Header() {
 
               {user ? (
                 <>
+                  <div className="flex items-center gap-2 px-3 py-2">
+                    {user.avatar_url ? (
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage
+                          src={user.avatar_url}
+                          alt={`${user.first_name || ""} ${
+                            user.last_name || ""
+                          }`}
+                        />
+                        <AvatarFallback>
+                          <User className="h-4 w-4" />
+                        </AvatarFallback>
+                      </Avatar>
+                    ) : (
+                      <User className="h-5 w-5 text-gray-600" />
+                    )}
+                    <span className="text-sm font-medium">
+                      {user.first_name
+                        ? `${user.first_name} ${user.last_name || ""}`
+                        : user.email}
+                    </span>
+                  </div>
                   <Link
                     href="/profile"
                     className="block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-oma-black hover:bg-oma-beige"

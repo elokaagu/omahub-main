@@ -33,7 +33,3 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-
-# problematic API routes for build
-app/api/repair-images/route.ts
-app/api/migrate-images/route.ts

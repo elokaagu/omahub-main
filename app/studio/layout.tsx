@@ -18,6 +18,7 @@ import {
   Settings,
 } from "lucide-react";
 import { useState } from "react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 export default function StudioLayout({
   children,
@@ -80,12 +81,20 @@ export default function StudioLayout({
             </Link>
             {user && (
               <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-600">{user.email}</span>
-                <img
-                  src={user.avatar_url || "https://via.placeholder.com/32"}
-                  alt="User"
-                  className="w-8 h-8 rounded-full"
-                />
+                <span className="text-sm text-gray-600">
+                  {user.first_name
+                    ? `${user.first_name} ${user.last_name || ""}`
+                    : user.email}
+                </span>
+                <Avatar className="h-8 w-8">
+                  <AvatarImage
+                    src={user.avatar_url || ""}
+                    alt={user.first_name || "User"}
+                  />
+                  <AvatarFallback>
+                    <User className="h-4 w-4" />
+                  </AvatarFallback>
+                </Avatar>
               </div>
             )}
           </div>

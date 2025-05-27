@@ -18,16 +18,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { User as UserIcon, Save } from "lucide-react";
 import { FileUpload } from "@/components/ui/file-upload";
+import { useRouter } from "next/navigation";
 
 interface ProfileData extends User {
   // Extends the User type from authService
 }
 
 export default function ProfilePage() {
-  const { user } = useAuth();
+  const { user, refreshUserProfile } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     const initialize = async () => {
@@ -107,7 +109,16 @@ export default function ProfilePage() {
         avatar_url: profileData.avatar_url,
       });
 
-      toast.success("Profile updated successfully");
+      // Refresh the user data in AuthContext to update the header
+      await refreshUserProfile();
+
+      toast.success("Profile updated successfully", {
+        duration: 2000,
+        onAutoClose: () => {
+          // Force a page reload after the toast disappears to ensure all components update
+          window.location.reload();
+        },
+      });
     } catch (error) {
       console.error("Error updating profile:", error);
       toast.error("Failed to update profile");
