@@ -21,6 +21,7 @@ export default function SettingsPage() {
     string,
     number
   > | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleStorageSetup = async () => {
     setIsStorageLoading(true);
@@ -38,6 +39,7 @@ export default function SettingsPage() {
   const handleImageMigration = async () => {
     setIsMigrationLoading(true);
     setMigrationResult(null);
+    setErrorMessage(null);
 
     try {
       console.log("Starting image repair request...");
@@ -45,7 +47,9 @@ export default function SettingsPage() {
         method: "GET",
         headers: {
           Accept: "application/json",
+          "Cache-Control": "no-cache",
         },
+        cache: "no-store",
       });
 
       console.log("Response status:", response.status);
@@ -57,13 +61,24 @@ export default function SettingsPage() {
       const responseText = await response.text();
       console.log("Raw response:", responseText);
 
+      // Check if response is empty
+      if (!responseText || responseText.trim() === "") {
+        throw new Error("Empty response received from server");
+      }
+
+      // Handle possible extra characters in the response
+      let cleanResponse = responseText;
+      if (responseText.endsWith("%")) {
+        cleanResponse = responseText.slice(0, -1);
+      }
+
       let data;
       try {
-        data = JSON.parse(responseText);
+        data = JSON.parse(cleanResponse);
         console.log("Parsed response data:", data);
       } catch (parseError) {
         console.error("Failed to parse response as JSON:", parseError);
-        throw new Error("Invalid response format");
+        throw new Error("Invalid response format from server");
       }
 
       if (!response.ok) {
@@ -73,16 +88,19 @@ export default function SettingsPage() {
         );
       }
 
+      if (!data.result) {
+        console.error("Missing result data in response:", data);
+        throw new Error("Response missing required data");
+      }
+
       setMigrationResult(data.result);
       console.log("Successfully repaired images:", data.result);
-      toast.success("Image URLs repaired successfully");
+      toast.success(data.message || "Image URLs repaired successfully");
     } catch (error) {
       console.error("Error during image repair:", error);
-      toast.error(
-        `Failed to repair image URLs: ${
-          error instanceof Error ? error.message : String(error)
-        }`
-      );
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      setErrorMessage(errorMsg);
+      toast.error(`Failed to repair image URLs: ${errorMsg}`);
     } finally {
       setIsMigrationLoading(false);
     }
@@ -142,6 +160,13 @@ export default function SettingsPage() {
               incorrect format (/lovable-uploads/) to the correct Supabase
               storage URL format.
             </p>
+
+            {errorMessage && (
+              <div className="mt-4 p-4 bg-red-50 text-red-600 rounded-md border border-red-200">
+                <h3 className="font-medium text-sm mb-2">Error:</h3>
+                <p className="text-sm">{errorMessage}</p>
+              </div>
+            )}
 
             {migrationResult && (
               <div className="mt-4 p-4 bg-gray-50 rounded-md">

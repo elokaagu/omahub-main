@@ -22,7 +22,7 @@ export async function OPTIONS(request: NextRequest) {
     headers: {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "GET, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization, Accept",
     },
   });
 }
@@ -30,27 +30,31 @@ export async function OPTIONS(request: NextRequest) {
 export async function GET(request: NextRequest) {
   console.log("Migrate images API called");
 
+  const headers = {
+    "Access-Control-Allow-Origin": "*",
+    "Content-Type": "application/json",
+    "Cache-Control": "no-store, max-age=0",
+  };
+
   // During build time, just return a dummy response
   if (isBuildTime) {
     console.log("Running in build process - skipping actual image migration");
-    return NextResponse.json(
-      {
-        success: true,
-        message: "Build-time dummy response - actual migration runs at runtime",
-        result: {
-          brands: 0,
-          collections: 0,
-          products: 0,
-          profiles: 0,
-          total: 0,
-        },
+    const dummyResponse = {
+      success: true,
+      message: "Build-time dummy response - actual migration runs at runtime",
+      result: {
+        brands: 0,
+        collections: 0,
+        products: 0,
+        profiles: 0,
+        total: 0,
       },
-      {
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-        },
-      }
-    );
+    };
+
+    return new NextResponse(JSON.stringify(dummyResponse), {
+      status: 200,
+      headers,
+    });
   }
 
   try {
@@ -282,35 +286,30 @@ export async function GET(request: NextRequest) {
       result.brands + result.collections + result.products + result.profiles;
     console.log("Image migration completed:", result);
 
-    // Return response with CORS headers
-    return NextResponse.json(
-      {
-        success: true,
-        message: "Image URLs migrated successfully",
-        result,
-      },
-      {
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    // Create response object
+    const responseData = {
+      success: true,
+      message: "Image URLs migrated successfully",
+      result,
+    };
+
+    // Return response with CORS headers using NextResponse constructor
+    return new NextResponse(JSON.stringify(responseData), {
+      status: 200,
+      headers,
+    });
   } catch (error) {
     console.error("Error migrating images:", error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: "Image migration failed",
-        details: error instanceof Error ? error.message : String(error),
-      },
-      {
-        status: 500,
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Content-Type": "application/json",
-        },
-      }
-    );
+
+    const errorResponse = {
+      success: false,
+      error: "Image migration failed",
+      details: error instanceof Error ? error.message : String(error),
+    };
+
+    return new NextResponse(JSON.stringify(errorResponse), {
+      status: 500,
+      headers,
+    });
   }
 }
