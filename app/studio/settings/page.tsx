@@ -43,11 +43,15 @@ export default function SettingsPage() {
 
     try {
       console.log("Starting image repair request...");
-      const response = await fetch("/api/repair-images", {
+
+      // Use timestamp to prevent caching
+      const timestamp = new Date().getTime();
+      const response = await fetch(`/api/repair-images?t=${timestamp}`, {
         method: "GET",
         headers: {
           Accept: "application/json",
-          "Cache-Control": "no-cache",
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          Pragma: "no-cache",
         },
         cache: "no-store",
       });
@@ -58,6 +62,7 @@ export default function SettingsPage() {
         Object.fromEntries([...response.headers.entries()])
       );
 
+      // Get raw response text
       const responseText = await response.text();
       console.log("Raw response:", responseText);
 
@@ -66,18 +71,43 @@ export default function SettingsPage() {
         throw new Error("Empty response received from server");
       }
 
-      // Handle possible extra characters in the response
-      let cleanResponse = responseText;
-      if (responseText.endsWith("%")) {
-        cleanResponse = responseText.slice(0, -1);
+      // Clean the response string - remove any trailing non-JSON characters
+      let cleanResponse = responseText.trim();
+      // Remove trailing percentage or other non-JSON characters
+      while (
+        cleanResponse.length > 0 &&
+        ![
+          "}",
+          "]",
+          '"',
+          "'",
+          "0",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+        ].includes(cleanResponse[cleanResponse.length - 1])
+      ) {
+        cleanResponse = cleanResponse.slice(0, -1);
       }
 
+      // Parse the JSON
       let data;
       try {
         data = JSON.parse(cleanResponse);
         console.log("Parsed response data:", data);
       } catch (parseError) {
-        console.error("Failed to parse response as JSON:", parseError);
+        console.error(
+          "Failed to parse response as JSON:",
+          parseError,
+          "Response was:",
+          cleanResponse
+        );
         throw new Error("Invalid response format from server");
       }
 

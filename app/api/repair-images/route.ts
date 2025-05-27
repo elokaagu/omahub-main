@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { supabase } from "@/lib/supabase";
 import setupStorage from "@/lib/supabase-storage-setup";
 
@@ -17,7 +17,7 @@ export const revalidate = 0;
 
 // Handler for CORS preflight requests
 export async function OPTIONS(request: NextRequest) {
-  return new NextResponse(null, {
+  return new Response(null, {
     status: 200,
     headers: {
       "Access-Control-Allow-Origin": "*",
@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
       },
     };
 
-    return new NextResponse(JSON.stringify(dummyResponse), {
+    return new Response(JSON.stringify(dummyResponse), {
       status: 200,
       headers,
     });
@@ -257,8 +257,8 @@ export async function GET(request: NextRequest) {
       result,
     };
 
-    // Return response with CORS headers using NextResponse constructor
-    return new NextResponse(JSON.stringify(responseData), {
+    // Return pure Response object instead of NextResponse
+    return new Response(JSON.stringify(responseData), {
       status: 200,
       headers,
     });
@@ -271,7 +271,7 @@ export async function GET(request: NextRequest) {
       details: error instanceof Error ? error.message : String(error),
     };
 
-    return new NextResponse(JSON.stringify(errorResponse), {
+    return new Response(JSON.stringify(errorResponse), {
       status: 500,
       headers,
     });
