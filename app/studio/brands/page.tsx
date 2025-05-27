@@ -57,6 +57,7 @@ export default function BrandsPage() {
     setLoading(true);
     try {
       const data = await getAllBrands();
+      console.log("Fetched brands:", data.length, data);
       setBrands(data);
       setFilteredBrands(data);
     } catch (error) {
@@ -71,6 +72,11 @@ export default function BrandsPage() {
       `/studio/brands/${encodeURIComponent(brandId.trim().toLowerCase())}`
     );
   };
+
+  // Log filtered brands when they change
+  useEffect(() => {
+    console.log("Filtered brands:", filteredBrands.length, filteredBrands);
+  }, [filteredBrands]);
 
   return (
     <div>
@@ -126,6 +132,12 @@ export default function BrandsPage() {
         </div>
       ) : (
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="p-4 border-b border-gray-200">
+            <p className="text-sm text-gray-500">
+              Showing {filteredBrands.length} brand
+              {filteredBrands.length === 1 ? "" : "s"}
+            </p>
+          </div>
           <Table>
             <TableHeader>
               <TableRow>
@@ -152,6 +164,13 @@ export default function BrandsPage() {
                             src={brand.image}
                             alt={brand.name}
                             className="w-full h-full object-cover"
+                            onError={(e) => {
+                              console.error(
+                                `Image failed to load for ${brand.name}:`,
+                                brand.image
+                              );
+                              e.currentTarget.src = "/placeholder-image.jpg";
+                            }}
                           />
                         )}
                       </div>

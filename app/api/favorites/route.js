@@ -2,25 +2,27 @@ import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
-// Initialize Supabase client with service role key, fallback to anon key if not available
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+// Initialize Supabase client with proper environment variables
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 const supabaseServiceKey =
-  process.env.SUPABASE_SERVICE_ROLE_KEY ||
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  process.env.SUPABASE_SERVICE_ROLE_KEY || supabaseAnonKey;
 
 // Function to get Supabase client with user context
-const getSupabaseClient = async () => {
-  const cookieStore = cookies();
-  const supabaseAuthCookie = cookieStore.get("supabase-auth-token");
+const getSupabaseClient = () => {
+  // Use service role key for API operations if available, fallback to anon key
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.error("Required Supabase environment variables are missing");
+    throw new Error("Supabase configuration is missing");
+  }
 
-  // Use service role key for API operations
   return createClient(supabaseUrl, supabaseServiceKey);
 };
 
 // GET endpoint to retrieve user favorites
 export async function GET(request) {
   try {
-    const supabase = await getSupabaseClient();
+    const supabase = getSupabaseClient();
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get("userId");
 
@@ -80,7 +82,7 @@ export async function GET(request) {
 // POST endpoint to add a favorite
 export async function POST(request) {
   try {
-    const supabase = await getSupabaseClient();
+    const supabase = getSupabaseClient();
     const body = await request.json();
     const { userId, brandId } = body;
 
@@ -143,7 +145,7 @@ export async function POST(request) {
 // DELETE endpoint to remove a favorite
 export async function DELETE(request) {
   try {
-    const supabase = await getSupabaseClient();
+    const supabase = getSupabaseClient();
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get("userId");
     const brandId = searchParams.get("brandId");

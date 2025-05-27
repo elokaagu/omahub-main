@@ -1,23 +1,7 @@
-import { supabase } from "../supabase";
-
-export interface Product {
-  id: string;
-  title: string;
-  description: string;
-  price: number;
-  sale_price?: number;
-  image: string;
-  brand_id: string;
-  collection_id?: string;
-  category: string;
-  in_stock: boolean;
-  sizes?: string[];
-  colors?: string[];
-  created_at: string;
-}
+import { supabase, Product } from "../supabase";
 
 /**
- * Fetch all products from the database
+ * Fetch all products
  */
 export async function getAllProducts(): Promise<Product[]> {
   const { data, error } = await supabase.from("products").select("*");
@@ -31,9 +15,48 @@ export async function getAllProducts(): Promise<Product[]> {
 }
 
 /**
- * Fetch a single product by ID
+ * Fetch products by brand ID
  */
-export async function getProductById(id: string): Promise<Product | null> {
+export async function getProductsByBrand(brandId: string): Promise<Product[]> {
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .eq("brand_id", brandId);
+
+  if (error) {
+    console.error(`Error fetching products for brand ${brandId}:`, error);
+    throw error;
+  }
+
+  return data || [];
+}
+
+/**
+ * Fetch products by collection ID
+ */
+export async function getProductsByCollection(
+  collectionId: string
+): Promise<Product[]> {
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .eq("collection_id", collectionId);
+
+  if (error) {
+    console.error(
+      `Error fetching products for collection ${collectionId}:`,
+      error
+    );
+    throw error;
+  }
+
+  return data || [];
+}
+
+/**
+ * Get a single product by ID
+ */
+export async function getProduct(id: string): Promise<Product | null> {
   const { data, error } = await supabase
     .from("products")
     .select("*")
@@ -52,11 +75,11 @@ export async function getProductById(id: string): Promise<Product | null> {
  * Create a new product
  */
 export async function createProduct(
-  productData: Omit<Product, "id" | "created_at">
-): Promise<Product | null> {
+  product: Omit<Product, "id">
+): Promise<Product> {
   const { data, error } = await supabase
     .from("products")
-    .insert([productData])
+    .insert(product)
     .select()
     .single();
 
@@ -73,11 +96,11 @@ export async function createProduct(
  */
 export async function updateProduct(
   id: string,
-  productData: Partial<Omit<Product, "id" | "created_at">>
-): Promise<Product | null> {
+  updates: Partial<Omit<Product, "id">>
+): Promise<Product> {
   const { data, error } = await supabase
     .from("products")
-    .update(productData)
+    .update(updates)
     .eq("id", id)
     .select()
     .single();
@@ -103,65 +126,7 @@ export async function deleteProduct(id: string): Promise<void> {
 }
 
 /**
- * Fetch products for a specific brand
- */
-export async function getProductsByBrand(brandId: string): Promise<Product[]> {
-  const { data, error } = await supabase
-    .from("products")
-    .select("*")
-    .eq("brand_id", brandId);
-
-  if (error) {
-    console.error(`Error fetching products for brand ${brandId}:`, error);
-    throw error;
-  }
-
-  return data || [];
-}
-
-/**
- * Fetch products for a specific collection
- */
-export async function getProductsByCollection(
-  collectionId: string
-): Promise<Product[]> {
-  const { data, error } = await supabase
-    .from("products")
-    .select("*")
-    .eq("collection_id", collectionId);
-
-  if (error) {
-    console.error(
-      `Error fetching products for collection ${collectionId}:`,
-      error
-    );
-    throw error;
-  }
-
-  return data || [];
-}
-
-/**
- * Fetch products by category
- */
-export async function getProductsByCategory(
-  category: string
-): Promise<Product[]> {
-  const { data, error } = await supabase
-    .from("products")
-    .select("*")
-    .eq("category", category);
-
-  if (error) {
-    console.error(`Error fetching products in category ${category}:`, error);
-    throw error;
-  }
-
-  return data || [];
-}
-
-/**
- * Search products
+ * Search products by title or description
  */
 export async function searchProducts(query: string): Promise<Product[]> {
   const { data, error } = await supabase
@@ -171,6 +136,27 @@ export async function searchProducts(query: string): Promise<Product[]> {
 
   if (error) {
     console.error(`Error searching products with query ${query}:`, error);
+    throw error;
+  }
+
+  return data || [];
+}
+
+/**
+ * Get featured products (can be customized based on your business logic)
+ */
+export async function getFeaturedProducts(
+  limit: number = 8
+): Promise<Product[]> {
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .eq("in_stock", true)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    console.error("Error fetching featured products:", error);
     throw error;
   }
 

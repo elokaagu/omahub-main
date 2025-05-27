@@ -24,7 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft, Save, Globe, Instagram } from "lucide-react";
 import Link from "next/link";
 
 // Brand categories
@@ -44,6 +44,12 @@ const CATEGORIES = [
 // Price range options
 const PRICE_RANGES = ["$", "$$", "$$$", "$$$$", "$$$$$"];
 
+// Generate founding year options from 1950 to current year
+const FOUNDING_YEARS = Array.from(
+  { length: new Date().getFullYear() - 1950 + 1 },
+  (_, i) => (1950 + i).toString()
+);
+
 export default function CreateBrandPage() {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
@@ -56,6 +62,9 @@ export default function CreateBrandPage() {
     category: "",
     image: "",
     is_verified: false,
+    website: "",
+    instagram: "",
+    founded_year: "",
   });
 
   const handleInputChange = (
@@ -122,6 +131,9 @@ export default function CreateBrandPage() {
         category: formData.category,
         image: formData.image,
         is_verified: false,
+        website: formData.website || undefined,
+        instagram: formData.instagram || undefined,
+        founded_year: formData.founded_year || undefined,
       });
 
       toast.success("Brand created successfully!");
@@ -257,16 +269,74 @@ export default function CreateBrandPage() {
                     required
                   />
                 </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="website">Website</Label>
+                    <div className="flex items-center rounded-md border border-input ring-offset-background">
+                      <div className="flex items-center justify-center h-9 w-9 border-r">
+                        <Globe className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                      <Input
+                        id="website"
+                        name="website"
+                        value={formData.website}
+                        onChange={handleInputChange}
+                        placeholder="https://example.com"
+                        className="border-0"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="instagram">Instagram</Label>
+                    <div className="flex items-center rounded-md border border-input ring-offset-background">
+                      <div className="flex items-center justify-center h-9 w-9 border-r">
+                        <Instagram className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                      <Input
+                        id="instagram"
+                        name="instagram"
+                        value={formData.instagram}
+                        onChange={handleInputChange}
+                        placeholder="@username"
+                        className="border-0"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="founded_year">Founded Year</Label>
+                  <Select
+                    value={formData.founded_year}
+                    onValueChange={(value) =>
+                      handleSelectChange("founded_year", value)
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select founding year" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Not specified</SelectItem>
+                      {FOUNDING_YEARS.map((year) => (
+                        <SelectItem key={year} value={year}>
+                          {year}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </CardContent>
             </Card>
           </div>
 
-          <div className="space-y-6">
+          <div>
             <Card>
               <CardHeader>
                 <CardTitle>Brand Image</CardTitle>
                 <CardDescription>
-                  Upload a main image for the brand
+                  Upload a logo or representative image
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -274,31 +344,45 @@ export default function CreateBrandPage() {
                   onUploadComplete={handleImageUpload}
                   bucket="brand-assets"
                   path="brands"
+                  accept={{
+                    "image/png": [".png"],
+                    "image/jpeg": [".jpg", ".jpeg"],
+                  }}
+                  maxSize={5}
                 />
+                {formData.image && (
+                  <div className="mt-4">
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Image Preview
+                    </p>
+                    <div className="relative aspect-square w-full overflow-hidden rounded-lg border border-border">
+                      <img
+                        src={formData.image}
+                        alt="Brand preview"
+                        className="object-cover"
+                      />
+                    </div>
+                  </div>
+                )}
               </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Actions</CardTitle>
-              </CardHeader>
-              <CardFooter className="flex flex-col space-y-2">
+              <CardFooter>
                 <Button
                   type="submit"
-                  className="w-full bg-oma-plum hover:bg-oma-plum/90 flex items-center gap-2"
-                  disabled={submitting}
-                >
-                  <Save className="h-4 w-4" />
-                  {submitting ? "Creating..." : "Create Brand"}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
                   className="w-full"
-                  onClick={() => router.push("/studio/brands")}
                   disabled={submitting}
+                  onClick={handleSubmit}
                 >
-                  Cancel
+                  {submitting ? (
+                    <span className="flex items-center gap-2">
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-r-transparent" />
+                      Creating...
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-2">
+                      <Save className="h-4 w-4" />
+                      Create Brand
+                    </span>
+                  )}
                 </Button>
               </CardFooter>
             </Card>

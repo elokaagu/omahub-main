@@ -12,8 +12,8 @@ interface FileUploadProps {
   defaultValue?: string;
   bucket?: string;
   path?: string;
-  accept?: string;
-  maxSizeMB?: number;
+  accept?: string | Record<string, string[]>;
+  maxSize?: number;
   className?: string;
 }
 
@@ -23,13 +23,21 @@ export function FileUpload({
   bucket = "brand-assets",
   path = "",
   accept = "image/jpeg, image/png, image/webp",
-  maxSizeMB = 5,
+  maxSize = 5,
   className = "",
 }: FileUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState<string | null>(defaultValue || null);
   const [debugInfo, setDebugInfo] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Process accept parameter to handle both string and object formats
+  const acceptString =
+    typeof accept === "string"
+      ? accept
+      : Object.entries(accept)
+          .map(([mimeType, extensions]) => extensions.join(", "))
+          .join(", ");
 
   // Create a fallback bucket if the specified one doesn't exist
   const fallbackBucket = "brand-assets";
@@ -141,8 +149,8 @@ export function FileUpload({
 
     // Validate file size
     const fileSizeMB = file.size / (1024 * 1024);
-    if (fileSizeMB > maxSizeMB) {
-      toast.error(`File is too large. Maximum size is ${maxSizeMB}MB.`);
+    if (fileSizeMB > maxSize) {
+      toast.error(`File is too large. Maximum size is ${maxSize}MB.`);
       return;
     }
 
@@ -219,7 +227,7 @@ export function FileUpload({
         type="file"
         ref={fileInputRef}
         onChange={handleFileChange}
-        accept={accept}
+        accept={acceptString}
         className="hidden"
       />
 
@@ -270,7 +278,7 @@ export function FileUpload({
                 Click to upload an image
               </p>
               <p className="text-xs text-gray-500 mt-1">
-                PNG, JPG or WEBP (max. {maxSizeMB}MB)
+                PNG, JPG or WEBP (max. {maxSize}MB)
               </p>
             </div>
             <Button
