@@ -15,7 +15,7 @@ type AuthContextType = {
   loading: boolean;
   error: Error | null;
   signOut: () => Promise<void>;
-  refreshUserProfile: () => Promise<void>;
+  refreshUserProfile: () => Promise<boolean>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -57,8 +57,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Function to manually refresh the user profile
   const refreshUserProfile = async () => {
     if (user?.id) {
-      await loadUserWithProfile(user.id, user.email);
+      try {
+        // First clear current user data to prevent stale data persistence
+        setUser((prevUser) => {
+          if (!prevUser) return null;
+          return {
+            ...prevUser,
+            // Keep basic auth data but clear profile data that will be refreshed
+            avatar_url: undefined,
+            first_name: undefined,
+            last_name: undefined,
+          };
+        });
+
+        // Add a small delay to ensure UI updates before fetching new data
+        await new Promise((resolve) => setTimeout(resolve, 100));
+
+        // Now fetch fresh profile data
+        await loadUserWithProfile(user.id, user.email);
+        return true;
+      } catch (err) {
+        console.error("Error refreshing user profile:", err);
+        return false;
+      }
     }
+    return false;
   };
 
   useEffect(() => {

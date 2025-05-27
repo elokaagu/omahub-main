@@ -112,13 +112,10 @@ export default function ProfilePage() {
       // Refresh the user data in AuthContext to update the header
       await refreshUserProfile();
 
-      toast.success("Profile updated successfully", {
-        duration: 2000,
-        onAutoClose: () => {
-          // Force a page reload after the toast disappears to ensure all components update
-          window.location.reload();
-        },
-      });
+      toast.success("Profile updated successfully");
+
+      // No need to force a page reload which can cause the "saving forever" issue
+      // Just let the component state update naturally
     } catch (error) {
       console.error("Error updating profile:", error);
       toast.error("Failed to update profile");

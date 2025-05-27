@@ -51,77 +51,83 @@ export function FileUpload({
       path: filePath,
     });
 
-    try {
-      // Try uploading to the specified bucket
-      debugLog(
-        `Attempting upload to primary bucket: ${bucket}`,
-        LogLevel.DEBUG
-      );
-      const { data, error } = await supabase.storage
-        .from(bucket)
-        .upload(filePath, file, {
-          cacheControl: "3600",
-          upsert: true,
-        });
+    // Retry mechanism for uploads
+    const maxRetries = 2;
+    let retryCount = 0;
 
-      // If there's an error, try the fallback bucket
-      if (error) {
+    async function attemptUpload(
+      currentBucket: string
+    ): Promise<{ publicUrl: string; usedBucket: string }> {
+      try {
         debugLog(
-          `Error uploading to ${bucket}, trying fallback bucket ${fallbackBucket}`,
-          LogLevel.WARNING,
-          extractErrorDetails(error)
-        );
-
-        // Try fallback bucket
-        debugLog(
-          `Attempting upload to fallback bucket: ${fallbackBucket}`,
+          `Attempting upload to bucket: ${currentBucket} (attempt ${
+            retryCount + 1
+          })`,
           LogLevel.DEBUG
         );
-        const fallbackResult = await supabase.storage
-          .from(fallbackBucket)
+        const { data, error } = await supabase.storage
+          .from(currentBucket)
           .upload(filePath, file, {
             cacheControl: "3600",
             upsert: true,
           });
 
-        if (fallbackResult.error) {
-          debugLog(
-            "Error uploading file to fallback bucket",
-            LogLevel.ERROR,
-            extractErrorDetails(fallbackResult.error)
-          );
-          throw fallbackResult.error;
+        if (error) {
+          throw error;
         }
 
-        // Get public URL from fallback bucket
-        debugLog(`Getting public URL from fallback bucket`, LogLevel.DEBUG);
-        const { data: fallbackUrlData } = supabase.storage
-          .from(fallbackBucket)
-          .getPublicUrl(fallbackResult.data.path);
+        // Get public URL
+        const { data: urlData } = supabase.storage
+          .from(currentBucket)
+          .getPublicUrl(data.path);
 
+        debugLog(`Upload successful to ${currentBucket}`, LogLevel.INFO);
+        return { publicUrl: urlData.publicUrl, usedBucket: currentBucket };
+      } catch (error) {
         debugLog(
-          `Public URL retrieved successfully`,
-          LogLevel.INFO,
-          fallbackUrlData
+          `Error uploading to ${currentBucket}`,
+          LogLevel.WARNING,
+          extractErrorDetails(error)
         );
-        return fallbackUrlData.publicUrl;
+        throw error;
       }
+    }
 
-      // Get public URL from original bucket
-      debugLog(`Getting public URL from primary bucket`, LogLevel.DEBUG);
-      const { data: urlData } = supabase.storage
-        .from(bucket)
-        .getPublicUrl(data.path);
+    try {
+      // Try primary bucket first
+      try {
+        const result = await attemptUpload(bucket);
+        return result.publicUrl;
+      } catch (primaryError) {
+        debugLog(
+          `Primary bucket ${bucket} failed, trying fallback`,
+          LogLevel.WARNING
+        );
 
-      debugLog(`Public URL retrieved successfully`, LogLevel.INFO, urlData);
-      return urlData.publicUrl;
+        // If primary bucket fails and we haven't exhausted retries, try fallback
+        if (retryCount < maxRetries) {
+          retryCount++;
+          // Try fallback bucket
+          try {
+            const result = await attemptUpload(fallbackBucket);
+            return result.publicUrl;
+          } catch (fallbackError) {
+            // If both primary and fallback fail, and we have retries left, try once more with primary
+            if (retryCount < maxRetries) {
+              retryCount++;
+              // One last attempt with original bucket
+              const result = await attemptUpload(bucket);
+              return result.publicUrl;
+            }
+            throw fallbackError;
+          }
+        }
+        throw primaryError;
+      }
     } catch (error) {
       const errorDetails = extractErrorDetails(error);
-      debugLog("Upload error", LogLevel.ERROR, errorDetails);
-
-      // Save debug info to state for displaying to user
+      debugLog("All upload attempts failed", LogLevel.ERROR, errorDetails);
       setDebugInfo(JSON.stringify(errorDetails, null, 2));
-
       throw error;
     }
   };
