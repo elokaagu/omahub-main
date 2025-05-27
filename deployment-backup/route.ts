@@ -1,0 +1,15 @@
+
+import { NextRequest, NextResponse } from "next/server";
+
+// Mark as dynamic to ensure it's not statically generated
+export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
+export const revalidate = 0;
+
+export async function GET(request: NextRequest) {
+  return NextResponse.json({
+    success: true,
+    message: "This is a placeholder response for build time",
+    result: { total: 0, brands: 0, collections: 0, products: 0, profiles: 0 }
+  });
+}
