@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "npm run build",
+  "buildCommand": "CI=false npm run build",
   "devCommand": "npm run dev",
   "installCommand": "npm install",
   "framework": "nextjs",
@@ -15,12 +15,14 @@
   "build": {
     "env": {
       "NODE_OPTIONS": "--no-warnings",
-      "VERCEL_BUILD_STEP": "true"
+      "VERCEL_BUILD_STEP": "true",
+      "CI": "false"
     }
   },
   "env": {
     "NODE_OPTIONS": "--no-warnings",
-    "VERCEL_BUILD_STEP": "true"
+    "VERCEL_BUILD_STEP": "true",
+    "CI": "false"
   },
   "routes": [
     {
@@ -33,6 +35,7 @@
     }
   ],
   "github": {
-    "silent": true
+    "silent": true,
+    "autoJobCancelation": true
   }
 }
