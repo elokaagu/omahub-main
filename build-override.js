@@ -3,6 +3,10 @@ const { execSync } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 
+// Check if we're running on Vercel
+const isVercel = process.env.VERCEL === "1" || process.env.VERCEL === "true";
+console.log(`Running build in ${isVercel ? "Vercel" : "local"} environment`);
+
 // Create a .vercelignore file if it doesn't exist
 console.log("Setting up .vercelignore file...");
 const vercelIgnorePath = ".vercelignore";
@@ -96,13 +100,60 @@ if (fs.existsSync(nextConfigPath)) {
   console.log(`Updated ${nextConfigPath} for build`);
 }
 
+// Set environment variables for the build
+process.env.VERCEL_BUILD_STEP = "true";
+process.env.CI = "false";
+if (!process.env.NODE_OPTIONS) {
+  process.env.NODE_OPTIONS = "--no-warnings";
+}
+
+// Determine the build command based on environment
+const buildCommand = isVercel
+  ? "CI=false NODE_OPTIONS=--no-warnings next build"
+  : "NODE_OPTIONS=--no-warnings next build";
+
 // Run the actual build
 try {
-  console.log("Running build with NODE_OPTIONS=--no-warnings...");
-  execSync("NODE_OPTIONS=--no-warnings next build", { stdio: "inherit" });
+  console.log(`Running build with command: ${buildCommand}`);
+  execSync(buildCommand, {
+    stdio: "inherit",
+    env: {
+      ...process.env,
+      VERCEL_BUILD_STEP: "true",
+      CI: "false",
+    },
+  });
   console.log("Build completed successfully!");
 } catch (error) {
   console.error("Build failed:", error.message);
+
+  // Even if the build fails, try to restore original files
+  console.log("Attempting to restore original files despite build failure...");
+  problematicRoutes.forEach((routePath) => {
+    const backupPath = `${routePath}.bak`;
+    if (fs.existsSync(backupPath)) {
+      try {
+        fs.copyFileSync(backupPath, routePath);
+        fs.unlinkSync(backupPath);
+        console.log(`Original route restored: ${routePath}`);
+      } catch (restoreError) {
+        console.error(`Failed to restore ${routePath}:`, restoreError);
+      }
+    }
+  });
+
+  // Restore original next.config.js
+  const backupConfigPath = `${nextConfigPath}.bak`;
+  if (fs.existsSync(backupConfigPath)) {
+    try {
+      fs.copyFileSync(backupConfigPath, nextConfigPath);
+      fs.unlinkSync(backupConfigPath);
+      console.log(`Original ${nextConfigPath} restored`);
+    } catch (restoreError) {
+      console.error(`Failed to restore ${nextConfigPath}:`, restoreError);
+    }
+  }
+
   process.exit(1);
 } finally {
   // Restore original files

@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "next lint",
     "postinstall": "patch-package",
-    "deploy": "node deploy.js && npx vercel --prod"
+    "deploy": "node deploy.js && npx vercel --prod",
+    "deploy:ci": "CI=false NODE_OPTIONS=\"--no-warnings\" npx vercel --prod --build-env VERCEL_BUILD_STEP=true --build-env CI=false --build-env NODE_OPTIONS=\"--no-warnings\"",
+    "build:vercel": "CI=false NODE_OPTIONS=\"--no-warnings\" next build"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
