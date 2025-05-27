@@ -44,6 +44,10 @@ export default function SettingsPage() {
     try {
       console.log("Starting image repair request...");
 
+      // Create a new AbortController
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
       // Use timestamp to prevent caching
       const timestamp = new Date().getTime();
       const response = await fetch(`/api/repair-images?t=${timestamp}`, {
@@ -54,7 +58,11 @@ export default function SettingsPage() {
           Pragma: "no-cache",
         },
         cache: "no-store",
+        signal: controller.signal,
       });
+
+      // Clear the timeout since the request completed
+      clearTimeout(timeoutId);
 
       console.log("Response status:", response.status);
       console.log(
@@ -73,6 +81,10 @@ export default function SettingsPage() {
 
       // Clean the response string - remove any trailing non-JSON characters
       let cleanResponse = responseText.trim();
+
+      // Remove any non-printable characters
+      cleanResponse = cleanResponse.replace(/[^\x20-\x7E]/g, "");
+
       // Remove trailing percentage or other non-JSON characters
       while (
         cleanResponse.length > 0 &&

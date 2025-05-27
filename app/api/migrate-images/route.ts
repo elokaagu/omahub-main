@@ -15,46 +15,46 @@ export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 export const revalidate = 0;
 
+// Simple CORS headers
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, Accept",
+  "Cache-Control": "no-store, max-age=0",
+  "Content-Type": "application/json",
+};
+
 // Handler for CORS preflight requests
-export async function OPTIONS(request: NextRequest) {
+export async function OPTIONS() {
   return new Response(null, {
     status: 200,
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type, Authorization, Accept",
-    },
+    headers: corsHeaders,
   });
 }
 
 export async function GET(request: NextRequest) {
   console.log("Migrate images API called");
 
-  const headers = {
-    "Access-Control-Allow-Origin": "*",
-    "Content-Type": "application/json",
-    "Cache-Control": "no-store, max-age=0",
-  };
-
   // During build time, just return a dummy response
   if (isBuildTime) {
     console.log("Running in build process - skipping actual image migration");
-    const dummyResponse = {
-      success: true,
-      message: "Build-time dummy response - actual migration runs at runtime",
-      result: {
-        brands: 0,
-        collections: 0,
-        products: 0,
-        profiles: 0,
-        total: 0,
-      },
-    };
-
-    return new Response(JSON.stringify(dummyResponse), {
-      status: 200,
-      headers,
-    });
+    return new Response(
+      JSON.stringify({
+        success: true,
+        message: "Build-time dummy response - actual migration runs at runtime",
+        result: {
+          brands: 0,
+          collections: 0,
+          products: 0,
+          profiles: 0,
+          total: 0,
+        },
+      }),
+      {
+        status: 200,
+        headers: corsHeaders,
+      }
+    );
   }
 
   try {
@@ -286,30 +286,31 @@ export async function GET(request: NextRequest) {
       result.brands + result.collections + result.products + result.profiles;
     console.log("Image migration completed:", result);
 
-    // Create response object
-    const responseData = {
-      success: true,
-      message: "Image URLs migrated successfully",
-      result,
-    };
-
-    // Return pure Response object instead of NextResponse
-    return new Response(JSON.stringify(responseData), {
-      status: 200,
-      headers,
-    });
+    // Return a simple Response object
+    return new Response(
+      JSON.stringify({
+        success: true,
+        message: "Image URLs migrated successfully",
+        result,
+      }),
+      {
+        status: 200,
+        headers: corsHeaders,
+      }
+    );
   } catch (error) {
     console.error("Error migrating images:", error);
 
-    const errorResponse = {
-      success: false,
-      error: "Image migration failed",
-      details: error instanceof Error ? error.message : String(error),
-    };
-
-    return new Response(JSON.stringify(errorResponse), {
-      status: 500,
-      headers,
-    });
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: "Image migration failed",
+        details: error instanceof Error ? error.message : String(error),
+      }),
+      {
+        status: 500,
+        headers: corsHeaders,
+      }
+    );
   }
 }
