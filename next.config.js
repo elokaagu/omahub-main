@@ -54,15 +54,6 @@ const nextConfig = {
       exprContextCritical: false,
     };
 
-    // Add environment variables to webpack
-    config.plugins.push(
-      new (require("webpack").DefinePlugin)({
-        "process.env.VERCEL_BUILD_STEP": JSON.stringify(
-          process.env.VERCEL ? "true" : "false"
-        ),
-      })
-    );
-
     return config;
   },
   // Explicitly define runtime
@@ -72,5 +63,5 @@ const nextConfig = {
   },
 };
 
-nextConfig.env = { ...nextConfig.env, VERCEL_BUILD_STEP: "true" };
+// Do not add duplicate environment variables
 module.exports = nextConfig;

@@ -15,21 +15,50 @@ export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 export const revalidate = 0;
 
+// Handler for CORS preflight requests
+export async function OPTIONS(request: NextRequest) {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    },
+  });
+}
+
 export async function GET(request: NextRequest) {
+  console.log("Repair images API called");
+
   // During build time, just return a dummy response
   if (isBuildTime) {
     console.log("Running in build process - skipping actual image repair");
-    return NextResponse.json({
-      success: true,
-      message: "Build-time dummy response - actual repair runs at runtime",
-      result: { brands: 0, collections: 0, products: 0, profiles: 0, total: 0 },
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        message: "Build-time dummy response - actual repair runs at runtime",
+        result: {
+          brands: 0,
+          collections: 0,
+          products: 0,
+          profiles: 0,
+          total: 0,
+        },
+      },
+      {
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+        },
+      }
+    );
   }
 
   try {
     // Setup storage to ensure buckets exist
     try {
+      console.log("Setting up storage buckets...");
       await setupStorage();
+      console.log("Storage setup completed");
     } catch (storageError) {
       console.warn(
         "Storage setup failed, but continuing with image repair:",
@@ -49,11 +78,13 @@ export async function GET(request: NextRequest) {
 
     // Process brands
     try {
+      console.log("Fetching brands...");
       const brands = await supabase.from("brands").select("id, image");
 
       if (brands.error) {
         console.warn(`Error fetching brands: ${brands.error.message}`);
       } else if (brands.data && brands.data.length > 0) {
+        console.log(`Found ${brands.data.length} brands to check`);
         let brandFixCount = 0;
         for (const brand of brands.data) {
           if (brand.image && brand.image.includes("/lovable-uploads/")) {
@@ -63,6 +94,9 @@ export async function GET(request: NextRequest) {
 
             // Create proper Supabase URL
             const newUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/brands/${fileName}`;
+            console.log(
+              `Updating brand ${brand.id} image from "${brand.image}" to "${newUrl}"`
+            );
 
             // Update the record
             const updateResult = await supabase
@@ -70,10 +104,21 @@ export async function GET(request: NextRequest) {
               .update({ image: newUrl })
               .eq("id", brand.id);
 
-            if (!updateResult.error) brandFixCount++;
+            if (updateResult.error) {
+              console.warn(
+                `Error updating brand ${brand.id}:`,
+                updateResult.error
+              );
+            } else {
+              console.log(`Successfully updated brand ${brand.id}`);
+              brandFixCount++;
+            }
           }
         }
+        console.log(`Updated ${brandFixCount} brand images`);
         result.brands = brandFixCount;
+      } else {
+        console.log("No brands found or no brands to update");
       }
     } catch (brandsError) {
       console.warn("Error processing brands:", brandsError);
@@ -81,6 +126,7 @@ export async function GET(request: NextRequest) {
 
     // Process collections
     try {
+      console.log("Fetching collections...");
       const collections = await supabase
         .from("collections")
         .select("id, image");
@@ -90,6 +136,7 @@ export async function GET(request: NextRequest) {
           `Error fetching collections: ${collections.error.message}`
         );
       } else if (collections.data && collections.data.length > 0) {
+        console.log(`Found ${collections.data.length} collections to check`);
         let collectionFixCount = 0;
         for (const collection of collections.data) {
           if (
@@ -120,11 +167,13 @@ export async function GET(request: NextRequest) {
 
     // Process products
     try {
+      console.log("Fetching products...");
       const products = await supabase.from("products").select("id, image");
 
       if (products.error) {
         console.warn(`Error fetching products: ${products.error.message}`);
       } else if (products.data && products.data.length > 0) {
+        console.log(`Found ${products.data.length} products to check`);
         let productFixCount = 0;
         for (const product of products.data) {
           if (product.image && product.image.includes("/lovable-uploads/")) {
@@ -144,7 +193,10 @@ export async function GET(request: NextRequest) {
             if (!updateResult.error) productFixCount++;
           }
         }
+        console.log(`Updated ${productFixCount} product images`);
         result.products = productFixCount;
+      } else {
+        console.log("No products found or no products to update");
       }
     } catch (productsError) {
       console.warn("Error processing products:", productsError);
@@ -152,11 +204,13 @@ export async function GET(request: NextRequest) {
 
     // Process profiles
     try {
+      console.log("Fetching profiles...");
       const profiles = await supabase.from("profiles").select("id, avatar_url");
 
       if (profiles.error) {
         console.warn(`Error fetching profiles: ${profiles.error.message}`);
       } else if (profiles.data && profiles.data.length > 0) {
+        console.log(`Found ${profiles.data.length} profiles to check`);
         let profileFixCount = 0;
         for (const profile of profiles.data) {
           if (
@@ -179,7 +233,10 @@ export async function GET(request: NextRequest) {
             if (!updateResult.error) profileFixCount++;
           }
         }
+        console.log(`Updated ${profileFixCount} profile images`);
         result.profiles = profileFixCount;
+      } else {
+        console.log("No profiles found or no profiles to update");
       }
     } catch (profilesError) {
       console.warn("Error processing profiles:", profilesError);
@@ -189,19 +246,35 @@ export async function GET(request: NextRequest) {
       result.brands + result.collections + result.products + result.profiles;
     console.log("Image repair completed:", result);
 
-    return NextResponse.json({
-      success: true,
-      message: "Image URLs repaired successfully",
-      result,
-    });
+    // Return response with CORS headers
+    return NextResponse.json(
+      {
+        success: true,
+        message: "Image URLs repaired successfully",
+        result,
+      },
+      {
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Content-Type": "application/json",
+        },
+      }
+    );
   } catch (error) {
     console.error("Error repairing images:", error);
     return NextResponse.json(
       {
+        success: false,
         error: "Image repair failed",
         details: error instanceof Error ? error.message : String(error),
       },
-      { status: 500 }
+      {
+        status: 500,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Content-Type": "application/json",
+        },
+      }
     );
   }
 }

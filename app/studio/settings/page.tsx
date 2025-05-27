@@ -40,19 +40,49 @@ export default function SettingsPage() {
     setMigrationResult(null);
 
     try {
-      const response = await fetch("/api/repair-images");
+      console.log("Starting image repair request...");
+      const response = await fetch("/api/repair-images", {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+        },
+      });
 
-      const data = await response.json();
+      console.log("Response status:", response.status);
+      console.log(
+        "Response headers:",
+        Object.fromEntries([...response.headers.entries()])
+      );
+
+      const responseText = await response.text();
+      console.log("Raw response:", responseText);
+
+      let data;
+      try {
+        data = JSON.parse(responseText);
+        console.log("Parsed response data:", data);
+      } catch (parseError) {
+        console.error("Failed to parse response as JSON:", parseError);
+        throw new Error("Invalid response format");
+      }
 
       if (!response.ok) {
-        throw new Error(data.error || "Image repair failed");
+        console.error("Error response from server:", data);
+        throw new Error(
+          data.error || `Image repair failed with status ${response.status}`
+        );
       }
 
       setMigrationResult(data.result);
+      console.log("Successfully repaired images:", data.result);
       toast.success("Image URLs repaired successfully");
     } catch (error) {
       console.error("Error during image repair:", error);
-      toast.error("Failed to repair image URLs");
+      toast.error(
+        `Failed to repair image URLs: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
     } finally {
       setIsMigrationLoading(false);
     }
