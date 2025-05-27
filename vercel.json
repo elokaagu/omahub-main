@@ -14,10 +14,25 @@
   ],
   "build": {
     "env": {
-      "NODE_OPTIONS": "--no-warnings"
+      "NODE_OPTIONS": "--no-warnings",
+      "VERCEL_BUILD_STEP": "true"
     }
   },
   "env": {
-    "NODE_OPTIONS": "--no-warnings"
+    "NODE_OPTIONS": "--no-warnings",
+    "VERCEL_BUILD_STEP": "true"
+  },
+  "routes": [
+    {
+      "src": "/api/migrate-images(.*)",
+      "dest": "/api/migrate-images"
+    },
+    {
+      "src": "/api/repair-images(.*)",
+      "dest": "/api/repair-images"
+    }
+  ],
+  "github": {
+    "silent": true
   }
 }

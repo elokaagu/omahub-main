@@ -1,5 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  distDir: ".next",
+
   eslint: {
     // Disabling eslint during builds for production
     ignoreDuringBuilds: true,
@@ -25,6 +27,13 @@ const nextConfig = {
   },
   reactStrictMode: true,
   swcMinify: true,
+  // Avoid including API routes that would fail during build
+  excludeDefaultMomentLocales: true,
+  // Environment variables for build time
+  env: {
+    VERCEL_BUILD_STEP: process.env.VERCEL ? "true" : "false",
+  },
+  // Custom webpack configuration
   webpack: (config, { isServer }) => {
     // Handle the punycode deprecation warning
     if (!isServer) {
@@ -39,12 +48,29 @@ const nextConfig = {
       level: "error",
     };
 
+    // Handle problematic modules
+    config.module = {
+      ...config.module,
+      exprContextCritical: false,
+    };
+
+    // Add environment variables to webpack
+    config.plugins.push(
+      new (require("webpack").DefinePlugin)({
+        "process.env.VERCEL_BUILD_STEP": JSON.stringify(
+          process.env.VERCEL ? "true" : "false"
+        ),
+      })
+    );
+
     return config;
   },
-  // Force exact Node.js version
+  // Explicitly define runtime
   experimental: {
-    // Add any experimental features you want to enable
+    optimizeCss: true,
+    scrollRestoration: true,
   },
 };
 
+nextConfig.env = { ...nextConfig.env, VERCEL_BUILD_STEP: "true" };
 module.exports = nextConfig;

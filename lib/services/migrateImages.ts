@@ -1,9 +1,12 @@
-import { supabase } from "../supabase";
+import { supabase, safeDbOperation } from "../supabase";
+import { Brand, Collection, Product, Profile } from "../supabase";
 
-// Flag to check if we're in build process
+// Improved build time detection
 const isBuildTime =
   process.env.NODE_ENV === "production" &&
-  process.env.NEXT_PHASE === "phase-production-build";
+  (process.env.NEXT_PHASE === "phase-production-build" ||
+    (process.env.VERCEL_ENV === "production" &&
+      process.env.VERCEL_BUILD_STEP === "true"));
 
 /**
  * This script migrates the old image URLs to the correct Supabase storage format
@@ -37,17 +40,15 @@ export async function migrateImageUrls() {
   try {
     // 1. Fix brand images
     try {
-      const { data: brands, error: brandsError } = await supabase
-        .from("brands")
-        .select("id, image");
+      const brands = await supabase.from("brands").select("id, image");
 
-      if (brandsError) {
-        console.warn("Error fetching brands:", brandsError);
-      } else {
-        console.log(`Found ${brands.length} brands to check`);
+      if (brands.error) {
+        console.warn("Error fetching brands:", brands.error);
+      } else if (brands.data && brands.data.length > 0) {
+        console.log(`Found ${brands.data.length} brands to check`);
 
         let brandUpdatesCount = 0;
-        for (const brand of brands) {
+        for (const brand of brands.data) {
           if (brand.image && brand.image.includes("/lovable-uploads/")) {
             // Extract the filename from the old URL
             const filename = brand.image.split("/").pop();
@@ -58,13 +59,16 @@ export async function migrateImageUrls() {
             const newImageUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/brands/${filename}`;
 
             // Update the brand record
-            const { error } = await supabase
+            const updateResult = await supabase
               .from("brands")
               .update({ image: newImageUrl })
               .eq("id", brand.id);
 
-            if (error) {
-              console.warn(`Error updating brand ${brand.id}:`, error);
+            if (updateResult.error) {
+              console.warn(
+                `Error updating brand ${brand.id}:`,
+                updateResult.error
+              );
             } else {
               brandUpdatesCount++;
             }
@@ -80,17 +84,17 @@ export async function migrateImageUrls() {
 
     // 2. Fix collection images
     try {
-      const { data: collections, error: collectionsError } = await supabase
+      const collections = await supabase
         .from("collections")
         .select("id, image");
 
-      if (collectionsError) {
-        console.warn("Error fetching collections:", collectionsError);
-      } else {
-        console.log(`Found ${collections.length} collections to check`);
+      if (collections.error) {
+        console.warn("Error fetching collections:", collections.error);
+      } else if (collections.data && collections.data.length > 0) {
+        console.log(`Found ${collections.data.length} collections to check`);
 
         let collectionUpdatesCount = 0;
-        for (const collection of collections) {
+        for (const collection of collections.data) {
           if (
             collection.image &&
             collection.image.includes("/lovable-uploads/")
@@ -104,15 +108,15 @@ export async function migrateImageUrls() {
             const newImageUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/collections/${filename}`;
 
             // Update the collection record
-            const { error } = await supabase
+            const updateResult = await supabase
               .from("collections")
               .update({ image: newImageUrl })
               .eq("id", collection.id);
 
-            if (error) {
+            if (updateResult.error) {
               console.warn(
                 `Error updating collection ${collection.id}:`,
-                error
+                updateResult.error
               );
             } else {
               collectionUpdatesCount++;
@@ -129,17 +133,15 @@ export async function migrateImageUrls() {
 
     // 3. Fix product images
     try {
-      const { data: products, error: productsError } = await supabase
-        .from("products")
-        .select("id, image");
+      const products = await supabase.from("products").select("id, image");
 
-      if (productsError) {
-        console.warn("Error fetching products:", productsError);
-      } else {
-        console.log(`Found ${products.length} products to check`);
+      if (products.error) {
+        console.warn("Error fetching products:", products.error);
+      } else if (products.data && products.data.length > 0) {
+        console.log(`Found ${products.data.length} products to check`);
 
         let productUpdatesCount = 0;
-        for (const product of products) {
+        for (const product of products.data) {
           if (product.image && product.image.includes("/lovable-uploads/")) {
             // Extract the filename from the old URL
             const filename = product.image.split("/").pop();
@@ -150,13 +152,16 @@ export async function migrateImageUrls() {
             const newImageUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/products/${filename}`;
 
             // Update the product record
-            const { error } = await supabase
+            const updateResult = await supabase
               .from("products")
               .update({ image: newImageUrl })
               .eq("id", product.id);
 
-            if (error) {
-              console.warn(`Error updating product ${product.id}:`, error);
+            if (updateResult.error) {
+              console.warn(
+                `Error updating product ${product.id}:`,
+                updateResult.error
+              );
             } else {
               productUpdatesCount++;
             }
@@ -172,17 +177,15 @@ export async function migrateImageUrls() {
 
     // 4. Fix profile images
     try {
-      const { data: profiles, error: profilesError } = await supabase
-        .from("profiles")
-        .select("id, avatar_url");
+      const profiles = await supabase.from("profiles").select("id, avatar_url");
 
-      if (profilesError) {
-        console.warn("Error fetching profiles:", profilesError);
-      } else {
-        console.log(`Found ${profiles.length} profiles to check`);
+      if (profiles.error) {
+        console.warn("Error fetching profiles:", profiles.error);
+      } else if (profiles.data && profiles.data.length > 0) {
+        console.log(`Found ${profiles.data.length} profiles to check`);
 
         let profileUpdatesCount = 0;
-        for (const profile of profiles) {
+        for (const profile of profiles.data) {
           if (
             profile.avatar_url &&
             profile.avatar_url.includes("/lovable-uploads/")
@@ -196,13 +199,16 @@ export async function migrateImageUrls() {
             const newImageUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/profiles/avatars/${filename}`;
 
             // Update the profile record
-            const { error } = await supabase
+            const updateResult = await supabase
               .from("profiles")
               .update({ avatar_url: newImageUrl })
               .eq("id", profile.id);
 
-            if (error) {
-              console.warn(`Error updating profile ${profile.id}:`, error);
+            if (updateResult.error) {
+              console.warn(
+                `Error updating profile ${profile.id}:`,
+                updateResult.error
+              );
             } else {
               profileUpdatesCount++;
             }

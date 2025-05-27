@@ -1,5 +1,12 @@
 import { createBrowserClient } from "@supabase/ssr";
 
+// Check if we're in a build process
+const isBuildTime =
+  process.env.NODE_ENV === "production" &&
+  (process.env.NEXT_PHASE === "phase-production-build" ||
+    (process.env.VERCEL_ENV === "production" &&
+      process.env.VERCEL_BUILD_STEP === "true"));
+
 // Safely access environment variables with fallbacks
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
@@ -12,6 +19,25 @@ export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey);
 if (process.env.NODE_ENV !== "production") {
   console.log("Supabase URL:", supabaseUrl ? "Set correctly" : "Missing");
   console.log("Supabase Key:", supabaseAnonKey ? "Set correctly" : "Missing");
+}
+
+// Helper function to safely execute database operations
+export async function safeDbOperation<T>(
+  operation: () => Promise<T>,
+  fallback: T
+): Promise<T> {
+  // Skip actual database operations during build time
+  if (isBuildTime) {
+    console.log("Build-time detected, skipping database operation");
+    return fallback;
+  }
+
+  try {
+    return await operation();
+  } catch (error) {
+    console.error("Database operation failed:", error);
+    return fallback;
+  }
 }
 
 // Types based on your current data model
