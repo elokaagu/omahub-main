@@ -23,7 +23,14 @@ const nextConfig = {
         protocol: "https",
         hostname: "images.unsplash.com",
       },
+      {
+        protocol: "https",
+        hostname: "gswduyodzdgucjscjtvz.supabase.co",
+        port: "",
+        pathname: "/storage/v1/object/public/**",
+      },
     ],
+    unoptimized: true, // Required for static export
   },
   reactStrictMode: false,
   swcMinify: true,
@@ -62,7 +69,7 @@ const nextConfig = {
     scrollRestoration: true,
   },
   // Disable static page optimization for Vercel builds
-  output: process.env.VERCEL ? "standalone" : undefined,
+  output: "export",
   // Power settings for Vercel
   poweredByHeader: false,
   // Disable source maps in production
