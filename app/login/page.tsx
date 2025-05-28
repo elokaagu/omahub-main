@@ -7,11 +7,14 @@ import { signIn, signInWithOAuth } from "@/lib/services/authService";
 import { Button } from "@/components/ui/button";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebook } from "react-icons/fa";
+import ErrorBoundary from "../components/ErrorBoundary";
 
 // Component to handle search params
 function LoginForm() {
   const router = useRouter();
-  const searchParams = useSearchParams();
+
+  // More defensive approach for search params
+  const [urlError, setUrlError] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -19,11 +22,20 @@ function LoginForm() {
 
   // Check for error parameter in URL
   useEffect(() => {
-    const errorParam = searchParams.get("error");
-    if (errorParam) {
-      setError(decodeURIComponent(errorParam));
+    try {
+      if (typeof window !== "undefined") {
+        // Get error from URL manually instead of using useSearchParams
+        const urlParams = new URLSearchParams(window.location.search);
+        const errorParam = urlParams.get("error");
+        if (errorParam) {
+          setUrlError(decodeURIComponent(errorParam));
+          setError(decodeURIComponent(errorParam));
+        }
+      }
+    } catch (err) {
+      console.error("Error parsing URL parameters:", err);
     }
-  }, [searchParams]);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -235,9 +247,11 @@ export default function LoginPage() {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          <Suspense fallback={<LoginFormLoading />}>
-            <LoginForm />
-          </Suspense>
+          <ErrorBoundary>
+            <Suspense fallback={<LoginFormLoading />}>
+              <LoginForm />
+            </Suspense>
+          </ErrorBoundary>
         </div>
       </div>
     </div>

@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -24,14 +23,8 @@ interface BrandDisplay {
 }
 
 export default function DirectoryClient() {
-  // More defensive approach for search params
-  const searchParamsObj = useSearchParams();
-  const initialCategory = searchParamsObj
-    ? searchParamsObj.get("category") || "All Categories"
-    : "All Categories";
-
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState(initialCategory);
+  const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [selectedLocation, setSelectedLocation] = useState("All Locations");
   const [showFilters, setShowFilters] = useState(false);
   const [displayedBrands, setDisplayedBrands] = useState<BrandDisplay[]>([]);
@@ -39,7 +32,6 @@ export default function DirectoryClient() {
   const [isGridView, setIsGridView] = useState(true);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [debugInfo, setDebugInfo] = useState<string>("");
 
   // Fetch brands from the database
   useEffect(() => {
@@ -50,7 +42,6 @@ export default function DirectoryClient() {
         console.log("🔄 DirectoryClient: Starting brand fetch...");
         setLoading(true);
         setError(null);
-        setDebugInfo("Fetching brands...");
 
         const brandsData = await getAllBrands();
         console.log(
@@ -63,7 +54,6 @@ export default function DirectoryClient() {
             "⚠️ DirectoryClient: No brands returned from getAllBrands"
           );
           setError("No brands found in database");
-          setDebugInfo("No brands returned from database");
           setLoading(false);
           return;
         }
@@ -83,13 +73,11 @@ export default function DirectoryClient() {
           brandDisplayData.length
         );
 
-        setDebugInfo(`Found ${brandDisplayData.length} brands`);
         setAllBrands(brandDisplayData);
         setDisplayedBrands(brandDisplayData);
       } catch (error) {
         console.error("❌ DirectoryClient: Error fetching brands:", error);
         setError(`Failed to load brands: ${error}`);
-        setDebugInfo(`Error: ${error}`);
       } finally {
         setLoading(false);
       }
