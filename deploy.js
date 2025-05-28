@@ -3,7 +3,40 @@ const { execSync } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 
-console.log("Starting custom deploy process...");
+// Clear the console
+console.clear();
+console.log("🚀 Starting deployment to Vercel...");
+
+try {
+  console.log("🧹 Cleaning build cache...");
+  execSync("npm run clear-cache", { stdio: "inherit" });
+
+  console.log("🔧 Building application...");
+  execSync("npm run build", {
+    stdio: "inherit",
+    env: {
+      ...process.env,
+      VERCEL_BUILD_STEP: "true",
+      CI: "false",
+      NODE_OPTIONS: "--no-warnings --max-old-space-size=4096",
+    },
+  });
+
+  console.log("📤 Deploying to Vercel...");
+  execSync("npx vercel --prod", {
+    stdio: "inherit",
+    env: {
+      ...process.env,
+      VERCEL_BUILD_STEP: "true",
+      CI: "false",
+    },
+  });
+
+  console.log("✅ Deployment completed successfully!");
+} catch (error) {
+  console.error("❌ Deployment failed:", error.message);
+  process.exit(1);
+}
 
 // Create a backup folder
 const backupDir = path.join(__dirname, "deployment-backup");

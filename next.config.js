@@ -25,7 +25,7 @@ const nextConfig = {
       },
     ],
   },
-  reactStrictMode: true,
+  reactStrictMode: false,
   swcMinify: true,
   // Avoid including API routes that would fail during build
   excludeDefaultMomentLocales: true,
@@ -61,6 +61,12 @@ const nextConfig = {
     optimizeCss: true,
     scrollRestoration: true,
   },
+  // Disable static page optimization for Vercel builds
+  output: process.env.VERCEL ? "standalone" : undefined,
+  // Power settings for Vercel
+  poweredByHeader: false,
+  // Disable source maps in production
+  productionBrowserSourceMaps: false,
 };
 
 // Do not add duplicate environment variables
