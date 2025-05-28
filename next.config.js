@@ -30,7 +30,7 @@ const nextConfig = {
         pathname: "/storage/v1/object/public/**",
       },
     ],
-    unoptimized: true, // Required for static export
+    unoptimized: process.env.STATIC_EXPORT ? true : false,
   },
   reactStrictMode: false,
   swcMinify: true,
@@ -68,8 +68,8 @@ const nextConfig = {
     optimizeCss: true,
     scrollRestoration: true,
   },
-  // Disable static page optimization for Vercel builds
-  output: "export",
+  // Use static export for Vercel, otherwise standard output
+  output: process.env.STATIC_EXPORT ? "export" : undefined,
   // Power settings for Vercel
   poweredByHeader: false,
   // Disable source maps in production
