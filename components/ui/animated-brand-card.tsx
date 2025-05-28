@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle } from "@/components/ui/icons";
 import { motion } from "framer-motion";
 import { useAnimateOnScroll, fadeIn } from "@/hooks/use-animation";
 

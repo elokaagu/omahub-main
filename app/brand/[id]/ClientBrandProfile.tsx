@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, MapPin, Star } from "lucide-react";
+import { CheckCircle, MapPin, Star } from "@/components/ui/icons";
 import ContactDesignerModal from "@/components/ContactDesignerModal";
 import { ReviewForm } from "@/components/ui/review-form";
 import useReviews from "@/lib/hooks/useReviews";

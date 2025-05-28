@@ -3,7 +3,6 @@
 import Link from "next/link";
 import Image from "next/image";
 import React, { useState, useEffect } from "react";
-import { CheckCircle } from "@/components/ui/icons";
 import {
   FadeIn,
   SlideUp,
@@ -15,6 +14,7 @@ import { Carousel } from "@/components/ui/carousel-custom";
 import { SectionHeader } from "@/components/ui/section-header";
 import { CategoryCard } from "@/components/ui/category-card";
 import { Button } from "@/components/ui/button";
+import { CheckCircle } from "@/components/ui/icons";
 
 interface BrandDisplay {
   id: string;

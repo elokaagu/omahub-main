@@ -1,16 +1,20 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import {
+  FadeIn,
+  SlideUp,
+  StaggerContainer,
+  StaggerItem,
+} from "@/components/ui/animations";
+import { getAllBrands } from "@/lib/services/brandService";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Search, Filter, LayoutGrid, LayoutList } from "@/components/ui/icons";
-import { cn } from "@/lib/utils";
-import { categories, locations } from "@/lib/data/directory";
-import { getAllBrands } from "@/lib/services/brandService";
 import { BrandCard } from "@/components/ui/brand-card";
-import { FadeIn } from "@/components/ui/animations";
+import { cn } from "@/lib/utils";
+import { Search, Filter, LayoutGrid, LayoutList } from "@/components/ui/icons";
 
 // Interface for brand display
 interface BrandDisplay {
@@ -21,6 +25,25 @@ interface BrandDisplay {
   location: string;
   isVerified: boolean;
 }
+
+// Define category and location options
+const categories = [
+  "All Categories",
+  "Bridal",
+  "Ready to Wear",
+  "Tailoring",
+  "Accessories",
+];
+
+const locations = [
+  "All Locations",
+  "Lagos",
+  "Accra",
+  "Nairobi",
+  "Johannesburg",
+  "Addis Ababa",
+  "Other",
+];
 
 export default function DirectoryClient() {
   const [searchTerm, setSearchTerm] = useState("");

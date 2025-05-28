@@ -9,7 +9,7 @@ import {
   getBrandCollections,
 } from "@/lib/services/brandService";
 import { Brand, Review, Collection } from "@/lib/supabase";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle } from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/context/AuthContext";
 import ContactDesignerModal from "@/components/ContactDesignerModal";
