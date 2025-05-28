@@ -1,36 +1,90 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# OmaHub - African Fashion Marketplace
 
-## Getting Started
+OmaHub is a marketplace connecting African fashion designers with customers worldwide.
 
-First, run the development server:
+## Development
+
+### Prerequisites
+
+- Node.js 18+
+- npm or yarn
+- Supabase account
+
+### Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/elokaagu/omahub-main.git
+cd omahub-main
+
+# Install dependencies
+npm install
+
+# Set up environment variables
+cp .env.example .env.local
+# Then edit .env.local with your Supabase credentials
+```
+
+### Running the development server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to view the app.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Deployment
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Deployment to Vercel
 
-## Learn More
+The application is configured to deploy to Vercel. There are multiple ways to deploy:
 
-To learn more about Next.js, take a look at the following resources:
+#### Option 1: GitHub Integration (Recommended)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Connect your GitHub repository to Vercel
+2. Configure the following environment variables in Vercel:
+   - `VERCEL_BUILD_STEP`: true
+   - `CI`: false
+   - `NODE_OPTIONS`: --no-warnings --max-old-space-size=4096
+   - `NEXT_PUBLIC_SUPABASE_URL`: Your Supabase URL
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Your Supabase anon key
+   - `SUPABASE_SERVICE_ROLE_KEY`: Your Supabase service role key
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+#### Option 2: Manual Deployment
 
-## Deploy on Vercel
+```bash
+# Clean the cache first
+npm run clear-cache
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+# Build the application
+npm run build
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# Deploy using Vercel CLI
+npx vercel --prod
+```
+
+### Troubleshooting Deployment
+
+If you encounter issues during deployment:
+
+1. Check that all environment variables are set correctly
+2. Try clearing the cache with `npm run clear-cache`
+3. Make sure the Supabase connection is working properly
+4. Check Vercel logs for specific error messages
+
+## Features
+
+- Browse African fashion designers by category
+- View designer profiles and collections
+- Contact designers for custom orders
+- Authentication and user profiles
+- Designer studio for managing products and collections
+
+## Tech Stack
+
+- Next.js 14
+- React
+- Supabase (Auth, Database, Storage)
+- Tailwind CSS
+- Radix UI Components
+- Vercel Deployment
