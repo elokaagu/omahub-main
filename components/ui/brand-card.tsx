@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CheckCircle, Star } from "lucide-react";
+import { CheckCircle, Star } from "@/components/ui/icons";
 import { cn } from "@/lib/utils";
 import FavoriteButton from "./favorite-button";
 
