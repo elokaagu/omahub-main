@@ -3,7 +3,8 @@ const nextConfig = {
   distDir: ".next",
 
   eslint: {
-    // Disabling eslint during builds for production
+    // Warning: This allows production builds to successfully complete even if
+    // your project has ESLint errors.
     ignoreDuringBuilds: true,
   },
   typescript: {
@@ -14,25 +15,16 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
+    domains: ["gswduyodzdgucjscjtvz.supabase.co"],
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "**.supabase.co",
-      },
-      {
-        protocol: "https",
-        hostname: "images.unsplash.com",
-      },
-      {
-        protocol: "https",
-        hostname: "gswduyodzdgucjscjtvz.supabase.co",
-        port: "",
-        pathname: "/storage/v1/object/public/**",
+        hostname: "**",
       },
     ],
     unoptimized: process.env.STATIC_EXPORT ? true : false,
   },
-  reactStrictMode: false,
+  reactStrictMode: true,
   swcMinify: true,
   // Avoid including API routes that would fail during build
   excludeDefaultMomentLocales: true,
@@ -74,6 +66,7 @@ const nextConfig = {
   poweredByHeader: false,
   // Disable source maps in production
   productionBrowserSourceMaps: false,
+  transpilePackages: ["lucide-react"],
 };
 
 // Do not add duplicate environment variables

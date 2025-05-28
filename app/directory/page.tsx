@@ -1,3 +1,5 @@
+"use client";
+
 import { Suspense } from "react";
 import DirectoryClient from "./DirectoryClient";
 import { SectionHeader } from "@/components/ui/section-header";

@@ -1,14 +1,6 @@
 "use client";
 import Link from "next/link";
 import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import { CheckCircle } from "lucide-react";
-import { SectionHeader } from "@/components/ui/section-header";
-import { Carousel } from "@/components/ui/carousel-custom";
-import { CategoryCard } from "@/components/ui/category-card";
-import { useState, useEffect } from "react";
-import { getAllBrands, getBrandsByCategory } from "@/lib/services/brandService";
-import { Brand } from "@/lib/supabase";
 import {
   FadeIn,
   SlideUp,

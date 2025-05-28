@@ -6,8 +6,8 @@ const path = require("path");
 console.log("🚀 Starting Vercel deployment process...");
 
 // Run the fix-animations script
-console.log("🔧 Running animations fix...");
-require("./fix-animations");
+console.log("🔧 Running comprehensive animations fix...");
+require("./fix-all-animations");
 
 // Update the .env file for deployment
 console.log("📝 Setting up environment variables...");
