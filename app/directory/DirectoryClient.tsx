@@ -29,11 +29,12 @@ interface BrandDisplay {
 }
 
 export default function DirectoryClient() {
-  const searchParams = useSearchParams();
+  // Client-side only hooks
+  const searchParams = typeof window !== "undefined" ? useSearchParams() : null;
+  const initialCategory = searchParams?.get("category") || "All Categories";
+
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState(
-    searchParams.get("category") || "All Categories"
-  );
+  const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [selectedLocation, setSelectedLocation] = useState("All Locations");
   const [showFilters, setShowFilters] = useState(false);
   const [displayedBrands, setDisplayedBrands] = useState<BrandDisplay[]>([]);

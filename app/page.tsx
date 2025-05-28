@@ -25,6 +25,14 @@ interface BrandDisplay {
   category: string;
 }
 
+interface CategoryWithBrands {
+  title: string;
+  image: string;
+  href: string;
+  customCta: string;
+  brands: BrandDisplay[];
+}
+
 const carouselItems = [
   {
     id: 1,
@@ -55,6 +63,7 @@ const carouselItems = [
   },
 ];
 
+// Define the categories
 const categoryDefinitions = [
   {
     title: "Bridal",
@@ -82,21 +91,18 @@ const categoryDefinitions = [
   },
 ];
 
+// Move this outside the component so it doesn't cause SSR issues
+const initialCategories: CategoryWithBrands[] = categoryDefinitions.map(
+  (category) => ({
+    ...category,
+    brands: [],
+  })
+);
+
 export default function Home() {
-  const [categories, setCategories] = useState<
-    Array<{
-      title: string;
-      image: string;
-      href: string;
-      customCta: string;
-      brands: BrandDisplay[];
-    }>
-  >(
-    categoryDefinitions.map((category) => ({
-      ...category,
-      brands: [],
-    }))
-  );
+  // Client-side state initialization
+  const [categories, setCategories] =
+    useState<CategoryWithBrands[]>(initialCategories);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
