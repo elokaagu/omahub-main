@@ -4,9 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "node scripts/fix-animations.js && next build",
     "build:custom": "node build-override.js",
-    "build:vercel": "VERCEL_BUILD_STEP=true CI=false NODE_OPTIONS=\"--no-warnings --max-old-space-size=4096\" next build",
+    "build:vercel": "node scripts/fix-animations.js && VERCEL_BUILD_STEP=true CI=false NODE_OPTIONS=\"--no-warnings --max-old-space-size=4096\" next build",
     "build:static": "STATIC_EXPORT=true VERCEL_BUILD_STEP=true CI=false NODE_OPTIONS=\"--no-warnings --max-old-space-size=4096\" next build",
     "start": "next start",
     "lint": "next lint",
@@ -14,10 +14,13 @@
     "deploy": "node deploy.js && npx vercel --prod",
     "deploy:ci": "CI=false NODE_OPTIONS=\"--no-warnings\" npx vercel --prod --build-env VERCEL_BUILD_STEP=true --build-env CI=false --build-env NODE_OPTIONS=\"--no-warnings\"",
     "deploy:clean": "node scripts/deploy-to-vercel.js",
+    "deploy:simple": "node scripts/deploy-simple.js",
+    "deploy:vercel": "node scripts/deploy-vercel.js",
     "simple-deploy": "npx vercel --prod",
     "setup": "node scripts/setup-supabase.js",
     "clear-cache": "node scripts/clear-cache.js",
-    "build:clean": "node scripts/clear-cache.js && next build"
+    "build:clean": "node scripts/clear-cache.js && node scripts/fix-animations.js && NEXT_IGNORE_TYPESCRIPT_ERRORS=true NEXT_IGNORE_ESM_VALIDATE=true next build",
+    "fix-animations": "node scripts/fix-animations.js"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",

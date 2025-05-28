@@ -5,68 +5,56 @@ const path = require("path");
 const { execSync } = require("child_process");
 
 console.log("🧹 Clearing Next.js cache...");
+console.log("Current working directory:", process.cwd());
 
-// Get the root directory of the project
-const rootDir = process.cwd();
-
-// Path to .next directory
-const nextCachePath = path.join(rootDir, ".next");
-if (fs.existsSync(nextCachePath)) {
-  console.log("Removing .next directory...");
-  try {
-    fs.rmSync(nextCachePath, { recursive: true, force: true });
-    console.log("✅ .next directory removed successfully.");
-  } catch (error) {
-    console.error("❌ Error removing .next directory:", error.message);
-  }
-} else {
-  console.log("⚠️ .next directory not found.");
-}
-
-// Path to node_modules/.cache directory
-const nodeCachePath = path.join(rootDir, "node_modules", ".cache");
-if (fs.existsSync(nodeCachePath)) {
-  console.log("Removing node_modules/.cache directory...");
-  try {
-    fs.rmSync(nodeCachePath, { recursive: true, force: true });
-    console.log("✅ node_modules/.cache directory removed successfully.");
-  } catch (error) {
-    console.error(
-      "❌ Error removing node_modules/.cache directory:",
-      error.message
-    );
-  }
-} else {
-  console.log("⚠️ node_modules/.cache directory not found.");
-}
-
-// Remove any temporary files that might be causing issues
-console.log("Removing temporary files...");
+// Remove .next directory
 try {
-  const tempFilePatterns = [".DS_Store", "*.log", "*.tmp"];
-  for (const pattern of tempFilePatterns) {
-    if (pattern === ".DS_Store") {
-      // Handle .DS_Store files specifically
-      try {
-        execSync(`find ${rootDir} -name ".DS_Store" -type f -delete`, {
-          stdio: "ignore",
-        });
-      } catch (e) {
-        // Ignore errors for this command
-      }
-    } else {
-      try {
-        execSync(`find ${rootDir} -name "${pattern}" -type f -delete`, {
-          stdio: "ignore",
-        });
-      } catch (e) {
-        // Ignore errors for this command
-      }
+  const nextDir = path.join(process.cwd(), ".next");
+  console.log("Checking for .next directory at:", nextDir);
+
+  if (fs.existsSync(nextDir)) {
+    console.log("Removing .next directory...");
+    fs.rmSync(nextDir, { recursive: true, force: true });
+    console.log("✅ .next directory removed successfully.");
+  } else {
+    console.log("⚠️ .next directory not found.");
+  }
+} catch (error) {
+  console.error("❌ Error removing .next directory:", error);
+}
+
+// Remove node_modules/.cache directory
+try {
+  const cacheDir = path.join(process.cwd(), "node_modules", ".cache");
+  console.log("Checking for node_modules/.cache directory at:", cacheDir);
+
+  if (fs.existsSync(cacheDir)) {
+    console.log("Removing node_modules/.cache directory...");
+    fs.rmSync(cacheDir, { recursive: true, force: true });
+    console.log("✅ node_modules/.cache directory removed successfully.");
+  } else {
+    console.log("⚠️ node_modules/.cache directory not found.");
+  }
+} catch (error) {
+  console.error("❌ Error removing node_modules/.cache directory:", error);
+}
+
+// Remove temporary files
+try {
+  console.log("Removing temporary files...");
+  const tempFiles = [
+    path.join(process.cwd(), ".vercel", "output"),
+    path.join(process.cwd(), ".vercel", "build-output"),
+  ];
+
+  for (const file of tempFiles) {
+    if (fs.existsSync(file)) {
+      fs.rmSync(file, { recursive: true, force: true });
     }
   }
   console.log("✅ Temporary files removed successfully.");
 } catch (error) {
-  console.error("❌ Error removing temporary files:", error.message);
+  console.error("❌ Error removing temporary files:", error);
 }
 
 console.log("✨ Cache clearing complete!");

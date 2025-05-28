@@ -12,6 +12,12 @@ import { cn } from "@/lib/utils";
 import { categories, locations } from "@/lib/data/directory";
 import { getAllBrands } from "@/lib/services/brandService";
 import { Brand } from "@/lib/supabase";
+import {
+  FadeIn,
+  SlideUp,
+  StaggerContainer,
+  StaggerItem,
+} from "@/components/ui/animations";
 
 // Interface for brand display
 interface BrandDisplay {
@@ -104,90 +110,94 @@ export default function DirectoryClient() {
   return (
     <>
       <div className="mt-8">
-        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-oma-cocoa" />
-            <Input
-              type="search"
-              placeholder="Search designers..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 border-oma-cocoa/20 focus:border-oma-plum/50"
-            />
-          </div>
+        <FadeIn>
+          <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-oma-cocoa" />
+              <Input
+                type="search"
+                placeholder="Search designers..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 border-oma-cocoa/20 focus:border-oma-plum/50"
+              />
+            </div>
 
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => setIsGridView(true)}
-              className={cn(
-                "w-10 h-10",
-                isGridView ? "bg-oma-beige text-oma-plum" : "text-oma-cocoa"
-              )}
-            >
-              <LayoutGrid className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => setIsGridView(false)}
-              className={cn(
-                "w-10 h-10",
-                !isGridView ? "bg-oma-beige text-oma-plum" : "text-oma-cocoa"
-              )}
-            >
-              <LayoutList className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              className="md:w-auto w-full"
-              onClick={() => setShowFilters(!showFilters)}
-            >
-              <Filter className="h-4 w-4 mr-2" />
-              Filters
-            </Button>
-            <Button
-              variant="outline"
-              className="md:w-auto w-full border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white"
-              onClick={resetFilters}
-            >
-              Show All Designers
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setIsGridView(true)}
+                className={cn(
+                  "w-10 h-10",
+                  isGridView ? "bg-oma-beige text-oma-plum" : "text-oma-cocoa"
+                )}
+              >
+                <LayoutGrid className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setIsGridView(false)}
+                className={cn(
+                  "w-10 h-10",
+                  !isGridView ? "bg-oma-beige text-oma-plum" : "text-oma-cocoa"
+                )}
+              >
+                <LayoutList className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                className="md:w-auto w-full"
+                onClick={() => setShowFilters(!showFilters)}
+              >
+                <Filter className="h-4 w-4 mr-2" />
+                Filters
+              </Button>
+              <Button
+                variant="outline"
+                className="md:w-auto w-full border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white"
+                onClick={resetFilters}
+              >
+                Show All Designers
+              </Button>
+            </div>
           </div>
-        </div>
+        </FadeIn>
 
         {showFilters && (
-          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 p-6 rounded-lg bg-oma-beige/50 border border-oma-gold/10">
-            <div>
-              <Label className="text-oma-cocoa">Category</Label>
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full mt-1 p-2 border rounded-md border-oma-gold/20 focus:border-oma-plum"
-              >
-                {categories.map((category) => (
-                  <option key={category} value={category}>
-                    {category}
-                  </option>
-                ))}
-              </select>
+          <SlideUp>
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 p-6 rounded-lg bg-oma-beige/50 border border-oma-gold/10">
+              <div>
+                <Label className="text-oma-cocoa">Category</Label>
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="w-full mt-1 p-2 border rounded-md border-oma-gold/20 focus:border-oma-plum"
+                >
+                  {categories.map((category) => (
+                    <option key={category} value={category}>
+                      {category}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <Label className="text-oma-cocoa">Location</Label>
+                <select
+                  value={selectedLocation}
+                  onChange={(e) => setSelectedLocation(e.target.value)}
+                  className="w-full mt-1 p-2 border rounded-md border-oma-gold/20 focus:border-oma-plum"
+                >
+                  {locations.map((location) => (
+                    <option key={location} value={location}>
+                      {location}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
-            <div>
-              <Label className="text-oma-cocoa">Location</Label>
-              <select
-                value={selectedLocation}
-                onChange={(e) => setSelectedLocation(e.target.value)}
-                className="w-full mt-1 p-2 border rounded-md border-oma-gold/20 focus:border-oma-plum"
-              >
-                {locations.map((location) => (
-                  <option key={location} value={location}>
-                    {location}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
+          </SlideUp>
         )}
       </div>
 
@@ -208,23 +218,33 @@ export default function DirectoryClient() {
                 : "grid-cols-1"
             )}
           >
-            {displayedBrands.map((brand) => (
-              <BrandCard key={brand.id} {...brand} isPortrait={!isGridView} />
-            ))}
+            <StaggerContainer>
+              {displayedBrands.map((brand) => (
+                <StaggerItem key={brand.id}>
+                  <BrandCard
+                    key={brand.id}
+                    {...brand}
+                    isPortrait={!isGridView}
+                  />
+                </StaggerItem>
+              ))}
+            </StaggerContainer>
           </div>
 
           {displayedBrands.length === 0 && (
-            <div className="text-center py-12 bg-oma-beige/30 rounded-lg p-8">
-              <p className="text-oma-cocoa text-lg">
-                No designers found matching your criteria.
-              </p>
-              <Button
-                onClick={resetFilters}
-                className="mt-4 bg-oma-plum hover:bg-oma-plum/90"
-              >
-                Reset Filters
-              </Button>
-            </div>
+            <FadeIn>
+              <div className="text-center py-12 bg-oma-beige/30 rounded-lg p-8">
+                <p className="text-oma-cocoa text-lg">
+                  No designers found matching your criteria.
+                </p>
+                <Button
+                  onClick={resetFilters}
+                  className="mt-4 bg-oma-plum hover:bg-oma-plum/90"
+                >
+                  Reset Filters
+                </Button>
+              </div>
+            </FadeIn>
           )}
         </>
       )}
