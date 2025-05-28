@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 import FavoriteButton from "./favorite-button";
 
@@ -8,8 +8,8 @@ interface BrandCardProps {
   name: string;
   image: string;
   category: string;
-  location?: string;
-  isVerified?: boolean;
+  location: string;
+  isVerified: boolean;
   rating?: number;
   isPortrait?: boolean;
   className?: string;
@@ -21,8 +21,8 @@ export function BrandCard({
   image,
   category,
   location,
-  isVerified = false,
-  rating,
+  isVerified,
+  rating = 4.8,
   isPortrait = false,
   className,
 }: BrandCardProps) {
@@ -39,12 +39,15 @@ export function BrandCard({
         className={cn("relative", isPortrait ? "w-48 h-48" : "aspect-[4/5]")}
       >
         <img
-          src={image}
+          src={image || "/placeholder.svg"}
           alt={name}
           className={cn(
             "w-full h-full object-cover transition-transform duration-300 group-hover:scale-105",
             isPortrait ? "object-center object-top" : ""
           )}
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = "/placeholder.svg";
+          }}
         />
         <div className="absolute top-2 right-2 z-10">
           <FavoriteButton brandId={id} />
@@ -64,12 +67,11 @@ export function BrandCard({
           <span className="px-2 py-1 bg-oma-beige/50 rounded">{category}</span>
           <span>•</span>
           <span>{location}</span>
-          {rating && (
-            <>
-              <span>•</span>
-              <span>★ {rating}</span>
-            </>
-          )}
+          <span>•</span>
+          <div className="flex items-center">
+            <Star className="h-4 w-4 text-amber-500 mr-1" />
+            <span>{rating.toFixed(1)}</span>
+          </div>
         </div>
       </div>
     </Link>

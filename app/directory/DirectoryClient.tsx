@@ -10,9 +10,11 @@ import { Separator } from "@/components/ui/separator";
 import { Search, Filter, LayoutGrid, LayoutList } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { categories, locations } from "@/lib/data/directory";
-import { brandsData } from "@/lib/data/brands";
+import { getAllBrands } from "@/lib/services/brandService";
+import { Brand } from "@/lib/supabase";
 
-interface Brand {
+// Interface for brand display
+interface BrandDisplay {
   id: string;
   name: string;
   image: string;
@@ -20,21 +22,6 @@ interface Brand {
   location: string;
   isVerified: boolean;
 }
-
-// Convert brandsData to array format for the directory
-const allBrands = Object.entries(brandsData).map(([id, brand]) => ({
-  id,
-  name: brand.name,
-  image: brand.collections[0]?.image || "",
-  category: brand.category,
-  location: brand.location.split(",")[0], // Take just the city name
-  isVerified: brand.isVerified,
-}));
-
-// Helper function to filter brands that exist in brandsData
-const filterExistingBrands = (brands: Brand[]) => {
-  return brands.filter((brand) => brand.id && brand.id in brandsData);
-};
 
 export default function DirectoryClient() {
   const searchParams = useSearchParams();
@@ -44,8 +31,40 @@ export default function DirectoryClient() {
   );
   const [selectedLocation, setSelectedLocation] = useState("All Locations");
   const [showFilters, setShowFilters] = useState(false);
-  const [displayedBrands, setDisplayedBrands] = useState(allBrands);
+  const [displayedBrands, setDisplayedBrands] = useState<BrandDisplay[]>([]);
+  const [allBrands, setAllBrands] = useState<BrandDisplay[]>([]);
   const [isGridView, setIsGridView] = useState(true);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch brands from the database
+  useEffect(() => {
+    async function fetchBrands() {
+      try {
+        setLoading(true);
+        const brandsData = await getAllBrands();
+        console.log("Fetched brands for directory:", brandsData.length);
+
+        // Convert to display format
+        const brandDisplayData = brandsData.map((brand) => ({
+          id: brand.id,
+          name: brand.name,
+          image: brand.image,
+          category: brand.category,
+          location: brand.location.split(",")[0], // Take just the city name
+          isVerified: brand.is_verified,
+        }));
+
+        setAllBrands(brandDisplayData);
+        setDisplayedBrands(brandDisplayData);
+      } catch (error) {
+        console.error("Error fetching brands for directory:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchBrands();
+  }, []);
 
   // Filter brands based on search, category, and location
   useEffect(() => {
@@ -72,11 +91,8 @@ export default function DirectoryClient() {
       );
     }
 
-    // Filter out any brands that don't exist in brandsData
-    filtered = filterExistingBrands(filtered);
-
     setDisplayedBrands(filtered);
-  }, [searchTerm, selectedCategory, selectedLocation]);
+  }, [searchTerm, selectedCategory, selectedLocation, allBrands]);
 
   const resetFilters = () => {
     setSearchTerm("");
@@ -178,31 +194,39 @@ export default function DirectoryClient() {
       <Separator className="my-8 bg-oma-gold/10" />
 
       {/* Results Section */}
-      <div
-        className={cn(
-          "grid gap-6",
-          isGridView
-            ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-            : "grid-cols-1"
-        )}
-      >
-        {displayedBrands.map((brand) => (
-          <BrandCard key={brand.id} {...brand} isPortrait={!isGridView} />
-        ))}
-      </div>
-
-      {displayedBrands.length === 0 && (
-        <div className="text-center py-12 bg-oma-beige/30 rounded-lg p-8">
-          <p className="text-oma-cocoa text-lg">
-            No designers found matching your criteria.
-          </p>
-          <Button
-            onClick={resetFilters}
-            className="mt-4 bg-oma-plum hover:bg-oma-plum/90"
-          >
-            Reset Filters
-          </Button>
+      {loading ? (
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full"></div>
         </div>
+      ) : (
+        <>
+          <div
+            className={cn(
+              "grid gap-6",
+              isGridView
+                ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+                : "grid-cols-1"
+            )}
+          >
+            {displayedBrands.map((brand) => (
+              <BrandCard key={brand.id} {...brand} isPortrait={!isGridView} />
+            ))}
+          </div>
+
+          {displayedBrands.length === 0 && (
+            <div className="text-center py-12 bg-oma-beige/30 rounded-lg p-8">
+              <p className="text-oma-cocoa text-lg">
+                No designers found matching your criteria.
+              </p>
+              <Button
+                onClick={resetFilters}
+                className="mt-4 bg-oma-plum hover:bg-oma-plum/90"
+              >
+                Reset Filters
+              </Button>
+            </div>
+          )}
+        </>
       )}
     </>
   );
