@@ -7,10 +7,26 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 // Create a client with admin privileges (service role key)
 export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
+// Check if we're in a build process
+const isBuildTime =
+  process.env.NODE_ENV === "production" &&
+  (process.env.NEXT_PHASE === "phase-production-build" ||
+    (process.env.VERCEL_ENV === "production" &&
+      process.env.VERCEL_BUILD_STEP === "true"));
+
 /**
  * Fix RLS policies for storage buckets
  */
 export async function fixStorageRLS() {
+  // Skip during build time
+  if (isBuildTime) {
+    console.log("Build-time detected, skipping fixStorageRLS operation");
+    return {
+      success: true,
+      message: "Build-time skip: Storage RLS setup would run in production",
+    };
+  }
+
   try {
     // Enable RLS on the storage.buckets table
     await supabaseAdmin.rpc("set_rls_enabled", {
@@ -61,6 +77,15 @@ export async function fixStorageRLS() {
  * Create missing products table
  */
 export async function createProductsTable() {
+  // Skip during build time
+  if (isBuildTime) {
+    console.log("Build-time detected, skipping createProductsTable operation");
+    return {
+      success: true,
+      message: "Build-time skip: Products table setup would run in production",
+    };
+  }
+
   try {
     const adminClient = await getAdminClient();
     if (!adminClient) {
