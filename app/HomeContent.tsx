@@ -107,6 +107,9 @@ export default function HomeContent() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Prevent running on the server
+    if (typeof window === "undefined") return;
+
     async function fetchBrands() {
       try {
         setLoading(true);

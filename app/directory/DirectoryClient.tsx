@@ -44,6 +44,8 @@ export default function DirectoryClient() {
 
   // Fetch brands from the database
   useEffect(() => {
+    if (typeof window === "undefined") return;
+
     async function fetchBrands() {
       try {
         setLoading(true);
@@ -74,6 +76,8 @@ export default function DirectoryClient() {
 
   // Filter brands based on search, category, and location
   useEffect(() => {
+    if (typeof window === "undefined") return;
+
     let filtered = [...allBrands];
 
     // Apply search filter

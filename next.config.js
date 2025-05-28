@@ -61,7 +61,6 @@ const nextConfig = {
   experimental: {
     optimizeCss: true,
     scrollRestoration: true,
-    serverActions: true,
   },
   // Use static export for Vercel, otherwise standard output
   output: process.env.STATIC_EXPORT ? "export" : undefined,

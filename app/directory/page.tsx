@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import DirectoryClient from "./DirectoryClient";
 import { SectionHeader } from "@/components/ui/section-header";
 
-// Make this a Server Component by removing "use client" directive
+// This component must be a Server Component with no client-side hooks
 export default function Directory() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-oma-beige/30 to-white">
