@@ -27,7 +27,7 @@ const carouselItems = [
     title: "New Season Collections",
     subtitle:
       "Tailored looks for weddings, travel, and every moment in between.",
-    link: "/directory?category=Ready to Wear",
+    link: "/directory?category=Ready%20to%20Wear",
     heroTitle: "Made to Measure. Made to Remember.",
   },
   {
@@ -45,7 +45,7 @@ const carouselItems = [
     title: "Spotlight: Lagos Fashion Week",
     subtitle:
       "Tailored looks for weddings, travel, and every moment in between.",
-    link: "/directory?category=Ready to Wear",
+    link: "/directory?category=Ready%20to%20Wear",
     heroTitle: "Made to Measure. Made to Remember.",
   },
 ];
@@ -60,7 +60,7 @@ const categoryDefinitions = [
   {
     title: "Ready to Wear",
     image: "/lovable-uploads/4a7c7e86-6cde-4d07-a246-a5aa4cb6fa51.png",
-    href: "/directory?category=Ready to Wear",
+    href: "/directory?category=Ready%20to%20Wear",
     customCta: "Looks for the every day that isn't.",
   },
   {
@@ -132,7 +132,12 @@ export default function Home() {
           })
         );
 
-        setCategories(updatedCategories);
+        // Only keep categories that have at least 4 brands
+        const filteredCategories = updatedCategories.filter(
+          (category) => category.brands.length === 4
+        );
+
+        setCategories(filteredCategories);
       } catch (error) {
         console.error("Error fetching brands for home page:", error);
       } finally {
@@ -378,7 +383,11 @@ export default function Home() {
                 variant="outline"
                 className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white"
               >
-                <Link href={`/directory?category=${category.title}`}>
+                <Link
+                  href={`/directory?category=${encodeURIComponent(
+                    category.title
+                  )}`}
+                >
                   View All {category.title}
                 </Link>
               </Button>
