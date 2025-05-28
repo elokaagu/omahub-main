@@ -131,7 +131,10 @@ export default function HomeContent() {
           return;
         }
 
-        console.log(`Processing ${allBrands.length} brands for home display`);
+        console.log(
+          `🔍 Processing ${allBrands.length} brands for home display`
+        );
+        console.log("🔍 Sample brand:", allBrands[0]);
 
         // Process categories in parallel - more efficient
         const updatedCategories = categoryDefinitions.map((category) => {
@@ -149,6 +152,10 @@ export default function HomeContent() {
               category: brand.category,
             }));
 
+          console.log(
+            `🔍 Category "${category.title}" has ${categoryBrands.length} brands`
+          );
+
           return {
             ...category,
             brands: categoryBrands,
@@ -158,6 +165,10 @@ export default function HomeContent() {
         // Include all categories that have at least 1 brand
         const filteredCategories = updatedCategories.filter(
           (category) => category.brands.length > 0
+        );
+
+        console.log(
+          `🔍 Found ${filteredCategories.length} categories with brands`
         );
 
         setCategories(filteredCategories);
@@ -341,97 +352,111 @@ export default function HomeContent() {
       </section>
 
       {/* Brand Categories */}
-      {categories.map((category, index) => (
-        <section
-          key={category.title}
-          className={`py-16 px-6 ${
-            index % 2 === 0 ? "bg-oma-cream" : "bg-oma-beige/30"
-          }`}
-        >
-          <div className="max-w-7xl mx-auto">
-            <FadeIn delay={0.1}>
-              <SectionHeader
-                title={category.title}
-                subtitle={category.customCta}
-                titleClassName="text-2xl md:text-3xl font-canela"
-                subtitleClassName="text-base text-oma-cocoa/80"
-              />
-            </FadeIn>
+      {categories.length > 0 ? (
+        categories.map((category, index) => (
+          <section
+            key={category.title}
+            className={`py-16 px-6 ${
+              index % 2 === 0 ? "bg-oma-cream" : "bg-oma-beige/30"
+            }`}
+          >
+            <div className="max-w-7xl mx-auto">
+              <FadeIn delay={0.1}>
+                <SectionHeader
+                  title={category.title}
+                  subtitle={category.customCta}
+                  titleClassName="text-2xl md:text-3xl font-canela"
+                  subtitleClassName="text-base text-oma-cocoa/80"
+                />
+              </FadeIn>
 
-            <div className="mt-10 overflow-hidden">
-              {loading ? (
-                <div className="flex justify-center items-center h-64">
-                  <div className="animate-spin h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full"></div>
-                </div>
-              ) : category.brands.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                  {category.brands.map((brand) => (
-                    <Link
-                      key={brand.id}
-                      href={`/brand/${brand.id}`}
-                      className="group block bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow h-full"
-                    >
-                      <div className="aspect-[4/5] relative">
-                        <Image
-                          src={brand.image}
-                          alt={brand.name}
-                          fill
-                          className="object-cover transition-transform duration-300 group-hover:scale-105"
-                        />
-                      </div>
-                      <div className="p-6">
-                        <div className="flex items-center justify-between mb-2">
-                          <h3 className="font-semibold text-lg">
-                            {brand.name}
-                          </h3>
-                          {brand.isVerified && (
-                            <CheckCircle className="h-5 w-5 text-oma-plum" />
-                          )}
-                        </div>
-                        <div className="flex flex-wrap items-center gap-2 text-sm text-oma-cocoa">
-                          <span className="px-2 py-1 bg-oma-beige/50 rounded">
-                            {category.title}
-                          </span>
-                          <span>•</span>
-                          <span>{brand.location}</span>
-                          <span>•</span>
-                          <span>★ {brand.rating}</span>
-                        </div>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              ) : (
-                <FadeIn delay={0.2}>
-                  <div className="flex justify-center items-center h-64 bg-oma-beige/30 rounded-lg">
-                    <p className="text-oma-cocoa text-lg">
-                      No brands found for this category
-                    </p>
+              <div className="mt-10 overflow-hidden">
+                {loading ? (
+                  <div className="flex justify-center items-center h-64">
+                    <div className="animate-spin h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full"></div>
                   </div>
-                </FadeIn>
-              )}
-            </div>
-
-            <SlideUp delay={0.3}>
-              <div className="mt-8 text-center">
-                <Button
-                  asChild
-                  variant="outline"
-                  className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white"
-                >
-                  <Link
-                    href={`/directory?category=${encodeURIComponent(
-                      category.title
-                    )}`}
-                  >
-                    View All {category.title}
-                  </Link>
-                </Button>
+                ) : category.brands.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                    {category.brands.map((brand) => (
+                      <Link
+                        key={brand.id}
+                        href={`/brand/${brand.id}`}
+                        className="group block bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow h-full"
+                      >
+                        <div className="aspect-[4/5] relative">
+                          <Image
+                            src={brand.image}
+                            alt={brand.name}
+                            fill
+                            className="object-cover transition-transform duration-300 group-hover:scale-105"
+                          />
+                        </div>
+                        <div className="p-6">
+                          <div className="flex items-center justify-between mb-2">
+                            <h3 className="font-semibold text-lg">
+                              {brand.name}
+                            </h3>
+                            {brand.isVerified && (
+                              <CheckCircle className="h-5 w-5 text-oma-plum" />
+                            )}
+                          </div>
+                          <div className="flex flex-wrap items-center gap-2 text-sm text-oma-cocoa">
+                            <span className="px-2 py-1 bg-oma-beige/50 rounded">
+                              {category.title}
+                            </span>
+                            <span>•</span>
+                            <span>{brand.location}</span>
+                            <span>•</span>
+                            <span>★ {brand.rating}</span>
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                ) : (
+                  <FadeIn delay={0.2}>
+                    <div className="flex justify-center items-center h-64 bg-oma-beige/30 rounded-lg">
+                      <p className="text-oma-cocoa text-lg">
+                        No brands found for this category
+                      </p>
+                    </div>
+                  </FadeIn>
+                )}
               </div>
-            </SlideUp>
+
+              <SlideUp delay={0.3}>
+                <div className="mt-8 text-center">
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white"
+                  >
+                    <Link
+                      href={`/directory?category=${encodeURIComponent(
+                        category.title
+                      )}`}
+                    >
+                      View All {category.title}
+                    </Link>
+                  </Button>
+                </div>
+              </SlideUp>
+            </div>
+          </section>
+        ))
+      ) : (
+        <section className="py-16 px-6 bg-oma-cream">
+          <div className="max-w-7xl mx-auto">
+            <FadeIn>
+              <div className="flex justify-center items-center h-64 bg-white rounded-lg shadow-sm">
+                <p className="text-oma-cocoa text-lg">
+                  Loading brand categories...
+                </p>
+              </div>
+            </FadeIn>
           </div>
         </section>
-      ))}
+      )}
 
       {/* CTA Section */}
       <section className="py-16 px-6">

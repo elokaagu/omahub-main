@@ -52,7 +52,25 @@ export async function getAllBrands(): Promise<Brand[]> {
 
     // Debug first few brands
     console.log(`✅ Successfully fetched ${data.length} brands`);
-    console.log("📋 First brand:", JSON.stringify(data[0], null, 2));
+    console.log("📋 First brand sample:", JSON.stringify(data[0], null, 2));
+
+    // ADDITIONAL DIAGNOSIS - Log each brand to check for problematic entries
+    console.log("🔍 Checking all brands for potential issues:");
+    for (let i = 0; i < data.length; i++) {
+      // Skip logging all brands, just log ones with potential problems
+      const brand = data[i];
+      const issues = [];
+
+      if (!brand.id) issues.push("missing ID");
+      if (!brand.name) issues.push("missing name");
+      if (!brand.image) issues.push("missing image");
+      if (!brand.category) issues.push("missing category");
+      if (!brand.location) issues.push("missing location");
+
+      if (issues.length > 0) {
+        console.warn(`⚠️ Brand ${i} has issues:`, issues, brand);
+      }
+    }
 
     // Create brand objects with all required fields filled
     const fullBrands: Brand[] = data.map((item) => ({

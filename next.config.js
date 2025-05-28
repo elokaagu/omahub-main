@@ -15,8 +15,12 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
-    domains: ["gswduyodzdgucjscjtvz.supabase.co"],
     remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "gswduyodzdgucjscjtvz.supabase.co",
+        pathname: "/storage/v1/object/public/**",
+      },
       {
         protocol: "https",
         hostname: "**",
