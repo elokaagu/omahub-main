@@ -16,7 +16,7 @@ import {
   Menu,
   X,
   Settings,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import { useState } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 

@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Brand, Collection } from "@/lib/supabase";
-import { PlusCircle, RefreshCw, Package, Star } from "lucide-react";
+import { PlusCircle, RefreshCw, Package, Star } from "@/components/ui/icons";
 
 export default function StudioDashboard() {
   const [brands, setBrands] = useState<Brand[]>([]);
