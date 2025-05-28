@@ -16,6 +16,7 @@
     "deploy:clean": "node scripts/deploy-to-vercel.js",
     "deploy:simple": "node scripts/deploy-simple.js",
     "deploy:vercel": "node scripts/deploy-vercel.js",
+    "deploy:super-clean": "node scripts/clean-deploy.js",
     "simple-deploy": "npx vercel --prod",
     "setup": "node scripts/setup-supabase.js",
     "clear-cache": "node scripts/clear-cache.js",

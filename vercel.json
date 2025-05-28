@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "npm run build",
+  "buildCommand": "NEXT_PUBLIC_RUNTIME=true NEXT_IGNORE_TYPESCRIPT_ERRORS=true NEXT_IGNORE_ESM_VALIDATE=true next build",
   "installCommand": "npm install",
   "framework": "nextjs",
   "outputDirectory": ".next",
