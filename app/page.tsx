@@ -6,9 +6,11 @@ import { CheckCircle } from "lucide-react";
 import { SectionHeader } from "@/components/ui/section-header";
 import { Carousel } from "@/components/ui/carousel-custom";
 import { CategoryCard } from "@/components/ui/category-card";
-import { brandsData } from "@/lib/data/brands";
+import { useState, useEffect } from "react";
+import { getAllBrands, getBrandsByCategory } from "@/lib/services/brandService";
+import { Brand } from "@/lib/supabase";
 
-interface Brand {
+interface BrandDisplay {
   id: string;
   name: string;
   image: string;
@@ -48,192 +50,99 @@ const carouselItems = [
   },
 ];
 
-// Helper function to filter brands that exist in brandsData
-const filterExistingBrands = (brands: Brand[]) => {
-  return brands.filter((brand) => brand.id in brandsData);
-};
-
-// Update categories to only include existing brands
-const categories = [
+const categoryDefinitions = [
   {
     title: "Bridal",
     image: "/lovable-uploads/57cc6a40-0f0d-4a7d-8786-41f15832ebfb.png",
     href: "/directory?category=Bridal",
     customCta: 'Tailored for "Yes."',
-    brands: filterExistingBrands([
-      {
-        id: "zora-atelier",
-        name: "Zora Atelier",
-        image: "/lovable-uploads/41fa65eb-36f2-4987-8c7b-a267b4d0e938.png",
-        location: "Nairobi",
-        rating: 4.9,
-        isVerified: true,
-        category: "Bridal",
-      },
-      {
-        id: "algiers-style",
-        name: "Algiers Style",
-        image: "/lovable-uploads/90f81e12-d22e-4e01-b75b-d3bad4db5e45.png",
-        location: "Algiers",
-        rating: 4.5,
-        isVerified: true,
-        category: "Bridal",
-      },
-      {
-        id: "cairo-couture",
-        name: "Cairo Couture",
-        image: "/lovable-uploads/592425d5-0327-465c-990c-c63a73645792.png",
-        location: "Cairo",
-        rating: 4.8,
-        isVerified: true,
-        category: "Bridal",
-      },
-      {
-        id: "lagos-bridal",
-        name: "Lagos Bridal House",
-        image: "/lovable-uploads/ee92bbfa-4f54-4567-b4ef-8aebd0bca695.png",
-        location: "Lagos",
-        rating: 4.7,
-        isVerified: true,
-        category: "Bridal",
-      },
-    ]),
   },
   {
     title: "Ready to Wear",
     image: "/lovable-uploads/4a7c7e86-6cde-4d07-a246-a5aa4cb6fa51.png",
     href: "/directory?category=Ready to Wear",
     customCta: "Looks for the every day that isn't.",
-    brands: filterExistingBrands([
-      {
-        id: "dakar-fashion",
-        name: "Dakar Fashion House",
-        image: "/lovable-uploads/90f81e12-d22e-4e01-b75b-d3bad4db5e45.png",
-        location: "Dakar",
-        rating: 4.7,
-        isVerified: true,
-        category: "Ready to Wear",
-      },
-      {
-        id: "nairobi-couture",
-        name: "Nairobi Couture",
-        image: "/lovable-uploads/6f7a1022-2d82-4fb9-9365-6455df679707.png",
-        location: "Nairobi",
-        rating: 4.6,
-        isVerified: true,
-        category: "Ready to Wear",
-      },
-      {
-        id: "accra-fashion",
-        name: "Accra Fashion",
-        image: "/lovable-uploads/abb12cfd-a40d-4890-bfd6-76feb4764069.png",
-        location: "Accra",
-        rating: 4.8,
-        isVerified: true,
-        category: "Ready to Wear",
-      },
-      {
-        id: "afrochic",
-        name: "AfroChic",
-        image: "/lovable-uploads/b3fb585e-93cf-4aa7-9204-0a1b477fcb06.png",
-        location: "Dakar",
-        rating: 4.7,
-        isVerified: false,
-        category: "Ready to Wear",
-      },
-    ]),
   },
   {
     title: "Tailoring",
     image: "/lovable-uploads/99ca757a-bed8-422e-b155-0b9d365b58e0.png",
     href: "/directory?category=Tailoring",
     customCta: "Custom fits. Clean lines.",
-    brands: [
-      {
-        id: "tunis-tailors",
-        name: "Tunis Master Tailors",
-        image: "/lovable-uploads/53ab4ec9-fd54-4aa8-a292-70669af33185.png",
-        location: "Tunis",
-        rating: 4.9,
-        isVerified: true,
-        category: "Tailoring",
-      },
-      {
-        id: "casablanca-cuts",
-        name: "Casablanca Cuts",
-        image: "/lovable-uploads/eca14925-7de8-4100-af5d-b158ff70e951.png",
-        location: "Casablanca",
-        rating: 4.8,
-        isVerified: true,
-        category: "Tailoring",
-      },
-      {
-        id: "lagos-bespoke",
-        name: "Lagos Bespoke",
-        image: "/lovable-uploads/023ba098-0109-4738-9baf-1321bc3d2fe1.png",
-        location: "Lagos",
-        rating: 4.7,
-        isVerified: true,
-        category: "Tailoring",
-      },
-      {
-        id: "addis-tailoring",
-        name: "Addis Fine Tailoring",
-        image: "/lovable-uploads/840e541a-b4c1-4e59-94af-89c8345e4d2d.png",
-        location: "Addis Ababa",
-        rating: 4.8,
-        isVerified: true,
-        category: "Tailoring",
-      },
-    ],
   },
   {
     title: "Accessories",
     image: "/lovable-uploads/25c3fe26-3fc4-43ef-83ac-6931a74468c0.png",
     href: "/directory?category=Accessories",
     customCta: "The extras that make it extra.",
-    brands: filterExistingBrands([
-      {
-        id: "beads-by-nneka",
-        name: "Beads by Nneka",
-        image: "/lovable-uploads/b3fb585e-93cf-4aa7-9204-0a1b477fcb06.png",
-        location: "Abuja",
-        rating: 4.9,
-        isVerified: true,
-        category: "Accessories",
-      },
-      {
-        id: "marrakech-textiles",
-        name: "Marrakech Textiles",
-        image: "/lovable-uploads/ee92bbfa-4f54-4567-b4ef-8aebd0bca695.png",
-        location: "Marrakech",
-        rating: 4.7,
-        isVerified: false,
-        category: "Accessories",
-      },
-      {
-        id: "kente-collective",
-        name: "Kente Collective",
-        image: "/lovable-uploads/6f7a1022-2d82-4fb9-9365-6455df679707.png",
-        location: "Accra",
-        rating: 4.8,
-        isVerified: true,
-        category: "Accessories",
-      },
-      {
-        id: "ananse-weaving",
-        name: "Ananse Weaving",
-        image: "/lovable-uploads/8bd685d2-cad8-4639-982a-cb5c7087443c.png",
-        location: "Kumasi",
-        rating: 4.7,
-        isVerified: true,
-        category: "Accessories",
-      },
-    ]),
   },
 ];
 
 export default function Home() {
+  const [categories, setCategories] = useState<
+    Array<{
+      title: string;
+      image: string;
+      href: string;
+      customCta: string;
+      brands: BrandDisplay[];
+    }>
+  >(
+    categoryDefinitions.map((category) => ({
+      ...category,
+      brands: [],
+    }))
+  );
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchBrands() {
+      try {
+        setLoading(true);
+        const allBrands = await getAllBrands();
+
+        if (!allBrands || allBrands.length === 0) {
+          console.error("No brands found in database");
+          setLoading(false);
+          return;
+        }
+
+        console.log(`Fetched ${allBrands.length} brands from database`);
+
+        // Create updated categories with brands from database
+        const updatedCategories = await Promise.all(
+          categoryDefinitions.map(async (category) => {
+            // Filter brands by category
+            const categoryBrands = allBrands
+              .filter((brand) => brand.category === category.title)
+              .slice(0, 4) // Get up to 4 brands per category
+              .map((brand) => ({
+                id: brand.id,
+                name: brand.name,
+                image: brand.image || "/placeholder-image.jpg",
+                location: brand.location.split(",")[0], // Take just the city name
+                rating: brand.rating || 4.5,
+                isVerified: brand.is_verified,
+                category: brand.category,
+              }));
+
+            return {
+              ...category,
+              brands: categoryBrands,
+            };
+          })
+        );
+
+        setCategories(updatedCategories);
+      } catch (error) {
+        console.error("Error fetching brands for home page:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchBrands();
+  }, []);
+
   return (
     <main className="min-h-screen bg-gradient-to-b from-oma-beige/50 to-white">
       {/* Hero Section with Carousel */}
@@ -261,7 +170,7 @@ export default function Home() {
         />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mt-14">
-          {categories.map((category, index) => (
+          {categoryDefinitions.map((category, index) => (
             <CategoryCard
               key={category.title}
               title={category.title}
@@ -412,41 +321,55 @@ export default function Home() {
             />
 
             <div className="mt-10 overflow-hidden">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {category.brands.map((brand) => (
-                  <Link
-                    key={brand.id}
-                    href={`/brand/${brand.id}`}
-                    className="group block bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
-                  >
-                    <div className="aspect-[4/5] relative">
-                      <Image
-                        src={brand.image}
-                        alt={brand.name}
-                        fill
-                        className="object-cover transition-transform duration-300 group-hover:scale-105"
-                      />
-                    </div>
-                    <div className="p-6">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="font-semibold text-lg">{brand.name}</h3>
-                        {brand.isVerified && (
-                          <CheckCircle className="h-5 w-5 text-oma-plum" />
-                        )}
+              {loading ? (
+                <div className="flex justify-center items-center h-64">
+                  <div className="animate-spin h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full"></div>
+                </div>
+              ) : category.brands.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {category.brands.map((brand) => (
+                    <Link
+                      key={brand.id}
+                      href={`/brand/${brand.id}`}
+                      className="group block bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+                    >
+                      <div className="aspect-[4/5] relative">
+                        <Image
+                          src={brand.image}
+                          alt={brand.name}
+                          fill
+                          className="object-cover transition-transform duration-300 group-hover:scale-105"
+                        />
                       </div>
-                      <div className="flex items-center gap-2 text-sm text-oma-cocoa">
-                        <span className="px-2 py-1 bg-oma-beige/50 rounded">
-                          {category.title}
-                        </span>
-                        <span>•</span>
-                        <span>{brand.location}</span>
-                        <span>•</span>
-                        <span>★ {brand.rating}</span>
+                      <div className="p-6">
+                        <div className="flex items-center justify-between mb-2">
+                          <h3 className="font-semibold text-lg">
+                            {brand.name}
+                          </h3>
+                          {brand.isVerified && (
+                            <CheckCircle className="h-5 w-5 text-oma-plum" />
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-oma-cocoa">
+                          <span className="px-2 py-1 bg-oma-beige/50 rounded">
+                            {category.title}
+                          </span>
+                          <span>•</span>
+                          <span>{brand.location}</span>
+                          <span>•</span>
+                          <span>★ {brand.rating}</span>
+                        </div>
                       </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex justify-center items-center h-64 bg-oma-beige/30 rounded-lg">
+                  <p className="text-oma-cocoa text-lg">
+                    No brands found for this category
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="mt-8 text-center">
@@ -455,9 +378,7 @@ export default function Home() {
                 variant="outline"
                 className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white"
               >
-                <Link
-                  href={`/directory?category=${category.title.toLowerCase()}`}
-                >
+                <Link href={`/directory?category=${category.title}`}>
                   View All {category.title}
                 </Link>
               </Button>
