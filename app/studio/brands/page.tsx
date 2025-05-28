@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Brand } from "@/lib/supabase";
-import { PlusCircle, Search, Star, CheckCircle } from "lucide-react";
+import { PlusCircle, Search, Star, CheckCircle } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import {
   Table,

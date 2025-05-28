@@ -33,7 +33,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { PlusCircle, Search, Edit, Trash2 } from "lucide-react";
+import { PlusCircle, Search, Edit, Trash2 } from "@/components/ui/icons";
 import { toast } from "sonner";
 
 export default function CollectionsPage() {

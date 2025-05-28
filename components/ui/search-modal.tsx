@@ -1,7 +1,7 @@
 import { useState, useEffect, KeyboardEvent } from "react";
 import { Command } from "@/components/ui/command";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Search, MapPin, CheckCircle, Tag, Clock } from "lucide-react";
+import { Search, MapPin, CheckCircle, Tag, Clock } from "@/components/ui/icons";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 

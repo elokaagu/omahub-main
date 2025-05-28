@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Menu, X, Search, ChevronDown, User } from "lucide-react";
+import { Menu, X, Search, ChevronDown, User } from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { SearchModal } from "@/components/ui/search-modal";
