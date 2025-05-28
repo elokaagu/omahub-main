@@ -1,11 +1,17 @@
 "use client";
 
-import {
-  FadeIn,
-  SlideUp,
-  StaggerContainer,
-  StaggerItem,
-} from "@/components/ui/animations";
+import React, { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { Search, Filter, LayoutGrid, LayoutList } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { categories, locations } from "@/lib/data/directory";
+import { getAllBrands } from "@/lib/services/brandService";
+import { BrandCard } from "@/components/ui/brand-card";
+import { FadeIn } from "@/components/ui/animations";
 
 // Interface for brand display
 interface BrandDisplay {
@@ -30,6 +36,8 @@ export default function DirectoryClient() {
   const [allBrands, setAllBrands] = useState<BrandDisplay[]>([]);
   const [isGridView, setIsGridView] = useState(true);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [debugInfo, setDebugInfo] = useState<string>("");
 
   // Fetch brands from the database
   useEffect(() => {
@@ -37,24 +45,49 @@ export default function DirectoryClient() {
 
     async function fetchBrands() {
       try {
+        console.log("🔄 DirectoryClient: Starting brand fetch...");
         setLoading(true);
+        setError(null);
+        setDebugInfo("Fetching brands...");
+
         const brandsData = await getAllBrands();
-        console.log("Fetched brands for directory:", brandsData.length);
+        console.log(
+          "📋 DirectoryClient: Fetch complete, brands count:",
+          brandsData.length
+        );
+
+        if (!brandsData || brandsData.length === 0) {
+          console.warn(
+            "⚠️ DirectoryClient: No brands returned from getAllBrands"
+          );
+          setError("No brands found in database");
+          setDebugInfo("No brands returned from database");
+          setLoading(false);
+          return;
+        }
 
         // Convert to display format
         const brandDisplayData = brandsData.map((brand) => ({
-          id: brand.id,
-          name: brand.name,
-          image: brand.image,
-          category: brand.category,
-          location: brand.location.split(",")[0], // Take just the city name
-          isVerified: brand.is_verified,
+          id: brand.id || "unknown-id",
+          name: brand.name || "Unnamed Brand",
+          image: brand.image || "/placeholder.jpg",
+          category: brand.category || "Uncategorized",
+          location: (brand.location || "Unknown").split(",")[0], // Take just the city name
+          isVerified: brand.is_verified || false,
         }));
 
+        console.log(
+          "✅ DirectoryClient: Processed brand data:",
+          brandDisplayData.length
+        );
+
+        setDebugInfo(`Found ${brandDisplayData.length} brands`);
         setAllBrands(brandDisplayData);
         setDisplayedBrands(brandDisplayData);
       } catch (error) {
-        console.error("Error fetching brands for directory:", error);
+        console.error("❌ DirectoryClient: Error fetching brands:", error);
+        setError(`Failed to load brands: ${error}`);
+        setDebugInfo(`Error: ${error}`);
       } finally {
         setLoading(false);
       }
@@ -66,6 +99,13 @@ export default function DirectoryClient() {
   // Filter brands based on search, category, and location
   useEffect(() => {
     if (typeof window === "undefined") return;
+
+    console.log("DirectoryClient: Filtering brands with:", {
+      searchTerm,
+      selectedCategory,
+      selectedLocation,
+      allBrandsCount: allBrands.length,
+    });
 
     let filtered = [...allBrands];
 
@@ -90,6 +130,7 @@ export default function DirectoryClient() {
       );
     }
 
+    console.log("DirectoryClient: Filtered brands count:", filtered.length);
     setDisplayedBrands(filtered);
   }, [searchTerm, selectedCategory, selectedLocation, allBrands]);
 
@@ -159,7 +200,7 @@ export default function DirectoryClient() {
         </FadeIn>
 
         {showFilters && (
-          <SlideUp>
+          <FadeIn>
             <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 p-6 rounded-lg bg-oma-beige/50 border border-oma-gold/10">
               <div>
                 <Label className="text-oma-cocoa">Category</Label>
@@ -190,7 +231,7 @@ export default function DirectoryClient() {
                 </select>
               </div>
             </div>
-          </SlideUp>
+          </FadeIn>
         )}
       </div>
 
@@ -203,28 +244,26 @@ export default function DirectoryClient() {
         </div>
       ) : (
         <>
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md text-red-700">
+              <p>{error}</p>
+            </div>
+          )}
+
           <div
             className={cn(
               "grid gap-6",
               isGridView
-                ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+                ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
                 : "grid-cols-1"
             )}
           >
-            <StaggerContainer>
-              {displayedBrands.map((brand) => (
-                <StaggerItem key={brand.id}>
-                  <BrandCard
-                    key={brand.id}
-                    {...brand}
-                    isPortrait={!isGridView}
-                  />
-                </StaggerItem>
-              ))}
-            </StaggerContainer>
+            {displayedBrands.map((brand) => (
+              <BrandCard key={brand.id} {...brand} isPortrait={!isGridView} />
+            ))}
           </div>
 
-          {displayedBrands.length === 0 && (
+          {displayedBrands.length === 0 && !error && (
             <FadeIn>
               <div className="text-center py-12 bg-oma-beige/30 rounded-lg p-8">
                 <p className="text-oma-cocoa text-lg">

@@ -30,13 +30,16 @@ export function BrandCard({
     <Link
       href={`/brand/${id}`}
       className={cn(
-        "group block bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow relative",
+        "group block bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow relative h-full",
         isPortrait ? "flex gap-6" : "",
         className
       )}
     >
       <div
-        className={cn("relative", isPortrait ? "w-48 h-48" : "aspect-[4/5]")}
+        className={cn(
+          "relative",
+          isPortrait ? "w-48 h-48 flex-shrink-0" : "aspect-[4/5]"
+        )}
       >
         <img
           src={image || "/placeholder.svg"}
@@ -63,7 +66,7 @@ export function BrandCard({
           <h3 className="font-semibold text-lg">{name}</h3>
           {isVerified && <CheckCircle className="h-5 w-5 text-oma-plum" />}
         </div>
-        <div className="flex items-center gap-2 text-sm text-oma-cocoa">
+        <div className="flex flex-wrap items-center gap-2 text-sm text-oma-cocoa">
           <span className="px-2 py-1 bg-oma-beige/50 rounded">{category}</span>
           <span>•</span>
           <span>{location}</span>

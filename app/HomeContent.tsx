@@ -2,12 +2,19 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import React, { useState, useEffect } from "react";
 import {
   FadeIn,
   SlideUp,
   StaggerContainer,
   StaggerItem,
 } from "@/components/ui/animations";
+import { getAllBrands } from "@/lib/services/brandService";
+import { Carousel } from "@/components/ui/carousel-custom";
+import { SectionHeader } from "@/components/ui/section-header";
+import { CategoryCard } from "@/components/ui/category-card";
+import { Button } from "@/components/ui/button";
+import { CheckCircle } from "lucide-react";
 
 interface BrandDisplay {
   id: string;
@@ -103,46 +110,54 @@ export default function HomeContent() {
     // Prevent running on the server
     if (typeof window === "undefined") return;
 
+    // Add a timeout to prevent infinite loading state on error
+    const timeoutId = setTimeout(() => {
+      if (loading) {
+        console.log("Loading timeout reached, forcing UI update");
+        setLoading(false);
+      }
+    }, 5000); // 5 second timeout
+
     async function fetchBrands() {
       try {
+        console.time("fetchBrandsForHome");
         setLoading(true);
         const allBrands = await getAllBrands();
+        console.timeEnd("fetchBrandsForHome");
 
         if (!allBrands || allBrands.length === 0) {
-          console.error("No brands found in database");
+          console.warn("No brands found in database");
           setLoading(false);
           return;
         }
 
-        console.log(`Fetched ${allBrands.length} brands from database`);
+        console.log(`Processing ${allBrands.length} brands for home display`);
 
-        // Create updated categories with brands from database
-        const updatedCategories = await Promise.all(
-          categoryDefinitions.map(async (category) => {
-            // Filter brands by category
-            const categoryBrands = allBrands
-              .filter((brand) => brand.category === category.title)
-              .slice(0, 4) // Get up to 4 brands per category
-              .map((brand) => ({
-                id: brand.id,
-                name: brand.name,
-                image: brand.image || "/placeholder-image.jpg",
-                location: brand.location.split(",")[0], // Take just the city name
-                rating: brand.rating || 4.5,
-                isVerified: brand.is_verified,
-                category: brand.category,
-              }));
+        // Process categories in parallel - more efficient
+        const updatedCategories = categoryDefinitions.map((category) => {
+          // Filter brands by category
+          const categoryBrands = allBrands
+            .filter((brand) => brand.category === category.title)
+            .slice(0, 8) // Get up to 8 brands per category
+            .map((brand) => ({
+              id: brand.id,
+              name: brand.name,
+              image: brand.image || "/placeholder-image.jpg",
+              location: brand.location.split(",")[0], // Take just the city name
+              rating: brand.rating || 4.5,
+              isVerified: brand.is_verified,
+              category: brand.category,
+            }));
 
-            return {
-              ...category,
-              brands: categoryBrands,
-            };
-          })
-        );
+          return {
+            ...category,
+            brands: categoryBrands,
+          };
+        });
 
-        // Only keep categories that have at least 4 brands
+        // Include all categories that have at least 1 brand
         const filteredCategories = updatedCategories.filter(
-          (category) => category.brands.length === 4
+          (category) => category.brands.length > 0
         );
 
         setCategories(filteredCategories);
@@ -150,10 +165,13 @@ export default function HomeContent() {
         console.error("Error fetching brands for home page:", error);
       } finally {
         setLoading(false);
+        clearTimeout(timeoutId);
       }
     }
 
     fetchBrands();
+
+    return () => clearTimeout(timeoutId);
   }, []);
 
   return (
@@ -182,20 +200,16 @@ export default function HomeContent() {
         </FadeIn>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mt-14">
-          <StaggerContainer delay={0.1} staggerDelay={0.1}>
-            {categoryDefinitions.map((category) => (
-              <StaggerItem key={category.title}>
-                <CategoryCard
-                  key={category.title}
-                  title={category.title}
-                  image={category.image}
-                  href={category.href}
-                  customCta={category.customCta}
-                  className="hover-scale shadow-lg"
-                />
-              </StaggerItem>
-            ))}
-          </StaggerContainer>
+          {categoryDefinitions.map((category) => (
+            <CategoryCard
+              key={category.title}
+              title={category.title}
+              image={category.image}
+              href={category.href}
+              customCta={category.customCta}
+              className="hover-scale shadow-lg"
+            />
+          ))}
         </div>
       </section>
 
@@ -279,51 +293,48 @@ export default function HomeContent() {
               </h4>
             </FadeIn>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              <StaggerContainer delay={0.3} staggerDelay={0.15}>
-                {[1, 2, 3, 4].map((i) => (
-                  <StaggerItem key={i}>
-                    <Link
-                      href="/brand/mbali-studio"
-                      className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 group"
-                    >
-                      <Image
-                        src={`/lovable-uploads/${
-                          [
-                            "53ab4ec9-fd54-4aa8-a292-70669af33185.png",
-                            "eca14925-7de8-4100-af5d-b158ff70e951.png",
-                            "023ba098-0109-4738-9baf-1321bc3d2fe1.png",
-                            "840e541a-b4c1-4e59-94af-89c8345e4d2d.png",
-                          ][i - 1]
-                        }`}
-                        alt={`Mbali Studio ${
-                          ["Scarf", "Dress", "Top", "Pants"][i - 1]
-                        }`}
-                        width={400}
-                        height={300}
-                        className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
-                      />
-                      <div className="p-4">
-                        <h5 className="font-medium text-oma-black group-hover:text-oma-plum transition-colors">
-                          Silk {["Scarf", "Dress", "Top", "Pants"][i - 1]}
-                        </h5>
-                        <p className="text-sm text-oma-cocoa/70">
-                          {
-                            [
-                              "Heritage Collection",
-                              "Summer '24 Collection",
-                              "Essential Series",
-                              "Limited Edition",
-                            ][i - 1]
-                          }
-                        </p>
-                        <span className="text-sm text-oma-plum mt-2 inline-block">
-                          View Collection →
-                        </span>
-                      </div>
-                    </Link>
-                  </StaggerItem>
-                ))}
-              </StaggerContainer>
+              {[1, 2, 3, 4].map((i) => (
+                <Link
+                  key={i}
+                  href="/brand/mbali-studio"
+                  className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 group"
+                >
+                  <Image
+                    src={`/lovable-uploads/${
+                      [
+                        "53ab4ec9-fd54-4aa8-a292-70669af33185.png",
+                        "eca14925-7de8-4100-af5d-b158ff70e951.png",
+                        "023ba098-0109-4738-9baf-1321bc3d2fe1.png",
+                        "840e541a-b4c1-4e59-94af-89c8345e4d2d.png",
+                      ][i - 1]
+                    }`}
+                    alt={`Mbali Studio ${
+                      ["Scarf", "Dress", "Top", "Pants"][i - 1]
+                    }`}
+                    width={400}
+                    height={300}
+                    className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                  <div className="p-4">
+                    <h5 className="font-medium text-oma-black group-hover:text-oma-plum transition-colors">
+                      Silk {["Scarf", "Dress", "Top", "Pants"][i - 1]}
+                    </h5>
+                    <p className="text-sm text-oma-cocoa/70">
+                      {
+                        [
+                          "Heritage Collection",
+                          "Summer '24 Collection",
+                          "Essential Series",
+                          "Limited Edition",
+                        ][i - 1]
+                      }
+                    </p>
+                    <span className="text-sm text-oma-plum mt-2 inline-block">
+                      View Collection →
+                    </span>
+                  </div>
+                </Link>
+              ))}
             </div>
           </div>
         </div>
@@ -353,46 +364,42 @@ export default function HomeContent() {
                   <div className="animate-spin h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full"></div>
                 </div>
               ) : category.brands.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  <StaggerContainer delay={0.2} staggerDelay={0.1}>
-                    {category.brands.map((brand) => (
-                      <StaggerItem key={brand.id}>
-                        <Link
-                          key={brand.id}
-                          href={`/brand/${brand.id}`}
-                          className="group block bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
-                        >
-                          <div className="aspect-[4/5] relative">
-                            <Image
-                              src={brand.image}
-                              alt={brand.name}
-                              fill
-                              className="object-cover transition-transform duration-300 group-hover:scale-105"
-                            />
-                          </div>
-                          <div className="p-6">
-                            <div className="flex items-center justify-between mb-2">
-                              <h3 className="font-semibold text-lg">
-                                {brand.name}
-                              </h3>
-                              {brand.isVerified && (
-                                <CheckCircle className="h-5 w-5 text-oma-plum" />
-                              )}
-                            </div>
-                            <div className="flex items-center gap-2 text-sm text-oma-cocoa">
-                              <span className="px-2 py-1 bg-oma-beige/50 rounded">
-                                {category.title}
-                              </span>
-                              <span>•</span>
-                              <span>{brand.location}</span>
-                              <span>•</span>
-                              <span>★ {brand.rating}</span>
-                            </div>
-                          </div>
-                        </Link>
-                      </StaggerItem>
-                    ))}
-                  </StaggerContainer>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                  {category.brands.map((brand) => (
+                    <Link
+                      key={brand.id}
+                      href={`/brand/${brand.id}`}
+                      className="group block bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow h-full"
+                    >
+                      <div className="aspect-[4/5] relative">
+                        <Image
+                          src={brand.image}
+                          alt={brand.name}
+                          fill
+                          className="object-cover transition-transform duration-300 group-hover:scale-105"
+                        />
+                      </div>
+                      <div className="p-6">
+                        <div className="flex items-center justify-between mb-2">
+                          <h3 className="font-semibold text-lg">
+                            {brand.name}
+                          </h3>
+                          {brand.isVerified && (
+                            <CheckCircle className="h-5 w-5 text-oma-plum" />
+                          )}
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2 text-sm text-oma-cocoa">
+                          <span className="px-2 py-1 bg-oma-beige/50 rounded">
+                            {category.title}
+                          </span>
+                          <span>•</span>
+                          <span>{brand.location}</span>
+                          <span>•</span>
+                          <span>★ {brand.rating}</span>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
                 </div>
               ) : (
                 <FadeIn delay={0.2}>

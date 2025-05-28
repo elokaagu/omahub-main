@@ -11,14 +11,62 @@ const isBuildTime =
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 
-// Create a single supabase client for interacting with your database
-// This handles both client and server-side environments
-export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey);
+console.log("🔄 Initializing Supabase client:", {
+  hasUrl: !!supabaseUrl,
+  hasKey: !!supabaseAnonKey.substring(0, 10) + "...",
+  env: process.env.NODE_ENV,
+  isBuildTime,
+});
 
 // For debugging in development
 if (process.env.NODE_ENV !== "production") {
-  console.log("Supabase URL:", supabaseUrl ? "Set correctly" : "Missing");
-  console.log("Supabase Key:", supabaseAnonKey ? "Set correctly" : "Missing");
+  console.log("🔑 Supabase URL:", supabaseUrl ? supabaseUrl : "Missing");
+  console.log(
+    "🔑 Supabase Key:",
+    supabaseAnonKey ? supabaseAnonKey.substring(0, 10) + "..." : "Missing"
+  );
+}
+
+// Create a single supabase client for interacting with your database
+// This handles both client and server-side environments
+export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+  },
+  global: {
+    fetch: fetch,
+  },
+});
+
+// Test the connection
+if (typeof window !== "undefined" && !isBuildTime) {
+  console.log("🔍 Testing Supabase connection...");
+
+  supabase.auth.getSession().then(({ data, error }) => {
+    if (error) {
+      console.error("❌ Supabase auth test failed:", error);
+    } else {
+      console.log("✅ Supabase auth test successful", {
+        hasSession: !!data.session,
+      });
+    }
+  });
+
+  // Test a simple database query
+  supabase
+    .from("brands")
+    .select("count()", { count: "exact", head: true })
+    .then(({ data, error, count }) => {
+      if (error) {
+        console.error("❌ Supabase database test failed:", error);
+      } else {
+        console.log(
+          "✅ Supabase database test successful. Brand count:",
+          count
+        );
+      }
+    });
 }
 
 // Helper function to safely execute database operations

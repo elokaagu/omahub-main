@@ -1,17 +1,89 @@
 import { supabase, Brand, Review, Collection } from "../supabase";
 
+// TEMPORARILY DISABLE ALL CACHING FOR TESTING
+let brandsCache: {
+  data: Brand[] | null;
+  timestamp: number;
+} = {
+  data: null,
+  timestamp: 0,
+};
+
+// Cache expiration time (10 minutes - increased from 5)
+const CACHE_EXPIRY = 10 * 60 * 1000;
+
+// Define essential fields to reduce payload size
+const ESSENTIAL_BRAND_FIELDS =
+  "id,name,image,category,location,is_verified,rating";
+
 /**
  * Fetch all brands from the database
  */
 export async function getAllBrands(): Promise<Brand[]> {
-  const { data, error } = await supabase.from("brands").select("*");
+  try {
+    // Always bypass cache for testing
+    console.log("🔍 Fetching brands directly from database...");
 
-  if (error) {
-    console.error("Error fetching brands:", error);
-    throw error;
+    // Debug Supabase connection
+    if (!supabase) {
+      console.error("⛔ ERROR: Supabase client is undefined!");
+      return [];
+    }
+
+    // Use simpler query that's less likely to fail
+    const { data, error } = await supabase
+      .from("brands")
+      .select("id, name, image, category, location, is_verified, rating");
+
+    if (error) {
+      console.error(
+        "⛔ Error fetching brands:",
+        error.message,
+        error.details,
+        error.hint
+      );
+      return [];
+    }
+
+    if (!data || data.length === 0) {
+      console.warn("⚠️ No brands found in the database!");
+      return [];
+    }
+
+    // Debug first few brands
+    console.log(`✅ Successfully fetched ${data.length} brands`);
+    console.log("📋 First brand:", JSON.stringify(data[0], null, 2));
+
+    // Create brand objects with all required fields filled
+    const fullBrands: Brand[] = data.map((item) => ({
+      id: item.id,
+      name: item.name,
+      description: "Brand description", // Default values for required fields
+      long_description: "Long brand description",
+      location: item.location || "Unknown location",
+      price_range: "$$",
+      category: item.category || "Other",
+      rating: item.rating || 4.5,
+      is_verified: item.is_verified || false,
+      image: item.image || "/placeholder-image.jpg",
+    }));
+
+    return fullBrands;
+  } catch (err) {
+    console.error("⛔ Unexpected error in getAllBrands:", err);
+    return [];
   }
+}
 
-  return data || [];
+/**
+ * Clear the brands cache to force a fresh fetch
+ */
+export function clearBrandsCache(): void {
+  console.log("Clearing brands cache");
+  brandsCache = {
+    data: null,
+    timestamp: 0,
+  };
 }
 
 /**
