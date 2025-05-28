@@ -1,16 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
-import { BrandCard } from "@/components/ui/brand-card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { Search, Filter, LayoutGrid, LayoutList } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { categories, locations } from "@/lib/data/directory";
-import { getAllBrands } from "@/lib/services/brandService";
 import {
   FadeIn,
   SlideUp,

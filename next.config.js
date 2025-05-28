@@ -62,8 +62,8 @@ const nextConfig = {
     optimizeCss: true,
     scrollRestoration: true,
   },
-  // Use static export for Vercel, otherwise standard output
-  output: process.env.STATIC_EXPORT ? "export" : undefined,
+  // Use standard output for Vercel - do not use 'export' which breaks middleware
+  output: undefined,
   // Power settings for Vercel
   poweredByHeader: false,
   // Disable source maps in production
