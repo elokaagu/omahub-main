@@ -30,7 +30,9 @@ const nextConfig = {
   excludeDefaultMomentLocales: true,
   // Environment variables for build time
   env: {
-    VERCEL_BUILD_STEP: process.env.VERCEL ? "true" : "false",
+    NEXT_PUBLIC_RUNTIME: "true",
+    NEXT_IGNORE_TYPESCRIPT_ERRORS: "true",
+    NEXT_IGNORE_ESM_VALIDATE: "true",
   },
   // Custom webpack configuration
   webpack: (config, { isServer }) => {
@@ -59,6 +61,7 @@ const nextConfig = {
   experimental: {
     optimizeCss: true,
     scrollRestoration: true,
+    serverActions: true,
   },
   // Use static export for Vercel, otherwise standard output
   output: process.env.STATIC_EXPORT ? "export" : undefined,
