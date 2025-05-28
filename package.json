@@ -12,7 +12,9 @@
     "deploy": "node deploy.js && npx vercel --prod",
     "deploy:ci": "CI=false NODE_OPTIONS=\"--no-warnings\" npx vercel --prod --build-env VERCEL_BUILD_STEP=true --build-env CI=false --build-env NODE_OPTIONS=\"--no-warnings\"",
     "build:vercel": "CI=false NODE_OPTIONS=\"--no-warnings\" next build",
-    "setup": "node scripts/setup-supabase.js"
+    "setup": "node scripts/setup-supabase.js",
+    "clear-cache": "node scripts/clear-cache.js",
+    "build:clean": "node scripts/clear-cache.js && next build"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
