@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "buildCommand": "NEXT_PUBLIC_RUNTIME=true NEXT_IGNORE_TYPESCRIPT_ERRORS=true NEXT_IGNORE_ESM_VALIDATE=true next build",
   "installCommand": "npm install",
+  "buildCommand": "next build",
   "framework": "nextjs",
   "outputDirectory": ".next",
   "env": {
