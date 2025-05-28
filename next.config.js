@@ -55,6 +55,16 @@ const nextConfig = {
       exprContextCritical: false,
     };
 
+    // Fix "Cannot find module" errors
+    config.resolve.extensions = [
+      ".js",
+      ".jsx",
+      ".ts",
+      ".tsx",
+      ".json",
+      ...(config.resolve.extensions || []),
+    ];
+
     return config;
   },
   // Explicitly define runtime

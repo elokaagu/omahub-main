@@ -1,7 +1,7 @@
 import dynamic from "next/dynamic";
 
 // Use dynamic import to load the client component with no SSR
-const HowItWorksClient = dynamic(() => import("./HowItWorksClient"), {
+const HowItWorksClient = dynamic(() => import("./HowItWorksClient.tsx"), {
   ssr: false,
   loading: () => (
     <div className="flex justify-center items-center min-h-screen">

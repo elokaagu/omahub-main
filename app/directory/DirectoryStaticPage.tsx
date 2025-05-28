@@ -2,7 +2,7 @@ import { SectionHeader } from "@/components/ui/section-header";
 import dynamic from "next/dynamic";
 
 // Dynamically load the client wrapper with no SSR
-const ClientWrapper = dynamic(() => import("./ClientWrapper"), {
+const ClientWrapper = dynamic(() => import("./ClientWrapper.tsx"), {
   ssr: false,
   loading: () => (
     <div className="mt-8">

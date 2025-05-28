@@ -64,8 +64,26 @@ if (!fs.existsSync(appComponentsUiDir)) {
 function copyFile(src, dest) {
   try {
     if (fs.existsSync(src)) {
-      fs.copyFileSync(src, dest);
-      console.log(`✅ Copied ${path.basename(src)} to app/components/ui/`);
+      // Read the file content
+      let content = fs.readFileSync(src, "utf8");
+
+      // If it's the animations.tsx file, ensure all imports use absolute paths
+      if (src.endsWith("animations.tsx")) {
+        content = content.replace(
+          /from ["']\.\.\/(.+)["']/g,
+          'from "@/components/ui/$1"'
+        );
+
+        // Also remove file extensions from imports to prevent issues
+        content = content.replace(/from ["'](.+)\.tsx["']/g, 'from "$1"');
+        content = content.replace(/from ["'](.+)\.jsx["']/g, 'from "$1"');
+      }
+
+      // Write the fixed content
+      fs.writeFileSync(dest, content);
+      console.log(
+        `✅ Copied and fixed ${path.basename(src)} to app/components/ui/`
+      );
     } else {
       console.log(`⚠️ Source file ${src} does not exist`);
     }
@@ -92,6 +110,7 @@ function fixImportsInFile(filePath) {
     let content = fs.readFileSync(filePath, "utf8");
 
     // Replace animation imports with the correct path
+    // Note: We're removing the file extension in the import path
     const fixedImport = `import {
   FadeIn,
   SlideUp,
@@ -100,9 +119,15 @@ function fixImportsInFile(filePath) {
 } from "@/components/ui/animations";`;
 
     // This regex will match import statements for animations components
-    if (content.includes('from "@/components/ui/animations')) {
+    const hasAnimationImport =
+      content.includes('from "@/components/ui/animations') ||
+      content.includes('from "../components/ui/animations') ||
+      content.includes('from "../../components/ui/animations');
+
+    if (hasAnimationImport) {
+      // Fix all variations of animation imports
       content = content.replace(
-        /import\s*{[\s\S]*?}\s*from\s*["']@\/components\/ui\/animations.*?["'];/g,
+        /import\s*{[\s\S]*?}\s*from\s*["'](?:@\/|\.\.\/|\.\.\/\.\.\/)?components\/ui\/animations(?:\.tsx)?["'];/g,
         fixedImport
       );
       fs.writeFileSync(filePath, content);
@@ -121,8 +146,10 @@ const filesToFix = [
   path.join(process.cwd(), "app", "directory", "DirectoryClient.tsx"),
   path.join(process.cwd(), "app", "directory", "page.tsx"),
   path.join(process.cwd(), "app", "how-it-works", "page.tsx"),
+  path.join(process.cwd(), "app", "how-it-works", "HowItWorksClient.tsx"),
   path.join(process.cwd(), "app", "about", "page.tsx"),
   path.join(process.cwd(), "app", "brand", "[id]", "page.tsx"),
+  path.join(process.cwd(), "app", "HomeContent.tsx"),
 ];
 
 filesToFix.forEach((file) => fixImportsInFile(file));
