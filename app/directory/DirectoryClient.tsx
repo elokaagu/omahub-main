@@ -24,9 +24,11 @@ interface BrandDisplay {
 }
 
 export default function DirectoryClient() {
-  // Client-side only hooks
-  const searchParams = typeof window !== "undefined" ? useSearchParams() : null;
-  const initialCategory = searchParams?.get("category") || "All Categories";
+  // More defensive approach for search params
+  const searchParamsObj = useSearchParams();
+  const initialCategory = searchParamsObj
+    ? searchParamsObj.get("category") || "All Categories"
+    : "All Categories";
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);

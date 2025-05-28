@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import DirectoryClient from "./DirectoryClient";
+import ErrorBoundary from "../components/ErrorBoundary";
 
 export default function ClientWrapper() {
   const [isClient, setIsClient] = useState(false);
@@ -14,5 +15,9 @@ export default function ClientWrapper() {
     return null;
   }
 
-  return <DirectoryClient />;
+  return (
+    <ErrorBoundary>
+      <DirectoryClient />
+    </ErrorBoundary>
+  );
 }
