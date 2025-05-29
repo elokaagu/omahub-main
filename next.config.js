@@ -1,7 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  distDir: ".next",
-
   eslint: {
     // Warning: This allows production builds to successfully complete even if
     // your project has ESLint errors.
@@ -38,43 +36,10 @@ const nextConfig = {
     NEXT_IGNORE_TYPESCRIPT_ERRORS: "true",
     NEXT_IGNORE_ESM_VALIDATE: "true",
   },
-  // Custom webpack configuration
-  webpack: (config, { isServer }) => {
-    // Handle the punycode deprecation warning
-    if (!isServer) {
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        punycode: false,
-      };
-    }
-
-    // Disable webpack warnings for cleaner build logs
-    config.infrastructureLogging = {
-      level: "error",
-    };
-
-    // Handle problematic modules
-    config.module = {
-      ...config.module,
-      exprContextCritical: false,
-    };
-
-    // Fix "Cannot find module" errors
-    config.resolve.extensions = [
-      ".js",
-      ".jsx",
-      ".ts",
-      ".tsx",
-      ".json",
-      ...(config.resolve.extensions || []),
-    ];
-
-    return config;
-  },
-  // Explicitly define runtime
+  // Disable experimental features
   experimental: {
-    optimizeCss: true,
-    scrollRestoration: true,
+    optimizeCss: false,
+    scrollRestoration: false,
   },
   // Use standard output for Vercel - do not use 'export' which breaks middleware
   output: undefined,

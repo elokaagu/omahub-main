@@ -1,8 +1,8 @@
 {
   "version": 2,
   "buildCommand": "next build",
+  "installCommand": "npm install",
   "framework": "nextjs",
-  "outputDirectory": ".next",
   "env": {
     "NEXT_PUBLIC_RUNTIME": "true",
     "NEXT_IGNORE_TYPESCRIPT_ERRORS": "true",
