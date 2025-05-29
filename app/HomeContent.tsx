@@ -126,7 +126,8 @@ export default function HomeContent() {
         console.timeEnd("fetchBrandsForHome");
 
         if (!allBrands || allBrands.length === 0) {
-          console.warn("No brands found in database");
+          console.warn("No brands found in database, using fallback data");
+          applyFallbackData();
           setLoading(false);
           return;
         }
@@ -143,13 +144,17 @@ export default function HomeContent() {
             .filter((brand) => brand.category === category.title)
             .slice(0, 8) // Get up to 8 brands per category
             .map((brand) => ({
-              id: brand.id,
-              name: brand.name,
+              id:
+                brand.id ||
+                `temp-id-${Math.random().toString(36).substring(2, 9)}`,
+              name: brand.name || "Brand Name",
               image: brand.image || "/placeholder-image.jpg",
-              location: brand.location.split(",")[0], // Take just the city name
+              location: brand.location
+                ? brand.location.split(",")[0]
+                : "Unknown", // Take just the city name
               rating: brand.rating || 4.5,
-              isVerified: brand.is_verified,
-              category: brand.category,
+              isVerified: brand.is_verified || false,
+              category: brand.category || "Other",
             }));
 
           console.log(
@@ -158,26 +163,113 @@ export default function HomeContent() {
 
           return {
             ...category,
-            brands: categoryBrands,
+            brands:
+              categoryBrands.length > 0
+                ? categoryBrands
+                : getFallbackBrandsForCategory(category.title),
           };
         });
 
-        // Include all categories that have at least 1 brand
-        const filteredCategories = updatedCategories.filter(
-          (category) => category.brands.length > 0
-        );
-
-        console.log(
-          `🔍 Found ${filteredCategories.length} categories with brands`
-        );
-
-        setCategories(filteredCategories);
+        // Use all categories, even if they don't have brands (we'll use fallbacks)
+        setCategories(updatedCategories);
       } catch (error) {
         console.error("Error fetching brands for home page:", error);
+        applyFallbackData();
       } finally {
         setLoading(false);
         clearTimeout(timeoutId);
       }
+    }
+
+    // Function to provide fallback data by category
+    function getFallbackBrandsForCategory(category: string): BrandDisplay[] {
+      // Return 1-2 sample brands per category
+      switch (category) {
+        case "Bridal":
+          return [
+            {
+              id: "bridal-fallback-1",
+              name: "Imad Eduso",
+              image:
+                "/lovable-uploads/57cc6a40-0f0d-4a7d-8786-41f15832ebfb.png",
+              location: "Lagos",
+              rating: 5.0,
+              isVerified: true,
+              category: "Bridal",
+            },
+            {
+              id: "bridal-fallback-2",
+              name: "Weiz Dhurm Franklyn",
+              image:
+                "/lovable-uploads/57cc6a40-0f0d-4a7d-8786-41f15832ebfb.png",
+              location: "Lagos",
+              rating: 4.9,
+              isVerified: true,
+              category: "Bridal",
+            },
+          ];
+        case "Ready to Wear":
+          return [
+            {
+              id: "rtw-fallback-1",
+              name: "Adiree",
+              image:
+                "/lovable-uploads/4a7c7e86-6cde-4d07-a246-a5aa4cb6fa51.png",
+              location: "Lagos",
+              rating: 4.8,
+              isVerified: true,
+              category: "Ready to Wear",
+            },
+            {
+              id: "rtw-fallback-2",
+              name: "Orange Culture",
+              image:
+                "/lovable-uploads/4a7c7e86-6cde-4d07-a246-a5aa4cb6fa51.png",
+              location: "Lagos",
+              rating: 4.7,
+              isVerified: true,
+              category: "Ready to Wear",
+            },
+          ];
+        case "Tailoring":
+          return [
+            {
+              id: "tailoring-fallback-1",
+              name: "Emmy Kasbit",
+              image:
+                "/lovable-uploads/99ca757a-bed8-422e-b155-0b9d365b58e0.png",
+              location: "Accra",
+              rating: 4.6,
+              isVerified: true,
+              category: "Tailoring",
+            },
+          ];
+        case "Accessories":
+          return [
+            {
+              id: "accessories-fallback-1",
+              name: "Shekudo",
+              image:
+                "/lovable-uploads/25c3fe26-3fc4-43ef-83ac-6931a74468c0.png",
+              location: "Nairobi",
+              rating: 4.7,
+              isVerified: true,
+              category: "Accessories",
+            },
+          ];
+        default:
+          return [];
+      }
+    }
+
+    // Apply fallback data to all categories
+    function applyFallbackData() {
+      const fallbackCategories = categoryDefinitions.map((category) => ({
+        ...category,
+        brands: getFallbackBrandsForCategory(category.title),
+      }));
+
+      setCategories(fallbackCategories);
     }
 
     fetchBrands();
