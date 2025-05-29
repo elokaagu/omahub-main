@@ -1,9 +1,8 @@
 {
   "version": 2,
-  "buildCommand": "npm run build:clean",
+  "buildCommand": "next build",
   "framework": "nextjs",
   "outputDirectory": ".next",
-  "ignoreCommand": "echo \"ignoring build errors\"",
   "env": {
     "NEXT_PUBLIC_RUNTIME": "true",
     "NEXT_IGNORE_TYPESCRIPT_ERRORS": "true",
