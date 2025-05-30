@@ -8,7 +8,7 @@ import {
   X,
   Search,
   ChevronDown,
-  User,
+  User as UserIcon,
   Heart,
   Palette,
   LogOut,
@@ -32,6 +32,7 @@ import {
   navigationItems,
   type NavigationItem,
 } from "@/components/ui/navigation";
+import type { User } from "@/lib/services/authService";
 
 const collectionItems = collections.map((category) => ({
   name: category,
@@ -75,7 +76,7 @@ export default function Header() {
     <header
       className={cn(
         "fixed inset-x-0 top-0 z-50 transition-all duration-300",
-        scrolled ? "bg-white shadow-sm" : "bg-transparent"
+        scrolled ? "bg-white shadow-sm" : "bg-white"
       )}
     >
       <nav
@@ -85,25 +86,11 @@ export default function Header() {
         <div className="flex lg:flex-1">
           <Link href="/" className="-m-1.5 pl-0">
             <Image
-              src="/lovable-uploads/omahub-logo-white.png"
-              alt="OmaHub"
-              width={90}
-              height={25}
-              className={cn(
-                "h-6 w-auto transition-opacity duration-300",
-                scrolled ? "opacity-0 absolute" : "opacity-100"
-              )}
-              priority
-            />
-            <Image
               src="/lovable-uploads/omahub-logo.png"
               alt="OmaHub"
               width={90}
               height={25}
-              className={cn(
-                "h-6 w-auto transition-opacity duration-300",
-                scrolled ? "opacity-100" : "opacity-0 absolute"
-              )}
+              className="h-6 w-auto"
               priority
             />
           </Link>
@@ -112,10 +99,7 @@ export default function Header() {
         <div className="flex lg:hidden">
           <button
             type="button"
-            className={cn(
-              "-m-2.5 inline-flex items-center justify-center rounded-md p-2.5",
-              scrolled ? "text-gray-700" : "text-white"
-            )}
+            className="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-gray-700"
             onClick={() => setMobileMenuOpen(true)}
           >
             <span className="sr-only">Open main menu</span>
@@ -130,12 +114,7 @@ export default function Header() {
                 <NavigationMenuItem key={item.name}>
                   <NavigationMenuLink
                     asChild
-                    className={cn(
-                      "text-sm font-semibold leading-6 expand-underline px-3 py-2",
-                      scrolled
-                        ? "text-oma-black hover:text-oma-plum"
-                        : "text-white hover:text-white/80"
-                    )}
+                    className="text-sm font-semibold leading-6 expand-underline px-3 py-2 text-oma-black hover:text-oma-plum"
                   >
                     <Link href={item.href}>{item.name}</Link>
                   </NavigationMenuLink>
@@ -143,18 +122,11 @@ export default function Header() {
               ))}
               {navigationItems.map((category) => (
                 <NavigationMenuItem key={category.title}>
-                  <NavigationMenuTrigger
-                    className={cn(
-                      "text-sm font-semibold leading-6 gap-x-2 bg-transparent",
-                      scrolled
-                        ? "text-oma-black hover:text-oma-plum"
-                        : "text-white hover:text-white/80"
-                    )}
-                  >
+                  <NavigationMenuTrigger className="text-sm font-semibold leading-6 gap-x-2 bg-transparent text-oma-black hover:text-oma-plum">
                     {category.title}
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
-                    <div className="w-[400px] p-4 bg-white/90 backdrop-blur-sm shadow-lg rounded-lg">
+                    <div className="w-[400px] p-4 bg-white shadow-lg rounded-lg">
                       <div className="mb-3">
                         <h3 className="text-lg font-semibold mb-1 text-oma-black">
                           {category.title}
@@ -186,57 +158,46 @@ export default function Header() {
         <div className="hidden lg:flex lg:flex-1 lg:justify-end lg:gap-x-6">
           <button
             onClick={() => setIsSearchOpen(true)}
-            className={cn(
-              "text-sm font-semibold leading-6",
-              scrolled
-                ? "text-oma-black hover:text-oma-plum"
-                : "text-white hover:text-white/80"
-            )}
+            className="text-sm font-semibold leading-6 text-oma-black hover:text-oma-plum"
           >
             <Search className="h-5 w-5" />
           </button>
           <Button
             asChild
             variant="outline"
-            className={cn(
-              "transition-colors font-semibold",
-              scrolled
-                ? "border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white"
-                : "border-white text-white hover:bg-white/20 hover:text-white hover:border-white/50"
-            )}
+            className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white"
           >
-            <Link href="/directory">Explore the Directory</Link>
+            <Link href="/join">Join</Link>
           </Button>
 
           {user ? (
             <NavigationMenu>
               <NavigationMenuList>
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger
-                    className={cn(
-                      scrolled
-                        ? "bg-oma-plum text-white hover:bg-oma-plum/90"
-                        : "bg-white text-oma-plum hover:bg-white/90"
-                    )}
-                  >
-                    {user.avatar_url ? (
-                      <Avatar className="h-6 w-6 mr-2">
-                        <AvatarImage
-                          src={user.avatar_url}
-                          alt={`${user.first_name || ""} ${user.last_name || ""}`}
-                        />
-                        <AvatarFallback>
-                          <User className="h-4 w-4" />
-                        </AvatarFallback>
-                      </Avatar>
-                    ) : (
-                      <User className="h-4 w-4 mr-2" />
-                    )}
-                    {user.first_name ? `${user.first_name}` : "My Account"}
+                  <NavigationMenuTrigger className="text-sm font-semibold leading-6 gap-x-2 bg-transparent text-oma-black hover:text-oma-plum">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage
+                        src={user.avatar_url}
+                        alt={`${user.first_name || ""} ${user.last_name || ""}`}
+                      />
+                      <AvatarFallback>
+                        {`${(user.first_name || "").charAt(0)}${(
+                          user.last_name || ""
+                        ).charAt(0)}` || "U"}
+                      </AvatarFallback>
+                    </Avatar>
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
-                    <ul className="grid w-[200px] gap-2 p-4 bg-white shadow-lg rounded-lg border border-gray-100">
-                      <li>
+                    <div className="w-[200px] p-4 bg-white shadow-lg rounded-lg">
+                      <div className="mb-3">
+                        <h3 className="text-lg font-semibold mb-1 text-oma-black">
+                          {user.first_name
+                            ? `${user.first_name} ${user.last_name || ""}`
+                            : "User"}
+                        </h3>
+                        <p className="text-sm text-gray-500">{user.email}</p>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
                         <NavigationMenuLink asChild>
                           <Link
                             href="/profile"
@@ -245,8 +206,6 @@ export default function Header() {
                             Profile
                           </Link>
                         </NavigationMenuLink>
-                      </li>
-                      <li>
                         <NavigationMenuLink asChild>
                           <Link
                             href="/favorites"
@@ -255,10 +214,8 @@ export default function Header() {
                             Favorites
                           </Link>
                         </NavigationMenuLink>
-                      </li>
-                      {(user?.role === "admin" ||
-                        user?.role === "super_admin") && (
-                        <li>
+                        {(user?.role === "admin" ||
+                          user?.role === "super_admin") && (
                           <NavigationMenuLink asChild>
                             <Link
                               href="/studio"
@@ -267,9 +224,7 @@ export default function Header() {
                               Studio
                             </Link>
                           </NavigationMenuLink>
-                        </li>
-                      )}
-                      <li className="border-t border-gray-100 mt-1 pt-1">
+                        )}
                         <NavigationMenuLink asChild>
                           <button
                             onClick={handleSignOut}
@@ -278,8 +233,8 @@ export default function Header() {
                             Sign Out
                           </button>
                         </NavigationMenuLink>
-                      </li>
-                    </ul>
+                      </div>
+                    </div>
                   </NavigationMenuContent>
                 </NavigationMenuItem>
               </NavigationMenuList>

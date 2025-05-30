@@ -38,7 +38,21 @@ export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey, {
         try {
           const value = localStorage.getItem(key);
           if (!value) return null;
-          return value.startsWith("base64-") ? atob(value.slice(7)) : value;
+
+          // Handle base64 encoded values
+          if (value.startsWith("base64-")) {
+            try {
+              const decodedValue = atob(value.slice(7));
+              // Verify if it's valid JSON
+              JSON.parse(decodedValue);
+              return decodedValue;
+            } catch (e) {
+              console.warn("Failed to parse base64 auth data:", e);
+              return null;
+            }
+          }
+
+          return value;
         } catch (e) {
           console.error("Error reading auth storage:", e);
           return null;
@@ -46,7 +60,11 @@ export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey, {
       },
       setItem: (key, value) => {
         try {
-          localStorage.setItem(key, value);
+          // For session data, store as base64 to prevent JSON parsing issues
+          const shouldEncode =
+            key === "sb-auth-token" && value && typeof value === "string";
+          const finalValue = shouldEncode ? `base64-${btoa(value)}` : value;
+          localStorage.setItem(key, finalValue);
         } catch (e) {
           console.error("Error writing to auth storage:", e);
         }
