@@ -1,90 +1,104 @@
-# OmaHub - African Fashion Marketplace
+# OmaHub
 
-OmaHub is a marketplace connecting African fashion designers with customers worldwide.
+A platform for discovering and connecting with African fashion brands.
+
+## Features
+
+- Brand discovery and management
+- Role-based access control (Admin, Brand Owner, User)
+- Authentication with email/password and social providers
+- Modern, responsive UI with Tailwind CSS
+
+## Tech Stack
+
+- Next.js 14
+- Supabase (Authentication & Database)
+- Tailwind CSS
+- TypeScript
+
+## Environment Variables
+
+Create a `.env.local` file with the following variables:
+
+```bash
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
 
 ## Development
 
-### Prerequisites
-
-- Node.js 18+
-- npm or yarn
-- Supabase account
-
-### Installation
+1. Install dependencies:
 
 ```bash
-# Clone the repository
-git clone https://github.com/elokaagu/omahub-main.git
-cd omahub-main
-
-# Install dependencies
 npm install
-
-# Set up environment variables
-cp .env.example .env.local
-# Then edit .env.local with your Supabase credentials
 ```
 
-### Running the development server
+2. Run the development server:
 
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to view the app.
+3. Open [http://localhost:3000](http://localhost:3000)
 
 ## Deployment
 
-### Deployment to Vercel
+### Deploy to Vercel
 
-The application is configured to deploy to Vercel. There are multiple ways to deploy:
+1. Push your code to GitHub
+2. Visit [Vercel](https://vercel.com)
+3. Import your GitHub repository
+4. Add environment variables:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+5. Deploy!
 
-#### Option 1: GitHub Integration (Recommended)
+### Database Setup
 
-1. Connect your GitHub repository to Vercel
-2. Configure the following environment variables in Vercel:
-   - `VERCEL_BUILD_STEP`: true
-   - `CI`: false
-   - `NODE_OPTIONS`: --no-warnings --max-old-space-size=4096
-   - `NEXT_PUBLIC_SUPABASE_URL`: Your Supabase URL
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Your Supabase anon key
-   - `SUPABASE_SERVICE_ROLE_KEY`: Your Supabase service role key
+1. Run the initial migration:
 
-#### Option 2: Manual Deployment
+```sql
+-- Create profiles table with role and owned_brands
+CREATE TABLE IF NOT EXISTS public.profiles (
+    id UUID REFERENCES auth.users(id) PRIMARY KEY,
+    email TEXT,
+    first_name TEXT,
+    last_name TEXT,
+    avatar_url TEXT,
+    role TEXT DEFAULT 'user',
+    owned_brands UUID[] DEFAULT '{}',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW())
+);
 
-```bash
-# Clean the cache first
-npm run clear-cache
+-- Enable Row Level Security
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
-# Build the application
-npm run build
+-- Create brands table
+CREATE TABLE IF NOT EXISTS public.brands (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    name TEXT NOT NULL,
+    description TEXT,
+    logo_url TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW())
+);
 
-# Deploy using Vercel CLI
-npx vercel --prod
+-- Enable Row Level Security
+ALTER TABLE public.brands ENABLE ROW LEVEL SECURITY;
 ```
 
-### Troubleshooting Deployment
+2. Set up Row Level Security policies in Supabase
 
-If you encounter issues during deployment:
+## Contributing
 
-1. Check that all environment variables are set correctly
-2. Try clearing the cache with `npm run clear-cache`
-3. Make sure the Supabase connection is working properly
-4. Check Vercel logs for specific error messages
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-## Features
+## License
 
-- Browse African fashion designers by category
-- View designer profiles and collections
-- Contact designers for custom orders
-- Authentication and user profiles
-- Designer studio for managing products and collections
-
-## Tech Stack
-
-- Next.js 14
-- React
-- Supabase (Auth, Database, Storage)
-- Tailwind CSS
-- Radix UI Components
-- Vercel Deployment
+This project is licensed under the MIT License.

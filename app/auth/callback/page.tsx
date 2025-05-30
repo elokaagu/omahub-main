@@ -9,42 +9,54 @@ export default function AuthCallbackPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Handle the OAuth callback
     const handleAuthCallback = async () => {
       try {
-        // Get the code and next URL from the query parameters
         const url = new URL(window.location.href);
         const code = url.searchParams.get("code");
         const next = url.searchParams.get("next") || "/";
 
-        if (code) {
-          // Exchange the code for a session
-          const { error: sessionError } =
-            await supabase.auth.exchangeCodeForSession(code);
-
-          if (sessionError) {
-            console.error("Error exchanging code for session:", sessionError);
-            setError(sessionError.message);
-            setTimeout(() => {
-              router.push("/login?error=Authentication%20failed");
-            }, 2000);
-            return;
-          }
-
-          // Redirect to the home page or the next URL
-          router.push(next);
-        } else {
-          // No code found, redirect to login
-          setError("No authentication code found");
-          setTimeout(() => {
-            router.push("/login");
-          }, 2000);
+        if (!code) {
+          throw new Error("No code provided");
         }
-      } catch (error: any) {
-        console.error("Error in auth callback:", error);
-        setError(error.message || "Unknown authentication error");
+
+        // Exchange the code for a session
+        const { data, error: sessionError } =
+          await supabase.auth.exchangeCodeForSession(code);
+
+        if (sessionError) {
+          throw sessionError;
+        }
+
+        if (!data.session) {
+          throw new Error("No session created");
+        }
+
+        // Get the user's profile
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", data.session.user.id)
+          .single();
+
+        // If no profile exists, create one
+        if (profileError && profileError.code === "PGRST116") {
+          await supabase.from("profiles").insert({
+            id: data.session.user.id,
+            email: data.session.user.email,
+            role: "user",
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          });
+        }
+
+        // Redirect to the next URL
+        router.push(next);
+      } catch (err: any) {
+        console.error("Error in auth callback:", err);
+        setError(err.message);
+        // Redirect to login after a delay
         setTimeout(() => {
-          router.push("/login?error=Authentication%20failed");
+          router.push(`/login?error=${encodeURIComponent(err.message)}`);
         }, 2000);
       }
     };
@@ -52,25 +64,27 @@ export default function AuthCallbackPage() {
     handleAuthCallback();
   }, [router]);
 
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-oma-beige/50 to-white">
+        <div className="text-center">
+          <div className="text-red-500 mb-4 text-xl">Error: {error}</div>
+          <p className="text-oma-cocoa">Redirecting you back to login...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-oma-beige/50 to-white">
       <div className="text-center">
-        {error ? (
-          <>
-            <div className="text-red-500 mb-4 text-xl">Error: {error}</div>
-            <p className="text-oma-cocoa">Redirecting you back to login...</p>
-          </>
-        ) : (
-          <>
-            <div className="animate-spin h-12 w-12 border-4 border-oma-plum border-t-transparent rounded-full mx-auto mb-4"></div>
-            <h1 className="text-2xl font-canela text-oma-plum">
-              Completing sign in...
-            </h1>
-            <p className="text-oma-cocoa mt-2">
-              Please wait while we complete your authentication.
-            </p>
-          </>
-        )}
+        <div className="animate-spin h-12 w-12 border-4 border-oma-plum border-t-transparent rounded-full mx-auto mb-4"></div>
+        <h1 className="text-2xl font-canela text-oma-plum">
+          Completing sign in...
+        </h1>
+        <p className="text-oma-cocoa mt-2">
+          Please wait while we complete your authentication.
+        </p>
       </div>
     </div>
   );
