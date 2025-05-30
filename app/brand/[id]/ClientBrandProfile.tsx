@@ -36,6 +36,14 @@ export default function ClientBrandProfile({
   const { reviews, loading, error, fetchReviews } = useReviews(id as string);
   const [showReviewForm, setShowReviewForm] = useState(false);
 
+  // Scroll to collections function
+  const scrollToCollections = () => {
+    const collectionsSection = document.getElementById("collections-section");
+    if (collectionsSection) {
+      collectionsSection.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
   // Fetch reviews when component mounts
   useEffect(() => {
     console.log("Fetching reviews for brand ID:", id);
@@ -89,11 +97,31 @@ export default function ClientBrandProfile({
             </div>
           </div>
 
-          <p className="text-lg max-w-3xl">{brandData.description}</p>
+          <p className="text-lg max-w-3xl mb-6">{brandData.description}</p>
+
+          <div className="flex gap-4">
+            <Button
+              onClick={scrollToCollections}
+              className="bg-oma-plum hover:bg-oma-plum/90"
+            >
+              View Collections
+            </Button>
+            <Button
+              onClick={handleOpenContactModal}
+              variant="outline"
+              className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white"
+            >
+              Contact Designer
+            </Button>
+          </div>
         </div>
 
         {/* Collection Grid */}
-        <div className="my-12 slide-up" style={{ animationDelay: "100ms" }}>
+        <div
+          id="collections-section"
+          className="my-12 slide-up scroll-mt-24"
+          style={{ animationDelay: "100ms" }}
+        >
           <h2 className="heading-sm mb-6">Collections</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {brandData.collections.map((collection, index) => (

@@ -6,12 +6,14 @@ export interface Review {
 }
 
 export interface Collection {
-  id: number;
+  id: string | number;
   title: string;
   image: string;
+  description?: string;
 }
 
 export interface BrandData {
+  id: string;
   name: string;
   description: string;
   longDescription: string;
@@ -19,13 +21,14 @@ export interface BrandData {
   priceRange: string;
   category: string;
   rating: number;
-  reviews: Review[];
   isVerified: boolean;
+  image: string;
   collections: Collection[];
 }
 
 export const brandsData: Record<string, BrandData> = {
   "adire-designs": {
+    id: "adire-designs",
     name: "Adire Designs",
     description:
       "Founded in 2015, Adire Designs specializes in contemporary ready to wear pieces that incorporate traditional Nigerian adire textile techniques. Each piece celebrates the rich cultural heritage of Yoruba textile art while embracing modern silhouettes and styling.",
@@ -35,30 +38,8 @@ export const brandsData: Record<string, BrandData> = {
     priceRange: "₦15,000 - ₦120,000",
     category: "Ready to Wear",
     rating: 4.8,
-    reviews: [
-      {
-        author: "Ngozi Okafor",
-        comment:
-          "Absolutely stunning designs! The quality of the adire fabric is exceptional, and the fit is perfect. I always get compliments when I wear my Adire Designs piece.",
-        rating: 5,
-        date: "2024-03-15",
-      },
-      {
-        author: "Chike Obi",
-        comment:
-          "I love how Adire Designs blends traditional techniques with modern styles. Their clothing is unique and makes a statement. Highly recommend!",
-        rating: 4,
-        date: "2024-02-28",
-      },
-      {
-        author: "Aisha Bello",
-        comment:
-          "The customer service was excellent, and I received my order quickly. The adire top I purchased is beautiful and well-made. Will definitely be buying more!",
-        rating: 5,
-        date: "2024-01-10",
-      },
-    ],
     isVerified: true,
+    image: "/lovable-uploads/023ba098-0109-4738-9baf-1321bc3d2fe1.png",
     collections: [
       {
         id: 1,
@@ -78,6 +59,7 @@ export const brandsData: Record<string, BrandData> = {
     ],
   },
   "zora-atelier": {
+    id: "zora-atelier",
     name: "Zora Atelier",
     description:
       "Zora Atelier creates unique bridal pieces that blend contemporary design with African craftsmanship. Each gown is meticulously crafted to celebrate the beauty of African brides.",
@@ -87,30 +69,8 @@ export const brandsData: Record<string, BrandData> = {
     priceRange: "KSh 150,000 - KSh 850,000",
     category: "Bridal",
     rating: 4.9,
-    reviews: [
-      {
-        author: "Amara Okafor",
-        comment:
-          "I cannot express how special my wedding gown from Zora Atelier was. The attention to detail and the way they incorporated my Nigerian heritage into the design made me feel both modern and connected to my roots.",
-        rating: 5,
-        date: "2023-12-05",
-      },
-      {
-        author: "Nadia Kimathi",
-        comment:
-          "My experience with Zora Atelier was exceptional from start to finish. They really listened to what I wanted and created a gown beyond my dreams. Worth every shilling!",
-        rating: 5,
-        date: "2024-02-18",
-      },
-      {
-        author: "Fatima Ndongo",
-        comment:
-          "The craftsmanship and quality of my dress was incredible. The team was so patient during fittings and made the process stress-free. My only small critique would be that the final delivery was cutting it close to my wedding date.",
-        rating: 4.5,
-        date: "2024-01-10",
-      },
-    ],
     isVerified: true,
+    image: "/lovable-uploads/41fa65eb-36f2-4987-8c7b-a267b4d0e938.png",
     collections: [
       {
         id: 1,
@@ -130,6 +90,7 @@ export const brandsData: Record<string, BrandData> = {
     ],
   },
   "algiers-style": {
+    id: "algiers-style",
     name: "Algiers Style",
     description:
       "Algiers Style crafts exquisite bridal wear that combines North African traditional craftsmanship with contemporary silhouettes, creating unforgettable pieces for the modern bride.",
@@ -139,30 +100,8 @@ export const brandsData: Record<string, BrandData> = {
     priceRange: "DA 250,000 - DA 1,200,000",
     category: "Bridal",
     rating: 4.5,
-    reviews: [
-      {
-        author: "Amina Khalid",
-        comment:
-          "My wedding dress from Algiers Style was everything I dreamed of. The handwork was exquisite, and they incorporated my mother's veil into the design beautifully.",
-        rating: 5,
-        date: "2024-01-15",
-      },
-      {
-        author: "Sophie Benoit",
-        comment:
-          "As a French woman marrying into an Algerian family, I wanted something that honored both traditions. Algiers Style created a perfect fusion that made everyone happy, especially me!",
-        rating: 4,
-        date: "2023-11-20",
-      },
-      {
-        author: "Farida Taleb",
-        comment:
-          "The craftsmanship was stunning, though the multiple fittings required were sometimes difficult with my schedule. But the end result was worth the effort.",
-        rating: 4,
-        date: "2024-03-05",
-      },
-    ],
     isVerified: true,
+    image: "/lovable-uploads/90f81e12-d22e-4e01-b75b-d3bad4db5e45.png",
     collections: [
       {
         id: 1,
@@ -182,6 +121,7 @@ export const brandsData: Record<string, BrandData> = {
     ],
   },
   "cairo-couture": {
+    id: "cairo-couture",
     name: "Cairo Couture",
     description:
       "Cairo Couture creates luxury bridal wear that combines Egyptian heritage with contemporary design, specializing in intricate beadwork and embroidery that celebrates Middle Eastern artistry.",
@@ -191,30 +131,8 @@ export const brandsData: Record<string, BrandData> = {
     priceRange: "EGP 50,000 - EGP 500,000",
     category: "Bridal",
     rating: 4.8,
-    reviews: [
-      {
-        author: "Yasmine Fawzi",
-        comment:
-          "My Cairo Couture wedding dress was a masterpiece. The beadwork captured the light so beautifully, and the design perfectly complemented our venue at the historic Mena House.",
-        rating: 5,
-        date: "2023-10-15",
-      },
-      {
-        author: "Layla Ibrahim",
-        comment:
-          "The attention to detail was extraordinary. Every fitting was a delight, and they were so accommodating with the changes I requested. The final result was breathtaking.",
-        rating: 5,
-        date: "2024-02-08",
-      },
-      {
-        author: "Joanna Miller",
-        comment:
-          "As an American marrying in Egypt, I wanted something that respected local traditions while still feeling like me. Cairo Couture struck that balance perfectly, though the process took longer than expected.",
-        rating: 4,
-        date: "2023-12-20",
-      },
-    ],
     isVerified: true,
+    image: "/lovable-uploads/592425d5-0327-465c-990c-c63a73645792.png",
     collections: [
       {
         id: 1,
@@ -234,6 +152,7 @@ export const brandsData: Record<string, BrandData> = {
     ],
   },
   "lagos-bridal": {
+    id: "lagos-bridal",
     name: "Lagos Bridal House",
     description:
       "Lagos Bridal House creates contemporary bridal wear that honors Nigerian traditions while embracing modern design elements, offering bespoke services to brides seeking unique cultural expressions.",
@@ -243,30 +162,8 @@ export const brandsData: Record<string, BrandData> = {
     priceRange: "₦300,000 - ₦2,500,000",
     category: "Bridal",
     rating: 4.7,
-    reviews: [
-      {
-        author: "Chioma Okonkwo",
-        comment:
-          "Lagos Bridal House created the perfect fusion of my Igbo heritage and modern style. The way they incorporated my grandmother's aso-oke into the design was nothing short of magical.",
-        rating: 5,
-        date: "2024-01-12",
-      },
-      {
-        author: "Adebola Fadipe",
-        comment:
-          "I had both my white wedding gown and traditional attire made by Lagos Bridal House. Both were stunning and photographed beautifully. The team was professional throughout.",
-        rating: 4,
-        date: "2023-11-25",
-      },
-      {
-        author: "Jennifer Osei",
-        comment:
-          "As a Ghanaian marrying a Nigerian, I wanted something that honored both our cultures. The design team was very thoughtful in their approach, though some of the final details were rushed.",
-        rating: 4,
-        date: "2024-02-18",
-      },
-    ],
     isVerified: true,
+    image: "/lovable-uploads/ee92bbfa-4f54-4567-b4ef-8aebd0bca695.png",
     collections: [
       {
         id: 1,
@@ -286,6 +183,7 @@ export const brandsData: Record<string, BrandData> = {
     ],
   },
   "dakar-fashion": {
+    id: "dakar-fashion",
     name: "Dakar Fashion House",
     description:
       "Dakar Fashion House creates bold ready-to-wear collections that celebrate Senegalese textiles and patterns with a contemporary twist, bringing West African style to global audiences.",
@@ -295,30 +193,8 @@ export const brandsData: Record<string, BrandData> = {
     priceRange: "XOF 20,000 - XOF 200,000",
     category: "Ready to Wear",
     rating: 4.7,
-    reviews: [
-      {
-        author: "Fatou Diallo",
-        comment:
-          "I love how Dakar Fashion House pieces celebrate our culture while feeling thoroughly modern. The quality is excellent, and the designs always get me compliments.",
-        rating: 5,
-        date: "2024-01-30",
-      },
-      {
-        author: "Aminata Sow",
-        comment:
-          "Their summer collection was amazing - the colors and patterns are vibrant but still very wearable for everyday. The sizing is consistent too, which I appreciate.",
-        rating: 4,
-        date: "2023-12-15",
-      },
-      {
-        author: "Emma Porter",
-        comment:
-          "As someone who appreciates African fashion but isn't African, I found their pieces accessible while still feeling authentic. The customer service was great too.",
-        rating: 5,
-        date: "2024-02-10",
-      },
-    ],
     isVerified: true,
+    image: "/lovable-uploads/90f81e12-d22e-4e01-b75b-d3bad4db5e45.png",
     collections: [
       {
         id: 1,
@@ -338,6 +214,7 @@ export const brandsData: Record<string, BrandData> = {
     ],
   },
   "nairobi-couture": {
+    id: "nairobi-couture",
     name: "Nairobi Couture",
     description:
       "Nairobi Couture delivers sophisticated ready-to-wear collections inspired by Kenya's diverse cultures and landscapes, offering elevated everyday fashion with an East African perspective.",
@@ -347,30 +224,8 @@ export const brandsData: Record<string, BrandData> = {
     priceRange: "KSh 5,000 - KSh 50,000",
     category: "Ready to Wear",
     rating: 4.6,
-    reviews: [
-      {
-        author: "Njeri Kamau",
-        comment:
-          "Nairobi Couture creates pieces that are perfect for both work and social events. The quality is exceptional, and I love supporting a brand that showcases Kenyan creativity.",
-        rating: 5,
-        date: "2024-01-05",
-      },
-      {
-        author: "Makena Odhiambo",
-        comment:
-          "Their latest collection is beautiful, though I've noticed some inconsistency in sizing between different styles. The customer service was helpful in resolving my exchange.",
-        rating: 4,
-        date: "2023-12-20",
-      },
-      {
-        author: "Sarah Williams",
-        comment:
-          "I discovered Nairobi Couture during a business trip to Kenya and was impressed by the unique designs and quality. They've become some of my favorite work pieces.",
-        rating: 5,
-        date: "2024-02-15",
-      },
-    ],
     isVerified: true,
+    image: "/lovable-uploads/6f7a1022-2d82-4fb9-9365-6455df679707.png",
     collections: [
       {
         id: 1,
@@ -390,6 +245,7 @@ export const brandsData: Record<string, BrandData> = {
     ],
   },
   "accra-fashion": {
+    id: "accra-fashion",
     name: "Accra Fashion",
     description:
       "Accra Fashion creates vibrant ready-to-wear collections that blend traditional Ghanaian textiles and motifs with contemporary silhouettes, perfect for the modern West African lifestyle.",
@@ -399,30 +255,8 @@ export const brandsData: Record<string, BrandData> = {
     priceRange: "GHS 300 - GHS 3,000",
     category: "Ready to Wear",
     rating: 4.8,
-    reviews: [
-      {
-        author: "Ama Darko",
-        comment:
-          "Accra Fashion perfectly captures the energy and style of modern Ghana. Their pieces mix tradition with trend in a way that feels authentic and fresh.",
-        rating: 5,
-        date: "2024-02-20",
-      },
-      {
-        author: "Kwame Boateng",
-        comment:
-          "I love their men's collection - it's one of the few brands that offers modern African menswear that I can wear to both office and social events.",
-        rating: 5,
-        date: "2023-11-30",
-      },
-      {
-        author: "Efua Mensah",
-        comment:
-          "The quality is generally good, though I've had some issues with color fastness in a couple of pieces. Their customer service was responsive in addressing my concerns.",
-        rating: 4,
-        date: "2024-01-15",
-      },
-    ],
     isVerified: true,
+    image: "/lovable-uploads/abb12cfd-a40d-4890-bfd6-76feb4764069.png",
     collections: [
       {
         id: 1,
@@ -442,6 +276,7 @@ export const brandsData: Record<string, BrandData> = {
     ],
   },
   afrochic: {
+    id: "afrochic",
     name: "AfroChic",
     description:
       "AfroChic creates contemporary ready-to-wear fashion that celebrates the diversity of African prints and textiles, offering modern silhouettes with a distinctive pan-African aesthetic.",
@@ -451,30 +286,8 @@ export const brandsData: Record<string, BrandData> = {
     priceRange: "XOF 15,000 - XOF 150,000",
     category: "Ready to Wear",
     rating: 4.7,
-    reviews: [
-      {
-        author: "Sophie Mendy",
-        comment:
-          "AfroChic's designs are so versatile - I can wear them to work with a blazer or dress them up for evenings out. The quality is excellent for the price point.",
-        rating: 5,
-        date: "2024-01-10",
-      },
-      {
-        author: "Omar Sall",
-        comment:
-          "I purchased several shirts from their men's line and have been impressed with both the fit and the durability. Their size guide was accurate, which is often an issue with online shopping.",
-        rating: 4,
-        date: "2023-12-05",
-      },
-      {
-        author: "Claire Durant",
-        comment:
-          "As a French expatriate living in Senegal, I've fallen in love with AfroChic's modern take on African fashion. The pieces feel authentic without being costumey.",
-        rating: 5,
-        date: "2024-02-25",
-      },
-    ],
     isVerified: false,
+    image: "/lovable-uploads/b3fb585e-93cf-4aa7-9204-0a1b477fcb06.png",
     collections: [
       {
         id: 1,
@@ -494,6 +307,7 @@ export const brandsData: Record<string, BrandData> = {
     ],
   },
   "tunis-tailors": {
+    id: "tunis-tailors",
     name: "Tunis Master Tailors",
     description:
       "Tunis Master Tailors offers bespoke tailoring services that blend Mediterranean and North African influences, creating impeccably crafted garments with a distinctly Tunisian sensibility.",
@@ -503,30 +317,8 @@ export const brandsData: Record<string, BrandData> = {
     priceRange: "TND 800 - TND 5,000",
     category: "Tailoring",
     rating: 4.9,
-    reviews: [
-      {
-        author: "Mehdi Khelifi",
-        comment:
-          "I've been a client of Tunis Master Tailors for over a decade, and the quality has remained impeccable. My wedding suit received countless compliments and fits perfectly.",
-        rating: 5,
-        date: "2023-12-10",
-      },
-      {
-        author: "Ahmed Bouazizi",
-        comment:
-          "Their attention to detail is unmatched. The process takes time, but the results are worth the wait. The suit they made me is the finest garment I own.",
-        rating: 5,
-        date: "2024-01-20",
-      },
-      {
-        author: "Pierre Dubois",
-        comment:
-          "As someone who regularly buys bespoke suits in Paris, I was impressed by the craftsmanship at Tunis Master Tailors. The value for the quality is exceptional.",
-        rating: 5,
-        date: "2024-02-05",
-      },
-    ],
     isVerified: true,
+    image: "/lovable-uploads/53ab4ec9-fd54-4aa8-a292-70669af33185.png",
     collections: [
       {
         id: 1,
@@ -546,6 +338,7 @@ export const brandsData: Record<string, BrandData> = {
     ],
   },
   "casablanca-cuts": {
+    id: "casablanca-cuts",
     name: "Casablanca Cuts",
     description:
       "Casablanca Cuts offers bespoke tailoring that combines Moroccan craftsmanship with contemporary fashion. Their pieces feature clean lines and impeccable attention to detail.",
@@ -555,30 +348,8 @@ export const brandsData: Record<string, BrandData> = {
     priceRange: "MAD 5,000 - MAD 30,000",
     category: "Tailoring",
     rating: 4.8,
-    reviews: [
-      {
-        author: "Youssef Mansour",
-        comment:
-          "Casablanca Cuts created a wedding suit that perfectly balanced traditional Moroccan elements with a modern silhouette. The craftsmanship was exceptional.",
-        rating: 5,
-        date: "2024-01-05",
-      },
-      {
-        author: "Karim Berrada",
-        comment:
-          "Their bespoke service is excellent - they took the time to understand exactly what I wanted and delivered a suit that exceeded my expectations.",
-        rating: 5,
-        date: "2023-11-15",
-      },
-      {
-        author: "James Thornton",
-        comment:
-          "As a British expatriate working in Casablanca, I was looking for suits that would work in the local climate while maintaining a professional look. Casablanca Cuts delivered perfectly.",
-        rating: 4.5,
-        date: "2024-02-10",
-      },
-    ],
     isVerified: true,
+    image: "/lovable-uploads/eca14925-7de8-4100-af5d-b158ff70e951.png",
     collections: [
       {
         id: 1,
@@ -598,6 +369,7 @@ export const brandsData: Record<string, BrandData> = {
     ],
   },
   "beads-by-nneka": {
+    id: "beads-by-nneka",
     name: "Beads by Nneka",
     description:
       "Beads by Nneka creates exquisite handcrafted jewelry that celebrates Nigerian heritage through contemporary designs, using traditional beading techniques passed down through generations.",
@@ -607,30 +379,8 @@ export const brandsData: Record<string, BrandData> = {
     priceRange: "₦15,000 - ₦250,000",
     category: "Accessories",
     rating: 4.9,
-    reviews: [
-      {
-        author: "Folake Johnson",
-        comment:
-          "The craftsmanship of my Beads by Nneka necklace is extraordinary. It's become my signature piece, and I receive compliments every time I wear it.",
-        rating: 5,
-        date: "2024-01-15",
-      },
-      {
-        author: "Chinyere Obi",
-        comment:
-          "I purchased a full set for my traditional wedding, and the pieces were absolutely stunning. Nneka took the time to understand our cultural background and incorporated meaningful symbols.",
-        rating: 5,
-        date: "2023-12-20",
-      },
-      {
-        author: "Maya Lewis",
-        comment:
-          "As an African American connecting with my heritage, finding Beads by Nneka was a gift. The pieces are beautiful, and the cultural context provided makes them even more special.",
-        rating: 5,
-        date: "2024-02-05",
-      },
-    ],
     isVerified: true,
+    image: "/lovable-uploads/b3fb585e-93cf-4aa7-9204-0a1b477fcb06.png",
     collections: [
       {
         id: 1,
@@ -650,6 +400,7 @@ export const brandsData: Record<string, BrandData> = {
     ],
   },
   "marrakech-textiles": {
+    id: "marrakech-textiles",
     name: "Marrakech Textiles",
     description:
       "Marrakech Textiles creates handwoven accessories that celebrate Morocco's rich textile heritage, offering contemporary interpretations of traditional patterns and techniques.",
@@ -659,30 +410,8 @@ export const brandsData: Record<string, BrandData> = {
     priceRange: "MAD 300 - MAD 3,000",
     category: "Accessories",
     rating: 4.7,
-    reviews: [
-      {
-        author: "Samira Alaoui",
-        comment:
-          "The quality of my Marrakech Textiles shawl is exceptional. The weaving is intricate, and the natural dyes have a depth of color you don't find in mass-produced items.",
-        rating: 5,
-        date: "2024-01-10",
-      },
-      {
-        author: "Thomas Reid",
-        comment:
-          "I purchased several scarves as gifts, and everyone was impressed by the craftsmanship. The packaging was beautiful as well, making them perfect presents.",
-        rating: 4,
-        date: "2023-12-15",
-      },
-      {
-        author: "Fatima Zahra",
-        comment:
-          "As someone from Marrakech, I appreciate how this brand is keeping our weaving traditions alive while making them relevant for today. My only suggestion would be to offer more color options.",
-        rating: 4,
-        date: "2024-02-20",
-      },
-    ],
     isVerified: false,
+    image: "/lovable-uploads/ee92bbfa-4f54-4567-b4ef-8aebd0bca695.png",
     collections: [
       {
         id: 1,

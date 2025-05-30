@@ -6,12 +6,13 @@ WHERE relname = 'brands';
 -- Drop any existing policies to start fresh
 DROP POLICY IF EXISTS "Enable read access for all users" ON public.brands;
 DROP POLICY IF EXISTS "Enable read access for authenticated users" ON public.brands;
+DROP POLICY IF EXISTS "Anyone can view brands" ON public.brands;
 
 -- Enable RLS if not already enabled
 ALTER TABLE public.brands ENABLE ROW LEVEL SECURITY;
 
--- Create a simple policy that allows everyone to read
-CREATE POLICY "Enable read access for all users"
+-- Create a single, clear policy that allows everyone to read
+CREATE POLICY "Anyone can view brands"
 ON public.brands
 FOR SELECT
 USING (true);

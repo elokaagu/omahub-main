@@ -38,29 +38,29 @@ const carouselItems = [
   {
     id: 1,
     image: "/lovable-uploads/827fb8c0-e5da-4520-a979-6fc054eefc6e.png",
-    title: "New Season Collections",
-    subtitle:
-      "Tailored looks for weddings, travel, and every moment in between.",
+    title: "Editorial",
+    subtitle: "Where African luxury finds its voice",
     link: "/directory?category=Ready%20to%20Wear",
-    heroTitle: "Made to Measure. Made to Remember.",
+    heroTitle: "New\nSeason",
+    isEditorial: true,
   },
   {
     id: 2,
     image: "/lovable-uploads/bb152c0b-6378-419b-a0e6-eafce44631b2.png",
-    title: "Modern African Bridal",
-    subtitle:
-      "Tailored looks for weddings, travel, and every moment in between.",
+    title: "Modern Romance",
+    subtitle: "Redefining bridal wear with cultural elegance",
     link: "/directory?category=Bridal",
-    heroTitle: "Made to Measure. Made to Remember.",
+    heroTitle: "Modern\nRomance",
+    isEditorial: true,
   },
   {
     id: 3,
     image: "/lovable-uploads/de2841a8-58d1-4fd4-adfa-8c9aa09e9bb2.png",
-    title: "Spotlight: Lagos Fashion Week",
-    subtitle:
-      "Tailored looks for weddings, travel, and every moment in between.",
+    title: "Lagos Rising",
+    subtitle: "The future of African fashion is here",
     link: "/directory?category=Ready%20to%20Wear",
-    heroTitle: "Made to Measure. Made to Remember.",
+    heroTitle: "Lagos\nRising",
+    isEditorial: true,
   },
 ];
 
@@ -279,15 +279,17 @@ export default function HomeContent() {
 
   return (
     <>
-      {/* Hero Section with Carousel */}
-      <section className="w-full fade-in -mt-[64px]">
+      {/* Hero Section with Enhanced Carousel */}
+      <section className="w-full animate-fadeInUp">
         <Carousel
           items={carouselItems}
           autoplay={true}
           interval={6000}
-          aspectRatio="wide"
-          className="h-[90vh] max-h-[800px]"
-          heroTitleClassName="font-canela text-5xl md:text-7xl mb-4"
+          className="min-h-screen"
+          heroTitleClassName="font-canela text-7xl md:text-9xl mb-4 tracking-tight whitespace-pre-line"
+          showIndicators={true}
+          showControls={false}
+          overlay={false}
         />
       </section>
 

@@ -21,6 +21,9 @@ const ESSENTIAL_BRAND_FIELDS =
  */
 export async function getAllBrands(): Promise<Brand[]> {
   try {
+    // Clear cache on each call to ensure fresh data
+    clearBrandsCache();
+
     // Add more detailed logging
     console.log("🔍 getAllBrands: Starting fetch from database...");
 
@@ -40,7 +43,9 @@ export async function getAllBrands(): Promise<Brand[]> {
         "⛔ Error fetching brands:",
         error.message,
         error.details,
-        error.hint
+        error.hint,
+        "\nStatus:",
+        error.code
       );
       return getSampleBrandsData(); // Return sample data as fallback
     }
