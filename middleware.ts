@@ -13,9 +13,19 @@ export async function middleware(req: NextRequest) {
     // Try to get the session
     const {
       data: { session },
+      error: sessionError,
     } = await supabase.auth.getSession();
 
-    console.log("🔑 Session check:", session ? "Session found" : "No session");
+    if (sessionError) {
+      console.error("❌ Session error:", sessionError);
+      return handleAuthError(req);
+    }
+
+    console.log("🔑 Session check:", {
+      hasSession: !!session,
+      userId: session?.user?.id,
+      expiresAt: session?.expires_at,
+    });
 
     // Check if the request is for a protected route
     const isStudioRoute = req.nextUrl.pathname.startsWith("/studio");
@@ -26,40 +36,72 @@ export async function middleware(req: NextRequest) {
     // If accessing a protected route and not authenticated, redirect to login
     if (isProtectedRoute && !session) {
       console.log("⛔ Protected route access denied - no session");
-      const redirectUrl = new URL("/login", req.url);
-      redirectUrl.searchParams.set("next", req.nextUrl.pathname);
-      return NextResponse.redirect(redirectUrl);
+      return redirectToLogin(req);
     }
 
     // If accessing studio and authenticated, check admin role
     if (isStudioRoute && session) {
       console.log("👤 Checking studio access for user:", session.user.id);
 
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", session.user.id)
-        .single();
+      try {
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", session.user.id)
+          .single();
 
-      console.log("👑 User role:", profile?.role);
+        if (profileError) {
+          console.error("❌ Profile fetch error:", profileError);
+          return handleAuthError(req);
+        }
 
-      if (
-        profile &&
-        (profile.role === "admin" || profile.role === "super_admin")
-      ) {
-        console.log("✅ Studio access granted");
-        return res;
+        console.log("👑 User role:", profile?.role);
+
+        if (
+          profile &&
+          (profile.role === "admin" || profile.role === "super_admin")
+        ) {
+          console.log("✅ Studio access granted");
+
+          // Set auth cookie for client-side access
+          res.cookies.set({
+            name: "sb-auth-token",
+            value: session.access_token,
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+            maxAge: 60 * 60 * 24 * 7, // 7 days
+          });
+
+          return res;
+        }
+
+        console.log("⛔ Studio access denied - insufficient permissions");
+        return NextResponse.redirect(new URL("/", req.url));
+      } catch (error) {
+        console.error("❌ Profile check error:", error);
+        return handleAuthError(req);
       }
-
-      console.log("⛔ Studio access denied - insufficient permissions");
-      return NextResponse.redirect(new URL("/", req.url));
     }
 
     return res;
   } catch (error) {
     console.error("❌ Middleware error:", error);
-    return NextResponse.redirect(new URL("/", req.url));
+    return handleAuthError(req);
   }
+}
+
+function handleAuthError(req: NextRequest) {
+  // Clear any existing auth cookies
+  const res = NextResponse.redirect(new URL("/", req.url));
+  res.cookies.delete("sb-auth-token");
+  return res;
+}
+
+function redirectToLogin(req: NextRequest) {
+  const redirectUrl = new URL("/login", req.url);
+  redirectUrl.searchParams.set("next", req.nextUrl.pathname);
+  return NextResponse.redirect(redirectUrl);
 }
 
 export const config = {

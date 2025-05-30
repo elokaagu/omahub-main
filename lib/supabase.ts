@@ -35,6 +35,8 @@ export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     storageKey: "sb-auth-token",
     detectSessionInUrl: true,
+    debug: process.env.NEXT_PUBLIC_DEBUG_MODE === "true",
+    flowType: "pkce",
     storage: {
       getItem: (key) => {
         try {
@@ -42,16 +44,26 @@ export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey, {
           const value = localStorage.getItem(key);
           AuthDebug.log("Reading from storage", { key, hasValue: !!value });
           if (!value) return null;
-          // Handle base64 encoded values
-          if (value.startsWith("base64-")) {
-            try {
-              return atob(value.slice(7));
-            } catch (e) {
-              AuthDebug.error("Error decoding base64 value", e);
-              return value; // Return original value if decoding fails
+
+          // Parse JSON values
+          try {
+            const parsed = JSON.parse(value);
+            AuthDebug.log("Successfully parsed storage value", { key });
+            return value;
+          } catch {
+            // Not JSON, handle base64
+            if (value.startsWith("base64-")) {
+              try {
+                const decoded = atob(value.slice(7));
+                AuthDebug.log("Successfully decoded base64 value", { key });
+                return decoded;
+              } catch (e) {
+                AuthDebug.error("Error decoding base64 value", e);
+                return value;
+              }
             }
+            return value;
           }
-          return value;
         } catch (e) {
           AuthDebug.error("Error reading from storage", e);
           return null;
@@ -60,12 +72,23 @@ export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey, {
       setItem: (key, value) => {
         try {
           if (typeof window === "undefined") return;
-          // Check if value needs base64 encoding
-          const finalValue = value.includes("{")
-            ? `base64-${btoa(value)}`
-            : value;
-          localStorage.setItem(key, finalValue);
-          AuthDebug.log("Writing to storage", { key, hasValue: !!value });
+
+          // Try to parse as JSON to check if it needs encoding
+          try {
+            JSON.parse(value);
+            localStorage.setItem(key, value);
+            AuthDebug.log("Stored JSON value directly", { key });
+          } catch {
+            // Not valid JSON, check if needs base64
+            if (value.includes("{") || value.includes("}")) {
+              const encoded = `base64-${btoa(value)}`;
+              localStorage.setItem(key, encoded);
+              AuthDebug.log("Stored base64 encoded value", { key });
+            } else {
+              localStorage.setItem(key, value);
+              AuthDebug.log("Stored plain value", { key });
+            }
+          }
         } catch (e) {
           AuthDebug.error("Error writing to storage", e);
         }
@@ -74,18 +97,19 @@ export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey, {
         try {
           if (typeof window === "undefined") return;
           localStorage.removeItem(key);
-          AuthDebug.log("Removing from storage", { key });
+          AuthDebug.log("Removed from storage", { key });
         } catch (e) {
           AuthDebug.error("Error removing from storage", e);
         }
       },
     },
-    flowType: "pkce",
-    debug: process.env.NEXT_PUBLIC_DEBUG_MODE === "true",
   },
   global: {
     fetch: fetch,
-    headers: { "x-application-name": "omahub" },
+    headers: {
+      "x-application-name": "omahub",
+      "Cache-Control": "no-cache",
+    },
   },
 });
 
