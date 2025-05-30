@@ -7,7 +7,7 @@ import {
   StaggerContainer,
   StaggerItem,
 } from "@/app/components/ui/animations";
-import { getAllBrands } from "@/lib/services/brandService";
+import { useAllBrands } from "@/lib/hooks/useBrands";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -90,69 +90,40 @@ export default function DirectoryClient() {
   const [selectedLocation, setSelectedLocation] = useState("All Locations");
   const [showFilters, setShowFilters] = useState(false);
   const [displayedBrands, setDisplayedBrands] = useState<BrandDisplay[]>([]);
-  const [allBrands, setAllBrands] = useState<BrandDisplay[]>([]);
   const [isGridView, setIsGridView] = useState(true);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  // Fetch brands from the database
+  // Use the useAllBrands hook
+  const { brands: allBrands, loading, error } = useAllBrands();
+
+  // Convert brands to display format when allBrands changes
   useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    async function fetchBrands() {
-      try {
-        console.log("🔄 DirectoryClient: Starting brand fetch...");
-        setLoading(true);
-        setError(null);
-
-        const brandsData = await getAllBrands();
-        console.log(
-          "📋 DirectoryClient: Fetch complete, brands count:",
-          brandsData.length
-        );
-
-        // Always ensure we have some data to display, even if it's just sample data
-        if (!brandsData || brandsData.length === 0) {
-          console.warn(
-            "⚠️ DirectoryClient: No brands returned from getAllBrands"
-          );
-          setError("No brands found, showing sample data");
-          setAllBrands(fallbackBrands);
-          setDisplayedBrands(fallbackBrands);
-          setLoading(false);
-          return;
-        }
-
-        // Convert to display format with fallbacks for all required fields
-        const brandDisplayData: BrandDisplay[] = brandsData.map((brand) => ({
-          id:
-            brand.id || `temp-id-${Math.random().toString(36).substring(2, 9)}`,
-          name: brand.name || "Unnamed Brand",
-          image: brand.image || "/placeholder.jpg",
-          category: (brand.category as Subcategory) || "Ready to Wear",
-          location: brand.location ? brand.location.split(",")[0] : "Unknown", // Take just the city name
-          isVerified: brand.is_verified || false,
-        }));
-
-        console.log(
-          "✅ DirectoryClient: Processed brand data:",
-          brandDisplayData.length
-        );
-
-        setAllBrands(brandDisplayData);
-        setDisplayedBrands(brandDisplayData);
-      } catch (error) {
-        console.error("❌ DirectoryClient: Error fetching brands:", error);
-        setError(`Failed to load brands: ${error}`);
-        setAllBrands(fallbackBrands);
-        setDisplayedBrands(fallbackBrands);
-      } finally {
-        setLoading(false);
-      }
+    if (!allBrands) {
+      console.log(
+        "⚠️ DirectoryClient: No brands data available, using fallback data"
+      );
+      setDisplayedBrands(fallbackBrands);
+      return;
     }
 
-    fetchBrands();
-  }, []);
+    console.log("🔄 DirectoryClient: Converting brands to display format...");
+
+    // Convert to display format with fallbacks for all required fields
+    const brandDisplayData: BrandDisplay[] = allBrands.map((brand) => ({
+      id: brand.id || `temp-id-${Math.random().toString(36).substring(2, 9)}`,
+      name: brand.name || "Unnamed Brand",
+      image: brand.image || "/placeholder.jpg",
+      category: (brand.category as Subcategory) || "Ready to Wear",
+      location: brand.location ? brand.location.split(",")[0] : "Unknown", // Take just the city name
+      isVerified: brand.is_verified || false,
+    }));
+
+    console.log(
+      "✅ DirectoryClient: Processed",
+      brandDisplayData.length,
+      "brands"
+    );
+    setDisplayedBrands(brandDisplayData);
+  }, [allBrands]);
 
   // Filter brands based on search, category, and location
   useEffect(() => {
@@ -162,10 +133,23 @@ export default function DirectoryClient() {
       searchTerm,
       selectedCategory,
       selectedLocation,
-      allBrandsCount: allBrands.length,
+      allBrandsCount: allBrands?.length || 0,
     });
 
-    let filtered = [...allBrands];
+    let filtered = [...(allBrands || [])].map((brand) => ({
+      id: brand.id || `temp-id-${Math.random().toString(36).substring(2, 9)}`,
+      name: brand.name || "Unnamed Brand",
+      image: brand.image || "/placeholder.jpg",
+      category: (brand.category as Subcategory) || "Ready to Wear",
+      location: brand.location ? brand.location.split(",")[0] : "Unknown",
+      isVerified: brand.is_verified || false,
+    }));
+
+    // If there's an error or no brands, use fallback data
+    if (error || filtered.length === 0) {
+      console.log("⚠️ DirectoryClient: Using fallback data for filtering");
+      filtered = [...fallbackBrands];
+    }
 
     // Apply search filter
     if (searchTerm) {
@@ -200,20 +184,60 @@ export default function DirectoryClient() {
       );
     }
 
-    console.log("DirectoryClient: Filtered brands count:", filtered.length);
     setDisplayedBrands(filtered);
-  }, [searchTerm, selectedCategory, selectedLocation, allBrands]);
+  }, [searchTerm, selectedCategory, selectedLocation, allBrands, error]);
 
+  // Reset filters
   const resetFilters = () => {
     setSearchTerm("");
     setSelectedCategory("All Categories");
     setSelectedLocation("All Locations");
-    setDisplayedBrands(allBrands);
+    if (allBrands) {
+      const brandDisplayData: BrandDisplay[] = allBrands.map((brand) => ({
+        id: brand.id || `temp-id-${Math.random().toString(36).substring(2, 9)}`,
+        name: brand.name || "Unnamed Brand",
+        image: brand.image || "/placeholder.jpg",
+        category: (brand.category as Subcategory) || "Ready to Wear",
+        location: brand.location ? brand.location.split(",")[0] : "Unknown",
+        isVerified: brand.is_verified || false,
+      }));
+      setDisplayedBrands(brandDisplayData);
+    }
   };
 
+  // Error display component
+  const ErrorDisplay = () => (
+    <div className="bg-red-50 border border-red-200 rounded-lg p-8 text-center">
+      <p className="text-red-600 mb-4">
+        {error instanceof Error
+          ? error.message
+          : "An error occurred while loading brands"}
+      </p>
+      <p className="text-gray-600 mb-4">
+        Showing sample brands while we try to fix the issue.
+      </p>
+    </div>
+  );
+
+  // Loading display component
+  const LoadingDisplay = () => (
+    <div className="flex justify-center items-center h-64">
+      <div className="animate-spin h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full"></div>
+    </div>
+  );
+
   return (
-    <>
-      <div className="mt-8">
+    <div className="container mx-auto px-4 py-8">
+      {/* Header section */}
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold mb-4">Brand Directory</h1>
+        <p className="text-gray-600">
+          Discover and connect with our curated selection of brands
+        </p>
+      </div>
+
+      {/* Search and filters section */}
+      <div className="mb-8">
         <FadeIn>
           <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
             <div className="relative flex-1 max-w-md">
@@ -307,24 +331,28 @@ export default function DirectoryClient() {
 
       <Separator className="my-8 bg-oma-gold/10" />
 
-      {/* Results Section */}
+      {/* Error display */}
+      {error && <ErrorDisplay />}
+
+      {/* Loading state */}
       {loading ? (
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full"></div>
-        </div>
+        <LoadingDisplay />
       ) : (
         <>
-          {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md text-red-700">
-              <p>{error}</p>
-            </div>
-          )}
+          {/* Results count */}
+          <div className="mb-4">
+            <p className="text-gray-600">
+              Showing {displayedBrands.length} brand
+              {displayedBrands.length === 1 ? "" : "s"}
+            </p>
+          </div>
 
+          {/* Brand grid/list */}
           <div
             className={cn(
               "grid gap-6",
               isGridView
-                ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+                ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
                 : "grid-cols-1"
             )}
           >
@@ -350,6 +378,6 @@ export default function DirectoryClient() {
           )}
         </>
       )}
-    </>
+    </div>
   );
 }

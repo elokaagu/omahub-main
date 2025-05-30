@@ -13,7 +13,7 @@ let brandsCache: {
 };
 
 // Cache expiration time (15 minutes)
-const CACHE_EXPIRY = 15 * 60 * 1000;
+const CACHE_EXPIRY = 5 * 1000; // Reduced to 5 seconds for testing
 
 // Define essential fields to reduce payload size
 const ESSENTIAL_BRAND_FIELDS = "*";
@@ -49,37 +49,35 @@ export async function getAllBrands(): Promise<Brand[]> {
     if (brandsCache.isLoading) {
       console.log("🔄 Already fetching brands, waiting for completion...");
       // Wait for a short period and check cache
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 2000)); // Increased to 2 seconds
       if (brandsCache.data) {
+        console.log("✅ Got data from cache after waiting");
         return brandsCache.data;
       }
-      // If still no data, return sample data
+      console.log("⚠️ No data in cache after waiting, using sample data");
       return getSampleBrandsData();
     }
 
     // Check cache first
     const now = Date.now();
     if (brandsCache.data && now - brandsCache.timestamp < CACHE_EXPIRY) {
-      console.log("🎯 Using cached brands data");
+      console.log(
+        "🎯 Using cached brands data, age:",
+        (now - brandsCache.timestamp) / 1000,
+        "seconds"
+      );
       return brandsCache.data;
     }
 
     // Set loading state
     brandsCache.isLoading = true;
-
-    console.log("🔍 getAllBrands: Starting fresh fetch from database...");
-    console.log("🔑 Supabase client initialized:", !!supabase);
-    console.log("🔑 Supabase URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
-    console.log(
-      "🔑 Supabase key present:",
-      !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    );
+    console.log("🔄 Cache expired or empty, fetching fresh data...");
 
     // Debug Supabase connection
     if (!supabase) {
       console.error("⛔ ERROR: Supabase client is undefined!");
       brandsCache.isLoading = false;
-      return getSampleBrandsData();
+      throw new Error("Supabase client is not initialized");
     }
 
     // Test connection with a count query first
@@ -90,7 +88,7 @@ export async function getAllBrands(): Promise<Brand[]> {
     if (countError) {
       console.error("⛔ Error testing database connection:", countError);
       brandsCache.isLoading = false;
-      return getSampleBrandsData();
+      throw new Error(`Database connection error: ${countError.message}`);
     }
 
     console.log(`📊 Found ${count} brands in database`);
@@ -111,13 +109,13 @@ export async function getAllBrands(): Promise<Brand[]> {
         error.code
       );
       brandsCache.isLoading = false;
-      return getSampleBrandsData();
+      throw new Error(`Failed to fetch brands: ${error.message}`);
     }
 
     if (!data || data.length === 0) {
       console.warn("⚠️ No brands found in the database!");
       brandsCache.isLoading = false;
-      return getSampleBrandsData();
+      throw new Error("No brands found in the database");
     }
 
     // Log the first brand for debugging
@@ -149,7 +147,14 @@ export async function getAllBrands(): Promise<Brand[]> {
   } catch (err) {
     console.error("⛔ Unexpected error in getAllBrands:", err);
     brandsCache.isLoading = false;
-    return getSampleBrandsData();
+
+    // If this is a known error (thrown by us), rethrow it
+    if (err instanceof Error) {
+      throw err;
+    }
+
+    // Otherwise, wrap it in a new error
+    throw new Error(`Failed to fetch brands: ${err}`);
   }
 }
 
@@ -220,6 +225,12 @@ export function clearBrandsCache(): void {
     timestamp: 0,
     isLoading: false,
   };
+}
+
+export async function forceRefreshBrands(): Promise<Brand[]> {
+  console.log("Force refreshing brands data");
+  clearBrandsCache();
+  return getAllBrands();
 }
 
 /**

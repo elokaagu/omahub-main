@@ -85,12 +85,12 @@ export default function Header() {
         <div className="flex lg:flex-1">
           <Link href="/" className="-m-1.5 pl-0">
             <Image
-              src="/lovable-uploads/omahub-logo-white.png"
+              src="/lovable-uploads/omahub-logo.png"
               alt="OmaHub"
               width={90}
               height={25}
               className={cn(
-                "h-6 w-auto transition-opacity duration-300",
+                "h-6 w-auto transition-opacity duration-300 invert",
                 scrolled ? "opacity-0 absolute" : "opacity-100"
               )}
               priority

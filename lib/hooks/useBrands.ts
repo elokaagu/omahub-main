@@ -8,6 +8,7 @@ import {
   getBrandReviews,
   getBrandCollections,
   searchBrands,
+  forceRefreshBrands,
 } from "../services/brandService";
 import { Brand, Review, Collection } from "../supabase";
 
@@ -19,9 +20,12 @@ export function useAllBrands() {
   useEffect(() => {
     async function fetchBrands() {
       try {
-        const data = await getAllBrands();
+        console.log("🔄 useAllBrands: Force refreshing brands...");
+        const data = await forceRefreshBrands();
+        console.log("✅ useAllBrands: Got", data.length, "brands");
         setBrands(data);
       } catch (err) {
+        console.error("❌ useAllBrands: Error fetching brands:", err);
         setError(err as Error);
       } finally {
         setLoading(false);
