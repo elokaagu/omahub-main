@@ -32,25 +32,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       // Get additional profile data
       const profileData = await getProfile(userId);
+      console.log("Loaded profile data:", profileData);
+
+      if (!profileData) {
+        console.warn("No profile data found for user:", userId);
+        return;
+      }
 
       // Create a complete user object with auth and profile data
       const completeUser: User = {
         id: userId,
         email: email || "",
-        first_name: profileData?.first_name || "",
-        last_name: profileData?.last_name || "",
-        avatar_url: profileData?.avatar_url || "",
-        role: profileData?.role || "user",
+        first_name: profileData.first_name || "",
+        last_name: profileData.last_name || "",
+        avatar_url: profileData.avatar_url || "",
+        role: profileData.role || "user",
+        owned_brands: profileData.owned_brands || [],
       };
 
+      console.log("Setting complete user:", completeUser);
       setUser(completeUser);
     } catch (err) {
       console.error("Error loading user profile:", err);
-      // Still set basic user data if profile fetch fails
-      setUser({
-        id: userId,
-        email: email || "",
-      });
+      setError(err as Error);
     }
   };
 
@@ -85,39 +89,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    // Check for current user on mount
-    const checkUser = async () => {
-      try {
-        const currentUser = await getCurrentUser();
-        if (currentUser) {
-          await loadUserWithProfile(currentUser.id, currentUser.email);
-        } else {
-          setUser(null);
-        }
-      } catch (err) {
-        setError(err as Error);
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state changed:", event, session?.user?.id);
+      setLoading(true);
+
+      if (event === "SIGNED_OUT") {
         setUser(null);
-      } finally {
-        setLoading(false);
+        setError(null);
+      } else if (session?.user) {
+        await loadUserWithProfile(session.user.id, session.user.email);
       }
-    };
 
-    checkUser();
+      setLoading(false);
+    });
 
-    // Set up auth state listener
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (session?.user) {
-          await loadUserWithProfile(session.user.id, session.user.email);
-        } else {
-          setUser(null);
-        }
-        setLoading(false);
+    // Initial session check
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      console.log("Initial session check:", session?.user?.id);
+      if (session?.user) {
+        await loadUserWithProfile(session.user.id, session.user.email);
       }
-    );
+      setLoading(false);
+    });
 
     return () => {
-      authListener.subscription.unsubscribe();
+      subscription.unsubscribe();
     };
   }, []);
 
@@ -125,7 +123,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await supabase.auth.signOut();
       setUser(null);
+      setError(null);
     } catch (err) {
+      console.error("Error signing out:", err);
       setError(err as Error);
     }
   };

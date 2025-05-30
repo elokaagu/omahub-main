@@ -46,16 +46,25 @@ export default function StudioLayout({
           return;
         }
 
-        console.log("Checking admin access for user:", user.id);
-        const adminAccess = await isAdmin(user.id);
-        console.log("Admin access check result:", adminAccess);
+        // Check if user has admin role directly from the user object
+        const hasAdminRole =
+          user.role === "admin" || user.role === "super_admin";
+        console.log("User role check:", { role: user.role, hasAdminRole });
 
-        setHasAccess(adminAccess);
+        if (!hasAdminRole) {
+          // Double check with the server
+          console.log("Double checking admin access for user:", user.id);
+          const adminAccess = await isAdmin(user.id);
+          console.log("Server admin check result:", adminAccess);
 
-        if (!adminAccess) {
-          console.log("User does not have admin access, redirecting to home");
-          router.push("/");
+          if (!adminAccess) {
+            console.log("User does not have admin access, redirecting to home");
+            router.push("/");
+            return;
+          }
         }
+
+        setHasAccess(true);
       } catch (error) {
         console.error("Error checking admin access:", error);
         router.push("/");

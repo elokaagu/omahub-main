@@ -11,23 +11,34 @@ if (!supabaseUrl || !supabaseServiceKey) {
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+// List of email addresses to make super_admin
+const adminEmails = ["eloka@satellitelabs.xyz", "eloka.agu@icloud.com"];
+
 async function main() {
   try {
-    // Get all users from auth.users
-    const { data: users, error: usersError } =
-      await supabase.auth.admin.listUsers();
+    console.log("Starting admin role update...");
 
-    if (usersError) {
-      throw usersError;
-    }
+    for (const email of adminEmails) {
+      console.log(`Processing ${email}...`);
 
-    console.log(`Found ${users.users.length} users`);
+      // Get user by email
+      const { data: user, error: userError } = await supabase
+        .from("profiles")
+        .select("id, email, role")
+        .eq("email", email)
+        .single();
 
-    // Process each user
-    for (const user of users.users) {
-      console.log(`Processing user: ${user.email}`);
+      if (userError) {
+        console.error(`Error finding user ${email}:`, userError);
+        continue;
+      }
 
-      // Update profile to super_admin
+      if (!user) {
+        console.log(`User not found for email: ${email}`);
+        continue;
+      }
+
+      // Update to super_admin role
       const { data: updatedProfile, error: updateError } = await supabase
         .from("profiles")
         .update({
@@ -39,14 +50,14 @@ async function main() {
         .single();
 
       if (updateError) {
-        console.error(`Error updating profile for ${user.email}:`, updateError);
+        console.error(`Error updating role for ${email}:`, updateError);
         continue;
       }
 
-      console.log(`✅ Updated ${user.email} to super_admin role`);
+      console.log(`✅ Successfully updated ${email} to super_admin role`);
     }
 
-    console.log("✅ Successfully updated all users to super_admin");
+    console.log("✅ Admin role update completed");
   } catch (error) {
     console.error("Error:", error);
     process.exit(1);

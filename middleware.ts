@@ -27,12 +27,13 @@ export async function middleware(req: NextRequest) {
 
     // If accessing a protected route and not authenticated, redirect to login
     if (isProtectedRoute && !session) {
+      console.log("No session found for protected route, redirecting to login");
       const redirectUrl = new URL("/login", req.url);
       redirectUrl.searchParams.set("next", req.nextUrl.pathname);
       return NextResponse.redirect(redirectUrl);
     }
 
-    // If accessing studio and not an admin, redirect to home
+    // If accessing studio and authenticated, check admin role
     if (isStudioRoute && session) {
       const {
         data: { user },
@@ -41,21 +42,31 @@ export async function middleware(req: NextRequest) {
 
       if (userError) {
         console.error("User error in middleware:", userError);
-        return res;
+        return NextResponse.redirect(new URL("/", req.url));
       }
 
-      const { data: profile } = await supabase
+      // Get user's profile to check role
+      const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("role")
         .eq("id", user?.id)
         .single();
 
+      if (profileError) {
+        console.error("Profile error in middleware:", profileError);
+        return NextResponse.redirect(new URL("/", req.url));
+      }
+
+      // Check if user has admin or super_admin role
       if (
         !profile ||
         (profile.role !== "admin" && profile.role !== "super_admin")
       ) {
+        console.log("User does not have admin access:", profile?.role);
         return NextResponse.redirect(new URL("/", req.url));
       }
+
+      console.log("Admin access granted for user:", user?.id);
     }
 
     // Set the session cookie
@@ -74,7 +85,7 @@ export async function middleware(req: NextRequest) {
     return response;
   } catch (error) {
     console.error("Middleware error:", error);
-    return NextResponse.next();
+    return NextResponse.redirect(new URL("/", req.url));
   }
 }
 
