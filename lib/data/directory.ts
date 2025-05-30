@@ -1,10 +1,20 @@
-export const categories = [
-  "All Categories",
-  "Ready to Wear",
-  "Bridal",
-  "Tailoring",
-  "Accessories",
-];
+// Main categories for the directory
+export const collections = ["Collections", "Tailored"] as const;
+
+// Subcategories mapping
+export const subcategories = {
+  Collections: ["Ready to Wear", "Accessories", "Holiday", "Occasion Wear"],
+  Tailored: [
+    "Bridal",
+    "Wedding Guest",
+    "Event Wear",
+    "Birthday",
+    "Custom Design",
+  ],
+} as const;
+
+export type Category = (typeof collections)[number];
+export type Subcategory = (typeof subcategories)[Category][number];
 
 export const locations = [
   "All Locations",
@@ -17,11 +27,4 @@ export const locations = [
   "Marrakech",
   "Cairo",
   "Kumasi",
-];
-
-export const collections = [
-  "Bridal",
-  "Ready to Wear",
-  "Tailoring",
-  "Accessories",
 ];

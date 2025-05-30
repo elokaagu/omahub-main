@@ -14,10 +14,9 @@ export default function Footer() {
               alt="Oma Hub"
               className="h-6 w-auto mb-4"
             />
-            <p className="text-oma-cocoa text-sm leading-relaxed max-w-md">
-              A curated platform spotlighting Africa&apos;s emerging designers
-              through craftsmanship, creativity, and culture.
-            </p>
+            <div className="text-sm text-oma-cocoa/70">
+              A curated platform spotlighting emerging designers
+            </div>
           </div>
 
           {/* Column 2: Navigate */}

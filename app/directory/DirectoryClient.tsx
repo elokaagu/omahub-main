@@ -15,13 +15,18 @@ import { Separator } from "@/components/ui/separator";
 import { BrandCard } from "@/components/ui/brand-card";
 import { cn } from "@/lib/utils";
 import { Search, Filter, LayoutGrid, LayoutList } from "@/components/ui/icons";
+import {
+  collections,
+  subcategories,
+  type Subcategory,
+} from "@/lib/data/directory";
 
 // Interface for brand display
 interface BrandDisplay {
   id: string;
   name: string;
   image: string;
-  category: string;
+  category: Subcategory;
   location: string;
   isVerified: boolean;
 }
@@ -29,10 +34,8 @@ interface BrandDisplay {
 // Define category and location options
 const categories = [
   "All Categories",
-  "Bridal",
-  "Ready to Wear",
-  "Tailoring",
-  "Accessories",
+  ...collections,
+  ...Object.values(subcategories).flat(),
 ];
 
 const locations = [
@@ -43,6 +46,42 @@ const locations = [
   "Johannesburg",
   "Addis Ababa",
   "Other",
+];
+
+// Fallback brands with correct category types
+const fallbackBrands: BrandDisplay[] = [
+  {
+    id: "fallback-1",
+    name: "Adiree",
+    image: "/lovable-uploads/4a7c7e86-6cde-4d07-a246-a5aa4cb6fa51.png",
+    category: "Ready to Wear",
+    location: "Lagos",
+    isVerified: true,
+  },
+  {
+    id: "fallback-2",
+    name: "Imad Eduso",
+    image: "/lovable-uploads/57cc6a40-0f0d-4a7d-8786-41f15832ebfb.png",
+    category: "Bridal",
+    location: "Lagos",
+    isVerified: true,
+  },
+  {
+    id: "fallback-3",
+    name: "Emmy Kasbit",
+    image: "/lovable-uploads/99ca757a-bed8-422e-b155-0b9d365b58e0.png",
+    category: "Custom Design",
+    location: "Accra",
+    isVerified: true,
+  },
+  {
+    id: "fallback-4",
+    name: "Shekudo",
+    image: "/lovable-uploads/25c3fe26-3fc4-43ef-83ac-6931a74468c0.png",
+    category: "Accessories",
+    location: "Nairobi",
+    isVerified: true,
+  },
 ];
 
 export default function DirectoryClient() {
@@ -78,17 +117,19 @@ export default function DirectoryClient() {
             "⚠️ DirectoryClient: No brands returned from getAllBrands"
           );
           setError("No brands found, showing sample data");
+          setAllBrands(fallbackBrands);
+          setDisplayedBrands(fallbackBrands);
           setLoading(false);
           return;
         }
 
         // Convert to display format with fallbacks for all required fields
-        const brandDisplayData = brandsData.map((brand) => ({
+        const brandDisplayData: BrandDisplay[] = brandsData.map((brand) => ({
           id:
             brand.id || `temp-id-${Math.random().toString(36).substring(2, 9)}`,
           name: brand.name || "Unnamed Brand",
           image: brand.image || "/placeholder.jpg",
-          category: brand.category || "Uncategorized",
+          category: (brand.category as Subcategory) || "Ready to Wear",
           location: brand.location ? brand.location.split(",")[0] : "Unknown", // Take just the city name
           isVerified: brand.is_verified || false,
         }));
@@ -103,43 +144,6 @@ export default function DirectoryClient() {
       } catch (error) {
         console.error("❌ DirectoryClient: Error fetching brands:", error);
         setError(`Failed to load brands: ${error}`);
-
-        // Create some fallback data to ensure UI isn't empty
-        const fallbackBrands = [
-          {
-            id: "fallback-1",
-            name: "Adiree",
-            image: "/lovable-uploads/4a7c7e86-6cde-4d07-a246-a5aa4cb6fa51.png",
-            category: "Ready to Wear",
-            location: "Lagos",
-            isVerified: true,
-          },
-          {
-            id: "fallback-2",
-            name: "Imad Eduso",
-            image: "/lovable-uploads/57cc6a40-0f0d-4a7d-8786-41f15832ebfb.png",
-            category: "Bridal",
-            location: "Lagos",
-            isVerified: true,
-          },
-          {
-            id: "fallback-3",
-            name: "Emmy Kasbit",
-            image: "/lovable-uploads/99ca757a-bed8-422e-b155-0b9d365b58e0.png",
-            category: "Tailoring",
-            location: "Accra",
-            isVerified: true,
-          },
-          {
-            id: "fallback-4",
-            name: "Shekudo",
-            image: "/lovable-uploads/25c3fe26-3fc4-43ef-83ac-6931a74468c0.png",
-            category: "Accessories",
-            location: "Nairobi",
-            isVerified: true,
-          },
-        ];
-
         setAllBrands(fallbackBrands);
         setDisplayedBrands(fallbackBrands);
       } finally {
@@ -172,9 +176,21 @@ export default function DirectoryClient() {
 
     // Apply category filter
     if (selectedCategory !== "All Categories") {
-      filtered = filtered.filter(
-        (brand) => brand.category === selectedCategory
-      );
+      if (
+        collections.includes(selectedCategory as (typeof collections)[number])
+      ) {
+        // If it's a main category, show all brands in its subcategories
+        const subcats =
+          subcategories[selectedCategory as (typeof collections)[number]];
+        filtered = filtered.filter((brand) =>
+          subcats.some((subcat) => subcat === brand.category)
+        );
+      } else {
+        // If it's a subcategory, show only brands in that specific category
+        filtered = filtered.filter(
+          (brand) => brand.category === selectedCategory
+        );
+      }
     }
 
     // Apply location filter

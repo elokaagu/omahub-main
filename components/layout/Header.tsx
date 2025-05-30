@@ -28,6 +28,10 @@ import { collections } from "@/lib/data/directory";
 import { useAuth } from "@/lib/context/AuthContext";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useRouter } from "next/navigation";
+import {
+  navigationItems,
+  type NavigationItem,
+} from "@/components/ui/navigation";
 
 const collectionItems = collections.map((category) => ({
   name: category,
@@ -99,29 +103,37 @@ export default function Header() {
                   </NavigationMenuLink>
                 </NavigationMenuItem>
               ))}
-              <NavigationMenuItem>
-                <NavigationMenuTrigger className="text-sm font-semibold leading-6 text-oma-black hover:text-oma-plum gap-x-2 bg-transparent">
-                  New Collections
-                </NavigationMenuTrigger>
-                <NavigationMenuContent>
-                  <ul className="grid w-[200px] gap-1 p-2 bg-white/80 backdrop-blur-sm">
-                    {collectionItems.map((item) => (
-                      <li key={item.name}>
-                        <NavigationMenuLink asChild>
-                          <Link
-                            href={item.href}
-                            className="block select-none rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-oma-beige/50 hover:text-oma-plum focus:bg-oma-beige/50 focus:text-oma-plum"
-                          >
-                            <div className="text-sm font-semibold leading-none">
-                              {item.name}
-                            </div>
-                          </Link>
-                        </NavigationMenuLink>
-                      </li>
-                    ))}
-                  </ul>
-                </NavigationMenuContent>
-              </NavigationMenuItem>
+              {navigationItems.map((category) => (
+                <NavigationMenuItem key={category.title}>
+                  <NavigationMenuTrigger className="text-sm font-semibold leading-6 text-oma-black hover:text-oma-plum gap-x-2 bg-transparent">
+                    {category.title}
+                  </NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <div className="w-[400px] p-4">
+                      <div className="mb-3">
+                        <h3 className="text-lg font-semibold mb-1">
+                          {category.title}
+                        </h3>
+                        <p className="text-sm text-gray-500">
+                          {category.description}
+                        </p>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        {category.items.map((item) => (
+                          <NavigationMenuLink key={item.title} asChild>
+                            <Link
+                              href={item.href}
+                              className="block select-none rounded-md p-3 text-sm leading-none no-underline outline-none transition-colors hover:bg-oma-beige/50 hover:text-oma-plum focus:bg-oma-beige/50 focus:text-oma-plum"
+                            >
+                              {item.title}
+                            </Link>
+                          </NavigationMenuLink>
+                        ))}
+                      </div>
+                    </div>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
+              ))}
             </NavigationMenuList>
           </NavigationMenu>
         </div>
@@ -260,122 +272,77 @@ export default function Header() {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-oma-black hover:bg-oma-beige"
-                  onClick={() => setMobileMenuOpen(false)}
+                  className="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
                 >
                   {item.name}
                 </Link>
               ))}
-
-              <div className="-mx-3 block rounded-lg px-3 py-2">
-                <button
-                  onClick={() => setIsCollectionsOpen(!isCollectionsOpen)}
-                  className="flex w-full justify-between items-center text-base font-semibold leading-7 text-oma-black"
-                >
-                  New Collections
-                  <ChevronDown
-                    className={cn(
-                      "h-4 w-4 transition-transform duration-200",
-                      isCollectionsOpen ? "rotate-180" : ""
-                    )}
-                  />
-                </button>
-                <div
-                  className={cn(
-                    "pl-4 mt-1 space-y-2",
-                    isCollectionsOpen ? "block" : "hidden"
-                  )}
-                >
-                  {collectionItems.map((item) => (
-                    <Link
-                      key={item.name}
-                      href={item.href}
-                      className="block rounded-lg px-3 py-2 text-base leading-7 text-oma-black hover:bg-oma-beige"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      {item.name}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div className="py-6 space-y-4">
-              <Button
-                asChild
-                variant="outline"
-                className="w-full border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white"
-              >
-                <Link href="/directory">Explore the Directory</Link>
-              </Button>
-
-              {user ? (
-                <>
-                  <div className="flex items-center gap-2 px-3 py-2">
-                    {user.avatar_url ? (
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage
-                          src={user.avatar_url}
-                          alt={`${user.first_name || ""} ${
-                            user.last_name || ""
-                          }`}
-                        />
-                        <AvatarFallback>
-                          <User className="h-4 w-4" />
-                        </AvatarFallback>
-                      </Avatar>
-                    ) : (
-                      <User className="h-5 w-5 text-gray-600" />
-                    )}
-                    <span className="text-sm font-medium">
-                      {user.first_name
-                        ? `${user.first_name} ${user.last_name || ""}`
-                        : user.email}
-                    </span>
+              {navigationItems.map((category) => (
+                <div key={category.title} className="space-y-2">
+                  <Link
+                    href={category.href}
+                    className="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
+                  >
+                    {category.title}
+                  </Link>
+                  <div className="pl-4 space-y-1">
+                    {category.items.map((item) => (
+                      <Link
+                        key={item.title}
+                        href={item.href}
+                        className="-mx-3 block rounded-lg px-3 py-2 text-sm leading-7 text-gray-700 hover:bg-gray-50"
+                      >
+                        {item.title}
+                      </Link>
+                    ))}
                   </div>
+                </div>
+              ))}
+            </div>
+            <div className="py-6">
+              {user ? (
+                <div className="space-y-3">
                   <Link
                     href="/profile"
-                    className="block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-oma-black hover:bg-oma-beige"
-                    onClick={() => setMobileMenuOpen(false)}
+                    className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
                   >
-                    My Profile
+                    Profile
                   </Link>
                   <Link
                     href="/favorites"
-                    className="block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-oma-black hover:bg-oma-beige"
-                    onClick={() => setMobileMenuOpen(false)}
+                    className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
                   >
                     Favorites
                   </Link>
                   {(user?.role === "admin" || user?.role === "super_admin") && (
                     <Link
                       href="/studio"
-                      className="block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-oma-black hover:bg-oma-beige"
-                      onClick={() => setMobileMenuOpen(false)}
+                      className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
                     >
                       Studio
                     </Link>
                   )}
                   <button
                     onClick={handleSignOut}
-                    className="block w-full text-left rounded-lg px-3 py-2 text-base font-semibold leading-7 text-red-600 hover:bg-red-50"
+                    className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-red-600 hover:bg-red-50 w-full text-left"
                   >
                     Sign Out
                   </button>
-                </>
+                </div>
               ) : (
-                <Button
-                  asChild
-                  className="w-full bg-oma-plum hover:bg-oma-plum/90"
+                <Link
+                  href="/login"
+                  className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
                 >
-                  <Link href="/login">Sign In</Link>
-                </Button>
+                  Sign In
+                </Link>
               )}
             </div>
           </div>
         </div>
       </div>
 
+      {/* Search Modal */}
       <SearchModal open={isSearchOpen} onOpenChange={setIsSearchOpen} />
     </header>
   );

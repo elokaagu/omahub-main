@@ -4,6 +4,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Search, MapPin, CheckCircle, Tag, Clock } from "@/components/ui/icons";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { collections, subcategories } from "@/lib/data/directory";
 
 interface SearchResult {
   id?: string;
@@ -48,11 +49,10 @@ const searchData = [
     category: "Ready to Wear",
     location: "Johannesburg",
     isVerified: true,
-    description: "Luxury ready-to-wear",
+    description: "Luxury ready to wear",
   },
 ];
 
-const categories = ["Bridal", "Ready to Wear", "Tailoring", "Accessories"];
 const locations = [
   "Lagos",
   "Accra",
@@ -63,13 +63,6 @@ const locations = [
   "Marrakech",
   "Cairo",
 ];
-const collections = [
-  "Summer 2024",
-  "Wedding Season",
-  "Resort Collection",
-  "Limited Edition",
-];
-const occasions = ["Wedding", "Party", "Business", "Casual", "Traditional"];
 
 interface SearchModalProps {
   open: boolean;
@@ -123,19 +116,35 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
         })
       );
 
-    // Search through categories
-    const categoryResults = categories
+    // Search through main categories
+    const categoryResults = collections
       .filter((category) => category.toLowerCase().includes(searchLower))
       .map(
         (category): SearchResult => ({
           name: category,
           type: "category" as const,
-          href: `/directory?category=${category
-            .toLowerCase()
-            .replace(/ /g, "+")}`,
-          description: `Browse ${category.toLowerCase()} designers`,
+          href: `/directory?category=${category}`,
+          description:
+            category === "Collections"
+              ? "Shop for an occasion, holiday, or ready to wear piece"
+              : "Masters of craft creating perfectly fitted garments",
         })
       );
+
+    // Search through subcategories
+    const subcategoryResults = Object.entries(subcategories).flatMap(
+      ([mainCategory, subcats]) =>
+        subcats
+          .filter((subcat) => subcat.toLowerCase().includes(searchLower))
+          .map(
+            (subcat): SearchResult => ({
+              name: subcat,
+              type: "category" as const,
+              href: `/directory?category=${mainCategory}&subcategory=${subcat.replace(/ /g, "+")}`,
+              description: `Browse ${subcat.toLowerCase()} designs`,
+            })
+          )
+    );
 
     // Search through locations
     const locationResults = locations
@@ -149,38 +158,11 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
         })
       );
 
-    // Search through collections
-    const collectionResults = collections
-      .filter((collection) => collection.toLowerCase().includes(searchLower))
-      .map(
-        (collection): SearchResult => ({
-          name: collection,
-          type: "collection" as const,
-          href: `/directory?collection=${collection
-            .toLowerCase()
-            .replace(/ /g, "+")}`,
-          description: `View ${collection} pieces`,
-        })
-      );
-
-    // Search through occasions
-    const occasionResults = occasions
-      .filter((occasion) => occasion.toLowerCase().includes(searchLower))
-      .map(
-        (occasion): SearchResult => ({
-          name: occasion,
-          type: "occasion" as const,
-          href: `/directory?occasion=${occasion.toLowerCase()}`,
-          description: `Find ${occasion.toLowerCase()} wear`,
-        })
-      );
-
     setResults([
       ...designerResults,
       ...categoryResults,
+      ...subcategoryResults,
       ...locationResults,
-      ...collectionResults,
-      ...occasionResults,
     ]);
     setSelectedIndex(-1);
   }, [searchTerm]);
@@ -211,10 +193,8 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
         return <Tag className="h-4 w-4 text-oma-plum/70" />;
       case "location":
         return <MapPin className="h-4 w-4 text-oma-plum/70" />;
-      case "collection":
-        return <Clock className="h-4 w-4 text-oma-plum/70" />;
-      case "occasion":
-        return <Tag className="h-4 w-4 text-oma-plum/70" />;
+      default:
+        return null;
     }
   };
 

@@ -5,8 +5,8 @@ import { suisseIntl, canela } from "./fonts";
 import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
-  title: "OmaHub",
-  description: "Your one-stop shop for African fashion",
+  title: "Oma Hub",
+  description: "Your one-stop shop for global fashion",
 };
 
 export default function RootLayout({

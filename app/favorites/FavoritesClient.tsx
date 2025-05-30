@@ -58,8 +58,8 @@ export default function FavoritesClient() {
     return (
       <div className="text-center py-16 bg-oma-beige/20 rounded-lg">
         <h2 className="text-2xl font-semibold mb-2">No favorites yet</h2>
-        <p className="text-oma-cocoa mb-6">
-          Save your favorite African fashion brands to find them easily later.
+        <p className="text-lg text-oma-cocoa mb-8">
+          Save your favorite fashion brands to find them easily later.
         </p>
         <Button onClick={() => router.push("/")} variant="default">
           Explore Brands

@@ -10,7 +10,6 @@ import {
   StaggerItem,
 } from "@/app/components/ui/animations";
 import { getAllBrands } from "@/lib/services/brandService";
-import { Carousel } from "@/components/ui/carousel-custom";
 import { SectionHeader } from "@/components/ui/section-header";
 import { CategoryCard } from "@/components/ui/category-card";
 import { Button } from "@/components/ui/button";
@@ -19,6 +18,8 @@ import {
   getActiveHeroSlides,
   type HeroSlide,
 } from "@/lib/services/heroService";
+import { subcategories, type Subcategory } from "@/lib/data/directory";
+import { Carousel } from "@/components/ui/carousel-custom";
 
 interface Brand {
   id: string;
@@ -49,29 +50,25 @@ interface CategoryWithBrands {
 }
 
 interface CarouselItem {
-  id: string | number;
+  id: number;
   image: string;
   title: string;
-  subtitle?: string;
-  link?: string;
-  hero_title?: string;
-  heroTitle?: string;
-  is_editorial?: boolean;
+  subtitle: string;
+  link: string;
+  heroTitle: string;
   isEditorial?: boolean;
-  display_order?: number;
-  is_active?: boolean;
-  width?: number;
-  height?: number;
+  width: number;
+  height: number;
 }
 
 const carouselItems: CarouselItem[] = [
   {
     id: 1,
     image: "/lovable-uploads/827fb8c0-e5da-4520-a979-6fc054eefc6e.png",
-    title: "Editorial",
-    subtitle: "Where African luxury finds its voice",
-    link: "/directory?category=Ready%20to%20Wear",
-    heroTitle: "New\nSeason",
+    title: "Collections",
+    subtitle: "Shop for an occasion, holiday, or ready to wear piece",
+    link: "/directory?category=Collections",
+    heroTitle: "New Season",
     isEditorial: true,
     width: 1920,
     height: 1080,
@@ -79,21 +76,10 @@ const carouselItems: CarouselItem[] = [
   {
     id: 2,
     image: "/lovable-uploads/bb152c0b-6378-419b-a0e6-eafce44631b2.png",
-    title: "Modern Romance",
-    subtitle: "Redefining bridal wear with cultural elegance",
-    link: "/directory?category=Bridal",
-    heroTitle: "Modern\nRomance",
-    isEditorial: true,
-    width: 1920,
-    height: 1080,
-  },
-  {
-    id: 3,
-    image: "/lovable-uploads/de2841a8-58d1-4fd4-adfa-8c9aa09e9bb2.png",
-    title: "Lagos Rising",
-    subtitle: "The future of African fashion is here",
-    link: "/directory?category=Ready%20to%20Wear",
-    heroTitle: "Lagos\nRising",
+    title: "Tailored",
+    subtitle: "Masters of craft creating perfectly fitted garments",
+    link: "/directory?category=Tailored",
+    heroTitle: "Bespoke Craft",
     isEditorial: true,
     width: 1920,
     height: 1080,
@@ -215,19 +201,11 @@ export default function HomeContent() {
   }
 
   return (
-    <>
-      {/* Hero Section with Enhanced Carousel */}
-      <section className="w-full animate-fadeInUp">
+    <main className="flex-1">
+      {/* Hero Section */}
+      <section className="relative">
         <Carousel
-          items={
-            heroSlides.length > 0
-              ? heroSlides.map((slide) => ({
-                  ...slide,
-                  heroTitle: slide.hero_title,
-                  isEditorial: slide.is_editorial,
-                }))
-              : carouselItems
-          }
+          items={carouselItems}
           autoplay={true}
           interval={6000}
           className="min-h-screen"
@@ -238,28 +216,55 @@ export default function HomeContent() {
         />
       </section>
 
-      {/* What Are You Dressing For Section */}
-      <section className="py-24 px-6 max-w-7xl mx-auto" id="categories">
-        <FadeIn>
-          <SectionHeader
-            title="What Are You Dressing For?"
-            subtitle="Explore designers by occasion - from aisle ready to Lagos bound."
-            titleClassName="text-2xl md:text-3xl font-canela"
-            subtitleClassName="text-base text-oma-cocoa/80"
-          />
-        </FadeIn>
+      {/* Categories Section */}
+      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white">
+        <div className="max-w-7xl mx-auto">
+          <h2 className="text-3xl font-canela text-center mb-12">
+            Browse by Category
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Collections Card */}
+            <div className="relative group overflow-hidden rounded-lg">
+              <Link href="/directory?category=Collections">
+                <div className="relative h-[400px]">
+                  <Image
+                    src="/lovable-uploads/827fb8c0-e5da-4520-a979-6fc054eefc6e.png"
+                    alt="Collections"
+                    fill
+                    className="object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-black/30 transition-opacity group-hover:bg-black/40" />
+                  <div className="absolute bottom-6 left-6 text-white">
+                    <h3 className="text-2xl font-canela mb-2">Collections</h3>
+                    <p className="text-sm">
+                      Shop for an occasion, holiday, or ready to wear piece
+                    </p>
+                  </div>
+                </div>
+              </Link>
+            </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mt-14">
-          {categoryDefinitions.map((category) => (
-            <CategoryCard
-              key={category.title}
-              title={category.title}
-              image={category.image}
-              href={category.href}
-              customCta={category.customCta}
-              className="hover-scale shadow-lg"
-            />
-          ))}
+            {/* Tailored Card */}
+            <div className="relative group overflow-hidden rounded-lg">
+              <Link href="/directory?category=Tailored">
+                <div className="relative h-[400px]">
+                  <Image
+                    src="/lovable-uploads/bb152c0b-6378-419b-a0e6-eafce44631b2.png"
+                    alt="Tailored"
+                    fill
+                    className="object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-black/30 transition-opacity group-hover:bg-black/40" />
+                  <div className="absolute bottom-6 left-6 text-white">
+                    <h3 className="text-2xl font-canela mb-2">Tailored</h3>
+                    <p className="text-sm">
+                      Masters of craft creating perfectly fitted garments
+                    </p>
+                  </div>
+                </div>
+              </Link>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -390,6 +395,58 @@ export default function HomeContent() {
         </div>
       </section>
 
+      {/* What are you dressing for section */}
+      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-oma-beige/50">
+        <div className="max-w-7xl mx-auto">
+          <h2 className="text-3xl font-canela text-center mb-12">
+            What are you dressing for?
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            {[
+              {
+                title: "Wedding",
+                image:
+                  "/lovable-uploads/57cc6a40-0f0d-4a7d-8786-41f15832ebfb.png",
+                href: "/directory?occasion=Wedding",
+              },
+              {
+                title: "Party",
+                image:
+                  "/lovable-uploads/4a7c7e86-6cde-4d07-a246-a5aa4cb6fa51.png",
+                href: "/directory?occasion=Party",
+              },
+              {
+                title: "Work",
+                image:
+                  "/lovable-uploads/99ca757a-bed8-422e-b155-0b9d365b58e0.png",
+                href: "/directory?occasion=Work",
+              },
+              {
+                title: "Vacation",
+                image:
+                  "/lovable-uploads/25c3fe26-3fc4-43ef-83ac-6931a74468c0.png",
+                href: "/directory?occasion=Vacation",
+              },
+            ].map((occasion, index) => (
+              <Link key={index} href={occasion.href} className="group">
+                <div className="relative h-64 rounded-lg overflow-hidden">
+                  <Image
+                    src={occasion.image}
+                    alt={occasion.title}
+                    fill
+                    className="object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-black/30 transition-opacity group-hover:bg-black/40" />
+                  <div className="absolute bottom-4 left-4 text-white">
+                    <h3 className="text-xl font-medium">{occasion.title}</h3>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Brand Categories */}
       {categories.length > 0 ? (
         categories
@@ -504,7 +561,7 @@ export default function HomeContent() {
               </h2>
               <p className="text-lg max-w-2xl mx-auto mb-8">
                 Join our community of fashion enthusiasts and talented designers
-                bringing African creativity to the world.
+                bringing creativity to the world.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button asChild className="bg-oma-plum hover:bg-oma-plum/90">
@@ -522,6 +579,6 @@ export default function HomeContent() {
           </FadeIn>
         </div>
       </section>
-    </>
+    </main>
   );
 }

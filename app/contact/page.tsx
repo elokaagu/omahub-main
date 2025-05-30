@@ -291,10 +291,9 @@ export default function ContactPage() {
             <h4 className="font-source text-xl mb-3 transition-colors duration-300 group-hover:text-oma-plum">
               What regions do you currently cover?
             </h4>
-            <p className="text-oma-cocoa">
-              We currently showcase designers from across Africa, with a focus
-              on major design centers including Lagos, Nairobi, Cape Town,
-              Accra, and Dakar.
+            <p className="text-lg text-oma-cocoa mb-8">
+              We currently showcase designers from around the world, with a
+              focus on emerging talent and unique perspectives.
             </p>
           </div>
 

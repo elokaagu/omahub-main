@@ -30,11 +30,11 @@ export default function HowItWorksClient() {
     <div className="w-full bg-gradient-to-b from-oma-beige/50 to-white pt-24 pb-16">
       <div className="max-w-7xl mx-auto px-6">
         <SectionHeader
-          title="How OmaHub Works"
-          subtitle="Your guide to discovering and connecting with Africa's most innovative fashion designers"
+          title="How Oma Hub Works"
+          subtitle="Your guide to discovering and connecting with the world's most innovative fashion designers"
           centered={true}
-          titleClassName="text-4xl md:text-5xl font-canela"
-          subtitleClassName="text-base text-oma-cocoa/80 mt-2"
+          titleClassName="font-canela text-3xl md:text-4xl"
+          subtitleClassName="text-oma-cocoa/80"
         />
 
         {/* Three-step process */}
@@ -44,7 +44,7 @@ export default function HowItWorksClient() {
               icon: <Search className="h-10 w-10 mb-4 text-oma-plum" />,
               title: "Discover",
               description:
-                "Browse our curated directory of Africa's top fashion designers and filter by style, location, and specialty.",
+                "Browse our curated directory of top fashion designers and filter by style, location, and specialty.",
             },
             {
               icon: <MessageCircle className="h-10 w-10 mb-4 text-oma-plum" />,
@@ -90,10 +90,8 @@ export default function HowItWorksClient() {
                 <h3 className="font-canela text-3xl mb-6 text-center">
                   Find Your Perfect Designer
                 </h3>
-                <p className="text-center text-lg mb-12">
-                  From custom wedding gowns to ready to wear collections,
-                  connect with talented African designers who bring your vision
-                  to life.
+                <p className="text-center text-lg text-oma-cocoa mb-8">
+                  connect with talented designers who bring your vision to life.
                 </p>
 
                 <div className="space-y-6">
@@ -165,10 +163,9 @@ export default function HowItWorksClient() {
                 <h3 className="font-canela text-3xl mb-6 text-center">
                   Showcase Your Collection
                 </h3>
-                <p className="text-center text-lg mb-12">
-                  Join a community of Africa&rsquo;s top fashion talent and
-                  connect with clients looking for your unique design
-                  perspective.
+                <p className="text-center text-lg text-oma-cocoa mb-8">
+                  Join a community of top fashion talent and showcase your brand
+                  to a global audience.
                 </p>
 
                 <div className="space-y-6">
@@ -208,7 +205,7 @@ export default function HowItWorksClient() {
                     {
                       title: "Grow Your Business",
                       description:
-                        "Schedule consultations, negotiate terms, and build your client base across Africa and beyond.",
+                        "Schedule consultations, negotiate terms, and build your global client base.",
                       icon: (
                         <CheckCircle className="h-6 w-6 text-oma-gold flex-shrink-0" />
                       ),
@@ -258,7 +255,7 @@ export default function HowItWorksClient() {
                 name: "Ready to Wear",
                 image:
                   "/lovable-uploads/4a7c7e86-6cde-4d07-a246-a5aa4cb6fa51.png",
-                description: "Contemporary everyday fashion with African flair",
+                description: "Contemporary everyday fashion with global flair",
                 link: "/directory?category=Ready%20to%20Wear",
               },
               {
@@ -341,7 +338,7 @@ export default function HowItWorksClient() {
                 id: "faq5",
                 question: "How can I become a featured designer on OmaHub?",
                 answer:
-                  "We're always looking for talented African designers to join our platform. Click on 'Join as a Designer' to apply, and our team will review your portfolio and brand information.",
+                  "We're always looking for talented designers to join our platform. Click on 'Join as a Designer' to apply, and our team will review your portfolio and brand information.",
               },
             ].map((faq) => (
               <Collapsible
@@ -368,12 +365,11 @@ export default function HowItWorksClient() {
 
         {/* CTA section */}
         <div className="mt-24 bg-gradient-to-r from-oma-plum/10 to-oma-gold/10 rounded-xl p-8 md:p-12 text-center">
-          <h2 className="font-canela text-3xl md:text-4xl mb-4">
-            Ready to Get Started?
+          <h2 className="text-2xl font-canela text-center mb-4">
+            Discover talented designers or showcase your own brand on Oma Hub
           </h2>
           <p className="text-lg max-w-2xl mx-auto mb-8">
-            Discover talented African designers or showcase your own brand on
-            OmaHub today.
+            Ready to get started?
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild className="bg-oma-plum hover:bg-oma-plum/90">

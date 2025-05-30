@@ -80,12 +80,16 @@ export default function Join() {
       >
         <motion.div variants={fadeIn} className="max-w-3xl mx-auto text-center">
           <SectionHeader
-            title="Join the Hub"
-            subtitle="Apply to become part of our curated directory of Africa's most innovative fashion designers"
+            title="Join Our Designer Community"
+            subtitle="Apply to become part of our curated directory of innovative fashion designers"
             centered={true}
-            titleClassName="text-4xl md:text-5xl font-canela"
-            subtitleClassName="text-base text-oma-cocoa/80 mt-2"
+            titleClassName="font-canela text-3xl md:text-4xl"
+            subtitleClassName="text-oma-cocoa/80"
           />
+          <p className="text-lg text-oma-cocoa mb-8">
+            We look for exceptional design, quality craftsmanship, and a
+            commitment to representing global fashion perspectives.
+          </p>
         </motion.div>
       </motion.section>
 
