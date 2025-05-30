@@ -3,7 +3,16 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Menu, X, Search, ChevronDown, User } from "@/components/ui/icons";
+import {
+  Menu,
+  X,
+  Search,
+  ChevronDown,
+  User,
+  Heart,
+  Palette,
+  LogOut,
+} from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { SearchModal } from "@/components/ui/search-modal";
@@ -155,16 +164,15 @@ export default function Header() {
                     {user.first_name ? `${user.first_name}` : "My Account"}
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
-                    <ul className="grid w-[200px] gap-1 p-2 bg-white/80 backdrop-blur-sm">
+                    <ul className="grid w-[200px] gap-2 p-4 bg-white shadow-lg rounded-lg border border-gray-100">
                       <li>
                         <NavigationMenuLink asChild>
                           <Link
                             href="/profile"
-                            className="block select-none rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-oma-beige/50 hover:text-oma-plum focus:bg-oma-beige/50 focus:text-oma-plum"
+                            className="flex items-center gap-2 w-full rounded-md p-2 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-oma-plum transition-colors"
                           >
-                            <div className="text-sm font-semibold leading-none">
-                              Profile
-                            </div>
+                            <User className="h-4 w-4" />
+                            Profile
                           </Link>
                         </NavigationMenuLink>
                       </li>
@@ -172,11 +180,10 @@ export default function Header() {
                         <NavigationMenuLink asChild>
                           <Link
                             href="/favorites"
-                            className="block select-none rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-oma-beige/50 hover:text-oma-plum focus:bg-oma-beige/50 focus:text-oma-plum"
+                            className="flex items-center gap-2 w-full rounded-md p-2 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-oma-plum transition-colors"
                           >
-                            <div className="text-sm font-semibold leading-none">
-                              Favorites
-                            </div>
+                            <Heart className="h-4 w-4" />
+                            Favorites
                           </Link>
                         </NavigationMenuLink>
                       </li>
@@ -186,24 +193,22 @@ export default function Header() {
                           <NavigationMenuLink asChild>
                             <Link
                               href="/studio"
-                              className="block select-none rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-oma-beige/50 hover:text-oma-plum focus:bg-oma-beige/50 focus:text-oma-plum"
+                              className="flex items-center gap-2 w-full rounded-md p-2 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-oma-plum transition-colors"
                             >
-                              <div className="text-sm font-semibold leading-none">
-                                Studio
-                              </div>
+                              <Palette className="h-4 w-4" />
+                              Studio
                             </Link>
                           </NavigationMenuLink>
                         </li>
                       )}
-                      <li className="border-t border-gray-200 mt-1 pt-1">
+                      <li className="border-t border-gray-100 mt-1 pt-1">
                         <NavigationMenuLink asChild>
                           <button
                             onClick={handleSignOut}
-                            className="w-full block select-none rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-red-50 hover:text-red-600 focus:bg-red-50 focus:text-red-600"
+                            className="flex items-center gap-2 w-full rounded-md p-2 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
                           >
-                            <div className="text-sm font-semibold leading-none">
-                              Sign Out
-                            </div>
+                            <LogOut className="h-4 w-4" />
+                            Sign Out
                           </button>
                         </NavigationMenuLink>
                       </li>

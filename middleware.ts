@@ -19,25 +19,43 @@ export async function middleware(req: NextRequest) {
       return res;
     }
 
-    // Check if the request is for a Supabase storage image
+    // Check if the request is for a protected route
+    const isStudioRoute = req.nextUrl.pathname.startsWith("/studio");
     const isStorageRequest =
       req.nextUrl.pathname.includes("/storage/v1/object");
+    const isProtectedRoute = isStudioRoute || isStorageRequest;
 
-    // If accessing storage or protected route and not logged in, redirect to login
-    const isProtectedRoute =
-      req.nextUrl.pathname.startsWith("/studio") || isStorageRequest;
-
+    // If accessing a protected route and not authenticated, redirect to login
     if (isProtectedRoute && !session) {
-      // For image requests, return a 401 status
-      if (isStorageRequest) {
-        return new NextResponse(null, { status: 401 });
-      }
-
-      // For other protected routes, redirect to login
-      const redirectUrl = req.nextUrl.clone();
-      redirectUrl.pathname = "/login";
+      const redirectUrl = new URL("/login", req.url);
       redirectUrl.searchParams.set("next", req.nextUrl.pathname);
       return NextResponse.redirect(redirectUrl);
+    }
+
+    // If accessing studio and not an admin, redirect to home
+    if (isStudioRoute && session) {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+
+      if (userError) {
+        console.error("User error in middleware:", userError);
+        return res;
+      }
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user?.id)
+        .single();
+
+      if (
+        !profile ||
+        (profile.role !== "admin" && profile.role !== "super_admin")
+      ) {
+        return NextResponse.redirect(new URL("/", req.url));
+      }
     }
 
     // Set the session cookie
@@ -55,8 +73,7 @@ export async function middleware(req: NextRequest) {
 
     return response;
   } catch (error) {
-    console.error("Error in middleware:", error);
-    // Return the original response if there's an error
+    console.error("Middleware error:", error);
     return NextResponse.next();
   }
 }

@@ -135,7 +135,7 @@ const FallbackStar = (props: any) => (
   </svg>
 );
 
-// Get icons from lucide-react or use fallbacks
+// Export all icons with fallbacks
 export const CheckCircle = LucideIcons.CheckCircle || FallbackCheckCircle;
 export const Search = LucideIcons.Search || FallbackSearch;
 export const Filter = LucideIcons.Filter || FallbackFilter;
@@ -144,24 +144,24 @@ export const LayoutList = LucideIcons.LayoutList || FallbackLayoutList;
 export const MapPin = LucideIcons.MapPin || FallbackMapPin;
 export const Star = LucideIcons.Star || FallbackStar;
 
-// Add studio-specific icons
-export const Home = LucideIcons.Home;
-export const Package = LucideIcons.Package;
-export const Image = LucideIcons.Image;
-export const User = LucideIcons.User;
-export const LogOut = LucideIcons.LogOut;
-export const Menu = LucideIcons.Menu;
-export const X = LucideIcons.X;
-export const Settings = LucideIcons.Settings;
-export const RefreshCw = LucideIcons.RefreshCw;
-export const PlusCircle = LucideIcons.PlusCircle;
-
-// Re-export all other icons
+// Export all other icons
 export const {
+  Menu,
+  X,
   ChevronDown,
   ChevronUp,
   ChevronLeft,
   ChevronRight,
+  User,
+  Heart,
+  Palette,
+  LogOut,
+  Home,
+  Package,
+  Image,
+  Settings,
+  RefreshCw,
+  PlusCircle,
   Check,
   Circle,
   Edit,
@@ -169,5 +169,4 @@ export const {
   Tag,
   Clock,
   Dot,
-  // Add any other icons you use in your app
 } = LucideIcons;
