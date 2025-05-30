@@ -30,13 +30,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     email: string | undefined
   ) => {
     try {
-      console.log("Starting loadUserWithProfile for user:", userId);
+      console.log("🔄 Starting loadUserWithProfile for user:", userId);
+      setLoading(true);
+
       // Get additional profile data
       const profileData = await getProfile(userId);
-      console.log("Loaded profile data:", profileData);
+      console.log("✅ Loaded profile data:", profileData);
 
       if (!profileData) {
-        console.warn("No profile data found for user:", userId);
+        console.warn("⚠️ No profile data found for user:", userId);
+        setLoading(false);
         return;
       }
 
@@ -51,11 +54,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         owned_brands: profileData.owned_brands || [],
       };
 
-      console.log("Setting complete user with role:", completeUser.role);
+      console.log("👤 Setting complete user with role:", completeUser.role);
       setUser(completeUser);
     } catch (err) {
-      console.error("Error loading user profile:", err);
+      console.error("❌ Error loading user profile:", err);
       setError(err as Error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -63,6 +68,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refreshUserProfile = async () => {
     if (user?.id) {
       try {
+        console.log("🔄 Refreshing user profile for:", user.id);
+        setLoading(true);
+
         // First clear current user data to prevent stale data persistence
         setUser((prevUser) => {
           if (!prevUser) return null;
@@ -75,59 +83,97 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           };
         });
 
-        // Add a small delay to ensure UI updates before fetching new data
-        await new Promise((resolve) => setTimeout(resolve, 100));
-
         // Now fetch fresh profile data
         await loadUserWithProfile(user.id, user.email);
         return true;
       } catch (err) {
-        console.error("Error refreshing user profile:", err);
+        console.error("❌ Error refreshing user profile:", err);
         return false;
+      } finally {
+        setLoading(false);
       }
     }
     return false;
   };
 
   useEffect(() => {
+    let mounted = true;
+
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth state changed:", event, session?.user?.id);
+      console.log("🔐 Auth state changed:", event, session?.user?.id);
+
+      if (!mounted) return;
       setLoading(true);
 
-      if (event === "SIGNED_OUT") {
-        setUser(null);
-        setError(null);
-      } else if (session?.user) {
-        await loadUserWithProfile(session.user.id, session.user.email);
+      try {
+        if (event === "SIGNED_OUT") {
+          console.log("👋 User signed out");
+          setUser(null);
+          setError(null);
+        } else if (session?.user) {
+          console.log("✅ User session found:", session.user.id);
+          await loadUserWithProfile(session.user.id, session.user.email);
+        }
+      } catch (err) {
+        console.error("❌ Error handling auth state change:", err);
+        setError(err as Error);
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
       }
-
-      setLoading(false);
     });
 
     // Initial session check
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      console.log("Initial session check:", session?.user?.id);
-      if (session?.user) {
-        await loadUserWithProfile(session.user.id, session.user.email);
+    const initializeAuth = async () => {
+      try {
+        console.log("🔍 Checking initial session...");
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        if (!mounted) return;
+
+        if (session?.user) {
+          console.log("✅ Initial session found:", session.user.id);
+          await loadUserWithProfile(session.user.id, session.user.email);
+        } else {
+          console.log("ℹ️ No initial session found");
+          setUser(null);
+        }
+      } catch (err) {
+        console.error("❌ Error checking initial session:", err);
+        setError(err as Error);
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
       }
-      setLoading(false);
-    });
+    };
+
+    initializeAuth();
 
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
   }, []);
 
   const signOut = async () => {
     try {
+      console.log("🔄 Signing out...");
+      setLoading(true);
       await supabase.auth.signOut();
       setUser(null);
       setError(null);
+      console.log("✅ Sign out successful");
     } catch (err) {
-      console.error("Error signing out:", err);
+      console.error("❌ Error signing out:", err);
       setError(err as Error);
+    } finally {
+      setLoading(false);
     }
   };
 
