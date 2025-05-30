@@ -27,7 +27,7 @@ import {
 import { collections } from "@/lib/data/directory";
 import { useAuth } from "@/lib/context/AuthContext";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import {
   navigationItems,
   type NavigationItem,
@@ -47,6 +47,8 @@ const navigation = [
 export default function Header() {
   const { user, signOut } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
+  const isHomePage = pathname === "/";
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isCollectionsOpen, setIsCollectionsOpen] = useState(false);
@@ -75,7 +77,11 @@ export default function Header() {
     <header
       className={cn(
         "fixed inset-x-0 top-0 z-50 transition-all duration-300",
-        scrolled ? "bg-white shadow-sm" : "bg-transparent"
+        scrolled
+          ? "bg-white shadow-sm"
+          : isHomePage
+            ? "bg-transparent"
+            : "bg-white"
       )}
     >
       <nav
@@ -90,8 +96,10 @@ export default function Header() {
               width={90}
               height={25}
               className={cn(
-                "h-6 w-auto transition-opacity duration-300 invert",
-                scrolled ? "opacity-0 absolute" : "opacity-100"
+                "h-6 w-auto transition-opacity duration-300",
+                isHomePage && !scrolled
+                  ? "invert opacity-100"
+                  : "opacity-0 absolute"
               )}
               priority
             />
@@ -102,7 +110,7 @@ export default function Header() {
               height={25}
               className={cn(
                 "h-6 w-auto transition-opacity duration-300",
-                scrolled ? "opacity-100" : "opacity-0 absolute"
+                isHomePage && !scrolled ? "opacity-0 absolute" : "opacity-100"
               )}
               priority
             />
@@ -132,7 +140,7 @@ export default function Header() {
                     asChild
                     className={cn(
                       "text-sm font-semibold leading-6 expand-underline px-3 py-2",
-                      scrolled
+                      scrolled || !isHomePage
                         ? "text-oma-black hover:text-oma-plum"
                         : "text-white hover:text-white/80"
                     )}
@@ -146,7 +154,7 @@ export default function Header() {
                   <NavigationMenuTrigger
                     className={cn(
                       "text-sm font-semibold leading-6 gap-x-2 bg-transparent",
-                      scrolled
+                      scrolled || !isHomePage
                         ? "text-oma-black hover:text-oma-plum"
                         : "text-white hover:text-white/80"
                     )}
@@ -188,7 +196,7 @@ export default function Header() {
             onClick={() => setIsSearchOpen(true)}
             className={cn(
               "text-sm font-semibold leading-6",
-              scrolled
+              scrolled || !isHomePage
                 ? "text-oma-black hover:text-oma-plum"
                 : "text-white hover:text-white/80"
             )}
@@ -200,9 +208,9 @@ export default function Header() {
             variant="outline"
             className={cn(
               "transition-colors font-semibold",
-              scrolled
+              scrolled || !isHomePage
                 ? "border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white"
-                : "border-white text-white hover:bg-white/20 hover:text-white hover:border-white/50"
+                : "border-white text-white bg-black/20 hover:bg-black/40 hover:text-white hover:border-white/50"
             )}
           >
             <Link href="/directory">Explore the Directory</Link>
@@ -214,7 +222,7 @@ export default function Header() {
                 <NavigationMenuItem>
                   <NavigationMenuTrigger
                     className={cn(
-                      scrolled
+                      scrolled || !isHomePage
                         ? "bg-oma-plum text-white hover:bg-oma-plum/90"
                         : "bg-white text-oma-plum hover:bg-white/90"
                     )}
@@ -288,7 +296,7 @@ export default function Header() {
             <Button
               asChild
               className={cn(
-                scrolled
+                scrolled || !isHomePage
                   ? "bg-oma-plum hover:bg-oma-plum/90 text-white"
                   : "bg-white text-oma-plum hover:bg-white/90"
               )}
