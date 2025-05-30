@@ -54,6 +54,7 @@ export default function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isCollectionsOpen, setIsCollectionsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
 
   useEffect(() => {
     console.log("Header user state:", {
@@ -70,7 +71,7 @@ export default function Header() {
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [user]);
 
   const handleSignOut = async () => {
     try {
@@ -78,6 +79,49 @@ export default function Header() {
       router.push("/login");
     } catch (error) {
       console.error("Error signing out:", error);
+    }
+  };
+
+  const handleStudioNavigation = async () => {
+    try {
+      if (isNavigating) {
+        console.log("Navigation already in progress, skipping...");
+        return;
+      }
+
+      setIsNavigating(true);
+      console.log("Studio navigation initiated for user:", {
+        id: user?.id,
+        role: user?.role,
+        email: user?.email,
+      });
+
+      // First verify the session is still valid
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
+      if (sessionError || !session) {
+        console.error("No valid session found");
+        window.location.href = "/login?next=/studio";
+        return;
+      }
+
+      // Verify user has admin access
+      if (user?.role !== "admin" && user?.role !== "super_admin") {
+        console.error("User does not have admin access");
+        window.location.href = "/";
+        return;
+      }
+
+      // Use window.location for a full page navigation
+      window.location.href = "/studio";
+    } catch (error) {
+      console.error("Error navigating to studio:", error);
+      window.location.href = "/login?next=/studio";
+    } finally {
+      setIsNavigating(false);
     }
   };
 
@@ -277,39 +321,9 @@ export default function Header() {
                         <li>
                           <NavigationMenuLink asChild>
                             <button
-                              onClick={async () => {
-                                try {
-                                  console.log(
-                                    "Studio navigation initiated for user:",
-                                    {
-                                      id: user?.id,
-                                      role: user?.role,
-                                      email: user?.email,
-                                    }
-                                  );
-
-                                  // First verify the session is still valid
-                                  const {
-                                    data: { session },
-                                  } = await supabase.auth.getSession();
-                                  if (!session) {
-                                    console.error("No valid session found");
-                                    window.location.href =
-                                      "/login?next=/studio";
-                                    return;
-                                  }
-
-                                  // Use window.location for a full page navigation
-                                  window.location.href = "/studio";
-                                } catch (error) {
-                                  console.error(
-                                    "Error navigating to studio:",
-                                    error
-                                  );
-                                  window.location.href = "/login?next=/studio";
-                                }
-                              }}
-                              className="flex items-center gap-2 w-full rounded-md p-2 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-oma-plum transition-colors"
+                              onClick={handleStudioNavigation}
+                              disabled={isNavigating}
+                              className="flex items-center gap-2 w-full rounded-md p-2 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-oma-plum transition-colors disabled:opacity-50"
                             >
                               Studio
                             </button>
