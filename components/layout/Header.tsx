@@ -18,6 +18,7 @@ import {
 import { collections } from "@/lib/data/directory";
 import { useAuth } from "@/lib/context/AuthContext";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { useRouter } from "next/navigation";
 
 const collectionItems = collections.map((category) => ({
   name: category,
@@ -31,10 +32,20 @@ const navigation = [
 ];
 
 export default function Header() {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
+  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isCollectionsOpen, setIsCollectionsOpen] = useState(false);
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      router.push("/login");
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
+  };
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 bg-white/80 backdrop-blur-sm">
@@ -169,16 +180,31 @@ export default function Header() {
                           </Link>
                         </NavigationMenuLink>
                       </li>
+                      {(user?.role === "admin" ||
+                        user?.role === "super_admin") && (
+                        <li>
+                          <NavigationMenuLink asChild>
+                            <Link
+                              href="/studio"
+                              className="block select-none rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-oma-beige/50 hover:text-oma-plum focus:bg-oma-beige/50 focus:text-oma-plum"
+                            >
+                              <div className="text-sm font-semibold leading-none">
+                                Studio
+                              </div>
+                            </Link>
+                          </NavigationMenuLink>
+                        </li>
+                      )}
                       <li className="border-t border-gray-200 mt-1 pt-1">
                         <NavigationMenuLink asChild>
-                          <Link
-                            href="/profile"
-                            className="block select-none rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-red-50 hover:text-red-600 focus:bg-red-50 focus:text-red-600"
+                          <button
+                            onClick={handleSignOut}
+                            className="w-full block select-none rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-red-50 hover:text-red-600 focus:bg-red-50 focus:text-red-600"
                           >
                             <div className="text-sm font-semibold leading-none">
                               Sign Out
                             </div>
-                          </Link>
+                          </button>
                         </NavigationMenuLink>
                       </li>
                     </ul>
@@ -316,13 +342,21 @@ export default function Header() {
                   >
                     Favorites
                   </Link>
-                  <Link
-                    href="/profile"
-                    className="block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-red-600 hover:bg-red-50"
-                    onClick={() => setMobileMenuOpen(false)}
+                  {(user?.role === "admin" || user?.role === "super_admin") && (
+                    <Link
+                      href="/studio"
+                      className="block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-oma-black hover:bg-oma-beige"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Studio
+                    </Link>
+                  )}
+                  <button
+                    onClick={handleSignOut}
+                    className="block w-full text-left rounded-lg px-3 py-2 text-base font-semibold leading-7 text-red-600 hover:bg-red-50"
                   >
                     Sign Out
-                  </Link>
+                  </button>
                 </>
               ) : (
                 <Button

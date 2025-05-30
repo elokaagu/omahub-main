@@ -3,6 +3,7 @@ import { Button } from "./button";
 import { ArrowLeft, ArrowRight, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { AuthImage } from "./auth-image";
 import "@/styles/hero-animations.css";
 
 interface CarouselProps {
@@ -14,6 +15,8 @@ interface CarouselProps {
     link?: string;
     heroTitle?: string;
     isEditorial?: boolean;
+    width?: number;
+    height?: number;
   }[];
   autoplay?: boolean;
   interval?: number;
@@ -132,9 +135,11 @@ export function Carousel({
               className="relative w-full h-full parallax-scroll"
               style={{ "--scroll-offset": `${scrollOffset}px` } as any}
             >
-              <img
+              <AuthImage
                 src={item.image}
                 alt={item.title}
+                width={item.width}
+                height={item.height}
                 className={cn(
                   "w-full h-full object-cover",
                   item.isEditorial ? "object-center" : "object-top",

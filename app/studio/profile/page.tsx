@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import { User as UserIcon, Save } from "lucide-react";
 import { FileUpload } from "@/components/ui/file-upload";
 import { useRouter } from "next/navigation";
+import { AuthImage } from "@/components/ui/auth-image";
 
 interface ProfileData extends User {
   // Extends the User type from authService
@@ -235,9 +236,11 @@ export default function ProfilePage() {
             <CardContent>
               <div className="flex flex-col items-center justify-center mb-6">
                 {profileData.avatar_url ? (
-                  <img
+                  <AuthImage
                     src={profileData.avatar_url}
                     alt={`${profileData.first_name} ${profileData.last_name}`}
+                    width={128}
+                    height={128}
                     className="w-32 h-32 rounded-full object-cover mb-4"
                   />
                 ) : (

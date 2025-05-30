@@ -6,6 +6,7 @@ import { Upload, X, Image as ImageIcon } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { debugLog, LogLevel, extractErrorDetails } from "@/lib/debug-utils";
+import { AuthImage } from "./auth-image";
 
 interface FileUploadProps {
   onUploadComplete: (url: string) => void;
@@ -233,9 +234,11 @@ export function FileUpload({
 
       {preview ? (
         <div className="relative rounded-md overflow-hidden border border-gray-200">
-          <img
+          <AuthImage
             src={preview}
             alt="Preview"
+            width={800}
+            height={600}
             className="w-full h-64 object-cover"
           />
           <div className="absolute top-2 right-2 flex gap-2">

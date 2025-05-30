@@ -19,16 +19,6 @@ export default function AuthCallbackPage() {
           throw new Error("No code provided");
         }
 
-        // Clear any existing cookies that might be malformed
-        document.cookie.split(";").forEach((c) => {
-          document.cookie = c
-            .replace(/^ +/, "")
-            .replace(
-              /=.*/,
-              "=;expires=" + new Date().toUTCString() + ";path=/"
-            );
-        });
-
         // Exchange the code for a session
         const { data, error: sessionError } =
           await supabase.auth.exchangeCodeForSession(code);
@@ -41,22 +31,32 @@ export default function AuthCallbackPage() {
           throw new Error("No session created");
         }
 
-        // Get the user's profile
+        // Get or create the user's profile
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
           .select("*")
           .eq("id", data.session.user.id)
           .single();
 
-        // If no profile exists, create one
         if (profileError && profileError.code === "PGRST116") {
-          await supabase.from("profiles").insert({
-            id: data.session.user.id,
-            email: data.session.user.email,
-            role: "user",
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          });
+          // Profile doesn't exist, create one
+          const { error: createError } = await supabase
+            .from("profiles")
+            .insert({
+              id: data.session.user.id,
+              email: data.session.user.email,
+              role: "user",
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            });
+
+          if (createError) {
+            console.error("Error creating profile:", createError);
+            throw createError;
+          }
+        } else if (profileError) {
+          console.error("Error fetching profile:", profileError);
+          throw profileError;
         }
 
         // Redirect to the next URL

@@ -60,6 +60,8 @@ interface CarouselItem {
   isEditorial?: boolean;
   display_order?: number;
   is_active?: boolean;
+  width?: number;
+  height?: number;
 }
 
 const carouselItems: CarouselItem[] = [
@@ -71,6 +73,8 @@ const carouselItems: CarouselItem[] = [
     link: "/directory?category=Ready%20to%20Wear",
     heroTitle: "New\nSeason",
     isEditorial: true,
+    width: 1920,
+    height: 1080,
   },
   {
     id: 2,
@@ -80,6 +84,8 @@ const carouselItems: CarouselItem[] = [
     link: "/directory?category=Bridal",
     heroTitle: "Modern\nRomance",
     isEditorial: true,
+    width: 1920,
+    height: 1080,
   },
   {
     id: 3,
@@ -89,6 +95,8 @@ const carouselItems: CarouselItem[] = [
     link: "/directory?category=Ready%20to%20Wear",
     heroTitle: "Lagos\nRising",
     isEditorial: true,
+    width: 1920,
+    height: 1080,
   },
 ];
 

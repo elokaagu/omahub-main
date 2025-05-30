@@ -1,7 +1,7 @@
 import { supabase } from "../supabase";
 import { Provider } from "@supabase/supabase-js";
 
-export type UserRole = "admin" | "brand_owner" | "user";
+export type UserRole = "user" | "admin" | "super_admin" | "brand_owner";
 
 export type User = {
   id: string;
@@ -77,6 +77,10 @@ export async function signInWithOAuth(provider: Provider) {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
+        redirectTo:
+          typeof window !== "undefined"
+            ? `${window.location.origin}/auth/callback`
+            : undefined,
         scopes: provider === "google" ? "email profile" : undefined,
         queryParams: {
           access_type: "offline",

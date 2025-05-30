@@ -77,7 +77,7 @@ CREATE TABLE profiles (
   role TEXT DEFAULT 'user',
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  CONSTRAINT valid_role CHECK (role IN ('user', 'designer', 'admin', 'super_admin'))
+  CONSTRAINT valid_role CHECK (role IN ('user', 'admin', 'super_admin', 'brand_owner'))
 );
 
 -- Function to set up super admin users

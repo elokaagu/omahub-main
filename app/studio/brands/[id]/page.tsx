@@ -52,6 +52,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { AuthImage } from "@/components/ui/auth-image";
 
 export default function BrandEditPage({ params }: { params: { id: string } }) {
   // Debug params
@@ -154,8 +155,14 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
 
     setSaving(true);
     try {
-      await updateBrand(brand.id, {
-        ...brand,
+      await updateBrand(brand.id, brand.name, {
+        description: brand.description,
+        category: brand.category,
+        location: brand.location,
+        website: brand.website,
+        instagram: brand.instagram,
+        founded_year: brand.founded_year,
+        is_verified: brand.is_verified,
         image: imageUrl,
       });
       toast.success("Brand updated successfully");
@@ -172,7 +179,7 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
 
     setDeleting(true);
     try {
-      await deleteBrand(brand.id);
+      await deleteBrand(brand.id, brand.name);
       toast.success("Brand deleted successfully");
       router.push("/studio/brands");
     } catch (error) {
@@ -427,9 +434,11 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
               <div className="rounded-lg border overflow-hidden">
                 <div className="h-36 bg-gray-100 relative">
                   {imageUrl ? (
-                    <img
+                    <AuthImage
                       src={imageUrl}
                       alt={brand.name}
+                      width={800}
+                      height={600}
                       className="w-full h-full object-cover"
                     />
                   ) : (

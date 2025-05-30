@@ -6,14 +6,31 @@ import { getProfile } from "./authService";
  */
 export async function isAdmin(userId: string): Promise<boolean> {
   try {
+    // First check if the user exists in auth
+    const { data: authUser, error: authError } =
+      await supabase.auth.admin.getUserById(userId);
+
+    if (authError || !authUser) {
+      console.error("Error getting auth user:", authError);
+      return false;
+    }
+
+    // Then get the profile with role information
     const profile = await getProfile(userId);
     if (!profile) {
       console.error("No profile found for user:", userId);
       return false;
     }
 
-    const isAdminRole = profile.role === "admin";
-    console.log(`User ${userId} admin status:`, isAdminRole);
+    // Check for either admin or super_admin role
+    const isAdminRole =
+      profile.role === "admin" || profile.role === "super_admin";
+    console.log(
+      `User ${userId} admin status:`,
+      isAdminRole,
+      "Role:",
+      profile.role
+    );
     return isAdminRole;
   } catch (error) {
     console.error("Error checking admin status:", error);

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { CheckCircle, Star } from "@/components/ui/icons";
 import { cn } from "@/lib/utils";
 import FavoriteButton from "./favorite-button";
+import { AuthImage } from "./auth-image";
 
 interface BrandCardProps {
   id: string;
@@ -41,16 +42,15 @@ export function BrandCard({
           isPortrait ? "w-48 h-48 flex-shrink-0" : "aspect-[4/5]"
         )}
       >
-        <img
+        <AuthImage
           src={image || "/placeholder.svg"}
           alt={name}
+          width={800}
+          height={1000}
           className={cn(
             "w-full h-full object-cover transition-transform duration-300 group-hover:scale-105",
             isPortrait ? "object-center object-top" : ""
           )}
-          onError={(e) => {
-            (e.target as HTMLImageElement).src = "/placeholder.svg";
-          }}
         />
         <div className="absolute top-2 right-2 z-10">
           <FavoriteButton brandId={id} />

@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/table";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { AuthImage } from "@/components/ui/auth-image";
 
 export default function BrandsPage() {
   const [brands, setBrands] = useState<Brand[]>([]);
@@ -45,7 +46,7 @@ export default function BrandsPage() {
       const filtered = brands.filter(
         (brand) =>
           brand.name.toLowerCase().includes(query) ||
-          brand.description.toLowerCase().includes(query) ||
+          (brand.description?.toLowerCase() || "").includes(query) ||
           brand.category.toLowerCase().includes(query) ||
           brand.location.toLowerCase().includes(query)
       );
@@ -160,17 +161,10 @@ export default function BrandsPage() {
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-md overflow-hidden bg-gray-100 flex-shrink-0">
                         {brand.image && (
-                          <img
+                          <AuthImage
                             src={brand.image}
                             alt={brand.name}
                             className="w-full h-full object-cover"
-                            onError={(e) => {
-                              console.error(
-                                `Image failed to load for ${brand.name}:`,
-                                brand.image
-                              );
-                              e.currentTarget.src = "/placeholder-image.jpg";
-                            }}
                           />
                         )}
                       </div>
