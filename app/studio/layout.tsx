@@ -38,6 +38,8 @@ export default function StudioLayout({
           userId: user?.id,
           userRole: user?.role,
           isLoading: loading,
+          hasAdminAccess:
+            user?.role === "admin" || user?.role === "super_admin",
         });
 
         if (loading) {
@@ -52,11 +54,15 @@ export default function StudioLayout({
         }
 
         // Check if user has admin role directly from the user object
-        const hasAdminRole =
+        const hasAdminAccess =
           user.role === "admin" || user.role === "super_admin";
-        console.log("👤 User role check:", { role: user.role, hasAdminRole });
+        console.log("👤 User role check:", {
+          role: user.role,
+          hasAdminAccess,
+          isSuperAdmin: user.role === "super_admin",
+        });
 
-        if (!hasAdminRole) {
+        if (!hasAdminAccess) {
           // Double check with the server
           console.log("🔍 Double checking admin access for user:", user.id);
           const adminAccess = await isAdmin(user.id);

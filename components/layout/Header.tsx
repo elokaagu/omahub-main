@@ -57,10 +57,12 @@ export default function Header() {
   const [isNavigating, setIsNavigating] = useState(false);
 
   useEffect(() => {
+    const hasAdminAccess =
+      user?.role === "admin" || user?.role === "super_admin";
     console.log("Header user state:", {
       userId: user?.id,
       userRole: user?.role,
-      isAdmin: user?.role === "admin",
+      hasAdminAccess,
       isSuperAdmin: user?.role === "super_admin",
     });
 
@@ -94,6 +96,7 @@ export default function Header() {
         id: user?.id,
         role: user?.role,
         email: user?.email,
+        hasAdminAccess: user?.role === "admin" || user?.role === "super_admin",
       });
 
       // First verify the session is still valid
@@ -103,19 +106,21 @@ export default function Header() {
       } = await supabase.auth.getSession();
 
       if (sessionError || !session) {
-        console.error("No valid session found");
+        console.error("No valid session found, redirecting to login");
         window.location.href = "/login?next=/studio";
         return;
       }
 
       // Verify user has admin access
-      if (user?.role !== "admin" && user?.role !== "super_admin") {
-        console.error("User does not have admin access");
+      const hasAdminAccess =
+        user?.role === "admin" || user?.role === "super_admin";
+      if (!hasAdminAccess) {
+        console.error("User does not have admin access, redirecting to home");
         window.location.href = "/";
         return;
       }
 
-      // Use window.location for a full page navigation
+      console.log("✅ Access verified, navigating to studio");
       window.location.href = "/studio";
     } catch (error) {
       console.error("Error navigating to studio:", error);
@@ -325,7 +330,7 @@ export default function Header() {
                               disabled={isNavigating}
                               className="flex items-center gap-2 w-full rounded-md p-2 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-oma-plum transition-colors disabled:opacity-50"
                             >
-                              Studio
+                              Studio {isNavigating && "..."}
                             </button>
                           </NavigationMenuLink>
                         </li>
