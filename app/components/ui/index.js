@@ -1,4 +1,4 @@
-// Re-export animations from animations.tsx or animations.js
+// Re-export animations from animations.tsx
 export {
   PageFade,
   FadeIn,

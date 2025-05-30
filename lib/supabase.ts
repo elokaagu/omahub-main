@@ -27,8 +27,7 @@ if (process.env.NODE_ENV !== "production") {
   );
 }
 
-// Create a single supabase client for interacting with your database
-// This handles both client and server-side environments
+// Create a browser client for client-side operations
 export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
@@ -92,7 +91,8 @@ export async function safeDbOperation<T>(
 export type Brand = {
   id: string;
   name: string;
-  description: string;
+  description?: string;
+  logo_url?: string;
   long_description: string;
   location: string;
   price_range: string;

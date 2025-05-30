@@ -20,15 +20,18 @@ export const FadeIn = ({
   children,
   delay = 0,
   duration = 0.5,
+  className = "",
 }: {
   children: ReactNode;
   delay?: number;
   duration?: number;
+  className?: string;
 }) => (
   <motion.div
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
     transition={{ duration, delay }}
+    className={className}
   >
     {children}
   </motion.div>
@@ -39,34 +42,40 @@ export const SlideUp = ({
   children,
   delay = 0,
   duration = 0.5,
+  className = "",
 }: {
   children: ReactNode;
   delay?: number;
   duration?: number;
+  className?: string;
 }) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration, delay }}
+    className={className}
   >
     {children}
   </motion.div>
 );
 
-// Scale animation
+// Scale in animation
 export const ScaleIn = ({
   children,
   delay = 0,
   duration = 0.5,
+  className = "",
 }: {
   children: ReactNode;
   delay?: number;
   duration?: number;
+  className?: string;
 }) => (
   <motion.div
     initial={{ opacity: 0, scale: 0.95 }}
     animate={{ opacity: 1, scale: 1 }}
     transition={{ duration, delay }}
+    className={className}
   >
     {children}
   </motion.div>
@@ -77,10 +86,12 @@ export const StaggerContainer = ({
   children,
   delay = 0.1,
   staggerDelay = 0.1,
+  className = "",
 }: {
   children: ReactNode;
   delay?: number;
   staggerDelay?: number;
+  className?: string;
 }) => {
   const container = {
     hidden: { opacity: 0 },
@@ -94,22 +105,42 @@ export const StaggerContainer = ({
   };
 
   return (
-    <motion.div variants={container} initial="hidden" animate="show">
+    <motion.div
+      variants={container}
+      initial="hidden"
+      animate="show"
+      className={className}
+    >
       {children}
     </motion.div>
   );
 };
 
-// Staggered child item
-export const StaggerItem = ({ children }: { children: ReactNode }) => {
+// Stagger item
+export const StaggerItem = ({
+  children,
+  index = 0,
+  className = "",
+}: {
+  children: ReactNode;
+  index?: number;
+  className?: string;
+}) => {
   const item = {
     hidden: { opacity: 0, y: 20 },
     show: {
       opacity: 1,
       y: 0,
-      transition: { type: "spring", stiffness: 300, damping: 24 },
+      transition: {
+        duration: 0.5,
+        ease: "easeOut",
+      },
     },
   };
 
-  return <motion.div variants={item}>{children}</motion.div>;
+  return (
+    <motion.div variants={item} className={className}>
+      {children}
+    </motion.div>
+  );
 };

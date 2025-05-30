@@ -8,7 +8,7 @@ import {
   SlideUp,
   StaggerContainer,
   StaggerItem,
-} from "@/components/ui/animations";
+} from "@/app/components/ui/animations";
 import { getAllBrands } from "@/lib/services/brandService";
 import { Carousel } from "@/components/ui/carousel-custom";
 import { SectionHeader } from "@/components/ui/section-header";

@@ -8,7 +8,7 @@ import {
   ScaleIn,
   StaggerContainer,
   StaggerItem,
-} from "@/components/ui/animations";
+} from "@/app/components/ui/animations";
 import { motion } from "framer-motion";
 import { useState } from "react";
 

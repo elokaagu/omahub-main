@@ -1,4 +1,5 @@
 import { supabase, Brand, Review, Collection } from "../supabase";
+import { getProfile } from "./authService";
 
 // Cache configuration
 let brandsCache: {
@@ -14,6 +15,28 @@ const CACHE_EXPIRY = 15 * 60 * 1000;
 
 // Define essential fields to reduce payload size
 const ESSENTIAL_BRAND_FIELDS = "*";
+
+/**
+ * Check if user has permission to modify a brand
+ */
+async function hasPermission(
+  userId: string,
+  brandId: string
+): Promise<boolean> {
+  const profile = await getProfile(userId);
+
+  if (!profile) return false;
+
+  // Admins have permission to all brands
+  if (profile.role === "admin") return true;
+
+  // Brand owners only have permission to their owned brands
+  if (profile.role === "brand_owner") {
+    return profile.owned_brands?.includes(brandId) || false;
+  }
+
+  return false;
+}
 
 /**
  * Fetch all brands from the database
@@ -218,19 +241,31 @@ export const getBrand = getBrandById;
  * Update a brand
  */
 export async function updateBrand(
+  userId: string,
   id: string,
-  brandData: Partial<Brand>
+  updates: Partial<Brand>
 ): Promise<Brand | null> {
+  // Check if user has permission to update this brand
+  const hasAccess = await hasPermission(userId, id);
+  if (!hasAccess) {
+    throw new Error(
+      "Unauthorized: You don't have permission to update this brand"
+    );
+  }
+
   const { data, error } = await supabase
     .from("brands")
-    .update(brandData)
+    .update({
+      ...updates,
+      updated_at: new Date().toISOString(),
+    })
     .eq("id", id)
     .select()
     .single();
 
   if (error) {
-    console.error(`Error updating brand ${id}:`, error);
-    throw error;
+    console.error("Error updating brand:", error);
+    return null;
   }
 
   return data;
@@ -239,13 +274,25 @@ export async function updateBrand(
 /**
  * Delete a brand
  */
-export async function deleteBrand(id: string): Promise<void> {
+export async function deleteBrand(
+  userId: string,
+  id: string
+): Promise<boolean> {
+  const profile = await getProfile(userId);
+
+  // Only admins can delete brands
+  if (profile?.role !== "admin") {
+    throw new Error("Unauthorized: Only admins can delete brands");
+  }
+
   const { error } = await supabase.from("brands").delete().eq("id", id);
 
   if (error) {
-    console.error(`Error deleting brand ${id}:`, error);
-    throw error;
+    console.error("Error deleting brand:", error);
+    return false;
   }
+
+  return true;
 }
 
 /**

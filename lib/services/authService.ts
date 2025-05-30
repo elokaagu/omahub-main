@@ -1,18 +1,19 @@
 import { supabase } from "../supabase";
 import { Provider } from "@supabase/supabase-js";
 
+export type UserRole = "admin" | "brand_owner" | "user";
+
 export type User = {
   id: string;
   email: string;
   first_name?: string;
   last_name?: string;
   avatar_url?: string;
-  role?: string;
+  role?: UserRole;
+  owned_brands?: string[]; // Array of brand IDs owned by this user
 };
 
-/**
- * Sign up a new user
- */
+// Client-side auth functions
 export async function signUp(email: string, password: string) {
   const { data, error } = await supabase.auth.signUp({
     email,
@@ -27,9 +28,6 @@ export async function signUp(email: string, password: string) {
   return data;
 }
 
-/**
- * Sign in an existing user
- */
 export async function signIn(email: string, password: string) {
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
@@ -44,20 +42,12 @@ export async function signIn(email: string, password: string) {
   return data;
 }
 
-/**
- * Sign in with OAuth provider (Google, Facebook, etc.)
- */
 export async function signInWithOAuth(provider: Provider) {
   try {
-    // Simplified approach: let Supabase handle the redirect
-    // This bypasses client-side URL construction which can cause issues
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        // Don't specify redirectTo to let Supabase handle it automatically with Site URL
-        // Optional: Add scopes for more user info
         scopes: provider === "google" ? "email profile" : undefined,
-        // Use a simple query param to track the flow
         queryParams: {
           access_type: "offline",
           prompt: "consent",
@@ -77,9 +67,6 @@ export async function signInWithOAuth(provider: Provider) {
   }
 }
 
-/**
- * Sign out the current user
- */
 export async function signOut() {
   const { error } = await supabase.auth.signOut();
 
@@ -91,68 +78,35 @@ export async function signOut() {
   return true;
 }
 
-/**
- * Get the current user
- */
 export async function getCurrentUser() {
   const {
     data: { user },
+    error,
   } = await supabase.auth.getUser();
+  if (error) {
+    console.error("Error getting current user:", error);
+    return null;
+  }
   return user;
 }
 
-/**
- * Update user profile
- */
-export async function updateProfile(userId: string, updates: Partial<User>) {
-  const { data, error } = await supabase
-    .from("profiles")
-    .update(updates)
-    .eq("id", userId)
-    .select()
-    .single();
-
-  if (error) {
-    console.error("Error updating profile:", error);
-    throw error;
-  }
-
-  return data;
-}
-
-/**
- * Reset password
- */
-export async function resetPassword(email: string) {
-  const { data, error } = await supabase.auth.resetPasswordForEmail(email);
-
-  if (error) {
-    console.error("Error resetting password:", error);
-    throw error;
-  }
-
-  return data;
-}
-
-/**
- * Get user profile
- */
 export async function getProfile(userId: string): Promise<User | null> {
   const { data, error } = await supabase
     .from("profiles")
-    .select("*")
+    .select("*, owned_brands")
     .eq("id", userId)
     .single();
 
   if (error) {
     if (error.code === "PGRST116") {
       // Record not found
-      // Create a new profile with admin role
+      // Create a new profile with user role
       const { data: newProfile, error: createError } = await supabase
         .from("profiles")
         .insert({
           id: userId,
-          role: "admin",
+          role: "user",
+          owned_brands: [],
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         })
@@ -171,4 +125,85 @@ export async function getProfile(userId: string): Promise<User | null> {
   }
 
   return data;
+}
+
+export async function updateProfile(userId: string, updates: Partial<User>) {
+  const { data, error } = await supabase
+    .from("profiles")
+    .update({
+      ...updates,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", userId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error updating profile:", error);
+    throw error;
+  }
+
+  return data;
+}
+
+export async function resetPassword(email: string) {
+  const { data, error } = await supabase.auth.resetPasswordForEmail(email);
+
+  if (error) {
+    console.error("Error resetting password:", error);
+    throw error;
+  }
+
+  return data;
+}
+
+export async function addOwnedBrand(userId: string, brandId: string) {
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("owned_brands")
+    .eq("id", userId)
+    .single();
+
+  const ownedBrands = profile?.owned_brands || [];
+
+  if (!ownedBrands.includes(brandId)) {
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        owned_brands: [...ownedBrands, brandId],
+        role: "brand_owner", // Automatically promote to brand owner
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", userId);
+
+    if (error) {
+      console.error("Error adding owned brand:", error);
+      throw error;
+    }
+  }
+}
+
+export async function removeOwnedBrand(userId: string, brandId: string) {
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("owned_brands")
+    .eq("id", userId)
+    .single();
+
+  const ownedBrands = profile?.owned_brands || [];
+  const updatedBrands = ownedBrands.filter((id: string) => id !== brandId);
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      owned_brands: updatedBrands,
+      role: updatedBrands.length === 0 ? "user" : "brand_owner", // Demote to user if no brands left
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", userId);
+
+  if (error) {
+    console.error("Error removing owned brand:", error);
+    throw error;
+  }
 }

@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { AuthProvider } from "@/lib/context/AuthContext";
-import { PageFade } from "@/components/ui/animations";
+import { PageFade } from "@/app/components/ui/animations";
 import { AnimatePresence } from "framer-motion";
 
 interface RootLayoutClientProps {

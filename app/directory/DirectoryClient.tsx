@@ -6,7 +6,7 @@ import {
   SlideUp,
   StaggerContainer,
   StaggerItem,
-} from "@/components/ui/animations";
+} from "@/app/components/ui/animations";
 import { getAllBrands } from "@/lib/services/brandService";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
