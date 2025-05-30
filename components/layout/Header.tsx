@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -50,6 +50,17 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isCollectionsOpen, setIsCollectionsOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const isScrolled = window.scrollY > 20;
+      setScrolled(isScrolled);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const handleSignOut = async () => {
     try {
@@ -61,7 +72,12 @@ export default function Header() {
   };
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 bg-white/80 backdrop-blur-sm">
+    <header
+      className={cn(
+        "fixed inset-x-0 top-0 z-50 transition-all duration-300",
+        scrolled ? "bg-white shadow-sm" : "bg-transparent"
+      )}
+    >
       <nav
         className="mx-auto flex max-w-7xl items-center justify-between p-4 lg:px-8"
         aria-label="Global"
@@ -69,11 +85,25 @@ export default function Header() {
         <div className="flex lg:flex-1">
           <Link href="/" className="-m-1.5 pl-0">
             <Image
+              src="/lovable-uploads/omahub-logo-white.png"
+              alt="OmaHub"
+              width={90}
+              height={25}
+              className={cn(
+                "h-6 w-auto transition-opacity duration-300",
+                scrolled ? "opacity-0 absolute" : "opacity-100"
+              )}
+              priority
+            />
+            <Image
               src="/lovable-uploads/omahub-logo.png"
               alt="OmaHub"
               width={90}
               height={25}
-              className="h-6 w-auto"
+              className={cn(
+                "h-6 w-auto transition-opacity duration-300",
+                scrolled ? "opacity-100" : "opacity-0 absolute"
+              )}
               priority
             />
           </Link>
@@ -82,7 +112,10 @@ export default function Header() {
         <div className="flex lg:hidden">
           <button
             type="button"
-            className="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-gray-700"
+            className={cn(
+              "-m-2.5 inline-flex items-center justify-center rounded-md p-2.5",
+              scrolled ? "text-gray-700" : "text-white"
+            )}
             onClick={() => setMobileMenuOpen(true)}
           >
             <span className="sr-only">Open main menu</span>
@@ -97,7 +130,12 @@ export default function Header() {
                 <NavigationMenuItem key={item.name}>
                   <NavigationMenuLink
                     asChild
-                    className="text-sm font-semibold leading-6 text-oma-black hover:text-oma-plum expand-underline px-3 py-2"
+                    className={cn(
+                      "text-sm font-semibold leading-6 expand-underline px-3 py-2",
+                      scrolled
+                        ? "text-oma-black hover:text-oma-plum"
+                        : "text-white hover:text-white/80"
+                    )}
                   >
                     <Link href={item.href}>{item.name}</Link>
                   </NavigationMenuLink>
@@ -105,13 +143,20 @@ export default function Header() {
               ))}
               {navigationItems.map((category) => (
                 <NavigationMenuItem key={category.title}>
-                  <NavigationMenuTrigger className="text-sm font-semibold leading-6 text-oma-black hover:text-oma-plum gap-x-2 bg-transparent">
+                  <NavigationMenuTrigger
+                    className={cn(
+                      "text-sm font-semibold leading-6 gap-x-2 bg-transparent",
+                      scrolled
+                        ? "text-oma-black hover:text-oma-plum"
+                        : "text-white hover:text-white/80"
+                    )}
+                  >
                     {category.title}
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
-                    <div className="w-[400px] p-4">
+                    <div className="w-[400px] p-4 bg-white/90 backdrop-blur-sm shadow-lg rounded-lg">
                       <div className="mb-3">
-                        <h3 className="text-lg font-semibold mb-1">
+                        <h3 className="text-lg font-semibold mb-1 text-oma-black">
                           {category.title}
                         </h3>
                         <p className="text-sm text-gray-500">
@@ -141,14 +186,24 @@ export default function Header() {
         <div className="hidden lg:flex lg:flex-1 lg:justify-end lg:gap-x-6">
           <button
             onClick={() => setIsSearchOpen(true)}
-            className="text-sm font-semibold leading-6 text-oma-black hover:text-oma-plum"
+            className={cn(
+              "text-sm font-semibold leading-6",
+              scrolled
+                ? "text-oma-black hover:text-oma-plum"
+                : "text-white hover:text-white/80"
+            )}
           >
             <Search className="h-5 w-5" />
           </button>
           <Button
             asChild
             variant="outline"
-            className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white"
+            className={cn(
+              "transition-colors font-semibold",
+              scrolled
+                ? "border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white"
+                : "border-white text-white hover:bg-white/20 hover:text-white hover:border-white/50"
+            )}
           >
             <Link href="/directory">Explore the Directory</Link>
           </Button>
@@ -157,14 +212,18 @@ export default function Header() {
             <NavigationMenu>
               <NavigationMenuList>
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger className="bg-oma-plum text-white hover:bg-oma-plum/90 hover:text-white">
+                  <NavigationMenuTrigger
+                    className={cn(
+                      scrolled
+                        ? "bg-oma-plum text-white hover:bg-oma-plum/90"
+                        : "bg-white text-oma-plum hover:bg-white/90"
+                    )}
+                  >
                     {user.avatar_url ? (
                       <Avatar className="h-6 w-6 mr-2">
                         <AvatarImage
                           src={user.avatar_url}
-                          alt={`${user.first_name || ""} ${
-                            user.last_name || ""
-                          }`}
+                          alt={`${user.first_name || ""} ${user.last_name || ""}`}
                         />
                         <AvatarFallback>
                           <User className="h-4 w-4" />
@@ -183,7 +242,6 @@ export default function Header() {
                             href="/profile"
                             className="flex items-center gap-2 w-full rounded-md p-2 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-oma-plum transition-colors"
                           >
-                            <User className="h-4 w-4" />
                             Profile
                           </Link>
                         </NavigationMenuLink>
@@ -194,7 +252,6 @@ export default function Header() {
                             href="/favorites"
                             className="flex items-center gap-2 w-full rounded-md p-2 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-oma-plum transition-colors"
                           >
-                            <Heart className="h-4 w-4" />
                             Favorites
                           </Link>
                         </NavigationMenuLink>
@@ -207,7 +264,6 @@ export default function Header() {
                               href="/studio"
                               className="flex items-center gap-2 w-full rounded-md p-2 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-oma-plum transition-colors"
                             >
-                              <Palette className="h-4 w-4" />
                               Studio
                             </Link>
                           </NavigationMenuLink>
@@ -219,7 +275,6 @@ export default function Header() {
                             onClick={handleSignOut}
                             className="flex items-center gap-2 w-full rounded-md p-2 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
                           >
-                            <LogOut className="h-4 w-4" />
                             Sign Out
                           </button>
                         </NavigationMenuLink>
@@ -230,7 +285,14 @@ export default function Header() {
               </NavigationMenuList>
             </NavigationMenu>
           ) : (
-            <Button asChild className="bg-oma-plum hover:bg-oma-plum/90">
+            <Button
+              asChild
+              className={cn(
+                scrolled
+                  ? "bg-oma-plum hover:bg-oma-plum/90 text-white"
+                  : "bg-white text-oma-plum hover:bg-white/90"
+              )}
+            >
               <Link href="/login">Sign In</Link>
             </Button>
           )}

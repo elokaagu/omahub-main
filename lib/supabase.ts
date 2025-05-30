@@ -32,6 +32,33 @@ export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
+    storageKey: "sb-auth-token",
+    storage: {
+      getItem: (key) => {
+        try {
+          const value = localStorage.getItem(key);
+          if (!value) return null;
+          return value.startsWith("base64-") ? atob(value.slice(7)) : value;
+        } catch (e) {
+          console.error("Error reading auth storage:", e);
+          return null;
+        }
+      },
+      setItem: (key, value) => {
+        try {
+          localStorage.setItem(key, value);
+        } catch (e) {
+          console.error("Error writing to auth storage:", e);
+        }
+      },
+      removeItem: (key) => {
+        try {
+          localStorage.removeItem(key);
+        } catch (e) {
+          console.error("Error removing from auth storage:", e);
+        }
+      },
+    },
   },
   global: {
     fetch: fetch,
