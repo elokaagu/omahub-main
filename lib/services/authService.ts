@@ -145,6 +145,27 @@ export async function getProfile(userId: string): Promise<User | null> {
     .single();
 
   if (error) {
+    if (error.code === "PGRST116") {
+      // Record not found
+      // Create a new profile with admin role
+      const { data: newProfile, error: createError } = await supabase
+        .from("profiles")
+        .insert({
+          id: userId,
+          role: "admin",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .select()
+        .single();
+
+      if (createError) {
+        console.error("Error creating profile:", createError);
+        return null;
+      }
+
+      return newProfile;
+    }
     console.error("Error fetching profile:", error);
     return null;
   }

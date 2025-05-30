@@ -33,10 +33,17 @@ export default function StudioLayout({
   useEffect(() => {
     const checkAccess = async () => {
       if (!loading && user) {
-        const adminAccess = await isAdmin(user.id);
-        setHasAccess(adminAccess);
+        try {
+          const adminAccess = await isAdmin(user.id);
+          setHasAccess(adminAccess);
 
-        if (!adminAccess) {
+          if (!adminAccess) {
+            console.log("User does not have admin access, redirecting to home");
+            router.push("/");
+          }
+        } catch (error) {
+          console.error("Error checking admin access:", error);
+          // If there's an error checking access, redirect to home
           router.push("/");
         }
       } else if (!loading && !user) {
