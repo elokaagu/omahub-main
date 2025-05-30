@@ -1,4 +1,5 @@
 import { createBrowserClient } from "@supabase/ssr";
+import { AuthDebug } from "./utils/debug";
 
 // Check if we're in a build process
 const isBuildTime =
@@ -33,49 +34,79 @@ export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey, {
     persistSession: true,
     autoRefreshToken: true,
     storageKey: "sb-auth-token",
+    detectSessionInUrl: true,
     storage: {
       getItem: (key) => {
         try {
+          if (typeof window === "undefined") return null;
           const value = localStorage.getItem(key);
+          AuthDebug.log("Reading from storage", { key, hasValue: !!value });
           if (!value) return null;
-          return value.startsWith("base64-") ? atob(value.slice(7)) : value;
+          // Handle base64 encoded values
+          if (value.startsWith("base64-")) {
+            try {
+              return atob(value.slice(7));
+            } catch (e) {
+              AuthDebug.error("Error decoding base64 value", e);
+              return value; // Return original value if decoding fails
+            }
+          }
+          return value;
         } catch (e) {
-          console.error("Error reading auth storage:", e);
+          AuthDebug.error("Error reading from storage", e);
           return null;
         }
       },
       setItem: (key, value) => {
         try {
-          localStorage.setItem(key, value);
+          if (typeof window === "undefined") return;
+          // Check if value needs base64 encoding
+          const finalValue = value.includes("{")
+            ? `base64-${btoa(value)}`
+            : value;
+          localStorage.setItem(key, finalValue);
+          AuthDebug.log("Writing to storage", { key, hasValue: !!value });
         } catch (e) {
-          console.error("Error writing to auth storage:", e);
+          AuthDebug.error("Error writing to storage", e);
         }
       },
       removeItem: (key) => {
         try {
+          if (typeof window === "undefined") return;
           localStorage.removeItem(key);
+          AuthDebug.log("Removing from storage", { key });
         } catch (e) {
-          console.error("Error removing from auth storage:", e);
+          AuthDebug.error("Error removing from storage", e);
         }
       },
     },
+    flowType: "pkce",
+    debug: process.env.NEXT_PUBLIC_DEBUG_MODE === "true",
   },
   global: {
     fetch: fetch,
+    headers: { "x-application-name": "omahub" },
   },
+});
+
+// Set up auth state change listener separately
+supabase.auth.onAuthStateChange((event, session) => {
+  AuthDebug.state(event, session);
+  AuthDebug.session(session);
 });
 
 // Test the connection
 if (typeof window !== "undefined" && !isBuildTime) {
-  console.log("🔍 Testing Supabase connection...");
+  AuthDebug.log("Testing Supabase connection...");
 
   supabase.auth.getSession().then(({ data, error }) => {
     if (error) {
-      console.error("❌ Supabase auth test failed:", error);
+      AuthDebug.error("Supabase auth test failed", error);
     } else {
-      console.log("✅ Supabase auth test successful", {
+      AuthDebug.log("Supabase auth test successful", {
         hasSession: !!data.session,
       });
+      AuthDebug.session(data.session);
     }
   });
 
@@ -85,12 +116,11 @@ if (typeof window !== "undefined" && !isBuildTime) {
     .select("*", { count: "exact", head: true })
     .then(({ data, error, count }) => {
       if (error) {
-        console.error("❌ Supabase database test failed:", error);
+        AuthDebug.error("Supabase database test failed", error);
       } else {
-        console.log(
-          "✅ Supabase database test successful. Brand count:",
-          count
-        );
+        AuthDebug.log("Supabase database test successful", {
+          brandCount: count,
+        });
       }
     });
 }
