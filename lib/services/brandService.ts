@@ -1,6 +1,6 @@
 import { supabase, Brand, Review, Collection } from "../supabase";
 
-// ENABLE CACHING FOR PRODUCTION
+// TEMPORARILY DISABLE ALL CACHING FOR TESTING
 let brandsCache: {
   data: Brand[] | null;
   timestamp: number;
@@ -9,56 +9,45 @@ let brandsCache: {
   timestamp: 0,
 };
 
-// Cache expiration time (15 minutes)
-const CACHE_EXPIRY = 15 * 60 * 1000;
+// Cache expiration time (10 minutes - increased from 5)
+const CACHE_EXPIRY = 10 * 60 * 1000;
 
 // Define essential fields to reduce payload size
 const ESSENTIAL_BRAND_FIELDS =
-  "id,name,image,category,location,is_verified,rating,description";
-
-// Define category mappings to handle variations
-const CATEGORY_MAPPINGS: Record<string, string[]> = {
-  Bridal: ["Bridal", "Wedding", "Bridal Wear"],
-  "Ready to Wear": ["Ready to Wear", "RTW", "Pret-a-Porter"],
-  Tailoring: ["Tailoring", "Formal Wear", "Bespoke"],
-  Accessories: ["Accessories", "Jewelry", "Bags"],
-  Other: ["Home & Lifestyle", "Other"],
-};
+  "id,name,image,category,location,is_verified,rating";
 
 /**
  * Fetch all brands from the database
  */
 export async function getAllBrands(): Promise<Brand[]> {
   try {
-    // Check cache first
-    const now = Date.now();
-    if (brandsCache.data && now - brandsCache.timestamp < CACHE_EXPIRY) {
-      console.log("📦 Using cached brands data");
-      return brandsCache.data;
-    }
-
+    // Add more detailed logging
     console.log("🔍 getAllBrands: Starting fetch from database...");
 
     // Debug Supabase connection
     if (!supabase) {
       console.error("⛔ ERROR: Supabase client is undefined!");
-      return [];
+      return getSampleBrandsData(); // Return sample data as fallback
     }
 
-    // Use optimized query with only essential fields
+    // Use simpler query that's less likely to fail
     const { data, error } = await supabase
       .from("brands")
-      .select(ESSENTIAL_BRAND_FIELDS)
-      .order("name", { ascending: true });
+      .select("id, name, image, category, location, is_verified, rating");
 
     if (error) {
-      console.error("⛔ Error fetching brands:", error.message);
-      return [];
+      console.error(
+        "⛔ Error fetching brands:",
+        error.message,
+        error.details,
+        error.hint
+      );
+      return getSampleBrandsData(); // Return sample data as fallback
     }
 
     if (!data || data.length === 0) {
       console.warn("⚠️ No brands found in the database!");
-      return [];
+      return getSampleBrandsData(); // Return sample data as fallback
     }
 
     // Debug first few brands
@@ -87,7 +76,7 @@ export async function getAllBrands(): Promise<Brand[]> {
     const fullBrands: Brand[] = data.map((item) => ({
       id: item.id || `temp-id-${Math.random().toString(36).substring(2, 9)}`,
       name: item.name || "Brand Name",
-      description: item.description || "Brand description",
+      description: "Brand description", // Default values for required fields
       long_description: "Long brand description",
       location: item.location || "Unknown location",
       price_range: "$$",
@@ -97,16 +86,10 @@ export async function getAllBrands(): Promise<Brand[]> {
       image: item.image || "/placeholder-image.jpg",
     }));
 
-    // Update cache
-    brandsCache = {
-      data: fullBrands,
-      timestamp: now,
-    };
-
     return fullBrands;
   } catch (err) {
     console.error("⛔ Unexpected error in getAllBrands:", err);
-    return [];
+    return getSampleBrandsData(); // Return sample data as fallback
   }
 }
 
@@ -256,45 +239,17 @@ export async function deleteBrand(id: string): Promise<void> {
  * Fetch brands by category
  */
 export async function getBrandsByCategory(category: string): Promise<Brand[]> {
-  try {
-    // If category is "All Categories", return all brands
-    if (category === "All Categories") {
-      return getAllBrands();
-    }
+  const { data, error } = await supabase
+    .from("brands")
+    .select("*")
+    .eq("category", category);
 
-    // Find all possible category variations
-    const categoryVariations = CATEGORY_MAPPINGS[category] || [category];
-
-    const { data, error } = await supabase
-      .from("brands")
-      .select(ESSENTIAL_BRAND_FIELDS)
-      .in("category", categoryVariations)
-      .order("name", { ascending: true });
-
-    if (error) {
-      console.error(`Error fetching brands in category ${category}:`, error);
-      return [];
-    }
-
-    // Map the data to Brand objects
-    return (
-      data?.map((item) => ({
-        id: item.id || `temp-id-${Math.random().toString(36).substring(2, 9)}`,
-        name: item.name || "Brand Name",
-        description: item.description || "Brand description",
-        long_description: "Long brand description",
-        location: item.location || "Unknown location",
-        price_range: "$$",
-        category: item.category || "Other",
-        rating: item.rating || 4.5,
-        is_verified: item.is_verified || false,
-        image: item.image || "/placeholder-image.jpg",
-      })) || []
-    );
-  } catch (error) {
-    console.error(`Error in getBrandsByCategory for ${category}:`, error);
-    return [];
+  if (error) {
+    console.error(`Error fetching brands in category ${category}:`, error);
+    throw error;
   }
+
+  return data || [];
 }
 
 /**

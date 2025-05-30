@@ -24,20 +24,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-  const [profileCache, setProfileCache] = useState<Record<string, User>>({});
 
   const loadUserWithProfile = async (
     userId: string,
     email: string | undefined
   ) => {
     try {
-      // Check profile cache first
-      if (profileCache[userId]) {
-        console.log("📦 Using cached profile data");
-        setUser(profileCache[userId]);
-        return;
-      }
-
       // Get additional profile data
       const profileData = await getProfile(userId);
 
@@ -50,12 +42,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         avatar_url: profileData?.avatar_url || "",
         role: profileData?.role || "user",
       };
-
-      // Update profile cache
-      setProfileCache((prev) => ({
-        ...prev,
-        [userId]: completeUser,
-      }));
 
       setUser(completeUser);
     } catch (err) {
@@ -72,14 +58,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refreshUserProfile = async () => {
     if (user?.id) {
       try {
-        // Clear profile from cache
-        setProfileCache((prev) => {
-          const newCache = { ...prev };
-          delete newCache[user.id];
-          return newCache;
+        // First clear current user data to prevent stale data persistence
+        setUser((prevUser) => {
+          if (!prevUser) return null;
+          return {
+            ...prevUser,
+            // Keep basic auth data but clear profile data that will be refreshed
+            avatar_url: undefined,
+            first_name: undefined,
+            last_name: undefined,
+          };
         });
 
-        // Fetch fresh profile data
+        // Add a small delay to ensure UI updates before fetching new data
+        await new Promise((resolve) => setTimeout(resolve, 100));
+
+        // Now fetch fresh profile data
         await loadUserWithProfile(user.id, user.email);
         return true;
       } catch (err) {
@@ -91,26 +85,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    let mounted = true;
-
     // Check for current user on mount
     const checkUser = async () => {
       try {
         const currentUser = await getCurrentUser();
-        if (currentUser && mounted) {
+        if (currentUser) {
           await loadUserWithProfile(currentUser.id, currentUser.email);
-        } else if (mounted) {
+        } else {
           setUser(null);
         }
       } catch (err) {
-        if (mounted) {
-          setError(err as Error);
-          setUser(null);
-        }
+        setError(err as Error);
+        setUser(null);
       } finally {
-        if (mounted) {
-          setLoading(false);
-        }
+        setLoading(false);
       }
     };
 
@@ -119,19 +107,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Set up auth state listener
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (session?.user && mounted) {
+        if (session?.user) {
           await loadUserWithProfile(session.user.id, session.user.email);
-        } else if (mounted) {
+        } else {
           setUser(null);
         }
-        if (mounted) {
-          setLoading(false);
-        }
+        setLoading(false);
       }
     );
 
     return () => {
-      mounted = false;
       authListener.subscription.unsubscribe();
     };
   }, []);
@@ -140,8 +125,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await supabase.auth.signOut();
       setUser(null);
-      // Clear profile cache on sign out
-      setProfileCache({});
     } catch (err) {
       setError(err as Error);
     }

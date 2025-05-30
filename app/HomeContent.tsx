@@ -142,6 +142,7 @@ export default function HomeContent() {
           // Filter brands by category
           const categoryBrands = allBrands
             .filter((brand) => brand.category === category.title)
+            .slice(0, 8) // Get up to 8 brands per category
             .map((brand) => ({
               id:
                 brand.id ||
