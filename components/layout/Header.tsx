@@ -32,6 +32,7 @@ import {
   navigationItems,
   type NavigationItem,
 } from "@/components/ui/navigation";
+import { supabase } from "@/lib/supabase";
 
 const collectionItems = collections.map((category) => ({
   name: category,
@@ -55,6 +56,13 @@ export default function Header() {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
+    console.log("Header user state:", {
+      userId: user?.id,
+      userRole: user?.role,
+      isAdmin: user?.role === "admin",
+      isSuperAdmin: user?.role === "super_admin",
+    });
+
     const handleScroll = () => {
       const isScrolled = window.scrollY > 20;
       setScrolled(isScrolled);
@@ -268,12 +276,43 @@ export default function Header() {
                         user?.role === "super_admin") && (
                         <li>
                           <NavigationMenuLink asChild>
-                            <Link
-                              href="/studio"
+                            <button
+                              onClick={async () => {
+                                try {
+                                  console.log(
+                                    "Studio navigation initiated for user:",
+                                    {
+                                      id: user?.id,
+                                      role: user?.role,
+                                      email: user?.email,
+                                    }
+                                  );
+
+                                  // First verify the session is still valid
+                                  const {
+                                    data: { session },
+                                  } = await supabase.auth.getSession();
+                                  if (!session) {
+                                    console.error("No valid session found");
+                                    window.location.href =
+                                      "/login?next=/studio";
+                                    return;
+                                  }
+
+                                  // Use window.location for a full page navigation
+                                  window.location.href = "/studio";
+                                } catch (error) {
+                                  console.error(
+                                    "Error navigating to studio:",
+                                    error
+                                  );
+                                  window.location.href = "/login?next=/studio";
+                                }
+                              }}
                               className="flex items-center gap-2 w-full rounded-md p-2 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-oma-plum transition-colors"
                             >
                               Studio
-                            </Link>
+                            </button>
                           </NavigationMenuLink>
                         </li>
                       )}

@@ -126,6 +126,8 @@ export async function getCurrentUser() {
 
 export async function getProfile(userId: string): Promise<User | null> {
   try {
+    console.log("🔍 Fetching profile for user:", userId);
+
     const { data, error } = await supabase
       .from("profiles")
       .select("*, owned_brands")
@@ -134,6 +136,7 @@ export async function getProfile(userId: string): Promise<User | null> {
 
     if (error) {
       if (error.code === "PGRST116") {
+        console.log("⚠️ Profile not found, creating new profile");
         // Profile not found, create a new one
         const { data: newProfile, error: createError } = await supabase
           .from("profiles")
@@ -148,15 +151,24 @@ export async function getProfile(userId: string): Promise<User | null> {
           .single();
 
         if (createError) {
-          console.error("Error creating profile:", createError);
+          console.error("❌ Error creating profile:", createError);
           return null;
         }
 
+        console.log("✅ New profile created:", newProfile);
         return newProfile;
       }
-      console.error("Error fetching profile:", error);
+      console.error("❌ Error fetching profile:", error);
       return null;
     }
+
+    console.log("✅ Profile fetched successfully:", {
+      id: data.id,
+      role: data.role,
+      email: data.email,
+      first_name: data.first_name,
+      owned_brands: data.owned_brands?.length || 0,
+    });
 
     return {
       id: data.id,
@@ -168,7 +180,7 @@ export async function getProfile(userId: string): Promise<User | null> {
       owned_brands: data.owned_brands || [],
     };
   } catch (err) {
-    console.error("Error in getProfile:", err);
+    console.error("❌ Error in getProfile:", err);
     return null;
   }
 }
@@ -256,6 +268,8 @@ export async function removeOwnedBrand(userId: string, brandId: string) {
 
 export async function isAdmin(userId: string): Promise<boolean> {
   try {
+    console.log("🔍 Checking admin status for user:", userId);
+
     const { data, error } = await supabase
       .from("profiles")
       .select("role")
@@ -263,13 +277,20 @@ export async function isAdmin(userId: string): Promise<boolean> {
       .single();
 
     if (error) {
-      console.error("Error checking admin status:", error);
+      console.error("❌ Error checking admin status:", error);
       return false;
     }
 
-    return data?.role === "admin";
+    const isAdminRole = data?.role === "admin" || data?.role === "super_admin";
+    console.log("👤 Admin check result:", {
+      userId,
+      role: data?.role,
+      isAdmin: isAdminRole,
+    });
+
+    return isAdminRole;
   } catch (err) {
-    console.error("Error in isAdmin check:", err);
+    console.error("❌ Error in isAdmin check:", err);
     return false;
   }
 }

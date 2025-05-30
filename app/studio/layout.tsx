@@ -33,48 +33,56 @@ export default function StudioLayout({
   useEffect(() => {
     const checkAccess = async () => {
       try {
-        console.log("Checking studio access:", { user, loading });
+        console.log("🔒 Studio access check starting...");
+        console.log("Current auth state:", {
+          userId: user?.id,
+          userRole: user?.role,
+          isLoading: loading,
+        });
 
         if (loading) {
-          console.log("Auth is still loading...");
+          console.log("⏳ Auth is still loading...");
           return;
         }
 
         if (!user) {
-          console.log("No user found, redirecting to login");
-          router.push("/login?redirect=/studio");
+          console.log("❌ No user found, redirecting to login");
+          window.location.href = "/login?redirect=/studio";
           return;
         }
 
         // Check if user has admin role directly from the user object
         const hasAdminRole =
           user.role === "admin" || user.role === "super_admin";
-        console.log("User role check:", { role: user.role, hasAdminRole });
+        console.log("👤 User role check:", { role: user.role, hasAdminRole });
 
         if (!hasAdminRole) {
           // Double check with the server
-          console.log("Double checking admin access for user:", user.id);
+          console.log("🔍 Double checking admin access for user:", user.id);
           const adminAccess = await isAdmin(user.id);
-          console.log("Server admin check result:", adminAccess);
+          console.log("📋 Server admin check result:", adminAccess);
 
           if (!adminAccess) {
-            console.log("User does not have admin access, redirecting to home");
-            router.push("/");
+            console.log(
+              "⛔ User does not have admin access, redirecting to home"
+            );
+            window.location.href = "/";
             return;
           }
         }
 
+        console.log("✅ Access granted to studio");
         setHasAccess(true);
       } catch (error) {
-        console.error("Error checking admin access:", error);
-        router.push("/");
+        console.error("❌ Error checking admin access:", error);
+        window.location.href = "/";
       } finally {
         setIsCheckingAccess(false);
       }
     };
 
     checkAccess();
-  }, [user, loading, router]);
+  }, [user, loading]);
 
   // Show loading state while checking authentication and access
   if (loading || isCheckingAccess) {

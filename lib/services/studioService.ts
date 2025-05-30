@@ -1,32 +1,11 @@
 import { supabase, Brand, Collection } from "../supabase";
-import { getProfile } from "./authService";
+import { getProfile, isAdmin as checkIsAdmin } from "./authService";
 
 /**
  * Check if user has admin access
  */
 export async function isAdmin(userId: string): Promise<boolean> {
-  try {
-    // Get the profile with role information
-    const profile = await getProfile(userId);
-    if (!profile) {
-      console.error("No profile found for user:", userId);
-      return false;
-    }
-
-    // Check for either admin or super_admin role
-    const isAdminRole =
-      profile.role === "admin" || profile.role === "super_admin";
-    console.log(
-      `User ${userId} admin status:`,
-      isAdminRole,
-      "Role:",
-      profile.role
-    );
-    return isAdminRole;
-  } catch (error) {
-    console.error("Error checking admin status:", error);
-    return false;
-  }
+  return checkIsAdmin(userId);
 }
 
 /**

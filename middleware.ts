@@ -4,6 +4,8 @@ import type { NextRequest } from "next/server";
 
 export async function middleware(req: NextRequest) {
   try {
+    console.log("🚀 Middleware triggered for:", req.nextUrl.pathname);
+
     // Create a response and supabase client
     const res = NextResponse.next();
     const supabase = createMiddlewareClient({ req, res });
@@ -11,13 +13,9 @@ export async function middleware(req: NextRequest) {
     // Try to get the session
     const {
       data: { session },
-      error: sessionError,
     } = await supabase.auth.getSession();
 
-    if (sessionError) {
-      console.error("Session error in middleware:", sessionError);
-      return res;
-    }
+    console.log("🔑 Session check:", session ? "Session found" : "No session");
 
     // Check if the request is for a protected route
     const isStudioRoute = req.nextUrl.pathname.startsWith("/studio");
@@ -27,7 +25,7 @@ export async function middleware(req: NextRequest) {
 
     // If accessing a protected route and not authenticated, redirect to login
     if (isProtectedRoute && !session) {
-      console.log("No session found for protected route, redirecting to login");
+      console.log("⛔ Protected route access denied - no session");
       const redirectUrl = new URL("/login", req.url);
       redirectUrl.searchParams.set("next", req.nextUrl.pathname);
       return NextResponse.redirect(redirectUrl);
@@ -35,71 +33,45 @@ export async function middleware(req: NextRequest) {
 
     // If accessing studio and authenticated, check admin role
     if (isStudioRoute && session) {
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
+      console.log("👤 Checking studio access for user:", session.user.id);
 
-      if (userError) {
-        console.error("User error in middleware:", userError);
-        return NextResponse.redirect(new URL("/", req.url));
-      }
-
-      // Get user's profile to check role
-      const { data: profile, error: profileError } = await supabase
+      const { data: profile } = await supabase
         .from("profiles")
         .select("role")
-        .eq("id", user?.id)
+        .eq("id", session.user.id)
         .single();
 
-      if (profileError) {
-        console.error("Profile error in middleware:", profileError);
-        return NextResponse.redirect(new URL("/", req.url));
-      }
+      console.log("👑 User role:", profile?.role);
 
-      // Check if user has admin or super_admin role
       if (
-        !profile ||
-        (profile.role !== "admin" && profile.role !== "super_admin")
+        profile &&
+        (profile.role === "admin" || profile.role === "super_admin")
       ) {
-        console.log("User does not have admin access:", profile?.role);
-        return NextResponse.redirect(new URL("/", req.url));
+        console.log("✅ Studio access granted");
+        return res;
       }
 
-      console.log("Admin access granted for user:", user?.id);
+      console.log("⛔ Studio access denied - insufficient permissions");
+      return NextResponse.redirect(new URL("/", req.url));
     }
 
-    // Set the session cookie
-    const response = NextResponse.next({
-      request: {
-        headers: req.headers,
-      },
-    });
-
-    // Set cookies on the response
-    const setCookieHeader = res.headers.get("set-cookie");
-    if (setCookieHeader) {
-      response.headers.set("set-cookie", setCookieHeader);
-    }
-
-    return response;
+    return res;
   } catch (error) {
-    console.error("Middleware error:", error);
+    console.error("❌ Middleware error:", error);
     return NextResponse.redirect(new URL("/", req.url));
   }
 }
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - auth callback route
-     */
-    "/((?!_next/static|_next/image|favicon.ico|auth/callback).*)",
+    // Match studio routes exactly
+    "/studio",
     "/studio/:path*",
+
+    // Match storage routes
+    "/storage/:path*",
+
+    // Match API routes
     "/api/:path*",
   ],
 };

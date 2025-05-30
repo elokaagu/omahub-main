@@ -30,6 +30,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     email: string | undefined
   ) => {
     try {
+      console.log("Starting loadUserWithProfile for user:", userId);
       // Get additional profile data
       const profileData = await getProfile(userId);
       console.log("Loaded profile data:", profileData);
@@ -50,7 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         owned_brands: profileData.owned_brands || [],
       };
 
-      console.log("Setting complete user:", completeUser);
+      console.log("Setting complete user with role:", completeUser.role);
       setUser(completeUser);
     } catch (err) {
       console.error("Error loading user profile:", err);
