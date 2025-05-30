@@ -36,23 +36,24 @@ export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey, {
     storage: {
       getItem: (key) => {
         try {
+          if (typeof window === "undefined") return null;
           const value = localStorage.getItem(key);
           if (!value) return null;
-
           // Handle base64 encoded values
           if (value.startsWith("base64-")) {
             try {
-              const decodedValue = atob(value.slice(7));
-              // Verify if it's valid JSON
-              JSON.parse(decodedValue);
-              return decodedValue;
+              return atob(value.slice(7));
             } catch (e) {
-              console.warn("Failed to parse base64 auth data:", e);
-              return null;
+              console.error("Failed to decode base64 value:", e);
+              return value; // Return original value if decoding fails
             }
           }
-
-          return value;
+          // Handle JSON strings
+          try {
+            return JSON.parse(value);
+          } catch (e) {
+            return value; // Return as is if not JSON
+          }
         } catch (e) {
           console.error("Error reading auth storage:", e);
           return null;
@@ -60,17 +61,18 @@ export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey, {
       },
       setItem: (key, value) => {
         try {
-          // For session data, store as base64 to prevent JSON parsing issues
-          const shouldEncode =
-            key === "sb-auth-token" && value && typeof value === "string";
-          const finalValue = shouldEncode ? `base64-${btoa(value)}` : value;
-          localStorage.setItem(key, finalValue);
+          if (typeof window === "undefined") return;
+          // If value is an object, stringify it
+          const stringValue =
+            typeof value === "object" ? JSON.stringify(value) : value;
+          localStorage.setItem(key, stringValue);
         } catch (e) {
           console.error("Error writing to auth storage:", e);
         }
       },
       removeItem: (key) => {
         try {
+          if (typeof window === "undefined") return;
           localStorage.removeItem(key);
         } catch (e) {
           console.error("Error removing from auth storage:", e);
