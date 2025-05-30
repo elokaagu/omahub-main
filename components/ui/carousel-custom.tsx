@@ -7,7 +7,7 @@ import "@/styles/hero-animations.css";
 
 interface CarouselProps {
   items: {
-    id: number;
+    id: string | number;
     image: string;
     title: string;
     subtitle?: string;

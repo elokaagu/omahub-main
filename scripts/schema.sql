@@ -13,6 +13,40 @@ CREATE TABLE brands (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Create hero_slides table for managing homepage carousel
+CREATE TABLE hero_slides (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  image TEXT NOT NULL,
+  title TEXT NOT NULL,
+  subtitle TEXT,
+  link TEXT,
+  hero_title TEXT,
+  is_editorial BOOLEAN DEFAULT true,
+  display_order INT NOT NULL,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Enable RLS on hero_slides
+ALTER TABLE hero_slides ENABLE ROW LEVEL SECURITY;
+
+-- Create policies for hero_slides
+CREATE POLICY "Allow public read access to hero_slides" 
+  ON hero_slides FOR SELECT 
+  USING (true);
+
+CREATE POLICY "Allow admin users to manage hero_slides" 
+  ON hero_slides FOR ALL 
+  TO authenticated 
+  USING (
+    EXISTS (
+      SELECT 1 FROM profiles 
+      WHERE id = auth.uid() 
+      AND role = 'super_admin'
+    )
+  );
+
 -- Create reviews table
 CREATE TABLE reviews (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -40,9 +74,25 @@ CREATE TABLE profiles (
   first_name TEXT,
   last_name TEXT,
   avatar_url TEXT,
+  role TEXT DEFAULT 'user',
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  CONSTRAINT valid_role CHECK (role IN ('user', 'designer', 'admin', 'super_admin'))
 );
+
+-- Function to set up super admin users
+CREATE OR REPLACE FUNCTION setup_super_admin(admin_email TEXT)
+RETURNS void AS $$
+BEGIN
+  UPDATE profiles
+  SET role = 'super_admin'
+  WHERE email = admin_email
+  AND EXISTS (
+    SELECT 1 FROM auth.users
+    WHERE email = admin_email
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Create a trigger to create a profile when a new user signs up
 CREATE OR REPLACE FUNCTION create_profile_for_user()

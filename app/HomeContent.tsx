@@ -15,6 +15,20 @@ import { SectionHeader } from "@/components/ui/section-header";
 import { CategoryCard } from "@/components/ui/category-card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle } from "@/components/ui/icons";
+import {
+  getActiveHeroSlides,
+  type HeroSlide,
+} from "@/lib/services/heroService";
+
+interface Brand {
+  id: string;
+  name: string;
+  image: string;
+  location: string;
+  rating: number;
+  is_verified: boolean;
+  category: string;
+}
 
 interface BrandDisplay {
   id: string;
@@ -34,7 +48,21 @@ interface CategoryWithBrands {
   brands: BrandDisplay[];
 }
 
-const carouselItems = [
+interface CarouselItem {
+  id: string | number;
+  image: string;
+  title: string;
+  subtitle?: string;
+  link?: string;
+  hero_title?: string;
+  heroTitle?: string;
+  is_editorial?: boolean;
+  isEditorial?: boolean;
+  display_order?: number;
+  is_active?: boolean;
+}
+
+const carouselItems: CarouselItem[] = [
   {
     id: 1,
     image: "/lovable-uploads/827fb8c0-e5da-4520-a979-6fc054eefc6e.png",
@@ -101,188 +129,68 @@ const initialCategories: CategoryWithBrands[] = categoryDefinitions.map(
 );
 
 export default function HomeContent() {
-  // Client-side state initialization
   const [categories, setCategories] =
     useState<CategoryWithBrands[]>(initialCategories);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [heroSlides, setHeroSlides] = useState<HeroSlide[]>([]);
 
   useEffect(() => {
-    // Prevent running on the server
-    if (typeof window === "undefined") return;
-
-    // Add a timeout to prevent infinite loading state on error
-    const timeoutId = setTimeout(() => {
-      if (loading) {
-        console.log("Loading timeout reached, forcing UI update");
-        setLoading(false);
-      }
-    }, 5000); // 5 second timeout
-
-    async function fetchBrands() {
+    const fetchData = async () => {
+      setIsLoading(true);
       try {
-        console.time("fetchBrandsForHome");
-        setLoading(true);
-        const allBrands = await getAllBrands();
-        console.timeEnd("fetchBrandsForHome");
-
-        if (!allBrands || allBrands.length === 0) {
-          console.warn("No brands found in database, using fallback data");
-          applyFallbackData();
-          setLoading(false);
-          return;
-        }
-
-        console.log(
-          `🔍 Processing ${allBrands.length} brands for home display`
-        );
-        console.log("🔍 Sample brand:", allBrands[0]);
-
-        // Process categories in parallel - more efficient
-        const updatedCategories = categoryDefinitions.map((category) => {
-          // Filter brands by category
-          const categoryBrands = allBrands
+        // Fetch brands
+        const brandsData = await getAllBrands();
+        const updatedCategories = categories.map((category) => ({
+          ...category,
+          brands: brandsData
             .filter((brand) => brand.category === category.title)
-            .slice(0, 8) // Get up to 8 brands per category
             .map((brand) => ({
-              id:
-                brand.id ||
-                `temp-id-${Math.random().toString(36).substring(2, 9)}`,
-              name: brand.name || "Brand Name",
+              id: brand.id,
+              name: brand.name,
               image: brand.image || "/placeholder-image.jpg",
-              location: brand.location
-                ? brand.location.split(",")[0]
-                : "Unknown", // Take just the city name
-              rating: brand.rating || 4.5,
+              location: brand.location.split(",")[0], // Take just the city name
+              rating: brand.rating,
               isVerified: brand.is_verified || false,
-              category: brand.category || "Other",
-            }));
-
-          console.log(
-            `🔍 Category "${category.title}" has ${categoryBrands.length} brands`
-          );
-
-          return {
-            ...category,
-            brands:
-              categoryBrands.length > 0
-                ? categoryBrands
-                : getFallbackBrandsForCategory(category.title),
-          };
-        });
-
-        // Use all categories, even if they don't have brands (we'll use fallbacks)
+              category: brand.category,
+            })),
+        }));
         setCategories(updatedCategories);
+
+        // Fetch hero slides
+        const slides = await getActiveHeroSlides();
+        setHeroSlides(slides);
       } catch (error) {
-        console.error("Error fetching brands for home page:", error);
-        applyFallbackData();
+        console.error("Error fetching data:", error);
       } finally {
-        setLoading(false);
-        clearTimeout(timeoutId);
+        setIsLoading(false);
       }
-    }
+    };
 
-    // Function to provide fallback data by category
-    function getFallbackBrandsForCategory(category: string): BrandDisplay[] {
-      // Return 1-2 sample brands per category
-      switch (category) {
-        case "Bridal":
-          return [
-            {
-              id: "bridal-fallback-1",
-              name: "Imad Eduso",
-              image:
-                "/lovable-uploads/57cc6a40-0f0d-4a7d-8786-41f15832ebfb.png",
-              location: "Lagos",
-              rating: 5.0,
-              isVerified: true,
-              category: "Bridal",
-            },
-            {
-              id: "bridal-fallback-2",
-              name: "Weiz Dhurm Franklyn",
-              image:
-                "/lovable-uploads/57cc6a40-0f0d-4a7d-8786-41f15832ebfb.png",
-              location: "Lagos",
-              rating: 4.9,
-              isVerified: true,
-              category: "Bridal",
-            },
-          ];
-        case "Ready to Wear":
-          return [
-            {
-              id: "rtw-fallback-1",
-              name: "Adiree",
-              image:
-                "/lovable-uploads/4a7c7e86-6cde-4d07-a246-a5aa4cb6fa51.png",
-              location: "Lagos",
-              rating: 4.8,
-              isVerified: true,
-              category: "Ready to Wear",
-            },
-            {
-              id: "rtw-fallback-2",
-              name: "Orange Culture",
-              image:
-                "/lovable-uploads/4a7c7e86-6cde-4d07-a246-a5aa4cb6fa51.png",
-              location: "Lagos",
-              rating: 4.7,
-              isVerified: true,
-              category: "Ready to Wear",
-            },
-          ];
-        case "Tailoring":
-          return [
-            {
-              id: "tailoring-fallback-1",
-              name: "Emmy Kasbit",
-              image:
-                "/lovable-uploads/99ca757a-bed8-422e-b155-0b9d365b58e0.png",
-              location: "Accra",
-              rating: 4.6,
-              isVerified: true,
-              category: "Tailoring",
-            },
-          ];
-        case "Accessories":
-          return [
-            {
-              id: "accessories-fallback-1",
-              name: "Shekudo",
-              image:
-                "/lovable-uploads/25c3fe26-3fc4-43ef-83ac-6931a74468c0.png",
-              location: "Nairobi",
-              rating: 4.7,
-              isVerified: true,
-              category: "Accessories",
-            },
-          ];
-        default:
-          return [];
-      }
-    }
-
-    // Apply fallback data to all categories
-    function applyFallbackData() {
-      const fallbackCategories = categoryDefinitions.map((category) => ({
-        ...category,
-        brands: getFallbackBrandsForCategory(category.title),
-      }));
-
-      setCategories(fallbackCategories);
-    }
-
-    fetchBrands();
-
-    return () => clearTimeout(timeoutId);
+    fetchData();
   }, []);
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
 
   return (
     <>
       {/* Hero Section with Enhanced Carousel */}
       <section className="w-full animate-fadeInUp">
         <Carousel
-          items={carouselItems}
+          items={
+            heroSlides.length > 0
+              ? heroSlides.map((slide) => ({
+                  ...slide,
+                  heroTitle: slide.hero_title,
+                  isEditorial: slide.is_editorial,
+                }))
+              : carouselItems
+          }
           autoplay={true}
           interval={6000}
           className="min-h-screen"
@@ -467,7 +375,7 @@ export default function HomeContent() {
                 </FadeIn>
 
                 <div className="mt-10 overflow-hidden">
-                  {loading ? (
+                  {isLoading ? (
                     <div className="flex justify-center items-center h-64">
                       <div className="animate-spin h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full"></div>
                     </div>
