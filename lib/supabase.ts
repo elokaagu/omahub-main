@@ -36,24 +36,9 @@ export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey, {
     storage: {
       getItem: (key) => {
         try {
-          if (typeof window === "undefined") return null;
           const value = localStorage.getItem(key);
           if (!value) return null;
-          // Handle base64 encoded values
-          if (value.startsWith("base64-")) {
-            try {
-              return atob(value.slice(7));
-            } catch (e) {
-              console.error("Failed to decode base64 value:", e);
-              return value; // Return original value if decoding fails
-            }
-          }
-          // Handle JSON strings
-          try {
-            return JSON.parse(value);
-          } catch (e) {
-            return value; // Return as is if not JSON
-          }
+          return value.startsWith("base64-") ? atob(value.slice(7)) : value;
         } catch (e) {
           console.error("Error reading auth storage:", e);
           return null;
@@ -61,18 +46,13 @@ export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey, {
       },
       setItem: (key, value) => {
         try {
-          if (typeof window === "undefined") return;
-          // If value is an object, stringify it
-          const stringValue =
-            typeof value === "object" ? JSON.stringify(value) : value;
-          localStorage.setItem(key, stringValue);
+          localStorage.setItem(key, value);
         } catch (e) {
           console.error("Error writing to auth storage:", e);
         }
       },
       removeItem: (key) => {
         try {
-          if (typeof window === "undefined") return;
           localStorage.removeItem(key);
         } catch (e) {
           console.error("Error removing from auth storage:", e);

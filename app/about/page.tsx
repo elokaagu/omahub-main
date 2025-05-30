@@ -23,17 +23,17 @@ export default function About() {
       >
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
           <motion.div variants={slideIn} className="order-2 lg:order-1">
-            <h1 className="heading-lg mb-6">About OmaHub</h1>
+            <h1 className="heading-lg mb-6">About Oma Hub</h1>
             <p className="text-oma-cocoa text-lg mb-6">
-              OmaHub is a premier fashion-tech platform where craftsmanship
-              meets personalization. We connect discerning clients with
-              exceptional designers who create both ready-to-wear collections
-              and bespoke pieces tailored to individual preferences.
+              Oma Hub is a premier fashion-tech platform dedicated to
+              spotlighting Africa&apos;s emerging designers. We&apos;re creating
+              a digital space where creativity, craftsmanship, and cultural
+              expression intersect.
             </p>
             <p className="text-oma-cocoa text-lg mb-8">
-              Our mission is to elevate the fashion experience through
-              personalization, quality craftsmanship, and innovative technology,
-              making exceptional design accessible to fashion lovers worldwide.
+              Our mission is to connect Africa&apos;s innovative fashion talent
+              with a global audience, fostering discovery and celebration of the
+              continent&apos;s rich design heritage.
             </p>
             <Button asChild className="bg-oma-plum hover:bg-oma-plum/90">
               <Link href="/directory">Discover Our Designers</Link>
@@ -61,21 +61,21 @@ export default function About() {
           <SectionHeader title="Our Story" centered={true} />
           <div className="prose prose-lg max-w-none space-y-6">
             <motion.p variants={fadeIn} className="text-center">
-              OmaHub was born from a vision to transform the fashion experience
-              through personalization and craftsmanship. We believe that truly
-              great fashion should be both beautifully crafted and perfectly
-              fitted to each individual.
+              Oma Hub was born in 2025 from a deep belief: that Africa&apos;s
+              designers deserve a global stage on their own terms. Rooted in the
+              meaning of &ldquo;Oma&rdquo; - a West African word for beauty, we
+              exist to honour the artistry shaping fashion across the continent.
             </motion.p>
             <motion.p variants={fadeIn} className="text-center">
-              What started as a platform for connecting clients with skilled
-              designers has evolved into a comprehensive fashion ecosystem that
-              celebrates individuality, craftsmanship, and innovation.
+              What started as a simple idea - a digital space to spotlight
+              emerging designers, has become a dynamic platform connecting
+              creators to conscious consumers around the world.
             </motion.p>
             <motion.p variants={fadeIn} className="text-center">
-              Today, OmaHub stands at the intersection of traditional
-              craftsmanship and modern technology, offering both curated
-              collections and personalized fashion experiences that cater to
-              diverse styles and occasions.
+              Oma Hub bridges tradition and innovation. We celebrate the bold,
+              the handmade, and the culturally grounded - helping preserve
+              traditional techniques while championing modern design. More than
+              fashion, this is a movement for craft, community, and creativity.
             </motion.p>
           </div>
         </div>
@@ -91,7 +91,7 @@ export default function About() {
       >
         <SectionHeader
           title="Our Mission & Values"
-          subtitle="Guided by principles that honor creativity, craftsmanship, and individuality"
+          subtitle="Guided by principles that honor creativity, culture, and community"
         />
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-10">
@@ -99,11 +99,12 @@ export default function About() {
             variants={fadeIn}
             className="bg-oma-cream p-6 rounded-lg shadow-sm border border-oma-gold/10"
           >
-            <h3 className="font-canela text-2xl mb-4">Personalization</h3>
+            <h3 className="font-canela text-2xl mb-4">Celebration</h3>
             <p className="text-oma-cocoa">
-              We believe in fashion that's made for you. Whether through bespoke
-              tailoring or curated collections, every piece should reflect
-              individual style and fit perfectly.
+              We celebrate the rich diversity of African design, honoring
+              traditional techniques while embracing contemporary expressions.
+              Every designer on our platform represents a unique voice and
+              perspective worth amplifying.
             </p>
           </motion.div>
 
@@ -111,11 +112,12 @@ export default function About() {
             variants={fadeIn}
             className="bg-oma-cream p-6 rounded-lg shadow-sm border border-oma-gold/10"
           >
-            <h3 className="font-canela text-2xl mb-4">Craftsmanship</h3>
+            <h3 className="font-canela text-2xl mb-4">Connection</h3>
             <p className="text-oma-cocoa">
-              We celebrate the art of fashion through exceptional craftsmanship,
-              attention to detail, and a commitment to quality in every stitch
-              and seam.
+              We build bridges between creators and consumers, between heritage
+              and innovation, and between local craftsmanship and global
+              appreciation. Our platform facilitates meaningful connections that
+              transcend geographical boundaries.
             </p>
           </motion.div>
 
@@ -123,10 +125,12 @@ export default function About() {
             variants={fadeIn}
             className="bg-oma-cream p-6 rounded-lg shadow-sm border border-oma-gold/10"
           >
-            <h3 className="font-canela text-2xl mb-4">Innovation</h3>
+            <h3 className="font-canela text-2xl mb-4">Curation</h3>
             <p className="text-oma-cocoa">
-              We embrace technology to enhance the fashion experience, making it
-              easier to find, customize, and receive perfectly fitted garments.
+              We carefully curate our directory to showcase designers who
+              demonstrate excellence in their craft, authenticity in their
+              vision, and commitment to ethical practices. Our verification
+              process ensures a standard of quality our community can trust.
             </p>
           </motion.div>
         </div>

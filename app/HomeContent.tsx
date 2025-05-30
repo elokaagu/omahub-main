@@ -66,10 +66,9 @@ const carouselItems: CarouselItem[] = [
     id: 1,
     image: "/lovable-uploads/827fb8c0-e5da-4520-a979-6fc054eefc6e.png",
     title: "Collections",
-    subtitle:
-      "Discover curated pieces for every moment, crafted with precision and care",
+    subtitle: "Shop for an occasion, holiday, or ready to wear piece",
     link: "/directory?category=Collections",
-    heroTitle: "Crafted for You",
+    heroTitle: "New Season",
     isEditorial: true,
     width: 1920,
     height: 1080,
@@ -78,9 +77,9 @@ const carouselItems: CarouselItem[] = [
     id: 2,
     image: "/lovable-uploads/bb152c0b-6378-419b-a0e6-eafce44631b2.png",
     title: "Tailored",
-    subtitle: "Experience personalized luxury with made-to-measure garments",
+    subtitle: "Masters of craft creating perfectly fitted garments",
     link: "/directory?category=Tailored",
-    heroTitle: "Perfect Fit",
+    heroTitle: "Bespoke Craft",
     isEditorial: true,
     width: 1920,
     height: 1080,
@@ -90,16 +89,28 @@ const carouselItems: CarouselItem[] = [
 // Define the categories
 const categoryDefinitions = [
   {
-    title: "Collections",
+    title: "Bridal",
     image: "/lovable-uploads/57cc6a40-0f0d-4a7d-8786-41f15832ebfb.png",
-    href: "/directory?category=Collections",
-    customCta: "Ready-to-wear pieces for every occasion",
+    href: "/directory?category=Bridal",
+    customCta: 'Tailored for "Yes."',
   },
   {
-    title: "Tailored",
+    title: "Ready to Wear",
+    image: "/lovable-uploads/4a7c7e86-6cde-4d07-a246-a5aa4cb6fa51.png",
+    href: "/directory?category=Ready%20to%20Wear",
+    customCta: "Looks for the every day that isn't.",
+  },
+  {
+    title: "Tailoring",
     image: "/lovable-uploads/99ca757a-bed8-422e-b155-0b9d365b58e0.png",
-    href: "/directory?category=Tailored",
-    customCta: "Personalized luxury, made just for you",
+    href: "/directory?category=Tailoring",
+    customCta: "Custom fits. Clean lines.",
+  },
+  {
+    title: "Accessories",
+    image: "/lovable-uploads/25c3fe26-3fc4-43ef-83ac-6931a74468c0.png",
+    href: "/directory?category=Accessories",
+    customCta: "The extras that make it extra.",
   },
 ];
 
@@ -385,112 +396,54 @@ export default function HomeContent() {
       </section>
 
       {/* What are you dressing for section */}
-      <section className="py-16 px-6 bg-white">
+      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-oma-beige/50">
         <div className="max-w-7xl mx-auto">
-          <FadeIn>
-            <h2 className="text-3xl font-canela text-center mb-12">
-              What are you dressing for?
-            </h2>
-          </FadeIn>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            <Link
-              href="/directory?occasion=bridal"
-              className="group relative aspect-square overflow-hidden rounded-lg"
-            >
-              <Image
-                src="/lovable-uploads/bridal.jpg"
-                alt="Bridal"
-                fill
-                className="object-cover transition-transform duration-500 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors" />
-              <div className="absolute bottom-4 left-4">
-                <h3 className="text-white text-xl font-canela">#bridal</h3>
-              </div>
-            </Link>
-            <Link
-              href="/directory?occasion=holiday"
-              className="group relative aspect-square overflow-hidden rounded-lg"
-            >
-              <Image
-                src="/lovable-uploads/holiday.jpg"
-                alt="Holiday"
-                fill
-                className="object-cover transition-transform duration-500 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors" />
-              <div className="absolute bottom-4 left-4">
-                <h3 className="text-white text-xl font-canela">#holiday</h3>
-              </div>
-            </Link>
-            <Link
-              href="/directory?occasion=special-event"
-              className="group relative aspect-square overflow-hidden rounded-lg"
-            >
-              <Image
-                src="/lovable-uploads/special-event.jpg"
-                alt="Special Event"
-                fill
-                className="object-cover transition-transform duration-500 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors" />
-              <div className="absolute bottom-4 left-4">
-                <h3 className="text-white text-xl font-canela">
-                  #special-event
-                </h3>
-              </div>
-            </Link>
-            <Link
-              href="/directory?occasion=ready-to-wear"
-              className="group relative aspect-square overflow-hidden rounded-lg"
-            >
-              <Image
-                src="/lovable-uploads/ready-to-wear.jpg"
-                alt="Ready to Wear"
-                fill
-                className="object-cover transition-transform duration-500 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors" />
-              <div className="absolute bottom-4 left-4">
-                <h3 className="text-white text-xl font-canela">
-                  #ready-to-wear
-                </h3>
-              </div>
-            </Link>
+          <h2 className="text-3xl font-canela text-center mb-12">
+            What are you dressing for?
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            {[
+              {
+                title: "Wedding",
+                image:
+                  "/lovable-uploads/57cc6a40-0f0d-4a7d-8786-41f15832ebfb.png",
+                href: "/directory?occasion=Wedding",
+              },
+              {
+                title: "Party",
+                image:
+                  "/lovable-uploads/4a7c7e86-6cde-4d07-a246-a5aa4cb6fa51.png",
+                href: "/directory?occasion=Party",
+              },
+              {
+                title: "Work",
+                image:
+                  "/lovable-uploads/99ca757a-bed8-422e-b155-0b9d365b58e0.png",
+                href: "/directory?occasion=Work",
+              },
+              {
+                title: "Vacation",
+                image:
+                  "/lovable-uploads/25c3fe26-3fc4-43ef-83ac-6931a74468c0.png",
+                href: "/directory?occasion=Vacation",
+              },
+            ].map((occasion, index) => (
+              <Link key={index} href={occasion.href} className="group">
+                <div className="relative h-64 rounded-lg overflow-hidden">
+                  <Image
+                    src={occasion.image}
+                    alt={occasion.title}
+                    fill
+                    className="object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-black/30 transition-opacity group-hover:bg-black/40" />
+                  <div className="absolute bottom-4 left-4 text-white">
+                    <h3 className="text-xl font-medium">{occasion.title}</h3>
+                  </div>
+                </div>
+              </Link>
+            ))}
           </div>
-        </div>
-      </section>
-
-      {/* Values Section */}
-      <section className="py-16 px-6 bg-oma-beige">
-        <div className="max-w-7xl mx-auto">
-          <FadeIn>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="text-center p-6">
-                <h3 className="font-canela text-2xl mb-4">Personalized Fit</h3>
-                <p className="text-oma-cocoa">
-                  Garments tailored to your unique measurements and style
-                  preferences
-                </p>
-              </div>
-              <div className="text-center p-6">
-                <h3 className="font-canela text-2xl mb-4">
-                  Quality Craftsmanship
-                </h3>
-                <p className="text-oma-cocoa">
-                  Expertly crafted pieces that celebrate artistry and attention
-                  to detail
-                </p>
-              </div>
-              <div className="text-center p-6">
-                <h3 className="font-canela text-2xl mb-4">Global Style</h3>
-                <p className="text-oma-cocoa">
-                  Contemporary designs that transcend boundaries and celebrate
-                  diversity
-                </p>
-              </div>
-            </div>
-          </FadeIn>
         </div>
       </section>
 
