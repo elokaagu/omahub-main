@@ -169,18 +169,6 @@ export default function Header() {
                           </Link>
                         </NavigationMenuLink>
                       </li>
-                      <li>
-                        <NavigationMenuLink asChild>
-                          <Link
-                            href="/orders"
-                            className="block select-none rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-oma-beige/50 hover:text-oma-plum focus:bg-oma-beige/50 focus:text-oma-plum"
-                          >
-                            <div className="text-sm font-semibold leading-none">
-                              Orders
-                            </div>
-                          </Link>
-                        </NavigationMenuLink>
-                      </li>
                       <li className="border-t border-gray-200 mt-1 pt-1">
                         <NavigationMenuLink asChild>
                           <Link

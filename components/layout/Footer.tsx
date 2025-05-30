@@ -135,14 +135,6 @@ export default function Footer() {
                   <span className="expand-underline">LinkedIn</span>
                 </a>
               </li>
-              <li>
-                <Link
-                  href="/contact"
-                  className="text-sm text-oma-cocoa hover:text-oma-plum expand-underline"
-                >
-                  Contact Us
-                </Link>
-              </li>
             </ul>
           </div>
         </div>

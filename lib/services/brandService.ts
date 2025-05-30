@@ -1,6 +1,6 @@
 import { supabase, Brand, Review, Collection } from "../supabase";
 
-// TEMPORARILY DISABLE ALL CACHING FOR TESTING
+// Cache configuration
 let brandsCache: {
   data: Brand[] | null;
   timestamp: number;
@@ -9,34 +9,54 @@ let brandsCache: {
   timestamp: 0,
 };
 
-// Cache expiration time (10 minutes - increased from 5)
-const CACHE_EXPIRY = 10 * 60 * 1000;
+// Cache expiration time (15 minutes)
+const CACHE_EXPIRY = 15 * 60 * 1000;
 
 // Define essential fields to reduce payload size
-const ESSENTIAL_BRAND_FIELDS =
-  "id,name,image,category,location,is_verified,rating";
+const ESSENTIAL_BRAND_FIELDS = "*";
 
 /**
  * Fetch all brands from the database
  */
 export async function getAllBrands(): Promise<Brand[]> {
   try {
-    // Clear cache on each call to ensure fresh data
-    clearBrandsCache();
+    // Check cache first
+    const now = Date.now();
+    if (brandsCache.data && now - brandsCache.timestamp < CACHE_EXPIRY) {
+      console.log("🎯 Using cached brands data");
+      return brandsCache.data;
+    }
 
-    // Add more detailed logging
-    console.log("🔍 getAllBrands: Starting fetch from database...");
+    console.log("🔍 getAllBrands: Starting fresh fetch from database...");
+    console.log("🔑 Supabase client initialized:", !!supabase);
+    console.log("🔑 Supabase URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
+    console.log(
+      "🔑 Supabase key present:",
+      !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    );
 
     // Debug Supabase connection
     if (!supabase) {
       console.error("⛔ ERROR: Supabase client is undefined!");
-      return getSampleBrandsData(); // Return sample data as fallback
+      return getSampleBrandsData();
     }
 
-    // Use simpler query that's less likely to fail
+    // Test connection with a count query first
+    const { count, error: countError } = await supabase
+      .from("brands")
+      .select("*", { count: "exact", head: true });
+
+    if (countError) {
+      console.error("⛔ Error testing database connection:", countError);
+      return getSampleBrandsData();
+    }
+
+    console.log(`📊 Found ${count} brands in database`);
+
+    // Fetch all brand data
     const { data, error } = await supabase
       .from("brands")
-      .select("id, name, image, category, location, is_verified, rating");
+      .select(ESSENTIAL_BRAND_FIELDS);
 
     if (error) {
       console.error(
@@ -47,54 +67,42 @@ export async function getAllBrands(): Promise<Brand[]> {
         "\nStatus:",
         error.code
       );
-      return getSampleBrandsData(); // Return sample data as fallback
+      return getSampleBrandsData();
     }
 
     if (!data || data.length === 0) {
       console.warn("⚠️ No brands found in the database!");
-      return getSampleBrandsData(); // Return sample data as fallback
+      return getSampleBrandsData();
     }
 
-    // Debug first few brands
-    console.log(`✅ Successfully fetched ${data.length} brands`);
-    console.log("📋 First brand sample:", JSON.stringify(data[0], null, 2));
+    // Log the first brand for debugging
+    console.log("📋 Sample brand data:", JSON.stringify(data[0], null, 2));
 
-    // ADDITIONAL DIAGNOSIS - Log each brand to check for problematic entries
-    console.log("🔍 Checking all brands for potential issues:");
-    for (let i = 0; i < data.length; i++) {
-      // Skip logging all brands, just log ones with potential problems
-      const brand = data[i];
-      const issues = [];
-
-      if (!brand.id) issues.push("missing ID");
-      if (!brand.name) issues.push("missing name");
-      if (!brand.image) issues.push("missing image");
-      if (!brand.category) issues.push("missing category");
-      if (!brand.location) issues.push("missing location");
-
-      if (issues.length > 0) {
-        console.warn(`⚠️ Brand ${i} has issues:`, issues, brand);
-      }
-    }
-
-    // Create brand objects with all required fields filled
+    // Map the data to Brand objects
     const fullBrands: Brand[] = data.map((item) => ({
       id: item.id || `temp-id-${Math.random().toString(36).substring(2, 9)}`,
       name: item.name || "Brand Name",
-      description: "Brand description", // Default values for required fields
-      long_description: "Long brand description",
+      description: item.description || "Brand description",
+      long_description: item.long_description || "Long brand description",
       location: item.location || "Unknown location",
-      price_range: "$$",
+      price_range: item.price_range || "$$",
       category: item.category || "Other",
       rating: item.rating || 4.5,
       is_verified: item.is_verified || false,
       image: item.image || "/placeholder-image.jpg",
     }));
 
+    // Update cache
+    brandsCache = {
+      data: fullBrands,
+      timestamp: now,
+    };
+
+    console.log(`✅ Successfully fetched ${fullBrands.length} brands`);
     return fullBrands;
   } catch (err) {
     console.error("⛔ Unexpected error in getAllBrands:", err);
-    return getSampleBrandsData(); // Return sample data as fallback
+    return getSampleBrandsData();
   }
 }
 

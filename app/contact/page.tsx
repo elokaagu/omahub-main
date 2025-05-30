@@ -10,6 +10,8 @@ import { toast } from "sonner";
 
 export default function ContactPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubscribing, setIsSubscribing] = useState(false);
+  const [email, setEmail] = useState("");
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -29,14 +31,40 @@ export default function ContactPage() {
     setIsSubmitting(true);
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to send message");
+      }
+
       toast.success("Your message has been sent successfully");
       setFormData({ name: "", email: "", subject: "", message: "" });
-    } catch {
+    } catch (error) {
       toast.error("Failed to send message. Please try again.");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubscribing(true);
+
+    try {
+      // TODO: Replace with actual newsletter subscription API
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      toast.success("Thanks for subscribing!");
+      setEmail("");
+    } catch {
+      toast.error("Failed to subscribe. Please try again.");
+    } finally {
+      setIsSubscribing(false);
     }
   };
 
@@ -152,10 +180,10 @@ export default function ContactPage() {
                 <div>
                   <p className="font-medium text-oma-black">Email</p>
                   <a
-                    href="mailto:contact@omahub.com"
+                    href="mailto:eloka@satellitelabs.xyz"
                     className="text-oma-cocoa hover:text-oma-plum expand-underline"
                   >
-                    contact@omahub.com
+                    eloka@satellitelabs.xyz
                   </a>
                 </div>
               </div>
@@ -182,9 +210,9 @@ export default function ContactPage() {
                 <div>
                   <p className="font-medium text-oma-black">Address</p>
                   <address className="text-oma-cocoa not-italic">
-                    123 Design District
+                    1 Coldbath Square
                     <br />
-                    Lagos, Nigeria
+                    London, Farringdon
                   </address>
                 </div>
               </div>
@@ -201,37 +229,38 @@ export default function ContactPage() {
                 spotlights, and early access to new collections.
               </p>
 
-              <div className="space-y-4">
+              <form onSubmit={handleSubscribe} className="space-y-4">
                 <Input
                   type="email"
                   placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
                   className="bg-white border-oma-gold/30 focus-visible:ring-oma-plum"
                 />
-                <Button className="w-full bg-oma-plum hover:bg-oma-plum/90 text-white">
-                  Subscribe to Updates
+                <Button
+                  type="submit"
+                  disabled={isSubscribing}
+                  className="w-full bg-oma-plum hover:bg-oma-plum/90 text-white"
+                >
+                  {isSubscribing ? "Subscribing..." : "Subscribe to Updates"}
                 </Button>
-              </div>
+              </form>
 
-              <div className="mt-6 space-y-3">
-                <div className="flex items-start gap-2">
-                  <div className="w-1 h-1 rounded-full bg-oma-gold mt-2" />
-                  <span className="text-sm text-oma-cocoa">
-                    Early access to new collections
-                  </span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <div className="w-1 h-1 rounded-full bg-oma-gold mt-2" />
-                  <span className="text-sm text-oma-cocoa">
-                    Exclusive designer interviews
-                  </span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <div className="w-1 h-1 rounded-full bg-oma-gold mt-2" />
-                  <span className="text-sm text-oma-cocoa">
-                    Special event invitations
-                  </span>
-                </div>
-              </div>
+              <ul className="mt-6 space-y-2 text-sm text-oma-cocoa">
+                <li className="flex items-center gap-2">
+                  <span className="text-oma-plum">•</span>
+                  Early access to new collections
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-oma-plum">•</span>
+                  Exclusive designer interviews
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-oma-plum">•</span>
+                  Special event invitations
+                </li>
+              </ul>
             </div>
           </div>
         </div>
