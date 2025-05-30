@@ -1,11 +1,39 @@
 import { supabase, Brand, Collection } from "../supabase";
+import { getProfile } from "./authService";
+
+/**
+ * Check if user has admin access
+ */
+export async function isAdmin(userId: string): Promise<boolean> {
+  try {
+    const profile = await getProfile(userId);
+    if (!profile) {
+      console.error("No profile found for user:", userId);
+      return false;
+    }
+
+    const isAdminRole = profile.role === "admin";
+    console.log(`User ${userId} admin status:`, isAdminRole);
+    return isAdminRole;
+  } catch (error) {
+    console.error("Error checking admin status:", error);
+    return false;
+  }
+}
 
 /**
  * Create a new brand
  */
 export async function createBrand(
+  userId: string,
   brandData: Omit<Brand, "id" | "rating">
 ): Promise<Brand> {
+  // Check admin access first
+  const hasAccess = await isAdmin(userId);
+  if (!hasAccess) {
+    throw new Error("Unauthorized: Only admins can create brands");
+  }
+
   // Generate a URL-friendly slug from the brand name
   const id = brandData.name
     .toLowerCase()
@@ -34,9 +62,16 @@ export async function createBrand(
  * Update an existing brand
  */
 export async function updateBrand(
+  userId: string,
   id: string,
   updates: Partial<Omit<Brand, "id" | "rating">>
 ): Promise<Brand> {
+  // Check admin access
+  const hasAccess = await isAdmin(userId);
+  if (!hasAccess) {
+    throw new Error("Unauthorized: Only admins can update brands");
+  }
+
   const { data, error } = await supabase
     .from("brands")
     .update(updates)
@@ -55,7 +90,13 @@ export async function updateBrand(
 /**
  * Delete a brand
  */
-export async function deleteBrand(id: string): Promise<void> {
+export async function deleteBrand(userId: string, id: string): Promise<void> {
+  // Check admin access
+  const hasAccess = await isAdmin(userId);
+  if (!hasAccess) {
+    throw new Error("Unauthorized: Only admins can delete brands");
+  }
+
   const { error } = await supabase.from("brands").delete().eq("id", id);
 
   if (error) {
@@ -68,8 +109,15 @@ export async function deleteBrand(id: string): Promise<void> {
  * Add a collection to a brand
  */
 export async function addCollection(
+  userId: string,
   collection: Omit<Collection, "id">
 ): Promise<Collection> {
+  // Check admin access
+  const hasAccess = await isAdmin(userId);
+  if (!hasAccess) {
+    throw new Error("Unauthorized: Only admins can add collections");
+  }
+
   const { data, error } = await supabase
     .from("collections")
     .insert(collection)
@@ -88,9 +136,16 @@ export async function addCollection(
  * Update a collection
  */
 export async function updateCollection(
+  userId: string,
   id: string,
   updates: Partial<Omit<Collection, "id">>
 ): Promise<Collection> {
+  // Check admin access
+  const hasAccess = await isAdmin(userId);
+  if (!hasAccess) {
+    throw new Error("Unauthorized: Only admins can update collections");
+  }
+
   const { data, error } = await supabase
     .from("collections")
     .update(updates)
@@ -109,29 +164,20 @@ export async function updateCollection(
 /**
  * Delete a collection
  */
-export async function deleteCollection(id: string): Promise<void> {
+export async function deleteCollection(
+  userId: string,
+  id: string
+): Promise<void> {
+  // Check admin access
+  const hasAccess = await isAdmin(userId);
+  if (!hasAccess) {
+    throw new Error("Unauthorized: Only admins can delete collections");
+  }
+
   const { error } = await supabase.from("collections").delete().eq("id", id);
 
   if (error) {
     console.error(`Error deleting collection ${id}:`, error);
     throw error;
   }
-}
-
-/**
- * Check if user has admin access
- */
-export async function isAdmin(userId: string): Promise<boolean> {
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", userId)
-    .single();
-
-  if (error) {
-    console.error("Error checking admin status:", error);
-    return false;
-  }
-
-  return data?.role === "admin";
 }

@@ -133,14 +133,27 @@ export default function HomeContent() {
     useState<CategoryWithBrands[]>(initialCategories);
   const [isLoading, setIsLoading] = useState(true);
   const [heroSlides, setHeroSlides] = useState<HeroSlide[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let isMounted = true;
+
     const fetchData = async () => {
+      if (!isMounted) return;
       setIsLoading(true);
+      setError(null);
+
       try {
-        // Fetch brands
-        const brandsData = await getAllBrands();
-        const updatedCategories = categories.map((category) => ({
+        // Fetch data in parallel
+        const [brandsData, slides] = await Promise.all([
+          getAllBrands(),
+          getActiveHeroSlides(),
+        ]);
+
+        if (!isMounted) return;
+
+        // Process brands data
+        const updatedCategories = categoryDefinitions.map((category) => ({
           ...category,
           brands: brandsData
             .filter((brand) => brand.category === category.title)
@@ -148,26 +161,42 @@ export default function HomeContent() {
               id: brand.id,
               name: brand.name,
               image: brand.image || "/placeholder-image.jpg",
-              location: brand.location.split(",")[0], // Take just the city name
+              location: brand.location?.split(",")[0] || "Unknown", // Take just the city name
               rating: brand.rating,
               isVerified: brand.is_verified || false,
               category: brand.category,
             })),
         }));
-        setCategories(updatedCategories);
 
-        // Fetch hero slides
-        const slides = await getActiveHeroSlides();
+        setCategories(updatedCategories);
         setHeroSlides(slides);
       } catch (error) {
         console.error("Error fetching data:", error);
+        if (isMounted) {
+          setError("Failed to load content. Please try refreshing the page.");
+        }
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
     fetchData();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen px-4">
+        <div className="text-red-500 mb-4">{error}</div>
+        <Button onClick={() => window.location.reload()}>Refresh Page</Button>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { isAdmin } from "@/lib/services/studioService";
@@ -17,7 +17,6 @@ import {
   X,
   Settings,
 } from "@/components/ui/icons";
-import { useState } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 export default function StudioLayout({
@@ -29,35 +28,60 @@ export default function StudioLayout({
   const router = useRouter();
   const [hasAccess, setHasAccess] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isCheckingAccess, setIsCheckingAccess] = useState(true);
 
   useEffect(() => {
     const checkAccess = async () => {
-      if (!loading && user) {
-        try {
+      try {
+        if (!loading) {
+          if (!user) {
+            console.log("No user found, redirecting to login");
+            router.push("/login?redirect=/studio");
+            return;
+          }
+
           const adminAccess = await isAdmin(user.id);
+          console.log("Admin access check result:", adminAccess);
           setHasAccess(adminAccess);
 
           if (!adminAccess) {
             console.log("User does not have admin access, redirecting to home");
             router.push("/");
           }
-        } catch (error) {
-          console.error("Error checking admin access:", error);
-          // If there's an error checking access, redirect to home
-          router.push("/");
         }
-      } else if (!loading && !user) {
-        router.push("/login?redirect=/studio");
+      } catch (error) {
+        console.error("Error checking admin access:", error);
+        router.push("/");
+      } finally {
+        setIsCheckingAccess(false);
       }
     };
 
     checkAccess();
   }, [user, loading, router]);
 
-  if (loading || !hasAccess) {
+  // Show loading state while checking authentication and access
+  if (loading || isCheckingAccess) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="animate-spin h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
+
+  // If no access, show a message (this will be briefly visible before redirect)
+  if (!hasAccess || !user) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
+          <p className="mb-4">
+            You don't have permission to access the studio.
+          </p>
+          <Button asChild>
+            <Link href="/">Return to Home</Link>
+          </Button>
+        </div>
       </div>
     );
   }
@@ -200,10 +224,10 @@ export default function StudioLayout({
         <div
           className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
           onClick={() => setSidebarOpen(false)}
-        ></div>
+        />
       )}
 
-      <Toaster position="top-right" />
+      <Toaster />
     </div>
   );
 }

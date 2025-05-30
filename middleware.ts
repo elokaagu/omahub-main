@@ -3,24 +3,30 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export async function middleware(req: NextRequest) {
-  const res = NextResponse.next();
-  const supabase = createMiddlewareClient({ req, res });
+  try {
+    const res = NextResponse.next();
+    const supabase = createMiddlewareClient({ req, res });
 
-  // Refresh session if expired - required for Server Components
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    // Refresh session if expired - required for Server Components
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
 
-  // If accessing a protected route and not logged in, redirect to login
-  const isProtectedRoute = req.nextUrl.pathname.startsWith("/studio");
-  if (isProtectedRoute && !session) {
-    const redirectUrl = req.nextUrl.clone();
-    redirectUrl.pathname = "/login";
-    redirectUrl.searchParams.set("next", req.nextUrl.pathname);
-    return NextResponse.redirect(redirectUrl);
+    // If accessing a protected route and not logged in, redirect to login
+    const isProtectedRoute = req.nextUrl.pathname.startsWith("/studio");
+    if (isProtectedRoute && !session) {
+      const redirectUrl = req.nextUrl.clone();
+      redirectUrl.pathname = "/login";
+      redirectUrl.searchParams.set("next", req.nextUrl.pathname);
+      return NextResponse.redirect(redirectUrl);
+    }
+
+    return res;
+  } catch (error) {
+    console.error("Error in middleware:", error);
+    // Continue the request even if there's an error
+    return NextResponse.next();
   }
-
-  return res;
 }
 
 export const config = {

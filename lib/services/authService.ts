@@ -25,7 +25,29 @@ export async function signUp(email: string, password: string) {
     throw error;
   }
 
+  // Create a profile for the new user
+  if (data.user) {
+    await createProfile(data.user.id, "user");
+  }
+
   return data;
+}
+
+// Function to create a new profile
+async function createProfile(userId: string, role: UserRole = "user") {
+  const { error } = await supabase.from("profiles").insert({
+    id: userId,
+    role,
+    owned_brands: [],
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  });
+
+  if (error && error.code !== "23505") {
+    // Ignore duplicate key errors
+    console.error("Error creating profile:", error);
+    throw error;
+  }
 }
 
 export async function signIn(email: string, password: string) {
@@ -37,6 +59,14 @@ export async function signIn(email: string, password: string) {
   if (error) {
     console.error("Error signing in:", error);
     throw error;
+  }
+
+  // Ensure profile exists
+  if (data.user) {
+    const profile = await getProfile(data.user.id);
+    if (!profile) {
+      await createProfile(data.user.id);
+    }
   }
 
   return data;
@@ -91,40 +121,52 @@ export async function getCurrentUser() {
 }
 
 export async function getProfile(userId: string): Promise<User | null> {
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("*, owned_brands")
-    .eq("id", userId)
-    .single();
+  try {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*, owned_brands")
+      .eq("id", userId)
+      .single();
 
-  if (error) {
-    if (error.code === "PGRST116") {
-      // Record not found
-      // Create a new profile with user role
-      const { data: newProfile, error: createError } = await supabase
-        .from("profiles")
-        .insert({
-          id: userId,
-          role: "user",
-          owned_brands: [],
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        })
-        .select()
-        .single();
+    if (error) {
+      if (error.code === "PGRST116") {
+        // Profile not found, create a new one
+        const { data: newProfile, error: createError } = await supabase
+          .from("profiles")
+          .insert({
+            id: userId,
+            role: "user",
+            owned_brands: [],
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+          .select()
+          .single();
 
-      if (createError) {
-        console.error("Error creating profile:", createError);
-        return null;
+        if (createError) {
+          console.error("Error creating profile:", createError);
+          return null;
+        }
+
+        return newProfile;
       }
-
-      return newProfile;
+      console.error("Error fetching profile:", error);
+      return null;
     }
-    console.error("Error fetching profile:", error);
+
+    return {
+      id: data.id,
+      email: data.email || "",
+      first_name: data.first_name,
+      last_name: data.last_name,
+      avatar_url: data.avatar_url,
+      role: data.role || "user",
+      owned_brands: data.owned_brands || [],
+    };
+  } catch (err) {
+    console.error("Error in getProfile:", err);
     return null;
   }
-
-  return data;
 }
 
 export async function updateProfile(userId: string, updates: Partial<User>) {
@@ -205,5 +247,25 @@ export async function removeOwnedBrand(userId: string, brandId: string) {
   if (error) {
     console.error("Error removing owned brand:", error);
     throw error;
+  }
+}
+
+export async function isAdmin(userId: string): Promise<boolean> {
+  try {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", userId)
+      .single();
+
+    if (error) {
+      console.error("Error checking admin status:", error);
+      return false;
+    }
+
+    return data?.role === "admin";
+  } catch (err) {
+    console.error("Error in isAdmin check:", err);
+    return false;
   }
 }

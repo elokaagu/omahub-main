@@ -5,9 +5,11 @@ import { getProfile } from "./authService";
 let brandsCache: {
   data: Brand[] | null;
   timestamp: number;
+  isLoading: boolean;
 } = {
   data: null,
   timestamp: 0,
+  isLoading: false,
 };
 
 // Cache expiration time (15 minutes)
@@ -43,12 +45,27 @@ async function hasPermission(
  */
 export async function getAllBrands(): Promise<Brand[]> {
   try {
+    // Check if we're already loading brands
+    if (brandsCache.isLoading) {
+      console.log("🔄 Already fetching brands, waiting for completion...");
+      // Wait for a short period and check cache
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      if (brandsCache.data) {
+        return brandsCache.data;
+      }
+      // If still no data, return sample data
+      return getSampleBrandsData();
+    }
+
     // Check cache first
     const now = Date.now();
     if (brandsCache.data && now - brandsCache.timestamp < CACHE_EXPIRY) {
       console.log("🎯 Using cached brands data");
       return brandsCache.data;
     }
+
+    // Set loading state
+    brandsCache.isLoading = true;
 
     console.log("🔍 getAllBrands: Starting fresh fetch from database...");
     console.log("🔑 Supabase client initialized:", !!supabase);
@@ -61,6 +78,7 @@ export async function getAllBrands(): Promise<Brand[]> {
     // Debug Supabase connection
     if (!supabase) {
       console.error("⛔ ERROR: Supabase client is undefined!");
+      brandsCache.isLoading = false;
       return getSampleBrandsData();
     }
 
@@ -71,6 +89,7 @@ export async function getAllBrands(): Promise<Brand[]> {
 
     if (countError) {
       console.error("⛔ Error testing database connection:", countError);
+      brandsCache.isLoading = false;
       return getSampleBrandsData();
     }
 
@@ -79,7 +98,8 @@ export async function getAllBrands(): Promise<Brand[]> {
     // Fetch all brand data
     const { data, error } = await supabase
       .from("brands")
-      .select(ESSENTIAL_BRAND_FIELDS);
+      .select(ESSENTIAL_BRAND_FIELDS)
+      .order("name");
 
     if (error) {
       console.error(
@@ -90,11 +110,13 @@ export async function getAllBrands(): Promise<Brand[]> {
         "\nStatus:",
         error.code
       );
+      brandsCache.isLoading = false;
       return getSampleBrandsData();
     }
 
     if (!data || data.length === 0) {
       console.warn("⚠️ No brands found in the database!");
+      brandsCache.isLoading = false;
       return getSampleBrandsData();
     }
 
@@ -119,12 +141,14 @@ export async function getAllBrands(): Promise<Brand[]> {
     brandsCache = {
       data: fullBrands,
       timestamp: now,
+      isLoading: false,
     };
 
     console.log(`✅ Successfully fetched ${fullBrands.length} brands`);
     return fullBrands;
   } catch (err) {
     console.error("⛔ Unexpected error in getAllBrands:", err);
+    brandsCache.isLoading = false;
     return getSampleBrandsData();
   }
 }
@@ -194,6 +218,7 @@ export function clearBrandsCache(): void {
   brandsCache = {
     data: null,
     timestamp: 0,
+    isLoading: false,
   };
 }
 

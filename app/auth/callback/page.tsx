@@ -19,6 +19,16 @@ export default function AuthCallbackPage() {
           throw new Error("No code provided");
         }
 
+        // Clear any existing cookies that might be malformed
+        document.cookie.split(";").forEach((c) => {
+          document.cookie = c
+            .replace(/^ +/, "")
+            .replace(
+              /=.*/,
+              "=;expires=" + new Date().toUTCString() + ";path=/"
+            );
+        });
+
         // Exchange the code for a session
         const { data, error: sessionError } =
           await supabase.auth.exchangeCodeForSession(code);
