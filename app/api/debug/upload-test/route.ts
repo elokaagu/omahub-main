@@ -1,6 +1,7 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import setupStorage from "@/lib/supabase-storage-setup";
+import { serverSupabase } from "@/lib/server-supabase";
 
 // Mark this route as server-side only
 export const dynamic = "force-dynamic";
@@ -32,60 +33,24 @@ export async function GET(request: NextRequest) {
   console.log("Upload test diagnostic API called");
 
   try {
-    // 1. Gather environment info
-    const environmentInfo = {
-      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL || "Not configured",
-      nodeEnv: process.env.NODE_ENV,
-      timestamp: new Date().toISOString(),
-      vercelEnv: process.env.VERCEL_ENV || "Not on Vercel",
-    };
+    // Try to get a signed URL
+    const { data: signedUrl, error: signedError } = await serverSupabase.storage
+      .from("brand-assets")
+      .createSignedUrl("test-image.jpg", 60);
 
-    // 2. Test storage buckets
-    console.log("Testing storage buckets...");
-    const bucketTests = await testStorageBuckets();
+    if (signedError) {
+      return NextResponse.json(
+        { success: false, error: signedError.message },
+        { status: 500 }
+      );
+    }
 
-    // 3. Test storage permissions
-    console.log("Testing storage permissions...");
-    const permissionTests = await testStoragePermissions();
-
-    // 4. Test RLS policies
-    console.log("Testing RLS policies...");
-    const rlsTests = await testRLSPolicies();
-
-    // Compile all diagnostic results
-    const diagnosticResults = {
-      timestamp: new Date().toISOString(),
-      environment: environmentInfo,
-      bucketTests,
-      permissionTests,
-      rlsTests,
-    };
-
-    // Return a simple Response object with all diagnostics
-    return new Response(
-      JSON.stringify({
-        success: true,
-        message: "Upload diagnostics completed",
-        diagnostics: diagnosticResults,
-      }),
-      {
-        status: 200,
-        headers: corsHeaders,
-      }
-    );
+    return NextResponse.json({ success: true, signedUrl });
   } catch (error) {
-    console.error("Error running upload diagnostics:", error);
-
-    return new Response(
-      JSON.stringify({
-        success: false,
-        error: "Upload diagnostics failed",
-        details: error instanceof Error ? error.message : String(error),
-      }),
-      {
-        status: 500,
-        headers: corsHeaders,
-      }
+    console.error("Test auth image error:", error);
+    return NextResponse.json(
+      { success: false, error: "Internal server error" },
+      { status: 500 }
     );
   }
 }
