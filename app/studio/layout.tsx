@@ -36,44 +36,83 @@ export default function StudioLayout({
   useEffect(() => {
     const checkAccess = async () => {
       try {
-        console.log("🔒 Studio access check starting...");
-        console.log("Current auth state:", {
+        console.log("🔒 Studio Layout: Access check starting...");
+        console.log("Studio Layout: Current auth state:", {
           userId: user?.id,
+          userEmail: user?.email,
           isLoading: loading,
         });
 
         if (loading) {
-          console.log("⏳ Auth is still loading...");
+          console.log("⏳ Studio Layout: Auth is still loading...");
           return;
         }
 
         if (!user) {
-          console.log("❌ No user found, redirecting to login");
+          console.log("❌ Studio Layout: No user found, redirecting to login");
           router.push("/login?redirect=/studio");
           return;
         }
 
-        // Get user permissions
-        const userPermissions = await getUserPermissions(user.id);
-        console.log("👤 User permissions:", userPermissions);
+        // Get user permissions with detailed logging
+        console.log("🔍 Studio Layout: Getting permissions for user:", user.id);
+        console.log("🔍 Studio Layout: User email:", user.email);
+        console.log("🔍 Studio Layout: About to call getUserPermissions...");
+
+        const userPermissions = await getUserPermissions(user.id, user.email);
+
+        console.log(
+          "👤 Studio Layout: User permissions received:",
+          userPermissions
+        );
+        console.log(
+          "👤 Studio Layout: Permissions array length:",
+          userPermissions.length
+        );
+        console.log(
+          "👤 Studio Layout: Permissions array contents:",
+          JSON.stringify(userPermissions)
+        );
+        console.log(
+          "🔐 Studio Layout: Checking for studio.access permission..."
+        );
+        console.log(
+          "🔐 Studio Layout: Has studio.access?",
+          userPermissions.includes("studio.access")
+        );
 
         if (!userPermissions.includes("studio.access")) {
           console.log(
-            "⛔ User does not have studio access, redirecting to home"
+            "⛔ Studio Layout: User does not have studio access, redirecting to home"
+          );
+          console.log(
+            "⛔ Studio Layout: Available permissions:",
+            userPermissions
           );
           router.push("/");
           return;
         }
 
+        console.log("✅ Studio Layout: Access granted, setting permissions");
         setPermissions(userPermissions);
       } catch (error) {
-        console.error("❌ Error checking access:", error);
+        console.error("❌ Studio Layout: Error checking access:", error);
+        console.error(
+          "❌ Studio Layout: Error stack:",
+          (error as Error)?.stack
+        );
         router.push("/");
       } finally {
+        console.log("🏁 Studio Layout: Setting isCheckingAccess to false");
         setIsCheckingAccess(false);
       }
     };
 
+    console.log("🚀 Studio Layout: useEffect triggered with:", {
+      user: !!user,
+      loading,
+      isCheckingAccess,
+    });
     checkAccess();
   }, [user, loading, router]);
 

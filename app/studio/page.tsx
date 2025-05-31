@@ -23,28 +23,51 @@ export default function StudioPage() {
   useEffect(() => {
     async function fetchData() {
       try {
+        console.log("🏠 Studio Page: fetchData starting...");
+        console.log("🏠 Studio Page: Current user:", {
+          userId: user?.id,
+          userEmail: user?.email,
+        });
+
         if (!user) {
+          console.log("🏠 Studio Page: No user, setting loading to false");
           setLoading(false);
           return;
         }
 
         // Get user permissions
-        const permissions = await getUserPermissions(user.id);
+        console.log("🔍 Studio Page: Getting permissions for user:", user.id);
+        const permissions = await getUserPermissions(user.id, user.email);
+        console.log("👤 Studio Page: User permissions received:", permissions);
+        console.log(
+          "🔐 Studio Page: Has studio.access?",
+          permissions.includes("studio.access")
+        );
         setUserPermissions(permissions);
 
         // Get brands if user has permission
         if (permissions.includes("studio.brands.manage")) {
+          console.log(
+            "📦 Studio Page: User can manage brands, fetching brands..."
+          );
           const { data: fetchedBrands, error } = await supabase
             .from("brands")
             .select("*")
             .order("name");
 
           if (error) throw error;
+          console.log(
+            "📦 Studio Page: Brands fetched:",
+            fetchedBrands?.length || 0
+          );
           setBrands(fetchedBrands || []);
+        } else {
+          console.log("📦 Studio Page: User cannot manage brands");
         }
       } catch (error) {
-        console.error("Error in StudioPage:", error);
+        console.error("❌ Studio Page: Error in fetchData:", error);
       } finally {
+        console.log("🏠 Studio Page: Setting loading to false");
         setLoading(false);
       }
     }

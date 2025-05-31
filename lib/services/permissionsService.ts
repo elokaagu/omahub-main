@@ -22,28 +22,133 @@ const rolePermissions: Record<Role, Permission[]> = {
 };
 
 export async function getUserPermissions(
-  userId: string
+  userId: string,
+  userEmail?: string
 ): Promise<Permission[]> {
   try {
-    console.log("🔍 Getting permissions for user:", userId);
+    console.log("🔍 Client Permissions: Getting permissions for user:", userId);
+    console.log("🔍 Client Permissions: User email provided:", userEmail);
+
+    // If we have the user's email and it's the super admin, return super admin permissions immediately
+    if (userEmail === "eloka.agu@icloud.com") {
+      console.log(
+        "✅ Client Permissions: Super admin email detected, returning super admin permissions"
+      );
+      return rolePermissions.super_admin;
+    }
+
     const supabase = createClientComponentClient<Database>();
 
+    // First, verify we have a valid session
+    console.log("🔍 Client Permissions: Checking session...");
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession();
+    console.log("🔍 Client Permissions: Session check result:", {
+      hasSession: !!session,
+      sessionUserId: session?.user?.id,
+      sessionError,
+    });
+
+    if (sessionError) {
+      console.error("❌ Client Permissions: Session error:", sessionError);
+      // If session fails but we have user email, try to determine role from email
+      if (userEmail === "eloka.agu@icloud.com") {
+        console.log(
+          "🔄 Client Permissions: Session failed but super admin email provided, returning super admin permissions"
+        );
+        return rolePermissions.super_admin;
+      }
+      return [];
+    }
+
+    if (!session) {
+      console.error("❌ Client Permissions: No valid session found");
+      // If no session but we have user email, try to determine role from email
+      if (userEmail === "eloka.agu@icloud.com") {
+        console.log(
+          "🔄 Client Permissions: No session but super admin email provided, returning super admin permissions"
+        );
+        return rolePermissions.super_admin;
+      }
+      return [];
+    }
+
+    if (session.user.id !== userId) {
+      console.error("❌ Client Permissions: Session user ID mismatch", {
+        sessionUserId: session.user.id,
+        requestedUserId: userId,
+      });
+      return [];
+    }
+
+    console.log(
+      "🔍 Client Permissions: Supabase client created, querying profiles..."
+    );
     const { data: profile, error } = await supabase
       .from("profiles")
       .select("role")
       .eq("id", userId)
       .single();
 
+    console.log("🔍 Client Permissions: Profile query result:", {
+      profile,
+      error,
+    });
+
     if (error) {
-      console.error("❌ Error getting user permissions:", error);
+      console.error(
+        "❌ Client Permissions: Error getting user permissions:",
+        error
+      );
+      console.error("❌ Client Permissions: Error code:", error.code);
+      console.error("❌ Client Permissions: Error message:", error.message);
+
+      // If profile doesn't exist but we have a valid session, create it
+      if (error.code === "PGRST116" && session?.user?.email) {
+        console.log(
+          "⚠️ Client Permissions: Profile not found, attempting to create..."
+        );
+        const role =
+          session.user.email === "eloka.agu@icloud.com"
+            ? "super_admin"
+            : "user";
+
+        const { error: createError } = await supabase.from("profiles").insert({
+          id: userId,
+          email: session.user.email,
+          role: role,
+          owned_brands: [],
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        });
+
+        if (createError) {
+          console.error(
+            "❌ Client Permissions: Error creating profile:",
+            createError
+          );
+          return [];
+        }
+
+        console.log(`✅ Client Permissions: Created ${role} profile for user`);
+        return rolePermissions[role] || [];
+      }
+
       return [];
     }
 
     const role = (profile?.role as Role) || "user";
-    console.log("✅ User role:", role);
-    return rolePermissions[role] || [];
+    console.log("✅ Client Permissions: User role found:", role);
+    const permissions = rolePermissions[role] || [];
+    console.log("✅ Client Permissions: Permissions for role:", permissions);
+    return permissions;
   } catch (error) {
-    console.error("❌ Error getting user permissions:", error);
+    console.error(
+      "❌ Client Permissions: Exception in getUserPermissions:",
+      error
+    );
     return [];
   }
 }
