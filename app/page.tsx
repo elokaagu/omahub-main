@@ -1,11 +1,12 @@
 import dynamic from "next/dynamic";
+import { Loading } from "@/components/ui/loading";
 
 // Dynamic import for client component
 const HomeContent = dynamic(() => import("./HomeContent.tsx"), {
   ssr: false,
   loading: () => (
     <div className="flex justify-center items-center min-h-screen">
-      <div className="animate-spin h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full"></div>
+      <Loading size="lg" />
     </div>
   ),
 });

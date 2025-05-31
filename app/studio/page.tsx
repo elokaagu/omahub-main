@@ -10,6 +10,7 @@ import {
 } from "@/lib/services/permissionsService";
 import { Package } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { Loading } from "@/components/ui/loading";
 
 type Brand = Database["public"]["Tables"]["brands"]["Row"];
 
@@ -78,7 +79,7 @@ export default function StudioPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-oma-plum"></div>
+        <Loading />
       </div>
     );
   }
