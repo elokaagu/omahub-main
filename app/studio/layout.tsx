@@ -3,8 +3,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/context/AuthContext";
 import { useRouter } from "next/navigation";
-import { isAdmin } from "@/lib/services/studioService";
-import { Toaster } from "sonner";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,6 +16,11 @@ import {
   Settings,
 } from "@/components/ui/icons";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Toaster } from "sonner";
+import {
+  Permission,
+  getUserPermissions,
+} from "@/lib/services/permissionsService";
 
 export default function StudioLayout({
   children,
@@ -26,7 +29,7 @@ export default function StudioLayout({
 }) {
   const { user, loading, signOut } = useAuth();
   const router = useRouter();
-  const [hasAccess, setHasAccess] = useState(false);
+  const [permissions, setPermissions] = useState<Permission[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isCheckingAccess, setIsCheckingAccess] = useState(true);
 
@@ -36,10 +39,7 @@ export default function StudioLayout({
         console.log("🔒 Studio access check starting...");
         console.log("Current auth state:", {
           userId: user?.id,
-          userRole: user?.role,
           isLoading: loading,
-          hasAdminAccess:
-            user?.role === "admin" || user?.role === "super_admin",
         });
 
         if (loading) {
@@ -53,34 +53,21 @@ export default function StudioLayout({
           return;
         }
 
-        // Check if user has admin role directly from the user object
-        const hasAdminAccess =
-          user.role === "admin" || user.role === "super_admin";
-        console.log("👤 User role check:", {
-          role: user.role,
-          hasAdminAccess,
-          isSuperAdmin: user.role === "super_admin",
-        });
+        // Get user permissions
+        const userPermissions = await getUserPermissions(user.id);
+        console.log("👤 User permissions:", userPermissions);
 
-        if (!hasAdminAccess) {
-          // Double check with the server
-          console.log("🔍 Double checking admin access for user:", user.id);
-          const adminAccess = await isAdmin(user.id);
-          console.log("📋 Server admin check result:", adminAccess);
-
-          if (!adminAccess) {
-            console.log(
-              "⛔ User does not have admin access, redirecting to home"
-            );
-            router.push("/");
-            return;
-          }
+        if (!userPermissions.includes("studio.access")) {
+          console.log(
+            "⛔ User does not have studio access, redirecting to home"
+          );
+          router.push("/");
+          return;
         }
 
-        console.log("✅ Access granted to studio");
-        setHasAccess(true);
+        setPermissions(userPermissions);
       } catch (error) {
-        console.error("❌ Error checking admin access:", error);
+        console.error("❌ Error checking access:", error);
         router.push("/");
       } finally {
         setIsCheckingAccess(false);
@@ -89,6 +76,15 @@ export default function StudioLayout({
 
     checkAccess();
   }, [user, loading, router]);
+
+  const handleSignOut = async () => {
+    await signOut();
+    router.push("/");
+  };
+
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
 
   // Show loading state while checking authentication and access
   if (loading || isCheckingAccess) {
@@ -100,7 +96,7 @@ export default function StudioLayout({
   }
 
   // If no access, show a message (this will be briefly visible before redirect)
-  if (!hasAccess || !user) {
+  if (!permissions.includes("studio.access")) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="text-center">
@@ -115,15 +111,6 @@ export default function StudioLayout({
       </div>
     );
   }
-
-  const handleSignOut = async () => {
-    await signOut();
-    router.push("/");
-  };
-
-  const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
-  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -198,22 +185,26 @@ export default function StudioLayout({
               <Home className="h-5 w-5" />
               <span>Dashboard</span>
             </Link>
-            <Link
-              href="/studio/brands"
-              className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100"
-              onClick={() => setSidebarOpen(false)}
-            >
-              <Package className="h-5 w-5" />
-              <span>Brands</span>
-            </Link>
-            <Link
-              href="/studio/collections"
-              className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100"
-              onClick={() => setSidebarOpen(false)}
-            >
-              <Image className="h-5 w-5" />
-              <span>Collections</span>
-            </Link>
+            {permissions.includes("studio.brands.manage") && (
+              <Link
+                href="/studio/brands"
+                className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100"
+                onClick={() => setSidebarOpen(false)}
+              >
+                <Package className="h-5 w-5" />
+                <span>Brands</span>
+              </Link>
+            )}
+            {permissions.includes("studio.collections.manage") && (
+              <Link
+                href="/studio/collections"
+                className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100"
+                onClick={() => setSidebarOpen(false)}
+              >
+                <Image className="h-5 w-5" />
+                <span>Collections</span>
+              </Link>
+            )}
             <Link
               href="/studio/profile"
               className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100"
@@ -222,14 +213,16 @@ export default function StudioLayout({
               <User className="h-5 w-5" />
               <span>Profile</span>
             </Link>
-            <Link
-              href="/studio/settings"
-              className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100"
-              onClick={() => setSidebarOpen(false)}
-            >
-              <Settings className="h-5 w-5" />
-              <span>Settings</span>
-            </Link>
+            {permissions.includes("studio.settings.manage") && (
+              <Link
+                href="/studio/settings"
+                className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100"
+                onClick={() => setSidebarOpen(false)}
+              >
+                <Settings className="h-5 w-5" />
+                <span>Settings</span>
+              </Link>
+            )}
           </nav>
 
           <div className="pt-6 border-t border-gray-200 mt-auto">

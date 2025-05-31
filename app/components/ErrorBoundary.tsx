@@ -1,7 +1,6 @@
 "use client";
 
 import React, { Component, ErrorInfo, ReactNode } from "react";
-import { useRouter } from "next/navigation";
 
 interface Props {
   children: ReactNode;
@@ -14,8 +13,6 @@ interface State {
 }
 
 class ErrorBoundary extends Component<Props, State> {
-  private router = useRouter();
-
   constructor(props: Props) {
     super(props);
     this.state = {

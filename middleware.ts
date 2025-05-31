@@ -1,6 +1,6 @@
+import { NextResponse, type NextRequest } from "next/server";
 import { createMiddlewareClient } from "@supabase/auth-helpers-nextjs";
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import { hasStudioAccess } from "@/lib/services/permissionsService";
 
 // Helper function to handle auth errors
 function handleAuthError(req: NextRequest) {
@@ -53,28 +53,14 @@ export async function middleware(req: NextRequest) {
       return redirectToLogin(req);
     }
 
-    // If accessing studio and authenticated, check admin role
+    // If accessing studio and authenticated, check permissions
     if (isStudioRoute && session) {
       console.log("👤 Checking studio access for user:", session.user.id);
 
       try {
-        const { data: profile, error: profileError } = await supabase
-          .from("profiles")
-          .select("role")
-          .eq("id", session.user.id)
-          .single();
+        const hasAccess = await hasStudioAccess(session.user.id);
 
-        if (profileError) {
-          console.error("❌ Profile fetch error:", profileError);
-          return handleAuthError(req);
-        }
-
-        console.log("👑 User role:", profile?.role);
-
-        if (
-          profile &&
-          (profile.role === "admin" || profile.role === "super_admin")
-        ) {
+        if (hasAccess) {
           console.log("✅ Studio access granted");
           return res;
         }
@@ -82,7 +68,7 @@ export async function middleware(req: NextRequest) {
         console.log("⛔ Studio access denied - insufficient permissions");
         return NextResponse.redirect(new URL("/", req.url));
       } catch (error) {
-        console.error("❌ Profile check error:", error);
+        console.error("❌ Permission check error:", error);
         return handleAuthError(req);
       }
     }

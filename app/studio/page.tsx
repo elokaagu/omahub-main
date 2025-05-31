@@ -1,73 +1,46 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Brand } from "@/lib/supabase";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import type { Database } from "@/lib/types/supabase";
 import BrandManagement from "@/components/studio/BrandManagement";
-import { UserRole } from "@/lib/services/authService";
-import { Package } from "@/components/ui/icons";
+import {
+  getUserPermissions,
+  Permission,
+} from "@/lib/services/permissionsService";
+import { Package } from "lucide-react";
+import { useAuth } from "@/lib/context/AuthContext";
+
+type Brand = Database["public"]["Tables"]["brands"]["Row"];
 
 export default function StudioPage() {
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
-  const [profile, setProfile] = useState<any>(null);
   const [brands, setBrands] = useState<Brand[]>([]);
-  const supabase = createClientComponentClient();
+  const [userPermissions, setUserPermissions] = useState<Permission[]>([]);
+  const { user } = useAuth();
+  const supabase = createClientComponentClient<Database>();
 
   useEffect(() => {
     async function fetchData() {
       try {
-        // Get current user
-        const {
-          data: { user: currentUser },
-        } = await supabase.auth.getUser();
-
-        if (!currentUser) {
+        if (!user) {
           setLoading(false);
           return;
         }
 
-        setUser(currentUser);
+        // Get user permissions
+        const permissions = await getUserPermissions(user.id);
+        setUserPermissions(permissions);
 
-        // Get user profile
-        const { data: userProfile, error: profileError } = await supabase
-          .from("profiles")
-          .select("*, owned_brands")
-          .eq("id", currentUser.id)
-          .single();
-
-        if (profileError) {
-          console.error("Error loading profile:", profileError);
-          setLoading(false);
-          return;
-        }
-
-        setProfile(userProfile);
-
-        // Get brands based on user role
-        const userRole: UserRole = userProfile.role || "user";
-        if (userRole === "admin") {
-          const { data: allBrands, error } = await supabase
+        // Get brands if user has permission
+        if (permissions.includes("studio.brands.manage")) {
+          const { data: fetchedBrands, error } = await supabase
             .from("brands")
             .select("*")
             .order("name");
 
-          if (!error) {
-            setBrands(allBrands || []);
-          }
-        } else if (
-          userRole === "brand_owner" &&
-          userProfile.owned_brands?.length
-        ) {
-          const { data: ownedBrands, error } = await supabase
-            .from("brands")
-            .select("*")
-            .in("id", userProfile.owned_brands)
-            .order("name");
-
-          if (!error) {
-            setBrands(ownedBrands || []);
-          }
+          if (error) throw error;
+          setBrands(fetchedBrands || []);
         }
       } catch (error) {
         console.error("Error in StudioPage:", error);
@@ -77,7 +50,7 @@ export default function StudioPage() {
     }
 
     fetchData();
-  }, [supabase]);
+  }, [user, supabase]);
 
   if (loading) {
     return (
@@ -101,22 +74,7 @@ export default function StudioPage() {
     );
   }
 
-  if (!profile) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center">
-          <h3 className="text-lg font-semibold">Profile Not Found</h3>
-          <p className="mt-2 text-gray-500">
-            Your profile could not be found. Please contact support.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  const userRole: UserRole = profile.role || "user";
-
-  if (userRole === "user") {
+  if (!userPermissions.includes("studio.access")) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
@@ -132,15 +90,15 @@ export default function StudioPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-4xl font-canela mb-8 text-oma-plum">
-        {userRole === "admin" ? "Studio Admin" : "Brand Management"}
-      </h1>
+      <h1 className="text-4xl font-canela mb-8 text-oma-plum">Studio</h1>
 
-      <BrandManagement
-        initialBrands={brands}
-        userRole={userRole}
-        userId={user.id}
-      />
+      {userPermissions.includes("studio.brands.manage") && (
+        <BrandManagement
+          initialBrands={brands}
+          userPermissions={userPermissions}
+          userId={user.id}
+        />
+      )}
     </div>
   );
 }
