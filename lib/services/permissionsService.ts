@@ -21,6 +21,12 @@ const rolePermissions: Record<Role, Permission[]> = {
   ],
 };
 
+const SUPER_ADMIN_EMAILS = ["eloka.agu@icloud.com", "shannonalisa@oma-hub.com"];
+
+function isSuperAdminEmail(email: string): boolean {
+  return SUPER_ADMIN_EMAILS.includes(email);
+}
+
 export async function getUserPermissions(
   userId: string,
   userEmail?: string
@@ -29,8 +35,8 @@ export async function getUserPermissions(
     console.log("🔍 Client Permissions: Getting permissions for user:", userId);
     console.log("🔍 Client Permissions: User email provided:", userEmail);
 
-    // If we have the user's email and it's the super admin, return super admin permissions immediately
-    if (userEmail === "eloka.agu@icloud.com") {
+    // If we have the user's email and it's a super admin, return super admin permissions immediately
+    if (userEmail && isSuperAdminEmail(userEmail)) {
       console.log(
         "✅ Client Permissions: Super admin email detected, returning super admin permissions"
       );
@@ -54,7 +60,7 @@ export async function getUserPermissions(
     if (sessionError) {
       console.error("❌ Client Permissions: Session error:", sessionError);
       // If session fails but we have user email, try to determine role from email
-      if (userEmail === "eloka.agu@icloud.com") {
+      if (userEmail && isSuperAdminEmail(userEmail)) {
         console.log(
           "🔄 Client Permissions: Session failed but super admin email provided, returning super admin permissions"
         );
@@ -66,7 +72,7 @@ export async function getUserPermissions(
     if (!session) {
       console.error("❌ Client Permissions: No valid session found");
       // If no session but we have user email, try to determine role from email
-      if (userEmail === "eloka.agu@icloud.com") {
+      if (userEmail && isSuperAdminEmail(userEmail)) {
         console.log(
           "🔄 Client Permissions: No session but super admin email provided, returning super admin permissions"
         );
@@ -110,10 +116,9 @@ export async function getUserPermissions(
         console.log(
           "⚠️ Client Permissions: Profile not found, attempting to create..."
         );
-        const role =
-          session.user.email === "eloka.agu@icloud.com"
-            ? "super_admin"
-            : "user";
+        const role = isSuperAdminEmail(session.user.email)
+          ? "super_admin"
+          : "user";
 
         const { error: createError } = await supabase.from("profiles").insert({
           id: userId,

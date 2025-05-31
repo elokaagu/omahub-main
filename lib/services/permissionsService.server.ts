@@ -22,6 +22,12 @@ const rolePermissions: Record<Role, Permission[]> = {
   ],
 };
 
+const SUPER_ADMIN_EMAILS = ["eloka.agu@icloud.com", "shannonalisa@oma-hub.com"];
+
+function isSuperAdminEmail(email: string): boolean {
+  return SUPER_ADMIN_EMAILS.includes(email);
+}
+
 function createSupabaseClient() {
   const cookieStore = cookies();
   return createServerClient(
@@ -44,10 +50,20 @@ function createSupabaseClient() {
 }
 
 export async function getUserPermissions(
-  userId: string
+  userId: string,
+  userEmail?: string
 ): Promise<Permission[]> {
   try {
-    console.log("🔍 Getting permissions for user:", userId);
+    console.log("🔍 Server Permissions: Getting permissions for user:", userId);
+
+    // Auto-assign super admin role for specific emails
+    if (userEmail && isSuperAdminEmail(userEmail)) {
+      console.log(
+        "✅ Server Permissions: Super admin email detected, returning super admin permissions"
+      );
+      return rolePermissions.super_admin;
+    }
+
     const supabase = createSupabaseClient();
 
     const { data: profile, error } = await supabase

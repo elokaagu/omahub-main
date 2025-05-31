@@ -21,6 +21,7 @@ import {
   Permission,
   getUserPermissions,
 } from "@/lib/services/permissionsService";
+import { LoadingPage } from "@/components/ui/loading";
 
 export default function StudioLayout({
   children,
@@ -127,11 +128,7 @@ export default function StudioLayout({
 
   // Show loading state while checking authentication and access
   if (loading || isCheckingAccess) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full"></div>
-      </div>
-    );
+    return <LoadingPage />;
   }
 
   // If no access, show a message (this will be briefly visible before redirect)

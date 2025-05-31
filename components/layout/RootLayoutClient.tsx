@@ -7,7 +7,8 @@ import Footer from "@/components/layout/Footer";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { PageFade } from "@/app/components/ui/animations";
 import { AnimatePresence } from "framer-motion";
-import { AuthDebug } from "@/components/debug/AuthDebug";
+import { Toaster } from "sonner";
+import { LoadingPage } from "@/components/ui/loading";
 
 interface RootLayoutClientProps {
   children: React.ReactNode;
@@ -40,7 +41,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
         </AnimatePresence>
       </main>
       {!isStudioPage && <Footer />}
-      <AuthDebug />
+      <Toaster />
     </>
   );
 }
