@@ -49,7 +49,7 @@ export default function StudioLayout({
 
         if (!user) {
           console.log("❌ No user found, redirecting to login");
-          window.location.href = "/login?redirect=/studio";
+          router.push("/login?redirect=/studio");
           return;
         }
 
@@ -72,7 +72,7 @@ export default function StudioLayout({
             console.log(
               "⛔ User does not have admin access, redirecting to home"
             );
-            window.location.href = "/";
+            router.push("/");
             return;
           }
         }
@@ -81,14 +81,14 @@ export default function StudioLayout({
         setHasAccess(true);
       } catch (error) {
         console.error("❌ Error checking admin access:", error);
-        window.location.href = "/";
+        router.push("/");
       } finally {
         setIsCheckingAccess(false);
       }
     };
 
     checkAccess();
-  }, [user, loading]);
+  }, [user, loading, router]);
 
   // Show loading state while checking authentication and access
   if (loading || isCheckingAccess) {

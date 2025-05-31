@@ -1,6 +1,7 @@
 "use client";
 
 import React, { Component, ErrorInfo, ReactNode } from "react";
+import { useRouter } from "next/navigation";
 
 interface Props {
   children: ReactNode;
@@ -13,6 +14,8 @@ interface State {
 }
 
 class ErrorBoundary extends Component<Props, State> {
+  private router = useRouter();
+
   constructor(props: Props) {
     super(props);
     this.state = {
@@ -32,6 +35,12 @@ class ErrorBoundary extends Component<Props, State> {
     console.error("ErrorBoundary caught an error:", error, errorInfo);
   }
 
+  handleRefresh = () => {
+    if (typeof window !== "undefined") {
+      window.location.reload();
+    }
+  };
+
   render(): ReactNode {
     if (this.state.hasError) {
       if (this.props.fallback) {
@@ -50,7 +59,7 @@ class ErrorBoundary extends Component<Props, State> {
               </code>
             </div>
             <button
-              onClick={() => window.location.reload()}
+              onClick={this.handleRefresh}
               className="mt-6 px-4 py-2 bg-oma-plum text-white rounded-md hover:bg-oma-plum/90"
             >
               Try again

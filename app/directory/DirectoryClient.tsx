@@ -84,6 +84,16 @@ const fallbackBrands: BrandDisplay[] = [
   },
 ];
 
+function useClientOnly<T>(callback: () => T, deps: any[] = []): T | undefined {
+  const [value, setValue] = useState<T>();
+
+  useEffect(() => {
+    setValue(callback());
+  }, deps);
+
+  return value;
+}
+
 export default function DirectoryClient() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
@@ -127,8 +137,6 @@ export default function DirectoryClient() {
 
   // Filter brands based on search, category, and location
   useEffect(() => {
-    if (typeof window === "undefined") return;
-
     console.log("DirectoryClient: Filtering brands with:", {
       searchTerm,
       selectedCategory,
@@ -225,6 +233,22 @@ export default function DirectoryClient() {
       <div className="animate-spin h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full"></div>
     </div>
   );
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen px-4">
+        <div className="text-red-500 mb-4">{error}</div>
+        <button
+          onClick={() =>
+            typeof window !== "undefined" && window.location.reload()
+          }
+          className="px-4 py-2 bg-oma-plum text-white rounded hover:bg-oma-plum/90"
+        >
+          Refresh Page
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">

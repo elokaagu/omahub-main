@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 
 // Define breakpoints
-export const MOBILE_BREAKPOINT = 768;
-export const TABLET_BREAKPOINT = 1024;
+const MOBILE_BREAKPOINT = 768;
+const TABLET_BREAKPOINT = 1024;
 
 // Define breakpoint types
 export type Breakpoint = "mobile" | "tablet" | "desktop" | undefined;
@@ -20,6 +20,7 @@ export function useIsMobile(): boolean | undefined {
   useEffect(() => {
     // Function to check if the screen width is mobile
     const checkMobile = () => {
+      if (typeof window === "undefined") return;
       setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
     };
 
@@ -41,6 +42,8 @@ export function useIsTablet(): boolean | undefined {
   const [isTablet, setIsTablet] = useState<boolean | undefined>(undefined);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+
     const checkTablet = () => {
       const width = window.innerWidth;
       setIsTablet(width >= MOBILE_BREAKPOINT && width < TABLET_BREAKPOINT);
@@ -58,6 +61,8 @@ export function useIsDesktop(): boolean | undefined {
   const [isDesktop, setIsDesktop] = useState<boolean | undefined>(undefined);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+
     const checkDesktop = () => {
       setIsDesktop(window.innerWidth >= TABLET_BREAKPOINT);
     };
@@ -82,9 +87,9 @@ export function useBreakpoint(): BreakpointState {
     current: isMobile
       ? "mobile"
       : isTablet
-      ? "tablet"
-      : isDesktop
-      ? "desktop"
-      : undefined,
+        ? "tablet"
+        : isDesktop
+          ? "desktop"
+          : undefined,
   };
 }

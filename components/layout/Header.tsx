@@ -66,6 +66,8 @@ export default function Header() {
       isSuperAdmin: user?.role === "super_admin",
     });
 
+    if (typeof window === "undefined") return;
+
     const handleScroll = () => {
       const isScrolled = window.scrollY > 20;
       setScrolled(isScrolled);

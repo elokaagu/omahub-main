@@ -19,81 +19,79 @@ console.log("🔄 Initializing Supabase client:", {
   isBuildTime,
 });
 
-// For debugging in development
-if (process.env.NODE_ENV !== "production") {
-  console.log("🔑 Supabase URL:", supabaseUrl ? supabaseUrl : "Missing");
-  console.log(
-    "🔑 Supabase Key:",
-    supabaseAnonKey ? supabaseAnonKey.substring(0, 10) + "..." : "Missing"
-  );
-}
+// Create a function to initialize the Supabase client
+const createClient = () => {
+  if (isBuildTime || typeof window === "undefined") {
+    console.log("🏗️ Build time or server-side, returning null client");
+    return null;
+  }
 
-// Create a browser client for client-side operations
-export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    storageKey: "sb-auth-token",
-    detectSessionInUrl: true,
-    flowType: "pkce",
-    storage: {
-      getItem: (key) => {
-        try {
-          if (typeof window === "undefined") return null;
-          const value = localStorage.getItem(key);
-          AuthDebug.log("Reading from storage", { key, hasValue: !!value });
-          return value;
-        } catch (e) {
-          AuthDebug.error("Error reading from storage", e);
-          return null;
-        }
+  return createBrowserClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      storageKey: "sb-auth-token",
+      detectSessionInUrl: true,
+      flowType: "pkce",
+      storage: {
+        getItem: (key) => {
+          try {
+            const value = localStorage.getItem(key);
+            AuthDebug.log("Reading from storage", { key, hasValue: !!value });
+            return value;
+          } catch (e) {
+            AuthDebug.error("Error reading from storage", e);
+            return null;
+          }
+        },
+        setItem: (key, value) => {
+          try {
+            localStorage.setItem(key, value);
+            AuthDebug.log("Stored value", { key });
+          } catch (e) {
+            AuthDebug.error("Error writing to storage", e);
+          }
+        },
+        removeItem: (key) => {
+          try {
+            localStorage.removeItem(key);
+            AuthDebug.log("Removed from storage", { key });
+          } catch (e) {
+            AuthDebug.error("Error removing from storage", e);
+          }
+        },
       },
-      setItem: (key, value) => {
-        try {
-          if (typeof window === "undefined") return;
-          localStorage.setItem(key, value);
-          AuthDebug.log("Stored value", { key });
-        } catch (e) {
-          AuthDebug.error("Error writing to storage", e);
-        }
-      },
-      removeItem: (key) => {
-        try {
-          if (typeof window === "undefined") return;
-          localStorage.removeItem(key);
-          AuthDebug.log("Removed from storage", { key });
-        } catch (e) {
-          AuthDebug.error("Error removing from storage", e);
-        }
+      cookies: {
+        name: "sb-auth-token",
+        lifetime: 60 * 60 * 24 * 7, // 7 days
+        sameSite: "lax",
+        path: "/",
+        domain:
+          typeof window !== "undefined" ? window.location.hostname : undefined,
       },
     },
-    cookieOptions: {
-      name: "sb-auth-token",
-      lifetime: 60 * 60 * 24 * 7, // 7 days
-      domain: window?.location?.hostname || undefined,
-      sameSite: "lax",
-      path: "/",
+    global: {
+      fetch: fetch,
+      headers: {
+        "x-application-name": "omahub",
+        "Cache-Control": "no-cache",
+      },
     },
-  },
-  global: {
-    fetch: fetch,
-    headers: {
-      "x-application-name": "omahub",
-      "Cache-Control": "no-cache",
-    },
-  },
-});
+  });
+};
 
-// Set up auth state change listener
-supabase.auth.onAuthStateChange((event, session) => {
-  AuthDebug.state(event, session);
-  AuthDebug.session(session);
-});
+// Initialize the client
+export const supabase = createClient();
 
-// Test the connection
-if (typeof window !== "undefined" && !isBuildTime) {
-  AuthDebug.log("Testing Supabase connection...");
+// Set up auth state change listener and run tests if in browser environment
+if (supabase && typeof window !== "undefined") {
+  // Set up auth state change listener
+  supabase.auth.onAuthStateChange((event, session) => {
+    AuthDebug.state(event, session);
+    AuthDebug.session(session);
+  });
 
+  // Test the connection
   supabase.auth.getSession().then(({ data, error }) => {
     if (error) {
       AuthDebug.error("Supabase auth test failed", error);
