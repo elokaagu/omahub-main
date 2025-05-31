@@ -24,7 +24,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-  const [isInitialized, setIsInitialized] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+
+  // Check if we're on the client side
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const loadUserWithProfile = async (
     userId: string,
@@ -33,8 +38,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       console.log("🔄 Starting loadUserWithProfile for user:", userId);
 
-      // Get additional profile data
-      const profileData = await getProfile(userId);
+      // Add a timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error("Profile loading timeout")), 10000);
+      });
+
+      const profilePromise = getProfile(userId);
+
+      // Race between the profile fetch and timeout
+      const profileData = (await Promise.race([
+        profilePromise,
+        timeoutPromise,
+      ])) as User | null;
+
       console.log("✅ Loaded profile data:", profileData);
 
       if (!profileData) {
@@ -86,10 +102,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let mounted = true;
 
+    // Only initialize if we're on the client side
+    if (!isClient) {
+      return;
+    }
+
     // Initialize auth state
     const initializeAuth = async () => {
       try {
         console.log("🔍 Checking initial session...");
+
+        if (!supabase) {
+          console.log(
+            "⚠️ Supabase client not available (likely SSR), setting loading to false"
+          );
+          setLoading(false);
+          setUser(null);
+          return;
+        }
+
         const {
           data: { session },
           error: sessionError,
@@ -124,36 +155,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } finally {
         if (mounted) {
           setLoading(false);
-          setIsInitialized(true);
         }
       }
     };
 
     // Set up auth state change listener
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (!mounted || !isInitialized) return;
+    let subscription: any = null;
+    if (supabase) {
+      const {
+        data: { subscription: authSubscription },
+      } = supabase.auth.onAuthStateChange(async (event, session) => {
+        if (!mounted) return;
 
-      setLoading(true);
-      await handleAuthChange(event, session);
-      if (mounted) {
-        setLoading(false);
-      }
-    });
+        console.log("🔄 Auth state change detected:", event);
+        setLoading(true);
+        await handleAuthChange(event, session);
+        if (mounted) {
+          setLoading(false);
+        }
+      });
+      subscription = authSubscription;
+    }
 
     initializeAuth();
 
     return () => {
       mounted = false;
-      subscription.unsubscribe();
+      if (subscription) {
+        subscription.unsubscribe();
+      }
     };
-  }, []);
+  }, [isClient]); // Add isClient as dependency
 
   const signOut = async () => {
     try {
       console.log("🔄 Signing out...");
       setLoading(true);
+
+      if (!supabase) {
+        console.log("⚠️ Supabase client not available for sign out");
+        return;
+      }
+
       await supabase.auth.signOut();
       setUser(null);
       setError(null);

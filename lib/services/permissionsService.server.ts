@@ -1,4 +1,5 @@
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 import type { Database } from "../types/supabase";
 
 export type Permission =
@@ -21,12 +22,33 @@ const rolePermissions: Record<Role, Permission[]> = {
   ],
 };
 
+function createSupabaseClient() {
+  const cookieStore = cookies();
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+        set(name: string, value: string, options: any) {
+          cookieStore.set({ name, value, ...options });
+        },
+        remove(name: string, options: any) {
+          cookieStore.set({ name, value: "", ...options });
+        },
+      },
+    }
+  );
+}
+
 export async function getUserPermissions(
   userId: string
 ): Promise<Permission[]> {
   try {
     console.log("🔍 Getting permissions for user:", userId);
-    const supabase = createClientComponentClient<Database>();
+    const supabase = createSupabaseClient();
 
     const { data: profile, error } = await supabase
       .from("profiles")
@@ -36,6 +58,43 @@ export async function getUserPermissions(
 
     if (error) {
       console.error("❌ Error getting user permissions:", error);
+
+      // If profile doesn't exist, create it with default role
+      if (error.code === "PGRST116") {
+        console.log("⚠️ Profile not found, creating default profile");
+
+        // Get user email from auth
+        const {
+          data: { user },
+          error: userError,
+        } = await supabase.auth.getUser();
+
+        if (!userError && user) {
+          // Check if this is the super admin email
+          const role =
+            user.email === "eloka.agu@icloud.com" ? "super_admin" : "user";
+
+          const { error: createError } = await supabase
+            .from("profiles")
+            .insert({
+              id: userId,
+              email: user.email,
+              role: role,
+              owned_brands: [],
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            });
+
+          if (createError) {
+            console.error("❌ Error creating profile:", createError);
+            return [];
+          }
+
+          console.log(`✅ Created ${role} profile for user`);
+          return rolePermissions[role];
+        }
+      }
+
       return [];
     }
 

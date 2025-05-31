@@ -4,9 +4,10 @@ import React from "react";
 import { usePathname } from "next/navigation";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import { AuthProvider, useAuth } from "@/lib/context/AuthContext";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { PageFade } from "@/app/components/ui/animations";
 import { AnimatePresence } from "framer-motion";
+import { AuthDebug } from "@/components/debug/AuthDebug";
 
 interface RootLayoutClientProps {
   children: React.ReactNode;
@@ -39,6 +40,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
         </AnimatePresence>
       </main>
       {!isStudioPage && <Footer />}
+      <AuthDebug />
     </>
   );
 }

@@ -2,7 +2,7 @@
 
 import { AuthImage } from "@/components/ui/auth-image";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/lib/context/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
 
 export default function TestAuthImagePage() {

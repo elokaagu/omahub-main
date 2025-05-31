@@ -21,54 +21,23 @@ console.log("🔄 Initializing Supabase client:", {
 
 // Create a function to initialize the Supabase client
 const createClient = () => {
-  if (isBuildTime || typeof window === "undefined") {
-    console.log("🏗️ Build time or server-side, returning null client");
+  // Only return null during actual build time, not during SSR
+  if (isBuildTime) {
+    console.log("🏗️ Build time detected, returning null client");
     return null;
+  }
+
+  // For SSR, we still create the client but it will only work after hydration
+  if (typeof window === "undefined") {
+    console.log("🖥️ Server-side rendering, creating client for hydration");
   }
 
   return createBrowserClient(supabaseUrl, supabaseAnonKey, {
     auth: {
       persistSession: true,
       autoRefreshToken: true,
-      storageKey: "sb-auth-token",
       detectSessionInUrl: true,
       flowType: "pkce",
-      storage: {
-        getItem: (key) => {
-          try {
-            const value = localStorage.getItem(key);
-            AuthDebug.log("Reading from storage", { key, hasValue: !!value });
-            return value;
-          } catch (e) {
-            AuthDebug.error("Error reading from storage", e);
-            return null;
-          }
-        },
-        setItem: (key, value) => {
-          try {
-            localStorage.setItem(key, value);
-            AuthDebug.log("Stored value", { key });
-          } catch (e) {
-            AuthDebug.error("Error writing to storage", e);
-          }
-        },
-        removeItem: (key) => {
-          try {
-            localStorage.removeItem(key);
-            AuthDebug.log("Removed from storage", { key });
-          } catch (e) {
-            AuthDebug.error("Error removing from storage", e);
-          }
-        },
-      },
-      cookies: {
-        name: "sb-auth-token",
-        lifetime: 60 * 60 * 24 * 7, // 7 days
-        sameSite: "lax",
-        path: "/",
-        domain:
-          typeof window !== "undefined" ? window.location.hostname : undefined,
-      },
     },
     global: {
       fetch: fetch,

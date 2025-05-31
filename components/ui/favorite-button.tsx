@@ -2,7 +2,7 @@ import { useState } from "react";
 import { HeartIcon } from "@heroicons/react/24/outline";
 import { HeartIcon as HeartSolidIcon } from "@heroicons/react/24/solid";
 import { useToast } from "@/components/ui/use-toast";
-import { useAuth } from "@/lib/context/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import useFavorites from "@/lib/hooks/useFavorites";
 
 interface FavoriteButtonProps {

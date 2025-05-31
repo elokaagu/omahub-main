@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { createMiddlewareClient } from "@supabase/auth-helpers-nextjs";
-import { hasStudioAccess } from "@/lib/services/permissionsService";
+import { createServerClient } from "@supabase/ssr";
+import { hasStudioAccess } from "@/lib/services/permissionsService.server";
 
 // Helper function to handle auth errors
 function handleAuthError(req: NextRequest) {
@@ -22,7 +22,32 @@ export async function middleware(req: NextRequest) {
 
     // Create a response and supabase client
     const res = NextResponse.next();
-    const supabase = createMiddlewareClient({ req, res });
+
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return req.cookies.get(name)?.value;
+          },
+          set(name: string, value: string, options: any) {
+            res.cookies.set({
+              name,
+              value,
+              ...options,
+            });
+          },
+          remove(name: string, options: any) {
+            res.cookies.set({
+              name,
+              value: "",
+              ...options,
+            });
+          },
+        },
+      }
+    );
 
     // Try to get the session
     const {
@@ -71,11 +96,6 @@ export async function middleware(req: NextRequest) {
         console.error("❌ Permission check error:", error);
         return handleAuthError(req);
       }
-    }
-
-    // For all other routes, refresh the session if it exists
-    if (session) {
-      await supabase.auth.refreshSession();
     }
 
     return res;

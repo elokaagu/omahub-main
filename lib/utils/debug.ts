@@ -1,6 +1,8 @@
 import { Session, User } from "@supabase/supabase-js";
 
-const DEBUG = process.env.NEXT_PUBLIC_DEBUG_MODE === "true";
+const DEBUG =
+  process.env.NEXT_PUBLIC_DEBUG_MODE === "true" ||
+  process.env.NODE_ENV === "development";
 
 export const AuthDebug = {
   log: (message: string, data?: any) => {

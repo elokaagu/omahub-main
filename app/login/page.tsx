@@ -45,8 +45,11 @@ function LoginForm() {
     try {
       const { session } = await signIn(email, password);
       if (session) {
-        router.push("/");
-        router.refresh();
+        // Add a small delay to ensure auth state is updated
+        await new Promise((resolve) => setTimeout(resolve, 500));
+
+        // Force a hard refresh to ensure auth state is properly updated
+        window.location.href = "/";
       }
     } catch (err) {
       console.error("Login error:", err);

@@ -9,7 +9,7 @@ import {
   Permission,
 } from "@/lib/services/permissionsService";
 import { Package } from "lucide-react";
-import { useAuth } from "@/lib/context/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 type Brand = Database["public"]["Tables"]["brands"]["Row"];
 

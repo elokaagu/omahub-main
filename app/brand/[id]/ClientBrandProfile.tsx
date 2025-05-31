@@ -10,7 +10,7 @@ import { ReviewForm } from "@/components/ui/review-form";
 import useReviews from "@/lib/hooks/useReviews";
 import type { BrandData } from "@/lib/data/brands";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useAuth } from "@/lib/context/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useParams } from "next/navigation";
 
 interface ClientBrandProfileProps {
@@ -26,8 +26,8 @@ export default function ClientBrandProfile({
     typeof params.id === "string"
       ? params.id
       : Array.isArray(params.id)
-      ? params.id[0]
-      : null;
+        ? params.id[0]
+        : null;
 
   console.log("Brand params:", params);
   console.log("Extracted brand ID:", id);

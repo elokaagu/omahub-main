@@ -25,7 +25,7 @@ import {
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
 import { collections } from "@/lib/data/directory";
-import { useAuth } from "@/lib/context/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useRouter, usePathname } from "next/navigation";
 import {
@@ -87,47 +87,17 @@ export default function Header() {
   };
 
   const handleStudioNavigation = async () => {
+    if (!supabase) {
+      console.error("Supabase client not available");
+      return;
+    }
+
+    setIsNavigating(true);
     try {
-      if (isNavigating) {
-        console.log("Navigation already in progress, skipping...");
-        return;
-      }
-
-      setIsNavigating(true);
-      console.log("Studio navigation initiated for user:", {
-        id: user?.id,
-        role: user?.role,
-        email: user?.email,
-        hasAdminAccess: user?.role === "admin" || user?.role === "super_admin",
-      });
-
-      // First verify the session is still valid
-      const {
-        data: { session },
-        error: sessionError,
-      } = await supabase.auth.getSession();
-
-      if (sessionError || !session) {
-        console.error("No valid session found, redirecting to login");
-        window.location.href = "/login?next=/studio";
-        return;
-      }
-
-      // Verify user has admin access
-      const hasAdminAccess =
-        user?.role === "admin" || user?.role === "super_admin";
-      if (!hasAdminAccess) {
-        console.error("User does not have admin access, redirecting to home");
-        window.location.href = "/";
-        return;
-      }
-
-      console.log("✅ Access verified, navigating to studio");
+      // Use window.location.href for navigation to avoid router issues
       window.location.href = "/studio";
     } catch (error) {
       console.error("Error navigating to studio:", error);
-      window.location.href = "/login?next=/studio";
-    } finally {
       setIsNavigating(false);
     }
   };

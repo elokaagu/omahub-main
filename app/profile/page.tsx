@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/lib/context/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { updateProfile, getProfile } from "@/lib/services/authService";
 import { Button } from "@/components/ui/button";
 import { User } from "@/lib/services/authService";

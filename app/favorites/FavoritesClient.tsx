@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import useFavorites from "@/lib/hooks/useFavorites";
-import { useAuth } from "@/lib/context/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { BrandCard } from "@/components/ui/brand-card";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";

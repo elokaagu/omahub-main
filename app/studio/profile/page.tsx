@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useAuth } from "@/lib/context/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { getProfile, updateProfile, User } from "@/lib/services/authService";
 import setupStorage from "@/lib/supabase-storage-setup";
 import { toast } from "sonner";
