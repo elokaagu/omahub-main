@@ -117,6 +117,12 @@ export default function StudioLayout({
     checkAccess();
   }, [user, loading, router]);
 
+  const handleBackToSite = () => {
+    // Use window.location.href for more reliable navigation
+    // This ensures a clean transition from Studio back to main site
+    window.location.href = "/";
+  };
+
   const handleSignOut = async () => {
     await signOut();
     router.push("/");
@@ -153,16 +159,19 @@ export default function StudioLayout({
       {/* Studio Header */}
       <header className="w-full bg-white border-b border-gray-200 shadow-sm fixed top-0 left-0 right-0 z-50 h-16 flex items-center">
         <div className="container mx-auto px-4 flex justify-between items-center">
-          <Link href="/" className="text-2xl font-canela text-oma-plum">
+          <button
+            onClick={handleBackToSite}
+            className="text-2xl font-canela text-oma-plum hover:text-oma-plum/80 transition-colors"
+          >
             OmaHub
-          </Link>
+          </button>
           <div className="hidden md:flex items-center space-x-4">
-            <Link
-              href="/"
-              className="text-sm text-gray-600 hover:text-oma-plum"
+            <button
+              onClick={handleBackToSite}
+              className="text-sm text-gray-600 hover:text-oma-plum transition-colors"
             >
               Back to Site
-            </Link>
+            </button>
             {user && (
               <div className="flex items-center space-x-2">
                 <span className="text-sm text-gray-600">
@@ -181,6 +190,16 @@ export default function StudioLayout({
                 </Avatar>
               </div>
             )}
+          </div>
+
+          {/* Mobile Back to Site button */}
+          <div className="md:hidden">
+            <button
+              onClick={handleBackToSite}
+              className="text-sm text-gray-600 hover:text-oma-plum transition-colors px-3 py-2 rounded-md border border-gray-200"
+            >
+              Back to Site
+            </button>
           </div>
         </div>
       </header>
@@ -259,6 +278,18 @@ export default function StudioLayout({
                 <span>Settings</span>
               </Link>
             )}
+
+            {/* Mobile Back to Site in sidebar */}
+            <button
+              onClick={() => {
+                setSidebarOpen(false);
+                handleBackToSite();
+              }}
+              className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100 w-full md:hidden border-t border-gray-200 mt-4 pt-4"
+            >
+              <Home className="h-5 w-5" />
+              <span>Back to Site</span>
+            </button>
           </nav>
 
           <div className="pt-6 border-t border-gray-200 mt-auto">
