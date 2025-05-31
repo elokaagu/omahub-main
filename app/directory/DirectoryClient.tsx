@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   FadeIn,
   SlideUp,
@@ -95,6 +96,7 @@ function useClientOnly<T>(callback: () => T, deps: any[] = []): T | undefined {
 }
 
 export default function DirectoryClient() {
+  const searchParams = useSearchParams();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [selectedLocation, setSelectedLocation] = useState("All Locations");
@@ -104,6 +106,23 @@ export default function DirectoryClient() {
 
   // Use the useAllBrands hook
   const { brands: allBrands, loading, error } = useAllBrands();
+
+  // Handle URL parameters on component mount
+  useEffect(() => {
+    const categoryParam = searchParams.get("category");
+    const subcategoryParam = searchParams.get("subcategory");
+
+    if (categoryParam) {
+      if (subcategoryParam) {
+        // If there's a subcategory, use that for filtering
+        const decodedSubcategory = subcategoryParam.replace(/\+/g, " ");
+        setSelectedCategory(decodedSubcategory);
+      } else {
+        // If only category, use the category
+        setSelectedCategory(categoryParam);
+      }
+    }
+  }, [searchParams]);
 
   // Convert brands to display format when allBrands changes
   useEffect(() => {
@@ -237,7 +256,9 @@ export default function DirectoryClient() {
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen px-4">
-        <div className="text-red-500 mb-4">{error}</div>
+        <div className="text-red-500 mb-4">
+          {error instanceof Error ? error.message : String(error)}
+        </div>
         <button
           onClick={() =>
             typeof window !== "undefined" && window.location.reload()
@@ -252,9 +273,8 @@ export default function DirectoryClient() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* Header section */}
+      {/* Header section - removed "Brand Directory" text */}
       <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-4">Brand Directory</h1>
         <p className="text-gray-600">
           Discover and connect with our curated selection of brands
         </p>
