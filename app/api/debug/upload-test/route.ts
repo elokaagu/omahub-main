@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
-import setupStorage from "@/lib/supabase-storage-setup";
 import { serverSupabase } from "@/lib/server-supabase";
 
 // Mark this route as server-side only
@@ -101,49 +99,33 @@ async function testStorageBuckets(): Promise<BucketTestResult> {
   try {
     // Try to list all buckets
     const { data: bucketsData, error: bucketsError } =
-      await supabase.storage.listBuckets();
+      await serverSupabase.storage.listBuckets();
 
     if (bucketsError) {
       return {
         success: false,
-        error: bucketsError.message,
+        error: String(bucketsError),
         details: bucketsError,
-      };
-    }
-
-    // Try to run storage setup
-    let setupResult: StorageSetupResult = {
-      success: true,
-      message: "Storage setup completed",
-    };
-    try {
-      await setupStorage();
-    } catch (setupError) {
-      setupResult = {
-        success: false,
-        error:
-          setupError instanceof Error ? setupError.message : String(setupError),
       };
     }
 
     // List buckets again after setup
     const { data: updatedBucketsData, error: updatedBucketsError } =
-      await supabase.storage.listBuckets();
+      await serverSupabase.storage.listBuckets();
 
     return {
       success: !bucketsError && !updatedBucketsError,
       initialBuckets: bucketsData || [],
-      setupResult,
       bucketsAfterSetup: updatedBucketsData || [],
-      bucketsError: bucketsError ? bucketsError.message : null,
+      bucketsError: bucketsError ? String(bucketsError) : null,
       updatedBucketsError: updatedBucketsError
-        ? updatedBucketsError.message
+        ? String(updatedBucketsError)
         : null,
     };
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : String(error),
+      error: String(error),
     };
   }
 }
@@ -174,7 +156,7 @@ async function testStoragePermissions() {
 
     // Try to upload to brand-assets
     const testPath = `test/debug-test-${Date.now()}.png`;
-    const { data: brandData, error: brandError } = await supabase.storage
+    const { data: brandData, error: brandError } = await serverSupabase.storage
       .from("brand-assets")
       .upload(testPath, blob);
 
@@ -186,7 +168,7 @@ async function testStoragePermissions() {
       };
     } else {
       // Try to delete the test file
-      const { error: deleteError } = await supabase.storage
+      const { error: deleteError } = await serverSupabase.storage
         .from("brand-assets")
         .remove([testPath]);
 
@@ -220,9 +202,8 @@ async function testStoragePermissions() {
 
     // Try to upload to avatars
     const testPath = `test/debug-test-${Date.now()}.png`;
-    const { data: avatarData, error: avatarError } = await supabase.storage
-      .from("avatars")
-      .upload(testPath, blob);
+    const { data: avatarData, error: avatarError } =
+      await serverSupabase.storage.from("avatars").upload(testPath, blob);
 
     if (avatarError) {
       results.avatars = {
@@ -232,7 +213,7 @@ async function testStoragePermissions() {
       };
     } else {
       // Try to delete the test file
-      const { error: deleteError } = await supabase.storage
+      const { error: deleteError } = await serverSupabase.storage
         .from("avatars")
         .remove([testPath]);
 
@@ -262,11 +243,11 @@ async function testRLSPolicies(): Promise<RLSTestResult> {
   try {
     // Test if we can read storage.objects
     const { data: storageObjectsData, error: storageObjectsError } =
-      await supabase.from("storage.objects").select("*").limit(1);
+      await serverSupabase.from("storage.objects").select("*").limit(1);
 
     // Test if we can read storage.buckets
     const { data: storageBucketsData, error: storageBucketsError } =
-      await supabase.from("storage.buckets").select("*").limit(1);
+      await serverSupabase.from("storage.buckets").select("*").limit(1);
 
     return {
       objects: {
