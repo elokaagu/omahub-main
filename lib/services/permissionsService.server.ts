@@ -85,10 +85,9 @@ export async function getUserPermissions(
           error: userError,
         } = await supabase.auth.getUser();
 
-        if (!userError && user) {
-          // Check if this is the super admin email
-          const role =
-            user.email === "eloka.agu@icloud.com" ? "super_admin" : "user";
+        if (!userError && user && user.email) {
+          // Check if this is a super admin email
+          const role = isSuperAdminEmail(user.email) ? "super_admin" : "user";
 
           const { error: createError } = await supabase
             .from("profiles")

@@ -20,6 +20,7 @@ import {
 } from "@/lib/services/heroService";
 import { subcategories, type Subcategory } from "@/lib/data/directory";
 import { Carousel } from "@/components/ui/carousel-custom";
+import { Loading } from "@/components/ui/loading";
 
 interface Brand {
   id: string;
