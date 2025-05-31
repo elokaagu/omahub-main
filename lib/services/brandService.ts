@@ -29,11 +29,11 @@ async function hasPermission(
 
   if (!profile) return false;
 
-  // Admins have permission to all brands
-  if (profile.role === "admin") return true;
+  // Super admins and admins have permission to all brands
+  if (profile.role === "admin" || profile.role === "super_admin") return true;
 
-  // Brand owners only have permission to their owned brands
-  if (profile.role === "brand_owner") {
+  // Brand admins only have permission to their owned brands
+  if (profile.role === "brand_admin") {
     return profile.owned_brands?.includes(brandId) || false;
   }
 

@@ -1,7 +1,7 @@
 import { supabase } from "../supabase";
 import { Provider } from "@supabase/supabase-js";
 
-export type UserRole = "user" | "admin" | "super_admin" | "brand_owner";
+export type UserRole = "user" | "admin" | "super_admin" | "brand_admin";
 
 export type User = {
   id: string;

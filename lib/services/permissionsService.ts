@@ -22,9 +22,14 @@ const rolePermissions: Record<Role, Permission[]> = {
 };
 
 const SUPER_ADMIN_EMAILS = ["eloka.agu@icloud.com", "shannonalisa@oma-hub.com"];
+const BRAND_ADMIN_EMAILS = ["eloka@culturin.com"];
 
 function isSuperAdminEmail(email: string): boolean {
   return SUPER_ADMIN_EMAILS.includes(email);
+}
+
+function isBrandAdminEmail(email: string): boolean {
+  return BRAND_ADMIN_EMAILS.includes(email);
 }
 
 export async function getUserPermissions(
@@ -41,6 +46,14 @@ export async function getUserPermissions(
         "✅ Client Permissions: Super admin email detected, returning super admin permissions"
       );
       return rolePermissions.super_admin;
+    }
+
+    // If we have the user's email and it's a brand admin, return brand admin permissions immediately
+    if (userEmail && isBrandAdminEmail(userEmail)) {
+      console.log(
+        "✅ Client Permissions: Brand admin email detected, returning brand admin permissions"
+      );
+      return rolePermissions.brand_admin;
     }
 
     const supabase = createClientComponentClient<Database>();
@@ -66,6 +79,12 @@ export async function getUserPermissions(
         );
         return rolePermissions.super_admin;
       }
+      if (userEmail && isBrandAdminEmail(userEmail)) {
+        console.log(
+          "🔄 Client Permissions: Session failed but brand admin email provided, returning brand admin permissions"
+        );
+        return rolePermissions.brand_admin;
+      }
       return [];
     }
 
@@ -77,6 +96,12 @@ export async function getUserPermissions(
           "🔄 Client Permissions: No session but super admin email provided, returning super admin permissions"
         );
         return rolePermissions.super_admin;
+      }
+      if (userEmail && isBrandAdminEmail(userEmail)) {
+        console.log(
+          "🔄 Client Permissions: No session but brand admin email provided, returning brand admin permissions"
+        );
+        return rolePermissions.brand_admin;
       }
       return [];
     }
@@ -118,7 +143,9 @@ export async function getUserPermissions(
         );
         const role = isSuperAdminEmail(session.user.email)
           ? "super_admin"
-          : "user";
+          : isBrandAdminEmail(session.user.email)
+            ? "brand_admin"
+            : "user";
 
         const { error: createError } = await supabase.from("profiles").insert({
           id: userId,

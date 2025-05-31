@@ -23,9 +23,14 @@ const rolePermissions: Record<Role, Permission[]> = {
 };
 
 const SUPER_ADMIN_EMAILS = ["eloka.agu@icloud.com", "shannonalisa@oma-hub.com"];
+const BRAND_ADMIN_EMAILS = ["eloka@culturin.com"];
 
 function isSuperAdminEmail(email: string): boolean {
   return SUPER_ADMIN_EMAILS.includes(email);
+}
+
+function isBrandAdminEmail(email: string): boolean {
+  return BRAND_ADMIN_EMAILS.includes(email);
 }
 
 function createSupabaseClient() {
@@ -64,6 +69,14 @@ export async function getUserPermissions(
       return rolePermissions.super_admin;
     }
 
+    // Auto-assign brand admin role for specific emails
+    if (userEmail && isBrandAdminEmail(userEmail)) {
+      console.log(
+        "✅ Server Permissions: Brand admin email detected, returning brand admin permissions"
+      );
+      return rolePermissions.brand_admin;
+    }
+
     const supabase = createSupabaseClient();
 
     const { data: profile, error } = await supabase
@@ -87,7 +100,11 @@ export async function getUserPermissions(
 
         if (!userError && user && user.email) {
           // Check if this is a super admin email
-          const role = isSuperAdminEmail(user.email) ? "super_admin" : "user";
+          const role = isSuperAdminEmail(user.email)
+            ? "super_admin"
+            : isBrandAdminEmail(user.email)
+              ? "brand_admin"
+              : "user";
 
           const { error: createError } = await supabase
             .from("profiles")
