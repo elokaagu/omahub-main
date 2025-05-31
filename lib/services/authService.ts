@@ -128,6 +128,17 @@ export async function getProfile(userId: string): Promise<User | null> {
   try {
     console.log("🔍 Fetching profile for user:", userId);
 
+    // First get the user's email from auth
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError) {
+      console.error("❌ Error getting user:", userError);
+      return null;
+    }
+
     const { data, error } = await supabase
       .from("profiles")
       .select("*, owned_brands")
@@ -142,6 +153,7 @@ export async function getProfile(userId: string): Promise<User | null> {
           .from("profiles")
           .insert({
             id: userId,
+            email: user?.email || "",
             role: "user",
             owned_brands: [],
             created_at: new Date().toISOString(),
@@ -156,7 +168,15 @@ export async function getProfile(userId: string): Promise<User | null> {
         }
 
         console.log("✅ New profile created:", newProfile);
-        return newProfile;
+        return {
+          id: newProfile.id,
+          email: newProfile.email || user?.email || "",
+          first_name: newProfile.first_name || "",
+          last_name: newProfile.last_name || "",
+          avatar_url: newProfile.avatar_url || "",
+          role: newProfile.role || "user",
+          owned_brands: newProfile.owned_brands || [],
+        };
       }
       console.error("❌ Error fetching profile:", error);
       return null;
@@ -165,17 +185,17 @@ export async function getProfile(userId: string): Promise<User | null> {
     console.log("✅ Profile fetched successfully:", {
       id: data.id,
       role: data.role,
-      email: data.email,
+      email: data.email || user?.email,
       first_name: data.first_name,
       owned_brands: data.owned_brands?.length || 0,
     });
 
     return {
       id: data.id,
-      email: data.email || "",
-      first_name: data.first_name,
-      last_name: data.last_name,
-      avatar_url: data.avatar_url,
+      email: data.email || user?.email || "",
+      first_name: data.first_name || "",
+      last_name: data.last_name || "",
+      avatar_url: data.avatar_url || "",
       role: data.role || "user",
       owned_brands: data.owned_brands || [],
     };

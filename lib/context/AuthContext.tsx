@@ -24,6 +24,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   const loadUserWithProfile = async (
     userId: string,
@@ -31,7 +32,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   ) => {
     try {
       console.log("🔄 Starting loadUserWithProfile for user:", userId);
-      setLoading(true);
 
       // Get additional profile data
       const profileData = await getProfile(userId);
@@ -39,7 +39,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (!profileData) {
         console.warn("⚠️ No profile data found for user:", userId);
-        setLoading(false);
+        setUser(null);
         return;
       }
 
@@ -59,12 +59,113 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (err) {
       console.error("❌ Error loading user profile:", err);
       setError(err as Error);
+      setUser(null);
+    }
+  };
+
+  // Function to handle auth state changes
+  const handleAuthChange = async (event: string, session: any) => {
+    console.log("🔐 Auth state changed:", event, session?.user?.id);
+
+    try {
+      if (event === "SIGNED_OUT" || !session) {
+        console.log("👋 User signed out or no session");
+        setUser(null);
+        setError(null);
+      } else if (session?.user) {
+        console.log("✅ User session found:", session.user.id);
+        await loadUserWithProfile(session.user.id, session.user.email);
+      }
+    } catch (err) {
+      console.error("❌ Error handling auth state change:", err);
+      setError(err as Error);
+      setUser(null);
+    }
+  };
+
+  useEffect(() => {
+    let mounted = true;
+
+    // Initialize auth state
+    const initializeAuth = async () => {
+      try {
+        console.log("🔍 Checking initial session...");
+        const {
+          data: { session },
+          error: sessionError,
+        } = await supabase.auth.getSession();
+
+        if (!mounted) return;
+
+        if (sessionError) {
+          throw sessionError;
+        }
+
+        if (session) {
+          // Try to refresh the session first
+          const { data: refreshedSession, error: refreshError } =
+            await supabase.auth.refreshSession();
+
+          if (refreshError) {
+            console.warn("⚠️ Session refresh failed:", refreshError);
+            // Continue with the existing session
+            await handleAuthChange("INITIAL", session);
+          } else {
+            console.log("✅ Session refreshed successfully");
+            await handleAuthChange("INITIAL", refreshedSession.session);
+          }
+        } else {
+          await handleAuthChange("SIGNED_OUT", null);
+        }
+      } catch (err) {
+        console.error("❌ Error checking initial session:", err);
+        setError(err as Error);
+        setUser(null);
+      } finally {
+        if (mounted) {
+          setLoading(false);
+          setIsInitialized(true);
+        }
+      }
+    };
+
+    // Set up auth state change listener
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!mounted || !isInitialized) return;
+
+      setLoading(true);
+      await handleAuthChange(event, session);
+      if (mounted) {
+        setLoading(false);
+      }
+    });
+
+    initializeAuth();
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const signOut = async () => {
+    try {
+      console.log("🔄 Signing out...");
+      setLoading(true);
+      await supabase.auth.signOut();
+      setUser(null);
+      setError(null);
+      console.log("✅ Sign out successful");
+    } catch (err) {
+      console.error("❌ Error signing out:", err);
+      setError(err as Error);
     } finally {
       setLoading(false);
     }
   };
 
-  // Function to manually refresh the user profile
   const refreshUserProfile = async () => {
     if (user?.id) {
       try {
@@ -94,87 +195,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
     return false;
-  };
-
-  useEffect(() => {
-    let mounted = true;
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("🔐 Auth state changed:", event, session?.user?.id);
-
-      if (!mounted) return;
-      setLoading(true);
-
-      try {
-        if (event === "SIGNED_OUT") {
-          console.log("👋 User signed out");
-          setUser(null);
-          setError(null);
-        } else if (session?.user) {
-          console.log("✅ User session found:", session.user.id);
-          await loadUserWithProfile(session.user.id, session.user.email);
-        }
-      } catch (err) {
-        console.error("❌ Error handling auth state change:", err);
-        setError(err as Error);
-      } finally {
-        if (mounted) {
-          setLoading(false);
-        }
-      }
-    });
-
-    // Initial session check
-    const initializeAuth = async () => {
-      try {
-        console.log("🔍 Checking initial session...");
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-
-        if (!mounted) return;
-
-        if (session?.user) {
-          console.log("✅ Initial session found:", session.user.id);
-          await loadUserWithProfile(session.user.id, session.user.email);
-        } else {
-          console.log("ℹ️ No initial session found");
-          setUser(null);
-        }
-      } catch (err) {
-        console.error("❌ Error checking initial session:", err);
-        setError(err as Error);
-      } finally {
-        if (mounted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    initializeAuth();
-
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  const signOut = async () => {
-    try {
-      console.log("🔄 Signing out...");
-      setLoading(true);
-      await supabase.auth.signOut();
-      setUser(null);
-      setError(null);
-      console.log("✅ Sign out successful");
-    } catch (err) {
-      console.error("❌ Error signing out:", err);
-      setError(err as Error);
-    } finally {
-      setLoading(false);
-    }
   };
 
   const value = {

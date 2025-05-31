@@ -2,6 +2,20 @@ import { createMiddlewareClient } from "@supabase/auth-helpers-nextjs";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
+// Helper function to handle auth errors
+function handleAuthError(req: NextRequest) {
+  console.log("⛔ Auth error - redirecting to login");
+  return redirectToLogin(req);
+}
+
+// Helper function to redirect to login
+function redirectToLogin(req: NextRequest) {
+  const redirectUrl = req.nextUrl.clone();
+  redirectUrl.pathname = "/login";
+  redirectUrl.searchParams.set("next", req.nextUrl.pathname);
+  return NextResponse.redirect(redirectUrl);
+}
+
 export async function middleware(req: NextRequest) {
   try {
     console.log("🚀 Middleware triggered for:", req.nextUrl.pathname);
@@ -62,17 +76,6 @@ export async function middleware(req: NextRequest) {
           (profile.role === "admin" || profile.role === "super_admin")
         ) {
           console.log("✅ Studio access granted");
-
-          // Set auth cookie for client-side access
-          res.cookies.set({
-            name: "sb-auth-token",
-            value: session.access_token,
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "lax",
-            maxAge: 60 * 60 * 24 * 7, // 7 days
-          });
-
           return res;
         }
 
@@ -84,24 +87,16 @@ export async function middleware(req: NextRequest) {
       }
     }
 
+    // For all other routes, refresh the session if it exists
+    if (session) {
+      await supabase.auth.refreshSession();
+    }
+
     return res;
   } catch (error) {
     console.error("❌ Middleware error:", error);
     return handleAuthError(req);
   }
-}
-
-function handleAuthError(req: NextRequest) {
-  // Clear any existing auth cookies
-  const res = NextResponse.redirect(new URL("/", req.url));
-  res.cookies.delete("sb-auth-token");
-  return res;
-}
-
-function redirectToLogin(req: NextRequest) {
-  const redirectUrl = new URL("/login", req.url);
-  redirectUrl.searchParams.set("next", req.nextUrl.pathname);
-  return NextResponse.redirect(redirectUrl);
 }
 
 export const config = {
