@@ -30,7 +30,7 @@ export default function HowItWorksClient() {
     <div className="w-full bg-gradient-to-b from-oma-beige/50 to-white pt-24 pb-16">
       <div className="max-w-7xl mx-auto px-6">
         <SectionHeader
-          title="How Oma Hub Works"
+          title="How OmaHub Works"
           subtitle="Your guide to discovering and connecting with the world's most innovative fashion designers"
           centered={true}
           titleClassName="font-canela text-3xl md:text-4xl"
@@ -366,7 +366,7 @@ export default function HowItWorksClient() {
         {/* CTA section */}
         <div className="mt-24 bg-gradient-to-r from-oma-plum/10 to-oma-gold/10 rounded-xl p-8 md:p-12 text-center">
           <h2 className="text-2xl font-canela text-center mb-4">
-            Discover talented designers or showcase your own brand on Oma Hub
+            Discover talented designers or showcase your own brand on OmaHub
           </h2>
           <p className="text-lg max-w-2xl mx-auto mb-8">
             Ready to get started?

@@ -11,7 +11,7 @@ export default function Footer() {
           <div className="flex flex-col items-center text-center md:items-start md:text-left">
             <img
               src="/lovable-uploads/omahub-logo.png"
-              alt="Oma Hub"
+              alt="OmaHub"
               className="h-6 w-auto mb-4"
             />
             <div className="text-sm text-oma-cocoa/70">
@@ -143,21 +143,20 @@ export default function Footer() {
           <p className="text-sm text-oma-plum font-medium mb-3 sm:mb-0">
             Want early access to new collections and drops?
           </p>
-          <Link
-            href="/join"
-            className="text-sm font-medium text-oma-plum flex items-center gap-1 group"
+          <a
+            href="https://instagram.com/omahub"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-oma-cocoa hover:text-oma-plum transition-colors"
           >
             <span className="expand-underline">Join the newsletter</span>
-            <span className="transition-transform group-hover:translate-x-0.5">
-              →
-            </span>
-          </Link>
+          </a>
         </div>
 
         {/* Copyright */}
         <div className="mt-8 text-center sm:text-left">
           <p className="text-xs leading-5 text-oma-cocoa/80">
-            &copy; {new Date().getFullYear()} Oma Hub. All rights reserved.
+            &copy; {new Date().getFullYear()} OmaHub. All rights reserved.
           </p>
         </div>
       </div>

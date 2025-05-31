@@ -23,9 +23,9 @@ export default function About() {
       >
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
           <motion.div variants={slideIn} className="order-2 lg:order-1">
-            <h1 className="heading-lg mb-6">About Oma Hub</h1>
+            <h1 className="heading-lg mb-6">About OmaHub</h1>
             <p className="text-oma-cocoa text-lg mb-6">
-              Oma Hub is a premier fashion-tech platform dedicated to
+              OmaHub is a premier fashion-tech platform dedicated to
               spotlighting Africa&apos;s emerging designers. We&apos;re creating
               a digital space where creativity, craftsmanship, and cultural
               expression intersect.
@@ -61,7 +61,7 @@ export default function About() {
           <SectionHeader title="Our Story" centered={true} />
           <div className="prose prose-lg max-w-none space-y-6">
             <motion.p variants={fadeIn} className="text-center">
-              Oma Hub was born in 2025 from a deep belief: that Africa&apos;s
+              OmaHub was born in 2025 from a deep belief: that Africa&apos;s
               designers deserve a global stage on their own terms. Rooted in the
               meaning of &ldquo;Oma&rdquo; - a West African word for beauty, we
               exist to honour the artistry shaping fashion across the continent.
@@ -72,7 +72,7 @@ export default function About() {
               creators to conscious consumers around the world.
             </motion.p>
             <motion.p variants={fadeIn} className="text-center">
-              Oma Hub bridges tradition and innovation. We celebrate the bold,
+              OmaHub bridges tradition and innovation. We celebrate the bold,
               the handmade, and the culturally grounded - helping preserve
               traditional techniques while championing modern design. More than
               fashion, this is a movement for craft, community, and creativity.
@@ -149,14 +149,14 @@ export default function About() {
             <motion.div variants={scaleIn}>
               <img
                 src="https://images.unsplash.com/photo-1567401893414-76b7b1e5a7a5?auto=format&fit=crop&q=80&w=1400"
-                alt="Oma Hub Community"
+                alt="OmaHub Community"
                 className="rounded-2xl shadow-lg w-full h-[400px] object-cover"
               />
             </motion.div>
             <motion.div variants={slideIn}>
               <h2 className="heading-md mb-6">Our Community</h2>
               <p className="text-oma-cocoa text-lg mb-6">
-                At the heart of Oma Hub is a vibrant community of designers,
+                At the heart of OmaHub is a vibrant community of designers,
                 fashion enthusiasts, and cultural advocates who share a passion
                 for African design innovation.
               </p>
@@ -167,9 +167,14 @@ export default function About() {
                 events, we&apos;re creating opportunities for meaningful
                 engagement and discovery.
               </p>
-              <Button asChild className="bg-oma-plum hover:bg-oma-plum/90">
-                <Link href="/join">Join Our Community</Link>
-              </Button>
+              <a
+                href="https://instagram.com/omahub"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-oma-plum hover:bg-oma-plum/90 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+              >
+                Join Our Community
+              </a>
             </motion.div>
           </div>
         </div>

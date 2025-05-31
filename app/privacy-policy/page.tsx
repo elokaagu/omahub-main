@@ -6,6 +6,7 @@ export default function PrivacyPolicy() {
       <SectionHeader
         title="Privacy Policy"
         subtitle="Last updated: April 25, 2025"
+        titleClassName="font-canela text-3xl md:text-4xl"
       />
 
       <div className="prose prose-oma max-w-none">
@@ -21,7 +22,7 @@ export default function PrivacyPolicy() {
         <p className="mb-6 text-oma-cocoa">
           We use the information we collect to provide, maintain, and improve
           our services, to communicate with you, and to personalize your
-          experience on Oma Hub.
+          experience on OmaHub.
         </p>
 
         <h2 className="heading-sm mb-4">3. Information Sharing</h2>

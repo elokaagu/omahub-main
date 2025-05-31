@@ -5,7 +5,7 @@ import { suisseIntl, canela } from "./fonts";
 import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
-  title: "Oma Hub",
+  title: "OmaHub",
   description: "Your one-stop shop for global fashion",
 };
 

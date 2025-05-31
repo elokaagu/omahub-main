@@ -42,31 +42,52 @@ export default function Join() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Simulate form submission
-    setTimeout(() => {
+    try {
+      // Submit to our API route which will handle Airtable submission
+      const response = await fetch("/api/designer-application", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (response.ok) {
+        toast({
+          title: "Application Submitted!",
+          description:
+            "Thank you for your interest in joining OmaHub. We'll review your application and get back to you soon.",
+        });
+        setFormData({
+          brandName: "",
+          designerName: "",
+          email: "",
+          phone: "",
+          website: "",
+          instagram: "",
+          location: "",
+          category: "",
+          description: "",
+          yearFounded: "",
+        });
+      } else {
+        throw new Error("Failed to submit application");
+      }
+    } catch (error) {
+      console.error("Error submitting application:", error);
       toast({
-        title: "Application Submitted!",
+        title: "Submission Error",
         description:
-          "Thank you for your interest in joining Oma Hub. We&apos;ll review your application and get back to you soon.",
+          "There was an error submitting your application. Please try again or contact support.",
+        variant: "destructive",
       });
+    } finally {
       setIsSubmitting(false);
-      setFormData({
-        brandName: "",
-        designerName: "",
-        email: "",
-        phone: "",
-        website: "",
-        instagram: "",
-        location: "",
-        category: "",
-        description: "",
-        yearFounded: "",
-      });
-    }, 1500);
+    }
   };
 
   return (
@@ -291,7 +312,7 @@ export default function Join() {
                   <AccordionItem value="item-3">
                     <AccordionTrigger>Is there a fee to join?</AccordionTrigger>
                     <AccordionContent>
-                      Currently, joining Oma Hub is free for approved designers.
+                      Currently, joining OmaHub is free for approved designers.
                       In the future, we may introduce premium listing options
                       with additional features and exposure.
                     </AccordionContent>
@@ -328,7 +349,7 @@ export default function Join() {
                     Need More Information?
                   </h3>
                   <p className="text-oma-cocoa mb-4">
-                    If you have additional questions about joining Oma Hub or
+                    If you have additional questions about joining OmaHub or
                     need assistance with your application, our team is here to
                     help.
                   </p>

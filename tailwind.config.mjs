@@ -63,7 +63,7 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
-        // Oma Hub custom colors
+        // OmaHub custom colors
         "oma-beige": "#F6F0E8",
         "oma-gold": "#D4B285",
         "oma-cocoa": "#A07F68",

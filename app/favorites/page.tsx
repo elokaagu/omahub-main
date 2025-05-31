@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import FavoritesClient from "./FavoritesClient";
 
 export const metadata: Metadata = {
-  title: "My Favorites | Oma Hub",
+  title: "My Favorites | OmaHub",
   description: "Your saved favorite fashion brands and designers",
 };
 

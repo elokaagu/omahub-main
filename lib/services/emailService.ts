@@ -10,7 +10,7 @@ export async function sendContactEmail(formData: {
 }) {
   try {
     const { data, error } = await resend.emails.send({
-      from: "Oma Hub <onboarding@resend.dev>",
+      from: "OmaHub <onboarding@resend.dev>",
       to: ["eloka@satellitelabs.xyz"],
       subject: `New Contact Form Submission: ${formData.subject}`,
       text: `

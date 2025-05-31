@@ -270,7 +270,7 @@ export default function ContactPage() {
       <div className="mt-24">
         <SectionHeader
           title="Frequently Asked Questions"
-          subtitle="Find answers to common questions about Oma Hub."
+          subtitle="Find answers to common questions about OmaHub."
           centered
           className="mb-12"
         />
@@ -278,7 +278,7 @@ export default function ContactPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="group bg-white p-8 rounded-lg border border-oma-gold/20 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:border-oma-gold/40 cursor-pointer">
             <h4 className="font-source text-xl mb-3 transition-colors duration-300 group-hover:text-oma-plum">
-              How can designers join Oma Hub?
+              How can designers join OmaHub?
             </h4>
             <p className="text-oma-cocoa">
               Designers can apply to join our platform through the &lsquo;Join
@@ -313,7 +313,7 @@ export default function ContactPage() {
               Do you offer shipping for products?
             </h4>
             <p className="text-oma-cocoa">
-              Oma Hub is primarily a discovery and connection platform. Shipping
+              OmaHub is primarily a discovery and connection platform. Shipping
               arrangements are made directly between clients and designers after
               initial introduction.
             </p>
