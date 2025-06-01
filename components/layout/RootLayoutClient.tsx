@@ -9,6 +9,7 @@ import { PageFade } from "@/app/components/ui/animations";
 import { AnimatePresence } from "framer-motion";
 import { Toaster } from "sonner";
 import { LoadingPage } from "@/components/ui/loading";
+import { AuthDebugPanel } from "@/components/debug/AuthDebugPanel";
 
 interface RootLayoutClientProps {
   children: React.ReactNode;
@@ -42,6 +43,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
       </main>
       {!isStudioPage && <Footer />}
       <Toaster />
+      <AuthDebugPanel />
     </>
   );
 }

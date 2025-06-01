@@ -18,22 +18,66 @@ function LoginForm() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [oauthLoading, setOauthLoading] = useState(false);
 
-  // Check for error parameter in URL and clear OAuth flag
+  // Enhanced OAuth state management and error checking
   useEffect(() => {
     try {
       if (typeof window !== "undefined") {
+        console.log("🔄 Login page mounted, checking OAuth state...");
+
         // Clear OAuth progress flag when returning to login using the helper
-        import("@/lib/supabase").then(({ clearOAuthProgress }) => {
-          clearOAuthProgress();
-        });
+        import("@/lib/supabase").then(
+          ({ clearOAuthProgress, isOAuthInProgress }) => {
+            if (isOAuthInProgress()) {
+              console.log("⚠️ OAuth was in progress, clearing flag");
+            }
+            clearOAuthProgress();
+          }
+        );
+
+        // Check for OAuth errors in session storage
+        const oauthError = sessionStorage.getItem("oauth_error");
+        if (oauthError) {
+          console.log("❌ Found OAuth error in session storage:", oauthError);
+          setError(`OAuth Error: ${oauthError}`);
+          sessionStorage.removeItem("oauth_error");
+        }
+
+        // Check OAuth timing
+        const oauthStartTime = sessionStorage.getItem("oauth_start_time");
+        if (oauthStartTime) {
+          const timeSinceStart = Date.now() - parseInt(oauthStartTime);
+          console.log("⏱️ Time since OAuth start:", timeSinceStart, "ms");
+          if (timeSinceStart > 60000) {
+            // More than 1 minute
+            console.log("⚠️ OAuth took too long, clearing flags");
+            sessionStorage.removeItem("oauth_start_time");
+          }
+        }
 
         // Get error from URL manually instead of using useSearchParams
         const urlParams = new URLSearchParams(window.location.search);
         const errorParam = urlParams.get("error");
         if (errorParam) {
-          setUrlError(decodeURIComponent(errorParam));
-          setError(decodeURIComponent(errorParam));
+          const decodedError = decodeURIComponent(errorParam);
+          console.log("❌ URL error parameter:", decodedError);
+          setUrlError(decodedError);
+          setError(decodedError);
+
+          // Clear the error from URL
+          const newUrl = window.location.pathname;
+          window.history.replaceState({}, document.title, newUrl);
+        }
+
+        // Check for successful OAuth completion
+        const urlParams2 = new URLSearchParams(window.location.search);
+        const successParam = urlParams2.get("oauth_success");
+        if (successParam === "true") {
+          console.log("✅ OAuth success detected");
+          // Clear the success parameter
+          const newUrl = window.location.pathname;
+          window.history.replaceState({}, document.title, newUrl);
         }
       }
     } catch (err) {
@@ -47,8 +91,10 @@ function LoginForm() {
     setError(null);
 
     try {
+      console.log("📧 Attempting email/password login...");
       const { session } = await signIn(email, password);
       if (session) {
+        console.log("✅ Email login successful");
         // Add a small delay to ensure auth state is updated
         await new Promise((resolve) => setTimeout(resolve, 500));
 
@@ -56,7 +102,7 @@ function LoginForm() {
         window.location.href = "/";
       }
     } catch (err) {
-      console.error("Login error:", err);
+      console.error("❌ Login error:", err);
       setError("Invalid email or password. Please try again.");
     } finally {
       setLoading(false);
@@ -65,27 +111,47 @@ function LoginForm() {
 
   const handleOAuthSignIn = async (provider: "google") => {
     setLoading(true);
+    setOauthLoading(true);
     setError(null);
 
     try {
+      console.log(`🚀 Starting ${provider} OAuth flow...`);
+
       // Check if OAuth is already in progress using the helper
       const { isOAuthInProgress } = await import("@/lib/supabase");
       if (isOAuthInProgress()) {
-        console.log("OAuth already in progress");
+        console.log("⏳ OAuth already in progress, skipping...");
         setLoading(false);
+        setOauthLoading(false);
         return;
       }
 
+      // Clear any previous errors
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem("oauth_error");
+      }
+
+      console.log("🎯 Initiating OAuth with enhanced debugging...");
       await signInWithOAuth(provider);
+
       // The redirect will happen automatically
+      console.log("🔄 OAuth redirect should have been initiated...");
+
+      // Set a timeout to reset loading state if redirect doesn't happen
+      setTimeout(() => {
+        console.log("⚠️ OAuth redirect timeout, resetting loading state");
+        setLoading(false);
+        setOauthLoading(false);
+      }, 10000); // 10 seconds timeout
     } catch (err) {
-      console.error(`${provider} sign in error:`, err);
+      console.error(`❌ ${provider} sign in error:`, err);
       setError(
         `Failed to sign in with ${
           provider.charAt(0).toUpperCase() + provider.slice(1)
         }. Please try again.`
       );
       setLoading(false);
+      setOauthLoading(false);
     }
   };
 
@@ -172,7 +238,7 @@ function LoginForm() {
             className="w-full bg-oma-plum hover:bg-oma-plum/90"
             disabled={loading}
           >
-            {loading ? "Signing in..." : "Sign in"}
+            {loading && !oauthLoading ? "Signing in..." : "Sign in"}
           </Button>
         </div>
       </form>
@@ -182,10 +248,10 @@ function LoginForm() {
           type="button"
           onClick={() => handleOAuthSignIn("google")}
           disabled={loading}
-          className="w-full inline-flex justify-center items-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-oma-cocoa hover:bg-gray-50"
+          className="w-full inline-flex justify-center items-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-oma-cocoa hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <FcGoogle className="h-5 w-5 mr-2" />
-          Continue with Google
+          {oauthLoading ? "Connecting to Google..." : "Continue with Google"}
         </button>
       </div>
 

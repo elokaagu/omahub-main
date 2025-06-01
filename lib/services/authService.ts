@@ -38,24 +38,82 @@ export async function signUp(email: string, password: string) {
 }
 
 // Function to create a new profile
-async function createProfile(userId: string, role: UserRole = "user") {
+async function createProfile(
+  userId: string,
+  role: UserRole = "user",
+  oauthData?: any
+) {
   if (!supabase) {
     throw new Error("Supabase client not available");
   }
 
-  const { error } = await supabase.from("profiles").insert({
+  console.log("🆕 Creating profile for user:", {
+    userId,
+    role,
+    hasOAuthData: !!oauthData,
+  });
+
+  // Extract name from OAuth data if available
+  let firstName = "";
+  let lastName = "";
+  let avatarUrl = "";
+
+  if (oauthData) {
+    // Handle Google OAuth data
+    if (oauthData.user_metadata) {
+      firstName =
+        oauthData.user_metadata.given_name ||
+        oauthData.user_metadata.first_name ||
+        "";
+      lastName =
+        oauthData.user_metadata.family_name ||
+        oauthData.user_metadata.last_name ||
+        "";
+      avatarUrl =
+        oauthData.user_metadata.avatar_url ||
+        oauthData.user_metadata.picture ||
+        "";
+
+      console.log("📊 Extracted OAuth profile data:", {
+        firstName,
+        lastName,
+        avatarUrl: avatarUrl ? "present" : "missing",
+        fullMetadata: oauthData.user_metadata,
+      });
+    }
+
+    // Fallback: try to extract name from full_name
+    if (!firstName && !lastName && oauthData.user_metadata?.full_name) {
+      const nameParts = oauthData.user_metadata.full_name.split(" ");
+      firstName = nameParts[0] || "";
+      lastName = nameParts.slice(1).join(" ") || "";
+      console.log("📝 Extracted name from full_name:", { firstName, lastName });
+    }
+  }
+
+  const profileData = {
     id: userId,
+    email: oauthData?.email || "",
+    first_name: firstName,
+    last_name: lastName,
+    avatar_url: avatarUrl,
     role,
     owned_brands: [],
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
-  });
+  };
+
+  console.log("💾 Creating profile with data:", profileData);
+
+  const { error } = await supabase.from("profiles").insert(profileData);
 
   if (error && error.code !== "23505") {
     // Ignore duplicate key errors
-    console.error("Error creating profile:", error);
+    console.error("❌ Error creating profile:", error);
     throw error;
   }
+
+  console.log("✅ Profile created successfully");
 }
 
 export async function signIn(email: string, password: string) {
@@ -93,13 +151,13 @@ export async function signInWithOAuth(provider: Provider) {
       await import("@/lib/supabase");
 
     if (isOAuthInProgress()) {
-      console.log("OAuth already in progress, skipping...");
+      console.log("⏳ OAuth already in progress, skipping...");
       return;
     }
 
     setOAuthProgress(true);
 
-    console.log("🚀 Starting OAuth flow with:", {
+    console.log("🚀 Starting enhanced OAuth flow with:", {
       provider,
       origin:
         typeof window !== "undefined" ? window.location.origin : "unknown",
@@ -109,15 +167,26 @@ export async function signInWithOAuth(provider: Provider) {
           : undefined,
       userAgent:
         typeof window !== "undefined" ? navigator.userAgent : "unknown",
+      timestamp: new Date().toISOString(),
     });
+
+    // Clear any existing session storage flags
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem("oauth_error");
+      sessionStorage.setItem("oauth_start_time", Date.now().toString());
+    }
 
     // Log current cookies before OAuth
     if (typeof window !== "undefined") {
-      console.log("🍪 Cookies before OAuth:", {
+      console.log("🍪 Pre-OAuth state:", {
         allCookies: document.cookie,
         supabaseCookies: document.cookie
           .split(";")
           .filter((c) => c.includes("sb-")),
+        localStorage: {
+          hasAuthToken: !!localStorage.getItem("sb-auth-token"),
+          authTokenLength: localStorage.getItem("sb-auth-token")?.length || 0,
+        },
       });
     }
 
@@ -132,46 +201,64 @@ export async function signInWithOAuth(provider: Provider) {
         queryParams: {
           access_type: "offline",
           prompt: "select_account",
+          // Add additional parameters for better OAuth flow
+          include_granted_scopes: "true",
+          state: `oauth_${Date.now()}`, // Add state for security
         },
       },
     });
 
-    console.log("📊 OAuth initiation result:", {
+    console.log("📊 Enhanced OAuth initiation result:", {
       hasData: !!data,
       hasUrl: !!data?.url,
       hasProvider: !!data?.provider,
       error: error?.message,
-      url: data?.url?.substring(0, 100) + "...", // Log first 100 chars of URL
+      urlPreview: data?.url ? data.url.substring(0, 150) + "..." : "none",
+      provider: data?.provider,
     });
 
     if (error) {
-      console.error(`❌ Error signing in with ${provider}:`, error);
+      console.error(`❌ OAuth initiation error for ${provider}:`, {
+        message: error.message,
+        status: error.status,
+        code: error.code,
+        details: error,
+      });
       setOAuthProgress(false);
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("oauth_error", error.message);
+      }
       handleAuthError(error);
       return;
     }
 
-    // Log cookies after OAuth initiation
+    // Log successful OAuth initiation
     if (typeof window !== "undefined") {
       setTimeout(() => {
-        console.log("🍪 Cookies after OAuth initiation:", {
+        console.log("🍪 Post-OAuth initiation state:", {
           allCookies: document.cookie,
           supabaseCookies: document.cookie
             .split(";")
             .filter((c) => c.includes("sb-")),
+          localStorage: {
+            hasAuthToken: !!localStorage.getItem("sb-auth-token"),
+            authTokenLength: localStorage.getItem("sb-auth-token")?.length || 0,
+          },
         });
       }, 100);
     }
 
-    // Don't remove the flag here - let the callback handle it
-    console.log("🚀 OAuth redirect initiated successfully");
+    console.log("🎯 OAuth redirect initiated successfully for", provider);
     return data;
   } catch (err) {
-    console.error(`❌ Error in signInWithOAuth:`, err);
+    console.error(`💥 Exception in signInWithOAuth for ${provider}:`, err);
     const { setOAuthProgress, handleAuthError } = await import(
       "@/lib/supabase"
     );
     setOAuthProgress(false);
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("oauth_error", String(err));
+    }
     handleAuthError(err);
   }
 }
@@ -209,25 +296,30 @@ export async function getCurrentUser() {
 
 export async function getProfile(userId: string): Promise<User | null> {
   try {
-    console.log("🔍 Fetching profile for user:", userId);
+    console.log("🔍 Enhanced profile fetch for user:", userId);
 
     if (!supabase) {
       console.error("❌ Supabase client not available");
       return null;
     }
 
-    // First get the user's email from auth
+    // First get the user's auth data
     const {
       data: { user },
       error: userError,
     } = await supabase.auth.getUser();
 
     if (userError) {
-      console.error("❌ Error getting user:", userError);
+      console.error("❌ Error getting auth user:", userError);
       return null;
     }
 
-    console.log("✅ Got auth user:", { id: user?.id, email: user?.email });
+    console.log("✅ Got auth user:", {
+      id: user?.id,
+      email: user?.email,
+      hasUserMetadata: !!user?.user_metadata,
+      userMetadata: user?.user_metadata,
+    });
 
     const { data, error } = await supabase
       .from("profiles")
@@ -235,40 +327,35 @@ export async function getProfile(userId: string): Promise<User | null> {
       .eq("id", userId)
       .single();
 
-    console.log("📊 Profile query result:", { data, error });
+    console.log("📊 Profile query result:", {
+      hasData: !!data,
+      error: error?.message,
+      errorCode: error?.code,
+    });
 
     if (error) {
       if (error.code === "PGRST116") {
-        console.log("⚠️ Profile not found, creating new profile");
-        // Profile not found, create a new one
-        const { data: newProfile, error: createError } = await supabase
+        console.log(
+          "⚠️ Profile not found, creating new profile with OAuth data"
+        );
+
+        // Create profile with OAuth data if available
+        await createProfile(userId, "user", user);
+
+        // Fetch the newly created profile
+        const { data: newProfile, error: fetchError } = await supabase
           .from("profiles")
-          .insert({
-            id: userId,
-            email: user?.email || "",
-            role: "user",
-            owned_brands: [],
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          })
-          .select()
+          .select("*")
+          .eq("id", userId)
           .single();
 
-        if (createError) {
-          console.error("❌ Error creating profile:", createError);
+        if (fetchError) {
+          console.error("❌ Error fetching newly created profile:", fetchError);
           return null;
         }
 
-        console.log("✅ New profile created:", newProfile);
-        return {
-          id: newProfile.id,
-          email: newProfile.email || user?.email || "",
-          first_name: newProfile.first_name || "",
-          last_name: newProfile.last_name || "",
-          avatar_url: newProfile.avatar_url || "",
-          role: newProfile.role || "user",
-          owned_brands: newProfile.owned_brands || [],
-        };
+        console.log("✅ New profile created and fetched:", newProfile);
+        return formatUserProfile(newProfile, user);
       }
       console.error("❌ Error fetching profile:", error);
       return null;
@@ -279,25 +366,32 @@ export async function getProfile(userId: string): Promise<User | null> {
       role: data.role,
       email: data.email || user?.email,
       first_name: data.first_name,
+      last_name: data.last_name,
+      avatar_url: data.avatar_url,
       owned_brands: data.owned_brands?.length || 0,
     });
 
-    const profileResult = {
-      id: data.id,
-      email: data.email || user?.email || "",
-      first_name: data.first_name || "",
-      last_name: data.last_name || "",
-      avatar_url: data.avatar_url || "",
-      role: data.role || "user",
-      owned_brands: data.owned_brands || [],
-    };
-
-    console.log("🎯 Returning profile:", profileResult);
-    return profileResult;
+    return formatUserProfile(data, user);
   } catch (err) {
-    console.error("❌ Error in getProfile:", err);
+    console.error("❌ Exception in getProfile:", err);
     return null;
   }
+}
+
+// Helper function to format user profile consistently
+function formatUserProfile(profileData: any, authUser: any): User {
+  const profile = {
+    id: profileData.id,
+    email: profileData.email || authUser?.email || "",
+    first_name: profileData.first_name || "",
+    last_name: profileData.last_name || "",
+    avatar_url: profileData.avatar_url || "",
+    role: profileData.role || "user",
+    owned_brands: profileData.owned_brands || [],
+  };
+
+  console.log("🎯 Formatted user profile:", profile);
+  return profile;
 }
 
 export async function updateProfile(userId: string, updates: Partial<User>) {
