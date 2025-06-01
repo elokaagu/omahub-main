@@ -4,7 +4,10 @@ import { cookies } from "next/headers";
 
 export async function POST(request: NextRequest) {
   try {
+    console.log("Brand creation API called");
+
     const cookieStore = cookies();
+    console.log("Cookie store created");
 
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -12,32 +15,75 @@ export async function POST(request: NextRequest) {
       {
         cookies: {
           get(name: string) {
-            return cookieStore.get(name)?.value;
+            try {
+              const value = cookieStore.get(name)?.value;
+              console.log(
+                `Getting cookie ${name}:`,
+                value ? "found" : "not found"
+              );
+              return value;
+            } catch (error) {
+              console.error(`Error getting cookie ${name}:`, error);
+              return undefined;
+            }
           },
           set(name: string, value: string, options: any) {
-            cookieStore.set({ name, value, ...options });
+            try {
+              cookieStore.set({ name, value, ...options });
+            } catch (error) {
+              console.error(`Error setting cookie ${name}:`, error);
+            }
           },
           remove(name: string, options: any) {
-            cookieStore.set({ name, value: "", ...options });
+            try {
+              cookieStore.set({ name, value: "", ...options });
+            } catch (error) {
+              console.error(`Error removing cookie ${name}:`, error);
+            }
           },
         },
       }
     );
 
-    // Get session
-    const {
-      data: { session },
-      error: sessionError,
-    } = await supabase.auth.getSession();
+    console.log("Supabase client created");
+
+    // Get session with better error handling
+    let session, sessionError;
+    try {
+      const result = await supabase.auth.getSession();
+      session = result.data.session;
+      sessionError = result.error;
+      console.log(
+        "Session check:",
+        session ? "found" : "not found",
+        sessionError ? `error: ${sessionError.message}` : "no error"
+      );
+    } catch (error) {
+      console.error("Error getting session:", error);
+      return NextResponse.json(
+        {
+          error: "Session retrieval failed",
+          details: error instanceof Error ? error.message : "Unknown error",
+        },
+        { status: 500 }
+      );
+    }
 
     if (sessionError || !session) {
+      console.log(
+        "Authentication failed:",
+        sessionError?.message || "No session"
+      );
       return NextResponse.json(
         {
           error: "Authentication required",
+          details: sessionError?.message || "No active session found",
         },
         { status: 401 }
       );
     }
+
+    console.log("User authenticated:", session.user.id);
 
     // Get user profile to check permissions
     const { data: profile, error: profileError } = await supabase
@@ -46,10 +92,17 @@ export async function POST(request: NextRequest) {
       .eq("id", session.user.id)
       .single();
 
+    console.log(
+      "Profile check:",
+      profile ? `role: ${profile.role}` : "not found",
+      profileError ? `error: ${profileError.message}` : "no error"
+    );
+
     if (profileError || !profile) {
       return NextResponse.json(
         {
           error: "User profile not found",
+          details: profileError?.message || "Profile does not exist",
         },
         { status: 404 }
       );
@@ -57,10 +110,16 @@ export async function POST(request: NextRequest) {
 
     // Check if user has admin permissions
     const isAdmin = profile.role === "admin" || profile.role === "super_admin";
+    console.log(
+      "Permission check:",
+      isAdmin ? "admin access granted" : "insufficient permissions"
+    );
+
     if (!isAdmin) {
       return NextResponse.json(
         {
           error: "Insufficient permissions. Only admins can create brands.",
+          userRole: profile.role,
         },
         { status: 403 }
       );
@@ -68,6 +127,11 @@ export async function POST(request: NextRequest) {
 
     // Get request body
     const brandData = await request.json();
+    console.log("Brand data received:", {
+      name: brandData.name,
+      category: brandData.category,
+      location: brandData.location,
+    });
 
     // Validate required fields
     if (
@@ -80,6 +144,12 @@ export async function POST(request: NextRequest) {
         {
           error:
             "Missing required fields: name, description, category, and location are required",
+          received: {
+            name: !!brandData.name,
+            description: !!brandData.description,
+            category: !!brandData.category,
+            location: !!brandData.location,
+          },
         },
         { status: 400 }
       );
@@ -90,6 +160,8 @@ export async function POST(request: NextRequest) {
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/(^-|-$)/g, "");
+
+    console.log("Generated brand ID:", id);
 
     // Create the brand
     const { data: brand, error: createError } = await supabase
@@ -137,7 +209,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log("Brand created successfully:", brand);
+    console.log("Brand created successfully:", brand.id);
 
     return NextResponse.json({
       success: true,
@@ -149,6 +221,7 @@ export async function POST(request: NextRequest) {
       {
         error: "Internal server error",
         details: error instanceof Error ? error.message : "Unknown error",
+        stack: error instanceof Error ? error.stack : undefined,
       },
       { status: 500 }
     );
