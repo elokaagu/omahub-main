@@ -6,7 +6,6 @@ import Link from "next/link";
 import { signUp, signInWithOAuth } from "@/lib/services/authService";
 import { Button } from "@/components/ui/button";
 import { FcGoogle } from "react-icons/fc";
-import { FaFacebook } from "react-icons/fa";
 
 // Component to handle the signup form
 function SignupForm() {
@@ -53,7 +52,7 @@ function SignupForm() {
     }
   };
 
-  const handleOAuthSignIn = async (provider: "google" | "facebook") => {
+  const handleOAuthSignIn = async (provider: "google") => {
     setLoading(true);
     setError(null);
 
@@ -161,37 +160,15 @@ function SignupForm() {
       </form>
 
       <div className="mt-6">
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-300" />
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white text-oma-cocoa">
-              Or continue with
-            </span>
-          </div>
-        </div>
-
-        <div className="mt-6 grid grid-cols-2 gap-3">
-          <button
-            type="button"
-            onClick={() => handleOAuthSignIn("google")}
-            disabled={loading}
-            className="w-full inline-flex justify-center items-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-oma-cocoa hover:bg-gray-50"
-          >
-            <FcGoogle className="h-5 w-5 mr-2" />
-            Google
-          </button>
-          <button
-            type="button"
-            onClick={() => handleOAuthSignIn("facebook")}
-            disabled={loading}
-            className="w-full inline-flex justify-center items-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-oma-cocoa hover:bg-gray-50"
-          >
-            <FaFacebook className="h-5 w-5 mr-2 text-blue-600" />
-            Facebook
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={() => handleOAuthSignIn("google")}
+          disabled={loading}
+          className="w-full inline-flex justify-center items-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-oma-cocoa hover:bg-gray-50"
+        >
+          <FcGoogle className="h-5 w-5 mr-2" />
+          Continue with Google
+        </button>
       </div>
 
       <div className="mt-6 text-center">
