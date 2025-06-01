@@ -204,6 +204,9 @@ export async function signInWithOAuth(provider: Provider) {
           // Add additional parameters for better OAuth flow
           include_granted_scopes: "true",
           state: `oauth_${Date.now()}`, // Add state for security
+          // Add app branding parameters
+          application_name: "OmaHub",
+          hd: "", // Allow any domain
         },
       },
     });
