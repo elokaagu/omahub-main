@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   getBrand,
   updateBrand,
@@ -59,6 +60,7 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
   console.log("Edit page params:", params);
 
   const router = useRouter();
+  const { user } = useAuth();
   const [brand, setBrand] = useState<Brand | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -151,11 +153,14 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!brand) return;
+    if (!brand || !user) {
+      toast.error("You must be logged in to update a brand");
+      return;
+    }
 
     setSaving(true);
     try {
-      await updateBrand(brand.id, brand.name, {
+      await updateBrand(user.id, brand.id, {
         description: brand.description,
         category: brand.category,
         location: brand.location,
@@ -175,11 +180,14 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
   };
 
   const handleDelete = async () => {
-    if (!brand) return;
+    if (!brand || !user) {
+      toast.error("You must be logged in to delete a brand");
+      return;
+    }
 
     setDeleting(true);
     try {
-      await deleteBrand(brand.id, brand.name);
+      await deleteBrand(user.id, brand.id);
       toast.success("Brand deleted successfully");
       router.push("/studio/brands");
     } catch (error) {

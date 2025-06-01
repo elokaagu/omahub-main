@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 import { createBrand } from "@/lib/services/studioService";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -52,6 +53,7 @@ const FOUNDING_YEARS = Array.from(
 
 export default function CreateBrandPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -94,6 +96,12 @@ export default function CreateBrandPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Check if user is authenticated
+    if (!user) {
+      toast.error("You must be logged in to create a brand");
+      return;
+    }
+
     // Validation
     if (!formData.name) {
       toast.error("Brand name is required");
@@ -122,7 +130,7 @@ export default function CreateBrandPage() {
 
     setSubmitting(true);
     try {
-      const brand = await createBrand({
+      const brand = await createBrand(user.id, {
         name: formData.name,
         description: formData.description,
         long_description: formData.long_description || formData.description,

@@ -20,6 +20,24 @@ export async function middleware(req: NextRequest) {
   try {
     console.log("🚀 Middleware triggered for:", req.nextUrl.pathname);
 
+    // Skip middleware for public API routes
+    const publicApiRoutes = [
+      "/api/test-airtable",
+      "/api/test-airtable-submit",
+      "/api/test-simple-submit",
+      "/api/test-brand-name",
+      "/api/check-airtable-fields",
+      "/api/designer-application",
+      "/api/contact",
+    ];
+
+    if (
+      publicApiRoutes.some((route) => req.nextUrl.pathname.startsWith(route))
+    ) {
+      console.log("⏭️ Skipping middleware for public API route");
+      return NextResponse.next();
+    }
+
     // Create a response and supabase client
     const res = NextResponse.next();
 
