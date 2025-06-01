@@ -133,7 +133,9 @@ export default function HomeContent() {
   // Clear OAuth progress flag when component mounts
   useEffect(() => {
     if (typeof window !== "undefined") {
-      sessionStorage.removeItem("oauth_in_progress");
+      import("@/lib/supabase").then(({ clearOAuthProgress }) => {
+        clearOAuthProgress();
+      });
     }
   }, []);
 

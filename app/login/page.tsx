@@ -23,8 +23,10 @@ function LoginForm() {
   useEffect(() => {
     try {
       if (typeof window !== "undefined") {
-        // Clear OAuth progress flag when returning to login
-        sessionStorage.removeItem("oauth_in_progress");
+        // Clear OAuth progress flag when returning to login using the helper
+        import("@/lib/supabase").then(({ clearOAuthProgress }) => {
+          clearOAuthProgress();
+        });
 
         // Get error from URL manually instead of using useSearchParams
         const urlParams = new URLSearchParams(window.location.search);
@@ -66,8 +68,9 @@ function LoginForm() {
     setError(null);
 
     try {
-      // Check if OAuth is already in progress
-      if (sessionStorage.getItem("oauth_in_progress")) {
+      // Check if OAuth is already in progress using the helper
+      const { isOAuthInProgress } = await import("@/lib/supabase");
+      if (isOAuthInProgress()) {
         console.log("OAuth already in progress");
         setLoading(false);
         return;

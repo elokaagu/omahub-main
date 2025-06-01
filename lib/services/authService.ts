@@ -88,14 +88,16 @@ export async function signInWithOAuth(provider: Provider) {
       throw new Error("Supabase client not available");
     }
 
-    // Prevent multiple simultaneous OAuth requests
-    const isOAuthInProgress = sessionStorage.getItem("oauth_in_progress");
-    if (isOAuthInProgress) {
+    // Prevent multiple simultaneous OAuth requests using the new helper
+    const { isOAuthInProgress, setOAuthProgress, handleAuthError } =
+      await import("@/lib/supabase");
+
+    if (isOAuthInProgress()) {
       console.log("OAuth already in progress, skipping...");
       return;
     }
 
-    sessionStorage.setItem("oauth_in_progress", "true");
+    setOAuthProgress(true);
 
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider,
@@ -107,23 +109,28 @@ export async function signInWithOAuth(provider: Provider) {
         scopes: provider === "google" ? "email profile" : undefined,
         queryParams: {
           access_type: "offline",
-          prompt: "select_account", // Changed from "consent" to reduce friction
+          prompt: "select_account",
         },
       },
     });
 
     if (error) {
       console.error(`Error signing in with ${provider}:`, error);
-      sessionStorage.removeItem("oauth_in_progress");
-      throw error;
+      setOAuthProgress(false);
+      handleAuthError(error);
+      return;
     }
 
     // Don't remove the flag here - let the callback handle it
+    console.log("🚀 OAuth redirect initiated successfully");
     return data;
   } catch (err) {
     console.error(`Error in signInWithOAuth:`, err);
-    sessionStorage.removeItem("oauth_in_progress");
-    throw err;
+    const { setOAuthProgress, handleAuthError } = await import(
+      "@/lib/supabase"
+    );
+    setOAuthProgress(false);
+    handleAuthError(err);
   }
 }
 

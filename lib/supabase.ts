@@ -1,4 +1,4 @@
-import { createBrowserClient } from "@supabase/ssr";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { AuthDebug } from "./utils/debug";
 
 // Check if we're in a build process
@@ -9,12 +9,12 @@ const isBuildTime =
       process.env.VERCEL_BUILD_STEP === "true"));
 
 // Safely access environment variables with fallbacks
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 console.log("🔄 Initializing Supabase client:", {
-  hasUrl: !!supabaseUrl,
-  hasKey: !!supabaseAnonKey.substring(0, 10) + "...",
+  url: supabaseUrl ? "✅ Present" : "❌ Missing",
+  key: supabaseAnonKey ? "✅ Present" : "❌ Missing",
   env: process.env.NODE_ENV,
   isBuildTime,
 });
@@ -32,52 +32,22 @@ const createClient = () => {
     console.log("🖥️ Server-side rendering, creating client for hydration");
   }
 
-  return createBrowserClient(supabaseUrl, supabaseAnonKey, {
+  return createSupabaseClient(supabaseUrl, supabaseAnonKey, {
     auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: false,
+      // Ensure PKCE flow is used for OAuth
       flowType: "pkce",
-      storage: typeof window !== "undefined" ? window.localStorage : undefined,
-      debug: process.env.NODE_ENV === "development",
+      // Disable automatic session detection from URL to prevent redirect loops
+      detectSessionInUrl: false,
+      // Persist session in localStorage
+      persistSession: true,
+      // Auto refresh tokens
+      autoRefreshToken: true,
+      // Storage key for session
+      storageKey: "sb-auth-token",
     },
     global: {
-      fetch: fetch,
       headers: {
-        "x-application-name": "omahub",
-        "Cache-Control": "no-cache",
-      },
-    },
-    cookies: {
-      get: (name: string) => {
-        if (typeof document === "undefined") return undefined;
-        const value = document.cookie
-          .split("; ")
-          .find((row) => row.startsWith(`${name}=`))
-          ?.split("=")[1];
-        return value ? decodeURIComponent(value) : undefined;
-      },
-      set: (name: string, value: string, options: any) => {
-        if (typeof document === "undefined") return;
-        const cookieOptions = {
-          ...options,
-          sameSite: "lax",
-          secure: process.env.NODE_ENV === "production",
-        };
-        const cookieString = `${name}=${encodeURIComponent(value)}; ${Object.entries(
-          cookieOptions
-        )
-          .map(([key, val]) => `${key}=${val}`)
-          .join("; ")}`;
-        document.cookie = cookieString;
-      },
-      remove: (name: string, options: any) => {
-        if (typeof document === "undefined") return;
-        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; ${Object.entries(
-          options || {}
-        )
-          .map(([key, val]) => `${key}=${val}`)
-          .join("; ")}`;
+        "X-Client-Info": "omahub-web",
       },
     },
   });
@@ -86,37 +56,111 @@ const createClient = () => {
 // Initialize the client
 export const supabase = createClient();
 
+// Prevent multiple OAuth attempts
+let oauthInProgress = false;
+
+// Enhanced session management
+export const getSession = async () => {
+  if (!supabase) return null;
+
+  try {
+    const {
+      data: { session },
+      error,
+    } = await supabase.auth.getSession();
+    if (error) {
+      console.error("Error getting session:", error);
+      return null;
+    }
+    return session;
+  } catch (error) {
+    console.error("Exception getting session:", error);
+    return null;
+  }
+};
+
+// Clear OAuth progress flag
+export const clearOAuthProgress = () => {
+  if (typeof window !== "undefined") {
+    sessionStorage.removeItem("oauth_in_progress");
+    oauthInProgress = false;
+  }
+};
+
+// Check if OAuth is in progress
+export const isOAuthInProgress = () => {
+  if (typeof window !== "undefined") {
+    return (
+      sessionStorage.getItem("oauth_in_progress") === "true" || oauthInProgress
+    );
+  }
+  return oauthInProgress;
+};
+
+// Set OAuth progress flag
+export const setOAuthProgress = (inProgress: boolean) => {
+  oauthInProgress = inProgress;
+  if (typeof window !== "undefined") {
+    if (inProgress) {
+      sessionStorage.setItem("oauth_in_progress", "true");
+    } else {
+      sessionStorage.removeItem("oauth_in_progress");
+    }
+  }
+};
+
+// Enhanced error handling for auth operations
+export const handleAuthError = (error: any) => {
+  console.error("Auth error:", error);
+
+  // Clear OAuth progress on any auth error
+  clearOAuthProgress();
+
+  // Handle specific error types
+  if (error?.message?.includes("rate limit")) {
+    throw new Error("Too many requests. Please wait a moment and try again.");
+  }
+
+  if (error?.message?.includes("code verifier")) {
+    throw new Error(
+      "Authentication session expired. Please try signing in again."
+    );
+  }
+
+  throw error;
+};
+
 // Set up auth state change listener and run tests if in browser environment
 if (supabase && typeof window !== "undefined") {
-  // Set up auth state change listener
-  supabase.auth.onAuthStateChange((event, session) => {
+  console.log("🌐 Browser environment detected, setting up auth listener");
+
+  // Auth state change listener
+  supabase.auth.onAuthStateChange((event: any, session: any) => {
+    console.log("🔄 Auth state changed:", event, session?.user?.email);
     AuthDebug.state(event, session);
-    AuthDebug.session(session);
   });
 
-  // Test the connection
-  supabase.auth.getSession().then(({ data, error }) => {
+  // Test connection
+  supabase.auth.getSession().then(({ data, error }: any) => {
     if (error) {
-      AuthDebug.error("Supabase auth test failed", error);
+      console.error("❌ Error getting initial session:", error);
     } else {
-      AuthDebug.log("Supabase auth test successful", {
-        hasSession: !!data.session,
-      });
-      AuthDebug.session(data.session);
+      console.log(
+        "✅ Initial session check:",
+        data.session ? "Logged in" : "Not logged in"
+      );
     }
   });
 
-  // Test a simple database query
+  // Test database connection
   supabase
-    .from("brands")
-    .select("*", { count: "exact", head: true })
-    .then(({ data, error, count }) => {
+    .from("profiles")
+    .select("count", { count: "exact", head: true })
+    .then(({ error }: any) => {
       if (error) {
-        AuthDebug.error("Supabase database test failed", error);
+        console.error("❌ Database connection test failed:", error);
       } else {
-        AuthDebug.log("Supabase database test successful", {
-          brandCount: count,
-        });
+        console.log("✅ Database connection test passed");
       }
     });
 }
