@@ -46,10 +46,14 @@ const createClient = () => {
       storageKey: "sb-auth-token",
       // Debug mode for development
       debug: process.env.NODE_ENV === "development",
+      // Add storage options for better CSP compatibility
+      storage: typeof window !== "undefined" ? window.localStorage : undefined,
     },
     global: {
       headers: {
         "X-Client-Info": "omahub-web",
+        // Add CSP-compatible headers
+        "X-Requested-With": "XMLHttpRequest",
       },
     },
     // Add realtime configuration
@@ -57,6 +61,10 @@ const createClient = () => {
       params: {
         eventsPerSecond: 2,
       },
+    },
+    // Add database configuration for better error handling
+    db: {
+      schema: "public",
     },
   });
 };

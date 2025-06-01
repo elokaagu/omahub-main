@@ -76,7 +76,10 @@ export async function middleware(req: NextRequest) {
       } = await supabase.auth.getSession();
 
       if (error) {
-        console.log("Middleware: Session error:", error.message);
+        // Only log non-refresh-token errors to reduce noise
+        if (!error.message?.includes("refresh_token_not_found")) {
+          console.log("Middleware: Session error:", error.message);
+        }
         // Don't redirect on session errors, let the app handle it
       }
 
@@ -88,7 +91,8 @@ export async function middleware(req: NextRequest) {
         session = sessionData;
       }
     } catch (error) {
-      console.log("Middleware: Exception getting session:", error);
+      // Silently handle session exceptions to prevent middleware failures
+      console.log("Middleware: Exception getting session (handled gracefully)");
     }
 
     // Check if the request is for a protected route
