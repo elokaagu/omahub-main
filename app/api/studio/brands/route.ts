@@ -133,22 +133,13 @@ export async function POST(request: NextRequest) {
       location: brandData.location,
     });
 
-    // Validate required fields
-    if (
-      !brandData.name ||
-      !brandData.description ||
-      !brandData.category ||
-      !brandData.location
-    ) {
+    // Validate required fields (based on actual schema)
+    if (!brandData.name) {
       return NextResponse.json(
         {
-          error:
-            "Missing required fields: name, description, category, and location are required",
+          error: "Missing required field: name is required",
           received: {
             name: !!brandData.name,
-            description: !!brandData.description,
-            category: !!brandData.category,
-            location: !!brandData.location,
           },
         },
         { status: 400 }
@@ -163,23 +154,15 @@ export async function POST(request: NextRequest) {
 
     console.log("Generated brand ID:", id);
 
-    // Create the brand
+    // Create the brand (using only columns that exist in the schema)
     const { data: brand, error: createError } = await supabase
       .from("brands")
       .insert({
         id,
         name: brandData.name,
-        description: brandData.description,
-        long_description: brandData.long_description || brandData.description,
-        location: brandData.location,
-        price_range: brandData.price_range || "$",
-        category: brandData.category,
-        image: brandData.image || null,
-        is_verified: brandData.is_verified || false,
+        description: brandData.description || null,
+        logo_url: brandData.image || null, // Map 'image' to 'logo_url'
         website: brandData.website || null,
-        instagram: brandData.instagram || null,
-        founded_year: brandData.founded_year || null,
-        rating: 0, // Default rating for new brands
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })

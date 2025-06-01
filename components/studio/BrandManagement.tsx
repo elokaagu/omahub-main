@@ -38,8 +38,6 @@ export default function BrandManagement({
     name: "",
     description: "",
     website: "",
-    category: "",
-    location: "",
   });
   const [showNewBrandForm, setShowNewBrandForm] = useState(false);
   const supabase = createClientComponentClient();
@@ -53,24 +51,9 @@ export default function BrandManagement({
       return;
     }
 
-    // Validation for required fields
+    // Validation for required fields (based on actual database schema)
     if (!newBrand.name) {
       toast.error("Brand name is required");
-      return;
-    }
-
-    if (!newBrand.description) {
-      toast.error("Brand description is required");
-      return;
-    }
-
-    if (!newBrand.category) {
-      toast.error("Category is required");
-      return;
-    }
-
-    if (!newBrand.location) {
-      toast.error("Location is required");
       return;
     }
 
@@ -84,11 +67,7 @@ export default function BrandManagement({
         body: JSON.stringify({
           name: newBrand.name,
           description: newBrand.description,
-          category: newBrand.category,
-          location: newBrand.location,
           website: newBrand.website || undefined,
-          price_range: "$", // Default price range
-          image: null, // No image upload in this simple form
         }),
       });
 
@@ -99,13 +78,7 @@ export default function BrandManagement({
       }
 
       setBrands([...brands, data.brand]);
-      setNewBrand({
-        name: "",
-        description: "",
-        website: "",
-        category: "",
-        location: "",
-      });
+      setNewBrand({ name: "", description: "", website: "" });
       setShowNewBrandForm(false);
       toast.success("Brand created successfully");
     } catch (error) {
@@ -217,55 +190,13 @@ export default function BrandManagement({
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Description *
+              Description
             </label>
             <Textarea
               value={newBrand.description}
               onChange={(e) =>
                 setNewBrand({ ...newBrand, description: e.target.value })
               }
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Category *
-            </label>
-            <Select
-              value={newBrand.category}
-              onValueChange={(value) =>
-                setNewBrand({ ...newBrand, category: value })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select a category" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Bridal">Bridal</SelectItem>
-                <SelectItem value="Jewelry">Jewelry</SelectItem>
-                <SelectItem value="Accessories">Accessories</SelectItem>
-                <SelectItem value="Casual Wear">Casual Wear</SelectItem>
-                <SelectItem value="Formal Wear">Formal Wear</SelectItem>
-                <SelectItem value="Streetwear">Streetwear</SelectItem>
-                <SelectItem value="Active Wear">Active Wear</SelectItem>
-                <SelectItem value="Traditional">Traditional</SelectItem>
-                <SelectItem value="Footwear">Footwear</SelectItem>
-                <SelectItem value="Luxury">Luxury</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Location *
-            </label>
-            <Input
-              type="text"
-              value={newBrand.location}
-              onChange={(e) =>
-                setNewBrand({ ...newBrand, location: e.target.value })
-              }
-              placeholder="e.g. Lagos, Nigeria"
-              required
             />
           </div>
           <div>
