@@ -24,6 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { MultiSelect } from "@/components/ui/multi-select";
 import { ArrowLeft, Save, Globe, Instagram } from "lucide-react";
 import Link from "next/link";
 
@@ -60,7 +61,7 @@ export default function CreateBrandPage() {
     long_description: "",
     location: "",
     price_range: "",
-    category: "",
+    categories: [] as string[],
     image: "",
     is_verified: false,
     website: "",
@@ -82,6 +83,13 @@ export default function CreateBrandPage() {
     setFormData({
       ...formData,
       [name]: value,
+    });
+  };
+
+  const handleCategoriesChange = (categories: string[]) => {
+    setFormData({
+      ...formData,
+      categories,
     });
   };
 
@@ -112,8 +120,8 @@ export default function CreateBrandPage() {
       return;
     }
 
-    if (!formData.category) {
-      toast.error("Category is required");
+    if (!formData.categories.length) {
+      toast.error("At least one category is required");
       return;
     }
 
@@ -140,7 +148,8 @@ export default function CreateBrandPage() {
           long_description: formData.long_description || formData.description,
           location: formData.location,
           price_range: formData.price_range || "$",
-          category: formData.category,
+          category: formData.categories[0],
+          categories: formData.categories,
           image: formData.image,
           is_verified: false,
           website: formData.website || undefined,
@@ -239,24 +248,13 @@ export default function CreateBrandPage() {
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="category">Category *</Label>
-                    <Select
-                      value={formData.category}
-                      onValueChange={(value) =>
-                        handleSelectChange("category", value)
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {CATEGORIES.map((category) => (
-                          <SelectItem key={category} value={category}>
-                            {category}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Label htmlFor="categories">Categories *</Label>
+                    <MultiSelect
+                      options={CATEGORIES}
+                      value={formData.categories}
+                      onValueChange={handleCategoriesChange}
+                      placeholder="Select categories"
+                    />
                   </div>
 
                   <div className="space-y-2">

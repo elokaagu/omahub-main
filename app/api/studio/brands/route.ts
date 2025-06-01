@@ -138,7 +138,8 @@ export async function POST(request: NextRequest) {
     if (!brandData.name) missingFields.push("name");
     if (!brandData.description) missingFields.push("description");
     if (!brandData.location) missingFields.push("location");
-    if (!brandData.category) missingFields.push("category");
+    if (!brandData.categories || !brandData.categories.length)
+      missingFields.push("categories");
 
     if (missingFields.length > 0) {
       return NextResponse.json(
@@ -148,7 +149,7 @@ export async function POST(request: NextRequest) {
             name: !!brandData.name,
             description: !!brandData.description,
             location: !!brandData.location,
-            category: !!brandData.category,
+            categories: !!(brandData.categories && brandData.categories.length),
           },
         },
         { status: 400 }
@@ -174,10 +175,11 @@ export async function POST(request: NextRequest) {
           brandData.long_description || brandData.description || null,
         location: brandData.location || null,
         price_range: brandData.price_range || "$",
-        category: brandData.category || null,
+        category: brandData.categories[0], // Primary category for backward compatibility
+        categories: brandData.categories, // Store all categories
         rating: 0,
         is_verified: brandData.is_verified || false,
-        image: brandData.image || null, // Use 'image' column, not 'logo_url'
+        image: brandData.image || null,
         website: brandData.website || null,
         instagram: brandData.instagram || null,
         founded_year: brandData.founded_year || null,

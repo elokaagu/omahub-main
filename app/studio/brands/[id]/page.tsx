@@ -30,6 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { MultiSelect } from "@/components/ui/multi-select";
 import {
   ArrowLeft,
   Save,
@@ -69,16 +70,16 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
 
   // Categories for the dropdown
   const categories = [
-    "Ready to Wear",
     "Bridal",
-    "Accessories",
-    "Footwear",
     "Jewelry",
-    "Traditional",
+    "Accessories",
+    "Casual Wear",
+    "Formal Wear",
     "Streetwear",
+    "Active Wear",
+    "Traditional",
+    "Footwear",
     "Luxury",
-    "Sustainable",
-    "Other",
   ];
 
   useEffect(() => {
@@ -132,6 +133,16 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
     }
   };
 
+  const handleCategoriesChange = (categories: string[]) => {
+    if (brand) {
+      setBrand({
+        ...brand,
+        categories: categories,
+        category: categories[0] || brand.category, // Keep primary category for backward compatibility
+      });
+    }
+  };
+
   const handleImageUpload = (url: string) => {
     setImageUrl(url);
     if (brand) {
@@ -163,6 +174,7 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
       await updateBrand(user.id, brand.id, {
         description: brand.description,
         category: brand.category,
+        categories: brand.categories,
         location: brand.location,
         website: brand.website,
         instagram: brand.instagram,
@@ -264,24 +276,15 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="category">Category</Label>
-                    <Select
-                      value={brand.category}
-                      onValueChange={(value) =>
-                        handleSelectChange("category", value)
+                    <Label htmlFor="categories">Categories</Label>
+                    <MultiSelect
+                      options={categories}
+                      value={
+                        brand.categories || [brand.category].filter(Boolean)
                       }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categories.map((category) => (
-                          <SelectItem key={category} value={category}>
-                            {category}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      onValueChange={handleCategoriesChange}
+                      placeholder="Select categories"
+                    />
                   </div>
 
                   <div className="space-y-2">

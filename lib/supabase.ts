@@ -116,6 +116,7 @@ export type Brand = {
   location: string;
   price_range: string;
   category: string;
+  categories?: string[];
   rating: number;
   is_verified: boolean;
   image: string;
