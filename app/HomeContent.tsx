@@ -130,15 +130,6 @@ export default function HomeContent() {
   const [heroSlides, setHeroSlides] = useState<HeroSlide[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  // Clear OAuth progress flag when component mounts
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      import("@/lib/supabase").then(({ clearOAuthProgress }) => {
-        clearOAuthProgress();
-      });
-    }
-  }, []);
-
   useEffect(() => {
     let isMounted = true;
 

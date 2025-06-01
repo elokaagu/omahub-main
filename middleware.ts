@@ -41,67 +41,48 @@ export async function middleware(req: NextRequest) {
     // Create a response and supabase client
     const res = NextResponse.next();
 
-    // Add OAuth-compatible CSP headers only in production
-    if (process.env.NODE_ENV === "production") {
-      res.headers.set(
-        "Content-Security-Policy",
-        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://apis.google.com https://www.gstatic.com https://ssl.gstatic.com data:; object-src 'none';"
-      );
-    }
-
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
-          getAll() {
-            return req.cookies.getAll();
+          get(name: string) {
+            return req.cookies.get(name)?.value;
           },
-          setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value, options }) => {
-              req.cookies.set(name, value);
-              res.cookies.set(name, value, {
-                ...options,
-                httpOnly: true,
-                secure: process.env.NODE_ENV === "production",
-                sameSite: "lax",
-                path: "/",
-              });
+          set(name: string, value: string, options: any) {
+            res.cookies.set({
+              name,
+              value,
+              ...options,
+            });
+          },
+          remove(name: string, options: any) {
+            res.cookies.set({
+              name,
+              value: "",
+              ...options,
             });
           },
         },
       }
     );
 
-    // Initialize session variable
-    let session = null;
+    // Try to get the session
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession();
 
-    // Refresh session if expired - this will also handle refresh token issues
-    try {
-      const {
-        data: { session: sessionData },
-        error,
-      } = await supabase.auth.getSession();
-
-      if (error) {
-        // Only log non-refresh-token errors to reduce noise
-        if (!error.message?.includes("refresh_token_not_found")) {
-          console.log("Middleware: Session error:", error.message);
-        }
-        // Don't redirect on session errors, let the app handle it
-      }
-
-      if (sessionData) {
-        console.log(
-          "Middleware: Valid session found for user:",
-          sessionData.user.email
-        );
-        session = sessionData;
-      }
-    } catch (error) {
-      // Silently handle session exceptions to prevent middleware failures
-      console.log("Middleware: Exception getting session (handled gracefully)");
+    if (sessionError) {
+      console.error("❌ Session error:", sessionError);
+      return handleAuthError(req);
     }
+
+    console.log("🔑 Session check:", {
+      hasSession: !!session,
+      userId: session?.user?.id,
+      expiresAt: session?.expires_at,
+    });
 
     // Check if the request is for a protected route
     const isStudioRoute = req.nextUrl.pathname.startsWith("/studio");
@@ -144,13 +125,14 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder
-     */
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    // Match studio routes exactly
+    "/studio",
+    "/studio/:path*",
+
+    // Match storage routes
+    "/storage/:path*",
+
+    // Match API routes
+    "/api/:path*",
   ],
 };

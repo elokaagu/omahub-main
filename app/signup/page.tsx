@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Suspense, useEffect } from "react";
+import { useState, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { signUp, signInWithOAuth } from "@/lib/services/authService";
@@ -16,13 +16,6 @@ function SignupForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
-
-  // Clear OAuth progress flag when component mounts
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      sessionStorage.removeItem("oauth_in_progress");
-    }
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,13 +57,6 @@ function SignupForm() {
     setError(null);
 
     try {
-      // Check if OAuth is already in progress
-      if (sessionStorage.getItem("oauth_in_progress")) {
-        console.log("OAuth already in progress");
-        setLoading(false);
-        return;
-      }
-
       await signInWithOAuth(provider);
       // The redirect will happen automatically
     } catch (err) {
@@ -174,15 +160,28 @@ function SignupForm() {
       </form>
 
       <div className="mt-6">
-        <button
-          type="button"
-          onClick={() => handleOAuthSignIn("google")}
-          disabled={loading}
-          className="w-full inline-flex justify-center items-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-oma-cocoa hover:bg-gray-50"
-        >
-          <FcGoogle className="h-5 w-5 mr-2" />
-          Continue with Google
-        </button>
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-300" />
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-2 bg-white text-oma-cocoa">
+              Or continue with
+            </span>
+          </div>
+        </div>
+
+        <div className="mt-6 flex justify-center">
+          <button
+            type="button"
+            onClick={() => handleOAuthSignIn("google")}
+            disabled={loading}
+            className="w-full inline-flex justify-center items-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-oma-cocoa hover:bg-gray-50"
+          >
+            <FcGoogle className="h-5 w-5 mr-2" />
+            Continue with Google
+          </button>
+        </div>
       </div>
 
       <div className="mt-6 text-center">

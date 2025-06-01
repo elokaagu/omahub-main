@@ -40,8 +40,6 @@ const nextConfig = {
   experimental: {
     optimizeCss: false,
     scrollRestoration: false,
-    // Disable automatic CSP nonce generation that interferes with OAuth
-    strictNextHead: false,
   },
   // Use standard output for Vercel - do not use 'export' which breaks middleware
   output: undefined,
