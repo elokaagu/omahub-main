@@ -8,6 +8,13 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Package, Trash2, PenSquare, Plus } from "lucide-react";
 import { Permission } from "@/lib/services/permissionsService";
 
@@ -31,6 +38,8 @@ export default function BrandManagement({
     name: "",
     description: "",
     website: "",
+    category: "",
+    location: "",
   });
   const [showNewBrandForm, setShowNewBrandForm] = useState(false);
   const supabase = createClientComponentClient();
@@ -44,27 +53,68 @@ export default function BrandManagement({
       return;
     }
 
+    // Validation for required fields
+    if (!newBrand.name) {
+      toast.error("Brand name is required");
+      return;
+    }
+
+    if (!newBrand.description) {
+      toast.error("Brand description is required");
+      return;
+    }
+
+    if (!newBrand.category) {
+      toast.error("Category is required");
+      return;
+    }
+
+    if (!newBrand.location) {
+      toast.error("Location is required");
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const { data: brand, error } = await supabase
-        .from("brands")
-        .insert({
+      const response = await fetch("/api/studio/brands", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
           name: newBrand.name,
           description: newBrand.description,
-          website: newBrand.website,
-        })
-        .select()
-        .single();
+          category: newBrand.category,
+          location: newBrand.location,
+          website: newBrand.website || undefined,
+          price_range: "$", // Default price range
+          image: null, // No image upload in this simple form
+        }),
+      });
 
-      if (error) throw error;
+      const data = await response.json();
 
-      setBrands([...brands, brand]);
-      setNewBrand({ name: "", description: "", website: "" });
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to create brand");
+      }
+
+      setBrands([...brands, data.brand]);
+      setNewBrand({
+        name: "",
+        description: "",
+        website: "",
+        category: "",
+        location: "",
+      });
       setShowNewBrandForm(false);
       toast.success("Brand created successfully");
     } catch (error) {
       console.error("Error creating brand:", error);
-      toast.error("Failed to create brand");
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to create brand. Please try again."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -154,7 +204,7 @@ export default function BrandManagement({
           <h3 className="text-lg font-semibold mb-4">Create New Brand</h3>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Name
+              Name *
             </label>
             <Input
               type="text"
@@ -167,13 +217,55 @@ export default function BrandManagement({
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Description
+              Description *
             </label>
             <Textarea
               value={newBrand.description}
               onChange={(e) =>
                 setNewBrand({ ...newBrand, description: e.target.value })
               }
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Category *
+            </label>
+            <Select
+              value={newBrand.category}
+              onValueChange={(value) =>
+                setNewBrand({ ...newBrand, category: value })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select a category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Bridal">Bridal</SelectItem>
+                <SelectItem value="Jewelry">Jewelry</SelectItem>
+                <SelectItem value="Accessories">Accessories</SelectItem>
+                <SelectItem value="Casual Wear">Casual Wear</SelectItem>
+                <SelectItem value="Formal Wear">Formal Wear</SelectItem>
+                <SelectItem value="Streetwear">Streetwear</SelectItem>
+                <SelectItem value="Active Wear">Active Wear</SelectItem>
+                <SelectItem value="Traditional">Traditional</SelectItem>
+                <SelectItem value="Footwear">Footwear</SelectItem>
+                <SelectItem value="Luxury">Luxury</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Location *
+            </label>
+            <Input
+              type="text"
+              value={newBrand.location}
+              onChange={(e) =>
+                setNewBrand({ ...newBrand, location: e.target.value })
+              }
+              placeholder="e.g. Lagos, Nigeria"
+              required
             />
           </div>
           <div>
@@ -186,6 +278,7 @@ export default function BrandManagement({
               onChange={(e) =>
                 setNewBrand({ ...newBrand, website: e.target.value })
               }
+              placeholder="https://example.com"
             />
           </div>
           <div className="flex justify-end space-x-2">
