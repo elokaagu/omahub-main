@@ -12,6 +12,7 @@ import type { BrandData } from "@/lib/data/brands";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
 import { useParams } from "next/navigation";
+import Link from "next/link";
 
 interface ClientBrandProfileProps {
   brandData: BrandData;
@@ -123,27 +124,41 @@ export default function ClientBrandProfile({
           style={{ animationDelay: "100ms" }}
         >
           <h2 className="heading-sm mb-6">Collections</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {brandData.collections.map((collection, index) => (
-              <div
-                key={collection.id}
-                className="aspect-[4/5] relative overflow-hidden rounded-2xl animate-[fadeIn_500ms_ease-in-out_forwards] opacity-0"
-                style={{ animationDelay: `${index * 150}ms` }}
-              >
-                <img
-                  src={collection.image}
-                  alt={collection.title}
-                  className="w-full h-full object-cover rounded-2xl"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                <div className="absolute bottom-0 left-0 p-6">
-                  <h3 className="text-white text-xl font-source">
-                    {collection.title}
-                  </h3>
-                </div>
-              </div>
-            ))}
-          </div>
+          {brandData.collections.length === 0 ? (
+            <div className="text-center py-12 text-gray-500">
+              <p>No collections available yet.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {brandData.collections.map((collection, index) => (
+                <Link
+                  key={collection.id}
+                  href={`/collection/${collection.id}`}
+                  className="block group"
+                >
+                  <div
+                    className="aspect-[4/5] relative overflow-hidden rounded-2xl animate-[fadeIn_500ms_ease-in-out_forwards] opacity-0 transition-transform duration-300 group-hover:scale-105"
+                    style={{ animationDelay: `${index * 150}ms` }}
+                  >
+                    <img
+                      src={collection.image}
+                      alt={collection.title}
+                      className="w-full h-full object-cover rounded-2xl"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent group-hover:from-black/70 transition-colors duration-300" />
+                    <div className="absolute bottom-0 left-0 p-6">
+                      <h3 className="text-white text-xl font-source group-hover:text-oma-gold transition-colors duration-300">
+                        {collection.title}
+                      </h3>
+                      <p className="text-white/80 text-sm mt-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        Click to view collection
+                      </p>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
 
         <div

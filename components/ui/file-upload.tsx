@@ -40,11 +40,13 @@ export function FileUpload({
           .map(([mimeType, extensions]) => extensions.join(", "))
           .join(", ");
 
-  // Create a fallback bucket if the specified one doesn't exist
-  const fallbackBucket = "brand-assets";
-
-  // Direct upload to Supabase
+  // Simplified upload to Supabase with timeout
   const uploadToSupabase = async (file: File): Promise<string> => {
+    // Check if supabase client is available
+    if (!supabase) {
+      throw new Error("Supabase client not available");
+    }
+
     // Create a unique file name with original extension
     const fileExt = file.name.split(".").pop();
     const fileName = `${Math.random()
@@ -60,82 +62,55 @@ export function FileUpload({
       path: filePath,
     });
 
-    // Retry mechanism for uploads
-    const maxRetries = 2;
-    let retryCount = 0;
-
-    async function attemptUpload(
-      currentBucket: string
-    ): Promise<{ publicUrl: string; usedBucket: string }> {
-      try {
-        debugLog(
-          `Attempting upload to bucket: ${currentBucket} (attempt ${
-            retryCount + 1
-          })`,
-          LogLevel.DEBUG
-        );
-        const { data, error } = await supabase.storage
-          .from(currentBucket)
-          .upload(filePath, file, {
-            cacheControl: "3600",
-            upsert: true,
-          });
-
-        if (error) {
-          throw error;
-        }
-
-        // Get public URL
-        const { data: urlData } = supabase.storage
-          .from(currentBucket)
-          .getPublicUrl(data.path);
-
-        debugLog(`Upload successful to ${currentBucket}`, LogLevel.INFO);
-        return { publicUrl: urlData.publicUrl, usedBucket: currentBucket };
-      } catch (error) {
-        debugLog(
-          `Error uploading to ${currentBucket}`,
-          LogLevel.WARNING,
-          extractErrorDetails(error)
-        );
-        throw error;
-      }
-    }
+    // Create a timeout promise
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(
+        () => reject(new Error("Upload timeout after 30 seconds")),
+        30000
+      );
+    });
 
     try {
-      // Try primary bucket first
-      try {
-        const result = await attemptUpload(bucket);
-        return result.publicUrl;
-      } catch (primaryError) {
-        debugLog(
-          `Primary bucket ${bucket} failed, trying fallback`,
-          LogLevel.WARNING
-        );
+      // Race between upload and timeout
+      const uploadPromise = supabase.storage
+        .from(bucket)
+        .upload(filePath, file, {
+          cacheControl: "3600",
+          upsert: true,
+        });
 
-        // If primary bucket fails and we haven't exhausted retries, try fallback
-        if (retryCount < maxRetries) {
-          retryCount++;
-          // Try fallback bucket
-          try {
-            const result = await attemptUpload(fallbackBucket);
-            return result.publicUrl;
-          } catch (fallbackError) {
-            // If both primary and fallback fail, and we have retries left, try once more with primary
-            if (retryCount < maxRetries) {
-              retryCount++;
-              // One last attempt with original bucket
-              const result = await attemptUpload(bucket);
-              return result.publicUrl;
-            }
-            throw fallbackError;
-          }
-        }
-        throw primaryError;
+      const { data, error } = (await Promise.race([
+        uploadPromise,
+        timeoutPromise,
+      ])) as any;
+
+      if (error) {
+        debugLog(`Upload error`, LogLevel.ERROR, extractErrorDetails(error));
+        throw error;
       }
+
+      if (!data) {
+        throw new Error("No data returned from upload");
+      }
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from(bucket)
+        .getPublicUrl(data.path);
+
+      if (!urlData?.publicUrl) {
+        throw new Error("Failed to get public URL");
+      }
+
+      debugLog(`Upload successful`, LogLevel.INFO, {
+        path: data.path,
+        url: urlData.publicUrl,
+      });
+
+      return urlData.publicUrl;
     } catch (error) {
       const errorDetails = extractErrorDetails(error);
-      debugLog("All upload attempts failed", LogLevel.ERROR, errorDetails);
+      debugLog("Upload failed", LogLevel.ERROR, errorDetails);
       setDebugInfo(JSON.stringify(errorDetails, null, 2));
       throw error;
     }
@@ -155,6 +130,13 @@ export function FileUpload({
       return;
     }
 
+    // Validate file type
+    const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+    if (!validTypes.includes(file.type)) {
+      toast.error("Please select a valid image file (JPEG, PNG, or WebP).");
+      return;
+    }
+
     debugLog(`File selected`, LogLevel.INFO, {
       name: file.name,
       type: file.type,
@@ -168,23 +150,29 @@ export function FileUpload({
     // Upload file
     setUploading(true);
     try {
-      // Use direct Supabase upload
       debugLog(`Starting upload process`, LogLevel.INFO);
       const url = await uploadToSupabase(file);
       debugLog(`Upload completed successfully`, LogLevel.INFO, { url });
       onUploadComplete(url);
-      toast.success("File uploaded successfully");
+      toast.success("Image uploaded successfully!");
     } catch (error) {
       debugLog(`Upload failed`, LogLevel.ERROR, error);
 
-      // More detailed error message
-      let errorMessage = "Failed to upload file. Please try again.";
+      // More specific error messages
+      let errorMessage = "Failed to upload image. Please try again.";
       if (error instanceof Error) {
-        errorMessage = `Upload error: ${error.message}`;
+        if (error.message.includes("timeout")) {
+          errorMessage =
+            "Upload timed out. Please check your connection and try again.";
+        } else if (error.message.includes("storage")) {
+          errorMessage = "Storage error. Please try again or contact support.";
+        } else {
+          errorMessage = `Upload error: ${error.message}`;
+        }
       }
 
       toast.error(errorMessage, {
-        description: "Check browser console for details",
+        description: "Check the debug info below for more details",
         duration: 5000,
       });
       setPreview(defaultValue || null);
@@ -207,15 +195,36 @@ export function FileUpload({
     }
   };
 
-  const toggleDebugInfo = () => {
+  const toggleDebugInfo = async () => {
     // If debug info is not already set, gather system info
     if (!debugInfo) {
-      const info = {
+      const info: any = {
         browser: navigator.userAgent,
         supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL || "Not configured",
         bucketRequested: bucket,
         timestamp: new Date().toISOString(),
+        supabaseClient: !!supabase ? "Connected" : "Not connected",
       };
+
+      // Test storage connection
+      if (supabase) {
+        try {
+          const { data: buckets, error } = await supabase.storage.listBuckets();
+          if (error) {
+            info.storageTest = `Error: ${error.message}`;
+          } else {
+            info.storageTest = `Success - Found ${buckets?.length || 0} buckets`;
+            info.availableBuckets = buckets?.map((b) => b.name) || [];
+            info.targetBucketExists =
+              buckets?.some((b) => b.name === bucket) || false;
+          }
+        } catch (error) {
+          info.storageTest = `Exception: ${error instanceof Error ? error.message : "Unknown error"}`;
+        }
+      } else {
+        info.storageTest = "Supabase client not available";
+      }
+
       setDebugInfo(JSON.stringify(info, null, 2));
     } else {
       setDebugInfo(null);
@@ -265,7 +274,10 @@ export function FileUpload({
           </div>
           {uploading && (
             <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
-              <div className="animate-spin h-8 w-8 border-4 border-white border-t-transparent rounded-full"></div>
+              <div className="flex flex-col items-center gap-2 text-white">
+                <div className="animate-spin h-8 w-8 border-4 border-white border-t-transparent rounded-full"></div>
+                <p className="text-sm">Uploading...</p>
+              </div>
             </div>
           )}
         </div>

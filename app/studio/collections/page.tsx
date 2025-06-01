@@ -4,9 +4,11 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getAllBrands } from "@/lib/services/brandService";
+import {
+  getCollectionsWithBrands,
+  deleteCollection,
+} from "@/lib/services/collectionService";
 import { Brand, Collection } from "@/lib/supabase";
-import { getBrandCollections } from "@/lib/services/brandService";
-import { deleteCollection } from "@/lib/services/collectionService";
 import {
   Card,
   CardContent,
@@ -33,17 +35,18 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { PlusCircle, Search, Edit, Trash2 } from "@/components/ui/icons";
+import { PlusCircle, Search, Edit, Trash2, Eye } from "lucide-react";
 import { toast } from "sonner";
+import { AuthImage } from "@/components/ui/auth-image";
+
+type CollectionWithBrand = Collection & { brand: { name: string; id: string } };
 
 export default function CollectionsPage() {
   const router = useRouter();
   const [brands, setBrands] = useState<Brand[]>([]);
-  const [collections, setCollections] = useState<
-    (Collection & { brandName: string })[]
-  >([]);
+  const [collections, setCollections] = useState<CollectionWithBrand[]>([]);
   const [filteredCollections, setFilteredCollections] = useState<
-    (Collection & { brandName: string })[]
+    CollectionWithBrand[]
   >([]);
   const [loading, setLoading] = useState(true);
   const [selectedBrand, setSelectedBrand] = useState<string>("all");
@@ -65,20 +68,14 @@ export default function CollectionsPage() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const brandsData = await getAllBrands();
-      setBrands(brandsData);
+      // Fetch brands and collections in parallel
+      const [brandsData, collectionsData] = await Promise.all([
+        getAllBrands(),
+        getCollectionsWithBrands(),
+      ]);
 
-      // Fetch collections for all brands
-      const allCollections = [];
-      for (const brand of brandsData) {
-        const brandCollections = await getBrandCollections(brand.id);
-        const collectionsWithBrandName = brandCollections.map((collection) => ({
-          ...collection,
-          brandName: brand.name,
-        }));
-        allCollections.push(...collectionsWithBrandName);
-      }
-      setCollections(allCollections);
+      setBrands(brandsData);
+      setCollections(collectionsData);
     } catch (error) {
       console.error("Error fetching data:", error);
       toast.error("Failed to load collections");
@@ -103,7 +100,7 @@ export default function CollectionsPage() {
       filtered = filtered.filter(
         (collection) =>
           collection.title.toLowerCase().includes(query) ||
-          collection.brandName.toLowerCase().includes(query)
+          collection.brand.name.toLowerCase().includes(query)
       );
     }
 
@@ -120,6 +117,11 @@ export default function CollectionsPage() {
 
   const handleEditCollection = (collectionId: string) => {
     router.push(`/studio/collections/${collectionId}/edit`);
+  };
+
+  const handleViewCollection = (collectionId: string) => {
+    // Open collection page in new tab
+    window.open(`/collection/${collectionId}`, "_blank");
   };
 
   const confirmDeleteCollection = (collectionId: string) => {
@@ -151,6 +153,14 @@ export default function CollectionsPage() {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
+
   return (
     <div>
       <div className="flex justify-between items-center mb-8">
@@ -174,7 +184,7 @@ export default function CollectionsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
               <Input
@@ -199,78 +209,81 @@ export default function CollectionsPage() {
               </SelectContent>
             </Select>
           </div>
+
+          {/* Collections Grid */}
+          {filteredCollections.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-500 mb-4">
+                {searchQuery || selectedBrand !== "all"
+                  ? "No collections found matching your criteria."
+                  : "No collections found. Create your first collection to get started."}
+              </p>
+              <Button asChild className="bg-oma-plum hover:bg-oma-plum/90">
+                <Link href="/studio/collections/create">
+                  <PlusCircle className="h-4 w-4 mr-2" />
+                  Create Collection
+                </Link>
+              </Button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredCollections.map((collection) => (
+                <Card
+                  key={collection.id}
+                  className="overflow-hidden hover:shadow-lg transition-shadow"
+                >
+                  <div className="aspect-square relative">
+                    <AuthImage
+                      src={collection.image}
+                      alt={collection.title}
+                      width={400}
+                      height={400}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <CardContent className="p-4">
+                    <h3 className="font-semibold text-lg mb-1">
+                      {collection.title}
+                    </h3>
+                    <p className="text-gray-600 text-sm mb-4">
+                      by {collection.brand.name}
+                    </p>
+
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleViewCollection(collection.id)}
+                        className="flex-1"
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
+                        View
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEditCollection(collection.id)}
+                        className="flex-1"
+                      >
+                        <Edit className="h-4 w-4 mr-1" />
+                        Edit
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => confirmDeleteCollection(collection.id)}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
-
-      {loading ? (
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full"></div>
-        </div>
-      ) : filteredCollections.length === 0 ? (
-        <div className="bg-gray-50 border border-dashed border-gray-300 rounded-lg p-8 text-center">
-          <p className="text-gray-600 mb-4">
-            {collections.length === 0
-              ? "No collections have been added yet"
-              : "No collections match your search criteria"}
-          </p>
-          {collections.length === 0 && (
-            <Button asChild className="bg-oma-plum hover:bg-oma-plum/90">
-              <Link href="/studio/collections/create">
-                Create Your First Collection
-              </Link>
-            </Button>
-          )}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredCollections.map((collection) => (
-            <Card
-              key={collection.id}
-              className="overflow-hidden hover:shadow-md transition-shadow"
-            >
-              <div className="aspect-[4/3] relative">
-                {collection.image ? (
-                  <img
-                    src={collection.image}
-                    alt={collection.title}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400">
-                    No image
-                  </div>
-                )}
-              </div>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg">{collection.title}</CardTitle>
-                <CardDescription>{collection.brandName}</CardDescription>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="flex space-x-2 mt-4">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1 flex items-center justify-center gap-1"
-                    onClick={() => handleEditCollection(collection.id)}
-                  >
-                    <Edit className="h-4 w-4" />
-                    Edit
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1 flex items-center justify-center gap-1 text-red-500 hover:text-white hover:bg-red-500 hover:border-red-500"
-                    onClick={() => confirmDeleteCollection(collection.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    Delete
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog
@@ -279,18 +292,18 @@ export default function CollectionsPage() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogTitle>Delete Collection</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the
-              collection.
+              Are you sure you want to delete this collection? This action
+              cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteCollection}
               disabled={isDeleting}
-              className="bg-red-500 hover:bg-red-600 text-white"
+              className="bg-red-600 hover:bg-red-700"
             >
               {isDeleting ? "Deleting..." : "Delete"}
             </AlertDialogAction>

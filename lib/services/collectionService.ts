@@ -4,6 +4,10 @@ import { supabase, Collection } from "../supabase";
  * Fetch all collections from the database
  */
 export async function getAllCollections(): Promise<Collection[]> {
+  if (!supabase) {
+    throw new Error("Supabase client not available");
+  }
+
   const { data, error } = await supabase.from("collections").select("*");
 
   if (error) {
@@ -20,6 +24,11 @@ export async function getAllCollections(): Promise<Collection[]> {
 export async function getCollectionById(
   id: string
 ): Promise<Collection | null> {
+  if (!supabase) {
+    console.error("Supabase client not available");
+    return null;
+  }
+
   const { data, error } = await supabase
     .from("collections")
     .select("*")
@@ -35,11 +44,38 @@ export async function getCollectionById(
 }
 
 /**
+ * Fetch collections with brand information
+ */
+export async function getCollectionsWithBrands(): Promise<
+  (Collection & { brand: { name: string; id: string } })[]
+> {
+  if (!supabase) {
+    throw new Error("Supabase client not available");
+  }
+
+  const { data, error } = await supabase.from("collections").select(`
+      *,
+      brand:brands(id, name)
+    `);
+
+  if (error) {
+    console.error("Error fetching collections with brands:", error);
+    throw error;
+  }
+
+  return data || [];
+}
+
+/**
  * Create a new collection
  */
 export async function createCollection(
   collectionData: Omit<Collection, "id">
 ): Promise<Collection | null> {
+  if (!supabase) {
+    throw new Error("Supabase client not available");
+  }
+
   const { data, error } = await supabase
     .from("collections")
     .insert([collectionData])
@@ -61,6 +97,10 @@ export async function updateCollection(
   id: string,
   collectionData: Partial<Collection>
 ): Promise<Collection | null> {
+  if (!supabase) {
+    throw new Error("Supabase client not available");
+  }
+
   const { data, error } = await supabase
     .from("collections")
     .update(collectionData)
@@ -80,6 +120,10 @@ export async function updateCollection(
  * Delete a collection
  */
 export async function deleteCollection(id: string): Promise<void> {
+  if (!supabase) {
+    throw new Error("Supabase client not available");
+  }
+
   const { error } = await supabase.from("collections").delete().eq("id", id);
 
   if (error) {

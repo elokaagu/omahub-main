@@ -18,6 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -44,6 +45,7 @@ export default function EditCollectionPage({
 
   // Form state
   const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
   const [brandId, setBrandId] = useState("");
   const [image, setImage] = useState("");
 
@@ -62,6 +64,7 @@ export default function EditCollectionPage({
 
         // Initialize form data
         setTitle(collectionData.title);
+        setDescription(collectionData.description || "");
         setBrandId(collectionData.brand_id);
         setImage(collectionData.image);
 
@@ -102,6 +105,7 @@ export default function EditCollectionPage({
     try {
       await updateCollection(id, {
         title,
+        description: description.trim() || undefined,
         brand_id: brandId,
         image,
       });
@@ -156,6 +160,17 @@ export default function EditCollectionPage({
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Enter collection title"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description">Description (Optional)</Label>
+              <Textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Enter a brief description of this collection..."
+                rows={3}
               />
             </div>
 

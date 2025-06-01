@@ -144,6 +144,7 @@ export type Collection = {
   brand_id: string;
   title: string;
   image: string;
+  description?: string;
 };
 
 export type Product = {

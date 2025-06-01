@@ -237,30 +237,53 @@ export async function forceRefreshBrands(): Promise<Brand[]> {
  * Fetch a single brand by ID
  */
 export async function getBrandById(id: string): Promise<Brand | null> {
-  // Normalize the brand ID
+  if (!supabase) {
+    console.error("Supabase client not available");
+    return null;
+  }
+
+  console.log(`Attempting to fetch brand with ID: "${id}"`);
+
+  // First try with the original ID as-is
+  let { data, error } = await supabase
+    .from("brands")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (!error && data) {
+    console.log(`Successfully fetched brand: ${data.name} (${data.id})`);
+    return data;
+  }
+
+  // If that fails, try with normalized ID (same logic as brand creation)
   const normalizedId = id
-    .toString()
-    .trim()
     .toLowerCase()
-    .replace(/[^a-z0-9-]/g, "");
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
 
   console.log(
-    `Attempting to fetch brand with ID: "${id}" (normalized: "${normalizedId}")`
+    `Original ID "${id}" not found, trying normalized: "${normalizedId}"`
   );
 
-  const { data, error } = await supabase
+  ({ data, error } = await supabase
     .from("brands")
     .select("*")
     .eq("id", normalizedId)
-    .single();
+    .single());
 
   if (error) {
-    console.error(`Error fetching brand ${normalizedId}:`, error);
+    console.error(
+      `Error fetching brand ${id} (normalized: ${normalizedId}):`,
+      error
+    );
     return null;
   }
 
   if (!data) {
-    console.log(`No brand found with ID: "${normalizedId}"`);
+    console.log(
+      `No brand found with ID: "${id}" or normalized: "${normalizedId}"`
+    );
     return null;
   }
 
@@ -281,6 +304,10 @@ export async function updateBrand(
   id: string,
   updates: Partial<Brand>
 ): Promise<Brand | null> {
+  if (!supabase) {
+    throw new Error("Supabase client not available");
+  }
+
   // Check if user has permission to update this brand
   const hasAccess = await hasPermission(userId, id);
   if (!hasAccess) {
@@ -314,6 +341,10 @@ export async function deleteBrand(
   userId: string,
   id: string
 ): Promise<boolean> {
+  if (!supabase) {
+    throw new Error("Supabase client not available");
+  }
+
   const profile = await getProfile(userId);
 
   // Only admins can delete brands
@@ -335,6 +366,10 @@ export async function deleteBrand(
  * Fetch brands by category
  */
 export async function getBrandsByCategory(category: string): Promise<Brand[]> {
+  if (!supabase) {
+    throw new Error("Supabase client not available");
+  }
+
   const { data, error } = await supabase
     .from("brands")
     .select("*")
@@ -352,6 +387,10 @@ export async function getBrandsByCategory(category: string): Promise<Brand[]> {
  * Fetch reviews for a brand
  */
 export async function getBrandReviews(brandId: string): Promise<Review[]> {
+  if (!supabase) {
+    throw new Error("Supabase client not available");
+  }
+
   const { data, error } = await supabase
     .from("reviews")
     .select("*")
@@ -371,6 +410,10 @@ export async function getBrandReviews(brandId: string): Promise<Review[]> {
 export async function getBrandCollections(
   brandId: string
 ): Promise<Collection[]> {
+  if (!supabase) {
+    throw new Error("Supabase client not available");
+  }
+
   const { data, error } = await supabase
     .from("collections")
     .select("*")
@@ -390,6 +433,10 @@ export async function getBrandCollections(
 export async function addReview(
   review: Omit<Review, "id">
 ): Promise<Review | null> {
+  if (!supabase) {
+    throw new Error("Supabase client not available");
+  }
+
   const { data, error } = await supabase
     .from("reviews")
     .insert([review])
@@ -408,6 +455,10 @@ export async function addReview(
  * Search brands by name or description
  */
 export async function searchBrands(query: string): Promise<Brand[]> {
+  if (!supabase) {
+    throw new Error("Supabase client not available");
+  }
+
   const { data, error } = await supabase
     .from("brands")
     .select("*")
