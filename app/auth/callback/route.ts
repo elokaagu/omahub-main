@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServerClient } from "@supabase/ssr";
+import { createClient } from "@/lib/supabase/server";
 
 export async function GET(request: NextRequest) {
   console.log("🔄 Auth callback route started");
@@ -11,10 +11,27 @@ export async function GET(request: NextRequest) {
 
   console.log("📋 Auth callback called with:", {
     code: code ? "present" : "missing",
+    codeLength: code?.length,
     error,
     origin,
     next,
     url: request.url,
+    userAgent: request.headers.get("user-agent"),
+    referer: request.headers.get("referer"),
+  });
+
+  // Log all cookies received
+  const allCookies = request.cookies.getAll();
+  const supabaseCookies = allCookies.filter((c) => c.name.startsWith("sb-"));
+  console.log("🍪 Cookies received in callback:", {
+    totalCookies: allCookies.length,
+    supabaseCookies: supabaseCookies.length,
+    supabaseCookieNames: supabaseCookies.map((c) => c.name),
+    supabaseCookieDetails: supabaseCookies.map((c) => ({
+      name: c.name,
+      valueLength: c.value?.length || 0,
+      valuePreview: c.value?.substring(0, 50) + "...",
+    })),
   });
 
   // Handle OAuth errors
@@ -31,31 +48,8 @@ export async function GET(request: NextRequest) {
     try {
       console.log("🏗️ Creating Supabase server client...");
 
-      // Create a response object to handle cookies
-      const response = NextResponse.next();
-
-      const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-          cookies: {
-            getAll() {
-              return request.cookies.getAll();
-            },
-            setAll(cookiesToSet) {
-              cookiesToSet.forEach(({ name, value, options }) => {
-                response.cookies.set(name, value, {
-                  ...options,
-                  httpOnly: true,
-                  secure: process.env.NODE_ENV === "production",
-                  sameSite: "lax",
-                  path: "/",
-                });
-              });
-            },
-          },
-        }
-      );
+      // Use the new server client function that ensures proper PKCE handling
+      const { supabase, response } = createClient(request);
 
       console.log("✅ Supabase client created successfully");
       console.log("🔄 Attempting to exchange code for session...");
@@ -135,10 +129,10 @@ export async function GET(request: NextRequest) {
 
         console.log("🚀 Redirecting to:", redirectUrl);
 
-        // Create the final redirect response
+        // Create the final redirect response using the response from server client
         const redirectResponse = NextResponse.redirect(redirectUrl);
 
-        // Copy all cookies from the response that was used for the Supabase client
+        // Copy all cookies from the server client response
         response.cookies.getAll().forEach((cookie) => {
           redirectResponse.cookies.set(cookie.name, cookie.value, {
             httpOnly: true,
@@ -149,7 +143,7 @@ export async function GET(request: NextRequest) {
           });
         });
 
-        // Also copy any existing session cookies from the request
+        // Also ensure any session cookies from the request are preserved
         request.cookies.getAll().forEach((cookie) => {
           if (cookie.name.startsWith("sb-")) {
             redirectResponse.cookies.set(cookie.name, cookie.value, {
@@ -166,6 +160,7 @@ export async function GET(request: NextRequest) {
         redirectResponse.headers.set("x-oauth-success", "true");
         redirectResponse.headers.set("x-clear-oauth-progress", "true");
 
+        console.log("🎉 OAuth callback completed successfully, redirecting...");
         return redirectResponse;
       } else {
         console.error("❌ No session data received");

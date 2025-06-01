@@ -99,6 +99,28 @@ export async function signInWithOAuth(provider: Provider) {
 
     setOAuthProgress(true);
 
+    console.log("🚀 Starting OAuth flow with:", {
+      provider,
+      origin:
+        typeof window !== "undefined" ? window.location.origin : "unknown",
+      redirectTo:
+        typeof window !== "undefined"
+          ? `${window.location.origin}/auth/callback`
+          : undefined,
+      userAgent:
+        typeof window !== "undefined" ? navigator.userAgent : "unknown",
+    });
+
+    // Log current cookies before OAuth
+    if (typeof window !== "undefined") {
+      console.log("🍪 Cookies before OAuth:", {
+        allCookies: document.cookie,
+        supabaseCookies: document.cookie
+          .split(";")
+          .filter((c) => c.includes("sb-")),
+      });
+    }
+
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
@@ -114,18 +136,38 @@ export async function signInWithOAuth(provider: Provider) {
       },
     });
 
+    console.log("📊 OAuth initiation result:", {
+      hasData: !!data,
+      hasUrl: !!data?.url,
+      hasProvider: !!data?.provider,
+      error: error?.message,
+      url: data?.url?.substring(0, 100) + "...", // Log first 100 chars of URL
+    });
+
     if (error) {
-      console.error(`Error signing in with ${provider}:`, error);
+      console.error(`❌ Error signing in with ${provider}:`, error);
       setOAuthProgress(false);
       handleAuthError(error);
       return;
+    }
+
+    // Log cookies after OAuth initiation
+    if (typeof window !== "undefined") {
+      setTimeout(() => {
+        console.log("🍪 Cookies after OAuth initiation:", {
+          allCookies: document.cookie,
+          supabaseCookies: document.cookie
+            .split(";")
+            .filter((c) => c.includes("sb-")),
+        });
+      }, 100);
     }
 
     // Don't remove the flag here - let the callback handle it
     console.log("🚀 OAuth redirect initiated successfully");
     return data;
   } catch (err) {
-    console.error(`Error in signInWithOAuth:`, err);
+    console.error(`❌ Error in signInWithOAuth:`, err);
     const { setOAuthProgress, handleAuthError } = await import(
       "@/lib/supabase"
     );
