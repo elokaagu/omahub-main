@@ -72,22 +72,26 @@ export async function getCollectionsWithBrands(): Promise<
 export async function createCollection(
   collectionData: Omit<Collection, "id">
 ): Promise<Collection | null> {
-  if (!supabase) {
-    throw new Error("Supabase client not available");
-  }
+  try {
+    const response = await fetch("/api/studio/collections", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(collectionData),
+    });
 
-  const { data, error } = await supabase
-    .from("collections")
-    .insert([collectionData])
-    .select()
-    .single();
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Failed to create collection");
+    }
 
-  if (error) {
+    const { collection } = await response.json();
+    return collection;
+  } catch (error) {
     console.error("Error creating collection:", error);
     throw error;
   }
-
-  return data;
 }
 
 /**

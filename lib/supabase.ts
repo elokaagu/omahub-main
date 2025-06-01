@@ -38,12 +38,45 @@ const createClient = () => {
       autoRefreshToken: true,
       detectSessionInUrl: true,
       flowType: "pkce",
+      storage: typeof window !== "undefined" ? window.localStorage : undefined,
     },
     global: {
       fetch: fetch,
       headers: {
         "x-application-name": "omahub",
         "Cache-Control": "no-cache",
+      },
+    },
+    cookies: {
+      get: (name: string) => {
+        if (typeof document === "undefined") return undefined;
+        const value = document.cookie
+          .split("; ")
+          .find((row) => row.startsWith(`${name}=`))
+          ?.split("=")[1];
+        return value ? decodeURIComponent(value) : undefined;
+      },
+      set: (name: string, value: string, options: any) => {
+        if (typeof document === "undefined") return;
+        const cookieOptions = {
+          ...options,
+          sameSite: "lax",
+          secure: process.env.NODE_ENV === "production",
+        };
+        const cookieString = `${name}=${encodeURIComponent(value)}; ${Object.entries(
+          cookieOptions
+        )
+          .map(([key, val]) => `${key}=${val}`)
+          .join("; ")}`;
+        document.cookie = cookieString;
+      },
+      remove: (name: string, options: any) => {
+        if (typeof document === "undefined") return;
+        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; ${Object.entries(
+          options || {}
+        )
+          .map(([key, val]) => `${key}=${val}`)
+          .join("; ")}`;
       },
     },
   });

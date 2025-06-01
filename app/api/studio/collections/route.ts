@@ -41,6 +41,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     if (!supabase) {
+      console.error("Supabase client not available");
       return NextResponse.json(
         { error: "Database connection not available" },
         { status: 500 }
@@ -48,10 +49,13 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+    console.log("Received collection data:", body);
+
     const { title, description, brand_id, image } = body;
 
     // Validate required fields
     if (!title?.trim()) {
+      console.error("Validation failed: Missing title");
       return NextResponse.json(
         { error: "Collection title is required" },
         { status: 400 }
@@ -59,6 +63,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!brand_id) {
+      console.error("Validation failed: Missing brand_id");
       return NextResponse.json(
         { error: "Brand ID is required" },
         { status: 400 }
@@ -66,6 +71,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!image) {
+      console.error("Validation failed: Missing image");
       return NextResponse.json(
         { error: "Collection image is required" },
         { status: 400 }
@@ -78,14 +84,25 @@ export async function POST(request: NextRequest) {
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/(^-|-$)/g, "");
 
+    console.log("Generated collection ID:", id);
+
     // Check if collection with this ID already exists
-    const { data: existingCollection } = await supabase
+    const { data: existingCollection, error: checkError } = await supabase
       .from("collections")
       .select("id")
       .eq("id", id)
       .single();
 
+    if (checkError && checkError.code !== "PGRST116") {
+      console.error("Error checking existing collection:", checkError);
+      return NextResponse.json(
+        { error: "Failed to check existing collections" },
+        { status: 500 }
+      );
+    }
+
     if (existingCollection) {
+      console.error("Collection already exists with ID:", id);
       return NextResponse.json(
         { error: "A collection with this title already exists" },
         { status: 409 }
@@ -101,6 +118,8 @@ export async function POST(request: NextRequest) {
       image,
     };
 
+    console.log("Creating collection with data:", collectionData);
+
     const { data: collection, error } = await supabase
       .from("collections")
       .insert([collectionData])
@@ -110,14 +129,15 @@ export async function POST(request: NextRequest) {
     if (error) {
       console.error("Error creating collection:", error);
       return NextResponse.json(
-        { error: "Failed to create collection" },
+        { error: `Failed to create collection: ${error.message}` },
         { status: 500 }
       );
     }
 
+    console.log("Collection created successfully:", collection);
     return NextResponse.json({ collection }, { status: 201 });
   } catch (error) {
-    console.error("Unexpected error:", error);
+    console.error("Unexpected error in POST /api/studio/collections:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
