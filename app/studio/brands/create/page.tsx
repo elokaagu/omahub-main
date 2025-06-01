@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import { createBrand } from "@/lib/services/studioService";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -130,25 +129,41 @@ export default function CreateBrandPage() {
 
     setSubmitting(true);
     try {
-      const brand = await createBrand(user.id, {
-        name: formData.name,
-        description: formData.description,
-        long_description: formData.long_description || formData.description,
-        location: formData.location,
-        price_range: formData.price_range || "$",
-        category: formData.category,
-        image: formData.image,
-        is_verified: false,
-        website: formData.website || undefined,
-        instagram: formData.instagram || undefined,
-        founded_year: formData.founded_year || undefined,
+      const response = await fetch("/api/studio/brands", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          description: formData.description,
+          long_description: formData.long_description || formData.description,
+          location: formData.location,
+          price_range: formData.price_range || "$",
+          category: formData.category,
+          image: formData.image,
+          is_verified: false,
+          website: formData.website || undefined,
+          instagram: formData.instagram || undefined,
+          founded_year: formData.founded_year || undefined,
+        }),
       });
 
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to create brand");
+      }
+
       toast.success("Brand created successfully!");
-      router.push(`/studio/brands/${brand.id}`);
+      router.push(`/studio/brands/${data.brand.id}`);
     } catch (error) {
       console.error("Error creating brand:", error);
-      toast.error("Failed to create brand. Please try again.");
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to create brand. Please try again."
+      );
     } finally {
       setSubmitting(false);
     }
