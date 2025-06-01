@@ -134,12 +134,21 @@ export async function POST(request: NextRequest) {
     });
 
     // Validate required fields (based on actual schema)
-    if (!brandData.name) {
+    const missingFields = [];
+    if (!brandData.name) missingFields.push("name");
+    if (!brandData.description) missingFields.push("description");
+    if (!brandData.location) missingFields.push("location");
+    if (!brandData.category) missingFields.push("category");
+
+    if (missingFields.length > 0) {
       return NextResponse.json(
         {
-          error: "Missing required field: name is required",
+          error: `Missing required fields: ${missingFields.join(", ")}`,
           received: {
             name: !!brandData.name,
+            description: !!brandData.description,
+            location: !!brandData.location,
+            category: !!brandData.category,
           },
         },
         { status: 400 }
@@ -161,8 +170,17 @@ export async function POST(request: NextRequest) {
         id,
         name: brandData.name,
         description: brandData.description || null,
-        logo_url: brandData.image || null, // Map 'image' to 'logo_url'
+        long_description:
+          brandData.long_description || brandData.description || null,
+        location: brandData.location || null,
+        price_range: brandData.price_range || "$",
+        category: brandData.category || null,
+        rating: 0,
+        is_verified: brandData.is_verified || false,
+        image: brandData.image || null, // Use 'image' column, not 'logo_url'
         website: brandData.website || null,
+        instagram: brandData.instagram || null,
+        founded_year: brandData.founded_year || null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
