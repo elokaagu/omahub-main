@@ -44,10 +44,18 @@ const createClient = () => {
       autoRefreshToken: true,
       // Storage key for session
       storageKey: "sb-auth-token",
+      // Debug mode for development
+      debug: process.env.NODE_ENV === "development",
     },
     global: {
       headers: {
         "X-Client-Info": "omahub-web",
+      },
+    },
+    // Add realtime configuration
+    realtime: {
+      params: {
+        eventsPerSecond: 2,
       },
     },
   });

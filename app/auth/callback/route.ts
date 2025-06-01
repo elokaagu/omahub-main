@@ -28,15 +28,11 @@ export async function GET(request: NextRequest) {
   if (code) {
     console.log("🔑 Processing OAuth code...");
 
-    // Create response first to handle cookies properly
-    let response = NextResponse.next({
-      request: {
-        headers: request.headers,
-      },
-    });
-
     try {
       console.log("🏗️ Creating Supabase server client...");
+
+      // Create a response object to handle cookies
+      const response = NextResponse.next();
 
       const supabase = createServerClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -48,8 +44,13 @@ export async function GET(request: NextRequest) {
             },
             setAll(cookiesToSet) {
               cookiesToSet.forEach(({ name, value, options }) => {
-                request.cookies.set(name, value);
-                response.cookies.set(name, value, options);
+                response.cookies.set(name, value, {
+                  ...options,
+                  httpOnly: true,
+                  secure: process.env.NODE_ENV === "production",
+                  sameSite: "lax",
+                  path: "/",
+                });
               });
             },
           },
@@ -71,10 +72,55 @@ export async function GET(request: NextRequest) {
         errorCode: exchangeError?.code,
       });
 
-      if (!exchangeError && data?.session) {
+      if (exchangeError) {
+        console.error("❌ Error exchanging code for session:", {
+          message: exchangeError?.message,
+          status: exchangeError?.status,
+          code: exchangeError?.code,
+          details: exchangeError,
+        });
+
+        // Handle specific error types
+        if (exchangeError?.code === "refresh_token_not_found") {
+          console.error(
+            "🔄 Refresh token not found - this might be expected for new sessions"
+          );
+          // For refresh token errors, we might still have a valid session
+          if (data?.session) {
+            console.log(
+              "✅ Session exists despite refresh token error, proceeding..."
+            );
+          } else {
+            return NextResponse.redirect(
+              `${origin}/login?error=${encodeURIComponent("Authentication failed - please try again")}`
+            );
+          }
+        } else if (exchangeError?.message?.includes("code verifier")) {
+          console.error("🔐 PKCE Error: OAuth flow was interrupted");
+          console.error("🔍 Debugging info:", {
+            hasCode: !!code,
+            codeLength: code?.length,
+            cookies: request.cookies
+              .getAll()
+              .filter((c) => c.name.startsWith("sb-")),
+            userAgent: request.headers.get("user-agent"),
+            referer: request.headers.get("referer"),
+          });
+          return NextResponse.redirect(
+            `${origin}/login?error=${encodeURIComponent("Authentication failed - please try again")}`
+          );
+        } else {
+          return NextResponse.redirect(
+            `${origin}/login?error=${encodeURIComponent("Authentication failed - please try again")}`
+          );
+        }
+      }
+
+      if (data?.session) {
         console.log("🎉 Code exchange successful:", {
           user: data?.user?.email,
           sessionId: data?.session?.access_token?.substring(0, 10) + "...",
+          hasRefreshToken: !!data?.session?.refresh_token,
         });
 
         const forwardedHost = request.headers.get("x-forwarded-host");
@@ -89,53 +135,42 @@ export async function GET(request: NextRequest) {
 
         console.log("🚀 Redirecting to:", redirectUrl);
 
-        // Create a new response with redirect and preserve cookies
-        response = NextResponse.redirect(redirectUrl);
+        // Create the final redirect response
+        const redirectResponse = NextResponse.redirect(redirectUrl);
 
-        // Copy over any cookies that were set during the session exchange
-        const sessionCookies = request.cookies.getAll();
-        sessionCookies.forEach((cookie) => {
+        // Copy all cookies from the response that was used for the Supabase client
+        response.cookies.getAll().forEach((cookie) => {
+          redirectResponse.cookies.set(cookie.name, cookie.value, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+            path: "/",
+            maxAge: 60 * 60 * 24 * 7, // 7 days
+          });
+        });
+
+        // Also copy any existing session cookies from the request
+        request.cookies.getAll().forEach((cookie) => {
           if (cookie.name.startsWith("sb-")) {
-            response.cookies.set(cookie.name, cookie.value, {
+            redirectResponse.cookies.set(cookie.name, cookie.value, {
               httpOnly: true,
               secure: process.env.NODE_ENV === "production",
               sameSite: "lax",
               path: "/",
+              maxAge: 60 * 60 * 24 * 7, // 7 days
             });
           }
         });
 
-        // Add a header to indicate successful OAuth and clear progress flag
-        response.headers.set("x-oauth-success", "true");
-        response.headers.set("x-clear-oauth-progress", "true");
+        // Add headers to indicate successful OAuth
+        redirectResponse.headers.set("x-oauth-success", "true");
+        redirectResponse.headers.set("x-clear-oauth-progress", "true");
 
-        return response;
+        return redirectResponse;
       } else {
-        console.error("❌ Error exchanging code for session:", {
-          message: exchangeError?.message,
-          status: exchangeError?.status,
-          code: exchangeError?.code,
-          details: exchangeError,
-        });
-
-        // If it's a PKCE error, try to provide more helpful feedback
-        if (exchangeError?.message?.includes("code verifier")) {
-          console.error(
-            "🔐 PKCE Error: This usually means the OAuth flow was interrupted or cookies were cleared"
-          );
-          console.error("🔍 Debugging info:", {
-            hasCode: !!code,
-            codeLength: code?.length,
-            cookies: request.cookies
-              .getAll()
-              .filter((c) => c.name.startsWith("sb-")),
-            userAgent: request.headers.get("user-agent"),
-            referer: request.headers.get("referer"),
-          });
-        }
-
+        console.error("❌ No session data received");
         return NextResponse.redirect(
-          `${origin}/login?error=${encodeURIComponent("Authentication failed - please try again")}`
+          `${origin}/login?error=${encodeURIComponent("Authentication failed - no session created")}`
         );
       }
     } catch (error) {
@@ -147,7 +182,6 @@ export async function GET(request: NextRequest) {
   }
 
   console.log("⚠️ No code provided, redirecting to login");
-  // return the user to login with an error message
   return NextResponse.redirect(
     `${origin}/login?error=${encodeURIComponent("Invalid authentication code")}`
   );
