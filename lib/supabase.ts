@@ -36,9 +36,10 @@ const createClient = () => {
     auth: {
       persistSession: true,
       autoRefreshToken: true,
-      detectSessionInUrl: true,
+      detectSessionInUrl: false,
       flowType: "pkce",
       storage: typeof window !== "undefined" ? window.localStorage : undefined,
+      debug: process.env.NODE_ENV === "development",
     },
     global: {
       fetch: fetch,

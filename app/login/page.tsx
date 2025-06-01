@@ -19,10 +19,13 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Check for error parameter in URL
+  // Check for error parameter in URL and clear OAuth flag
   useEffect(() => {
     try {
       if (typeof window !== "undefined") {
+        // Clear OAuth progress flag when returning to login
+        sessionStorage.removeItem("oauth_in_progress");
+
         // Get error from URL manually instead of using useSearchParams
         const urlParams = new URLSearchParams(window.location.search);
         const errorParam = urlParams.get("error");
@@ -63,6 +66,13 @@ function LoginForm() {
     setError(null);
 
     try {
+      // Check if OAuth is already in progress
+      if (sessionStorage.getItem("oauth_in_progress")) {
+        console.log("OAuth already in progress");
+        setLoading(false);
+        return;
+      }
+
       await signInWithOAuth(provider);
       // The redirect will happen automatically
     } catch (err) {

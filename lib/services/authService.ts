@@ -88,6 +88,15 @@ export async function signInWithOAuth(provider: Provider) {
       throw new Error("Supabase client not available");
     }
 
+    // Prevent multiple simultaneous OAuth requests
+    const isOAuthInProgress = sessionStorage.getItem("oauth_in_progress");
+    if (isOAuthInProgress) {
+      console.log("OAuth already in progress, skipping...");
+      return;
+    }
+
+    sessionStorage.setItem("oauth_in_progress", "true");
+
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
@@ -98,19 +107,22 @@ export async function signInWithOAuth(provider: Provider) {
         scopes: provider === "google" ? "email profile" : undefined,
         queryParams: {
           access_type: "offline",
-          prompt: "consent",
+          prompt: "select_account", // Changed from "consent" to reduce friction
         },
       },
     });
 
     if (error) {
       console.error(`Error signing in with ${provider}:`, error);
+      sessionStorage.removeItem("oauth_in_progress");
       throw error;
     }
 
+    // Don't remove the flag here - let the callback handle it
     return data;
   } catch (err) {
     console.error(`Error in signInWithOAuth:`, err);
+    sessionStorage.removeItem("oauth_in_progress");
     throw err;
   }
 }

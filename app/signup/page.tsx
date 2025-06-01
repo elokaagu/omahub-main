@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, Suspense, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { signUp, signInWithOAuth } from "@/lib/services/authService";
@@ -16,6 +16,13 @@ function SignupForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+
+  // Clear OAuth progress flag when component mounts
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem("oauth_in_progress");
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,6 +64,13 @@ function SignupForm() {
     setError(null);
 
     try {
+      // Check if OAuth is already in progress
+      if (sessionStorage.getItem("oauth_in_progress")) {
+        console.log("OAuth already in progress");
+        setLoading(false);
+        return;
+      }
+
       await signInWithOAuth(provider);
       // The redirect will happen automatically
     } catch (err) {
