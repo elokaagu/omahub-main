@@ -183,8 +183,6 @@ export async function POST(request: NextRequest) {
         website: brandData.website || null,
         instagram: brandData.instagram || null,
         founded_year: brandData.founded_year || null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
       })
       .select()
       .single();

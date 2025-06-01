@@ -45,10 +45,10 @@ const CATEGORIES = [
 // Price range options
 const PRICE_RANGES = ["$", "$$", "$$$", "$$$$", "$$$$$"];
 
-// Generate founding year options from 1950 to current year
+// Generate founding year options from current year backwards to 1950
 const FOUNDING_YEARS = Array.from(
   { length: new Date().getFullYear() - 1950 + 1 },
-  (_, i) => (1950 + i).toString()
+  (_, i) => (new Date().getFullYear() - i).toString()
 );
 
 export default function CreateBrandPage() {
