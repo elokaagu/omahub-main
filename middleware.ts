@@ -41,11 +41,13 @@ export async function middleware(req: NextRequest) {
     // Create a response and supabase client
     const res = NextResponse.next();
 
-    // Add OAuth-compatible CSP headers
-    res.headers.set(
-      "Content-Security-Policy",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://apis.google.com https://www.gstatic.com https://ssl.gstatic.com data:; object-src 'none';"
-    );
+    // Add OAuth-compatible CSP headers only in production
+    if (process.env.NODE_ENV === "production") {
+      res.headers.set(
+        "Content-Security-Policy",
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://apis.google.com https://www.gstatic.com https://ssl.gstatic.com data:; object-src 'none';"
+      );
+    }
 
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
