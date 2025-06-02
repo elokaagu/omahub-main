@@ -4,11 +4,12 @@ import { useEffect, useState } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import type { Database } from "@/lib/types/supabase";
 import BrandManagement from "@/components/studio/BrandManagement";
+import AnalyticsDashboard from "@/components/studio/AnalyticsDashboard";
 import {
   getUserPermissions,
   Permission,
 } from "@/lib/services/permissionsService";
-import { Package } from "lucide-react";
+import { Package, BarChart3 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loading } from "@/components/ui/loading";
 
@@ -28,6 +29,7 @@ export default function StudioPage() {
         console.log("🏠 Studio Page: Current user:", {
           userId: user?.id,
           userEmail: user?.email,
+          userRole: user?.role,
         });
 
         if (!user) {
@@ -112,16 +114,42 @@ export default function StudioPage() {
     );
   }
 
+  const isSuperAdmin = user.role === "super_admin";
+
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 space-y-8">
       <h1 className="text-4xl font-canela mb-8 text-oma-plum">Studio</h1>
 
+      {/* Analytics Dashboard for Super Admins */}
+      {isSuperAdmin && (
+        <div className="mb-8">
+          <AnalyticsDashboard userId={user.id} />
+        </div>
+      )}
+
+      {/* Brand Management Section */}
       {userPermissions.includes("studio.brands.manage") && (
-        <BrandManagement
-          initialBrands={brands}
-          userPermissions={userPermissions}
-          userId={user.id}
-        />
+        <div>
+          <BrandManagement
+            initialBrands={brands}
+            userPermissions={userPermissions}
+            userId={user.id}
+          />
+        </div>
+      )}
+
+      {/* Empty State for Users Without Permissions */}
+      {!isSuperAdmin && !userPermissions.includes("studio.brands.manage") && (
+        <div className="flex items-center justify-center min-h-[40vh]">
+          <div className="text-center">
+            <BarChart3 className="mx-auto h-12 w-12 text-gray-400" />
+            <h3 className="mt-4 text-lg font-semibold">Welcome to Studio</h3>
+            <p className="mt-2 text-gray-500">
+              Your dashboard will appear here once you have the necessary
+              permissions.
+            </p>
+          </div>
+        </div>
       )}
     </div>
   );
