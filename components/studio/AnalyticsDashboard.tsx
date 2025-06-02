@@ -2,115 +2,169 @@
 
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   getAnalyticsData,
   getBrandGrowthData,
   getReviewTrendsData,
+  syncBrandRatings,
   type AnalyticsData,
 } from "@/lib/services/analyticsService";
 import {
-  BarChart3,
   Users,
-  MessageSquare,
-  Package,
   Eye,
   TrendingUp,
   Star,
-  Calendar,
   CheckCircle,
-  Activity,
+  ShoppingBag,
+  RefreshCw,
+  AlertTriangle,
 } from "lucide-react";
-import { Loading } from "@/components/ui/loading";
+import { toast } from "sonner";
 
-interface AnalyticsDashboardProps {
-  userId: string;
+interface BrandGrowthData {
+  month: string;
+  brands: number;
 }
 
-export default function AnalyticsDashboard({
-  userId,
-}: AnalyticsDashboardProps) {
-  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(
-    null
-  );
-  const [brandGrowthData, setBrandGrowthData] = useState<
-    { month: string; brands: number }[]
-  >([]);
-  const [reviewTrendsData, setReviewTrendsData] = useState<
-    { month: string; reviews: number; avgRating: number }[]
-  >([]);
-  const [isLoading, setIsLoading] = useState(true);
+interface ReviewTrendsData {
+  month: string;
+  reviews: number;
+  avgRating: number;
+}
+
+export default function AnalyticsDashboard() {
+  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
+  const [brandGrowth, setBrandGrowth] = useState<BrandGrowthData[]>([]);
+  const [reviewTrends, setReviewTrends] = useState<ReviewTrendsData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchAnalyticsData = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-        console.log("📊 Fetching analytics dashboard data...");
+      const [analyticsData, growthData, trendsData] = await Promise.all([
+        getAnalyticsData(),
+        getBrandGrowthData(),
+        getReviewTrendsData(),
+      ]);
 
-        const [analytics, brandGrowth, reviewTrends] = await Promise.all([
-          getAnalyticsData(),
-          getBrandGrowthData(),
-          getReviewTrendsData(),
-        ]);
+      setAnalytics(analyticsData);
+      setBrandGrowth(growthData);
+      setReviewTrends(trendsData);
+    } catch (err) {
+      console.error("Error fetching analytics:", err);
+      setError("Failed to load analytics data");
+      toast.error("Failed to load analytics data");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        setAnalyticsData(analytics);
-        setBrandGrowthData(brandGrowth);
-        setReviewTrendsData(reviewTrends);
+  const handleSyncRatings = async () => {
+    try {
+      setSyncing(true);
+      const result = await syncBrandRatings();
 
-        console.log("✅ Analytics dashboard data loaded successfully");
-      } catch (error) {
-        console.error("❌ Error fetching analytics data:", error);
-        setError("Failed to load analytics data");
-      } finally {
-        setIsLoading(false);
+      if (result.updated > 0) {
+        toast.success(`Successfully updated ${result.updated} brand ratings`);
+        // Refresh analytics data
+        await fetchData();
+      } else {
+        toast.info("All brand ratings were already accurate");
       }
-    };
 
-    fetchAnalyticsData();
-  }, [userId]);
+      if (result.errors > 0) {
+        toast.warning(`${result.errors} brands had sync errors`);
+      }
+    } catch (err) {
+      console.error("Error syncing ratings:", err);
+      toast.error("Failed to sync brand ratings");
+    } finally {
+      setSyncing(false);
+    }
+  };
 
-  if (isLoading) {
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  if (loading) {
     return (
       <div className="space-y-6">
-        <div className="flex items-center gap-2 mb-6">
-          <BarChart3 className="h-6 w-6 text-oma-plum" />
-          <h2 className="text-2xl font-canela text-oma-black">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold text-oma-plum">
             Analytics Dashboard
           </h2>
         </div>
-        <div className="flex justify-center items-center py-12">
-          <Loading />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i} className="animate-pulse">
+              <CardContent className="p-6">
+                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                <div className="h-8 bg-gray-200 rounded w-1/2"></div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </div>
     );
   }
 
-  if (error || !analyticsData) {
+  if (error || !analytics) {
     return (
       <div className="space-y-6">
-        <div className="flex items-center gap-2 mb-6">
-          <BarChart3 className="h-6 w-6 text-oma-plum" />
-          <h2 className="text-2xl font-canela text-oma-black">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold text-oma-plum">
             Analytics Dashboard
           </h2>
+          <Button onClick={fetchData} variant="outline">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Retry
+          </Button>
         </div>
         <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <Activity className="h-12 w-12 text-oma-cocoa/40 mb-4" />
-            <h3 className="text-lg font-medium text-oma-black mb-2">
-              Unable to Load Analytics
-            </h3>
-            <p className="text-oma-cocoa text-center">
-              {error || "There was an error loading the analytics data."}
+          <CardContent className="p-6 text-center">
+            <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+            <p className="text-gray-600">
+              {error || "Failed to load analytics data"}
             </p>
           </CardContent>
         </Card>
       </div>
     );
   }
+
+  // Calculate growth percentages
+  const brandGrowthPercentage =
+    brandGrowth.length >= 2
+      ? (((brandGrowth[brandGrowth.length - 1]?.brands || 0) -
+          (brandGrowth[brandGrowth.length - 2]?.brands || 0)) /
+          Math.max(brandGrowth[brandGrowth.length - 2]?.brands || 1, 1)) *
+        100
+      : 0;
+
+  const reviewGrowthPercentage =
+    reviewTrends.length >= 2
+      ? (((reviewTrends[reviewTrends.length - 1]?.reviews || 0) -
+          (reviewTrends[reviewTrends.length - 2]?.reviews || 0)) /
+          Math.max(reviewTrends[reviewTrends.length - 2]?.reviews || 1, 1)) *
+        100
+      : 0;
+
+  const verificationRate =
+    analytics.totalBrands > 0
+      ? (analytics.verifiedBrands / analytics.totalBrands) * 100
+      : 0;
+
+  const activeRate =
+    analytics.totalBrands > 0
+      ? (analytics.activeBrands / analytics.totalBrands) * 100
+      : 0;
 
   const formatNumber = (num: number): string => {
     if (num >= 1000000) {
@@ -121,244 +175,296 @@ export default function AnalyticsDashboard({
     return num.toString();
   };
 
-  const getGrowthPercentage = (current: number, recent: number): number => {
-    if (current === 0) return 0;
-    return Math.round((recent / current) * 100);
-  };
-
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-2 mb-6">
-        <BarChart3 className="h-6 w-6 text-oma-plum" />
-        <h2 className="text-2xl font-canela text-oma-black">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-oma-plum">
           Analytics Dashboard
         </h2>
-        <Badge variant="outline" className="ml-2">
-          Super Admin
-        </Badge>
+        <div className="flex gap-2">
+          <Button
+            onClick={handleSyncRatings}
+            variant="outline"
+            size="sm"
+            disabled={syncing}
+          >
+            <RefreshCw
+              className={`h-4 w-4 mr-2 ${syncing ? "animate-spin" : ""}`}
+            />
+            {syncing ? "Syncing..." : "Sync Ratings"}
+          </Button>
+          <Button onClick={fetchData} variant="outline" size="sm">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
+        </div>
       </div>
 
-      {/* Key Metrics Grid */}
+      {/* Key Metrics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Total Brands */}
-        <Card>
+        <Card className="border-l-4 border-l-oma-plum">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Brands</CardTitle>
             <Users className="h-4 w-4 text-oma-plum" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {formatNumber(analyticsData.totalBrands)}
+              {formatNumber(analytics.totalBrands)}
             </div>
             <div className="flex items-center gap-2 mt-2">
-              <Badge variant="secondary" className="text-xs">
-                +{analyticsData.recentBrands} this month
+              <Badge
+                variant={
+                  analytics.verifiedBrands === analytics.totalBrands
+                    ? "default"
+                    : "secondary"
+                }
+              >
+                {analytics.verifiedBrands} verified
               </Badge>
-              {analyticsData.recentBrands > 0 && (
-                <TrendingUp className="h-3 w-3 text-green-500" />
-              )}
+              <Badge variant="outline">{analytics.activeBrands} active</Badge>
             </div>
-            <p className="text-xs text-oma-cocoa mt-1">
-              {analyticsData.verifiedBrands} verified •{" "}
-              {analyticsData.activeBrands} active
-            </p>
+            {brandGrowthPercentage !== 0 && (
+              <p
+                className={`text-xs mt-2 flex items-center ${brandGrowthPercentage > 0 ? "text-green-600" : "text-red-600"}`}
+              >
+                <TrendingUp className="h-3 w-3 mr-1" />
+                {brandGrowthPercentage > 0 ? "+" : ""}
+                {brandGrowthPercentage.toFixed(1)}% this month
+              </p>
+            )}
           </CardContent>
         </Card>
 
-        {/* Total Reviews */}
-        <Card>
+        <Card className="border-l-4 border-l-oma-cocoa">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Reviews</CardTitle>
-            <MessageSquare className="h-4 w-4 text-oma-plum" />
+            <Star className="h-4 w-4 text-oma-cocoa" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {formatNumber(analyticsData.totalReviews)}
+              {formatNumber(analytics.totalReviews)}
             </div>
-            <div className="flex items-center gap-2 mt-2">
-              <Badge variant="secondary" className="text-xs">
-                +{analyticsData.recentReviews} this month
-              </Badge>
-              {analyticsData.recentReviews > 0 && (
-                <TrendingUp className="h-3 w-3 text-green-500" />
-              )}
+            <div className="flex items-center gap-1 mt-2">
+              <Star className="h-4 w-4 text-yellow-400 fill-current" />
+              <span className="text-sm font-medium">
+                {analytics.averageRating.toFixed(1)} avg rating
+              </span>
             </div>
-            <div className="flex items-center gap-1 mt-1">
-              <Star className="h-3 w-3 text-yellow-500 fill-current" />
-              <p className="text-xs text-oma-cocoa">
-                {analyticsData.averageRating} avg rating
+            {reviewGrowthPercentage !== 0 && (
+              <p
+                className={`text-xs mt-2 flex items-center ${reviewGrowthPercentage > 0 ? "text-green-600" : "text-red-600"}`}
+              >
+                <TrendingUp className="h-3 w-3 mr-1" />
+                {reviewGrowthPercentage > 0 ? "+" : ""}
+                {reviewGrowthPercentage.toFixed(1)}% this month
               </p>
-            </div>
+            )}
           </CardContent>
         </Card>
 
-        {/* Total Collections */}
-        <Card>
+        <Card className="border-l-4 border-l-blue-500">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Collections</CardTitle>
-            <Package className="h-4 w-4 text-oma-plum" />
+            <ShoppingBag className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {formatNumber(analyticsData.totalCollections)}
+              {formatNumber(analytics.totalCollections)}
             </div>
-            <p className="text-xs text-oma-cocoa mt-2">
-              Curated brand collections
+            <p className="text-xs text-muted-foreground mt-2">
+              Brand showcases and galleries
             </p>
           </CardContent>
         </Card>
 
-        {/* Page Views */}
-        <Card>
+        <Card className="border-l-4 border-l-green-500">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Page Views</CardTitle>
-            <Eye className="h-4 w-4 text-oma-plum" />
+            <CardTitle className="text-sm font-medium">
+              Estimated Page Views
+            </CardTitle>
+            <Eye className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {formatNumber(analyticsData.totalPageViews)}
+              {formatNumber(analytics.totalPageViews)}
             </div>
-            <p className="text-xs text-oma-cocoa mt-2">Estimated total views</p>
+            <p className="text-xs text-muted-foreground mt-2">
+              Based on engagement metrics
+            </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Brand Growth Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-oma-plum" />
-              Brand Growth (6 Months)
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {brandGrowthData.length > 0 ? (
-              <div className="space-y-4">
-                {brandGrowthData.map((data, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between"
-                  >
-                    <span className="text-sm text-oma-cocoa">{data.month}</span>
-                    <div className="flex items-center gap-2">
-                      <div className="w-24 bg-gray-200 rounded-full h-2">
-                        <div
-                          className="bg-oma-plum h-2 rounded-full"
-                          style={{
-                            width: `${Math.max((data.brands / Math.max(...brandGrowthData.map((d) => d.brands))) * 100, 5)}%`,
-                          }}
-                        />
-                      </div>
-                      <span className="text-sm font-medium w-8 text-right">
-                        {data.brands}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-oma-cocoa text-center py-8">
-                No growth data available
-              </p>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Review Trends Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MessageSquare className="h-5 w-5 text-oma-plum" />
-              Review Trends (6 Months)
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {reviewTrendsData.length > 0 ? (
-              <div className="space-y-4">
-                {reviewTrendsData.map((data, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between"
-                  >
-                    <span className="text-sm text-oma-cocoa">{data.month}</span>
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-1">
-                        <Star className="h-3 w-3 text-yellow-500 fill-current" />
-                        <span className="text-xs">{data.avgRating}</span>
-                      </div>
-                      <div className="w-20 bg-gray-200 rounded-full h-2">
-                        <div
-                          className="bg-oma-plum h-2 rounded-full"
-                          style={{
-                            width: `${Math.max((data.reviews / Math.max(...reviewTrendsData.map((d) => d.reviews))) * 100, 5)}%`,
-                          }}
-                        />
-                      </div>
-                      <span className="text-sm font-medium w-6 text-right">
-                        {data.reviews}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-oma-cocoa text-center py-8">
-                No review data available
-              </p>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Summary Stats */}
+      {/* Platform Health Section */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Activity className="h-5 w-5 text-oma-plum" />
+            <CheckCircle className="h-5 w-5 text-green-500" />
             Platform Health
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="text-center">
-              <div className="flex items-center justify-center mb-2">
-                <CheckCircle className="h-8 w-8 text-green-500" />
+              <div className="text-3xl font-bold text-oma-plum">
+                {verificationRate.toFixed(1)}%
               </div>
-              <div className="text-2xl font-bold text-green-600">
-                {Math.round(
-                  (analyticsData.verifiedBrands / analyticsData.totalBrands) *
-                    100
-                )}
-                %
+              <p className="text-sm text-muted-foreground">Verification Rate</p>
+              <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                <div
+                  className="bg-oma-plum h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${verificationRate}%` }}
+                ></div>
               </div>
-              <p className="text-sm text-oma-cocoa">Verified Brands</p>
             </div>
 
             <div className="text-center">
-              <div className="flex items-center justify-center mb-2">
-                <Star className="h-8 w-8 text-yellow-500 fill-current" />
+              <div className="text-3xl font-bold text-oma-cocoa">
+                {activeRate.toFixed(1)}%
               </div>
-              <div className="text-2xl font-bold text-yellow-600">
-                {analyticsData.averageRating}
+              <p className="text-sm text-muted-foreground">Active Brands</p>
+              <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                <div
+                  className="bg-oma-cocoa h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${activeRate}%` }}
+                ></div>
               </div>
-              <p className="text-sm text-oma-cocoa">Average Rating</p>
             </div>
 
             <div className="text-center">
-              <div className="flex items-center justify-center mb-2">
-                <TrendingUp className="h-8 w-8 text-oma-plum" />
+              <div className="flex items-center justify-center gap-1">
+                <Star className="h-6 w-6 text-yellow-400 fill-current" />
+                <span className="text-3xl font-bold">
+                  {analytics.averageRating.toFixed(1)}
+                </span>
               </div>
-              <div className="text-2xl font-bold text-oma-plum">
-                {getGrowthPercentage(
-                  analyticsData.totalBrands,
-                  analyticsData.recentBrands
-                )}
-                %
+              <p className="text-sm text-muted-foreground">Average Rating</p>
+              <div className="flex justify-center mt-2">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <Star
+                    key={star}
+                    className={`h-4 w-4 ${
+                      star <= analytics.averageRating
+                        ? "text-yellow-400 fill-current"
+                        : "text-gray-300"
+                    }`}
+                  />
+                ))}
               </div>
-              <p className="text-sm text-oma-cocoa">Monthly Growth</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Growth Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Brand Growth (6 Months)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {brandGrowth.map((data, index) => {
+                const maxBrands = Math.max(...brandGrowth.map((d) => d.brands));
+                const percentage =
+                  maxBrands > 0 ? (data.brands / maxBrands) * 100 : 0;
+
+                return (
+                  <div key={index} className="flex items-center gap-3">
+                    <div className="w-16 text-sm text-muted-foreground">
+                      {data.month}
+                    </div>
+                    <div className="flex-1 bg-gray-200 rounded-full h-6 relative">
+                      <div
+                        className="bg-oma-plum h-6 rounded-full transition-all duration-300 flex items-center justify-end pr-2"
+                        style={{ width: `${percentage}%` }}
+                      >
+                        <span className="text-white text-xs font-medium">
+                          {data.brands}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Review Trends (6 Months)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {reviewTrends.map((data, index) => {
+                const maxReviews = Math.max(
+                  ...reviewTrends.map((d) => d.reviews)
+                );
+                const percentage =
+                  maxReviews > 0 ? (data.reviews / maxReviews) * 100 : 0;
+
+                return (
+                  <div key={index} className="flex items-center gap-3">
+                    <div className="w-16 text-sm text-muted-foreground">
+                      {data.month}
+                    </div>
+                    <div className="flex-1 bg-gray-200 rounded-full h-6 relative">
+                      <div
+                        className="bg-oma-cocoa h-6 rounded-full transition-all duration-300 flex items-center justify-between px-2"
+                        style={{ width: `${percentage}%` }}
+                      >
+                        <span className="text-white text-xs font-medium">
+                          {data.reviews}
+                        </span>
+                        {data.avgRating > 0 && (
+                          <span className="text-white text-xs">
+                            ⭐{data.avgRating}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Recent Activity */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Activity (Last 30 Days)</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-oma-plum/10 rounded-lg">
+                <Users className="h-6 w-6 text-oma-plum" />
+              </div>
+              <div>
+                <div className="text-2xl font-bold">
+                  {analytics.recentBrands}
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  New brands added
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-oma-cocoa/10 rounded-lg">
+                <Star className="h-6 w-6 text-oma-cocoa" />
+              </div>
+              <div>
+                <div className="text-2xl font-bold">
+                  {analytics.recentReviews}
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  New reviews posted
+                </p>
+              </div>
             </div>
           </div>
         </CardContent>

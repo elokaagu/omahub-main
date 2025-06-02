@@ -123,7 +123,7 @@ export default function StudioPage() {
       {/* Analytics Dashboard for Super Admins */}
       {isSuperAdmin && (
         <div className="mb-8">
-          <AnalyticsDashboard userId={user.id} />
+          <AnalyticsDashboard />
         </div>
       )}
 
