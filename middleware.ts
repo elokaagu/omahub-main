@@ -2,17 +2,10 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { hasStudioAccess } from "@/lib/services/permissionsService.server";
 
-// Helper function to handle auth errors
 function handleAuthError(req: NextRequest) {
-  console.log("⛔ Auth error - redirecting to login");
-  return redirectToLogin(req);
-}
-
-// Helper function to redirect to login
-function redirectToLogin(req: NextRequest) {
-  const redirectUrl = req.nextUrl.clone();
-  redirectUrl.pathname = "/login";
-  redirectUrl.searchParams.set("next", req.nextUrl.pathname);
+  console.log("🔄 Redirecting to sign-in page");
+  const redirectUrl = new URL("/auth/signin", req.url);
+  redirectUrl.searchParams.set("redirect_to", req.nextUrl.pathname);
   return NextResponse.redirect(redirectUrl);
 }
 
@@ -21,20 +14,12 @@ export async function middleware(req: NextRequest) {
     console.log("🚀 Middleware triggered for:", req.nextUrl.pathname);
 
     // Skip middleware for public API routes
-    const publicApiRoutes = [
-      "/api/test-airtable",
-      "/api/test-airtable-submit",
-      "/api/test-simple-submit",
-      "/api/test-brand-name",
-      "/api/check-airtable-fields",
-      "/api/designer-application",
-      "/api/contact",
-    ];
+    if (req.nextUrl.pathname.startsWith("/api/public")) {
+      return NextResponse.next();
+    }
 
-    if (
-      publicApiRoutes.some((route) => req.nextUrl.pathname.startsWith(route))
-    ) {
-      console.log("⏭️ Skipping middleware for public API route");
+    // Skip middleware for auth routes
+    if (req.nextUrl.pathname.startsWith("/auth/")) {
       return NextResponse.next();
     }
 
@@ -85,35 +70,22 @@ export async function middleware(req: NextRequest) {
     });
 
     // Check if the request is for a protected route
-    const isStudioRoute = req.nextUrl.pathname.startsWith("/studio");
-    const isStorageRequest =
-      req.nextUrl.pathname.includes("/storage/v1/object");
-    const isProtectedRoute = isStudioRoute || isStorageRequest;
-
-    // If accessing a protected route and not authenticated, redirect to login
-    if (isProtectedRoute && !session) {
-      console.log("⛔ Protected route access denied - no session");
-      return redirectToLogin(req);
-    }
-
-    // If accessing studio and authenticated, check permissions
-    if (isStudioRoute && session) {
-      console.log("👤 Checking studio access for user:", session.user.id);
-
-      try {
-        const hasAccess = await hasStudioAccess(session.user.id);
-
-        if (hasAccess) {
-          console.log("✅ Studio access granted");
-          return res;
-        }
-
-        console.log("⛔ Studio access denied - insufficient permissions");
-        return NextResponse.redirect(new URL("/", req.url));
-      } catch (error) {
-        console.error("❌ Permission check error:", error);
+    if (req.nextUrl.pathname.startsWith("/studio")) {
+      if (!session) {
+        console.log("❌ No session found for studio route");
         return handleAuthError(req);
       }
+
+      // Check studio access permissions
+      const hasAccess = await hasStudioAccess(session.user.id);
+      console.log("🔐 Studio access check:", { hasAccess });
+
+      if (!hasAccess) {
+        console.log("❌ User does not have studio access");
+        return NextResponse.redirect(new URL("/unauthorized", req.url));
+      }
+
+      console.log("✅ Studio access granted");
     }
 
     return res;

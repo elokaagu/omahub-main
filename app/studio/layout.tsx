@@ -15,13 +15,13 @@ import {
   X,
   Settings,
 } from "@/components/ui/icons";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Toaster } from "sonner";
 import {
   Permission,
   getUserPermissions,
 } from "@/lib/services/permissionsService";
 import { LoadingPage } from "@/components/ui/loading";
+import UserProfile from "@/components/auth/UserProfile";
 
 export default function StudioLayout({
   children,
@@ -172,24 +172,7 @@ export default function StudioLayout({
             >
               Back to Site
             </button>
-            {user && (
-              <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-600">
-                  {user.first_name
-                    ? `${user.first_name} ${user.last_name || ""}`
-                    : user.email}
-                </span>
-                <Avatar className="h-8 w-8">
-                  <AvatarImage
-                    src={user.avatar_url || ""}
-                    alt={user.first_name || "User"}
-                  />
-                  <AvatarFallback>
-                    <User className="h-4 w-4" />
-                  </AvatarFallback>
-                </Avatar>
-              </div>
-            )}
+            <UserProfile />
           </div>
 
           {/* Mobile Back to Site button */}
