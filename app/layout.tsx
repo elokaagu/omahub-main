@@ -3,6 +3,7 @@ import "./globals.css";
 import RootLayoutClient from "../components/layout/RootLayoutClient";
 import { suisseIntl, canela } from "./fonts";
 import { Toaster } from "sonner";
+import { Analytics } from "@vercel/analytics/react";
 
 export const metadata: Metadata = {
   title: "OmaHub",
@@ -19,6 +20,7 @@ export default function RootLayout({
       <body>
         <RootLayoutClient>{children}</RootLayoutClient>
         <Toaster />
+        <Analytics />
       </body>
     </html>
   );

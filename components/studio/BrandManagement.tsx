@@ -92,116 +92,123 @@ export default function BrandManagement({
 
   return (
     <div className="space-y-8">
-      {/* Brands List */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {brands.map((brand) => (
-          <div
-            key={brand.id}
-            className="bg-white p-6 rounded-lg border border-gray-200"
-          >
-            {editingBrand?.id === brand.id ? (
-              <form onSubmit={handleUpdateBrand} className="space-y-4">
-                <Input
-                  type="text"
-                  value={editingBrand.name}
-                  onChange={(e) =>
-                    setEditingBrand({ ...editingBrand, name: e.target.value })
-                  }
-                  required
-                />
-                <Textarea
-                  value={editingBrand.description || ""}
-                  onChange={(e) =>
-                    setEditingBrand({
-                      ...editingBrand,
-                      description: e.target.value,
-                    })
-                  }
-                  placeholder="Description"
-                />
-                <Input
-                  type="url"
-                  value={editingBrand.website || ""}
-                  onChange={(e) =>
-                    setEditingBrand({
-                      ...editingBrand,
-                      website: e.target.value,
-                    })
-                  }
-                  placeholder="Website URL"
-                />
-                <div className="flex justify-end space-x-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setEditingBrand(null)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={isLoading}
-                    className="bg-oma-plum hover:bg-oma-plum/90"
-                  >
-                    {isLoading ? "Saving..." : "Save"}
-                  </Button>
-                </div>
-              </form>
-            ) : (
-              <>
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h3 className="text-lg font-semibold">{brand.name}</h3>
-                    {brand.description && (
-                      <p className="text-gray-600 mt-2">{brand.description}</p>
-                    )}
-                    {brand.website && (
-                      <a
-                        href={brand.website}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-oma-plum hover:underline mt-2 block"
-                      >
-                        Visit Website
-                      </a>
+      {/* Quick Edit Section */}
+      <div>
+        <h3 className="text-xl font-canela text-oma-plum mb-6">Quick Edit</h3>
+
+        {/* Brands List */}
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {brands.map((brand) => (
+            <div
+              key={brand.id}
+              className="bg-white p-6 rounded-lg border border-gray-200"
+            >
+              {editingBrand?.id === brand.id ? (
+                <form onSubmit={handleUpdateBrand} className="space-y-4">
+                  <Input
+                    type="text"
+                    value={editingBrand.name}
+                    onChange={(e) =>
+                      setEditingBrand({ ...editingBrand, name: e.target.value })
+                    }
+                    required
+                  />
+                  <Textarea
+                    value={editingBrand.description || ""}
+                    onChange={(e) =>
+                      setEditingBrand({
+                        ...editingBrand,
+                        description: e.target.value,
+                      })
+                    }
+                    placeholder="Description"
+                  />
+                  <Input
+                    type="url"
+                    value={editingBrand.website || ""}
+                    onChange={(e) =>
+                      setEditingBrand({
+                        ...editingBrand,
+                        website: e.target.value,
+                      })
+                    }
+                    placeholder="Website URL"
+                  />
+                  <div className="flex justify-end space-x-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setEditingBrand(null)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="submit"
+                      disabled={isLoading}
+                      className="bg-oma-plum hover:bg-oma-plum/90"
+                    >
+                      {isLoading ? "Saving..." : "Save"}
+                    </Button>
+                  </div>
+                </form>
+              ) : (
+                <>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h3 className="text-lg font-semibold">{brand.name}</h3>
+                      {brand.description && (
+                        <p className="text-gray-600 mt-2">
+                          {brand.description}
+                        </p>
+                      )}
+                      {brand.website && (
+                        <a
+                          href={brand.website}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-oma-plum hover:underline mt-2 block"
+                        >
+                          Visit Website
+                        </a>
+                      )}
+                    </div>
+                    {canManageBrands && (
+                      <div className="flex space-x-2">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => setEditingBrand(brand)}
+                        >
+                          <PenSquare className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => handleDeleteBrand(brand.id)}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     )}
                   </div>
-                  {canManageBrands && (
-                    <div className="flex space-x-2">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => setEditingBrand(brand)}
-                      >
-                        <PenSquare className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => handleDeleteBrand(brand.id)}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </>
-            )}
-          </div>
-        ))}
+                </>
+              )}
+            </div>
+          ))}
 
-        {brands.length === 0 && (
-          <div className="col-span-full text-center py-12">
-            <Package className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-sm font-semibold text-gray-900">
-              No brands
-            </h3>
-            <p className="mt-1 text-sm text-gray-500">
-              Get started by creating a new brand.
-            </p>
-          </div>
-        )}
+          {brands.length === 0 && (
+            <div className="col-span-full text-center py-12">
+              <Package className="mx-auto h-12 w-12 text-gray-400" />
+              <h3 className="mt-2 text-sm font-semibold text-gray-900">
+                No brands
+              </h3>
+              <p className="mt-1 text-sm text-gray-500">
+                Get started by creating your first brand.
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

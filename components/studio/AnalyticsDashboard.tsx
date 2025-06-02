@@ -97,7 +97,7 @@ export default function AnalyticsDashboard() {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-oma-plum">
+          <h2 className="text-2xl font-canela text-oma-plum">
             Analytics Dashboard
           </h2>
         </div>
@@ -105,8 +105,8 @@ export default function AnalyticsDashboard() {
           {[...Array(4)].map((_, i) => (
             <Card key={i} className="animate-pulse">
               <CardContent className="p-6">
-                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                <div className="h-8 bg-gray-200 rounded w-1/2"></div>
+                <div className="h-4 bg-oma-beige rounded w-3/4 mb-2"></div>
+                <div className="h-8 bg-oma-beige rounded w-1/2"></div>
               </CardContent>
             </Card>
           ))}
@@ -119,18 +119,22 @@ export default function AnalyticsDashboard() {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-oma-plum">
+          <h2 className="text-2xl font-canela text-oma-plum">
             Analytics Dashboard
           </h2>
-          <Button onClick={fetchData} variant="outline">
+          <Button
+            onClick={fetchData}
+            variant="outline"
+            className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white"
+          >
             <RefreshCw className="h-4 w-4 mr-2" />
             Retry
           </Button>
         </div>
-        <Card>
+        <Card className="border-oma-beige">
           <CardContent className="p-6 text-center">
-            <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-            <p className="text-gray-600">
+            <AlertTriangle className="h-12 w-12 text-oma-cocoa mx-auto mb-4" />
+            <p className="text-oma-cocoa">
               {error || "Failed to load analytics data"}
             </p>
           </CardContent>
@@ -178,7 +182,7 @@ export default function AnalyticsDashboard() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-oma-plum">
+        <h2 className="text-2xl font-canela text-oma-plum">
           Analytics Dashboard
         </h2>
         <div className="flex gap-2">
@@ -187,13 +191,19 @@ export default function AnalyticsDashboard() {
             variant="outline"
             size="sm"
             disabled={syncing}
+            className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white"
           >
             <RefreshCw
               className={`h-4 w-4 mr-2 ${syncing ? "animate-spin" : ""}`}
             />
             {syncing ? "Syncing..." : "Sync Ratings"}
           </Button>
-          <Button onClick={fetchData} variant="outline" size="sm">
+          <Button
+            onClick={fetchData}
+            variant="outline"
+            size="sm"
+            className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white"
+          >
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
           </Button>
@@ -202,13 +212,15 @@ export default function AnalyticsDashboard() {
 
       {/* Key Metrics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="border-l-4 border-l-oma-plum">
+        <Card className="border-l-4 border-l-oma-plum border-oma-beige">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Brands</CardTitle>
+            <CardTitle className="text-sm font-medium text-oma-cocoa">
+              Total Brands
+            </CardTitle>
             <Users className="h-4 w-4 text-oma-plum" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-2xl font-canela text-oma-plum">
               {formatNumber(analytics.totalBrands)}
             </div>
             <div className="flex items-center gap-2 mt-2">
@@ -218,14 +230,20 @@ export default function AnalyticsDashboard() {
                     ? "default"
                     : "secondary"
                 }
+                className="bg-oma-plum text-white"
               >
                 {analytics.verifiedBrands} verified
               </Badge>
-              <Badge variant="outline">{analytics.activeBrands} active</Badge>
+              <Badge
+                variant="outline"
+                className="border-oma-cocoa text-oma-cocoa"
+              >
+                {analytics.activeBrands} active
+              </Badge>
             </div>
             {brandGrowthPercentage !== 0 && (
               <p
-                className={`text-xs mt-2 flex items-center ${brandGrowthPercentage > 0 ? "text-green-600" : "text-red-600"}`}
+                className={`text-xs mt-2 flex items-center ${brandGrowthPercentage > 0 ? "text-green-600" : "text-oma-cocoa"}`}
               >
                 <TrendingUp className="h-3 w-3 mr-1" />
                 {brandGrowthPercentage > 0 ? "+" : ""}
@@ -235,24 +253,26 @@ export default function AnalyticsDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-oma-cocoa">
+        <Card className="border-l-4 border-l-oma-cocoa border-oma-beige">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Reviews</CardTitle>
+            <CardTitle className="text-sm font-medium text-oma-cocoa">
+              Total Reviews
+            </CardTitle>
             <Star className="h-4 w-4 text-oma-cocoa" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-2xl font-canela text-oma-plum">
               {formatNumber(analytics.totalReviews)}
             </div>
             <div className="flex items-center gap-1 mt-2">
               <Star className="h-4 w-4 text-yellow-400 fill-current" />
-              <span className="text-sm font-medium">
+              <span className="text-sm font-medium text-oma-cocoa">
                 {analytics.averageRating.toFixed(1)} avg rating
               </span>
             </div>
             {reviewGrowthPercentage !== 0 && (
               <p
-                className={`text-xs mt-2 flex items-center ${reviewGrowthPercentage > 0 ? "text-green-600" : "text-red-600"}`}
+                className={`text-xs mt-2 flex items-center ${reviewGrowthPercentage > 0 ? "text-green-600" : "text-oma-cocoa"}`}
               >
                 <TrendingUp className="h-3 w-3 mr-1" />
                 {reviewGrowthPercentage > 0 ? "+" : ""}
@@ -262,43 +282,45 @@ export default function AnalyticsDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-blue-500">
+        <Card className="border-l-4 border-l-oma-beige border-oma-beige">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Collections</CardTitle>
-            <ShoppingBag className="h-4 w-4 text-blue-500" />
+            <CardTitle className="text-sm font-medium text-oma-cocoa">
+              Collections
+            </CardTitle>
+            <ShoppingBag className="h-4 w-4 text-oma-beige" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-2xl font-canela text-oma-plum">
               {formatNumber(analytics.totalCollections)}
             </div>
-            <p className="text-xs text-muted-foreground mt-2">
+            <p className="text-xs text-oma-cocoa mt-2">
               Brand showcases and galleries
             </p>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-green-500">
+        <Card className="border-l-4 border-l-green-500 border-oma-beige">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Estimated Page Views
+            <CardTitle className="text-sm font-medium text-oma-cocoa">
+              Page Views
             </CardTitle>
             <Eye className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-2xl font-canela text-oma-plum">
               {formatNumber(analytics.totalPageViews)}
             </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              Based on engagement metrics
+            <p className="text-xs text-oma-cocoa mt-2">
+              Real-time analytics via Vercel
             </p>
           </CardContent>
         </Card>
       </div>
 
       {/* Platform Health Section */}
-      <Card>
+      <Card className="border-oma-beige">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-oma-plum font-canela">
             <CheckCircle className="h-5 w-5 text-green-500" />
             Platform Health
           </CardTitle>
@@ -306,11 +328,11 @@ export default function AnalyticsDashboard() {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="text-center">
-              <div className="text-3xl font-bold text-oma-plum">
+              <div className="text-3xl font-canela text-oma-plum">
                 {verificationRate.toFixed(1)}%
               </div>
-              <p className="text-sm text-muted-foreground">Verification Rate</p>
-              <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+              <p className="text-sm text-oma-cocoa">Verification Rate</p>
+              <div className="w-full bg-oma-beige rounded-full h-2 mt-2">
                 <div
                   className="bg-oma-plum h-2 rounded-full transition-all duration-300"
                   style={{ width: `${verificationRate}%` }}
@@ -319,11 +341,11 @@ export default function AnalyticsDashboard() {
             </div>
 
             <div className="text-center">
-              <div className="text-3xl font-bold text-oma-cocoa">
+              <div className="text-3xl font-canela text-oma-cocoa">
                 {activeRate.toFixed(1)}%
               </div>
-              <p className="text-sm text-muted-foreground">Active Brands</p>
-              <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+              <p className="text-sm text-oma-cocoa">Active Brands</p>
+              <div className="w-full bg-oma-beige rounded-full h-2 mt-2">
                 <div
                   className="bg-oma-cocoa h-2 rounded-full transition-all duration-300"
                   style={{ width: `${activeRate}%` }}
@@ -334,11 +356,11 @@ export default function AnalyticsDashboard() {
             <div className="text-center">
               <div className="flex items-center justify-center gap-1">
                 <Star className="h-6 w-6 text-yellow-400 fill-current" />
-                <span className="text-3xl font-bold">
+                <span className="text-3xl font-canela text-oma-plum">
                   {analytics.averageRating.toFixed(1)}
                 </span>
               </div>
-              <p className="text-sm text-muted-foreground">Average Rating</p>
+              <p className="text-sm text-oma-cocoa">Average Rating</p>
               <div className="flex justify-center mt-2">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <Star
@@ -346,7 +368,7 @@ export default function AnalyticsDashboard() {
                     className={`h-4 w-4 ${
                       star <= analytics.averageRating
                         ? "text-yellow-400 fill-current"
-                        : "text-gray-300"
+                        : "text-oma-beige"
                     }`}
                   />
                 ))}
@@ -358,9 +380,11 @@ export default function AnalyticsDashboard() {
 
       {/* Growth Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
+        <Card className="border-oma-beige">
           <CardHeader>
-            <CardTitle>Brand Growth (6 Months)</CardTitle>
+            <CardTitle className="text-oma-plum font-canela">
+              Brand Growth (6 Months)
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -371,10 +395,10 @@ export default function AnalyticsDashboard() {
 
                 return (
                   <div key={index} className="flex items-center gap-3">
-                    <div className="w-16 text-sm text-muted-foreground">
+                    <div className="w-16 text-sm text-oma-cocoa">
                       {data.month}
                     </div>
-                    <div className="flex-1 bg-gray-200 rounded-full h-6 relative">
+                    <div className="flex-1 bg-oma-beige rounded-full h-6 relative">
                       <div
                         className="bg-oma-plum h-6 rounded-full transition-all duration-300 flex items-center justify-end pr-2"
                         style={{ width: `${percentage}%` }}
@@ -391,9 +415,11 @@ export default function AnalyticsDashboard() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-oma-beige">
           <CardHeader>
-            <CardTitle>Review Trends (6 Months)</CardTitle>
+            <CardTitle className="text-oma-plum font-canela">
+              Review Trends (6 Months)
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -406,10 +432,10 @@ export default function AnalyticsDashboard() {
 
                 return (
                   <div key={index} className="flex items-center gap-3">
-                    <div className="w-16 text-sm text-muted-foreground">
+                    <div className="w-16 text-sm text-oma-cocoa">
                       {data.month}
                     </div>
-                    <div className="flex-1 bg-gray-200 rounded-full h-6 relative">
+                    <div className="flex-1 bg-oma-beige rounded-full h-6 relative">
                       <div
                         className="bg-oma-cocoa h-6 rounded-full transition-all duration-300 flex items-center justify-between px-2"
                         style={{ width: `${percentage}%` }}
@@ -433,9 +459,11 @@ export default function AnalyticsDashboard() {
       </div>
 
       {/* Recent Activity */}
-      <Card>
+      <Card className="border-oma-beige">
         <CardHeader>
-          <CardTitle>Recent Activity (Last 30 Days)</CardTitle>
+          <CardTitle className="text-oma-plum font-canela">
+            Recent Activity (Last 30 Days)
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -444,12 +472,10 @@ export default function AnalyticsDashboard() {
                 <Users className="h-6 w-6 text-oma-plum" />
               </div>
               <div>
-                <div className="text-2xl font-bold">
+                <div className="text-2xl font-canela text-oma-plum">
                   {analytics.recentBrands}
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  New brands added
-                </p>
+                <p className="text-sm text-oma-cocoa">New brands added</p>
               </div>
             </div>
 
@@ -458,12 +484,10 @@ export default function AnalyticsDashboard() {
                 <Star className="h-6 w-6 text-oma-cocoa" />
               </div>
               <div>
-                <div className="text-2xl font-bold">
+                <div className="text-2xl font-canela text-oma-plum">
                   {analytics.recentReviews}
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  New reviews posted
-                </p>
+                <p className="text-sm text-oma-cocoa">New reviews posted</p>
               </div>
             </div>
           </div>

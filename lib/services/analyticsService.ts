@@ -13,6 +13,57 @@ export interface AnalyticsData {
 }
 
 /**
+ * Fetch real page views from Vercel Analytics
+ * This function attempts to get real analytics data from Vercel
+ */
+async function getVercelPageViews(): Promise<number | null> {
+  try {
+    // In a real implementation, you would use Vercel's Analytics API
+    // For now, we'll return null to fall back to estimated views
+    // This would require setting up Vercel Analytics API access
+
+    // Example of how this would work with Vercel Analytics API:
+    // const response = await fetch('/api/analytics/pageviews', {
+    //   headers: {
+    //     'Authorization': `Bearer ${process.env.VERCEL_ANALYTICS_TOKEN}`
+    //   }
+    // });
+    // const data = await response.json();
+    // return data.pageViews;
+
+    return null; // Fallback to estimated views for now
+  } catch (error) {
+    console.warn(
+      "Failed to fetch Vercel analytics data, using estimated views:",
+      error
+    );
+    return null;
+  }
+}
+
+/**
+ * Calculate estimated page views based on engagement metrics
+ */
+function calculateEstimatedPageViews(
+  totalBrands: number,
+  totalReviews: number,
+  totalCollections: number,
+  verifiedBrands: number,
+  recentBrands: number
+): number {
+  // Enhanced formula based on realistic engagement patterns
+  // Base formula: (brands * 25) + (reviews * 8) + (collections * 15) + (verified_brands * 50)
+  // This assumes verified brands get more views, reviews indicate engagement, collections are browsed
+  return Math.round(
+    totalBrands * 25 +
+      totalReviews * 8 +
+      totalCollections * 15 +
+      verifiedBrands * 50 +
+      recentBrands * 100 // New brands get initial traffic boost
+  );
+}
+
+/**
  * Get comprehensive analytics data for the dashboard
  */
 export async function getAnalyticsData(): Promise<AnalyticsData> {
@@ -34,6 +85,7 @@ export async function getAnalyticsData(): Promise<AnalyticsData> {
       collectionsResult,
       recentBrandsResult,
       recentReviewsResult,
+      vercelPageViews,
     ] = await Promise.all([
       // All brands with their review counts
       supabase.from("brands").select(`
@@ -62,6 +114,9 @@ export async function getAnalyticsData(): Promise<AnalyticsData> {
         .from("reviews")
         .select("id", { count: "exact", head: true })
         .gte("created_at", thirtyDaysAgoISO),
+
+      // Try to get real page views from Vercel Analytics
+      getVercelPageViews(),
     ]);
 
     // Handle errors
@@ -101,16 +156,17 @@ export async function getAnalyticsData(): Promise<AnalyticsData> {
     const recentBrands = recentBrandsResult.count || 0;
     const recentReviews = recentReviewsResult.count || 0;
 
-    // Calculate more realistic page views based on actual engagement
-    // Base formula: (brands * 25) + (reviews * 8) + (collections * 15) + (verified_brands * 50)
-    // This assumes verified brands get more views, reviews indicate engagement, collections are browsed
-    const totalPageViews = Math.round(
-      totalBrands * 25 +
-        totalReviews * 8 +
-        totalCollections * 15 +
-        verifiedBrands * 50 +
-        recentBrands * 100 // New brands get initial traffic boost
-    );
+    // Use real page views if available, otherwise calculate estimated views
+    const totalPageViews =
+      vercelPageViews !== null
+        ? vercelPageViews
+        : calculateEstimatedPageViews(
+            totalBrands,
+            totalReviews,
+            totalCollections,
+            verifiedBrands,
+            recentBrands
+          );
 
     // Check for rating inconsistencies and log them
     let ratingInconsistencies = 0;
@@ -153,6 +209,8 @@ export async function getAnalyticsData(): Promise<AnalyticsData> {
     console.log("✅ Analytics data fetched successfully:", {
       ...analyticsData,
       ratingInconsistencies,
+      pageViewsSource:
+        vercelPageViews !== null ? "Vercel Analytics" : "Estimated",
     });
 
     return analyticsData;
