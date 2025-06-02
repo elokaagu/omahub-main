@@ -3,9 +3,9 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { signIn, signInWithOAuth } from "@/lib/services/authService";
+import { signIn } from "@/lib/services/authService";
 import { Button } from "@/components/ui/button";
-import { FcGoogle } from "react-icons/fc";
+import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
 import ErrorBoundary from "../components/ErrorBoundary";
 
 // Component to handle search params
@@ -54,24 +54,6 @@ function LoginForm() {
       console.error("Login error:", err);
       setError("Invalid email or password. Please try again.");
     } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleOAuthSignIn = async (provider: "google") => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      await signInWithOAuth(provider);
-      // The redirect will happen automatically
-    } catch (err) {
-      console.error(`${provider} sign in error:`, err);
-      setError(
-        `Failed to sign in with ${
-          provider.charAt(0).toUpperCase() + provider.slice(1)
-        }. Please try again.`
-      );
       setLoading(false);
     }
   };
@@ -177,15 +159,11 @@ function LoginForm() {
         </div>
 
         <div className="mt-6">
-          <button
-            type="button"
-            onClick={() => handleOAuthSignIn("google")}
-            disabled={loading}
-            className="w-full inline-flex justify-center items-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-oma-cocoa hover:bg-gray-50"
-          >
-            <FcGoogle className="h-5 w-5 mr-2" />
-            Google
-          </button>
+          <GoogleSignInButton
+            className="w-full"
+            variant="outline"
+            redirectTo={`${window.location.origin}/auth/callback`}
+          />
         </div>
       </div>
 
