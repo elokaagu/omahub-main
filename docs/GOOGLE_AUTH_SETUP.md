@@ -22,21 +22,79 @@ This guide walks you through setting up Google Sign-In for your OmaHub applicati
 2. Search for "Google+ API"
 3. Click on it and press **Enable**
 
-### 1.3 Create OAuth 2.0 Credentials
+### 1.3 Configure OAuth Consent Screen (IMPORTANT for Branding)
+
+**This step is crucial to show "OmaHub" instead of the Supabase project ID**
+
+1. Go to **APIs & Services** → **OAuth consent screen**
+2. Choose **External** user type (unless you have Google Workspace)
+3. Click **Create**
+
+#### OAuth Consent Screen Configuration:
+
+**App Information:**
+
+- **App name**: `OmaHub`
+- **User support email**: Your email address
+- **App logo**: Upload your OmaHub logo (optional but recommended)
+- **App domain**: Your website domain (e.g., `omahub.com`)
+
+**App Domain (Optional but recommended):**
+
+- **Application home page**: `https://yourdomain.com`
+- **Application privacy policy link**: `https://yourdomain.com/privacy`
+- **Application terms of service link**: `https://yourdomain.com/terms`
+
+**Authorized Domains:**
+Add these domains:
+
+- `yourdomain.com` (your production domain)
+- `supabase.co` (required for Supabase auth)
+- `localhost` (for development)
+
+**Developer Contact Information:**
+
+- Add your email address
+
+4. Click **Save and Continue**
+
+#### Scopes Configuration:
+
+1. Click **Add or Remove Scopes**
+2. Add these scopes:
+   - `../auth/userinfo.email`
+   - `../auth/userinfo.profile`
+   - `openid`
+3. Click **Update** then **Save and Continue**
+
+#### Test Users (for development):
+
+1. Add your email and any test user emails
+2. Click **Save and Continue**
+
+#### Summary:
+
+1. Review your configuration
+2. Click **Back to Dashboard**
+
+### 1.4 Create OAuth 2.0 Credentials
 
 1. Go to **APIs & Services** → **Credentials**
 2. Click **Create Credentials** → **OAuth 2.0 Client IDs**
-3. Configure the consent screen if prompted:
-   - Choose **External** user type
-   - Fill in required fields (App name, User support email, Developer contact)
-   - Add scopes: `email`, `profile`, `openid`
-4. For Application type, select **Web application**
-5. Add authorized redirect URIs:
+3. For Application type, select **Web application**
+4. **Name**: `OmaHub Web Client`
+5. Add **Authorized JavaScript origins**:
    ```
-   https://your-project-ref.supabase.co/auth/v1/callback
-   http://localhost:54321/auth/v1/callback (for local development)
+   https://yourdomain.com
+   http://localhost:3000
    ```
-6. Save and note your **Client ID** and **Client Secret**
+6. Add **Authorized redirect URIs**:
+   ```
+   https://gswduyodzdgucjscjtvz.supabase.co/auth/v1/callback
+   http://localhost:54321/auth/v1/callback
+   ```
+7. Click **Create**
+8. Save your **Client ID** and **Client Secret**
 
 ## 🔧 Step 2: Supabase Configuration
 
@@ -110,10 +168,11 @@ CREATE TRIGGER on_auth_user_created
 ### 5.1 Local Testing
 
 1. Start your development server: `npm run dev`
-2. Navigate to `http://localhost:3000/auth/signin`
+2. Navigate to `http://localhost:3000/login`
 3. Click "Continue with Google"
-4. Complete the OAuth flow
-5. Verify you're redirected to `/studio`
+4. **You should now see "OmaHub" instead of the Supabase project ID**
+5. Complete the OAuth flow
+6. Verify you're redirected properly
 
 ### 5.2 Production Testing
 
@@ -121,6 +180,15 @@ CREATE TRIGGER on_auth_user_created
 2. Update Google Cloud Console with production URLs
 3. Update Supabase with production URLs
 4. Test the complete flow
+
+## 🚨 IMPORTANT: Publishing Your OAuth App
+
+**For production use, you need to publish your OAuth consent screen:**
+
+1. Go back to **OAuth consent screen** in Google Cloud Console
+2. Click **Publish App**
+3. This removes the "unverified app" warning
+4. For apps with sensitive scopes, you may need Google verification
 
 ## 🔧 Step 6: Customization
 
@@ -160,22 +228,28 @@ scopes: 'email profile https://www.googleapis.com/auth/userinfo.profile',
 
 ### Common Issues
 
-1. **"redirect_uri_mismatch" error**
+1. **Shows Supabase project ID instead of app name**
+
+   - Configure OAuth consent screen properly (Step 1.3)
+   - Set app name to "OmaHub"
+   - Publish the OAuth app
+
+2. **"redirect_uri_mismatch" error**
 
    - Check that your redirect URIs in Google Cloud Console match exactly
    - Ensure no trailing slashes
 
-2. **"Invalid client" error**
+3. **"Invalid client" error**
 
    - Verify Client ID and Secret are correct
    - Check that Google+ API is enabled
 
-3. **User not redirected after sign-in**
+4. **User not redirected after sign-in**
 
    - Check middleware configuration
    - Verify auth callback page is working
 
-4. **Session not persisting**
+5. **Session not persisting**
    - Check Supabase URL configuration
    - Verify cookie settings
 
@@ -198,10 +272,9 @@ NEXT_PUBLIC_DEBUG_AUTH=true
 ## 🔧 Next Steps
 
 - [ ] Set up email authentication as fallback
-- [ ] Implement role-based access control
-- [ ] Add social login analytics
-- [ ] Configure session management
-- [ ] Set up user profile management
+- [ ] Configure OAuth consent screen branding
+- [ ] Publish OAuth app for production
+- [ ] Add custom domain for better branding
 
 ## 📚 Resources
 
