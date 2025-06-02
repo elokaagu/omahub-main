@@ -13,6 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { NavigationLink } from "@/components/ui/navigation-link";
 
 interface ClientBrandProfileProps {
   brandData: BrandData;
@@ -131,7 +132,7 @@ export default function ClientBrandProfile({
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {brandData.collections.map((collection, index) => (
-                <Link
+                <NavigationLink
                   key={collection.id}
                   href={`/collection/${collection.id}`}
                   className="block group"
@@ -155,7 +156,7 @@ export default function ClientBrandProfile({
                       </p>
                     </div>
                   </div>
-                </Link>
+                </NavigationLink>
               ))}
             </div>
           )}

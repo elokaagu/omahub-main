@@ -24,8 +24,10 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
+import { NavigationLink } from "@/components/ui/navigation-link";
 import { collections } from "@/lib/data/directory";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNavigation } from "@/contexts/NavigationContext";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useRouter, usePathname } from "next/navigation";
 import {
@@ -47,6 +49,7 @@ const navigation = [
 
 export default function Header() {
   const { user, signOut } = useAuth();
+  const { setIsNavigating } = useNavigation();
   const router = useRouter();
   const pathname = usePathname();
   const isHomePage = pathname === "/";
@@ -54,7 +57,7 @@ export default function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isCollectionsOpen, setIsCollectionsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [isNavigating, setIsNavigating] = useState(false);
+  const [isNavigatingToStudio, setIsNavigatingToStudio] = useState(false);
 
   useEffect(() => {
     const hasAdminAccess =
@@ -92,12 +95,14 @@ export default function Header() {
       return;
     }
 
+    setIsNavigatingToStudio(true);
     setIsNavigating(true);
     try {
-      // Use window.location.href for navigation to avoid router issues
-      window.location.href = "/studio";
+      // Use router.push for better navigation handling
+      router.push("/studio");
     } catch (error) {
       console.error("Error navigating to studio:", error);
+      setIsNavigatingToStudio(false);
       setIsNavigating(false);
     }
   };
@@ -174,7 +179,9 @@ export default function Header() {
                         : "text-white hover:text-white/80"
                     )}
                   >
-                    <Link href={item.href}>{item.name}</Link>
+                    <NavigationLink href={item.href}>
+                      {item.name}
+                    </NavigationLink>
                   </NavigationMenuLink>
                 </NavigationMenuItem>
               ))}
@@ -203,12 +210,12 @@ export default function Header() {
                       <div className="grid grid-cols-2 gap-2">
                         {category.items.map((item) => (
                           <NavigationMenuLink key={item.title} asChild>
-                            <Link
+                            <NavigationLink
                               href={item.href}
                               className="block select-none rounded-md p-3 text-sm leading-none no-underline outline-none transition-colors hover:bg-oma-beige/50 hover:text-oma-plum focus:bg-oma-beige/50 focus:text-oma-plum"
                             >
                               {item.title}
-                            </Link>
+                            </NavigationLink>
                           </NavigationMenuLink>
                         ))}
                       </div>
@@ -242,7 +249,9 @@ export default function Header() {
                 : "border-white text-white bg-black/20 hover:bg-black/40 hover:text-white hover:border-white/50"
             )}
           >
-            <Link href="/directory">Explore the Directory</Link>
+            <NavigationLink href="/directory">
+              Explore the Directory
+            </NavigationLink>
           </Button>
 
           {user ? (
@@ -275,22 +284,22 @@ export default function Header() {
                     <ul className="grid w-[200px] gap-2 p-4 bg-white shadow-lg rounded-lg border border-gray-100">
                       <li>
                         <NavigationMenuLink asChild>
-                          <Link
+                          <NavigationLink
                             href="/profile"
                             className="flex items-center gap-2 w-full rounded-md p-2 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-oma-plum transition-colors"
                           >
                             Profile
-                          </Link>
+                          </NavigationLink>
                         </NavigationMenuLink>
                       </li>
                       <li>
                         <NavigationMenuLink asChild>
-                          <Link
+                          <NavigationLink
                             href="/favorites"
                             className="flex items-center gap-2 w-full rounded-md p-2 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-oma-plum transition-colors"
                           >
                             Favorites
-                          </Link>
+                          </NavigationLink>
                         </NavigationMenuLink>
                       </li>
                       {(user?.role === "admin" ||
@@ -299,10 +308,10 @@ export default function Header() {
                           <NavigationMenuLink asChild>
                             <button
                               onClick={handleStudioNavigation}
-                              disabled={isNavigating}
+                              disabled={isNavigatingToStudio}
                               className="flex items-center gap-2 w-full rounded-md p-2 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-oma-plum transition-colors disabled:opacity-50"
                             >
-                              Studio {isNavigating && "..."}
+                              Studio {isNavigatingToStudio && "..."}
                             </button>
                           </NavigationMenuLink>
                         </li>
@@ -331,7 +340,7 @@ export default function Header() {
                   : "bg-white text-oma-plum hover:bg-white/90"
               )}
             >
-              <Link href="/login">Sign In</Link>
+              <NavigationLink href="/login">Sign In</NavigationLink>
             </Button>
           )}
         </div>
@@ -379,22 +388,22 @@ export default function Header() {
                 Navigate
               </h3>
               {navigation.map((item) => (
-                <Link
+                <NavigationLink
                   key={item.name}
                   href={item.href}
                   onClick={() => setMobileMenuOpen(false)}
                   className="-mx-3 block rounded-lg px-3 py-3 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 transition-colors"
                 >
                   {item.name}
-                </Link>
+                </NavigationLink>
               ))}
-              <Link
+              <NavigationLink
                 href="/directory"
                 onClick={() => setMobileMenuOpen(false)}
                 className="-mx-3 block rounded-lg px-3 py-3 text-base font-semibold leading-7 text-oma-plum hover:bg-oma-beige/50 transition-colors"
               >
                 Explore Directory
-              </Link>
+              </NavigationLink>
             </div>
 
             {/* Categories */}
@@ -404,23 +413,23 @@ export default function Header() {
               </h3>
               {navigationItems.map((category) => (
                 <div key={category.title} className="space-y-2">
-                  <Link
+                  <NavigationLink
                     href={category.href}
                     onClick={() => setMobileMenuOpen(false)}
                     className="-mx-3 block rounded-lg px-3 py-3 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 transition-colors"
                   >
                     {category.title}
-                  </Link>
+                  </NavigationLink>
                   <div className="pl-4 space-y-1">
                     {category.items.map((item) => (
-                      <Link
+                      <NavigationLink
                         key={item.title}
                         href={item.href}
                         onClick={() => setMobileMenuOpen(false)}
                         className="-mx-3 block rounded-lg px-3 py-2 text-sm leading-7 text-gray-700 hover:bg-gray-50 transition-colors"
                       >
                         {item.title}
-                      </Link>
+                      </NavigationLink>
                     ))}
                   </div>
                 </div>
@@ -467,23 +476,23 @@ export default function Header() {
                   </div>
 
                   {/* User Menu Items */}
-                  <Link
+                  <NavigationLink
                     href="/profile"
                     onClick={() => setMobileMenuOpen(false)}
                     className="-mx-3 flex items-center gap-3 rounded-lg px-3 py-3 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 transition-colors"
                   >
                     <User className="h-5 w-5 text-gray-500" />
                     Profile
-                  </Link>
+                  </NavigationLink>
 
-                  <Link
+                  <NavigationLink
                     href="/favorites"
                     onClick={() => setMobileMenuOpen(false)}
                     className="-mx-3 flex items-center gap-3 rounded-lg px-3 py-3 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 transition-colors"
                   >
                     <Heart className="h-5 w-5 text-gray-500" />
                     Favorites
-                  </Link>
+                  </NavigationLink>
 
                   {/* Studio Access for Admins */}
                   {(user?.role === "admin" || user?.role === "super_admin") && (
@@ -492,11 +501,11 @@ export default function Header() {
                         setMobileMenuOpen(false);
                         handleStudioNavigation();
                       }}
-                      disabled={isNavigating}
+                      disabled={isNavigatingToStudio}
                       className="-mx-3 flex items-center gap-3 rounded-lg px-3 py-3 text-base font-semibold leading-7 text-oma-plum hover:bg-oma-beige/50 transition-colors disabled:opacity-50 w-full text-left"
                     >
                       <Palette className="h-5 w-5" />
-                      Studio {isNavigating && "..."}
+                      Studio {isNavigatingToStudio && "..."}
                     </button>
                   )}
 
@@ -519,23 +528,23 @@ export default function Header() {
                   </h3>
 
                   {/* Sign In Button */}
-                  <Link
+                  <NavigationLink
                     href="/login"
                     onClick={() => setMobileMenuOpen(false)}
                     className="-mx-3 flex items-center justify-center gap-3 rounded-lg px-3 py-4 text-base font-semibold leading-7 bg-oma-plum text-white hover:bg-oma-plum/90 transition-colors"
                   >
                     <User className="h-5 w-5" />
                     Sign In
-                  </Link>
+                  </NavigationLink>
 
                   {/* Sign Up Link */}
-                  <Link
+                  <NavigationLink
                     href="/signup"
                     onClick={() => setMobileMenuOpen(false)}
                     className="-mx-3 block text-center rounded-lg px-3 py-2 text-sm leading-7 text-oma-plum hover:bg-oma-beige/50 transition-colors"
                   >
                     Don't have an account? Sign up
-                  </Link>
+                  </NavigationLink>
                 </div>
               )}
             </div>

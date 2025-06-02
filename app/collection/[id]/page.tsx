@@ -9,6 +9,7 @@ import { Collection, Brand } from "@/lib/supabase";
 import { CollectionImage } from "@/lib/services/collectionImageService";
 import { AuthImage } from "@/components/ui/auth-image";
 import { Button } from "@/components/ui/button";
+import { NavigationLink } from "@/components/ui/navigation-link";
 import { ArrowLeft, MapPin, Globe, Instagram } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -85,9 +86,9 @@ export default function CollectionPage() {
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
           <Button variant="outline" size="icon" asChild className="h-8 w-8">
-            <Link href={`/brand/${brand.id}`}>
+            <NavigationLink href={`/brand/${brand.id}`}>
               <ArrowLeft className="h-4 w-4" />
-            </Link>
+            </NavigationLink>
           </Button>
           <div>
             <h1 className="text-3xl font-canela text-gray-900">
@@ -174,9 +175,9 @@ export default function CollectionPage() {
                   asChild
                   className="w-full bg-oma-plum hover:bg-oma-plum/90"
                 >
-                  <Link href={`/brand/${brand.id}`}>
+                  <NavigationLink href={`/brand/${brand.id}`}>
                     View All {brand.name} Collections
-                  </Link>
+                  </NavigationLink>
                 </Button>
               </div>
             </div>

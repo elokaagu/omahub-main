@@ -5,6 +5,10 @@ import { usePathname } from "next/navigation";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import {
+  NavigationProvider,
+  useNavigation,
+} from "@/contexts/NavigationContext";
 import { PageFade } from "@/app/components/ui/animations";
 import { AnimatePresence } from "framer-motion";
 import { Toaster } from "sonner";
@@ -24,11 +28,13 @@ function LoadingSpinner() {
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { loading } = useAuth();
+  const { loading: authLoading } = useAuth();
+  const { isNavigating } = useNavigation();
   const isHomePage = pathname === "/";
   const isStudioPage = pathname?.startsWith("/studio") || false;
 
-  if (loading) {
+  // Show loading spinner for auth loading or navigation loading
+  if (authLoading || isNavigating) {
     return <LoadingSpinner />;
   }
 
@@ -49,7 +55,9 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 export default function RootLayoutClient({ children }: RootLayoutClientProps) {
   return (
     <AuthProvider>
-      <LayoutContent>{children}</LayoutContent>
+      <NavigationProvider>
+        <LayoutContent>{children}</LayoutContent>
+      </NavigationProvider>
     </AuthProvider>
   );
 }

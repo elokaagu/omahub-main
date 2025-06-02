@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { NavigationLink } from "./navigation-link";
 import { CheckCircle, Star } from "@/components/ui/icons";
 import { cn } from "@/lib/utils";
 import FavoriteButton from "./favorite-button";
@@ -28,7 +28,7 @@ export function BrandCard({
   className,
 }: BrandCardProps) {
   return (
-    <Link
+    <NavigationLink
       href={`/brand/${id}`}
       className={cn(
         "group block bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow relative h-full",
@@ -77,6 +77,6 @@ export function BrandCard({
           </div>
         </div>
       </div>
-    </Link>
+    </NavigationLink>
   );
 }
