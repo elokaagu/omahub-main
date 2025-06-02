@@ -27,10 +27,11 @@ export function ReviewForm({
   const [comment, setComment] = useState("");
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
+  const [initialNameSet, setInitialNameSet] = useState(false);
 
   // Load user profile data if logged in
   useEffect(() => {
-    if (user && !name) {
+    if (user && !initialNameSet) {
       const loadUserProfile = async () => {
         try {
           const profile = await getProfile(user.id);
@@ -46,14 +47,28 @@ export function ReviewForm({
               setName(user.email.split("@")[0]);
             }
           }
+          setInitialNameSet(true);
         } catch (error) {
           console.error("Error loading user profile:", error);
+          setInitialNameSet(true);
         }
       };
 
       loadUserProfile();
+    } else if (!user) {
+      setInitialNameSet(true);
     }
-  }, [user, name]);
+  }, [user, initialNameSet]);
+
+  const resetForm = () => {
+    // Only reset name if user is not logged in
+    if (!user) {
+      setName("");
+    }
+    setComment("");
+    setRating(0);
+    setHoverRating(0);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,8 +90,8 @@ export function ReviewForm({
 
     const reviewData: Omit<Review, "date" | "user_id"> = {
       brand_id: brandId,
-      author: name,
-      comment,
+      author: name.trim(),
+      comment: comment.trim(),
       rating,
     };
 
@@ -86,9 +101,7 @@ export function ReviewForm({
       toast.success("Thank you for sharing your experience!");
 
       // Reset form
-      setName("");
-      setComment("");
-      setRating(0);
+      resetForm();
 
       // Call callback if provided
       if (onReviewSubmitted) {
@@ -103,8 +116,8 @@ export function ReviewForm({
     <div className={`bg-white rounded-lg shadow-sm p-6 ${className}`}>
       <h3 className="text-lg font-semibold mb-4">Write a Review</h3>
 
-      <form onSubmit={handleSubmit}>
-        <div className="mb-4">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
           <label
             htmlFor="name"
             className="block text-sm font-medium text-gray-700 mb-1"
@@ -118,10 +131,11 @@ export function ReviewForm({
             onChange={(e) => setName(e.target.value)}
             placeholder="Enter your name"
             className="w-full"
+            required
           />
         </div>
 
-        <div className="mb-4">
+        <div>
           <label
             htmlFor="rating"
             className="block text-sm font-medium text-gray-700 mb-1"
@@ -136,7 +150,7 @@ export function ReviewForm({
                 onClick={() => setRating(star)}
                 onMouseEnter={() => setHoverRating(star)}
                 onMouseLeave={() => setHoverRating(0)}
-                className="text-yellow-400 focus:outline-none"
+                className="text-yellow-400 hover:text-yellow-500 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-1 rounded transition-colors"
                 aria-label={`Rate ${star} stars`}
               >
                 {star <= (hoverRating || rating) ? (
@@ -154,7 +168,7 @@ export function ReviewForm({
           </div>
         </div>
 
-        <div className="mb-4">
+        <div>
           <label
             htmlFor="comment"
             className="block text-sm font-medium text-gray-700 mb-1"
@@ -166,17 +180,30 @@ export function ReviewForm({
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             placeholder="Share your experience with this brand..."
-            className="w-full min-h-[120px]"
+            className="w-full min-h-[120px] resize-none"
+            required
           />
         </div>
 
-        <Button
-          type="submit"
-          disabled={submitting}
-          className="bg-oma-plum hover:bg-oma-plum/90 text-white"
-        >
-          {submitting ? "Submitting..." : "Submit Review"}
-        </Button>
+        <div className="flex gap-3 pt-2">
+          <Button
+            type="submit"
+            disabled={submitting}
+            className="bg-oma-plum hover:bg-oma-plum/90 text-white flex-1 sm:flex-none"
+          >
+            {submitting ? "Submitting..." : "Submit Review"}
+          </Button>
+
+          <Button
+            type="button"
+            variant="outline"
+            onClick={resetForm}
+            disabled={submitting}
+            className="flex-1 sm:flex-none"
+          >
+            Clear
+          </Button>
+        </div>
       </form>
     </div>
   );

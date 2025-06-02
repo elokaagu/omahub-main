@@ -162,7 +162,7 @@ export default function CollectionsPage() {
   }
 
   return (
-    <div>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-8 gap-4">
         <h1 className="text-3xl font-canela text-gray-900">Collections</h1>
         <Button
@@ -180,13 +180,13 @@ export default function CollectionsPage() {
       </div>
 
       <Card className="mb-8">
-        <CardHeader>
+        <CardHeader className="pb-4">
           <CardTitle>Collection Management</CardTitle>
           <CardDescription>
             Manage collections for all your brands
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
             <div className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
@@ -259,33 +259,35 @@ export default function CollectionsPage() {
                     <p className="text-gray-600 text-sm mb-4 line-clamp-1">
                       by {collection.brand.name}
                     </p>
-                    <div className="flex flex-col sm:flex-row gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleViewCollection(collection.id)}
-                        className="flex-1"
-                      >
-                        <Eye className="h-4 w-4 mr-1" />
-                        View
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEditCollection(collection.id)}
-                        className="flex-1"
-                      >
-                        <Edit className="h-4 w-4 mr-1" />
-                        Edit
-                      </Button>
+                    <div className="flex flex-col gap-2">
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleViewCollection(collection.id)}
+                          className="flex-1"
+                        >
+                          <Eye className="h-4 w-4 mr-1" />
+                          <span className="hidden sm:inline">View</span>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEditCollection(collection.id)}
+                          className="flex-1"
+                        >
+                          <Edit className="h-4 w-4 mr-1" />
+                          <span className="hidden sm:inline">Edit</span>
+                        </Button>
+                      </div>
                       <Button
                         variant="destructive"
                         size="sm"
                         onClick={() => confirmDeleteCollection(collection.id)}
-                        className="flex-1"
+                        className="w-full"
                       >
                         <Trash2 className="h-4 w-4 mr-1" />
-                        Delete
+                        <span className="hidden sm:inline">Delete</span>
                       </Button>
                     </div>
                   </CardContent>

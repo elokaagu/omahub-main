@@ -4,7 +4,9 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { getCollectionById } from "@/lib/services/collectionService";
 import { getBrandById } from "@/lib/services/brandService";
+import { getCollectionImages } from "@/lib/services/collectionImageService";
 import { Collection, Brand } from "@/lib/supabase";
+import { CollectionImage } from "@/lib/services/collectionImageService";
 import { AuthImage } from "@/components/ui/auth-image";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, MapPin, Globe, Instagram } from "lucide-react";
@@ -17,6 +19,9 @@ export default function CollectionPage() {
 
   const [collection, setCollection] = useState<Collection | null>(null);
   const [brand, setBrand] = useState<Brand | null>(null);
+  const [collectionImages, setCollectionImages] = useState<CollectionImage[]>(
+    []
+  );
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -33,11 +38,17 @@ export default function CollectionPage() {
 
         setCollection(collectionData);
 
-        // Fetch brand data
-        const brandData = await getBrandById(collectionData.brand_id);
+        // Fetch brand data and collection images in parallel
+        const [brandData, imagesData] = await Promise.all([
+          getBrandById(collectionData.brand_id),
+          getCollectionImages(collectionId),
+        ]);
+
         if (brandData) {
           setBrand(brandData);
         }
+
+        setCollectionImages(imagesData);
       } catch (error) {
         console.error("Error fetching collection:", error);
         notFound();
@@ -70,7 +81,7 @@ export default function CollectionPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 sm:px-6 py-8">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
           <Button variant="outline" size="icon" asChild className="h-8 w-8">
@@ -189,27 +200,55 @@ export default function CollectionPage() {
           </div>
         </div>
 
-        {/* Additional Collection Images Grid */}
-        <div className="mt-12">
-          <h2 className="text-2xl font-canela mb-6">Collection Gallery</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Main collection image repeated for demo - in real app, you'd have multiple images */}
-            {[1, 2, 3, 4, 5, 6].map((index) => (
-              <div
-                key={index}
-                className="aspect-square rounded-lg overflow-hidden bg-gray-100"
-              >
-                <AuthImage
-                  src={collection.image}
-                  alt={`${collection.title} - Image ${index}`}
-                  width={400}
-                  height={400}
-                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                />
-              </div>
-            ))}
+        {/* Collection Gallery */}
+        {collectionImages.length > 0 && (
+          <div className="mt-12">
+            <h2 className="text-2xl font-canela mb-6">Collection Gallery</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {collectionImages.map((image, index) => (
+                <div
+                  key={image.id}
+                  className="aspect-square rounded-lg overflow-hidden bg-gray-100 group"
+                >
+                  <AuthImage
+                    src={image.image_url}
+                    alt={
+                      image.alt_text ||
+                      `${collection.title} - Image ${index + 1}`
+                    }
+                    width={400}
+                    height={400}
+                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* Fallback gallery if no additional images */}
+        {collectionImages.length === 0 && (
+          <div className="mt-12">
+            <h2 className="text-2xl font-canela mb-6">Collection Gallery</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Show main collection image as placeholder */}
+              {[1, 2, 3].map((index) => (
+                <div
+                  key={index}
+                  className="aspect-square rounded-lg overflow-hidden bg-gray-100"
+                >
+                  <AuthImage
+                    src={collection.image}
+                    alt={`${collection.title} - Image ${index}`}
+                    width={400}
+                    height={400}
+                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

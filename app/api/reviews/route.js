@@ -53,17 +53,36 @@ export async function POST(request) {
 
     console.log(`Adding review for brand ${brandId} by ${author}`);
 
+    // First, check if the user_id column exists in the reviews table
+    const { data: tableInfo, error: tableError } = await supabase
+      .from("information_schema.columns")
+      .select("column_name")
+      .eq("table_name", "reviews")
+      .eq("column_name", "user_id");
+
+    const hasUserIdColumn = tableInfo && tableInfo.length > 0;
+    console.log("Reviews table has user_id column:", hasUserIdColumn);
+
+    // Prepare the review data
+    const reviewData = {
+      brand_id: brandId,
+      author,
+      comment,
+      rating: parseFloat(rating),
+      date,
+    };
+
+    // Add user_id only if the column exists
+    if (hasUserIdColumn && userId) {
+      reviewData.user_id = userId;
+    }
+
+    console.log("Inserting review data:", reviewData);
+
     // Add review
     const { data, error } = await supabase
       .from("reviews")
-      .insert({
-        brand_id: brandId,
-        author,
-        comment,
-        rating: parseFloat(rating),
-        date,
-        user_id: userId || null, // Make user_id optional
-      })
+      .insert([reviewData])
       .select()
       .single();
 
@@ -122,7 +141,7 @@ export async function GET(request) {
     if (error) {
       console.error(`Error fetching reviews for brand ${brandId}:`, error);
       return NextResponse.json(
-        { error: "Failed to fetch reviews" },
+        { error: "Failed to fetch reviews", details: error.message },
         { status: 500 }
       );
     }
@@ -132,52 +151,55 @@ export async function GET(request) {
   } catch (error) {
     console.error("Unexpected error:", error);
     return NextResponse.json(
-      { error: "An unexpected error occurred" },
+      { error: "An unexpected error occurred", details: error.message },
       { status: 500 }
     );
   }
 }
 
-// Helper function to update brand's average rating
+// Function to update brand rating based on reviews
 async function updateBrandRating(supabase, brandId) {
-  console.log(`Updating average rating for brand ${brandId}`);
+  try {
+    console.log(`Updating rating for brand ${brandId}`);
 
-  // Get all ratings for the brand
-  const { data: reviews, error: reviewsError } = await supabase
-    .from("reviews")
-    .select("rating")
-    .eq("brand_id", brandId);
+    // Get all reviews for this brand
+    const { data: reviews, error: reviewsError } = await supabase
+      .from("reviews")
+      .select("rating")
+      .eq("brand_id", brandId);
 
-  if (reviewsError) {
-    console.error(`Error fetching ratings for brand ${brandId}:`, reviewsError);
-    return;
-  }
+    if (reviewsError) {
+      console.error("Error fetching reviews for rating update:", reviewsError);
+      return;
+    }
 
-  if (!reviews || reviews.length === 0) {
+    if (!reviews || reviews.length === 0) {
+      console.log("No reviews found for brand, skipping rating update");
+      return;
+    }
+
+    // Calculate average rating
+    const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
+    const averageRating = totalRating / reviews.length;
+
     console.log(
-      `No reviews found for brand ${brandId}, skipping rating update`
+      `Calculated average rating: ${averageRating} from ${reviews.length} reviews`
     );
-    return;
-  }
 
-  // Calculate average rating
-  const sum = reviews.reduce((acc, review) => acc + review.rating, 0);
-  const avgRating = sum / reviews.length;
-  const roundedRating = Math.round(avgRating * 10) / 10; // Round to 1 decimal place
+    // Update brand rating
+    const { error: updateError } = await supabase
+      .from("brands")
+      .update({ rating: averageRating })
+      .eq("id", brandId);
 
-  console.log(
-    `New average rating for brand ${brandId}: ${roundedRating} (from ${reviews.length} reviews)`
-  );
-
-  // Update brand's rating
-  const { error: updateError } = await supabase
-    .from("brands")
-    .update({ rating: roundedRating })
-    .eq("id", brandId);
-
-  if (updateError) {
-    console.error(`Error updating brand rating for ${brandId}:`, updateError);
-  } else {
-    console.log(`Successfully updated rating for brand ${brandId}`);
+    if (updateError) {
+      console.error("Error updating brand rating:", updateError);
+    } else {
+      console.log(
+        `Successfully updated brand ${brandId} rating to ${averageRating}`
+      );
+    }
+  } catch (error) {
+    console.error("Error in updateBrandRating:", error);
   }
 }
