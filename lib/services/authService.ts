@@ -1,5 +1,6 @@
 import { supabase } from "../supabase";
 import { Provider } from "@supabase/supabase-js";
+import { clearRememberMe } from "../utils/rememberMe";
 
 export type UserRole = "user" | "admin" | "super_admin" | "brand_admin";
 
@@ -126,6 +127,9 @@ export async function signOut() {
     console.error("Error signing out:", error);
     throw error;
   }
+
+  // Clear remember me data on explicit sign out
+  clearRememberMe();
 
   return true;
 }
@@ -267,12 +271,37 @@ export async function resetPassword(email: string) {
     throw new Error("Supabase client not available");
   }
 
+  const redirectUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}/reset-password`
+      : "http://localhost:3001/reset-password";
+
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${window.location.origin}/reset-password`,
+    redirectTo: redirectUrl,
   });
 
   if (error) {
     console.error("Error resetting password:", error);
+    throw error;
+  }
+
+  return true;
+}
+
+/**
+ * Update user password (used in reset password flow)
+ */
+export async function updatePassword(newPassword: string) {
+  if (!supabase) {
+    throw new Error("Supabase client not available");
+  }
+
+  const { error } = await supabase.auth.updateUser({
+    password: newPassword,
+  });
+
+  if (error) {
+    console.error("Error updating password:", error);
     throw error;
   }
 

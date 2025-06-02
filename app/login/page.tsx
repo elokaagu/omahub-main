@@ -7,6 +7,11 @@ import { signIn } from "@/lib/services/authService";
 import { Button } from "@/components/ui/button";
 import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
 import ErrorBoundary from "../components/ErrorBoundary";
+import {
+  saveRememberMe,
+  getRememberedData,
+  clearRememberMe,
+} from "@/lib/utils/rememberMe";
 
 // Component to handle search params
 function LoginForm() {
@@ -16,9 +21,19 @@ function LoginForm() {
   const [urlError, setUrlError] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [debugInfo, setDebugInfo] = useState<string | null>(null);
+
+  // Load remembered data on component mount
+  useEffect(() => {
+    const rememberedData = getRememberedData();
+    if (rememberedData.rememberMe && rememberedData.email) {
+      setEmail(rememberedData.email);
+      setRememberMe(true);
+    }
+  }, []);
 
   // Check for error parameter in URL
   useEffect(() => {
@@ -78,6 +93,9 @@ function LoginForm() {
     try {
       const { session } = await signIn(email, password);
       if (session) {
+        // Save or clear remember me preference
+        saveRememberMe(email, rememberMe);
+
         // Add a small delay to ensure auth state is updated
         await new Promise((resolve) => setTimeout(resolve, 500));
 
@@ -87,8 +105,22 @@ function LoginForm() {
     } catch (err) {
       console.error("Login error:", err);
       setError("Invalid email or password. Please try again.");
+
+      // Clear remember me data on failed login
+      if (rememberMe) {
+        clearRememberMe();
+        setRememberMe(false);
+      }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRememberMeChange = (checked: boolean) => {
+    setRememberMe(checked);
+    if (!checked) {
+      // If unchecking, clear any existing remembered data
+      clearRememberMe();
     }
   };
 
@@ -161,6 +193,8 @@ function LoginForm() {
               id="remember-me"
               name="remember-me"
               type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => handleRememberMeChange(e.target.checked)}
               className="h-4 w-4 text-oma-plum focus:ring-oma-plum border-gray-300 rounded"
             />
             <label
