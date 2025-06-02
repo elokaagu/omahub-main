@@ -341,11 +341,16 @@ export default function Header() {
       <div
         className={cn(
           "lg:hidden",
-          mobileMenuOpen ? "fixed inset-0 z-50 bg-white px-6 py-6" : "hidden"
+          mobileMenuOpen ? "fixed inset-0 z-50 bg-white" : "hidden"
         )}
       >
-        <div className="flex items-center justify-between">
-          <Link href="/" className="-m-1.5 pl-0">
+        {/* Header with logo and close button */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+          <Link
+            href="/"
+            className="-m-1.5 pl-0"
+            onClick={() => setMobileMenuOpen(false)}
+          >
             <Image
               src="/lovable-uploads/omahub-logo.png"
               alt="OmaHub"
@@ -357,7 +362,7 @@ export default function Header() {
           </Link>
           <button
             type="button"
-            className="-m-2.5 rounded-md p-2.5 text-gray-700"
+            className="-m-2.5 rounded-md p-2.5 text-gray-700 hover:bg-gray-100"
             onClick={() => setMobileMenuOpen(false)}
           >
             <span className="sr-only">Close menu</span>
@@ -365,23 +370,44 @@ export default function Header() {
           </button>
         </div>
 
-        <div className="mt-6 flow-root">
-          <div className="-my-6 divide-y divide-gray-500/10">
-            <div className="space-y-2 py-6">
+        {/* Scrollable content */}
+        <div className="flex-1 overflow-y-auto px-6 py-4 max-h-[calc(100vh-80px)]">
+          <div className="space-y-6">
+            {/* Main Navigation */}
+            <div className="space-y-2">
+              <h3 className="text-xs font-medium uppercase tracking-wider text-gray-500 mb-3">
+                Navigate
+              </h3>
               {navigation.map((item) => (
                 <Link
                   key={item.name}
                   href={item.href}
-                  className="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="-mx-3 block rounded-lg px-3 py-3 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 transition-colors"
                 >
                   {item.name}
                 </Link>
               ))}
+              <Link
+                href="/directory"
+                onClick={() => setMobileMenuOpen(false)}
+                className="-mx-3 block rounded-lg px-3 py-3 text-base font-semibold leading-7 text-oma-plum hover:bg-oma-beige/50 transition-colors"
+              >
+                Explore Directory
+              </Link>
+            </div>
+
+            {/* Categories */}
+            <div className="space-y-2">
+              <h3 className="text-xs font-medium uppercase tracking-wider text-gray-500 mb-3">
+                Categories
+              </h3>
               {navigationItems.map((category) => (
                 <div key={category.title} className="space-y-2">
                   <Link
                     href={category.href}
-                    className="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="-mx-3 block rounded-lg px-3 py-3 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 transition-colors"
                   >
                     {category.title}
                   </Link>
@@ -390,7 +416,8 @@ export default function Header() {
                       <Link
                         key={item.title}
                         href={item.href}
-                        className="-mx-3 block rounded-lg px-3 py-2 text-sm leading-7 text-gray-700 hover:bg-gray-50"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="-mx-3 block rounded-lg px-3 py-2 text-sm leading-7 text-gray-700 hover:bg-gray-50 transition-colors"
                       >
                         {item.title}
                       </Link>
@@ -399,44 +426,132 @@ export default function Header() {
                 </div>
               ))}
             </div>
-            <div className="py-6">
+
+            {/* User Section */}
+            <div className="border-t border-gray-200 pt-6">
               {user ? (
                 <div className="space-y-3">
+                  <h3 className="text-xs font-medium uppercase tracking-wider text-gray-500 mb-3">
+                    Account
+                  </h3>
+
+                  {/* User Info */}
+                  <div className="flex items-center gap-3 px-3 py-2 bg-gray-50 rounded-lg">
+                    {user.avatar_url ? (
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage
+                          src={user.avatar_url}
+                          alt={`${user.first_name || ""} ${user.last_name || ""}`}
+                        />
+                        <AvatarFallback>
+                          <User className="h-4 w-4" />
+                        </AvatarFallback>
+                      </Avatar>
+                    ) : (
+                      <div className="h-8 w-8 bg-oma-plum rounded-full flex items-center justify-center">
+                        <User className="h-4 w-4 text-white" />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">
+                        {user.first_name
+                          ? `${user.first_name} ${user.last_name || ""}`.trim()
+                          : user.email}
+                      </p>
+                      <p className="text-xs text-gray-500 truncate">
+                        {user.role === "admin" || user.role === "super_admin"
+                          ? "Admin"
+                          : "Member"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* User Menu Items */}
                   <Link
                     href="/profile"
-                    className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="-mx-3 flex items-center gap-3 rounded-lg px-3 py-3 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 transition-colors"
                   >
+                    <User className="h-5 w-5 text-gray-500" />
                     Profile
                   </Link>
+
                   <Link
                     href="/favorites"
-                    className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="-mx-3 flex items-center gap-3 rounded-lg px-3 py-3 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 transition-colors"
                   >
+                    <Heart className="h-5 w-5 text-gray-500" />
                     Favorites
                   </Link>
+
+                  {/* Studio Access for Admins */}
                   {(user?.role === "admin" || user?.role === "super_admin") && (
-                    <Link
-                      href="/studio"
-                      className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
+                    <button
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        handleStudioNavigation();
+                      }}
+                      disabled={isNavigating}
+                      className="-mx-3 flex items-center gap-3 rounded-lg px-3 py-3 text-base font-semibold leading-7 text-oma-plum hover:bg-oma-beige/50 transition-colors disabled:opacity-50 w-full text-left"
                     >
-                      Studio
-                    </Link>
+                      <Palette className="h-5 w-5" />
+                      Studio {isNavigating && "..."}
+                    </button>
                   )}
+
+                  {/* Sign Out */}
                   <button
-                    onClick={handleSignOut}
-                    className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-red-600 hover:bg-red-50 w-full text-left"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      handleSignOut();
+                    }}
+                    className="-mx-3 flex items-center gap-3 rounded-lg px-3 py-3 text-base font-semibold leading-7 text-red-600 hover:bg-red-50 transition-colors w-full text-left"
                   >
+                    <LogOut className="h-5 w-5" />
                     Sign Out
                   </button>
                 </div>
               ) : (
-                <Link
-                  href="/login"
-                  className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
-                >
-                  Sign In
-                </Link>
+                <div className="space-y-3">
+                  <h3 className="text-xs font-medium uppercase tracking-wider text-gray-500 mb-3">
+                    Account
+                  </h3>
+
+                  {/* Sign In Button */}
+                  <Link
+                    href="/login"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="-mx-3 flex items-center justify-center gap-3 rounded-lg px-3 py-4 text-base font-semibold leading-7 bg-oma-plum text-white hover:bg-oma-plum/90 transition-colors"
+                  >
+                    <User className="h-5 w-5" />
+                    Sign In
+                  </Link>
+
+                  {/* Sign Up Link */}
+                  <Link
+                    href="/signup"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="-mx-3 block text-center rounded-lg px-3 py-2 text-sm leading-7 text-oma-plum hover:bg-oma-beige/50 transition-colors"
+                  >
+                    Don't have an account? Sign up
+                  </Link>
+                </div>
               )}
+            </div>
+
+            {/* Search Button */}
+            <div className="border-t border-gray-200 pt-6">
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  setIsSearchOpen(true);
+                }}
+                className="-mx-3 flex items-center gap-3 rounded-lg px-3 py-3 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 transition-colors w-full text-left"
+              >
+                <Search className="h-5 w-5 text-gray-500" />
+                Search
+              </button>
             </div>
           </div>
         </div>
