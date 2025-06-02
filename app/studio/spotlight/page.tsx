@@ -120,8 +120,8 @@ export default function SpotlightManagementPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-8">
-      <div className="flex justify-between items-center mb-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-8 gap-4">
         <div>
           <h1 className="text-3xl font-canela text-oma-black mb-2">
             Spotlight Management
@@ -130,9 +130,15 @@ export default function SpotlightManagementPage() {
             Manage the featured brand spotlight section on the homepage
           </p>
         </div>
-        <Button asChild className="bg-oma-plum hover:bg-oma-plum/90">
-          <Link href="/studio/spotlight/create">
-            <Plus className="h-4 w-4 mr-2" />
+        <Button
+          asChild
+          className="bg-oma-plum hover:bg-oma-plum/90 w-full sm:w-auto"
+        >
+          <Link
+            href="/studio/spotlight/create"
+            className="flex items-center justify-center gap-2"
+          >
+            <Plus className="h-4 w-4" />
             Create Spotlight
           </Link>
         </Button>
@@ -149,16 +155,22 @@ export default function SpotlightManagementPage() {
               Create your first spotlight content to feature a brand on the
               homepage
             </p>
-            <Button asChild className="bg-oma-plum hover:bg-oma-plum/90">
-              <Link href="/studio/spotlight/create">
-                <Plus className="h-4 w-4 mr-2" />
+            <Button
+              asChild
+              className="bg-oma-plum hover:bg-oma-plum/90 w-full sm:w-auto"
+            >
+              <Link
+                href="/studio/spotlight/create"
+                className="flex items-center justify-center gap-2"
+              >
+                <Plus className="h-4 w-4" />
                 Create Spotlight
               </Link>
             </Button>
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {spotlightContent.map((item) => (
             <Card key={item.id} className="overflow-hidden">
               <div className="relative">
@@ -179,7 +191,9 @@ export default function SpotlightManagementPage() {
               </div>
 
               <CardHeader>
-                <CardTitle className="text-lg">{item.title}</CardTitle>
+                <CardTitle className="text-lg line-clamp-1">
+                  {item.title}
+                </CardTitle>
                 <p className="text-sm text-oma-cocoa line-clamp-2">
                   {item.subtitle}
                 </p>
@@ -188,7 +202,7 @@ export default function SpotlightManagementPage() {
               <CardContent>
                 <div className="space-y-3">
                   <div>
-                    <p className="text-sm font-medium text-oma-black">
+                    <p className="text-sm font-medium text-oma-black line-clamp-1">
                       Brand: {item.brand_name}
                     </p>
                     <p className="text-xs text-oma-cocoa line-clamp-2">
@@ -196,7 +210,7 @@ export default function SpotlightManagementPage() {
                     </p>
                   </div>
 
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2">
                     <Button
                       asChild
                       variant="outline"

@@ -163,12 +163,15 @@ export default function CollectionsPage() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-8 gap-4">
         <h1 className="text-3xl font-canela text-gray-900">Collections</h1>
-        <Button asChild className="bg-oma-plum hover:bg-oma-plum/90">
+        <Button
+          asChild
+          className="bg-oma-plum hover:bg-oma-plum/90 w-full sm:w-auto"
+        >
           <Link
             href="/studio/collections/create"
-            className="flex items-center gap-2"
+            className="flex items-center justify-center gap-2"
           >
             <PlusCircle className="h-4 w-4" />
             Add New Collection
@@ -184,7 +187,7 @@ export default function CollectionsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
             <div className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
               <Input
@@ -213,20 +216,28 @@ export default function CollectionsPage() {
           {/* Collections Grid */}
           {filteredCollections.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-gray-500 mb-4">
+              <div className="text-gray-400 mb-4">
+                <Search className="h-12 w-12 mx-auto" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                No collections found
+              </h3>
+              <p className="text-gray-600 mb-6">
                 {searchQuery || selectedBrand !== "all"
-                  ? "No collections found matching your criteria."
-                  : "No collections found. Create your first collection to get started."}
+                  ? "Try adjusting your search or filter criteria."
+                  : "Get started by creating your first collection."}
               </p>
-              <Button asChild className="bg-oma-plum hover:bg-oma-plum/90">
-                <Link href="/studio/collections/create">
-                  <PlusCircle className="h-4 w-4 mr-2" />
-                  Create Collection
-                </Link>
-              </Button>
+              {!searchQuery && selectedBrand === "all" && (
+                <Button asChild className="bg-oma-plum hover:bg-oma-plum/90">
+                  <Link href="/studio/collections/create">
+                    <PlusCircle className="h-4 w-4 mr-2" />
+                    Create First Collection
+                  </Link>
+                </Button>
+              )}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredCollections.map((collection) => (
                 <Card
                   key={collection.id}
@@ -242,14 +253,13 @@ export default function CollectionsPage() {
                     />
                   </div>
                   <CardContent className="p-4">
-                    <h3 className="font-semibold text-lg mb-1">
+                    <h3 className="font-semibold text-lg mb-1 line-clamp-1">
                       {collection.title}
                     </h3>
-                    <p className="text-gray-600 text-sm mb-4">
+                    <p className="text-gray-600 text-sm mb-4 line-clamp-1">
                       by {collection.brand.name}
                     </p>
-
-                    <div className="flex gap-2">
+                    <div className="flex flex-col sm:flex-row gap-2">
                       <Button
                         variant="outline"
                         size="sm"
@@ -269,12 +279,13 @@ export default function CollectionsPage() {
                         Edit
                       </Button>
                       <Button
-                        variant="outline"
+                        variant="destructive"
                         size="sm"
                         onClick={() => confirmDeleteCollection(collection.id)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        className="flex-1"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-4 w-4 mr-1" />
+                        Delete
                       </Button>
                     </div>
                   </CardContent>

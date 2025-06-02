@@ -179,19 +179,25 @@ export default function HeroManagementPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-8">
-      <div className="flex justify-between items-center mb-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-8 gap-4">
         <div>
           <h1 className="text-3xl font-canela text-oma-black mb-2">
             Hero Carousel Management
           </h1>
           <p className="text-oma-cocoa">
-            Manage the hero slides that appear on the homepage carousel
+            Manage the hero slides displayed on the homepage
           </p>
         </div>
-        <Button asChild className="bg-oma-plum hover:bg-oma-plum/90">
-          <Link href="/studio/hero/create">
-            <Plus className="h-4 w-4 mr-2" />
+        <Button
+          asChild
+          className="bg-oma-plum hover:bg-oma-plum/90 w-full sm:w-auto"
+        >
+          <Link
+            href="/studio/hero/create"
+            className="flex items-center justify-center gap-2"
+          >
+            <Plus className="h-4 w-4" />
             Create Hero Slide
           </Link>
         </Button>
@@ -205,146 +211,172 @@ export default function HeroManagementPage() {
               No hero slides yet
             </h3>
             <p className="text-oma-cocoa text-center mb-6">
-              Create your first hero slide to feature on the homepage carousel
+              Create your first hero slide to showcase content on the homepage
             </p>
-            <Button asChild className="bg-oma-plum hover:bg-oma-plum/90">
-              <Link href="/studio/hero/create">
-                <Plus className="h-4 w-4 mr-2" />
+            <Button
+              asChild
+              className="bg-oma-plum hover:bg-oma-plum/90 w-full sm:w-auto"
+            >
+              <Link
+                href="/studio/hero/create"
+                className="flex items-center justify-center gap-2"
+              >
+                <Plus className="h-4 w-4" />
                 Create Hero Slide
               </Link>
             </Button>
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-6">
           {heroSlides.map((slide, index) => (
             <Card key={slide.id} className="overflow-hidden">
-              <div className="flex">
-                {/* Image Preview */}
-                <div className="relative w-48 h-32 flex-shrink-0">
-                  <Image
-                    src={slide.image}
-                    alt={slide.title}
-                    fill
-                    className="object-cover"
-                  />
-                  <div className="absolute top-2 left-2 flex gap-1">
-                    {slide.is_active && (
-                      <Badge className="bg-green-500 hover:bg-green-600 text-xs">
-                        Active
-                      </Badge>
-                    )}
-                    {slide.is_editorial && (
-                      <Badge variant="secondary" className="text-xs">
-                        Editorial
-                      </Badge>
-                    )}
+              <div className="flex flex-col lg:flex-row">
+                <div className="lg:w-1/3">
+                  <div className="aspect-video lg:aspect-square relative">
+                    <Image
+                      src={slide.image}
+                      alt={slide.title}
+                      width={400}
+                      height={300}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                 </div>
 
-                {/* Content */}
                 <div className="flex-1 p-6">
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <h3 className="text-lg font-semibold text-oma-black mb-1">
-                        {slide.hero_title || slide.title}
-                      </h3>
-                      <p className="text-sm text-oma-cocoa mb-2">
-                        {slide.subtitle}
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-4 gap-4">
+                    <div className="flex-1">
+                      <div className="flex flex-wrap items-center gap-2 mb-2">
+                        <h3 className="text-xl font-semibold text-oma-black">
+                          {slide.title}
+                        </h3>
+                        <Badge
+                          variant={slide.is_active ? "default" : "secondary"}
+                        >
+                          {slide.is_active ? "Active" : "Inactive"}
+                        </Badge>
+                        {slide.is_editorial && (
+                          <Badge variant="outline">Editorial</Badge>
+                        )}
+                      </div>
+
+                      <p className="text-lg text-oma-plum font-medium mb-2">
+                        {slide.hero_title}
                       </p>
-                      <div className="flex items-center gap-2 text-xs text-oma-cocoa/70">
-                        <span>Order: {slide.display_order}</span>
-                        <span>•</span>
-                        <span>Link: {slide.link || "No link"}</span>
+
+                      {slide.subtitle && (
+                        <p className="text-oma-cocoa mb-4 line-clamp-2">
+                          {slide.subtitle}
+                        </p>
+                      )}
+
+                      <div className="text-sm text-oma-cocoa">
+                        <p>Display Order: {slide.display_order}</p>
+                        <p>
+                          Created:{" "}
+                          {new Date(slide.created_at).toLocaleDateString()}
+                        </p>
                       </div>
                     </div>
 
-                    {/* Order Controls */}
-                    <div className="flex flex-col gap-1">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleMoveUp(index)}
-                        disabled={index === 0 || isReordering}
-                        className="h-8 w-8 p-0"
-                      >
-                        <ArrowUp className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleMoveDown(index)}
-                        disabled={
-                          index === heroSlides.length - 1 || isReordering
-                        }
-                        className="h-8 w-8 p-0"
-                      >
-                        <ArrowDown className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex gap-2">
-                    <Button asChild variant="outline" size="sm">
-                      <Link href={`/studio/hero/${slide.id}`}>
-                        <Edit className="h-3 w-3 mr-1" />
-                        Edit
-                      </Link>
-                    </Button>
-
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        handleToggleStatus(slide.id, slide.is_active)
-                      }
-                      disabled={isToggling === slide.id}
-                    >
-                      {isToggling === slide.id ? (
-                        <div className="h-3 w-3 mr-1 animate-spin rounded-full border border-current border-t-transparent" />
-                      ) : slide.is_active ? (
-                        <EyeOff className="h-3 w-3 mr-1" />
-                      ) : (
-                        <Eye className="h-3 w-3 mr-1" />
-                      )}
-                      {slide.is_active ? "Deactivate" : "Activate"}
-                    </Button>
-
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
+                    <div className="flex flex-col sm:flex-row gap-2 min-w-fit">
+                      <div className="flex gap-2">
                         <Button
-                          variant="destructive"
+                          variant="outline"
                           size="sm"
-                          disabled={isDeleting === slide.id}
+                          onClick={() => handleMoveUp(index)}
+                          disabled={index === 0 || isReordering}
+                          className="flex-1 sm:flex-none"
                         >
-                          {isDeleting === slide.id ? (
-                            <div className="h-3 w-3 mr-1 animate-spin rounded-full border border-current border-t-transparent" />
-                          ) : (
-                            <Trash2 className="h-3 w-3 mr-1" />
-                          )}
-                          Delete
+                          <ArrowUp className="h-4 w-4" />
                         </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Delete Hero Slide</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Are you sure you want to delete "{slide.title}"?
-                            This action cannot be undone.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => handleDelete(slide.id)}
-                            className="bg-red-600 hover:bg-red-700"
-                          >
-                            Delete
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleMoveDown(index)}
+                          disabled={
+                            index === heroSlides.length - 1 || isReordering
+                          }
+                          className="flex-1 sm:flex-none"
+                        >
+                          <ArrowDown className="h-4 w-4" />
+                        </Button>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            router.push(`/studio/hero/${slide.id}`)
+                          }
+                          className="flex-1 sm:flex-none"
+                        >
+                          <Edit className="h-4 w-4 mr-1" />
+                          <span className="sm:hidden">Edit</span>
+                        </Button>
+
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            handleToggleStatus(slide.id, slide.is_active)
+                          }
+                          disabled={isToggling === slide.id}
+                          className="flex-1 sm:flex-none"
+                        >
+                          {isToggling === slide.id ? (
+                            <div className="h-4 w-4 animate-spin rounded-full border border-current border-t-transparent" />
+                          ) : slide.is_active ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                          <span className="ml-1 sm:hidden">
+                            {slide.is_active ? "Deactivate" : "Activate"}
+                          </span>
+                        </Button>
+
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              disabled={isDeleting === slide.id}
+                              className="flex-1 sm:flex-none"
+                            >
+                              {isDeleting === slide.id ? (
+                                <div className="h-4 w-4 animate-spin rounded-full border border-current border-t-transparent" />
+                              ) : (
+                                <Trash2 className="h-4 w-4" />
+                              )}
+                              <span className="ml-1 sm:hidden">Delete</span>
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>
+                                Delete Hero Slide
+                              </AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to delete "{slide.title}"?
+                                This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleDelete(slide.id)}
+                                className="bg-red-600 hover:bg-red-700"
+                              >
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
