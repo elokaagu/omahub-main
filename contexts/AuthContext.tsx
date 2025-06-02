@@ -47,90 +47,101 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
-    let timeoutId: NodeJS.Timeout;
-
-    // Clean up any corrupted cookies before initializing auth
-    if (typeof window !== "undefined") {
-      if (hasCorruptedCookies()) {
-        console.log("🧹 Corrupted cookies detected, cleaning up...");
-        cleanupCorruptedCookies();
-      }
-    }
 
     const initializeAuth = async () => {
       try {
-        // Handle case where client is null during SSR
+        // Clean up any corrupted cookies before initializing
+        console.log("🔍 Checking for corrupted cookies...");
+        if (hasCorruptedCookies()) {
+          console.log("🧹 Found corrupted cookies, cleaning up...");
+          cleanupCorruptedCookies();
+
+          // Wait a bit for cleanup to complete
+          await new Promise((resolve) => setTimeout(resolve, 100));
+        }
+
+        console.log("🔐 Initializing authentication...");
+
+        // Check if supabase client is available
         if (!supabase) {
-          AuthDebug.log(
-            "Supabase client not available, waiting for hydration..."
-          );
-          // Set a timeout to prevent infinite loading
-          timeoutId = setTimeout(() => {
-            if (mounted) {
-              AuthDebug.log("Timeout reached, setting loading to false");
-              setLoading(false);
-            }
-          }, 5000);
+          console.error("❌ Supabase client not available");
+          if (mounted) {
+            setLoading(false);
+          }
           return;
         }
 
-        AuthDebug.log("Initializing auth with Supabase client");
+        // Get initial session with error handling
+        let session = null;
+        try {
+          const { data: sessionData, error: sessionError } =
+            await supabase.auth.getSession();
 
-        // Get initial session
-        const {
-          data: { session: initialSession },
-          error,
-        } = await supabase.auth.getSession();
+          if (sessionError) {
+            console.error("❌ Session error:", sessionError);
+            // If session is corrupted, clean up and try again
+            if (
+              sessionError.message?.includes("Invalid") ||
+              sessionError.message?.includes("JSON")
+            ) {
+              console.log("🧹 Session corrupted, cleaning up...");
+              cleanupCorruptedCookies();
+              await new Promise((resolve) => setTimeout(resolve, 100));
 
-        if (error) {
-          AuthDebug.error("Error getting initial session:", error);
+              // Try one more time
+              const { data: retrySessionData } =
+                await supabase.auth.getSession();
+              session = retrySessionData?.session;
+            }
+          } else {
+            session = sessionData?.session;
+          }
+        } catch (error) {
+          console.error("❌ Critical session error:", error);
+          cleanupCorruptedCookies();
+        }
+
+        if (!mounted) return;
+
+        if (session?.user) {
+          console.log("✅ User session found:", session.user.email);
+          setSession(session);
+
+          try {
+            // Fetch user profile
+            const profile = await getProfile(session.user.id);
+            if (mounted) {
+              setUser(profile);
+              console.log("✅ User profile loaded:", profile?.role);
+            }
+          } catch (profileError) {
+            console.error("❌ Error loading profile:", profileError);
+            // Don't fail auth if profile loading fails
+          }
         } else {
-          AuthDebug.log("Initial session:", { hasSession: !!initialSession });
+          console.log("ℹ️ No active session");
+          setSession(null);
+          setUser(null);
+        }
+      } catch (error) {
+        console.error("❌ Auth initialization error:", error);
+
+        // If there's a critical error, clean up everything
+        if (
+          error instanceof Error &&
+          (error.message.includes("JSON") ||
+            error.message.includes("Invalid") ||
+            error.message.includes("Unexpected token"))
+        ) {
+          console.log("🚨 Critical auth error, performing force cleanup...");
+          cleanupCorruptedCookies();
         }
 
         if (mounted) {
-          setSession(initialSession);
-
-          // Get user profile if session exists
-          if (initialSession?.user?.id) {
-            const profile = await getProfile(initialSession.user.id);
-            setUser(profile);
-          } else {
-            setUser(null);
-          }
-
-          setLoading(false);
+          setSession(null);
+          setUser(null);
         }
-
-        // Listen for auth changes
-        const {
-          data: { subscription },
-        } = supabase.auth.onAuthStateChange(async (event, session) => {
-          AuthDebug.log("Auth state changed:", {
-            event,
-            hasSession: !!session,
-          });
-
-          if (mounted) {
-            setSession(session);
-
-            // Get user profile if session exists
-            if (session?.user?.id) {
-              const profile = await getProfile(session.user.id);
-              setUser(profile);
-            } else {
-              setUser(null);
-            }
-
-            setLoading(false);
-          }
-        });
-
-        return () => {
-          subscription.unsubscribe();
-        };
-      } catch (error) {
-        AuthDebug.error("Error in auth initialization:", error);
+      } finally {
         if (mounted) {
           setLoading(false);
         }
@@ -139,11 +150,70 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     initializeAuth();
 
+    // Set up auth state change listener with error handling
+    if (supabase) {
+      const {
+        data: { subscription },
+      } = supabase.auth.onAuthStateChange(async (event, session) => {
+        try {
+          console.log("🔄 Auth state changed:", event);
+
+          if (!mounted) return;
+
+          if (event === "SIGNED_IN" && session?.user) {
+            console.log("✅ User signed in:", session.user.email);
+            setSession(session);
+
+            try {
+              const profile = await getProfile(session.user.id);
+              if (mounted) {
+                setUser(profile);
+              }
+            } catch (profileError) {
+              console.error(
+                "❌ Error loading profile after sign in:",
+                profileError
+              );
+            }
+          } else if (event === "SIGNED_OUT") {
+            console.log("👋 User signed out");
+            setSession(null);
+            setUser(null);
+
+            // Clean up any remaining auth cookies
+            cleanupCorruptedCookies();
+          } else if (event === "TOKEN_REFRESHED" && session?.user) {
+            console.log("🔄 Token refreshed for:", session.user.email);
+            setSession(session);
+          }
+        } catch (error) {
+          console.error("❌ Auth state change error:", error);
+
+          // Handle corrupted session during state change
+          if (
+            error instanceof Error &&
+            (error.message.includes("JSON") ||
+              error.message.includes("Invalid"))
+          ) {
+            console.log("🧹 Cleaning up corrupted session...");
+            cleanupCorruptedCookies();
+
+            if (mounted) {
+              setSession(null);
+              setUser(null);
+            }
+          }
+        }
+      });
+
+      return () => {
+        mounted = false;
+        subscription.unsubscribe();
+      };
+    }
+
     return () => {
       mounted = false;
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
     };
   }, []);
 

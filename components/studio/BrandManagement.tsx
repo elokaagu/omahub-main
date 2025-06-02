@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import type { Database } from "@/lib/types/supabase";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,7 +26,6 @@ export default function BrandManagement({
   const [brands, setBrands] = useState<Brand[]>(initialBrands);
   const [isLoading, setIsLoading] = useState(false);
   const [editingBrand, setEditingBrand] = useState<Brand | null>(null);
-  const supabase = createClientComponentClient();
 
   const canManageBrands = userPermissions.includes("studio.brands.manage");
 
@@ -40,22 +38,25 @@ export default function BrandManagement({
 
     setIsLoading(true);
     try {
-      const { data: brand, error } = await supabase
-        .from("brands")
-        .update({
+      // Use API endpoint instead of direct database call
+      const response = await fetch(`/api/studio/brands/${editingBrand.id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
           name: editingBrand.name,
           description: editingBrand.description,
           website: editingBrand.website,
-        })
-        .eq("id", editingBrand.id)
-        .select()
-        .single();
+        }),
+      });
 
-      if (error) {
-        console.error("Error updating brand:", error);
-        throw error;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to update brand");
       }
 
+      const { brand } = await response.json();
       setBrands(brands.map((b) => (b.id === brand.id ? brand : b)));
       setEditingBrand(null);
       toast.success("Brand updated successfully");
@@ -81,18 +82,23 @@ export default function BrandManagement({
 
     setIsLoading(true);
     try {
-      const { error } = await supabase
-        .from("brands")
-        .delete()
-        .eq("id", brandId);
+      // Use API endpoint instead of direct database call
+      const response = await fetch(`/api/studio/brands/${brandId}`, {
+        method: "DELETE",
+      });
 
-      if (error) throw error;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to delete brand");
+      }
 
       setBrands(brands.filter((b) => b.id !== brandId));
       toast.success("Brand deleted successfully");
     } catch (error) {
       console.error("Error deleting brand:", error);
-      toast.error("Failed to delete brand");
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
+      toast.error(`Failed to delete brand: ${errorMessage}`);
     } finally {
       setIsLoading(false);
     }
