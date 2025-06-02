@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useRouter, usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -12,11 +13,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { AuthImage } from "@/components/ui/auth-image";
 import { LogOut, User, Settings } from "lucide-react";
 import { toast } from "sonner";
 
 export default function UserProfile() {
   const { user, session, signOut } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
   const [isSigningOut, setIsSigningOut] = useState(false);
 
   const handleSignOut = async () => {
@@ -29,6 +33,29 @@ export default function UserProfile() {
       toast.error("Failed to sign out");
     } finally {
       setIsSigningOut(false);
+    }
+  };
+
+  const handleProfileClick = () => {
+    // Navigate to appropriate profile page based on current context
+    if (pathname.startsWith("/studio")) {
+      router.push("/studio/profile");
+    } else {
+      router.push("/profile");
+    }
+  };
+
+  const handleSettingsClick = () => {
+    // Navigate to appropriate settings page based on current context
+    if (pathname.startsWith("/studio")) {
+      router.push("/studio/settings");
+    } else {
+      // For main site, redirect to studio settings if user has access
+      if (user?.role === "admin" || user?.role === "super_admin") {
+        router.push("/studio/settings");
+      } else {
+        toast.info("Settings are available in the studio for administrators");
+      }
     }
   };
 
@@ -52,10 +79,19 @@ export default function UserProfile() {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-8 w-8">
-            <AvatarImage src={avatarUrl} alt={displayName} />
-            <AvatarFallback>
-              {displayName.charAt(0).toUpperCase()}
-            </AvatarFallback>
+            {avatarUrl ? (
+              <AuthImage
+                src={avatarUrl}
+                alt={displayName}
+                width={32}
+                height={32}
+                className="h-8 w-8 rounded-full object-cover"
+              />
+            ) : (
+              <AvatarFallback>
+                {displayName.charAt(0).toUpperCase()}
+              </AvatarFallback>
+            )}
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
@@ -69,16 +105,26 @@ export default function UserProfile() {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={handleProfileClick}
+          className="cursor-pointer"
+        >
           <User className="mr-2 h-4 w-4" />
           <span>Profile</span>
         </DropdownMenuItem>
-        <DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={handleSettingsClick}
+          className="cursor-pointer"
+        >
           <Settings className="mr-2 h-4 w-4" />
           <span>Settings</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleSignOut} disabled={isSigningOut}>
+        <DropdownMenuItem
+          onClick={handleSignOut}
+          disabled={isSigningOut}
+          className="cursor-pointer"
+        >
           <LogOut className="mr-2 h-4 w-4" />
           <span>{isSigningOut ? "Signing out..." : "Sign out"}</span>
         </DropdownMenuItem>
