@@ -18,7 +18,7 @@ import {
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { Loading } from "@/components/ui/loading";
-import Link from "next/link";
+import { NavigationLink } from "@/components/ui/navigation-link";
 
 export default function EditHeroSlidePage() {
   const { user } = useAuth();
@@ -153,7 +153,9 @@ export default function EditHeroSlidePage() {
             Hero Slide Not Found
           </h1>
           <Button asChild>
-            <Link href="/studio/hero">Back to Hero Slides</Link>
+            <NavigationLink href="/studio/hero">
+              Back to Hero Slides
+            </NavigationLink>
           </Button>
         </div>
       </div>
@@ -164,10 +166,10 @@ export default function EditHeroSlidePage() {
     <div className="max-w-4xl mx-auto px-6 py-8">
       <div className="flex items-center gap-4 mb-8">
         <Button asChild variant="outline" size="sm">
-          <Link href="/studio/hero">
+          <NavigationLink href="/studio/hero">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Hero Slides
-          </Link>
+          </NavigationLink>
         </Button>
         <div>
           <h1 className="text-3xl font-canela text-oma-black mb-2">
@@ -345,7 +347,7 @@ export default function EditHeroSlidePage() {
         {/* Submit Button */}
         <div className="flex justify-end gap-4">
           <Button type="button" variant="outline" asChild>
-            <Link href="/studio/hero">Cancel</Link>
+            <NavigationLink href="/studio/hero">Cancel</NavigationLink>
           </Button>
           <Button
             type="submit"

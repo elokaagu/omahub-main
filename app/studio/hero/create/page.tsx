@@ -17,7 +17,7 @@ import {
 import { ArrowLeft, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Loading } from "@/components/ui/loading";
-import Link from "next/link";
+import { NavigationLink } from "@/components/ui/navigation-link";
 
 export default function CreateHeroSlidePage() {
   const { user } = useAuth();
@@ -99,12 +99,32 @@ export default function CreateHeroSlidePage() {
 
     try {
       setIsLoading(true);
-      await createHeroSlide(user.id, formData);
+      console.log("Creating hero slide with data:", formData);
+      console.log("User ID:", user.id);
+      console.log("User role:", user.role);
+
+      const result = await createHeroSlide(user.id, formData);
+      console.log("Hero slide created successfully:", result);
+
       toast.success("Hero slide created successfully");
       router.push("/studio/hero");
     } catch (error) {
       console.error("Error creating hero slide:", error);
-      toast.error("Failed to create hero slide");
+
+      // More detailed error handling
+      if (error instanceof Error) {
+        if (error.message.includes("permission")) {
+          toast.error("Permission denied. Please check your admin privileges.");
+        } else if (error.message.includes("network")) {
+          toast.error("Network error. Please check your connection.");
+        } else if (error.message.includes("validation")) {
+          toast.error("Validation error. Please check your input data.");
+        } else {
+          toast.error(`Failed to create hero slide: ${error.message}`);
+        }
+      } else {
+        toast.error("Failed to create hero slide. Please try again.");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -118,10 +138,10 @@ export default function CreateHeroSlidePage() {
     <div className="max-w-4xl mx-auto px-6 py-8">
       <div className="flex items-center gap-4 mb-8">
         <Button asChild variant="outline" size="sm">
-          <Link href="/studio/hero">
+          <NavigationLink href="/studio/hero">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Hero Slides
-          </Link>
+          </NavigationLink>
         </Button>
         <div>
           <h1 className="text-3xl font-canela text-oma-black mb-2">
@@ -299,7 +319,7 @@ export default function CreateHeroSlidePage() {
         {/* Submit Button */}
         <div className="flex justify-end gap-4">
           <Button type="button" variant="outline" asChild>
-            <Link href="/studio/hero">Cancel</Link>
+            <NavigationLink href="/studio/hero">Cancel</NavigationLink>
           </Button>
           <Button
             type="submit"

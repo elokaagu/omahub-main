@@ -112,25 +112,64 @@ export async function createHeroSlide(
   slideData: CreateHeroSlideData
 ): Promise<HeroSlide> {
   try {
+    console.log("🚀 Starting hero slide creation...");
+    console.log("User ID:", userId);
+    console.log("Slide data:", slideData);
+
     if (!supabase) {
+      console.error("❌ Supabase client not available");
       throw new Error("Supabase client not available");
     }
 
+    console.log("✅ Supabase client available");
+
+    // Check if user has permission
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", userId)
+      .single();
+
+    if (profileError) {
+      console.error("❌ Error fetching user profile:", profileError);
+      throw new Error(`Permission check failed: ${profileError.message}`);
+    }
+
+    console.log("👤 User profile:", profile);
+
+    if (profile?.role !== "super_admin") {
+      console.error("❌ User is not super admin:", profile?.role);
+      throw new Error(
+        "Permission denied: Only super admins can create hero slides"
+      );
+    }
+
+    console.log("✅ User has super admin permissions");
+
+    // Prepare the data for insertion
+    const insertData = {
+      ...slideData,
+      is_editorial: slideData.is_editorial ?? true,
+      is_active: slideData.is_active ?? true,
+    };
+
+    console.log("📝 Insert data:", insertData);
+
     const { data, error } = await supabase
       .from("hero_slides")
-      .insert({
-        ...slideData,
-        is_editorial: slideData.is_editorial ?? true,
-        is_active: slideData.is_active ?? true,
-      })
+      .insert(insertData)
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error("❌ Database insert error:", error);
+      throw new Error(`Database error: ${error.message}`);
+    }
 
+    console.log("✅ Hero slide created successfully:", data);
     return data;
   } catch (error) {
-    console.error("Error creating hero slide:", error);
+    console.error("❌ Error creating hero slide:", error);
     throw error;
   }
 }

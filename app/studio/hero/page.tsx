@@ -39,6 +39,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { Loading } from "@/components/ui/loading";
+import { NavigationLink } from "@/components/ui/navigation-link";
 
 export default function HeroManagementPage() {
   const { user, session } = useAuth();
@@ -193,13 +194,13 @@ export default function HeroManagementPage() {
           asChild
           className="bg-oma-plum hover:bg-oma-plum/90 w-full sm:w-auto"
         >
-          <Link
+          <NavigationLink
             href="/studio/hero/create"
             className="flex items-center justify-center gap-2"
           >
             <Plus className="h-4 w-4" />
             Create Hero Slide
-          </Link>
+          </NavigationLink>
         </Button>
       </div>
 
@@ -217,13 +218,13 @@ export default function HeroManagementPage() {
               asChild
               className="bg-oma-plum hover:bg-oma-plum/90 w-full sm:w-auto"
             >
-              <Link
+              <NavigationLink
                 href="/studio/hero/create"
                 className="flex items-center justify-center gap-2"
               >
                 <Plus className="h-4 w-4" />
                 Create Hero Slide
-              </Link>
+              </NavigationLink>
             </Button>
           </CardContent>
         </Card>
@@ -308,13 +309,13 @@ export default function HeroManagementPage() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() =>
-                            router.push(`/studio/hero/${slide.id}`)
-                          }
+                          asChild
                           className="flex-1 sm:flex-none"
                         >
-                          <Edit className="h-4 w-4 mr-1" />
-                          <span className="sm:hidden">Edit</span>
+                          <NavigationLink href={`/studio/hero/${slide.id}`}>
+                            <Edit className="h-4 w-4" />
+                            <span className="ml-1 sm:hidden">Edit</span>
+                          </NavigationLink>
                         </Button>
 
                         <Button
