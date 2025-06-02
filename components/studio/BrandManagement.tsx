@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { Database } from "@/lib/types/supabase";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { toast } from "sonner";
@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Package, Trash2, PenSquare } from "lucide-react";
 import { Permission } from "@/lib/services/permissionsService";
+import React from "react";
 
 type Brand = Database["public"]["Tables"]["brands"]["Row"];
 
@@ -30,12 +31,40 @@ export default function BrandManagement({
 
   const canManageBrands = userPermissions.includes("studio.brands.manage");
 
+  // Debug current user and session
+  useEffect(() => {
+    const checkAuth = async () => {
+      const {
+        data: { session },
+        error,
+      } = await supabase.auth.getSession();
+      console.log("🔍 BrandManagement Auth Debug:", {
+        userId,
+        userPermissions,
+        canManageBrands,
+        hasSession: !!session,
+        sessionUserId: session?.user?.id,
+        sessionUserEmail: session?.user?.email,
+        error,
+      });
+    };
+    checkAuth();
+  }, [userId, userPermissions, canManageBrands, supabase]);
+
   const handleUpdateBrand = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingBrand || !canManageBrands) {
       toast.error("You don't have permission to update brands");
       return;
     }
+
+    console.log("🔄 Updating brand:", {
+      brandId: editingBrand.id,
+      brandName: editingBrand.name,
+      userId: userId,
+      canManageBrands,
+      userPermissions,
+    });
 
     setIsLoading(true);
     try {
@@ -50,14 +79,22 @@ export default function BrandManagement({
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("❌ Supabase error updating brand:", error);
+        throw error;
+      }
 
+      console.log("✅ Brand updated successfully:", brand);
       setBrands(brands.map((b) => (b.id === brand.id ? brand : b)));
       setEditingBrand(null);
       toast.success("Brand updated successfully");
     } catch (error) {
-      console.error("Error updating brand:", error);
-      toast.error("Failed to update brand");
+      console.error("❌ Error updating brand:", error);
+
+      // Show more specific error message
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
+      toast.error(`Failed to update brand: ${errorMessage}`);
     } finally {
       setIsLoading(false);
     }
