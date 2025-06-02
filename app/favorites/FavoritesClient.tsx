@@ -61,7 +61,10 @@ export default function FavoritesClient() {
         <p className="text-lg text-oma-cocoa mb-8">
           Save your favorite fashion brands to find them easily later.
         </p>
-        <Button onClick={() => router.push("/")} variant="default">
+        <Button
+          onClick={() => router.push("/")}
+          className="bg-oma-plum hover:bg-oma-plum/90 text-white"
+        >
           Explore Brands
         </Button>
       </div>
