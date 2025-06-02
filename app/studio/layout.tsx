@@ -159,7 +159,7 @@ export default function StudioLayout({
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Studio Header */}
       <header className="w-full bg-white border-b border-gray-200 shadow-sm fixed top-0 left-0 right-0 z-50 h-16 flex items-center">
-        <div className="container mx-auto px-4 flex justify-between items-center">
+        <div className="container mx-auto px-4 flex justify-between items-center h-full">
           {/* Mobile sidebar toggle - positioned before logo */}
           <div className="lg:hidden flex items-center space-x-3">
             <Button
@@ -213,12 +213,12 @@ export default function StudioLayout({
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         } mt-16`}
       >
-        <div className="p-6 h-full flex flex-col">
-          <div className="mb-8">
+        <div className="h-full flex flex-col">
+          <div className="px-6 py-4 flex items-center h-16 border-b border-gray-100">
             <h1 className="text-2xl font-canela text-oma-plum">Studio</h1>
           </div>
 
-          <nav className="space-y-1 flex-1">
+          <nav className="space-y-1 flex-1 p-6 pt-4">
             <Link
               href="/studio"
               className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100"
@@ -299,10 +299,10 @@ export default function StudioLayout({
             </button>
           </nav>
 
-          <div className="pt-6 border-t border-gray-200 mt-auto">
+          <div className="px-6 pb-6 border-t border-gray-200">
             <button
               onClick={handleSignOut}
-              className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100 w-full"
+              className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100 w-full mt-4"
             >
               <LogOut className="h-5 w-5" />
               <span>Sign Out</span>
