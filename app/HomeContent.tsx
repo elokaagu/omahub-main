@@ -18,6 +18,10 @@ import {
   getActiveHeroSlides,
   type HeroSlide,
 } from "@/lib/services/heroService";
+import {
+  getActiveSpotlightContent,
+  type SpotlightContent,
+} from "@/lib/services/spotlightService";
 import { subcategories, type Subcategory } from "@/lib/data/directory";
 import { Carousel } from "@/components/ui/carousel-custom";
 import { Loading } from "@/components/ui/loading";
@@ -127,31 +131,30 @@ export default function HomeContent() {
   const [categories, setCategories] =
     useState<CategoryWithBrands[]>(initialCategories);
   const [isLoading, setIsLoading] = useState(true);
-  const [heroSlides, setHeroSlides] = useState<HeroSlide[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [heroSlides, setHeroSlides] = useState<HeroSlide[]>([]);
+  const [spotlightContent, setSpotlightContent] =
+    useState<SpotlightContent | null>(null);
 
   useEffect(() => {
-    let isMounted = true;
-
     const fetchData = async () => {
-      if (!isMounted) return;
-      setIsLoading(true);
-      setError(null);
-
       try {
-        // Fetch data in parallel
-        const [brandsData, slides] = await Promise.all([
+        setIsLoading(true);
+        setError(null);
+
+        // Fetch hero slides and spotlight content in parallel
+        const [brandsData, heroData, spotlightData] = await Promise.all([
           getAllBrands(),
           getActiveHeroSlides(),
+          getActiveSpotlightContent(),
         ]);
 
-        if (!isMounted) return;
-
         // Process brands data
-        const updatedCategories = categoryDefinitions.map((category) => ({
+        const updatedCategories = initialCategories.map((category) => ({
           ...category,
           brands: brandsData
             .filter((brand) => brand.category === category.title)
+            .slice(0, 8)
             .map((brand) => ({
               id: brand.id,
               name: brand.name,
@@ -164,24 +167,17 @@ export default function HomeContent() {
         }));
 
         setCategories(updatedCategories);
-        setHeroSlides(slides);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        if (isMounted) {
-          setError("Failed to load content. Please try refreshing the page.");
-        }
+        setHeroSlides(heroData);
+        setSpotlightContent(spotlightData);
+      } catch (err) {
+        console.error("Error fetching data:", err);
+        setError("Failed to load content. Please try again.");
       } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
+        setIsLoading(false);
       }
     };
 
     fetchData();
-
-    return () => {
-      isMounted = false;
-    };
   }, []);
 
   if (error) {
@@ -270,131 +266,112 @@ export default function HomeContent() {
       </section>
 
       {/* Spotlight Section */}
-      <section className="py-20 bg-oma-beige relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-oma-plum/10 via-transparent to-transparent opacity-50"></div>
-        <div className="max-w-7xl mx-auto px-6 relative z-10">
-          <FadeIn>
-            <SectionHeader
-              title="Spotlight On: Mbali Studio"
-              subtitle="Where tradition meets modern edge each piece tells a story you'll want to wear."
-              titleClassName="text-2xl md:text-3xl font-canela"
-              subtitleClassName="text-base text-oma-cocoa/80"
-            />
-          </FadeIn>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center mt-10">
-            <SlideUp delay={0.2}>
-              <div className="rounded-2xl overflow-hidden relative group">
-                <Image
-                  src="/lovable-uploads/4a7c7e86-6cde-4d07-a246-a5aa4cb6fa51.png"
-                  alt="Mbali Studio collection"
-                  width={800}
-                  height={1000}
-                  className="w-full h-[500px] object-cover transition-transform duration-700 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-oma-black/70 via-oma-black/30 to-transparent"></div>
-                <div className="absolute bottom-8 left-8 right-8 text-white">
-                  <p className="font-canela italic text-xl md:text-2xl">
-                    &ldquo;This month, meet the Johannesburg studio weaving
-                    culture into silk.&rdquo;
-                  </p>
-                </div>
-              </div>
-            </SlideUp>
-
-            <SlideUp delay={0.4}>
-              <div className="flex flex-col h-full justify-center">
-                <h3 className="font-canela text-3xl md:text-4xl mb-6 text-oma-plum italic">
-                  Mbali Studio
-                </h3>
-                <p className="text-oma-cocoa mb-6 text-lg">
-                  Founded in 2018 by textile artist Thandi Mbali, this
-                  Johannesburg based studio has quickly become known for its
-                  luxurious silk pieces featuring contemporary interpretations
-                  of traditional African patterns.
-                </p>
-                <p className="text-oma-cocoa mb-8 text-lg">
-                  Each piece tells a story of cultural heritage while embracing
-                  modern silhouettes and sustainable production methods, making
-                  it a favorite among conscious fashion enthusiasts across the
-                  continent.
-                </p>
-
-                <div className="mt-4 flex flex-col gap-6">
-                  <div className="p-5 border-l-2 border-oma-gold bg-white/70 rounded-r-lg">
-                    <p className="italic text-oma-cocoa/80 text-lg">
-                      &ldquo;Where elegance comes stitched with meaning.&rdquo;
-                    </p>
-                    <p className="text-sm text-oma-cocoa/60 mt-2">
-                      — Thandi Mbali, Founder
-                    </p>
-                  </div>
-
-                  <Button
-                    asChild
-                    className="bg-oma-plum hover:bg-oma-plum/90 w-fit mt-4"
-                  >
-                    <Link href="/brand/mbali-studio">See the Collection</Link>
-                  </Button>
-                </div>
-              </div>
-            </SlideUp>
-          </div>
-
-          {/* Featured Products */}
-          <div className="mt-16">
-            <FadeIn delay={0.2}>
-              <h4 className="font-canela text-xl mb-6 text-oma-cocoa/80">
-                Featured Pieces from Mbali Studio
-              </h4>
+      {spotlightContent && (
+        <section className="py-20 bg-oma-beige relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-oma-plum/10 via-transparent to-transparent opacity-50"></div>
+          <div className="max-w-7xl mx-auto px-6 relative z-10">
+            <FadeIn>
+              <SectionHeader
+                title={spotlightContent.title}
+                subtitle={spotlightContent.subtitle}
+                titleClassName="text-2xl md:text-3xl font-canela"
+                subtitleClassName="text-base text-oma-cocoa/80"
+              />
             </FadeIn>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {[1, 2, 3, 4].map((i) => (
-                <Link
-                  key={i}
-                  href="/brand/mbali-studio"
-                  className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 group"
-                >
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center mt-10">
+              <SlideUp delay={0.2}>
+                <div className="rounded-2xl overflow-hidden relative group">
                   <Image
-                    src={`/lovable-uploads/${
-                      [
-                        "53ab4ec9-fd54-4aa8-a292-70669af33185.png",
-                        "eca14925-7de8-4100-af5d-b158ff70e951.png",
-                        "023ba098-0109-4738-9baf-1321bc3d2fe1.png",
-                        "840e541a-b4c1-4e59-94af-89c8345e4d2d.png",
-                      ][i - 1]
-                    }`}
-                    alt={`Mbali Studio ${
-                      ["Scarf", "Dress", "Top", "Pants"][i - 1]
-                    }`}
-                    width={400}
-                    height={300}
-                    className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
+                    src={spotlightContent.main_image}
+                    alt={`${spotlightContent.brand_name} collection`}
+                    width={800}
+                    height={1000}
+                    className="w-full h-[500px] object-cover transition-transform duration-700 group-hover:scale-105"
                   />
-                  <div className="p-4">
-                    <h5 className="font-medium text-oma-black group-hover:text-oma-plum transition-colors">
-                      Silk {["Scarf", "Dress", "Top", "Pants"][i - 1]}
-                    </h5>
-                    <p className="text-sm text-oma-cocoa/70">
-                      {
-                        [
-                          "Heritage Collection",
-                          "Summer '24 Collection",
-                          "Essential Series",
-                          "Limited Edition",
-                        ][i - 1]
-                      }
+                  <div className="absolute inset-0 bg-gradient-to-t from-oma-black/70 via-oma-black/30 to-transparent"></div>
+                  <div className="absolute bottom-8 left-8 right-8 text-white">
+                    <p className="font-canela italic text-xl md:text-2xl">
+                      &ldquo;{spotlightContent.brand_quote}&rdquo;
                     </p>
-                    <span className="text-sm text-oma-plum mt-2 inline-block">
-                      View Collection →
-                    </span>
                   </div>
-                </Link>
-              ))}
+                </div>
+              </SlideUp>
+
+              <SlideUp delay={0.4}>
+                <div className="flex flex-col h-full justify-center">
+                  <h3 className="font-canela text-3xl md:text-4xl mb-6 text-oma-plum italic">
+                    {spotlightContent.brand_name}
+                  </h3>
+                  <p className="text-oma-cocoa mb-6 text-lg">
+                    {spotlightContent.brand_description}
+                  </p>
+
+                  <div className="mt-4 flex flex-col gap-6">
+                    <div className="p-5 border-l-2 border-oma-gold bg-white/70 rounded-r-lg">
+                      <p className="italic text-oma-cocoa/80 text-lg">
+                        &ldquo;{spotlightContent.brand_quote}&rdquo;
+                      </p>
+                      <p className="text-sm text-oma-cocoa/60 mt-2">
+                        — {spotlightContent.brand_quote_author}
+                      </p>
+                    </div>
+
+                    <Button
+                      asChild
+                      className="bg-oma-plum hover:bg-oma-plum/90 w-fit mt-4"
+                    >
+                      <Link href={spotlightContent.brand_link}>
+                        See the Collection
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+              </SlideUp>
             </div>
+
+            {/* Featured Products */}
+            {spotlightContent.featured_products &&
+              spotlightContent.featured_products.length > 0 && (
+                <div className="mt-16">
+                  <FadeIn delay={0.2}>
+                    <h4 className="font-canela text-xl mb-6 text-oma-cocoa/80">
+                      Featured Pieces from {spotlightContent.brand_name}
+                    </h4>
+                  </FadeIn>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {spotlightContent.featured_products.map((product, i) => (
+                      <Link
+                        key={i}
+                        href={spotlightContent.brand_link}
+                        className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 group"
+                      >
+                        <Image
+                          src={product.image}
+                          alt={`${spotlightContent.brand_name} ${product.name}`}
+                          width={400}
+                          height={300}
+                          className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
+                        />
+                        <div className="p-4">
+                          <h5 className="font-medium text-oma-black group-hover:text-oma-plum transition-colors">
+                            {product.name}
+                          </h5>
+                          <p className="text-sm text-oma-cocoa/70">
+                            {product.collection}
+                          </p>
+                          <span className="text-sm text-oma-plum mt-2 inline-block">
+                            View Collection →
+                          </span>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* What are you dressing for section */}
       <section className="py-16 px-4 sm:px-6 lg:px-8 bg-oma-beige/50">
