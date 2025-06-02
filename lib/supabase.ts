@@ -50,33 +50,75 @@ const createClient = () => {
     cookies: {
       get: (name: string) => {
         if (typeof document === "undefined") return undefined;
-        const value = document.cookie
-          .split("; ")
-          .find((row) => row.startsWith(`${name}=`))
-          ?.split("=")[1];
-        return value ? decodeURIComponent(value) : undefined;
+        try {
+          const value = document.cookie
+            .split("; ")
+            .find((row) => row.startsWith(`${name}=`))
+            ?.split("=")[1];
+
+          if (!value) return undefined;
+
+          // Safely decode the cookie value
+          const decoded = decodeURIComponent(value);
+
+          // Validate that it's not corrupted base64 or JSON
+          if (name.includes("supabase") && decoded.startsWith("base64-")) {
+            try {
+              // Try to parse as base64 encoded JSON
+              const base64Data = decoded.replace("base64-", "");
+              const jsonString = atob(base64Data);
+              JSON.parse(jsonString); // Validate JSON
+              return decoded;
+            } catch (e) {
+              console.warn(
+                `Corrupted Supabase cookie detected: ${name}, removing...`
+              );
+              // Remove corrupted cookie
+              document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
+              return undefined;
+            }
+          }
+
+          return decoded;
+        } catch (error) {
+          console.warn(`Error reading cookie ${name}:`, error);
+          return undefined;
+        }
       },
       set: (name: string, value: string, options: any) => {
         if (typeof document === "undefined") return;
-        const cookieOptions = {
-          ...options,
-          sameSite: "lax",
-          secure: process.env.NODE_ENV === "production",
-        };
-        const cookieString = `${name}=${encodeURIComponent(value)}; ${Object.entries(
-          cookieOptions
-        )
-          .map(([key, val]) => `${key}=${val}`)
-          .join("; ")}`;
-        document.cookie = cookieString;
+        try {
+          const cookieOptions = {
+            ...options,
+            sameSite: "lax",
+            secure: process.env.NODE_ENV === "production",
+            path: "/",
+          };
+          const cookieString = `${name}=${encodeURIComponent(value)}; ${Object.entries(
+            cookieOptions
+          )
+            .map(([key, val]) => `${key}=${val}`)
+            .join("; ")}`;
+          document.cookie = cookieString;
+        } catch (error) {
+          console.warn(`Error setting cookie ${name}:`, error);
+        }
       },
       remove: (name: string, options: any) => {
         if (typeof document === "undefined") return;
-        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; ${Object.entries(
-          options || {}
-        )
-          .map(([key, val]) => `${key}=${val}`)
-          .join("; ")}`;
+        try {
+          const cookieOptions = {
+            ...options,
+            path: "/",
+          };
+          document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; ${Object.entries(
+            cookieOptions || {}
+          )
+            .map(([key, val]) => `${key}=${val}`)
+            .join("; ")}`;
+        } catch (error) {
+          console.warn(`Error removing cookie ${name}:`, error);
+        }
       },
     },
   });

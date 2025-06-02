@@ -31,40 +31,12 @@ export default function BrandManagement({
 
   const canManageBrands = userPermissions.includes("studio.brands.manage");
 
-  // Debug current user and session
-  useEffect(() => {
-    const checkAuth = async () => {
-      const {
-        data: { session },
-        error,
-      } = await supabase.auth.getSession();
-      console.log("🔍 BrandManagement Auth Debug:", {
-        userId,
-        userPermissions,
-        canManageBrands,
-        hasSession: !!session,
-        sessionUserId: session?.user?.id,
-        sessionUserEmail: session?.user?.email,
-        error,
-      });
-    };
-    checkAuth();
-  }, [userId, userPermissions, canManageBrands, supabase]);
-
   const handleUpdateBrand = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingBrand || !canManageBrands) {
       toast.error("You don't have permission to update brands");
       return;
     }
-
-    console.log("🔄 Updating brand:", {
-      brandId: editingBrand.id,
-      brandName: editingBrand.name,
-      userId: userId,
-      canManageBrands,
-      userPermissions,
-    });
 
     setIsLoading(true);
     try {
@@ -80,16 +52,15 @@ export default function BrandManagement({
         .single();
 
       if (error) {
-        console.error("❌ Supabase error updating brand:", error);
+        console.error("Error updating brand:", error);
         throw error;
       }
 
-      console.log("✅ Brand updated successfully:", brand);
       setBrands(brands.map((b) => (b.id === brand.id ? brand : b)));
       setEditingBrand(null);
       toast.success("Brand updated successfully");
     } catch (error) {
-      console.error("❌ Error updating brand:", error);
+      console.error("Error updating brand:", error);
 
       // Show more specific error message
       const errorMessage =

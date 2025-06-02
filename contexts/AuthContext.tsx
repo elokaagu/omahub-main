@@ -1,10 +1,20 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
-import { Session } from "@supabase/supabase-js";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from "react";
+import { Session, User as SupabaseUser } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { AuthDebug } from "@/lib/utils/debug";
-import { User, getProfile } from "@/lib/services/authService";
+import { getProfile, User } from "@/lib/services/authService";
+import {
+  cleanupCorruptedCookies,
+  hasCorruptedCookies,
+} from "@/lib/utils/cookieUtils";
 
 interface AuthContextType {
   user: User | null;
@@ -16,10 +26,11 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
   const refreshUserProfile = async () => {
     if (!session?.user?.id) return;
@@ -37,6 +48,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let mounted = true;
     let timeoutId: NodeJS.Timeout;
+
+    // Clean up any corrupted cookies before initializing auth
+    if (typeof window !== "undefined") {
+      if (hasCorruptedCookies()) {
+        console.log("🧹 Corrupted cookies detected, cleaning up...");
+        cleanupCorruptedCookies();
+      }
+    }
 
     const initializeAuth = async () => {
       try {
