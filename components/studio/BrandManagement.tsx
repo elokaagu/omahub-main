@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import type { Database } from "@/lib/types/supabase";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,8 +27,29 @@ export default function BrandManagement({
   const [brands, setBrands] = useState<Brand[]>(initialBrands);
   const [isLoading, setIsLoading] = useState(false);
   const [editingBrand, setEditingBrand] = useState<Brand | null>(null);
+  const supabase = createClientComponentClient();
 
   const canManageBrands = userPermissions.includes("studio.brands.manage");
+
+  // Debug current user and session
+  useEffect(() => {
+    const checkAuth = async () => {
+      const {
+        data: { session },
+        error,
+      } = await supabase.auth.getSession();
+      console.log("🔍 BrandManagement Auth Debug:", {
+        userId,
+        userPermissions,
+        canManageBrands,
+        hasSession: !!session,
+        sessionUserId: session?.user?.id,
+        sessionUserEmail: session?.user?.email,
+        error,
+      });
+    };
+    checkAuth();
+  }, [userId, userPermissions, canManageBrands, supabase]);
 
   const handleUpdateBrand = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,32 +58,38 @@ export default function BrandManagement({
       return;
     }
 
+    console.log("🔄 Updating brand:", {
+      brandId: editingBrand.id,
+      brandName: editingBrand.name,
+      userId: userId,
+      canManageBrands,
+      userPermissions,
+    });
+
     setIsLoading(true);
     try {
-      // Use API endpoint instead of direct database call
-      const response = await fetch(`/api/studio/brands/${editingBrand.id}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
+      const { data: brand, error } = await supabase
+        .from("brands")
+        .update({
           name: editingBrand.name,
           description: editingBrand.description,
           website: editingBrand.website,
-        }),
-      });
+        })
+        .eq("id", editingBrand.id)
+        .select()
+        .single();
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to update brand");
+      if (error) {
+        console.error("❌ Supabase error updating brand:", error);
+        throw error;
       }
 
-      const { brand } = await response.json();
+      console.log("✅ Brand updated successfully:", brand);
       setBrands(brands.map((b) => (b.id === brand.id ? brand : b)));
       setEditingBrand(null);
       toast.success("Brand updated successfully");
     } catch (error) {
-      console.error("Error updating brand:", error);
+      console.error("❌ Error updating brand:", error);
 
       // Show more specific error message
       const errorMessage =
@@ -82,23 +110,18 @@ export default function BrandManagement({
 
     setIsLoading(true);
     try {
-      // Use API endpoint instead of direct database call
-      const response = await fetch(`/api/studio/brands/${brandId}`, {
-        method: "DELETE",
-      });
+      const { error } = await supabase
+        .from("brands")
+        .delete()
+        .eq("id", brandId);
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to delete brand");
-      }
+      if (error) throw error;
 
       setBrands(brands.filter((b) => b.id !== brandId));
       toast.success("Brand deleted successfully");
     } catch (error) {
       console.error("Error deleting brand:", error);
-      const errorMessage =
-        error instanceof Error ? error.message : "Unknown error";
-      toast.error(`Failed to delete brand: ${errorMessage}`);
+      toast.error("Failed to delete brand");
     } finally {
       setIsLoading(false);
     }

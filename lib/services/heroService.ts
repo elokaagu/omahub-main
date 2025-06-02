@@ -123,63 +123,28 @@ export async function createHeroSlide(
 
     console.log("✅ Supabase client available");
 
-    // Verify current session first
-    const {
-      data: { session },
-      error: sessionError,
-    } = await supabase.auth.getSession();
-    if (sessionError) {
-      console.error("❌ Session error:", sessionError);
-      throw new Error(`Authentication error: ${sessionError.message}`);
+    // Check if user has permission
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", userId)
+      .single();
+
+    if (profileError) {
+      console.error("❌ Error fetching user profile:", profileError);
+      throw new Error(`Permission check failed: ${profileError.message}`);
     }
 
-    if (!session || session.user.id !== userId) {
-      console.error("❌ No valid session or user ID mismatch");
-      throw new Error("Authentication required. Please sign in again.");
-    }
+    console.log("👤 User profile:", profile);
 
-    console.log("✅ Valid session confirmed");
-
-    // Add timeout to prevent hanging
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(
-        () => reject(new Error("Operation timed out after 30 seconds")),
-        30000
+    if (profile?.role !== "super_admin") {
+      console.error("❌ User is not super admin:", profile?.role);
+      throw new Error(
+        "Permission denied: Only super admins can create hero slides"
       );
-    });
+    }
 
-    // Check if user has permission with timeout
-    const permissionCheck = async () => {
-      if (!supabase) {
-        throw new Error("Supabase client not available");
-      }
-
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", userId)
-        .single();
-
-      if (profileError) {
-        console.error("❌ Error fetching user profile:", profileError);
-        throw new Error(`Permission check failed: ${profileError.message}`);
-      }
-
-      console.log("👤 User profile:", profile);
-
-      if (profile?.role !== "super_admin") {
-        console.error("❌ User is not super admin:", profile?.role);
-        throw new Error(
-          "Permission denied: Only super admins can create hero slides"
-        );
-      }
-
-      console.log("✅ User has super admin permissions");
-      return profile;
-    };
-
-    // Wait for permission check with timeout
-    await Promise.race([permissionCheck(), timeoutPromise]);
+    console.log("✅ User has super admin permissions");
 
     // Prepare the data for insertion
     const insertData = {
@@ -190,64 +155,21 @@ export async function createHeroSlide(
 
     console.log("📝 Insert data:", insertData);
 
-    // Perform the insert with timeout
-    const insertOperation = async () => {
-      if (!supabase) {
-        throw new Error("Supabase client not available");
-      }
+    const { data, error } = await supabase
+      .from("hero_slides")
+      .insert(insertData)
+      .select()
+      .single();
 
-      const { data, error } = await supabase
-        .from("hero_slides")
-        .insert(insertData)
-        .select()
-        .single();
-
-      if (error) {
-        console.error("❌ Database insert error:", error);
-        console.error("Error code:", error.code);
-        console.error("Error details:", error.details);
-        console.error("Error hint:", error.hint);
-
-        // Handle specific RLS errors
-        if (error.code === "42501" || error.message.includes("permission")) {
-          throw new Error(
-            "Permission denied by database security policies. Please ensure you have the correct admin role."
-          );
-        }
-
-        throw new Error(`Database error: ${error.message}`);
-      }
-
-      return data;
-    };
-
-    const data = await Promise.race([insertOperation(), timeoutPromise]);
+    if (error) {
+      console.error("❌ Database insert error:", error);
+      throw new Error(`Database error: ${error.message}`);
+    }
 
     console.log("✅ Hero slide created successfully:", data);
     return data;
   } catch (error) {
     console.error("❌ Error creating hero slide:", error);
-
-    // Provide more specific error messages
-    if (error instanceof Error) {
-      if (error.message.includes("timeout")) {
-        throw new Error(
-          "Request timed out. Please check your connection and try again."
-        );
-      } else if (
-        error.message.includes("permission") ||
-        error.message.includes("Authentication")
-      ) {
-        throw new Error(
-          "Permission denied. Please ensure you have admin privileges and are properly signed in."
-        );
-      } else if (error.message.includes("network")) {
-        throw new Error(
-          "Network error. Please check your internet connection."
-        );
-      }
-    }
-
     throw error;
   }
 }

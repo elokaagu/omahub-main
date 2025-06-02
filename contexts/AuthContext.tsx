@@ -1,20 +1,10 @@
 "use client";
 
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  ReactNode,
-} from "react";
-import { Session, User as SupabaseUser } from "@supabase/supabase-js";
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { AuthDebug } from "@/lib/utils/debug";
-import { getProfile, User } from "@/lib/services/authService";
-import {
-  cleanupCorruptedCookies,
-  hasCorruptedCookies,
-} from "@/lib/utils/cookieUtils";
+import { User, getProfile } from "@/lib/services/authService";
 
 interface AuthContextType {
   user: User | null;
@@ -26,11 +16,10 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
 
   const refreshUserProfile = async () => {
     if (!session?.user?.id) return;
@@ -47,101 +36,82 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
+    let timeoutId: NodeJS.Timeout;
 
     const initializeAuth = async () => {
       try {
-        // Clean up any corrupted cookies before initializing
-        console.log("🔍 Checking for corrupted cookies...");
-        if (hasCorruptedCookies()) {
-          console.log("🧹 Found corrupted cookies, cleaning up...");
-          cleanupCorruptedCookies();
-
-          // Wait a bit for cleanup to complete
-          await new Promise((resolve) => setTimeout(resolve, 100));
-        }
-
-        console.log("🔐 Initializing authentication...");
-
-        // Check if supabase client is available
+        // Handle case where client is null during SSR
         if (!supabase) {
-          console.error("❌ Supabase client not available");
-          if (mounted) {
-            setLoading(false);
-          }
+          AuthDebug.log(
+            "Supabase client not available, waiting for hydration..."
+          );
+          // Set a timeout to prevent infinite loading
+          timeoutId = setTimeout(() => {
+            if (mounted) {
+              AuthDebug.log("Timeout reached, setting loading to false");
+              setLoading(false);
+            }
+          }, 5000);
           return;
         }
 
-        // Get initial session with error handling
-        let session = null;
-        try {
-          const { data: sessionData, error: sessionError } =
-            await supabase.auth.getSession();
+        AuthDebug.log("Initializing auth with Supabase client");
 
-          if (sessionError) {
-            console.error("❌ Session error:", sessionError);
-            // If session is corrupted, clean up and try again
-            if (
-              sessionError.message?.includes("Invalid") ||
-              sessionError.message?.includes("JSON")
-            ) {
-              console.log("🧹 Session corrupted, cleaning up...");
-              cleanupCorruptedCookies();
-              await new Promise((resolve) => setTimeout(resolve, 100));
+        // Get initial session
+        const {
+          data: { session: initialSession },
+          error,
+        } = await supabase.auth.getSession();
 
-              // Try one more time
-              const { data: retrySessionData } =
-                await supabase.auth.getSession();
-              session = retrySessionData?.session;
-            }
-          } else {
-            session = sessionData?.session;
-          }
-        } catch (error) {
-          console.error("❌ Critical session error:", error);
-          cleanupCorruptedCookies();
-        }
-
-        if (!mounted) return;
-
-        if (session?.user) {
-          console.log("✅ User session found:", session.user.email);
-          setSession(session);
-
-          try {
-            // Fetch user profile
-            const profile = await getProfile(session.user.id);
-            if (mounted) {
-              setUser(profile);
-              console.log("✅ User profile loaded:", profile?.role);
-            }
-          } catch (profileError) {
-            console.error("❌ Error loading profile:", profileError);
-            // Don't fail auth if profile loading fails
-          }
+        if (error) {
+          AuthDebug.error("Error getting initial session:", error);
         } else {
-          console.log("ℹ️ No active session");
-          setSession(null);
-          setUser(null);
-        }
-      } catch (error) {
-        console.error("❌ Auth initialization error:", error);
-
-        // If there's a critical error, clean up everything
-        if (
-          error instanceof Error &&
-          (error.message.includes("JSON") ||
-            error.message.includes("Invalid") ||
-            error.message.includes("Unexpected token"))
-        ) {
-          console.log("🚨 Critical auth error, performing force cleanup...");
-          cleanupCorruptedCookies();
+          AuthDebug.log("Initial session:", { hasSession: !!initialSession });
         }
 
         if (mounted) {
-          setSession(null);
-          setUser(null);
+          setSession(initialSession);
+
+          // Get user profile if session exists
+          if (initialSession?.user?.id) {
+            const profile = await getProfile(initialSession.user.id);
+            setUser(profile);
+          } else {
+            setUser(null);
+          }
+
+          setLoading(false);
         }
-      } finally {
+
+        // Listen for auth changes
+        const {
+          data: { subscription },
+        } = supabase.auth.onAuthStateChange(async (event, session) => {
+          AuthDebug.log("Auth state changed:", {
+            event,
+            hasSession: !!session,
+          });
+
+          if (mounted) {
+            setSession(session);
+
+            // Get user profile if session exists
+            if (session?.user?.id) {
+              const profile = await getProfile(session.user.id);
+              setUser(profile);
+            } else {
+              setUser(null);
+            }
+
+            setLoading(false);
+          }
+        });
+
+        return () => {
+          subscription.unsubscribe();
+        };
+      } catch (error) {
+        AuthDebug.error("Error in auth initialization:", error);
         if (mounted) {
           setLoading(false);
         }
@@ -150,70 +120,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     initializeAuth();
 
-    // Set up auth state change listener with error handling
-    if (supabase) {
-      const {
-        data: { subscription },
-      } = supabase.auth.onAuthStateChange(async (event, session) => {
-        try {
-          console.log("🔄 Auth state changed:", event);
-
-          if (!mounted) return;
-
-          if (event === "SIGNED_IN" && session?.user) {
-            console.log("✅ User signed in:", session.user.email);
-            setSession(session);
-
-            try {
-              const profile = await getProfile(session.user.id);
-              if (mounted) {
-                setUser(profile);
-              }
-            } catch (profileError) {
-              console.error(
-                "❌ Error loading profile after sign in:",
-                profileError
-              );
-            }
-          } else if (event === "SIGNED_OUT") {
-            console.log("👋 User signed out");
-            setSession(null);
-            setUser(null);
-
-            // Clean up any remaining auth cookies
-            cleanupCorruptedCookies();
-          } else if (event === "TOKEN_REFRESHED" && session?.user) {
-            console.log("🔄 Token refreshed for:", session.user.email);
-            setSession(session);
-          }
-        } catch (error) {
-          console.error("❌ Auth state change error:", error);
-
-          // Handle corrupted session during state change
-          if (
-            error instanceof Error &&
-            (error.message.includes("JSON") ||
-              error.message.includes("Invalid"))
-          ) {
-            console.log("🧹 Cleaning up corrupted session...");
-            cleanupCorruptedCookies();
-
-            if (mounted) {
-              setSession(null);
-              setUser(null);
-            }
-          }
-        }
-      });
-
-      return () => {
-        mounted = false;
-        subscription.unsubscribe();
-      };
-    }
-
     return () => {
       mounted = false;
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
     };
   }, []);
 
