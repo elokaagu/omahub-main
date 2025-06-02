@@ -159,9 +159,9 @@ export default function StudioLayout({
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Studio Header */}
       <header className="w-full bg-white border-b border-gray-200 shadow-sm fixed top-0 left-0 right-0 z-50 h-16 flex items-center">
-        <div className="container mx-auto px-4 flex justify-between items-center h-full">
-          {/* Mobile sidebar toggle - positioned before logo */}
-          <div className="lg:hidden flex items-center space-x-3">
+        <div className="container mx-auto px-4 flex justify-between items-center">
+          {/* Mobile sidebar toggle */}
+          <div className="lg:hidden flex items-center">
             <Button
               variant="outline"
               size="icon"
@@ -174,21 +174,10 @@ export default function StudioLayout({
                 <Menu className="h-5 w-5" />
               )}
             </Button>
-            <button
-              onClick={handleBackToSite}
-              className="text-xl font-canela text-oma-plum hover:text-oma-plum/80 transition-colors"
-            >
-              OmaHub
-            </button>
           </div>
 
-          {/* Desktop logo */}
-          <button
-            onClick={handleBackToSite}
-            className="hidden lg:block text-2xl font-canela text-oma-plum hover:text-oma-plum/80 transition-colors"
-          >
-            OmaHub
-          </button>
+          {/* Desktop: Empty space to account for sidebar */}
+          <div className="hidden lg:block w-64"></div>
 
           <div className="hidden md:flex items-center space-x-4">
             <button
@@ -213,12 +202,19 @@ export default function StudioLayout({
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         } mt-16`}
       >
-        <div className="h-full flex flex-col">
-          <div className="px-6 py-4 flex items-center h-16 border-b border-gray-100">
+        <div className="p-6 h-full flex flex-col">
+          {/* Logo and Studio title aligned */}
+          <div className="mb-8">
+            <button
+              onClick={handleBackToSite}
+              className="text-2xl font-canela text-oma-plum hover:text-oma-plum/80 transition-colors mb-2 block"
+            >
+              OmaHub
+            </button>
             <h1 className="text-2xl font-canela text-oma-plum">Studio</h1>
           </div>
 
-          <nav className="space-y-1 flex-1 p-6 pt-4">
+          <nav className="space-y-1 flex-1">
             <Link
               href="/studio"
               className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100"
@@ -299,10 +295,10 @@ export default function StudioLayout({
             </button>
           </nav>
 
-          <div className="px-6 pb-6 border-t border-gray-200">
+          <div className="pt-6 border-t border-gray-200 mt-auto">
             <button
               onClick={handleSignOut}
-              className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100 w-full mt-4"
+              className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100 w-full"
             >
               <LogOut className="h-5 w-5" />
               <span>Sign Out</span>
