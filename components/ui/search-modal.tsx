@@ -5,6 +5,9 @@ import { Search, MapPin, CheckCircle, Tag, Clock } from "@/components/ui/icons";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { collections, subcategories } from "@/lib/data/directory";
+import { getAllBrands, searchBrands } from "@/lib/services/brandService";
+import { Brand } from "@/lib/supabase";
+import { useNavigation } from "@/contexts/NavigationContext";
 
 interface SearchResult {
   id?: string;
@@ -16,53 +19,6 @@ interface SearchResult {
   href: string;
   description?: string;
 }
-
-// Mock data - in a real app, this would come from your API or database
-const searchData = [
-  {
-    id: "adire-designs",
-    name: "Adire Designs",
-    category: "Ready to Wear",
-    location: "Lagos",
-    isVerified: true,
-    description: "Contemporary African fashion",
-  },
-  {
-    id: "kente-collective",
-    name: "Kente Collective",
-    category: "Accessories",
-    location: "Accra",
-    isVerified: true,
-    description: "Traditional Ghanaian textiles",
-  },
-  {
-    id: "zora-atelier",
-    name: "Zora Atelier",
-    category: "Bridal",
-    location: "Nairobi",
-    isVerified: true,
-    description: "Modern bridal wear",
-  },
-  {
-    id: "mbali-studio",
-    name: "Mbali Studio",
-    category: "Ready to Wear",
-    location: "Johannesburg",
-    isVerified: true,
-    description: "Luxury ready to wear",
-  },
-];
-
-const locations = [
-  "Lagos",
-  "Accra",
-  "Nairobi",
-  "Johannesburg",
-  "Dakar",
-  "Abuja",
-  "Marrakech",
-  "Cairo",
-];
 
 interface SearchModalProps {
   open: boolean;
@@ -88,7 +44,53 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [locations, setLocations] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { setIsNavigating } = useNavigation();
+
+  // Load all brands and extract unique locations when component mounts
+  useEffect(() => {
+    const loadBrands = async () => {
+      try {
+        const allBrands = await getAllBrands();
+        setBrands(allBrands);
+
+        // Extract unique locations from brands
+        const uniqueLocations = Array.from(
+          new Set(allBrands.map((brand) => brand.location).filter(Boolean))
+        ).sort();
+        setLocations(uniqueLocations);
+      } catch (error) {
+        console.error("Error loading brands:", error);
+      }
+    };
+
+    loadBrands();
+  }, []);
+
+  // Refresh brands when modal opens (to catch new brands)
+  useEffect(() => {
+    if (open) {
+      const refreshBrands = async () => {
+        try {
+          const allBrands = await getAllBrands();
+          setBrands(allBrands);
+
+          // Update locations as well
+          const uniqueLocations = Array.from(
+            new Set(allBrands.map((brand) => brand.location).filter(Boolean))
+          ).sort();
+          setLocations(uniqueLocations);
+        } catch (error) {
+          console.error("Error refreshing brands:", error);
+        }
+      };
+
+      refreshBrands();
+    }
+  }, [open]);
 
   useEffect(() => {
     if (!searchTerm) {
@@ -97,75 +99,140 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
       return;
     }
 
-    const searchLower = searchTerm.toLowerCase();
+    const performSearch = async () => {
+      setLoading(true);
+      try {
+        const searchLower = searchTerm.toLowerCase();
 
-    // Search through designers
-    const designerResults = searchData
-      .filter(
-        (designer) =>
-          designer.name.toLowerCase().includes(searchLower) ||
-          designer.category.toLowerCase().includes(searchLower) ||
-          designer.location.toLowerCase().includes(searchLower) ||
-          designer.description?.toLowerCase().includes(searchLower)
-      )
-      .map(
-        (designer): SearchResult => ({
-          ...designer,
-          type: "designer" as const,
-          href: `/brand/${designer.id}`,
-        })
-      );
+        // Search through brands using database search for better performance
+        let designerResults: SearchResult[] = [];
+        if (searchTerm.length >= 2) {
+          try {
+            const searchedBrands = await searchBrands(searchTerm);
+            designerResults = searchedBrands.map(
+              (brand): SearchResult => ({
+                id: brand.id,
+                name: brand.name,
+                category: brand.category,
+                location: brand.location,
+                isVerified: brand.is_verified || false,
+                type: "designer" as const,
+                href: `/brand/${brand.id}`,
+                description: brand.description || undefined,
+              })
+            );
+          } catch (error) {
+            console.error("Error searching brands:", error);
+            // Fallback to local search if database search fails
+            designerResults = brands
+              .filter(
+                (brand) =>
+                  brand.name.toLowerCase().includes(searchLower) ||
+                  brand.category.toLowerCase().includes(searchLower) ||
+                  brand.location.toLowerCase().includes(searchLower) ||
+                  brand.description?.toLowerCase().includes(searchLower)
+              )
+              .map(
+                (brand): SearchResult => ({
+                  id: brand.id,
+                  name: brand.name,
+                  category: brand.category,
+                  location: brand.location,
+                  isVerified: brand.is_verified || false,
+                  type: "designer" as const,
+                  href: `/brand/${brand.id}`,
+                  description: brand.description || undefined,
+                })
+              );
+          }
+        } else {
+          // For short queries, use local search
+          designerResults = brands
+            .filter(
+              (brand) =>
+                brand.name.toLowerCase().includes(searchLower) ||
+                brand.category.toLowerCase().includes(searchLower) ||
+                brand.location.toLowerCase().includes(searchLower) ||
+                brand.description?.toLowerCase().includes(searchLower)
+            )
+            .map(
+              (brand): SearchResult => ({
+                id: brand.id,
+                name: brand.name,
+                category: brand.category,
+                location: brand.location,
+                isVerified: brand.is_verified || false,
+                type: "designer" as const,
+                href: `/brand/${brand.id}`,
+                description: brand.description || undefined,
+              })
+            );
+        }
 
-    // Search through main categories
-    const categoryResults = collections
-      .filter((category) => category.toLowerCase().includes(searchLower))
-      .map(
-        (category): SearchResult => ({
-          name: category,
-          type: "category" as const,
-          href: `/directory?category=${category}`,
-          description:
-            category === "Collections"
-              ? "Shop for an occasion, holiday, or ready to wear piece"
-              : "Masters of craft creating perfectly fitted garments",
-        })
-      );
-
-    // Search through subcategories
-    const subcategoryResults = Object.entries(subcategories).flatMap(
-      ([mainCategory, subcats]) =>
-        subcats
-          .filter((subcat) => subcat.toLowerCase().includes(searchLower))
+        // Search through main categories
+        const categoryResults = collections
+          .filter((category) => category.toLowerCase().includes(searchLower))
           .map(
-            (subcat): SearchResult => ({
-              name: subcat,
+            (category): SearchResult => ({
+              name: category,
               type: "category" as const,
-              href: `/directory?category=${mainCategory}&subcategory=${subcat.replace(/ /g, "+")}`,
-              description: `Browse ${subcat.toLowerCase()} designs`,
+              href: `/directory?category=${category}`,
+              description:
+                category === "Collections"
+                  ? "Shop for an occasion, holiday, or ready to wear piece"
+                  : "Masters of craft creating perfectly fitted garments",
             })
-          )
-    );
+          );
 
-    // Search through locations
-    const locationResults = locations
-      .filter((location) => location.toLowerCase().includes(searchLower))
-      .map(
-        (location): SearchResult => ({
-          name: location,
-          type: "location" as const,
-          href: `/directory?location=${location}`,
-          description: `Discover designers in ${location}`,
-        })
-      );
+        // Search through subcategories
+        const subcategoryResults = Object.entries(subcategories).flatMap(
+          ([mainCategory, subcats]) =>
+            subcats
+              .filter((subcat) => subcat.toLowerCase().includes(searchLower))
+              .map(
+                (subcat): SearchResult => ({
+                  name: subcat,
+                  type: "category" as const,
+                  href: `/directory?category=${mainCategory}&subcategory=${subcat.replace(/ /g, "+")}`,
+                  description: `Browse ${subcat.toLowerCase()} designs`,
+                })
+              )
+        );
 
-    setResults([
-      ...designerResults,
-      ...categoryResults,
-      ...subcategoryResults,
-      ...locationResults,
-    ]);
-    setSelectedIndex(-1);
-  }, [searchTerm]);
+        // Search through locations (now dynamic from actual brand data)
+        const locationResults = locations
+          .filter((location) => location.toLowerCase().includes(searchLower))
+          .map(
+            (location): SearchResult => ({
+              name: location,
+              type: "location" as const,
+              href: `/directory?location=${location}`,
+              description: `Discover designers in ${location}`,
+            })
+          );
+
+        setResults([
+          ...designerResults,
+          ...categoryResults,
+          ...subcategoryResults,
+          ...locationResults,
+        ]);
+        setSelectedIndex(-1);
+      } catch (error) {
+        console.error("Error performing search:", error);
+        setResults([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // Debounce search
+    const timeoutId = setTimeout(() => {
+      performSearch();
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm, brands, locations]);
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "ArrowDown") {
@@ -180,6 +247,7 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
   };
 
   const handleSelect = (href: string) => {
+    setIsNavigating(true);
     router.push(href);
     onOpenChange(false);
     setSearchTerm("");
@@ -214,11 +282,18 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
             />
           </div>
           <div className="max-h-[300px] overflow-y-auto">
-            {results.length > 0 ? (
+            {loading ? (
+              <div className="py-6 text-center text-sm text-muted-foreground">
+                <div className="flex items-center justify-center gap-2">
+                  <div className="animate-spin h-4 w-4 border-2 border-oma-plum border-t-transparent rounded-full"></div>
+                  Searching...
+                </div>
+              </div>
+            ) : results.length > 0 ? (
               <div className="py-2">
                 {results.map((result, index) => (
                   <button
-                    key={`${result.type}-${index}`}
+                    key={`${result.type}-${result.id || index}`}
                     className={cn(
                       "w-full text-left px-4 py-2 transition-colors",
                       index === selectedIndex
