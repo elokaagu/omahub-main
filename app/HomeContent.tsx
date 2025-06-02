@@ -55,7 +55,7 @@ interface CategoryWithBrands {
 }
 
 interface CarouselItem {
-  id: number;
+  id: string | number;
   image: string;
   title: string;
   subtitle: string;
@@ -66,7 +66,8 @@ interface CarouselItem {
   height: number;
 }
 
-const carouselItems: CarouselItem[] = [
+// Fallback carousel items (used if no hero slides are available)
+const fallbackCarouselItems: CarouselItem[] = [
   {
     id: 1,
     image: "/lovable-uploads/827fb8c0-e5da-4520-a979-6fc054eefc6e.png",
@@ -135,6 +136,22 @@ export default function HomeContent() {
   const [heroSlides, setHeroSlides] = useState<HeroSlide[]>([]);
   const [spotlightContent, setSpotlightContent] =
     useState<SpotlightContent | null>(null);
+
+  // Transform hero slides to carousel items
+  const carouselItems: CarouselItem[] =
+    heroSlides.length > 0
+      ? heroSlides.map((slide) => ({
+          id: slide.id,
+          image: slide.image,
+          title: slide.title,
+          subtitle: slide.subtitle || "",
+          link: slide.link || "/directory",
+          heroTitle: slide.hero_title || slide.title,
+          isEditorial: slide.is_editorial,
+          width: 1920,
+          height: 1080,
+        }))
+      : fallbackCarouselItems;
 
   useEffect(() => {
     const fetchData = async () => {
