@@ -1,6 +1,9 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Initialize Resend only if API key is available
+const resend = process.env.RESEND_API_KEY
+  ? new Resend(process.env.RESEND_API_KEY)
+  : null;
 
 export async function sendContactEmail(formData: {
   name: string;
@@ -9,6 +12,12 @@ export async function sendContactEmail(formData: {
   message: string;
 }) {
   try {
+    // Check if Resend is properly configured
+    if (!resend) {
+      console.error("Resend API key not configured");
+      return { success: false, error: "Email service not configured" };
+    }
+
     const { data, error } = await resend.emails.send({
       from: "OmaHub <onboarding@resend.dev>",
       to: ["eloka@satellitelabs.xyz"],
