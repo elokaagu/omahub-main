@@ -56,6 +56,22 @@ import {
 } from "@/components/ui/alert-dialog";
 import { AuthImage } from "@/components/ui/auth-image";
 
+// Common currencies used across Africa
+const CURRENCIES = [
+  { code: "NGN", symbol: "₦", name: "Nigerian Naira" },
+  { code: "KES", symbol: "KSh", name: "Kenyan Shilling" },
+  { code: "GHS", symbol: "GHS", name: "Ghanaian Cedi" },
+  { code: "ZAR", symbol: "R", name: "South African Rand" },
+  { code: "EGP", symbol: "EGP", name: "Egyptian Pound" },
+  { code: "MAD", symbol: "MAD", name: "Moroccan Dirham" },
+  { code: "TND", symbol: "TND", name: "Tunisian Dinar" },
+  { code: "XOF", symbol: "XOF", name: "West African CFA Franc" },
+  { code: "DZD", symbol: "DA", name: "Algerian Dinar" },
+  { code: "USD", symbol: "$", name: "US Dollar" },
+  { code: "EUR", symbol: "€", name: "Euro" },
+  { code: "GBP", symbol: "£", name: "British Pound" },
+];
+
 export default function BrandEditPage({ params }: { params: { id: string } }) {
   // Debug params
   console.log("Edit page params:", params);
@@ -67,6 +83,11 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
+
+  // Price range state
+  const [priceMin, setPriceMin] = useState("");
+  const [priceMax, setPriceMax] = useState("");
+  const [currency, setCurrency] = useState("NGN");
 
   // Categories for the dropdown
   const categories = [
@@ -95,6 +116,28 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
           console.log("Brand data found:", brandData.name);
           setBrand(brandData);
           setImageUrl(brandData.image || "");
+
+          // Parse existing price range if it exists
+          if (
+            brandData.price_range &&
+            brandData.price_range !== "Contact for pricing"
+          ) {
+            const priceRangeMatch = brandData.price_range.match(
+              /^(.+?)(\d+(?:,\d+)*)\s*-\s*(.+?)(\d+(?:,\d+)*)$/
+            );
+            if (priceRangeMatch) {
+              const [, symbol1, min, symbol2, max] = priceRangeMatch;
+              const foundCurrency = CURRENCIES.find(
+                (c) =>
+                  c.symbol === symbol1.trim() || c.symbol === symbol2.trim()
+              );
+              if (foundCurrency) {
+                setCurrency(foundCurrency.code);
+                setPriceMin(min.replace(/,/g, ""));
+                setPriceMax(max.replace(/,/g, ""));
+              }
+            }
+          }
         } else {
           console.error("Brand not found in database");
           // Use Next.js notFound() function to show the custom not-found page
@@ -169,6 +212,14 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
       return;
     }
 
+    // Format price range if both min and max are provided
+    let priceRange = brand.price_range || "Contact for pricing";
+    if (priceMin && priceMax) {
+      const selectedCurrency = CURRENCIES.find((c) => c.code === currency);
+      const symbol = selectedCurrency?.symbol || "$";
+      priceRange = `${symbol}${priceMin} - ${symbol}${priceMax}`;
+    }
+
     setSaving(true);
     try {
       await updateBrand(user.id, brand.id, {
@@ -176,6 +227,7 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
         category: brand.category,
         categories: brand.categories,
         location: brand.location,
+        price_range: priceRange,
         website: brand.website,
         instagram: brand.instagram,
         founded_year: brand.founded_year,
@@ -297,6 +349,51 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
                       placeholder="e.g. Lagos, Nigeria"
                     />
                   </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="price_range">Price Range</Label>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                    <Select value={currency} onValueChange={setCurrency}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Currency" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CURRENCIES.map((curr) => (
+                          <SelectItem key={curr.code} value={curr.code}>
+                            {curr.symbol} - {curr.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    <Input
+                      value={priceMin}
+                      onChange={(e) => setPriceMin(e.target.value)}
+                      placeholder="Min price (e.g. 15000)"
+                      type="number"
+                    />
+
+                    <Input
+                      value={priceMax}
+                      onChange={(e) => setPriceMax(e.target.value)}
+                      placeholder="Max price (e.g. 120000)"
+                      type="number"
+                    />
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {priceMin && priceMax && currency ? (
+                      <>
+                        Preview:{" "}
+                        {CURRENCIES.find((c) => c.code === currency)?.symbol}
+                        {priceMin} -{" "}
+                        {CURRENCIES.find((c) => c.code === currency)?.symbol}
+                        {priceMax}
+                      </>
+                    ) : (
+                      <>Current: {brand.price_range || "Contact for pricing"}</>
+                    )}
+                  </p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -473,6 +570,16 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
                     <MapPin className="h-3 w-3 mr-1" />
                     <span>{brand.location}</span>
                   </div>
+                  {(priceMin && priceMax && currency) || brand.price_range ? (
+                    <div className="flex items-center text-sm text-gray-500 mb-2">
+                      <span className="font-medium">Price Range:</span>
+                      <span className="ml-1">
+                        {priceMin && priceMax && currency
+                          ? `${CURRENCIES.find((c) => c.code === currency)?.symbol}${priceMin} - ${CURRENCIES.find((c) => c.code === currency)?.symbol}${priceMax}`
+                          : brand.price_range}
+                      </span>
+                    </div>
+                  ) : null}
                   <p className="text-sm text-gray-600 line-clamp-3 mb-4">
                     {brand.description}
                   </p>

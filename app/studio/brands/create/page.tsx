@@ -42,8 +42,21 @@ const CATEGORIES = [
   "Luxury",
 ];
 
-// Price range options
-const PRICE_RANGES = ["$", "$$", "$$$", "$$$$", "$$$$$"];
+// Common currencies used across Africa
+const CURRENCIES = [
+  { code: "NGN", symbol: "₦", name: "Nigerian Naira" },
+  { code: "KES", symbol: "KSh", name: "Kenyan Shilling" },
+  { code: "GHS", symbol: "GHS", name: "Ghanaian Cedi" },
+  { code: "ZAR", symbol: "R", name: "South African Rand" },
+  { code: "EGP", symbol: "EGP", name: "Egyptian Pound" },
+  { code: "MAD", symbol: "MAD", name: "Moroccan Dirham" },
+  { code: "TND", symbol: "TND", name: "Tunisian Dinar" },
+  { code: "XOF", symbol: "XOF", name: "West African CFA Franc" },
+  { code: "DZD", symbol: "DA", name: "Algerian Dinar" },
+  { code: "USD", symbol: "$", name: "US Dollar" },
+  { code: "EUR", symbol: "€", name: "Euro" },
+  { code: "GBP", symbol: "£", name: "British Pound" },
+];
 
 // Generate founding year options from current year backwards to 1950
 const FOUNDING_YEARS = Array.from(
@@ -61,6 +74,9 @@ export default function CreateBrandPage() {
     long_description: "",
     location: "",
     price_range: "",
+    price_min: "",
+    price_max: "",
+    currency: "NGN", // Default to Nigerian Naira
     categories: [] as string[],
     image: "",
     is_verified: false,
@@ -135,6 +151,14 @@ export default function CreateBrandPage() {
       return;
     }
 
+    // Format price range if both min and max are provided
+    let priceRange = "";
+    if (formData.price_min && formData.price_max) {
+      const currency = CURRENCIES.find((c) => c.code === formData.currency);
+      const symbol = currency?.symbol || "$";
+      priceRange = `${symbol}${formData.price_min} - ${symbol}${formData.price_max}`;
+    }
+
     setSubmitting(true);
     try {
       const response = await fetch("/api/studio/brands", {
@@ -147,7 +171,7 @@ export default function CreateBrandPage() {
           description: formData.description,
           long_description: formData.long_description || formData.description,
           location: formData.location,
-          price_range: formData.price_range || "$",
+          price_range: priceRange || "Contact for pricing",
           category: formData.categories[0],
           categories: formData.categories,
           image: formData.image,
@@ -169,9 +193,7 @@ export default function CreateBrandPage() {
     } catch (error) {
       console.error("Error creating brand:", error);
       toast.error(
-        error instanceof Error
-          ? error.message
-          : "Failed to create brand. Please try again."
+        error instanceof Error ? error.message : "Failed to create brand"
       );
     } finally {
       setSubmitting(false);
@@ -259,23 +281,65 @@ export default function CreateBrandPage() {
 
                   <div className="space-y-2">
                     <Label htmlFor="price_range">Price Range</Label>
-                    <Select
-                      value={formData.price_range}
-                      onValueChange={(value) =>
-                        handleSelectChange("price_range", value)
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select price range" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {PRICE_RANGES.map((range) => (
-                          <SelectItem key={range} value={range}>
-                            {range}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                      <Select
+                        value={formData.currency}
+                        onValueChange={(value) =>
+                          handleSelectChange("currency", value)
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Currency" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {CURRENCIES.map((currency) => (
+                            <SelectItem
+                              key={currency.code}
+                              value={currency.code}
+                            >
+                              {currency.symbol} - {currency.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+
+                      <Input
+                        name="price_min"
+                        value={formData.price_min}
+                        onChange={handleInputChange}
+                        placeholder="Min price (e.g. 15000)"
+                        type="number"
+                      />
+
+                      <Input
+                        name="price_max"
+                        value={formData.price_max}
+                        onChange={handleInputChange}
+                        placeholder="Max price (e.g. 120000)"
+                        type="number"
+                      />
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {formData.price_min &&
+                      formData.price_max &&
+                      formData.currency ? (
+                        <>
+                          Preview:{" "}
+                          {
+                            CURRENCIES.find((c) => c.code === formData.currency)
+                              ?.symbol
+                          }
+                          {formData.price_min} -{" "}
+                          {
+                            CURRENCIES.find((c) => c.code === formData.currency)
+                              ?.symbol
+                          }
+                          {formData.price_max}
+                        </>
+                      ) : (
+                        "Enter minimum and maximum prices to see preview"
+                      )}
+                    </p>
                   </div>
                 </div>
 

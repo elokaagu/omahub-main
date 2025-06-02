@@ -24,7 +24,7 @@ export default function AuthCallback() {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        addDebugLog("Starting auth callback process");
+        addDebugLog("Starting simplified auth callback process");
 
         if (!supabase) {
           addDebugLog("ERROR: Supabase client not available");
@@ -32,8 +32,6 @@ export default function AuthCallback() {
           router.push("/login?error=service_unavailable");
           return;
         }
-
-        addDebugLog("Supabase client available");
 
         // Log all URL parameters for debugging
         const allParams: Record<string, string> = {};
@@ -68,56 +66,49 @@ export default function AuthCallback() {
           return;
         }
 
-        // Enhanced session handling with multiple attempts
-        let sessionEstablished = false;
-        let attempts = 0;
-        const maxAttempts = 3;
+        // Simplified approach: Let Supabase handle the OAuth callback automatically
+        addDebugLog("Waiting for Supabase to process OAuth callback...");
 
-        const checkAndEstablishSession = async (): Promise<boolean> => {
-          attempts++;
-          addDebugLog(`Session check attempt ${attempts}/${maxAttempts}`);
+        // Set up a single auth state change listener
+        const {
+          data: { subscription },
+        } = supabase.auth.onAuthStateChange(async (event, session) => {
+          addDebugLog("Auth state change detected", {
+            event,
+            hasSession: !!session,
+            userId: session?.user?.id,
+            email: session?.user?.email,
+          });
 
-          try {
-            // Ensure supabase client is available
-            if (!supabase) {
-              addDebugLog("Supabase client not available for session check");
-              return false;
-            }
+          if (event === "SIGNED_IN" && session) {
+            addDebugLog("User signed in successfully", {
+              userId: session.user.id,
+              email: session.user.email,
+              provider: session.user.app_metadata?.provider,
+            });
 
-            // First, try to get the current session
-            const {
-              data: { session: currentSession },
-              error: sessionError,
-            } = await supabase.auth.getSession();
+            // Create profile if it doesn't exist
+            try {
+              if (!supabase) {
+                addDebugLog(
+                  "Supabase client not available for profile creation"
+                );
+                return;
+              }
 
-            if (sessionError) {
-              addDebugLog("Session error", sessionError);
-              return false;
-            }
-
-            if (currentSession) {
-              addDebugLog("Session found", {
-                userId: currentSession.user.id,
-                email: currentSession.user.email,
-                expiresAt: currentSession.expires_at,
-                provider: currentSession.user.app_metadata?.provider,
-              });
-
-              // Test if we can make an authenticated request
               const { data: profile, error: profileError } = await supabase
                 .from("profiles")
-                .select("id, email, role")
-                .eq("id", currentSession.user.id)
+                .select("id")
+                .eq("id", session.user.id)
                 .single();
 
               if (profileError && profileError.code === "PGRST116") {
-                // Profile doesn't exist, create it
                 addDebugLog("Creating user profile");
                 const { error: createError } = await supabase
                   .from("profiles")
                   .insert({
-                    id: currentSession.user.id,
-                    email: currentSession.user.email,
+                    id: session.user.id,
+                    email: session.user.email,
                     role: "user",
                     owned_brands: [],
                     created_at: new Date().toISOString(),
@@ -129,125 +120,107 @@ export default function AuthCallback() {
                 } else {
                   addDebugLog("Profile created successfully");
                 }
-              } else if (profile) {
-                addDebugLog("User profile found", profile);
               }
-
-              return true;
-            } else {
-              addDebugLog("No session found");
-              return false;
+            } catch (profileErr) {
+              addDebugLog("Profile check/creation error", profileErr);
             }
-          } catch (error) {
-            addDebugLog("Session check error", error);
-            return false;
-          }
-        };
-
-        // Set up auth state change listener
-        addDebugLog("Setting up auth state change listener");
-
-        const {
-          data: { subscription },
-        } = supabase.auth.onAuthStateChange(async (event, session) => {
-          addDebugLog("Auth state change detected", {
-            event,
-            hasSession: !!session,
-            userId: session?.user?.id,
-          });
-
-          if (event === "SIGNED_IN" && session && !sessionEstablished) {
-            sessionEstablished = true;
-            addDebugLog("User signed in via state change", {
-              userId: session.user.id,
-              email: session.user.email,
-              provider: session.user.app_metadata?.provider,
-            });
 
             toast.success("Successfully signed in!");
 
-            // Wait a moment for session to propagate
-            setTimeout(async () => {
-              const redirectTo = searchParams.get("redirect_to") || "/studio";
-              addDebugLog("Redirecting user after state change", {
-                redirectTo,
-              });
+            // Clean up subscription
+            subscription.unsubscribe();
 
-              // Clean up subscription
-              subscription.unsubscribe();
+            // Redirect after a short delay
+            const redirectTo = searchParams.get("redirect_to") || "/studio";
+            addDebugLog("Redirecting user", { redirectTo });
 
-              // Force a page reload to ensure middleware picks up the session
+            setTimeout(() => {
+              // Use window.location.href for a full page reload to ensure middleware picks up the session
               window.location.href = redirectTo;
-            }, 1500);
-          } else if (event === "SIGNED_OUT") {
+            }, 1000);
+
+            return;
+          }
+
+          if (event === "SIGNED_OUT") {
             addDebugLog("User signed out");
             subscription.unsubscribe();
             router.push("/login");
+            return;
           }
         });
 
-        // Try to establish session immediately
-        const hasSession = await checkAndEstablishSession();
+        // Check if we already have a session
+        const {
+          data: { session: currentSession },
+        } = await supabase.auth.getSession();
 
-        if (hasSession && !sessionEstablished) {
-          sessionEstablished = true;
-          addDebugLog("Session established immediately");
-          toast.success("Successfully signed in!");
-
-          const redirectTo = searchParams.get("redirect_to") || "/studio";
-          subscription.unsubscribe();
-
-          // Force a page reload to ensure middleware picks up the session
-          setTimeout(() => {
-            addDebugLog("Redirecting user immediately", { redirectTo });
-            window.location.href = redirectTo;
-          }, 1000);
-        } else if (!hasSession) {
-          addDebugLog("No immediate session, waiting for auth state change");
-
-          // Set progressive timeouts to retry session establishment
-          const retryIntervals = [2000, 5000, 8000];
-
-          retryIntervals.forEach((interval, index) => {
-            setTimeout(async () => {
-              if (!sessionEstablished && attempts < maxAttempts) {
-                addDebugLog(`Retry timeout ${index + 1} reached`);
-                const retrySuccess = await checkAndEstablishSession();
-
-                if (retrySuccess && !sessionEstablished) {
-                  sessionEstablished = true;
-                  addDebugLog("Session established on retry");
-                  toast.success("Successfully signed in!");
-
-                  const redirectTo =
-                    searchParams.get("redirect_to") || "/studio";
-                  subscription.unsubscribe();
-                  window.location.href = redirectTo;
-                }
-              }
-            }, interval);
+        if (currentSession) {
+          addDebugLog("Existing session found", {
+            userId: currentSession.user.id,
+            email: currentSession.user.email,
           });
 
-          // Final timeout - if nothing works, redirect to login with error
+          toast.success("Successfully signed in!");
+          subscription.unsubscribe();
+
+          const redirectTo = searchParams.get("redirect_to") || "/studio";
           setTimeout(() => {
-            if (!sessionEstablished) {
-              addDebugLog("All attempts failed, redirecting to login");
-              subscription.unsubscribe();
-              router.push(
-                "/login?error=session_timeout&details=Could not establish authentication session"
-              );
-              setLoading(false);
-            }
-          }, 10000);
+            window.location.href = redirectTo;
+          }, 1000);
+          return;
         }
 
-        // Clean up subscription after 15 seconds regardless
+        // If no immediate session, wait for the auth state change
+        addDebugLog("No immediate session, waiting for auth state change...");
+
+        // Set a timeout to handle cases where auth state change doesn't fire
+        setTimeout(() => {
+          addDebugLog("Timeout reached, checking session one more time");
+
+          if (!supabase) {
+            addDebugLog("Supabase client not available for timeout check");
+            router.push("/login?error=service_unavailable");
+            setLoading(false);
+            return;
+          }
+
+          supabase.auth
+            .getSession()
+            .then(({ data: { session: timeoutSession } }) => {
+              if (timeoutSession) {
+                addDebugLog("Session found on timeout check", {
+                  userId: timeoutSession.user.id,
+                });
+                toast.success("Successfully signed in!");
+                subscription.unsubscribe();
+
+                const redirectTo = searchParams.get("redirect_to") || "/studio";
+                window.location.href = redirectTo;
+              } else {
+                addDebugLog(
+                  "No session found after timeout - this indicates an OAuth flow issue"
+                );
+                subscription.unsubscribe();
+
+                // More specific error message
+                const errorDetails =
+                  "OAuth callback completed but session was not established. This may be due to redirect URI configuration.";
+                router.push(
+                  `/login?error=oauth_session_failed&details=${encodeURIComponent(errorDetails)}`
+                );
+              }
+              setLoading(false);
+            });
+        }, 5000);
+
+        // Clean up subscription after 10 seconds
         setTimeout(() => {
           subscription.unsubscribe();
-          if (loading && !sessionEstablished) {
+          if (loading) {
             setLoading(false);
           }
-        }, 15000);
+        }, 10000);
       } catch (error: unknown) {
         const errorMessage =
           error instanceof Error ? error.message : "Unknown error";
