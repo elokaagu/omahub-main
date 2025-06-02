@@ -13,6 +13,10 @@ export type User = {
   owned_brands?: string[]; // Array of brand IDs owned by this user
 };
 
+// Rate limiting for OAuth attempts
+let lastOAuthAttempt = 0;
+const OAUTH_COOLDOWN = 5000; // 5 seconds between attempts
+
 // Client-side auth functions
 export async function signUp(email: string, password: string) {
   if (!supabase) {
@@ -86,6 +90,16 @@ export async function signInWithOAuth(provider: Provider) {
   try {
     console.log(`🔐 Starting OAuth sign-in with ${provider}`);
 
+    // Rate limiting check
+    const now = Date.now();
+    if (now - lastOAuthAttempt < OAUTH_COOLDOWN) {
+      const waitTime = Math.ceil(
+        (OAUTH_COOLDOWN - (now - lastOAuthAttempt)) / 1000
+      );
+      throw new Error(`Please wait ${waitTime} seconds before trying again`);
+    }
+    lastOAuthAttempt = now;
+
     if (!supabase) {
       console.error("❌ Supabase client not available");
       throw new Error("Supabase client not available");
@@ -114,6 +128,17 @@ export async function signInWithOAuth(provider: Provider) {
 
     if (error) {
       console.error(`❌ Error signing in with ${provider}:`, error);
+
+      // Handle specific error types
+      if (
+        error.message?.includes("rate limit") ||
+        error.message?.includes("429")
+      ) {
+        throw new Error(
+          "Too many authentication attempts. Please wait a moment and try again."
+        );
+      }
+
       throw error;
     }
 
