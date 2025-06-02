@@ -13,10 +13,6 @@ export type User = {
   owned_brands?: string[]; // Array of brand IDs owned by this user
 };
 
-// Rate limiting for OAuth attempts
-let lastOAuthAttempt = 0;
-const OAUTH_COOLDOWN = 5000; // 5 seconds between attempts
-
 // Client-side auth functions
 export async function signUp(email: string, password: string) {
   if (!supabase) {
@@ -88,36 +84,17 @@ export async function signIn(email: string, password: string) {
 
 export async function signInWithOAuth(provider: Provider) {
   try {
-    console.log(`🔐 Starting OAuth sign-in with ${provider}`);
-
-    // Rate limiting check
-    const now = Date.now();
-    if (now - lastOAuthAttempt < OAUTH_COOLDOWN) {
-      const waitTime = Math.ceil(
-        (OAUTH_COOLDOWN - (now - lastOAuthAttempt)) / 1000
-      );
-      throw new Error(`Please wait ${waitTime} seconds before trying again`);
-    }
-    lastOAuthAttempt = now;
-
     if (!supabase) {
-      console.error("❌ Supabase client not available");
       throw new Error("Supabase client not available");
     }
-
-    // Check if we're in the browser
-    if (typeof window === "undefined") {
-      console.error("❌ OAuth sign-in must be called from browser");
-      throw new Error("OAuth sign-in must be called from browser");
-    }
-
-    const redirectUrl = `${window.location.origin}/auth/callback`;
-    console.log(`🔗 Using redirect URL: ${redirectUrl}`);
 
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: redirectUrl,
+        redirectTo:
+          typeof window !== "undefined"
+            ? `${window.location.origin}/auth/callback`
+            : undefined,
         scopes: provider === "google" ? "email profile" : undefined,
         queryParams: {
           access_type: "offline",
@@ -127,27 +104,13 @@ export async function signInWithOAuth(provider: Provider) {
     });
 
     if (error) {
-      console.error(`❌ Error signing in with ${provider}:`, error);
-
-      // Handle specific error types
-      if (
-        error.message?.includes("rate limit") ||
-        error.message?.includes("429")
-      ) {
-        throw new Error(
-          "Too many authentication attempts. Please wait a moment and try again."
-        );
-      }
-
+      console.error(`Error signing in with ${provider}:`, error);
       throw error;
     }
 
-    console.log(`✅ OAuth sign-in initiated successfully for ${provider}`);
-    console.log("📊 OAuth data:", data);
-
     return data;
   } catch (err) {
-    console.error(`❌ Error in signInWithOAuth:`, err);
+    console.error(`Error in signInWithOAuth:`, err);
     throw err;
   }
 }

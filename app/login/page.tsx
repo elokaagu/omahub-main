@@ -176,7 +176,7 @@ function LoginForm() {
           </div>
         </div>
 
-        <div className="mt-6 flex justify-center">
+        <div className="mt-6">
           <button
             type="button"
             onClick={() => handleOAuthSignIn("google")}
@@ -184,7 +184,7 @@ function LoginForm() {
             className="w-full inline-flex justify-center items-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-oma-cocoa hover:bg-gray-50"
           >
             <FcGoogle className="h-5 w-5 mr-2" />
-            Continue with Google
+            Google
           </button>
         </div>
       </div>
