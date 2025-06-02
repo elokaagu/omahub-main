@@ -18,6 +18,7 @@ function LoginForm() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [debugInfo, setDebugInfo] = useState<string | null>(null);
 
   // Check for error parameter in URL
   useEffect(() => {
@@ -26,9 +27,42 @@ function LoginForm() {
         // Get error from URL manually instead of using useSearchParams
         const urlParams = new URLSearchParams(window.location.search);
         const errorParam = urlParams.get("error");
+        const errorDescription = urlParams.get("error_description");
+        const details = urlParams.get("details");
+
         if (errorParam) {
-          setUrlError(decodeURIComponent(errorParam));
-          setError(decodeURIComponent(errorParam));
+          const decodedError = decodeURIComponent(errorParam);
+          setUrlError(decodedError);
+
+          // Create a user-friendly error message
+          let friendlyMessage = "Authentication failed. Please try again.";
+
+          if (decodedError === "callback_error") {
+            friendlyMessage =
+              "There was an issue completing your sign-in. Please try again.";
+          } else if (decodedError === "access_denied") {
+            friendlyMessage = "Access was denied. Please try signing in again.";
+          } else if (decodedError === "service_unavailable") {
+            friendlyMessage =
+              "Authentication service is temporarily unavailable.";
+          } else if (errorDescription) {
+            friendlyMessage = decodeURIComponent(errorDescription);
+          }
+
+          setError(friendlyMessage);
+
+          // Set debug info for development
+          if (process.env.NODE_ENV === "development") {
+            const debugData = {
+              error: decodedError,
+              description: errorDescription
+                ? decodeURIComponent(errorDescription)
+                : null,
+              details: details ? decodeURIComponent(details) : null,
+              timestamp: new Date().toISOString(),
+            };
+            setDebugInfo(JSON.stringify(debugData, null, 2));
+          }
         }
       }
     } catch (err) {
@@ -64,6 +98,18 @@ function LoginForm() {
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm">
             {error}
+
+            {/* Debug information in development */}
+            {process.env.NODE_ENV === "development" && debugInfo && (
+              <details className="mt-3">
+                <summary className="cursor-pointer font-semibold">
+                  Debug Info (Development Only)
+                </summary>
+                <pre className="mt-2 text-xs bg-red-100 p-2 rounded overflow-x-auto">
+                  {debugInfo}
+                </pre>
+              </details>
+            )}
           </div>
         )}
 
