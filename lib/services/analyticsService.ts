@@ -426,3 +426,278 @@ export async function getReviewTrendsData(): Promise<
     return [];
   }
 }
+
+/**
+ * Get analytics data filtered for a specific brand owner
+ */
+export async function getBrandOwnerAnalyticsData(
+  ownedBrandIds: string[]
+): Promise<AnalyticsData> {
+  try {
+    if (!supabase) {
+      throw new Error("Supabase client not available");
+    }
+
+    console.log(
+      "🔄 Fetching brand owner analytics data for brands:",
+      ownedBrandIds
+    );
+
+    if (!ownedBrandIds || ownedBrandIds.length === 0) {
+      // Return empty analytics if no brands owned
+      return {
+        totalBrands: 0,
+        totalReviews: 0,
+        totalCollections: 0,
+        totalPageViews: 0,
+        activeBrands: 0,
+        verifiedBrands: 0,
+        averageRating: 0,
+        recentReviews: 0,
+        recentBrands: 0,
+      };
+    }
+
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const thirtyDaysAgoISO = thirtyDaysAgo.toISOString();
+
+    // Fetch data filtered by owned brands
+    const [
+      brandsResult,
+      reviewsResult,
+      collectionsResult,
+      recentReviewsResult,
+    ] = await Promise.all([
+      // Owned brands with their review counts
+      supabase
+        .from("brands")
+        .select(
+          `
+          id, 
+          name, 
+          rating, 
+          is_verified, 
+          created_at,
+          reviews:reviews(rating, created_at)
+        `
+        )
+        .in("id", ownedBrandIds),
+
+      // Reviews for owned brands only
+      supabase
+        .from("reviews")
+        .select("id, rating, created_at, brand_id")
+        .in("brand_id", ownedBrandIds),
+
+      // Collections for owned brands only
+      supabase
+        .from("collections")
+        .select("id", { count: "exact", head: true })
+        .in("brand_id", ownedBrandIds),
+
+      // Recent reviews for owned brands (last 30 days)
+      supabase
+        .from("reviews")
+        .select("id", { count: "exact", head: true })
+        .in("brand_id", ownedBrandIds)
+        .gte("created_at", thirtyDaysAgoISO),
+    ]);
+
+    // Handle errors
+    if (brandsResult.error) throw brandsResult.error;
+    if (reviewsResult.error) throw reviewsResult.error;
+    if (collectionsResult.error) throw collectionsResult.error;
+    if (recentReviewsResult.error) throw recentReviewsResult.error;
+
+    // Process brands data
+    const brands = brandsResult.data || [];
+    const totalBrands = brands.length;
+    const verifiedBrands = brands.filter((brand) => brand.is_verified).length;
+
+    // All owned brands are considered "active" for brand owners
+    const activeBrands = totalBrands;
+
+    // Process reviews data
+    const reviews = reviewsResult.data || [];
+    const totalReviews = reviews.length;
+
+    // Calculate average rating from all reviews for owned brands
+    const averageRating =
+      reviews.length > 0
+        ? reviews.reduce((sum, review) => sum + (review.rating || 0), 0) /
+          reviews.length
+        : 0;
+
+    // Get counts
+    const totalCollections = collectionsResult.count || 0;
+    const recentReviews = recentReviewsResult.count || 0;
+    const recentBrands = 0; // Brand owners don't create new brands frequently
+
+    // Calculate estimated page views for owned brands only
+    // Use a more conservative multiplier since it's brand-specific
+    const totalPageViews = Math.round(
+      totalBrands * 15 +
+        totalReviews * 5 +
+        totalCollections * 10 +
+        verifiedBrands * 30
+    );
+
+    const analyticsData: AnalyticsData = {
+      totalBrands,
+      totalReviews,
+      totalCollections,
+      totalPageViews,
+      activeBrands,
+      verifiedBrands,
+      averageRating,
+      recentReviews,
+      recentBrands,
+    };
+
+    console.log("✅ Brand owner analytics data fetched:", analyticsData);
+    return analyticsData;
+  } catch (error) {
+    console.error("❌ Error fetching brand owner analytics:", error);
+    throw error;
+  }
+}
+
+/**
+ * Get brand growth data filtered for specific brands (shows collection growth instead)
+ */
+export async function getBrandOwnerGrowthData(
+  ownedBrandIds: string[]
+): Promise<{ month: string; brands: number }[]> {
+  try {
+    if (!supabase) {
+      throw new Error("Supabase client not available");
+    }
+
+    if (!ownedBrandIds || ownedBrandIds.length === 0) {
+      return [];
+    }
+
+    console.log(
+      "🔄 Fetching brand owner growth data for brands:",
+      ownedBrandIds
+    );
+
+    // For brand owners, growth is typically about collections/products, not new brands
+    // So we'll show collection growth instead
+    const { data, error } = await supabase
+      .from("collections")
+      .select("created_at")
+      .in("brand_id", ownedBrandIds)
+      .order("created_at");
+
+    if (error) throw error;
+
+    // Group by month for the last 6 months
+    const months: { date: Date; month: string; collections: number }[] = [];
+    const now = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      months.push({
+        date,
+        month: date.toLocaleDateString("en-US", { month: "short" }),
+        collections: 0,
+      });
+    }
+
+    // Count collections by month
+    (data || []).forEach((collection) => {
+      const createdDate = new Date(collection.created_at);
+      const monthIndex = months.findIndex(
+        (m) =>
+          m.date.getMonth() === createdDate.getMonth() &&
+          m.date.getFullYear() === createdDate.getFullYear()
+      );
+      if (monthIndex !== -1) {
+        months[monthIndex].collections++;
+      }
+    });
+
+    // Convert to cumulative count (total collections up to each month)
+    let cumulative = 0;
+    return months.map((month) => {
+      cumulative += month.collections;
+      return {
+        month: month.month,
+        brands: cumulative, // Using 'brands' key for consistency with existing interface
+      };
+    });
+  } catch (error) {
+    console.error("❌ Error fetching brand owner growth data:", error);
+    return [];
+  }
+}
+
+/**
+ * Get review trends data filtered for specific brands
+ */
+export async function getBrandOwnerReviewTrends(
+  ownedBrandIds: string[]
+): Promise<{ month: string; reviews: number; avgRating: number }[]> {
+  try {
+    if (!supabase) {
+      throw new Error("Supabase client not available");
+    }
+
+    if (!ownedBrandIds || ownedBrandIds.length === 0) {
+      return [];
+    }
+
+    console.log(
+      "🔄 Fetching brand owner review trends for brands:",
+      ownedBrandIds
+    );
+
+    const { data, error } = await supabase
+      .from("reviews")
+      .select("created_at, rating")
+      .in("brand_id", ownedBrandIds)
+      .order("created_at");
+
+    if (error) throw error;
+
+    // Group by month for the last 6 months
+    const months: { date: Date; month: string; reviews: number[] }[] = [];
+    const now = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      months.push({
+        date,
+        month: date.toLocaleDateString("en-US", { month: "short" }),
+        reviews: [],
+      });
+    }
+
+    // Group reviews by month
+    (data || []).forEach((review) => {
+      const createdDate = new Date(review.created_at);
+      const monthIndex = months.findIndex(
+        (m) =>
+          m.date.getMonth() === createdDate.getMonth() &&
+          m.date.getFullYear() === createdDate.getFullYear()
+      );
+      if (monthIndex !== -1) {
+        months[monthIndex].reviews.push(review.rating);
+      }
+    });
+
+    // Calculate monthly stats
+    return months.map((month) => ({
+      month: month.month,
+      reviews: month.reviews.length,
+      avgRating:
+        month.reviews.length > 0
+          ? month.reviews.reduce((sum, rating) => sum + rating, 0) /
+            month.reviews.length
+          : 0,
+    }));
+  } catch (error) {
+    console.error("❌ Error fetching brand owner review trends:", error);
+    return [];
+  }
+}

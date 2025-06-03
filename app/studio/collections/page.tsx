@@ -3,11 +3,18 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import type { Database } from "@/lib/types/supabase";
 import { getAllBrands } from "@/lib/services/brandService";
 import {
   getCollectionsWithBrands,
   deleteCollection,
 } from "@/lib/services/collectionService";
+import {
+  getUserPermissions,
+  Permission,
+} from "@/lib/services/permissionsService";
+import { useAuth } from "@/contexts/AuthContext";
 import { Brand, Collection } from "@/lib/supabase";
 import {
   Card,
@@ -35,19 +42,26 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { PlusCircle, Search, Edit, Trash2, Eye } from "lucide-react";
+import { PlusCircle, Search, Edit, Trash2, Eye, Package } from "lucide-react";
 import { toast } from "sonner";
 import { AuthImage } from "@/components/ui/auth-image";
+import { Loading } from "@/components/ui/loading";
 
 type CollectionWithBrand = Collection & { brand: { name: string; id: string } };
+type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
 export default function CollectionsPage() {
   const router = useRouter();
+  const { user } = useAuth();
+  const supabase = createClientComponentClient<Database>();
+
   const [brands, setBrands] = useState<Brand[]>([]);
   const [collections, setCollections] = useState<CollectionWithBrand[]>([]);
   const [filteredCollections, setFilteredCollections] = useState<
     CollectionWithBrand[]
   >([]);
+  const [userPermissions, setUserPermissions] = useState<Permission[]>([]);
+  const [userProfile, setUserProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedBrand, setSelectedBrand] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -59,23 +73,73 @@ export default function CollectionsPage() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     filterCollections();
   }, [selectedBrand, searchQuery, collections]);
 
   const fetchData = async () => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     try {
-      // Fetch brands and collections in parallel
-      const [brandsData, collectionsData] = await Promise.all([
-        getAllBrands(),
-        getCollectionsWithBrands(),
+      // Get user permissions and profile
+      const [permissions, profileResult] = await Promise.all([
+        getUserPermissions(user.id, user.email),
+        supabase.from("profiles").select("*").eq("id", user.id).single(),
       ]);
 
-      setBrands(brandsData);
-      setCollections(collectionsData);
+      setUserPermissions(permissions);
+
+      if (profileResult.error) {
+        console.error("Error fetching profile:", profileResult.error);
+      } else {
+        setUserProfile(profileResult.data);
+      }
+
+      // Check if user has permission to manage collections
+      if (!permissions.includes("studio.collections.manage")) {
+        console.log("User doesn't have permission to manage collections");
+        setLoading(false);
+        return;
+      }
+
+      const isBrandOwner = user.role === "brand_admin";
+      const isAdmin = user.role === "admin" || user.role === "super_admin";
+      const ownedBrandIds = profileResult.data?.owned_brands || [];
+
+      // Fetch brands and collections based on user role
+      if (isAdmin) {
+        // Admins see all brands and collections
+        const [brandsData, collectionsData] = await Promise.all([
+          getAllBrands(),
+          getCollectionsWithBrands(),
+        ]);
+        setBrands(brandsData);
+        setCollections(collectionsData);
+      } else if (isBrandOwner && ownedBrandIds.length > 0) {
+        // Brand owners see only their brands and collections
+        const [brandsData, collectionsData] = await Promise.all([
+          getAllBrands().then((allBrands) =>
+            allBrands.filter((brand) => ownedBrandIds.includes(brand.id))
+          ),
+          getCollectionsWithBrands().then((allCollections) =>
+            allCollections.filter((collection) =>
+              ownedBrandIds.includes(collection.brand_id)
+            )
+          ),
+        ]);
+        setBrands(brandsData);
+        setCollections(collectionsData);
+      } else {
+        // No access
+        setBrands([]);
+        setCollections([]);
+      }
     } catch (error) {
       console.error("Error fetching data:", error);
       toast.error("Failed to load collections");
@@ -125,6 +189,21 @@ export default function CollectionsPage() {
   };
 
   const confirmDeleteCollection = (collectionId: string) => {
+    // Check if user can delete this collection
+    const collection = collections.find((c) => c.id === collectionId);
+    const isBrandOwner = user?.role === "brand_admin";
+    const isAdmin = user?.role === "admin" || user?.role === "super_admin";
+    const ownedBrandIds = userProfile?.owned_brands || [];
+
+    if (
+      isBrandOwner &&
+      collection &&
+      !ownedBrandIds.includes(collection.brand_id)
+    ) {
+      toast.error("You can only delete collections for your own brands");
+      return;
+    }
+
     setCollectionToDelete(collectionId);
     setIsDeleteDialogOpen(true);
   };
@@ -156,15 +235,55 @@ export default function CollectionsPage() {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full"></div>
+        <Loading />
       </div>
     );
   }
 
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <Package className="mx-auto h-12 w-12 text-gray-400" />
+          <h3 className="mt-4 text-lg font-semibold">Please Sign In</h3>
+          <p className="mt-2 text-gray-500">
+            You need to be signed in to manage collections.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!userPermissions.includes("studio.collections.manage")) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <Package className="mx-auto h-12 w-12 text-gray-400" />
+          <h3 className="mt-4 text-lg font-semibold">Access Denied</h3>
+          <p className="mt-2 text-gray-500">
+            You don't have permission to manage collections.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const isBrandOwner = user.role === "brand_admin";
+  const isAdmin = user.role === "admin" || user.role === "super_admin";
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-8 gap-4">
-        <h1 className="text-3xl font-canela text-gray-900">Collections</h1>
+        <div>
+          <h1 className="text-3xl font-canela text-gray-900">
+            {isBrandOwner ? "Your Collections" : "Collections"}
+          </h1>
+          {isBrandOwner && (
+            <p className="text-sm text-gray-600 mt-1">
+              Manage collections for your brands
+            </p>
+          )}
+        </div>
         <Button
           asChild
           className="bg-oma-plum hover:bg-oma-plum/90 w-full sm:w-auto"
@@ -183,7 +302,9 @@ export default function CollectionsPage() {
         <CardHeader className="pb-4">
           <CardTitle>Collection Management</CardTitle>
           <CardDescription>
-            Manage collections for all your brands
+            {isBrandOwner
+              ? "Manage collections for your brands"
+              : "Manage collections for all brands"}
           </CardDescription>
         </CardHeader>
         <CardContent className="p-6">
@@ -203,7 +324,9 @@ export default function CollectionsPage() {
                 <SelectValue placeholder="Filter by brand" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Brands</SelectItem>
+                <SelectItem value="all">
+                  {isBrandOwner ? "All Your Brands" : "All Brands"}
+                </SelectItem>
                 {brands.map((brand) => (
                   <SelectItem key={brand.id} value={brand.id}>
                     {brand.name}
@@ -225,7 +348,9 @@ export default function CollectionsPage() {
               <p className="text-gray-600 mb-6">
                 {searchQuery || selectedBrand !== "all"
                   ? "Try adjusting your search or filter criteria."
-                  : "Get started by creating your first collection."}
+                  : isBrandOwner
+                    ? "Get started by creating your first collection."
+                    : "Get started by creating your first collection."}
               </p>
               {!searchQuery && selectedBrand === "all" && (
                 <Button asChild className="bg-oma-plum hover:bg-oma-plum/90">

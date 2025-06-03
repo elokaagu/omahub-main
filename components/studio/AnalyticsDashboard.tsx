@@ -8,6 +8,9 @@ import {
   getAnalyticsData,
   getBrandGrowthData,
   getReviewTrendsData,
+  getBrandOwnerAnalyticsData,
+  getBrandOwnerGrowthData,
+  getBrandOwnerReviewTrends,
   syncBrandRatings,
   type AnalyticsData,
 } from "@/lib/services/analyticsService";
@@ -34,7 +37,17 @@ interface ReviewTrendsData {
   avgRating: number;
 }
 
-export default function AnalyticsDashboard() {
+interface AnalyticsDashboardProps {
+  isBrandOwner?: boolean;
+  ownedBrandIds?: string[];
+  brandNames?: string[];
+}
+
+export default function AnalyticsDashboard({
+  isBrandOwner = false,
+  ownedBrandIds = [],
+  brandNames = [],
+}: AnalyticsDashboardProps) {
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [brandGrowth, setBrandGrowth] = useState<BrandGrowthData[]>([]);
   const [reviewTrends, setReviewTrends] = useState<ReviewTrendsData[]>([]);
@@ -47,15 +60,29 @@ export default function AnalyticsDashboard() {
       setLoading(true);
       setError(null);
 
-      const [analyticsData, growthData, trendsData] = await Promise.all([
-        getAnalyticsData(),
-        getBrandGrowthData(),
-        getReviewTrendsData(),
-      ]);
+      if (isBrandOwner && ownedBrandIds.length > 0) {
+        // Fetch brand owner specific data
+        const [analyticsData, growthData, trendsData] = await Promise.all([
+          getBrandOwnerAnalyticsData(ownedBrandIds),
+          getBrandOwnerGrowthData(ownedBrandIds),
+          getBrandOwnerReviewTrends(ownedBrandIds),
+        ]);
 
-      setAnalytics(analyticsData);
-      setBrandGrowth(growthData);
-      setReviewTrends(trendsData);
+        setAnalytics(analyticsData);
+        setBrandGrowth(growthData);
+        setReviewTrends(trendsData);
+      } else {
+        // Fetch global analytics data (for super admins)
+        const [analyticsData, growthData, trendsData] = await Promise.all([
+          getAnalyticsData(),
+          getBrandGrowthData(),
+          getReviewTrendsData(),
+        ]);
+
+        setAnalytics(analyticsData);
+        setBrandGrowth(growthData);
+        setReviewTrends(trendsData);
+      }
     } catch (err) {
       console.error("Error fetching analytics:", err);
       setError("Failed to load analytics data");
@@ -91,14 +118,14 @@ export default function AnalyticsDashboard() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [isBrandOwner, ownedBrandIds]);
 
   if (loading) {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-canela text-oma-plum">
-            Analytics Dashboard
+            {isBrandOwner ? "Your Brand Analytics" : "Analytics Dashboard"}
           </h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -120,7 +147,7 @@ export default function AnalyticsDashboard() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-canela text-oma-plum">
-            Analytics Dashboard
+            {isBrandOwner ? "Your Brand Analytics" : "Analytics Dashboard"}
           </h2>
           <Button
             onClick={fetchData}
@@ -182,22 +209,31 @@ export default function AnalyticsDashboard() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-canela text-oma-plum">
-          Analytics Dashboard
-        </h2>
+        <div>
+          <h2 className="text-2xl font-canela text-oma-plum">
+            {isBrandOwner ? "Your Brand Analytics" : "Analytics Dashboard"}
+          </h2>
+          {isBrandOwner && brandNames.length > 0 && (
+            <p className="text-sm text-oma-cocoa mt-1">
+              Analytics for: {brandNames.join(", ")}
+            </p>
+          )}
+        </div>
         <div className="flex gap-2">
-          <Button
-            onClick={handleSyncRatings}
-            variant="outline"
-            size="sm"
-            disabled={syncing}
-            className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white"
-          >
-            <RefreshCw
-              className={`h-4 w-4 mr-2 ${syncing ? "animate-spin" : ""}`}
-            />
-            {syncing ? "Syncing..." : "Sync Ratings"}
-          </Button>
+          {!isBrandOwner && (
+            <Button
+              onClick={handleSyncRatings}
+              variant="outline"
+              size="sm"
+              disabled={syncing}
+              className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white"
+            >
+              <RefreshCw
+                className={`h-4 w-4 mr-2 ${syncing ? "animate-spin" : ""}`}
+              />
+              {syncing ? "Syncing..." : "Sync Ratings"}
+            </Button>
+          )}
           <Button
             onClick={fetchData}
             variant="outline"
@@ -215,7 +251,7 @@ export default function AnalyticsDashboard() {
         <Card className="border-l-4 border-l-oma-plum border-oma-beige">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-oma-cocoa">
-              Total Brands
+              {isBrandOwner ? "Your Brands" : "Total Brands"}
             </CardTitle>
             <Users className="h-4 w-4 text-oma-plum" />
           </CardHeader>
@@ -247,7 +283,8 @@ export default function AnalyticsDashboard() {
               >
                 <TrendingUp className="h-3 w-3 mr-1" />
                 {brandGrowthPercentage > 0 ? "+" : ""}
-                {brandGrowthPercentage.toFixed(1)}% this month
+                {brandGrowthPercentage.toFixed(1)}%{" "}
+                {isBrandOwner ? "collections" : "this month"}
               </p>
             )}
           </CardContent>
@@ -256,7 +293,7 @@ export default function AnalyticsDashboard() {
         <Card className="border-l-4 border-l-oma-cocoa border-oma-beige">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-oma-cocoa">
-              Total Reviews
+              {isBrandOwner ? "Your Reviews" : "Total Reviews"}
             </CardTitle>
             <Star className="h-4 w-4 text-oma-cocoa" />
           </CardHeader>
@@ -285,7 +322,7 @@ export default function AnalyticsDashboard() {
         <Card className="border-l-4 border-l-oma-beige border-oma-beige">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-oma-cocoa">
-              Collections
+              {isBrandOwner ? "Your Collections" : "Collections"}
             </CardTitle>
             <ShoppingBag className="h-4 w-4 text-oma-beige" />
           </CardHeader>
@@ -294,7 +331,9 @@ export default function AnalyticsDashboard() {
               {formatNumber(analytics.totalCollections)}
             </div>
             <p className="text-xs text-oma-cocoa mt-2">
-              Brand showcases and galleries
+              {isBrandOwner
+                ? "Brand showcases and galleries"
+                : "Brand showcases and galleries"}
             </p>
           </CardContent>
         </Card>
@@ -311,7 +350,9 @@ export default function AnalyticsDashboard() {
               {formatNumber(analytics.totalPageViews)}
             </div>
             <p className="text-xs text-oma-cocoa mt-2">
-              Real-time analytics via Vercel
+              {isBrandOwner
+                ? "Estimated brand page views"
+                : "Real-time analytics via Vercel"}
             </p>
           </CardContent>
         </Card>
@@ -322,7 +363,7 @@ export default function AnalyticsDashboard() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-oma-plum font-canela">
             <CheckCircle className="h-5 w-5 text-green-500" />
-            Platform Health
+            {isBrandOwner ? "Brand Health" : "Platform Health"}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -383,7 +424,9 @@ export default function AnalyticsDashboard() {
         <Card className="border-oma-beige">
           <CardHeader>
             <CardTitle className="text-oma-plum font-canela">
-              Brand Growth (6 Months)
+              {isBrandOwner
+                ? "Collection Growth (6 Months)"
+                : "Brand Growth (6 Months)"}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -445,7 +488,7 @@ export default function AnalyticsDashboard() {
                         </span>
                         {data.avgRating > 0 && (
                           <span className="text-white text-xs">
-                            ⭐{data.avgRating}
+                            ⭐{data.avgRating.toFixed(1)}
                           </span>
                         )}
                       </div>
@@ -457,42 +500,6 @@ export default function AnalyticsDashboard() {
           </CardContent>
         </Card>
       </div>
-
-      {/* Recent Activity */}
-      <Card className="border-oma-beige">
-        <CardHeader>
-          <CardTitle className="text-oma-plum font-canela">
-            Recent Activity (Last 30 Days)
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-oma-plum/10 rounded-lg">
-                <Users className="h-6 w-6 text-oma-plum" />
-              </div>
-              <div>
-                <div className="text-2xl font-canela text-oma-plum">
-                  {analytics.recentBrands}
-                </div>
-                <p className="text-sm text-oma-cocoa">New brands added</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-oma-cocoa/10 rounded-lg">
-                <Star className="h-6 w-6 text-oma-cocoa" />
-              </div>
-              <div>
-                <div className="text-2xl font-canela text-oma-plum">
-                  {analytics.recentReviews}
-                </div>
-                <p className="text-sm text-oma-cocoa">New reviews posted</p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }
