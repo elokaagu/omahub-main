@@ -117,7 +117,7 @@ export default function StudioPage() {
   const isSuperAdmin = user.role === "super_admin";
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8">
       <h1 className="text-4xl font-canela mb-8 text-oma-plum">Studio</h1>
 
       {/* Analytics Dashboard for Super Admins */}

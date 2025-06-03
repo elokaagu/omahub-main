@@ -80,13 +80,16 @@ export default function BrandsPage() {
   }, [filteredBrands]);
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-8 gap-4">
         <h1 className="text-3xl font-canela text-gray-900">Brands</h1>
-        <Button asChild className="bg-oma-plum hover:bg-oma-plum/90">
+        <Button
+          asChild
+          className="bg-oma-plum hover:bg-oma-plum/90 w-full sm:w-auto"
+        >
           <Link
             href="/studio/brands/create"
-            className="flex items-center gap-2"
+            className="flex items-center justify-center gap-2"
           >
             <PlusCircle className="h-4 w-4" />
             Add New Brand

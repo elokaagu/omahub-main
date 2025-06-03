@@ -144,7 +144,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
       <h1 className="text-3xl font-canela text-gray-900 mb-8">
         Profile Settings
       </h1>

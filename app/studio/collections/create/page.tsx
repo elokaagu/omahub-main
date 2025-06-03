@@ -113,7 +113,7 @@ export default function CreateCollectionPage() {
   }
 
   return (
-    <div>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
       <div className="flex items-center mb-8">
         <Button
           variant="outline"
