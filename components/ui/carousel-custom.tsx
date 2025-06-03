@@ -170,8 +170,10 @@ export function Carousel({
                 </p>
               )}
 
-              {/* Minimal CTA - only shown after first slide */}
-              {(currentIndex > 0 || !item.isEditorial) && (
+              {/* CTA Button - shown when there's a link or after first slide */}
+              {(item.link && item.link.trim()) ||
+              currentIndex > 0 ||
+              !item.isEditorial ? (
                 <Button
                   asChild
                   className="bg-white hover:bg-white/90 text-black font-medium px-8 py-6 text-lg tracking-wide"
@@ -184,7 +186,7 @@ export function Carousel({
                     {item.isEditorial ? "View Collection" : "Explore Designers"}
                   </Link>
                 </Button>
-              )}
+              ) : null}
             </div>
           </div>
         ))}

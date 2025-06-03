@@ -141,9 +141,20 @@ export default function HomeContent() {
   const carouselItems: CarouselItem[] =
     heroSlides.length > 0
       ? heroSlides.map((slide) => {
-          // Ensure link is properly formatted
+          // Use the same flexible link handling as the hero service
           let link = slide.link?.trim() || "/directory";
-          if (link && !link.startsWith("/") && !link.startsWith("http")) {
+
+          // Only add "/" prefix if it's clearly an internal path that needs it
+          if (
+            link &&
+            link !== "/directory" &&
+            !link.startsWith("/") &&
+            !link.startsWith("http") &&
+            !link.includes(".") &&
+            !link.includes("?") &&
+            !link.includes("#")
+          ) {
+            // Only add "/" for simple paths like "directory" or "collections"
             link = "/" + link;
           }
 
