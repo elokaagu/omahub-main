@@ -4,11 +4,12 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import {
   Home,
   Package,
-  Image,
+  Image as ImageIcon,
   User,
   LogOut,
   Menu,
@@ -176,8 +177,39 @@ export default function StudioLayout({
             </Button>
           </div>
 
-          {/* Desktop: Empty space to account for sidebar */}
-          <div className="hidden lg:block w-64"></div>
+          {/* Desktop: OmaHub logo */}
+          <div className="hidden lg:flex items-center">
+            <button
+              onClick={handleBackToSite}
+              className="hover:opacity-80 transition-opacity"
+            >
+              <Image
+                src="/lovable-uploads/omahub-logo.png"
+                alt="OmaHub"
+                width={90}
+                height={25}
+                className="h-6 w-auto"
+                priority
+              />
+            </button>
+          </div>
+
+          {/* Mobile: OmaHub logo */}
+          <div className="lg:hidden flex-1 flex justify-center">
+            <button
+              onClick={handleBackToSite}
+              className="hover:opacity-80 transition-opacity"
+            >
+              <Image
+                src="/lovable-uploads/omahub-logo.png"
+                alt="OmaHub"
+                width={90}
+                height={25}
+                className="h-6 w-auto"
+                priority
+              />
+            </button>
+          </div>
 
           <div className="hidden md:flex items-center space-x-4">
             <button
@@ -203,14 +235,8 @@ export default function StudioLayout({
         } mt-16`}
       >
         <div className="p-6 h-full flex flex-col">
-          {/* Logo and Studio title aligned */}
+          {/* Studio title only */}
           <div className="mb-8">
-            <button
-              onClick={handleBackToSite}
-              className="text-2xl font-canela text-oma-plum hover:text-oma-plum/80 transition-colors mb-2 block"
-            >
-              OmaHub
-            </button>
             <h1 className="text-2xl font-canela text-oma-plum">Studio</h1>
           </div>
 
@@ -239,7 +265,7 @@ export default function StudioLayout({
                 className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100"
                 onClick={() => setSidebarOpen(false)}
               >
-                <Image className="h-5 w-5" />
+                <ImageIcon className="h-5 w-5" />
                 <span>Collections</span>
               </Link>
             )}
@@ -259,7 +285,7 @@ export default function StudioLayout({
                 className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100"
                 onClick={() => setSidebarOpen(false)}
               >
-                <Image className="h-5 w-5" />
+                <ImageIcon className="h-5 w-5" />
                 <span>Spotlight</span>
               </Link>
             )}
