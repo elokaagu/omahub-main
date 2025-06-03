@@ -61,7 +61,9 @@ export default function Header() {
 
   useEffect(() => {
     const hasAdminAccess =
-      user?.role === "admin" || user?.role === "super_admin";
+      user?.role === "admin" ||
+      user?.role === "super_admin" ||
+      user?.role === "brand_admin";
     console.log("Header user state:", {
       userId: user?.id,
       userRole: user?.role,
@@ -313,7 +315,8 @@ export default function Header() {
                         </NavigationMenuLink>
                       </li>
                       {(user?.role === "admin" ||
-                        user?.role === "super_admin") && (
+                        user?.role === "super_admin" ||
+                        user?.role === "brand_admin") && (
                         <li>
                           <NavigationMenuLink asChild>
                             <button
@@ -505,7 +508,9 @@ export default function Header() {
                   </NavigationLink>
 
                   {/* Studio Access for Admins */}
-                  {(user?.role === "admin" || user?.role === "super_admin") && (
+                  {(user?.role === "admin" ||
+                    user?.role === "super_admin" ||
+                    user?.role === "brand_admin") && (
                     <button
                       onClick={() => {
                         setMobileMenuOpen(false);

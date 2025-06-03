@@ -51,7 +51,11 @@ export default function UserProfile() {
       router.push("/studio/settings");
     } else {
       // For main site, redirect to studio settings if user has access
-      if (user?.role === "admin" || user?.role === "super_admin") {
+      if (
+        user?.role === "admin" ||
+        user?.role === "super_admin" ||
+        user?.role === "brand_admin"
+      ) {
         router.push("/studio/settings");
       } else {
         toast.info("Settings are available in the studio for administrators");
