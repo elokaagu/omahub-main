@@ -253,8 +253,18 @@ export default function EditHeroSlidePage() {
                   placeholder="/directory?category=Collections"
                 />
                 <p className="text-xs text-oma-cocoa/70 mt-1">
-                  Where users go when they click the CTA button
+                  Where users go when they click the CTA button. Use internal
+                  paths (e.g., /directory) or full URLs (e.g.,
+                  https://example.com)
                 </p>
+                {formData.link &&
+                  !formData.link.startsWith("/") &&
+                  !formData.link.startsWith("http") && (
+                    <p className="text-xs text-amber-600 mt-1">
+                      ⚠️ Link will be automatically prefixed with "/" for
+                      internal navigation
+                    </p>
+                  )}
               </div>
             </div>
 

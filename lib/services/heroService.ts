@@ -18,7 +18,7 @@ export interface CreateHeroSlideData {
   image: string;
   title: string;
   subtitle?: string;
-  link?: string;
+  link?: string | null;
   hero_title?: string;
   is_editorial?: boolean;
   display_order: number;
@@ -146,9 +146,21 @@ export async function createHeroSlide(
 
     console.log("✅ User has super admin permissions");
 
+    // Sanitize and validate link URL
+    let sanitizedLink = slideData.link?.trim() || null;
+    if (sanitizedLink) {
+      // Ensure link starts with / for internal links or http/https for external
+      if (!sanitizedLink.startsWith("/") && !sanitizedLink.startsWith("http")) {
+        sanitizedLink = "/" + sanitizedLink;
+      }
+      // Remove any trailing spaces or invalid characters
+      sanitizedLink = sanitizedLink.replace(/\s+/g, "");
+    }
+
     // Prepare the data for insertion
     const insertData = {
       ...slideData,
+      link: sanitizedLink,
       is_editorial: slideData.is_editorial ?? true,
       is_active: slideData.is_active ?? true,
     };
@@ -183,22 +195,70 @@ export async function updateHeroSlide(
   updates: UpdateHeroSlideData
 ): Promise<HeroSlide> {
   try {
+    console.log("🔄 Starting hero slide update...");
+    console.log("User ID:", userId);
+    console.log("Slide ID:", id);
+    console.log("Updates:", updates);
+
     if (!supabase) {
       throw new Error("Supabase client not available");
     }
 
+    // Check if user has permission
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", userId)
+      .single();
+
+    if (profileError) {
+      console.error("❌ Error fetching user profile:", profileError);
+      throw new Error(`Permission check failed: ${profileError.message}`);
+    }
+
+    if (profile?.role !== "super_admin") {
+      console.error("❌ User is not super admin:", profile?.role);
+      throw new Error(
+        "Permission denied: Only super admins can update hero slides"
+      );
+    }
+
+    // Sanitize and validate link URL if it's being updated
+    const sanitizedUpdates = { ...updates };
+    if (updates.link !== undefined) {
+      let sanitizedLink = updates.link?.trim() || null;
+      if (sanitizedLink) {
+        // Ensure link starts with / for internal links or http/https for external
+        if (
+          !sanitizedLink.startsWith("/") &&
+          !sanitizedLink.startsWith("http")
+        ) {
+          sanitizedLink = "/" + sanitizedLink;
+        }
+        // Remove any trailing spaces or invalid characters
+        sanitizedLink = sanitizedLink.replace(/\s+/g, "");
+      }
+      sanitizedUpdates.link = sanitizedLink;
+    }
+
+    console.log("📝 Sanitized updates:", sanitizedUpdates);
+
     const { data, error } = await supabase
       .from("hero_slides")
-      .update(updates)
+      .update(sanitizedUpdates)
       .eq("id", id)
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error("❌ Database update error:", error);
+      throw new Error(`Database error: ${error.message}`);
+    }
 
+    console.log("✅ Hero slide updated successfully:", data);
     return data;
   } catch (error) {
-    console.error("Error updating hero slide:", error);
+    console.error("❌ Error updating hero slide:", error);
     throw error;
   }
 }

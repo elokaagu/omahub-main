@@ -176,7 +176,11 @@ export function Carousel({
                   asChild
                   className="bg-white hover:bg-white/90 text-black font-medium px-8 py-6 text-lg tracking-wide"
                 >
-                  <Link href={item.link || "/directory"}>
+                  <Link
+                    href={
+                      item.link && item.link.trim() ? item.link : "/directory"
+                    }
+                  >
                     {item.isEditorial ? "View Collection" : "Explore Designers"}
                   </Link>
                 </Button>

@@ -140,17 +140,25 @@ export default function HomeContent() {
   // Transform hero slides to carousel items
   const carouselItems: CarouselItem[] =
     heroSlides.length > 0
-      ? heroSlides.map((slide) => ({
-          id: slide.id,
-          image: slide.image,
-          title: slide.title,
-          subtitle: slide.subtitle || "",
-          link: slide.link || "/directory",
-          heroTitle: slide.hero_title || slide.title,
-          isEditorial: slide.is_editorial,
-          width: 1920,
-          height: 1080,
-        }))
+      ? heroSlides.map((slide) => {
+          // Ensure link is properly formatted
+          let link = slide.link?.trim() || "/directory";
+          if (link && !link.startsWith("/") && !link.startsWith("http")) {
+            link = "/" + link;
+          }
+
+          return {
+            id: slide.id,
+            image: slide.image,
+            title: slide.title,
+            subtitle: slide.subtitle || "",
+            link: link,
+            heroTitle: slide.hero_title || slide.title,
+            isEditorial: slide.is_editorial,
+            width: 1920,
+            height: 1080,
+          };
+        })
       : fallbackCarouselItems;
 
   useEffect(() => {
