@@ -149,12 +149,22 @@ export async function createHeroSlide(
     // Sanitize and validate link URL
     let sanitizedLink = slideData.link?.trim() || null;
     if (sanitizedLink) {
-      // Ensure link starts with / for internal links or http/https for external
-      if (!sanitizedLink.startsWith("/") && !sanitizedLink.startsWith("http")) {
-        sanitizedLink = "/" + sanitizedLink;
-      }
       // Remove any trailing spaces or invalid characters
       sanitizedLink = sanitizedLink.replace(/\s+/g, "");
+
+      // Only add "/" prefix if it's clearly an internal path that needs it
+      // Allow flexible URL formats without forcing prefixes
+      if (
+        sanitizedLink &&
+        !sanitizedLink.startsWith("/") &&
+        !sanitizedLink.startsWith("http") &&
+        !sanitizedLink.includes(".") &&
+        !sanitizedLink.includes("?") &&
+        !sanitizedLink.includes("#")
+      ) {
+        // Only add "/" for simple paths like "directory" or "collections"
+        sanitizedLink = "/" + sanitizedLink;
+      }
     }
 
     // Prepare the data for insertion
@@ -228,15 +238,22 @@ export async function updateHeroSlide(
     if (updates.link !== undefined) {
       let sanitizedLink = updates.link?.trim() || null;
       if (sanitizedLink) {
-        // Ensure link starts with / for internal links or http/https for external
-        if (
-          !sanitizedLink.startsWith("/") &&
-          !sanitizedLink.startsWith("http")
-        ) {
-          sanitizedLink = "/" + sanitizedLink;
-        }
         // Remove any trailing spaces or invalid characters
         sanitizedLink = sanitizedLink.replace(/\s+/g, "");
+
+        // Only add "/" prefix if it's clearly an internal path that needs it
+        // Allow flexible URL formats without forcing prefixes
+        if (
+          sanitizedLink &&
+          !sanitizedLink.startsWith("/") &&
+          !sanitizedLink.startsWith("http") &&
+          !sanitizedLink.includes(".") &&
+          !sanitizedLink.includes("?") &&
+          !sanitizedLink.includes("#")
+        ) {
+          // Only add "/" for simple paths like "directory" or "collections"
+          sanitizedLink = "/" + sanitizedLink;
+        }
       }
       sanitizedUpdates.link = sanitizedLink;
     }

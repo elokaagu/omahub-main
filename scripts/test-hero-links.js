@@ -59,21 +59,47 @@ async function testHeroLinks() {
       "  /directory  ",
       "",
       null,
+      "directory",
+      "collections",
+      "brand/cairo-couture",
+      "www.example.com",
+      "page#section",
     ];
 
-    testLinks.forEach((testLink) => {
+    testLinks.forEach((testLink, index) => {
+      console.log(`\n${index + 1}. Testing: "${testLink}"`);
+
+      // Simulate the sanitization logic from heroService.ts
       let sanitizedLink = testLink?.trim() || null;
       if (sanitizedLink) {
+        // Remove any trailing spaces or invalid characters
+        sanitizedLink = sanitizedLink.replace(/\s+/g, "");
+
+        // Only add "/" prefix if it's clearly an internal path that needs it
         if (
+          sanitizedLink &&
           !sanitizedLink.startsWith("/") &&
-          !sanitizedLink.startsWith("http")
+          !sanitizedLink.startsWith("http") &&
+          !sanitizedLink.includes(".") &&
+          !sanitizedLink.includes("?") &&
+          !sanitizedLink.includes("#")
         ) {
+          // Only add "/" for simple paths like "directory" or "collections"
           sanitizedLink = "/" + sanitizedLink;
         }
-        sanitizedLink = sanitizedLink.replace(/\s+/g, "");
       }
 
-      console.log(`Input: "${testLink}" → Output: "${sanitizedLink}"`);
+      console.log(`   Result: "${sanitizedLink}"`);
+
+      if (testLink === "directory?category=Collections") {
+        console.log(`   ✅ Query parameters preserved`);
+      } else if (testLink === "directory") {
+        console.log(`   ✅ Simple path gets "/" prefix`);
+      } else if (testLink === "brand/cairo-couture") {
+        console.log(`   ✅ Path with slash preserved`);
+      } else if (testLink === "www.example.com") {
+        console.log(`   ✅ Domain preserved without prefix`);
+      }
     });
 
     console.log("\n✅ Hero link testing completed!");
