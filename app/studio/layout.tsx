@@ -24,6 +24,8 @@ import {
 } from "@/lib/services/permissionsService";
 import { LoadingPage } from "@/components/ui/loading";
 import UserProfile from "@/components/auth/UserProfile";
+import { NavigationLink } from "@/components/ui/navigation-link";
+import { NavigationDebug } from "@/components/debug/NavigationDebug";
 
 export default function StudioLayout({
   children,
@@ -241,71 +243,71 @@ export default function StudioLayout({
           </div>
 
           <nav className="space-y-1 flex-1">
-            <Link
+            <NavigationLink
               href="/studio"
               className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100"
               onClick={() => setSidebarOpen(false)}
             >
               <Home className="h-5 w-5" />
               <span>Dashboard</span>
-            </Link>
+            </NavigationLink>
             {permissions.includes("studio.brands.manage") && (
-              <Link
+              <NavigationLink
                 href="/studio/brands"
                 className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100"
                 onClick={() => setSidebarOpen(false)}
               >
                 <Package className="h-5 w-5" />
                 <span>Brands</span>
-              </Link>
+              </NavigationLink>
             )}
             {permissions.includes("studio.collections.manage") && (
-              <Link
+              <NavigationLink
                 href="/studio/collections"
                 className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100"
                 onClick={() => setSidebarOpen(false)}
               >
                 <ImageIcon className="h-5 w-5" />
                 <span>Collections</span>
-              </Link>
+              </NavigationLink>
             )}
             {user?.role === "super_admin" && (
-              <Link
+              <NavigationLink
                 href="/studio/hero"
                 className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100"
                 onClick={() => setSidebarOpen(false)}
               >
                 <Monitor className="h-5 w-5" />
                 <span>Hero Carousel</span>
-              </Link>
+              </NavigationLink>
             )}
             {user?.role === "super_admin" && (
-              <Link
+              <NavigationLink
                 href="/studio/spotlight"
                 className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100"
                 onClick={() => setSidebarOpen(false)}
               >
                 <ImageIcon className="h-5 w-5" />
                 <span>Spotlight</span>
-              </Link>
+              </NavigationLink>
             )}
-            <Link
+            <NavigationLink
               href="/studio/profile"
               className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100"
               onClick={() => setSidebarOpen(false)}
             >
               <User className="h-5 w-5" />
               <span>Profile</span>
-            </Link>
+            </NavigationLink>
             {permissions.includes("studio.settings.manage") && (
-              <Link
+              <NavigationLink
                 href="/studio/settings"
                 className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100"
                 onClick={() => setSidebarOpen(false)}
               >
                 <Settings className="h-5 w-5" />
                 <span>Settings</span>
-              </Link>
+              </NavigationLink>
             )}
 
             {/* Mobile Back to Site in sidebar */}
@@ -333,9 +335,9 @@ export default function StudioLayout({
         </div>
       </aside>
 
-      {/* Main content */}
-      <main className="flex-1 ml-0 lg:ml-64 min-h-screen mt-16">
-        <div className="p-4 sm:p-6">{children}</div>
+      {/* Main Content */}
+      <main className="flex-1 lg:ml-64 mt-16 overflow-auto">
+        <div className="h-full">{children}</div>
       </main>
 
       {/* Overlay for mobile */}
@@ -347,6 +349,7 @@ export default function StudioLayout({
       )}
 
       <Toaster />
+      <NavigationDebug />
     </div>
   );
 }

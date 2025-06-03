@@ -90,18 +90,28 @@ export default function Header() {
   };
 
   const handleStudioNavigation = async () => {
-    if (!supabase) {
-      console.error("Supabase client not available");
-      return;
-    }
+    console.log("🎨 Header: Studio navigation initiated");
 
     setIsNavigatingToStudio(true);
     setIsNavigating(true);
+
     try {
+      // Add a timeout to prevent indefinite loading
+      const navigationTimeout = setTimeout(() => {
+        console.warn("⚠️ Header: Studio navigation timeout, resetting state");
+        setIsNavigatingToStudio(false);
+        setIsNavigating(false);
+      }, 5000);
+
       // Use router.push for better navigation handling
-      router.push("/studio");
+      await router.push("/studio");
+
+      // Clear timeout if navigation succeeds
+      clearTimeout(navigationTimeout);
+
+      console.log("✅ Header: Studio navigation completed");
     } catch (error) {
-      console.error("Error navigating to studio:", error);
+      console.error("❌ Header: Error navigating to studio:", error);
       setIsNavigatingToStudio(false);
       setIsNavigating(false);
     }

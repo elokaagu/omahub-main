@@ -13,6 +13,7 @@ import { PageFade } from "@/app/components/ui/animations";
 import { AnimatePresence } from "framer-motion";
 import { Toaster } from "sonner";
 import { LoadingPage } from "@/components/ui/loading";
+import { NavigationDebug } from "@/components/debug/NavigationDebug";
 
 interface RootLayoutClientProps {
   children: React.ReactNode;
@@ -20,8 +21,11 @@ interface RootLayoutClientProps {
 
 function LoadingSpinner() {
   return (
-    <div className="fixed inset-0 bg-white bg-opacity-80 z-50 flex items-center justify-center">
-      <div className="animate-spin h-12 w-12 border-4 border-oma-plum border-t-transparent rounded-full"></div>
+    <div className="fixed inset-0 bg-white/80 backdrop-blur-sm z-50 flex items-center justify-center">
+      <div className="flex flex-col items-center gap-4">
+        <div className="animate-spin h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full"></div>
+        <p className="text-oma-cocoa text-sm">Loading...</p>
+      </div>
     </div>
   );
 }
@@ -48,6 +52,10 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
       </main>
       {!isStudioPage && <Footer />}
       <Toaster />
+      {/* Only show NavigationDebug in development and not in studio (since studio has its own) */}
+      {process.env.NODE_ENV === "development" && !isStudioPage && (
+        <NavigationDebug />
+      )}
     </>
   );
 }
