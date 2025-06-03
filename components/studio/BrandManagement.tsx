@@ -124,29 +124,92 @@ export default function BrandManagement({
     brandId: string,
     updates: Partial<Brand>
   ) => {
-    // Check if user has permission to update this specific brand
-    if (isBrandOwner && !ownedBrandIds.includes(brandId)) {
-      toast.error("You can only update your own brands");
+    // Check if user can update this brand
+    if (!isAdmin && isBrandOwner && !ownedBrandIds.includes(brandId)) {
+      toast.error("You don't have permission to update this brand");
       return;
     }
 
     try {
       setIsLoading(true);
+
+      // Add debugging information
+      console.log("🔄 Attempting brand update:", {
+        brandId,
+        updates,
+        userRole,
+        isAdmin,
+        isBrandOwner,
+        ownedBrandIds,
+      });
+
+      // Check authentication status first
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
+      if (sessionError) {
+        console.error("❌ Session error:", sessionError);
+        toast.error("Authentication error. Please refresh and try again.");
+        return;
+      }
+
+      if (!session) {
+        console.error("❌ No active session");
+        toast.error("Please sign in again to update brands.");
+        return;
+      }
+
+      console.log("✅ Session valid:", {
+        userId: session.user.id,
+        email: session.user.email,
+      });
+
+      // Perform the update with additional error context
       const { data, error } = await supabase
         .from("brands")
-        .update(updates)
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString(),
+        })
         .eq("id", brandId)
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("❌ Database update error:", {
+          error,
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+        });
 
+        // Provide specific error messages based on error type
+        if (error.code === "PGRST116") {
+          toast.error(
+            "No permission to update this brand. Please check your access rights."
+          );
+        } else if (error.code === "42501") {
+          toast.error("Database permission denied. Please contact support.");
+        } else if (error.message.includes("RLS")) {
+          toast.error(
+            "Security policy blocked the update. Please contact support."
+          );
+        } else {
+          toast.error(`Failed to update brand: ${error.message}`);
+        }
+        return;
+      }
+
+      console.log("✅ Brand updated successfully:", data);
       setBrands(brands.map((brand) => (brand.id === brandId ? data : brand)));
       setEditingBrand(null);
       toast.success("Brand updated successfully");
     } catch (error) {
-      console.error("Error updating brand:", error);
-      toast.error("Failed to update brand");
+      console.error("❌ Unexpected error updating brand:", error);
+      toast.error("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }
