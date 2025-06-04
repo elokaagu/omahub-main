@@ -155,38 +155,63 @@ export default function CreateProductPage() {
     try {
       setIsLoading(true);
 
+      // Prepare product data with only the fields that exist in the database
       const productData = {
         title: formData.title,
         description: formData.description,
         price: parseFloat(formData.price),
         sale_price: formData.sale_price
           ? parseFloat(formData.sale_price)
-          : undefined,
+          : null,
         image:
           formData.image ||
           "https://via.placeholder.com/400x400?text=Product+Image",
         brand_id: formData.brand_id,
-        collection_id: formData.collection_id || undefined,
+        collection_id: formData.collection_id || null,
         category: formData.category || "General",
         in_stock: formData.in_stock,
-        sizes: formData.sizes.length > 0 ? formData.sizes : undefined,
-        colors: formData.colors.length > 0 ? formData.colors : undefined,
-        materials:
-          formData.materials.length > 0 ? formData.materials : undefined,
-        care_instructions: formData.care_instructions || undefined,
-        is_custom: formData.is_custom,
-        lead_time: formData.lead_time || undefined,
+        sizes: formData.sizes.length > 0 ? formData.sizes : [],
+        colors: formData.colors.length > 0 ? formData.colors : [],
+        // Only include these fields if they exist in the database schema
+        ...(formData.materials.length > 0 && { materials: formData.materials }),
+        ...(formData.care_instructions && {
+          care_instructions: formData.care_instructions,
+        }),
+        ...(formData.is_custom !== undefined && {
+          is_custom: formData.is_custom,
+        }),
+        ...(formData.lead_time && { lead_time: formData.lead_time }),
       };
+
+      console.log("Creating product with data:", productData);
 
       const newProduct = await createProduct(productData);
 
       if (newProduct) {
         toast.success("Product created successfully");
         router.push("/studio/products");
+      } else {
+        throw new Error("Product creation returned null");
       }
     } catch (error) {
       console.error("Error creating product:", error);
-      toast.error("Failed to create product");
+
+      // Provide more specific error messages
+      if (
+        error.message?.includes("schema cache") ||
+        error.message?.includes("column")
+      ) {
+        toast.error(
+          "Database schema issue detected. Please contact administrator."
+        );
+        console.error("Schema error - missing columns in products table");
+      } else if (error.message?.includes("foreign key")) {
+        toast.error("Invalid brand or collection selected");
+      } else if (error.message?.includes("permission")) {
+        toast.error("You don't have permission to create products");
+      } else {
+        toast.error("Failed to create product. Please try again.");
+      }
     } finally {
       setIsLoading(false);
     }

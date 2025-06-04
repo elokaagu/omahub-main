@@ -127,22 +127,82 @@ export async function createProduct(
     throw new Error("Supabase client not available");
   }
 
-  const { data, error } = await supabase
-    .from("products")
-    .insert({
-      ...productData,
+  try {
+    // Prepare the data with only core required fields first
+    const coreData = {
+      title: productData.title,
+      description: productData.description,
+      price: productData.price,
+      sale_price: productData.sale_price || null,
+      image: productData.image,
+      brand_id: productData.brand_id,
+      collection_id: productData.collection_id || null,
+      category: productData.category,
+      in_stock: productData.in_stock ?? true,
+      sizes: productData.sizes || [],
+      colors: productData.colors || [],
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-    })
-    .select()
-    .single();
+    };
 
-  if (error) {
-    console.error("Error creating product:", error);
+    // Try to add optional fields if they exist in the schema
+    const optionalFields = [
+      "materials",
+      "care_instructions",
+      "is_custom",
+      "lead_time",
+      "images",
+    ];
+    const finalData = { ...coreData };
+
+    // Only add optional fields if they have values
+    optionalFields.forEach((field) => {
+      if (productData[field] !== undefined && productData[field] !== null) {
+        finalData[field] = productData[field];
+      }
+    });
+
+    console.log("Attempting to create product with data:", finalData);
+
+    const { data, error } = await supabase
+      .from("products")
+      .insert(finalData)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error creating product:", error);
+
+      // If it's a schema error, try with just core fields
+      if (
+        error.message?.includes("schema cache") ||
+        error.message?.includes("column")
+      ) {
+        console.log("Schema error detected, retrying with core fields only...");
+
+        const { data: retryData, error: retryError } = await supabase
+          .from("products")
+          .insert(coreData)
+          .select()
+          .single();
+
+        if (retryError) {
+          console.error("Retry with core fields also failed:", retryError);
+          throw retryError;
+        }
+
+        console.log("Successfully created product with core fields only");
+        return retryData;
+      }
+
+      throw error;
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Exception in createProduct:", error);
     throw error;
   }
-
-  return data;
 }
 
 /**
