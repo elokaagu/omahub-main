@@ -13,7 +13,7 @@ export interface NavigationItem {
 export const navigationItems: NavigationItem[] = [
   {
     title: "Collections",
-    href: "/directory?category=Collections",
+    href: "/collections",
     description: "Shop for an occasion, holiday, or ready to wear piece",
     items: subcategories.Collections.map((subcategory) => ({
       title: subcategory,

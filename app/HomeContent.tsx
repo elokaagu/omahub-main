@@ -73,7 +73,7 @@ const fallbackCarouselItems: CarouselItem[] = [
     image: "/lovable-uploads/827fb8c0-e5da-4520-a979-6fc054eefc6e.png",
     title: "Collections",
     subtitle: "Shop for an occasion, holiday, or ready to wear piece",
-    link: "/directory?category=Collections",
+    link: "/collections",
     heroTitle: "New Season",
     isEditorial: true,
     width: 1920,
@@ -258,7 +258,7 @@ export default function HomeContent() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Collections Card */}
             <div className="relative group overflow-hidden rounded-lg">
-              <Link href="/directory?category=Collections">
+              <Link href="/collections">
                 <div className="relative h-[400px]">
                   <Image
                     src="/lovable-uploads/827fb8c0-e5da-4520-a979-6fc054eefc6e.png"

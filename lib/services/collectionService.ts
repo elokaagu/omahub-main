@@ -47,7 +47,9 @@ export async function getCollectionById(
  * Fetch collections with brand information
  */
 export async function getCollectionsWithBrands(): Promise<
-  (Collection & { brand: { name: string; id: string } })[]
+  (Collection & {
+    brand: { name: string; id: string; location: string; is_verified: boolean };
+  })[]
 > {
   if (!supabase) {
     throw new Error("Supabase client not available");
@@ -55,7 +57,7 @@ export async function getCollectionsWithBrands(): Promise<
 
   const { data, error } = await supabase.from("collections").select(`
       *,
-      brand:brands(id, name)
+      brand:brands(id, name, location, is_verified)
     `);
 
   if (error) {
