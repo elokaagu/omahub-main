@@ -48,6 +48,7 @@ export default function BrandManagement({ className }: BrandManagementProps) {
   const supabase = createClientComponentClient();
   const [brands, setBrands] = useState<Brand[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [authError, setAuthError] = useState<string | null>(null);
   const [editingBrand, setEditingBrand] = useState<Brand | null>(null);
   const [editForm, setEditForm] = useState({
     name: "",
@@ -68,12 +69,24 @@ export default function BrandManagement({ className }: BrandManagementProps) {
   const fetchBrands = async () => {
     try {
       setIsLoading(true);
+      setAuthError(null); // Clear any previous auth errors
       const allBrands = await getAllBrands();
       const filteredBrands = filterBrandsByOwnership(allBrands);
       setBrands(filteredBrands);
     } catch (error) {
       console.error("Error fetching brands:", error);
-      toast.error("Failed to load brands");
+
+      // Check if it's an authentication error
+      if (
+        error instanceof Error &&
+        (error.message.includes("auth") ||
+          error.message.includes("session") ||
+          error.message.includes("unauthorized"))
+      ) {
+        setAuthError("Authentication session expired. Please sign in again.");
+      } else {
+        toast.error("Failed to load brands");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -82,14 +95,34 @@ export default function BrandManagement({ className }: BrandManagementProps) {
   const handleRefreshSession = async () => {
     try {
       setIsLoading(true);
-      console.log("🔄 Refreshing session...");
+      console.log("🔄 Manual session refresh requested...");
+
+      // First check if we have a session
+      const { data: currentSession, error: currentSessionError } =
+        await supabase.auth.getSession();
+
+      if (currentSessionError) {
+        console.error("❌ Error getting current session:", currentSessionError);
+        toast.error("Authentication error - please sign in again");
+        return;
+      }
+
+      if (!currentSession.session) {
+        console.error("❌ No session found to refresh");
+        toast.error("No authentication session found - please sign in again");
+        return;
+      }
+
+      console.log("✅ Current session found, attempting refresh...");
 
       const { data: refreshData, error: refreshError } =
         await supabase.auth.refreshSession();
 
       if (refreshError) {
         console.error("❌ Session refresh failed:", refreshError);
-        toast.error("Failed to refresh session");
+        toast.error(
+          "Session refresh failed - please sign out and sign back in"
+        );
         return;
       }
 
@@ -100,9 +133,35 @@ export default function BrandManagement({ className }: BrandManagementProps) {
       await fetchBrands();
     } catch (error) {
       console.error("❌ Error refreshing session:", error);
-      toast.error("Failed to refresh session");
+      toast.error(
+        "Failed to refresh session - please sign out and sign back in"
+      );
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleAuthRecovery = async () => {
+    try {
+      console.log("🔄 Starting authentication recovery...");
+
+      // Sign out the user
+      const { error: signOutError } = await supabase.auth.signOut();
+
+      if (signOutError) {
+        console.error("❌ Error signing out:", signOutError);
+        toast.error("Failed to sign out - please refresh the page");
+        return;
+      }
+
+      console.log("✅ Signed out successfully");
+      toast.success("Signed out successfully - please sign in again");
+
+      // Redirect to login page
+      window.location.href = "/login?redirect=/studio";
+    } catch (error) {
+      console.error("❌ Error during authentication recovery:", error);
+      toast.error("Authentication recovery failed - please refresh the page");
     }
   };
 
@@ -147,28 +206,47 @@ export default function BrandManagement({ className }: BrandManagementProps) {
         ownedBrandIds,
       });
 
-      // Force session refresh before attempting update
-      console.log("🔄 Refreshing session...");
+      // First, check if we have any session at all
+      console.log("🔍 Checking current session...");
+      const { data: currentSession, error: currentSessionError } =
+        await supabase.auth.getSession();
+
+      if (currentSessionError) {
+        console.error("❌ Error getting current session:", currentSessionError);
+        throw new Error("Authentication error - please sign in again");
+      }
+
+      if (!currentSession.session) {
+        console.error("❌ No session found");
+        throw new Error("No authentication session - please sign in again");
+      }
+
+      console.log("✅ Current session found, attempting refresh...");
+
+      // Try to refresh the session
       const { data: refreshData, error: refreshError } =
         await supabase.auth.refreshSession();
 
       if (refreshError) {
         console.error("❌ Session refresh failed:", refreshError);
-        throw new Error(`Session refresh failed: ${refreshError.message}`);
+        // If refresh fails, try to use the current session
+        console.log("⚠️ Using current session instead of refreshed session");
+      } else {
+        console.log("✅ Session refreshed successfully");
       }
 
-      console.log("✅ Session refreshed, attempting database update...");
-
-      // Get current session to verify authentication
+      // Verify we still have a valid session after refresh attempt
       const { data: sessionData, error: sessionError } =
         await supabase.auth.getSession();
 
       if (sessionError || !sessionData.session) {
-        console.error("❌ No valid session found:", sessionError);
-        throw new Error("Authentication session invalid");
+        console.error("❌ No valid session after refresh:", sessionError);
+        throw new Error(
+          "Authentication session invalid - please sign in again"
+        );
       }
 
-      console.log("✅ Valid session found, updating brand...");
+      console.log("✅ Valid session confirmed, updating brand...");
 
       const { data, error } = await supabase
         .from("brands")
@@ -187,7 +265,7 @@ export default function BrandManagement({ className }: BrandManagementProps) {
           );
         } else if (error.code === "42501") {
           throw new Error(
-            "Database permission denied - please refresh your session"
+            "Database permission denied - please try refreshing your session"
           );
         } else if (error.message.includes("RLS")) {
           throw new Error(
@@ -213,7 +291,17 @@ export default function BrandManagement({ className }: BrandManagementProps) {
       console.error("❌ Error updating brand:", error);
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error occurred";
-      toast.error(`Failed to update brand: ${errorMessage}`);
+
+      // If it's an authentication error, set the auth error state and suggest signing in again
+      if (
+        errorMessage.includes("sign in again") ||
+        errorMessage.includes("Authentication")
+      ) {
+        setAuthError(errorMessage);
+        toast.error(`${errorMessage}. Please try the recovery options below.`);
+      } else {
+        toast.error(`Failed to update brand: ${errorMessage}`);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -318,6 +406,14 @@ export default function BrandManagement({ className }: BrandManagementProps) {
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh Session
           </Button>
+          <Button
+            variant="outline"
+            onClick={handleAuthRecovery}
+            disabled={isLoading}
+            className="text-sm text-orange-600 hover:text-orange-700 border-orange-300 hover:border-orange-400"
+          >
+            Sign Out & Sign In
+          </Button>
           {isAdmin && (
             <Button className="bg-oma-plum hover:bg-oma-plum/90">
               Add New Brand
@@ -330,6 +426,34 @@ export default function BrandManagement({ className }: BrandManagementProps) {
         <div className="flex justify-center items-center h-64 mt-8">
           <div className="animate-spin h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full"></div>
         </div>
+      ) : authError ? (
+        <Card className="mt-8 border-orange-200 bg-orange-50">
+          <CardContent className="p-8 text-center">
+            <Package className="mx-auto h-12 w-12 text-orange-400 mb-4" />
+            <h3 className="text-lg font-semibold text-orange-900 mb-2">
+              Authentication Issue
+            </h3>
+            <p className="text-orange-700 mb-6">{authError}</p>
+            <div className="flex justify-center space-x-4">
+              <Button
+                variant="outline"
+                onClick={handleRefreshSession}
+                disabled={isLoading}
+                className="border-orange-300 text-orange-700 hover:bg-orange-100"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Try Refresh Session
+              </Button>
+              <Button
+                onClick={handleAuthRecovery}
+                disabled={isLoading}
+                className="bg-orange-600 hover:bg-orange-700 text-white"
+              >
+                Sign Out & Sign In Again
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       ) : brands.length === 0 ? (
         <Card className="mt-8">
           <CardContent className="p-8 text-center">
