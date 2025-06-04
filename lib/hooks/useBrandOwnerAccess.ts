@@ -52,6 +52,7 @@ export function useBrandOwnerAccess(): BrandOwnerAccess {
 
   const fetchUserData = async () => {
     if (!user) {
+      console.log("🔍 useBrandOwnerAccess: No user, setting loading to false");
       setLoading(false);
       return;
     }
@@ -60,18 +61,31 @@ export function useBrandOwnerAccess(): BrandOwnerAccess {
       setLoading(true);
       setError(null);
 
+      console.log("🔍 useBrandOwnerAccess: Fetching data for user:", {
+        userId: user.id,
+        userEmail: user.email,
+        userRole: user.role,
+        userOwnedBrands: user.owned_brands,
+      });
+
       // Get user permissions and profile
       const [permissions, profileResult] = await Promise.all([
         getUserPermissions(user.id, user.email),
         supabase.from("profiles").select("*").eq("id", user.id).single(),
       ]);
 
+      console.log("✅ useBrandOwnerAccess: Permissions received:", permissions);
       setUserPermissions(permissions);
 
       if (profileResult.error) {
-        console.error("Error fetching profile:", profileResult.error);
+        console.error(
+          "❌ useBrandOwnerAccess: Error fetching profile:",
+          profileResult.error
+        );
+        console.log("🔄 useBrandOwnerAccess: Using user context as fallback");
+
         // Use user context as fallback
-        setUserProfile({
+        const fallbackProfile = {
           id: user.id,
           email: user.email,
           role: user.role || "user",
@@ -81,12 +95,23 @@ export function useBrandOwnerAccess(): BrandOwnerAccess {
           avatar_url: user.avatar_url || null,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
-        } as Profile);
+        } as Profile;
+
+        console.log("🔄 useBrandOwnerAccess: Fallback profile:", {
+          role: fallbackProfile.role,
+          owned_brands: fallbackProfile.owned_brands,
+        });
+
+        setUserProfile(fallbackProfile);
       } else {
+        console.log("✅ useBrandOwnerAccess: Profile fetched successfully:", {
+          role: profileResult.data.role,
+          owned_brands: profileResult.data.owned_brands,
+        });
         setUserProfile(profileResult.data);
       }
     } catch (err) {
-      console.error("Error fetching user data:", err);
+      console.error("❌ useBrandOwnerAccess: Error fetching user data:", err);
       setError("Failed to load user data");
     } finally {
       setLoading(false);
@@ -117,16 +142,51 @@ export function useBrandOwnerAccess(): BrandOwnerAccess {
   );
   const canManageSettings = userPermissions.includes("studio.settings.manage");
 
+  // Debug logging for derived values
+  console.log("🎯 useBrandOwnerAccess: Derived values:", {
+    isBrandOwner,
+    isAdmin,
+    ownedBrandIds,
+    canManageBrands,
+    effectiveProfileRole: effectiveProfile.role,
+    userProfileExists: !!userProfile,
+  });
+
   // Utility functions
   const filterBrandsByOwnership = (brands: Brand[]): Brand[] => {
+    console.log("🔍 filterBrandsByOwnership: Input brands:", brands.length);
+    console.log("🔍 filterBrandsByOwnership: User access:", {
+      isAdmin,
+      isBrandOwner,
+      ownedBrandIds,
+    });
+
     if (isAdmin) {
+      console.log(
+        "👑 filterBrandsByOwnership: Admin access - returning all brands"
+      );
       return brands; // Admins see all brands
     }
 
     if (isBrandOwner && ownedBrandIds.length > 0) {
-      return brands.filter((brand) => ownedBrandIds.includes(brand.id));
+      const filtered = brands.filter((brand) =>
+        ownedBrandIds.includes(brand.id)
+      );
+      console.log(
+        "🏷️ filterBrandsByOwnership: Brand owner access - filtered brands:",
+        {
+          totalBrands: brands.length,
+          ownedBrandIds,
+          filteredCount: filtered.length,
+          filteredBrands: filtered.map((b) => `${b.name} (${b.id})`),
+        }
+      );
+      return filtered;
     }
 
+    console.log(
+      "🚫 filterBrandsByOwnership: No access - returning empty array"
+    );
     return []; // No access for other roles
   };
 

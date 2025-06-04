@@ -142,7 +142,7 @@ export function Carousel({
                 height={item.height}
                 className={cn(
                   "w-full h-full object-cover",
-                  item.isEditorial ? "object-center" : "object-top",
+                  item.isEditorial ? "object-[50%_20%]" : "object-[50%_15%]",
                   "hero-image-transition",
                   imageClassName
                 )}
