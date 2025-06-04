@@ -48,7 +48,13 @@ export async function getCollectionById(
  */
 export async function getCollectionsWithBrands(): Promise<
   (Collection & {
-    brand: { name: string; id: string; location: string; is_verified: boolean };
+    brand: {
+      name: string;
+      id: string;
+      location: string;
+      is_verified: boolean;
+      category: string;
+    };
   })[]
 > {
   if (!supabase) {
@@ -57,7 +63,7 @@ export async function getCollectionsWithBrands(): Promise<
 
   const { data, error } = await supabase.from("collections").select(`
       *,
-      brand:brands(id, name, location, is_verified)
+      brand:brands(id, name, location, is_verified, category)
     `);
 
   if (error) {

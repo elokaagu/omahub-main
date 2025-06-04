@@ -7,9 +7,16 @@ import { AuthImage } from "@/components/ui/auth-image";
 import { NavigationLink } from "@/components/ui/navigation-link";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Filter, LayoutGrid, LayoutList } from "lucide-react";
+import { Search, Filter, LayoutGrid, LayoutList, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Loading } from "@/components/ui/loading";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type CollectionWithBrand = Collection & {
   brand: {
@@ -17,8 +24,20 @@ type CollectionWithBrand = Collection & {
     id: string;
     location: string;
     is_verified: boolean;
+    category: string;
   };
 };
+
+// Define the main categories based on the established system
+const CATEGORIES = [
+  "All Categories",
+  "Bridal",
+  "Ready to Wear",
+  "Tailoring",
+  "Accessories",
+  "Collections",
+  "Tailored",
+];
 
 export default function CollectionsPage() {
   const [collections, setCollections] = useState<CollectionWithBrand[]>([]);
@@ -27,7 +46,16 @@ export default function CollectionsPage() {
   >([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All Categories");
+  const [selectedDesigner, setSelectedDesigner] = useState("All Designers");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Get unique designers from collections
+  const uniqueDesigners = [
+    "All Designers",
+    ...Array.from(new Set(collections.map((c) => c.brand.name))).sort(),
+  ];
 
   useEffect(() => {
     fetchCollections();
@@ -35,7 +63,7 @@ export default function CollectionsPage() {
 
   useEffect(() => {
     filterCollections();
-  }, [searchQuery, collections]);
+  }, [searchQuery, selectedCategory, selectedDesigner, collections]);
 
   const fetchCollections = async () => {
     try {
@@ -52,6 +80,7 @@ export default function CollectionsPage() {
   const filterCollections = () => {
     let filtered = collections;
 
+    // Filter by search query
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
@@ -63,8 +92,33 @@ export default function CollectionsPage() {
       );
     }
 
+    // Filter by category
+    if (selectedCategory !== "All Categories") {
+      filtered = filtered.filter(
+        (collection) => collection.brand.category === selectedCategory
+      );
+    }
+
+    // Filter by designer
+    if (selectedDesigner !== "All Designers") {
+      filtered = filtered.filter(
+        (collection) => collection.brand.name === selectedDesigner
+      );
+    }
+
     setFilteredCollections(filtered);
   };
+
+  const clearAllFilters = () => {
+    setSearchQuery("");
+    setSelectedCategory("All Categories");
+    setSelectedDesigner("All Designers");
+  };
+
+  const hasActiveFilters =
+    searchQuery ||
+    selectedCategory !== "All Categories" ||
+    selectedDesigner !== "All Designers";
 
   if (loading) {
     return (
@@ -95,44 +149,171 @@ export default function CollectionsPage() {
 
         {/* Search and Filters */}
         <div className="mb-8">
-          <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input
-                type="text"
-                placeholder="Search collections or brands..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
+          <div className="flex flex-col gap-4">
+            {/* Search and View Toggle Row */}
+            <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Input
+                  type="text"
+                  placeholder="Search collections or brands..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowFilters(!showFilters)}
+                  className="flex items-center gap-2"
+                >
+                  <Filter className="h-4 w-4" />
+                  Filters
+                  {hasActiveFilters && (
+                    <span className="bg-oma-plum text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                      {
+                        [
+                          searchQuery,
+                          selectedCategory !== "All Categories",
+                          selectedDesigner !== "All Designers",
+                        ].filter(Boolean).length
+                      }
+                    </span>
+                  )}
+                </Button>
+
+                <div className="flex items-center gap-1 border rounded-md">
+                  <Button
+                    variant={viewMode === "grid" ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setViewMode("grid")}
+                    className="h-9 w-9 p-0 rounded-r-none"
+                  >
+                    <LayoutGrid className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant={viewMode === "list" ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setViewMode("list")}
+                    className="h-9 w-9 p-0 rounded-l-none"
+                  >
+                    <LayoutList className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              <Button
-                variant={viewMode === "grid" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setViewMode("grid")}
-                className="h-9 w-9 p-0"
-              >
-                <LayoutGrid className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={viewMode === "list" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setViewMode("list")}
-                className="h-9 w-9 p-0"
-              >
-                <LayoutList className="h-4 w-4" />
-              </Button>
-            </div>
+            {/* Filters Row */}
+            {showFilters && (
+              <div className="flex flex-col sm:flex-row gap-4 p-4 bg-gray-50 rounded-lg">
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Category
+                  </label>
+                  <Select
+                    value={selectedCategory}
+                    onValueChange={setSelectedCategory}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CATEGORIES.map((category) => (
+                        <SelectItem key={category} value={category}>
+                          {category}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Designer
+                  </label>
+                  <Select
+                    value={selectedDesigner}
+                    onValueChange={setSelectedDesigner}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select designer" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {uniqueDesigners.map((designer) => (
+                        <SelectItem key={designer} value={designer}>
+                          {designer}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {hasActiveFilters && (
+                  <div className="flex items-end">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={clearAllFilters}
+                      className="flex items-center gap-2"
+                    >
+                      <X className="h-4 w-4" />
+                      Clear All
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
+
+        {/* Active Filters Display */}
+        {hasActiveFilters && (
+          <div className="mb-6 flex flex-wrap gap-2">
+            {searchQuery && (
+              <span className="inline-flex items-center gap-1 px-3 py-1 bg-oma-plum/10 text-oma-plum rounded-full text-sm">
+                Search: "{searchQuery}"
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="hover:bg-oma-plum/20 rounded-full p-0.5"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </span>
+            )}
+            {selectedCategory !== "All Categories" && (
+              <span className="inline-flex items-center gap-1 px-3 py-1 bg-oma-plum/10 text-oma-plum rounded-full text-sm">
+                Category: {selectedCategory}
+                <button
+                  onClick={() => setSelectedCategory("All Categories")}
+                  className="hover:bg-oma-plum/20 rounded-full p-0.5"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </span>
+            )}
+            {selectedDesigner !== "All Designers" && (
+              <span className="inline-flex items-center gap-1 px-3 py-1 bg-oma-plum/10 text-oma-plum rounded-full text-sm">
+                Designer: {selectedDesigner}
+                <button
+                  onClick={() => setSelectedDesigner("All Designers")}
+                  className="hover:bg-oma-plum/20 rounded-full p-0.5"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </span>
+            )}
+          </div>
+        )}
 
         {/* Results Count */}
         <div className="mb-6">
           <p className="text-gray-600">
             {filteredCollections.length} collection
             {filteredCollections.length !== 1 ? "s" : ""} found
+            {hasActiveFilters && ` (filtered from ${collections.length} total)`}
           </p>
         </div>
 
@@ -145,18 +326,18 @@ export default function CollectionsPage() {
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
               No collections found
             </h3>
-            <p className="text-gray-600">
-              {searchQuery
-                ? "Try adjusting your search terms or browse all collections."
+            <p className="text-gray-600 mb-4">
+              {hasActiveFilters
+                ? "Try adjusting your filters or search terms."
                 : "No collections are currently available."}
             </p>
-            {searchQuery && (
+            {hasActiveFilters && (
               <Button
                 variant="outline"
-                onClick={() => setSearchQuery("")}
+                onClick={clearAllFilters}
                 className="mt-4"
               >
-                Clear Search
+                Clear All Filters
               </Button>
             )}
           </div>
@@ -195,9 +376,13 @@ export default function CollectionsPage() {
                           <span className="ml-1 text-green-600">✓</span>
                         )}
                       </p>
-                      <p className="text-xs text-gray-500">
-                        {collection.brand.location}
-                      </p>
+                      <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
+                        <span className="px-2 py-1 bg-gray-100 rounded">
+                          {collection.brand.category}
+                        </span>
+                        <span>•</span>
+                        <span>{collection.brand.location}</span>
+                      </div>
                       {collection.description && (
                         <p className="text-sm text-gray-600 mt-2 line-clamp-2">
                           {collection.description}
@@ -226,9 +411,13 @@ export default function CollectionsPage() {
                           <span className="ml-1 text-green-600">✓</span>
                         )}
                       </p>
-                      <p className="text-xs text-gray-500 mb-2">
-                        {collection.brand.location}
-                      </p>
+                      <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
+                        <span className="px-2 py-1 bg-gray-100 rounded">
+                          {collection.brand.category}
+                        </span>
+                        <span>•</span>
+                        <span>{collection.brand.location}</span>
+                      </div>
                       {collection.description && (
                         <p className="text-sm text-gray-600 line-clamp-2">
                           {collection.description}
