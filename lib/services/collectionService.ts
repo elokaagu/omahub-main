@@ -1,4 +1,4 @@
-import { supabase, Collection } from "../supabase";
+import { supabase, Collection, Brand } from "../supabase";
 
 /**
  * Fetch all collections from the database
@@ -37,6 +37,40 @@ export async function getCollectionById(
 
   if (error) {
     console.error(`Error fetching collection ${id}:`, error);
+    return null;
+  }
+
+  return data;
+}
+
+/**
+ * Fetch a single collection with brand information by ID
+ */
+export async function getCollectionWithBrand(id: string): Promise<
+  | (Collection & {
+      brand: Brand;
+      created_at?: string;
+    })
+  | null
+> {
+  if (!supabase) {
+    console.error("Supabase client not available");
+    return null;
+  }
+
+  const { data, error } = await supabase
+    .from("collections")
+    .select(
+      `
+      *,
+      brand:brands(*)
+    `
+    )
+    .eq("id", id)
+    .single();
+
+  if (error) {
+    console.error(`Error fetching collection with brand ${id}:`, error);
     return null;
   }
 

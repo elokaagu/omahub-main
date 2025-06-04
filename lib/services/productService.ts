@@ -306,3 +306,148 @@ export async function getCollectionRecommendations(
 
   return data || [];
 }
+
+/**
+ * Get intelligent recommendations based on user favorites and collection context
+ * Prioritizes products from user's favorite brands, then falls back to collection products
+ */
+export async function getIntelligentRecommendations(
+  collectionId: string,
+  userId?: string,
+  excludeProductId?: string,
+  limit: number = 4
+): Promise<Product[]> {
+  if (!supabase) {
+    throw new Error("Supabase client not available");
+  }
+
+  let recommendations: Product[] = [];
+
+  // If user is logged in, get products from their favorite brands first
+  if (userId) {
+    try {
+      // Get user's favorite brands
+      const { data: favorites, error: favError } = await supabase
+        .from("favorites")
+        .select("brand_id")
+        .eq("user_id", userId);
+
+      if (!favError && favorites && favorites.length > 0) {
+        const favoriteBrandIds = favorites.map((f) => f.brand_id);
+
+        // Get products from favorite brands (excluding current product)
+        let favoriteQuery = supabase
+          .from("products")
+          .select("*")
+          .in("brand_id", favoriteBrandIds)
+          .eq("in_stock", true)
+          .limit(limit * 2); // Get more to have variety
+
+        if (excludeProductId) {
+          favoriteQuery = favoriteQuery.neq("id", excludeProductId);
+        }
+
+        const { data: favoriteProducts, error: favProdError } =
+          await favoriteQuery.order("created_at", { ascending: false });
+
+        if (!favProdError && favoriteProducts) {
+          // Shuffle and take up to half the limit from favorite brands
+          const shuffled = favoriteProducts.sort(() => Math.random() - 0.5);
+          recommendations = shuffled.slice(0, Math.ceil(limit / 2));
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching favorite brand products:", error);
+      // Continue with fallback logic
+    }
+  }
+
+  // Fill remaining slots with products from the same collection
+  const remainingSlots = limit - recommendations.length;
+  if (remainingSlots > 0) {
+    try {
+      let collectionQuery = supabase
+        .from("products")
+        .select("*")
+        .eq("collection_id", collectionId)
+        .eq("in_stock", true)
+        .limit(remainingSlots * 2); // Get more for variety
+
+      if (excludeProductId) {
+        collectionQuery = collectionQuery.neq("id", excludeProductId);
+      }
+
+      // Exclude products already in recommendations
+      if (recommendations.length > 0) {
+        const existingIds = recommendations.map((p) => p.id);
+        collectionQuery = collectionQuery.not(
+          "id",
+          "in",
+          `(${existingIds.join(",")})`
+        );
+      }
+
+      const { data: collectionProducts, error: collError } =
+        await collectionQuery.order("created_at", { ascending: false });
+
+      if (!collError && collectionProducts) {
+        // Shuffle and add to recommendations
+        const shuffled = collectionProducts.sort(() => Math.random() - 0.5);
+        recommendations = [
+          ...recommendations,
+          ...shuffled.slice(0, remainingSlots),
+        ];
+      }
+    } catch (error) {
+      console.error("Error fetching collection products:", error);
+    }
+  }
+
+  // If still not enough, get products from the same brand as the collection
+  if (recommendations.length < limit) {
+    try {
+      // First get the collection to find its brand
+      const { data: collection, error: collectionError } = await supabase
+        .from("collections")
+        .select("brand_id")
+        .eq("id", collectionId)
+        .single();
+
+      if (!collectionError && collection) {
+        const remainingSlots = limit - recommendations.length;
+
+        let brandQuery = supabase
+          .from("products")
+          .select("*")
+          .eq("brand_id", collection.brand_id)
+          .eq("in_stock", true)
+          .limit(remainingSlots * 2);
+
+        if (excludeProductId) {
+          brandQuery = brandQuery.neq("id", excludeProductId);
+        }
+
+        // Exclude products already in recommendations
+        if (recommendations.length > 0) {
+          const existingIds = recommendations.map((p) => p.id);
+          brandQuery = brandQuery.not("id", "in", `(${existingIds.join(",")})`);
+        }
+
+        const { data: brandProducts, error: brandError } =
+          await brandQuery.order("created_at", { ascending: false });
+
+        if (!brandError && brandProducts) {
+          const shuffled = brandProducts.sort(() => Math.random() - 0.5);
+          recommendations = [
+            ...recommendations,
+            ...shuffled.slice(0, remainingSlots),
+          ];
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching brand products:", error);
+    }
+  }
+
+  return recommendations.slice(0, limit);
+}

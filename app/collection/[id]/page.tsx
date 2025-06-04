@@ -2,12 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { getCollectionById } from "@/lib/services/collectionService";
+import { useAuth } from "@/contexts/AuthContext";
+import {
+  getCollectionById,
+  getCollectionWithBrand,
+} from "@/lib/services/collectionService";
 import {
   getProductsByCollection,
-  getCollectionRecommendations,
+  getIntelligentRecommendations,
 } from "@/lib/services/productService";
-import { getBrandById } from "@/lib/services/brandService";
 import { Collection, Product, Brand } from "@/lib/supabase";
 import { AuthImage } from "@/components/ui/auth-image";
 import { Button } from "@/components/ui/button";
@@ -21,54 +24,56 @@ import {
   Star,
   ShoppingBag,
   Heart,
+  Calendar,
 } from "lucide-react";
 
 export default function CollectionPage() {
   const params = useParams();
+  const { user } = useAuth();
   const collectionId = params.id as string;
 
-  const [collection, setCollection] = useState<Collection | null>(null);
+  const [collection, setCollection] = useState<
+    (Collection & { brand: Brand; created_at?: string }) | undefined
+  >();
   const [products, setProducts] = useState<Product[]>([]);
   const [recommendedProducts, setRecommendedProducts] = useState<Product[]>([]);
-  const [brand, setBrand] = useState<Brand | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchCollectionData();
-  }, [collectionId]);
+  }, [collectionId, user]);
 
   const fetchCollectionData = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const collectionData = await getCollectionById(collectionId);
+      // Fetch collection with brand data
+      const collectionData = await getCollectionWithBrand(collectionId);
       if (!collectionData) {
         setError("Collection not found");
         return;
       }
-
-      const [productsData, brandData] = await Promise.all([
-        getProductsByCollection(collectionId),
-        getBrandById(collectionData.brand_id),
-      ]);
-
       setCollection(collectionData);
-      setProducts(productsData);
-      setBrand(brandData);
 
-      // Get recommendations - other products from the same collection (shuffled for variety)
-      if (productsData.length > 1) {
-        const recommendations = await getCollectionRecommendations(
-          collectionId,
-          undefined,
-          4
-        );
-        // Shuffle the recommendations to show variety
-        const shuffled = [...recommendations].sort(() => Math.random() - 0.5);
-        setRecommendedProducts(shuffled.slice(0, 4));
-      }
+      // Fetch products in this collection
+      const productsData = await getProductsByCollection(collectionId);
+      setProducts(productsData);
+
+      // Fetch intelligent recommendations based on user favorites
+      const recommendations = await getIntelligentRecommendations(
+        collectionId,
+        user?.id, // Pass user ID for personalized recommendations
+        undefined, // No product to exclude since this is collection page
+        4
+      );
+
+      // Shuffle recommendations for variety on each visit
+      const shuffledRecommendations = recommendations.sort(
+        () => Math.random() - 0.5
+      );
+      setRecommendedProducts(shuffledRecommendations);
     } catch (err) {
       console.error("Error fetching collection data:", err);
       setError("Failed to load collection information");
@@ -78,40 +83,34 @@ export default function CollectionPage() {
   };
 
   if (loading) {
+    return <Loading />;
+  }
+
+  if (error) {
     return (
-      <div className="min-h-screen bg-white">
-        <div className="container mx-auto px-4 sm:px-6 py-16">
-          <div className="flex justify-center items-center h-64">
-            <Loading />
-          </div>
-        </div>
+      <div className="container mx-auto px-6 py-24 text-center">
+        <h1 className="text-2xl font-bold text-red-600 mb-4">Error</h1>
+        <p className="text-gray-600">{error}</p>
       </div>
     );
   }
 
-  if (error || !collection || !brand) {
+  if (!collection) {
     return (
-      <div className="min-h-screen bg-white">
-        <div className="container mx-auto px-4 sm:px-6 py-16">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">
-              {error || "Collection not found"}
-            </h1>
-            <NavigationLink href="/collections">
-              <Button variant="outline">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Collections
-              </Button>
-            </NavigationLink>
-          </div>
-        </div>
+      <div className="container mx-auto px-6 py-24 text-center">
+        <h1 className="text-2xl font-bold text-gray-900 mb-4">
+          Collection Not Found
+        </h1>
+        <p className="text-gray-600">
+          The collection you're looking for doesn't exist.
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="container mx-auto px-4 sm:px-6 py-8">
+    <div className="min-h-screen bg-gradient-to-b from-oma-beige/30 to-white">
+      <div className="max-w-7xl mx-auto px-6 py-24">
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-sm text-gray-600 mb-8">
           <NavigationLink href="/collections" className="hover:text-oma-plum">
@@ -119,73 +118,74 @@ export default function CollectionPage() {
           </NavigationLink>
           <span>/</span>
           <NavigationLink
-            href={`/brand/${brand.id}`}
+            href={`/brand/${collection.brand.id}`}
             className="hover:text-oma-plum"
           >
-            {brand.name}
+            {collection.brand.name}
           </NavigationLink>
           <span>/</span>
           <span className="text-gray-900">{collection.title}</span>
         </div>
 
         {/* Collection Header */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-12">
-          {/* Collection Image */}
-          <div className="aspect-square relative overflow-hidden rounded-lg bg-gray-100">
-            <AuthImage
-              src={collection.image}
-              alt={collection.title}
-              width={600}
-              height={600}
-              className="w-full h-full object-cover"
-            />
-          </div>
-
-          {/* Collection Information */}
-          <div className="space-y-6">
-            {/* Brand Info */}
-            <div className="flex items-center gap-3">
-              <NavigationLink href={`/brand/${brand.id}`}>
-                <div className="flex items-center gap-2 hover:text-oma-plum transition-colors">
-                  <span className="font-medium">{brand.name}</span>
-                  {brand.is_verified && (
-                    <CheckCircle className="h-4 w-4 text-green-600" />
-                  )}
-                </div>
-              </NavigationLink>
-              <div className="flex items-center gap-1 text-sm text-gray-600">
-                <MapPin className="h-3 w-3" />
-                {brand.location}
+        <div className="mb-16">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            {/* Collection Image */}
+            <div className="relative">
+              <div className="aspect-square rounded-2xl overflow-hidden shadow-lg">
+                <AuthImage
+                  src={collection.image}
+                  alt={collection.title}
+                  width={600}
+                  height={600}
+                  className="w-full h-full object-cover"
+                />
               </div>
             </div>
 
-            {/* Collection Title */}
-            <div>
-              <h1 className="text-4xl font-canela text-gray-900 mb-4">
-                {collection.title}
-              </h1>
-              <Badge variant="outline">{brand.category}</Badge>
-            </div>
-
-            {/* Collection Description */}
-            {collection.description && (
+            {/* Collection Info */}
+            <div className="space-y-6">
               <div>
-                <h3 className="font-semibold text-gray-900 mb-2">
-                  About This Collection
-                </h3>
-                <p className="text-gray-600 leading-relaxed">
+                <h1 className="text-4xl font-canela text-oma-cocoa mb-4">
+                  {collection.title}
+                </h1>
+                <p className="text-lg text-oma-cocoa/80 leading-relaxed">
                   {collection.description}
                 </p>
               </div>
-            )}
 
-            {/* Brand Rating */}
-            <div className="pt-4 border-t">
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-600">Brand Rating:</span>
-                <div className="flex items-center gap-1">
-                  <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                  <span className="font-medium">{brand.rating}</span>
+              {/* Brand Info */}
+              <div className="bg-white/50 rounded-lg p-6 border border-oma-cocoa/10">
+                <h3 className="text-lg font-semibold text-oma-cocoa mb-3">
+                  About the Designer
+                </h3>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-oma-cocoa">
+                      {collection.brand.name}
+                    </span>
+                    {collection.brand.is_verified && (
+                      <Badge
+                        variant="secondary"
+                        className="bg-oma-plum text-white text-xs"
+                      >
+                        Verified
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 text-oma-cocoa/70">
+                    <MapPin className="h-4 w-4" />
+                    <span className="text-sm">{collection.brand.location}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-oma-cocoa/70">
+                    <Calendar className="h-4 w-4" />
+                    <span className="text-sm">
+                      Collection launched{" "}
+                      {new Date(
+                        collection.created_at || ""
+                      ).toLocaleDateString()}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -194,29 +194,15 @@ export default function CollectionPage() {
 
         {/* Products Section */}
         <div className="mb-16">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl font-canela text-gray-900">
-              Products in this Collection
-            </h2>
-            <span className="text-gray-600">
-              {products.length} product{products.length !== 1 ? "s" : ""}
-            </span>
-          </div>
+          <h2 className="text-3xl font-canela text-oma-cocoa mb-8">
+            Products in This Collection
+          </h2>
 
           {products.length === 0 ? (
-            <div className="text-center py-16">
-              <div className="text-gray-400 mb-4">
-                <ShoppingBag className="h-16 w-16 mx-auto" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                No products yet
-              </h3>
-              <p className="text-gray-600 mb-4">
-                This collection doesn't have any products yet. Check back soon!
+            <div className="text-center py-16 bg-white/30 rounded-lg border border-oma-cocoa/10">
+              <p className="text-lg text-oma-cocoa/70">
+                No products available in this collection yet.
               </p>
-              <NavigationLink href={`/brand/${brand.id}`}>
-                <Button variant="outline">View Brand Profile</Button>
-              </NavigationLink>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -294,6 +280,11 @@ export default function CollectionPage() {
               <h2 className="text-2xl font-canela text-gray-900">
                 You May Also Like
               </h2>
+              {user && (
+                <span className="text-sm text-oma-cocoa/60 ml-2">
+                  Based on your favorites
+                </span>
+              )}
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {recommendedProducts.map((product) => (
@@ -330,7 +321,7 @@ export default function CollectionPage() {
                       )}
                     </div>
                     <div className="p-4">
-                      <h3 className="font-semibold text-gray-900 group-hover:text-oma-plum transition-colors mb-1 line-clamp-1">
+                      <h3 className="font-semibold text-gray-900 group-hover:text-oma-plum transition-colors mb-1">
                         {product.title}
                       </h3>
                       <div className="flex items-center gap-2 mb-2">
