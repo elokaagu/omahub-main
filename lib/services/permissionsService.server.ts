@@ -12,7 +12,11 @@ export type Role = "user" | "brand_admin" | "admin" | "super_admin";
 
 const rolePermissions: Record<Role, Permission[]> = {
   user: [],
-  brand_admin: ["studio.access", "studio.brands.manage"],
+  brand_admin: [
+    "studio.access",
+    "studio.brands.manage",
+    "studio.collections.manage",
+  ],
   admin: ["studio.access", "studio.brands.manage", "studio.collections.manage"],
   super_admin: [
     "studio.access",

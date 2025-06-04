@@ -258,7 +258,9 @@ export default function StudioLayout({
                 onClick={() => setSidebarOpen(false)}
               >
                 <Package className="h-5 w-5" />
-                <span>Brands</span>
+                <span>
+                  {user?.role === "brand_admin" ? "Your Brands" : "Brands"}
+                </span>
               </NavigationLink>
             )}
             {permissions.includes("studio.collections.manage") && (
@@ -268,7 +270,11 @@ export default function StudioLayout({
                 onClick={() => setSidebarOpen(false)}
               >
                 <ImageIcon className="h-5 w-5" />
-                <span>Collections</span>
+                <span>
+                  {user?.role === "brand_admin"
+                    ? "Your Collections"
+                    : "Collections"}
+                </span>
               </NavigationLink>
             )}
             {user?.role === "super_admin" && (

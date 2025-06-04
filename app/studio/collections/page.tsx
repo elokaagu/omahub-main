@@ -284,18 +284,20 @@ export default function CollectionsPage() {
             </p>
           )}
         </div>
-        <Button
-          asChild
-          className="bg-oma-plum hover:bg-oma-plum/90 w-full sm:w-auto"
-        >
-          <Link
-            href="/studio/collections/create"
-            className="flex items-center justify-center gap-2"
+        {(isAdmin || isBrandOwner) && (
+          <Button
+            asChild
+            className="bg-oma-plum hover:bg-oma-plum/90 w-full sm:w-auto"
           >
-            <PlusCircle className="h-4 w-4" />
-            Add New Collection
-          </Link>
-        </Button>
+            <Link
+              href="/studio/collections/create"
+              className="flex items-center justify-center gap-2"
+            >
+              <PlusCircle className="h-4 w-4" />
+              Add New Collection
+            </Link>
+          </Button>
+        )}
       </div>
 
       <Card className="mb-8">
@@ -349,17 +351,19 @@ export default function CollectionsPage() {
                 {searchQuery || selectedBrand !== "all"
                   ? "Try adjusting your search or filter criteria."
                   : isBrandOwner
-                    ? "Get started by creating your first collection."
+                    ? "Get started by creating your first collection for your brands."
                     : "Get started by creating your first collection."}
               </p>
-              {!searchQuery && selectedBrand === "all" && (
-                <Button asChild className="bg-oma-plum hover:bg-oma-plum/90">
-                  <Link href="/studio/collections/create">
-                    <PlusCircle className="h-4 w-4 mr-2" />
-                    Create First Collection
-                  </Link>
-                </Button>
-              )}
+              {!searchQuery &&
+                selectedBrand === "all" &&
+                (isAdmin || isBrandOwner) && (
+                  <Button asChild className="bg-oma-plum hover:bg-oma-plum/90">
+                    <Link href="/studio/collections/create">
+                      <PlusCircle className="h-4 w-4 mr-2" />
+                      Create First Collection
+                    </Link>
+                  </Button>
+                )}
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
