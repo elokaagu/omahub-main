@@ -103,18 +103,51 @@ export async function getProductsWithDetails(): Promise<
     throw new Error("Supabase client not available");
   }
 
-  const { data, error } = await supabase.from("products").select(`
-      *,
-      brand:brands(id, name, location, is_verified),
-      collection:collections(id, title)
-    `);
+  try {
+    // First, get products with brands (this works)
+    const { data: productsWithBrands, error: productsError } =
+      await supabase.from("products").select(`
+        *,
+        brand:brands(id, name, location, is_verified)
+      `);
 
-  if (error) {
-    console.error("Error fetching products with details:", error);
+    if (productsError) {
+      console.error("Error fetching products with brands:", productsError);
+      throw productsError;
+    }
+
+    if (!productsWithBrands || productsWithBrands.length === 0) {
+      return [];
+    }
+
+    // Get all collections to manually join
+    const { data: collections, error: collectionsError } = await supabase
+      .from("collections")
+      .select("id, title");
+
+    if (collectionsError) {
+      console.error("Error fetching collections:", collectionsError);
+      // Continue without collections data
+    }
+
+    // Manually join collections data
+    const productsWithDetails = productsWithBrands.map((product) => {
+      const collection = collections?.find(
+        (c) => c.id === product.collection_id
+      );
+      return {
+        ...product,
+        collection: collection
+          ? { id: collection.id, title: collection.title }
+          : undefined,
+      };
+    });
+
+    return productsWithDetails;
+  } catch (error) {
+    console.error("Error in getProductsWithDetails:", error);
     throw error;
   }
-
-  return data || [];
 }
 
 /**
@@ -157,8 +190,12 @@ export async function createProduct(
 
     // Only add optional fields if they have values
     optionalFields.forEach((field) => {
-      if (productData[field] !== undefined && productData[field] !== null) {
-        finalData[field] = productData[field];
+      if (
+        productData[field as keyof typeof productData] !== undefined &&
+        productData[field as keyof typeof productData] !== null
+      ) {
+        (finalData as any)[field] =
+          productData[field as keyof typeof productData];
       }
     });
 
