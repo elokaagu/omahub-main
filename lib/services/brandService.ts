@@ -1,4 +1,4 @@
-import { supabase, Brand, Review, Collection } from "../supabase";
+import { supabase, Brand, Review, Collection, Product } from "../supabase";
 import { getProfile } from "./authService";
 
 // Cache configuration
@@ -466,6 +466,28 @@ export async function searchBrands(query: string): Promise<Brand[]> {
 
   if (error) {
     console.error(`Error searching brands with query ${query}:`, error);
+    throw error;
+  }
+
+  return data || [];
+}
+
+/**
+ * Get products for a specific brand
+ */
+export async function getBrandProducts(brandId: string): Promise<Product[]> {
+  if (!supabase) {
+    throw new Error("Supabase client not available");
+  }
+
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .eq("brand_id", brandId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error(`Error fetching products for brand ${brandId}:`, error);
     throw error;
   }
 

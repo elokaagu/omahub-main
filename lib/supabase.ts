@@ -187,13 +187,19 @@ export type Product = {
   price: number;
   sale_price?: number;
   image: string;
+  images?: string[]; // Multiple product images
   brand_id: string;
   collection_id?: string;
   category: string;
   in_stock: boolean;
   sizes?: string[];
   colors?: string[];
+  materials?: string[];
+  care_instructions?: string;
+  is_custom?: boolean; // For tailored/custom pieces
+  lead_time?: string; // e.g., "2-3 weeks"
   created_at: string;
+  updated_at?: string;
 };
 
 export type Profile = {
@@ -207,6 +213,63 @@ export type Profile = {
   location: string;
   website: string;
   role: string; // 'user', 'designer', 'admin'
+  owned_brands?: string[];
+};
+
+export type TailoringOrder = {
+  id: string;
+  user_id: string;
+  product_id: string;
+  brand_id: string;
+  status: "pending" | "confirmed" | "in_progress" | "completed" | "cancelled";
+  total_amount: number;
+  currency: string;
+  customer_notes?: string;
+  brand_notes?: string;
+  measurements: CustomerMeasurements;
+  delivery_address: DeliveryAddress;
+  estimated_completion?: string;
+  created_at: string;
+  updated_at?: string;
+};
+
+export type CustomerMeasurements = {
+  // General measurements
+  height?: string;
+  weight?: string;
+
+  // Upper body
+  chest?: string;
+  bust?: string;
+  waist?: string;
+  hips?: string;
+  shoulder_width?: string;
+  arm_length?: string;
+  neck?: string;
+
+  // Lower body
+  inseam?: string;
+  outseam?: string;
+  thigh?: string;
+  knee?: string;
+  calf?: string;
+  ankle?: string;
+
+  // Additional notes
+  fit_preference?: "slim" | "regular" | "loose";
+  special_requirements?: string;
+};
+
+export type DeliveryAddress = {
+  full_name: string;
+  phone: string;
+  email: string;
+  address_line_1: string;
+  address_line_2?: string;
+  city: string;
+  state: string;
+  postal_code: string;
+  country: string;
 };
 
 export type Order = {

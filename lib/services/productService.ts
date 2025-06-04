@@ -1,10 +1,17 @@
 import { supabase, Product } from "../supabase";
 
 /**
- * Fetch all products
+ * Fetch all products from the database
  */
 export async function getAllProducts(): Promise<Product[]> {
-  const { data, error } = await supabase.from("products").select("*");
+  if (!supabase) {
+    throw new Error("Supabase client not available");
+  }
+
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .order("created_at", { ascending: false });
 
   if (error) {
     console.error("Error fetching products:", error);
@@ -15,48 +22,14 @@ export async function getAllProducts(): Promise<Product[]> {
 }
 
 /**
- * Fetch products by brand ID
+ * Fetch a single product by ID
  */
-export async function getProductsByBrand(brandId: string): Promise<Product[]> {
-  const { data, error } = await supabase
-    .from("products")
-    .select("*")
-    .eq("brand_id", brandId);
-
-  if (error) {
-    console.error(`Error fetching products for brand ${brandId}:`, error);
-    throw error;
+export async function getProductById(id: string): Promise<Product | null> {
+  if (!supabase) {
+    console.error("Supabase client not available");
+    return null;
   }
 
-  return data || [];
-}
-
-/**
- * Fetch products by collection ID
- */
-export async function getProductsByCollection(
-  collectionId: string
-): Promise<Product[]> {
-  const { data, error } = await supabase
-    .from("products")
-    .select("*")
-    .eq("collection_id", collectionId);
-
-  if (error) {
-    console.error(
-      `Error fetching products for collection ${collectionId}:`,
-      error
-    );
-    throw error;
-  }
-
-  return data || [];
-}
-
-/**
- * Get a single product by ID
- */
-export async function getProduct(id: string): Promise<Product | null> {
   const { data, error } = await supabase
     .from("products")
     .select("*")
@@ -72,14 +45,95 @@ export async function getProduct(id: string): Promise<Product | null> {
 }
 
 /**
+ * Fetch products by brand ID
+ */
+export async function getProductsByBrand(brandId: string): Promise<Product[]> {
+  if (!supabase) {
+    throw new Error("Supabase client not available");
+  }
+
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .eq("brand_id", brandId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching products by brand:", error);
+    throw error;
+  }
+
+  return data || [];
+}
+
+/**
+ * Fetch products by collection ID
+ */
+export async function getProductsByCollection(
+  collectionId: string
+): Promise<Product[]> {
+  if (!supabase) {
+    throw new Error("Supabase client not available");
+  }
+
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .eq("collection_id", collectionId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching products by collection:", error);
+    throw error;
+  }
+
+  return data || [];
+}
+
+/**
+ * Fetch products with brand and collection information
+ */
+export async function getProductsWithDetails(): Promise<
+  (Product & {
+    brand: { name: string; id: string; location: string; is_verified: boolean };
+    collection?: { title: string; id: string };
+  })[]
+> {
+  if (!supabase) {
+    throw new Error("Supabase client not available");
+  }
+
+  const { data, error } = await supabase.from("products").select(`
+      *,
+      brand:brands(id, name, location, is_verified),
+      collection:collections(id, title)
+    `);
+
+  if (error) {
+    console.error("Error fetching products with details:", error);
+    throw error;
+  }
+
+  return data || [];
+}
+
+/**
  * Create a new product
  */
 export async function createProduct(
-  product: Omit<Product, "id">
-): Promise<Product> {
+  productData: Omit<Product, "id" | "created_at" | "updated_at">
+): Promise<Product | null> {
+  if (!supabase) {
+    throw new Error("Supabase client not available");
+  }
+
   const { data, error } = await supabase
     .from("products")
-    .insert(product)
+    .insert({
+      ...productData,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
     .select()
     .single();
 
@@ -96,11 +150,18 @@ export async function createProduct(
  */
 export async function updateProduct(
   id: string,
-  updates: Partial<Omit<Product, "id">>
-): Promise<Product> {
+  productData: Partial<Product>
+): Promise<Product | null> {
+  if (!supabase) {
+    throw new Error("Supabase client not available");
+  }
+
   const { data, error } = await supabase
     .from("products")
-    .update(updates)
+    .update({
+      ...productData,
+      updated_at: new Date().toISOString(),
+    })
     .eq("id", id)
     .select()
     .single();
@@ -117,6 +178,10 @@ export async function updateProduct(
  * Delete a product
  */
 export async function deleteProduct(id: string): Promise<void> {
+  if (!supabase) {
+    throw new Error("Supabase client not available");
+  }
+
   const { error } = await supabase.from("products").delete().eq("id", id);
 
   if (error) {
@@ -126,16 +191,23 @@ export async function deleteProduct(id: string): Promise<void> {
 }
 
 /**
- * Search products by title or description
+ * Search products by title, description, or category
  */
 export async function searchProducts(query: string): Promise<Product[]> {
+  if (!supabase) {
+    throw new Error("Supabase client not available");
+  }
+
   const { data, error } = await supabase
     .from("products")
     .select("*")
-    .or(`title.ilike.%${query}%,description.ilike.%${query}%`);
+    .or(
+      `title.ilike.%${query}%,description.ilike.%${query}%,category.ilike.%${query}%`
+    )
+    .order("created_at", { ascending: false });
 
   if (error) {
-    console.error(`Error searching products with query ${query}:`, error);
+    console.error("Error searching products:", error);
     throw error;
   }
 
@@ -148,6 +220,10 @@ export async function searchProducts(query: string): Promise<Product[]> {
 export async function getFeaturedProducts(
   limit: number = 8
 ): Promise<Product[]> {
+  if (!supabase) {
+    throw new Error("Supabase client not available");
+  }
+
   const { data, error } = await supabase
     .from("products")
     .select("*")
