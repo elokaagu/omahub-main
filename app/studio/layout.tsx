@@ -16,7 +16,7 @@ import {
   X,
   Settings,
 } from "@/components/ui/icons";
-import { Monitor } from "lucide-react";
+import { Monitor, ShoppingBag } from "lucide-react";
 import { Toaster } from "sonner";
 import {
   Permission,
@@ -275,6 +275,16 @@ export default function StudioLayout({
                     ? "Your Collections"
                     : "Collections"}
                 </span>
+              </NavigationLink>
+            )}
+            {user?.role === "super_admin" && (
+              <NavigationLink
+                href="/studio/products"
+                className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100"
+                onClick={() => setSidebarOpen(false)}
+              >
+                <ShoppingBag className="h-5 w-5" />
+                <span>Products</span>
               </NavigationLink>
             )}
             {user?.role === "super_admin" && (
