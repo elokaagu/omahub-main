@@ -3,7 +3,10 @@
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { getCollectionById } from "@/lib/services/collectionService";
-import { getProductsByCollection } from "@/lib/services/productService";
+import {
+  getProductsByCollection,
+  getCollectionRecommendations,
+} from "@/lib/services/productService";
 import { getBrandById } from "@/lib/services/brandService";
 import { Collection, Product, Brand } from "@/lib/supabase";
 import { AuthImage } from "@/components/ui/auth-image";
@@ -17,6 +20,7 @@ import {
   CheckCircle,
   Star,
   ShoppingBag,
+  Heart,
 } from "lucide-react";
 
 export default function CollectionPage() {
@@ -25,6 +29,7 @@ export default function CollectionPage() {
 
   const [collection, setCollection] = useState<Collection | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
+  const [recommendedProducts, setRecommendedProducts] = useState<Product[]>([]);
   const [brand, setBrand] = useState<Brand | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -52,6 +57,18 @@ export default function CollectionPage() {
       setCollection(collectionData);
       setProducts(productsData);
       setBrand(brandData);
+
+      // Get recommendations - other products from the same collection (shuffled for variety)
+      if (productsData.length > 1) {
+        const recommendations = await getCollectionRecommendations(
+          collectionId,
+          undefined,
+          4
+        );
+        // Shuffle the recommendations to show variety
+        const shuffled = [...recommendations].sort(() => Math.random() - 0.5);
+        setRecommendedProducts(shuffled.slice(0, 4));
+      }
     } catch (err) {
       console.error("Error fetching collection data:", err);
       setError("Failed to load collection information");
@@ -176,7 +193,7 @@ export default function CollectionPage() {
         </div>
 
         {/* Products Section */}
-        <div>
+        <div className="mb-16">
           <div className="flex items-center justify-between mb-8">
             <h2 className="text-2xl font-canela text-gray-900">
               Products in this Collection
@@ -209,7 +226,7 @@ export default function CollectionPage() {
                   href={`/product/${product.id}`}
                   className="group block"
                 >
-                  <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200">
+                  <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200 border border-gray-100 hover:border-oma-plum/20">
                     <div className="aspect-square relative overflow-hidden">
                       <AuthImage
                         src={product.image}
@@ -268,6 +285,82 @@ export default function CollectionPage() {
             </div>
           )}
         </div>
+
+        {/* You May Also Like Section */}
+        {recommendedProducts.length > 0 && (
+          <div className="border-t pt-16">
+            <div className="flex items-center gap-3 mb-8">
+              <Heart className="h-6 w-6 text-oma-plum" />
+              <h2 className="text-2xl font-canela text-gray-900">
+                You May Also Like
+              </h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {recommendedProducts.map((product) => (
+                <NavigationLink
+                  key={product.id}
+                  href={`/product/${product.id}`}
+                  className="group block"
+                >
+                  <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 border border-gray-100 hover:border-oma-plum/20 hover:shadow-lg">
+                    <div className="aspect-square relative overflow-hidden">
+                      <AuthImage
+                        src={product.image}
+                        alt={product.title}
+                        width={300}
+                        height={300}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      {product.sale_price && (
+                        <div className="absolute top-2 left-2">
+                          <Badge variant="destructive" className="bg-red-600">
+                            Sale
+                          </Badge>
+                        </div>
+                      )}
+                      {product.is_custom && (
+                        <div className="absolute top-2 right-2">
+                          <Badge
+                            variant="secondary"
+                            className="bg-oma-plum text-white"
+                          >
+                            Custom
+                          </Badge>
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-4">
+                      <h3 className="font-semibold text-gray-900 group-hover:text-oma-plum transition-colors mb-1 line-clamp-1">
+                        {product.title}
+                      </h3>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-lg font-bold text-oma-plum">
+                          ${product.sale_price || product.price}
+                        </span>
+                        {product.sale_price && (
+                          <span className="text-sm text-gray-500 line-through">
+                            ${product.price}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <Badge
+                          variant={product.in_stock ? "default" : "secondary"}
+                          className="text-xs"
+                        >
+                          {product.in_stock ? "In Stock" : "Out of Stock"}
+                        </Badge>
+                        <span className="text-xs text-gray-500">
+                          {product.category}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </NavigationLink>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

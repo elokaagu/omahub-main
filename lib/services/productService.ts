@@ -238,3 +238,71 @@ export async function getFeaturedProducts(
 
   return data || [];
 }
+
+/**
+ * Get related products from the same brand or collection, excluding the current product
+ */
+export async function getRelatedProducts(
+  currentProductId: string,
+  brandId?: string,
+  collectionId?: string,
+  limit: number = 4
+): Promise<Product[]> {
+  if (!supabase) {
+    throw new Error("Supabase client not available");
+  }
+
+  let query = supabase
+    .from("products")
+    .select("*")
+    .neq("id", currentProductId) // Exclude current product
+    .limit(limit);
+
+  // Prioritize products from the same collection, then same brand
+  if (collectionId) {
+    query = query.eq("collection_id", collectionId);
+  } else if (brandId) {
+    query = query.eq("brand_id", brandId);
+  }
+
+  const { data, error } = await query.order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching related products:", error);
+    throw error;
+  }
+
+  return data || [];
+}
+
+/**
+ * Get products from the same collection for collection page recommendations
+ */
+export async function getCollectionRecommendations(
+  collectionId: string,
+  excludeProductId?: string,
+  limit: number = 4
+): Promise<Product[]> {
+  if (!supabase) {
+    throw new Error("Supabase client not available");
+  }
+
+  let query = supabase
+    .from("products")
+    .select("*")
+    .eq("collection_id", collectionId)
+    .limit(limit);
+
+  if (excludeProductId) {
+    query = query.neq("id", excludeProductId);
+  }
+
+  const { data, error } = await query.order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching collection recommendations:", error);
+    throw error;
+  }
+
+  return data || [];
+}
