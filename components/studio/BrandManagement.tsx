@@ -120,6 +120,29 @@ export default function BrandManagement({
     }
   };
 
+  const handleRefreshSession = async () => {
+    try {
+      setIsLoading(true);
+      console.log("🔄 Manually refreshing session...");
+
+      const { data, error } = await supabase.auth.refreshSession();
+
+      if (error) {
+        console.error("❌ Session refresh failed:", error);
+        toast.error("Failed to refresh session. Please sign in again.");
+        return;
+      }
+
+      console.log("✅ Session refreshed manually");
+      toast.success("Session refreshed successfully");
+    } catch (error) {
+      console.error("❌ Error refreshing session:", error);
+      toast.error("Failed to refresh session");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleUpdateBrand = async (
     brandId: string,
     updates: Partial<Brand>
@@ -143,7 +166,20 @@ export default function BrandManagement({
         ownedBrandIds,
       });
 
-      // Check authentication status first
+      // Force session refresh before attempting update
+      console.log("🔄 Refreshing session...");
+      const { data: refreshData, error: refreshError } =
+        await supabase.auth.refreshSession();
+
+      if (refreshError) {
+        console.error("❌ Session refresh error:", refreshError);
+        toast.error("Session expired. Please sign in again.");
+        return;
+      }
+
+      console.log("✅ Session refreshed successfully");
+
+      // Check authentication status
       const {
         data: { session },
         error: sessionError,
@@ -197,6 +233,8 @@ export default function BrandManagement({
           toast.error(
             "Security policy blocked the update. Please contact support."
           );
+        } else if (error.message.includes("JWT")) {
+          toast.error("Authentication token invalid. Please sign in again.");
         } else {
           toast.error(`Failed to update brand: ${error.message}`);
         }
@@ -242,11 +280,21 @@ export default function BrandManagement({
             </p>
           )}
         </div>
-        {isAdmin && (
-          <Button className="bg-oma-plum hover:bg-oma-plum/90">
-            Add New Brand
+        <div className="flex space-x-2">
+          <Button
+            variant="outline"
+            onClick={handleRefreshSession}
+            disabled={isLoading}
+            className="text-sm"
+          >
+            Refresh Session
           </Button>
-        )}
+          {isAdmin && (
+            <Button className="bg-oma-plum hover:bg-oma-plum/90">
+              Add New Brand
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Brand Grid */}
