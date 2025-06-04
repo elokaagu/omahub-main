@@ -1,74 +1,82 @@
 const { createClient } = require("@supabase/supabase-js");
 
-// Supabase configuration
-const supabaseUrl = "https://gswduyodzdgucjscjtvz.supabase.co";
-const supabaseServiceKey =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdzd2R1eW9kemRndWNqc2NqdHZ6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0ODAxNzQzOCwiZXhwIjoyMDYzNTkzNDM4fQ.4sqZxnRlSXQwRv7wB5JEWcpdTr5_Ucb97IF-32SRG7k";
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-// Create Supabase client with service role key (bypasses RLS)
+if (!supabaseUrl || !supabaseServiceKey) {
+  console.error("Missing Supabase environment variables");
+  process.exit(1);
+}
+
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 async function checkSchema() {
   try {
     console.log("🔍 Checking database schema...");
 
-    // Check brands table structure
-    console.log("\n📋 Brands table sample:");
-    const { data: brands, error: brandsError } = await supabase
-      .from("brands")
+    // Check collections table structure
+    console.log("\n📋 Collections table info:");
+    const { data: collections } = await supabase
+      .from("collections")
       .select("*")
-      .limit(3);
+      .limit(1);
 
-    if (brandsError) {
-      console.error("❌ Error fetching brands:", brandsError);
-    } else {
-      console.log(brands);
+    if (collections && collections.length > 0) {
+      console.log("Collection ID type:", typeof collections[0].id);
+      console.log("Collection ID value:", collections[0].id);
     }
 
-    // Check profiles table structure
-    console.log("\n📋 Profiles table sample:");
-    const { data: profiles, error: profilesError } = await supabase
-      .from("profiles")
+    // Check products table structure
+    console.log("\n📦 Products table info:");
+    const { data: products } = await supabase
+      .from("products")
       .select("*")
-      .limit(3);
+      .limit(1);
 
-    if (profilesError) {
-      console.error("❌ Error fetching profiles:", profilesError);
-    } else {
-      console.log(profiles);
+    if (products && products.length > 0) {
+      console.log("Product ID type:", typeof products[0].id);
+      console.log("Product ID value:", products[0].id);
+      console.log(
+        "Product collection_id type:",
+        typeof products[0].collection_id
+      );
+      console.log("Product collection_id value:", products[0].collection_id);
+      console.log("Product brand_id type:", typeof products[0].brand_id);
+      console.log("Product brand_id value:", products[0].brand_id);
     }
 
-    // Check specifically for eloka@culturin.com
-    console.log("\n🔍 Checking eloka@culturin.com profile:");
-    const { data: elokaProfile, error: elokaError } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("email", "eloka@culturin.com")
-      .single();
+    // Try to update the product to link it to the collection
+    console.log("\n🔗 Attempting to link product to collection...");
+    const { data: updateResult, error: updateError } = await supabase
+      .from("products")
+      .update({ collection_id: "detty-december" })
+      .eq("brand_id", "ehbs-couture")
+      .select();
 
-    if (elokaError) {
-      console.error("❌ Error fetching eloka profile:", elokaError);
+    if (updateError) {
+      console.error("❌ Error updating product:", updateError);
+
+      // Try with UUID conversion if needed
+      console.log("\n🔄 Checking if collection ID needs UUID conversion...");
+
+      // First, let's see what the actual collection UUID is
+      const { data: collectionData } = await supabase
+        .from("collections")
+        .select("id")
+        .eq("id", "detty-december");
+
+      if (collectionData && collectionData.length > 0) {
+        console.log("✅ Collection exists with ID:", collectionData[0].id);
+      } else {
+        console.log("❌ Collection not found");
+      }
     } else {
-      console.log(elokaProfile);
+      console.log("✅ Successfully linked product to collection");
+      console.log("Updated product:", updateResult);
     }
-
-    // Check for Ehbs Couture specifically
-    console.log("\n🔍 Checking Ehbs Couture brand:");
-    const { data: ehbsBrand, error: ehbsError } = await supabase
-      .from("brands")
-      .select("*")
-      .eq("id", "ehbs-couture")
-      .single();
-
-    if (ehbsError) {
-      console.error("❌ Error fetching Ehbs Couture:", ehbsError);
-    } else {
-      console.log(ehbsBrand);
-    }
-  } catch (error) {
-    console.error("❌ Unexpected error:", error);
+  } catch (err) {
+    console.error("❌ Unexpected error:", err);
   }
 }
 
-// Run the script
 checkSchema();
