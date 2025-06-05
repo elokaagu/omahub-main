@@ -528,7 +528,10 @@ export default function ProductsPage() {
                   />
                   {product.sale_price && (
                     <div className="absolute top-2 left-2">
-                      <Badge variant="destructive" className="bg-red-600">
+                      <Badge
+                        variant="secondary"
+                        className="bg-oma-plum text-white"
+                      >
                         Sale
                       </Badge>
                     </div>
@@ -600,8 +603,8 @@ export default function ProductsPage() {
                         className={cn(
                           "text-xs",
                           product.in_stock
-                            ? "bg-green-600 text-white"
-                            : "bg-gray-400 text-white"
+                            ? "bg-oma-cocoa text-white"
+                            : "bg-oma-cocoa/60 text-white"
                         )}
                       >
                         {product.in_stock ? "In Stock" : "Out of Stock"}
@@ -683,8 +686,8 @@ export default function ProductsPage() {
                               className={cn(
                                 "text-xs",
                                 product.in_stock
-                                  ? "bg-green-600 text-white"
-                                  : "bg-gray-400 text-white"
+                                  ? "bg-oma-cocoa text-white"
+                                  : "bg-oma-cocoa/60 text-white"
                               )}
                             >
                               {product.in_stock ? "In Stock" : "Out of Stock"}
@@ -699,8 +702,8 @@ export default function ProductsPage() {
                             )}
                             {product.sale_price && (
                               <Badge
-                                variant="destructive"
-                                className="bg-red-600 text-xs"
+                                variant="secondary"
+                                className="bg-oma-plum text-white text-xs"
                               >
                                 Sale
                               </Badge>
