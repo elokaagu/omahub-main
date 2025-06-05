@@ -259,11 +259,9 @@ export default function EditProductPage() {
 
   if (isLoadingProduct) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-oma-beige/30 to-white">
-        <div className="max-w-4xl mx-auto px-6 py-24">
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full"></div>
-          </div>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full"></div>
         </div>
       </div>
     );
@@ -271,515 +269,507 @@ export default function EditProductPage() {
 
   if (!product) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-oma-beige/30 to-white">
-        <div className="max-w-4xl mx-auto px-6 py-24">
-          <div className="text-center">
-            <h1 className="text-2xl font-canela text-oma-cocoa mb-4">
-              Product Not Found
-            </h1>
-            <Button asChild>
-              <NavigationLink href="/studio/products">
-                Back to Products
-              </NavigationLink>
-            </Button>
-          </div>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+        <div className="text-center">
+          <h1 className="text-2xl font-canela text-gray-900 mb-4">
+            Product Not Found
+          </h1>
+          <Button asChild>
+            <NavigationLink href="/studio/products">
+              Back to Products
+            </NavigationLink>
+          </Button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-oma-beige/30 to-white">
-      <div className="max-w-4xl mx-auto px-6 py-24">
-        {/* Header */}
-        <div className="flex items-center gap-4 mb-12">
-          <Button variant="outline" size="icon" asChild>
-            <NavigationLink href="/studio/products">
-              <ArrowLeft className="h-4 w-4" />
-            </NavigationLink>
-          </Button>
-          <div>
-            <h1 className="text-4xl font-canela text-oma-cocoa mb-2">
-              Edit Product
-            </h1>
-            <p className="text-oma-cocoa/80">Update product information</p>
-          </div>
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+      {/* Header */}
+      <div className="flex items-center gap-4 mb-12">
+        <Button variant="outline" size="icon" asChild>
+          <NavigationLink href="/studio/products">
+            <ArrowLeft className="h-4 w-4" />
+          </NavigationLink>
+        </Button>
+        <div>
+          <h1 className="text-4xl font-canela text-gray-900 mb-2">
+            Edit Product
+          </h1>
+          <p className="text-gray-600">Update product information</p>
         </div>
+      </div>
 
-        <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Basic Information */}
-          <Card className="border border-oma-gold/10 bg-white">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-oma-cocoa">
-                <Package className="h-5 w-5" />
-                Basic Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="title" className="text-oma-cocoa">
-                    Product Title *
-                  </Label>
-                  <Input
-                    id="title"
-                    value={formData.title}
-                    onChange={(e) => handleInputChange("title", e.target.value)}
-                    placeholder="Enter product title"
-                    className="border-oma-cocoa/20 focus:border-oma-plum"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="category" className="text-oma-cocoa">
-                    Category
-                  </Label>
-                  <Input
-                    id="category"
-                    value={formData.category}
-                    onChange={(e) =>
-                      handleInputChange("category", e.target.value)
-                    }
-                    placeholder="e.g., Dresses, Accessories"
-                    className="border-oma-cocoa/20 focus:border-oma-plum"
-                  />
-                </div>
-              </div>
-
+      <form onSubmit={handleSubmit} className="space-y-8">
+        {/* Basic Information */}
+        <Card className="border border-oma-gold/10 bg-white">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-oma-cocoa">
+              <Package className="h-5 w-5" />
+              Basic Information
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label htmlFor="description" className="text-oma-cocoa">
-                  Description *
+                <Label htmlFor="title" className="text-oma-cocoa">
+                  Product Title *
                 </Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) =>
-                    handleInputChange("description", e.target.value)
-                  }
-                  placeholder="Describe the product..."
-                  rows={4}
+                <Input
+                  id="title"
+                  value={formData.title}
+                  onChange={(e) => handleInputChange("title", e.target.value)}
+                  placeholder="Enter product title"
                   className="border-oma-cocoa/20 focus:border-oma-plum"
                   required
                 />
               </div>
-
               <div className="space-y-2">
-                <Label htmlFor="image" className="text-oma-cocoa">
-                  Product Image URL
+                <Label htmlFor="category" className="text-oma-cocoa">
+                  Category
                 </Label>
                 <Input
-                  id="image"
-                  value={formData.image}
-                  onChange={(e) => handleInputChange("image", e.target.value)}
-                  placeholder="https://example.com/image.jpg"
-                  className="border-oma-cocoa/20 focus:border-oma-plum"
-                />
-                {formData.image && (
-                  <div className="mt-2">
-                    <img
-                      src={formData.image}
-                      alt="Product preview"
-                      className="w-32 h-32 object-cover rounded-lg border border-oma-gold/20"
-                      onError={(e) => {
-                        e.currentTarget.src =
-                          "https://via.placeholder.com/128x128?text=Invalid+Image";
-                      }}
-                    />
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Brand and Collection */}
-          <Card className="border border-oma-gold/10 bg-white">
-            <CardHeader>
-              <CardTitle className="text-oma-cocoa">
-                Brand & Collection
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="brand" className="text-oma-cocoa">
-                    Brand *
-                  </Label>
-                  <Select
-                    value={formData.brand_id}
-                    onValueChange={(value) =>
-                      handleInputChange("brand_id", value)
-                    }
-                  >
-                    <SelectTrigger className="border-oma-cocoa/20 focus:border-oma-plum">
-                      <SelectValue placeholder="Select a brand" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {brands.map((brand) => (
-                        <SelectItem key={brand.id} value={brand.id}>
-                          <div className="flex items-center gap-2">
-                            <span>{brand.name}</span>
-                            {brand.is_verified && (
-                              <Badge
-                                variant="secondary"
-                                className="text-xs bg-oma-plum text-white"
-                              >
-                                Verified
-                              </Badge>
-                            )}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="collection" className="text-oma-cocoa">
-                    Collection (Optional)
-                  </Label>
-                  <Select
-                    value={formData.collection_id}
-                    onValueChange={(value) =>
-                      handleInputChange("collection_id", value)
-                    }
-                    disabled={!formData.brand_id}
-                  >
-                    <SelectTrigger className="border-oma-cocoa/20 focus:border-oma-plum">
-                      <SelectValue
-                        placeholder={
-                          formData.brand_id
-                            ? "Select a collection"
-                            : "Select brand first"
-                        }
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {filteredCollections.map((collection) => (
-                        <SelectItem key={collection.id} value={collection.id}>
-                          {collection.title}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Pricing */}
-          <Card className="border border-oma-gold/10 bg-white">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-oma-cocoa">
-                <DollarSign className="h-5 w-5" />
-                Pricing
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="price" className="text-oma-cocoa">
-                    Regular Price *
-                  </Label>
-                  <Input
-                    id="price"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={formData.price}
-                    onChange={(e) => handleInputChange("price", e.target.value)}
-                    placeholder="0.00"
-                    className="border-oma-cocoa/20 focus:border-oma-plum"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="sale_price" className="text-oma-cocoa">
-                    Sale Price (Optional)
-                  </Label>
-                  <Input
-                    id="sale_price"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={formData.sale_price}
-                    onChange={(e) =>
-                      handleInputChange("sale_price", e.target.value)
-                    }
-                    placeholder="0.00"
-                    className="border-oma-cocoa/20 focus:border-oma-plum"
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Product Details */}
-          <Card className="border border-oma-gold/10 bg-white">
-            <CardHeader>
-              <CardTitle className="text-oma-cocoa">Product Details</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Sizes */}
-              <div className="space-y-2">
-                <Label className="text-oma-cocoa">Available Sizes</Label>
-                <div className="flex gap-2 mb-2">
-                  <Input
-                    placeholder="Add size (e.g., S, M, L, XL)"
-                    className="border-oma-cocoa/20 focus:border-oma-plum"
-                    onKeyPress={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        handleArrayChange("sizes", e.currentTarget.value);
-                        e.currentTarget.value = "";
-                      }
-                    }}
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white"
-                    onClick={(e) => {
-                      const input = e.currentTarget
-                        .previousElementSibling as HTMLInputElement;
-                      handleArrayChange("sizes", input.value);
-                      input.value = "";
-                    }}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {formData.sizes.map((size, index) => (
-                    <Badge
-                      key={index}
-                      variant="secondary"
-                      className="flex items-center gap-1 bg-oma-beige text-oma-plum"
-                    >
-                      {size}
-                      <button
-                        type="button"
-                        onClick={() => removeArrayItem("sizes", index)}
-                        className="ml-1 hover:text-red-600"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-
-              {/* Colors */}
-              <div className="space-y-2">
-                <Label className="text-oma-cocoa">Available Colors</Label>
-                <div className="flex gap-2 mb-2">
-                  <Input
-                    placeholder="Add color (e.g., Red, Blue, Black)"
-                    className="border-oma-cocoa/20 focus:border-oma-plum"
-                    onKeyPress={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        handleArrayChange("colors", e.currentTarget.value);
-                        e.currentTarget.value = "";
-                      }
-                    }}
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white"
-                    onClick={(e) => {
-                      const input = e.currentTarget
-                        .previousElementSibling as HTMLInputElement;
-                      handleArrayChange("colors", input.value);
-                      input.value = "";
-                    }}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {formData.colors.map((color, index) => (
-                    <Badge
-                      key={index}
-                      variant="secondary"
-                      className="flex items-center gap-1 bg-oma-beige text-oma-plum"
-                    >
-                      {color}
-                      <button
-                        type="button"
-                        onClick={() => removeArrayItem("colors", index)}
-                        className="ml-1 hover:text-red-600"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-
-              {/* Materials */}
-              <div className="space-y-2">
-                <Label className="text-oma-cocoa">Materials</Label>
-                <div className="flex gap-2 mb-2">
-                  <Input
-                    placeholder="Add material (e.g., Cotton, Silk, Polyester)"
-                    className="border-oma-cocoa/20 focus:border-oma-plum"
-                    onKeyPress={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        handleArrayChange("materials", e.currentTarget.value);
-                        e.currentTarget.value = "";
-                      }
-                    }}
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white"
-                    onClick={(e) => {
-                      const input = e.currentTarget
-                        .previousElementSibling as HTMLInputElement;
-                      handleArrayChange("materials", input.value);
-                      input.value = "";
-                    }}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {formData.materials.map((material, index) => (
-                    <Badge
-                      key={index}
-                      variant="secondary"
-                      className="flex items-center gap-1 bg-oma-beige text-oma-plum"
-                    >
-                      {material}
-                      <button
-                        type="button"
-                        onClick={() => removeArrayItem("materials", index)}
-                        className="ml-1 hover:text-red-600"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="care_instructions" className="text-oma-cocoa">
-                  Care Instructions
-                </Label>
-                <Textarea
-                  id="care_instructions"
-                  value={formData.care_instructions}
+                  id="category"
+                  value={formData.category}
                   onChange={(e) =>
-                    handleInputChange("care_instructions", e.target.value)
+                    handleInputChange("category", e.target.value)
                   }
-                  placeholder="e.g., Hand wash only, Dry clean recommended"
-                  rows={3}
+                  placeholder="e.g., Dresses, Accessories"
                   className="border-oma-cocoa/20 focus:border-oma-plum"
                 />
               </div>
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="lead_time" className="text-oma-cocoa">
-                  Lead Time (for custom items)
-                </Label>
-                <Input
-                  id="lead_time"
-                  value={formData.lead_time}
-                  onChange={(e) =>
-                    handleInputChange("lead_time", e.target.value)
-                  }
-                  placeholder="e.g., 2-3 weeks"
-                  className="border-oma-cocoa/20 focus:border-oma-plum"
-                />
-              </div>
-            </CardContent>
-          </Card>
+            <div className="space-y-2">
+              <Label htmlFor="description" className="text-oma-cocoa">
+                Description *
+              </Label>
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) =>
+                  handleInputChange("description", e.target.value)
+                }
+                placeholder="Describe the product..."
+                rows={4}
+                className="border-oma-cocoa/20 focus:border-oma-plum"
+                required
+              />
+            </div>
 
-          {/* Settings */}
-          <Card className="border border-oma-gold/10 bg-white">
-            <CardHeader>
-              <CardTitle className="text-oma-cocoa">Settings</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center justify-between p-4 bg-oma-beige/30 rounded-lg">
-                <div className="space-y-0.5">
-                  <Label
-                    htmlFor="in_stock"
-                    className="text-oma-cocoa font-medium"
-                  >
-                    In Stock
-                  </Label>
-                  <p className="text-sm text-oma-cocoa/70">
-                    Whether this product is currently available
-                  </p>
+            <div className="space-y-2">
+              <Label htmlFor="image" className="text-oma-cocoa">
+                Product Image URL
+              </Label>
+              <Input
+                id="image"
+                value={formData.image}
+                onChange={(e) => handleInputChange("image", e.target.value)}
+                placeholder="https://example.com/image.jpg"
+                className="border-oma-cocoa/20 focus:border-oma-plum"
+              />
+              {formData.image && (
+                <div className="mt-2">
+                  <img
+                    src={formData.image}
+                    alt="Product preview"
+                    className="w-32 h-32 object-cover rounded-lg border border-oma-gold/20"
+                    onError={(e) => {
+                      e.currentTarget.src =
+                        "https://via.placeholder.com/128x128?text=Invalid+Image";
+                    }}
+                  />
                 </div>
-                <Switch
-                  id="in_stock"
-                  checked={formData.in_stock}
-                  onCheckedChange={(checked) =>
-                    handleInputChange("in_stock", checked)
-                  }
-                />
-              </div>
-
-              <div className="flex items-center justify-between p-4 bg-oma-beige/30 rounded-lg">
-                <div className="space-y-0.5">
-                  <Label
-                    htmlFor="is_custom"
-                    className="text-oma-cocoa font-medium"
-                  >
-                    Custom/Tailored Item
-                  </Label>
-                  <p className="text-sm text-oma-cocoa/70">
-                    Mark if this is a custom or made-to-order item
-                  </p>
-                </div>
-                <Switch
-                  id="is_custom"
-                  checked={formData.is_custom}
-                  onCheckedChange={(checked) =>
-                    handleInputChange("is_custom", checked)
-                  }
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Submit */}
-          <div className="flex gap-4 pt-6">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => router.push("/studio/products")}
-              disabled={isLoading}
-              className="border-oma-cocoa text-oma-cocoa hover:bg-oma-cocoa hover:text-white"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              className="bg-oma-plum hover:bg-oma-plum/90"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <>
-                  <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2"></div>
-                  Updating...
-                </>
-              ) : (
-                <>
-                  <Save className="h-4 w-4 mr-2" />
-                  Update Product
-                </>
               )}
-            </Button>
-          </div>
-        </form>
-      </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Brand and Collection */}
+        <Card className="border border-oma-gold/10 bg-white">
+          <CardHeader>
+            <CardTitle className="text-oma-cocoa">Brand & Collection</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="brand" className="text-oma-cocoa">
+                  Brand *
+                </Label>
+                <Select
+                  value={formData.brand_id}
+                  onValueChange={(value) =>
+                    handleInputChange("brand_id", value)
+                  }
+                >
+                  <SelectTrigger className="border-oma-cocoa/20 focus:border-oma-plum">
+                    <SelectValue placeholder="Select a brand" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {brands.map((brand) => (
+                      <SelectItem key={brand.id} value={brand.id}>
+                        <div className="flex items-center gap-2">
+                          <span>{brand.name}</span>
+                          {brand.is_verified && (
+                            <Badge
+                              variant="secondary"
+                              className="text-xs bg-oma-plum text-white"
+                            >
+                              Verified
+                            </Badge>
+                          )}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="collection" className="text-oma-cocoa">
+                  Collection (Optional)
+                </Label>
+                <Select
+                  value={formData.collection_id}
+                  onValueChange={(value) =>
+                    handleInputChange("collection_id", value)
+                  }
+                  disabled={!formData.brand_id}
+                >
+                  <SelectTrigger className="border-oma-cocoa/20 focus:border-oma-plum">
+                    <SelectValue
+                      placeholder={
+                        formData.brand_id
+                          ? "Select a collection"
+                          : "Select brand first"
+                      }
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {filteredCollections.map((collection) => (
+                      <SelectItem key={collection.id} value={collection.id}>
+                        {collection.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Pricing */}
+        <Card className="border border-oma-gold/10 bg-white">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-oma-cocoa">
+              <DollarSign className="h-5 w-5" />
+              Pricing
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="price" className="text-oma-cocoa">
+                  Regular Price *
+                </Label>
+                <Input
+                  id="price"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.price}
+                  onChange={(e) => handleInputChange("price", e.target.value)}
+                  placeholder="0.00"
+                  className="border-oma-cocoa/20 focus:border-oma-plum"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="sale_price" className="text-oma-cocoa">
+                  Sale Price (Optional)
+                </Label>
+                <Input
+                  id="sale_price"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.sale_price}
+                  onChange={(e) =>
+                    handleInputChange("sale_price", e.target.value)
+                  }
+                  placeholder="0.00"
+                  className="border-oma-cocoa/20 focus:border-oma-plum"
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Product Details */}
+        <Card className="border border-oma-gold/10 bg-white">
+          <CardHeader>
+            <CardTitle className="text-oma-cocoa">Product Details</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Sizes */}
+            <div className="space-y-2">
+              <Label className="text-oma-cocoa">Available Sizes</Label>
+              <div className="flex gap-2 mb-2">
+                <Input
+                  placeholder="Add size (e.g., S, M, L, XL)"
+                  className="border-oma-cocoa/20 focus:border-oma-plum"
+                  onKeyPress={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleArrayChange("sizes", e.currentTarget.value);
+                      e.currentTarget.value = "";
+                    }
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white"
+                  onClick={(e) => {
+                    const input = e.currentTarget
+                      .previousElementSibling as HTMLInputElement;
+                    handleArrayChange("sizes", input.value);
+                    input.value = "";
+                  }}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {formData.sizes.map((size, index) => (
+                  <Badge
+                    key={index}
+                    variant="secondary"
+                    className="flex items-center gap-1 bg-oma-beige text-oma-plum"
+                  >
+                    {size}
+                    <button
+                      type="button"
+                      onClick={() => removeArrayItem("sizes", index)}
+                      className="ml-1 hover:text-red-600"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            </div>
+
+            {/* Colors */}
+            <div className="space-y-2">
+              <Label className="text-oma-cocoa">Available Colors</Label>
+              <div className="flex gap-2 mb-2">
+                <Input
+                  placeholder="Add color (e.g., Red, Blue, Black)"
+                  className="border-oma-cocoa/20 focus:border-oma-plum"
+                  onKeyPress={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleArrayChange("colors", e.currentTarget.value);
+                      e.currentTarget.value = "";
+                    }
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white"
+                  onClick={(e) => {
+                    const input = e.currentTarget
+                      .previousElementSibling as HTMLInputElement;
+                    handleArrayChange("colors", input.value);
+                    input.value = "";
+                  }}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {formData.colors.map((color, index) => (
+                  <Badge
+                    key={index}
+                    variant="secondary"
+                    className="flex items-center gap-1 bg-oma-beige text-oma-plum"
+                  >
+                    {color}
+                    <button
+                      type="button"
+                      onClick={() => removeArrayItem("colors", index)}
+                      className="ml-1 hover:text-red-600"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            </div>
+
+            {/* Materials */}
+            <div className="space-y-2">
+              <Label className="text-oma-cocoa">Materials</Label>
+              <div className="flex gap-2 mb-2">
+                <Input
+                  placeholder="Add material (e.g., Cotton, Silk, Polyester)"
+                  className="border-oma-cocoa/20 focus:border-oma-plum"
+                  onKeyPress={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleArrayChange("materials", e.currentTarget.value);
+                      e.currentTarget.value = "";
+                    }
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white"
+                  onClick={(e) => {
+                    const input = e.currentTarget
+                      .previousElementSibling as HTMLInputElement;
+                    handleArrayChange("materials", input.value);
+                    input.value = "";
+                  }}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {formData.materials.map((material, index) => (
+                  <Badge
+                    key={index}
+                    variant="secondary"
+                    className="flex items-center gap-1 bg-oma-beige text-oma-plum"
+                  >
+                    {material}
+                    <button
+                      type="button"
+                      onClick={() => removeArrayItem("materials", index)}
+                      className="ml-1 hover:text-red-600"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="care_instructions" className="text-oma-cocoa">
+                Care Instructions
+              </Label>
+              <Textarea
+                id="care_instructions"
+                value={formData.care_instructions}
+                onChange={(e) =>
+                  handleInputChange("care_instructions", e.target.value)
+                }
+                placeholder="e.g., Hand wash only, Dry clean recommended"
+                rows={3}
+                className="border-oma-cocoa/20 focus:border-oma-plum"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="lead_time" className="text-oma-cocoa">
+                Lead Time (for custom items)
+              </Label>
+              <Input
+                id="lead_time"
+                value={formData.lead_time}
+                onChange={(e) => handleInputChange("lead_time", e.target.value)}
+                placeholder="e.g., 2-3 weeks"
+                className="border-oma-cocoa/20 focus:border-oma-plum"
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Settings */}
+        <Card className="border border-oma-gold/10 bg-white">
+          <CardHeader>
+            <CardTitle className="text-oma-cocoa">Settings</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="flex items-center justify-between p-4 bg-oma-beige/30 rounded-lg">
+              <div className="space-y-0.5">
+                <Label
+                  htmlFor="in_stock"
+                  className="text-oma-cocoa font-medium"
+                >
+                  In Stock
+                </Label>
+                <p className="text-sm text-oma-cocoa/70">
+                  Whether this product is currently available
+                </p>
+              </div>
+              <Switch
+                id="in_stock"
+                checked={formData.in_stock}
+                onCheckedChange={(checked) =>
+                  handleInputChange("in_stock", checked)
+                }
+              />
+            </div>
+
+            <div className="flex items-center justify-between p-4 bg-oma-beige/30 rounded-lg">
+              <div className="space-y-0.5">
+                <Label
+                  htmlFor="is_custom"
+                  className="text-oma-cocoa font-medium"
+                >
+                  Custom/Tailored Item
+                </Label>
+                <p className="text-sm text-oma-cocoa/70">
+                  Mark if this is a custom or made-to-order item
+                </p>
+              </div>
+              <Switch
+                id="is_custom"
+                checked={formData.is_custom}
+                onCheckedChange={(checked) =>
+                  handleInputChange("is_custom", checked)
+                }
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Submit */}
+        <div className="flex gap-4 pt-6">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => router.push("/studio/products")}
+            disabled={isLoading}
+            className="border-oma-cocoa text-oma-cocoa hover:bg-oma-cocoa hover:text-white"
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            className="bg-oma-plum hover:bg-oma-plum/90"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <>
+                <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2"></div>
+                Updating...
+              </>
+            ) : (
+              <>
+                <Save className="h-4 w-4 mr-2" />
+                Update Product
+              </>
+            )}
+          </Button>
+        </div>
+      </form>
     </div>
   );
 }
