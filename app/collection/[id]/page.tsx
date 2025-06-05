@@ -26,6 +26,7 @@ import {
   Heart,
   Calendar,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export default function CollectionPage() {
   const params = useParams();
@@ -109,8 +110,8 @@ export default function CollectionPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-oma-beige/30 to-white">
-      <div className="max-w-7xl mx-auto px-6 py-24">
+    <div className="min-h-screen bg-white">
+      <div className="container mx-auto px-4 sm:px-6 py-8">
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-sm text-gray-600 mb-8">
           <NavigationLink href="/collections" className="hover:text-oma-plum">
@@ -132,7 +133,7 @@ export default function CollectionPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             {/* Collection Image */}
             <div className="relative">
-              <div className="aspect-square rounded-2xl overflow-hidden shadow-lg">
+              <div className="aspect-square rounded-lg overflow-hidden bg-gray-100">
                 <AuthImage
                   src={collection.image}
                   alt={collection.title}
@@ -146,22 +147,22 @@ export default function CollectionPage() {
             {/* Collection Info */}
             <div className="space-y-6">
               <div>
-                <h1 className="text-4xl font-canela text-oma-cocoa mb-4">
+                <h1 className="text-3xl font-canela text-gray-900 mb-4">
                   {collection.title}
                 </h1>
-                <p className="text-lg text-oma-cocoa/80 leading-relaxed">
+                <p className="text-lg text-gray-600 leading-relaxed">
                   {collection.description}
                 </p>
               </div>
 
               {/* Brand Info */}
-              <div className="bg-white/50 rounded-lg p-6 border border-oma-cocoa/10">
-                <h3 className="text-lg font-semibold text-oma-cocoa mb-3">
+              <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">
                   About the Designer
                 </h3>
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <span className="font-medium text-oma-cocoa">
+                    <span className="font-medium text-gray-900">
                       {collection.brand.name}
                     </span>
                     {collection.brand.is_verified && (
@@ -173,11 +174,11 @@ export default function CollectionPage() {
                       </Badge>
                     )}
                   </div>
-                  <div className="flex items-center gap-2 text-oma-cocoa/70">
+                  <div className="flex items-center gap-2 text-gray-600">
                     <MapPin className="h-4 w-4" />
                     <span className="text-sm">{collection.brand.location}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-oma-cocoa/70">
+                  <div className="flex items-center gap-2 text-gray-600">
                     <Calendar className="h-4 w-4" />
                     <span className="text-sm">
                       Collection launched{" "}
@@ -194,13 +195,13 @@ export default function CollectionPage() {
 
         {/* Products Section */}
         <div className="mb-16">
-          <h2 className="text-3xl font-canela text-oma-cocoa mb-8">
+          <h2 className="text-2xl font-canela text-gray-900 mb-8">
             Products in This Collection
           </h2>
 
           {products.length === 0 ? (
-            <div className="text-center py-16 bg-white/30 rounded-lg border border-oma-cocoa/10">
-              <p className="text-lg text-oma-cocoa/70">
+            <div className="text-center py-16 bg-gray-50 rounded-lg border border-gray-200">
+              <p className="text-lg text-gray-600">
                 No products available in this collection yet.
               </p>
             </div>
@@ -212,8 +213,8 @@ export default function CollectionPage() {
                   href={`/product/${product.id}`}
                   className="group block"
                 >
-                  <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200 border border-gray-100 hover:border-oma-plum/20">
-                    <div className="aspect-square relative overflow-hidden">
+                  <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200 border border-gray-200 hover:border-oma-plum/30">
+                    <div className="aspect-square relative overflow-hidden bg-gray-100">
                       <AuthImage
                         src={product.image}
                         alt={product.title}
@@ -240,10 +241,10 @@ export default function CollectionPage() {
                       )}
                     </div>
                     <div className="p-4">
-                      <h3 className="font-semibold text-gray-900 group-hover:text-oma-plum transition-colors mb-1">
+                      <h3 className="font-semibold text-gray-900 group-hover:text-oma-plum transition-colors mb-2">
                         {product.title}
                       </h3>
-                      <div className="flex items-center gap-2 mb-2">
+                      <div className="flex items-center gap-2 mb-3">
                         <span className="text-lg font-bold text-oma-plum">
                           ${product.sale_price || product.price}
                         </span>
@@ -256,11 +257,16 @@ export default function CollectionPage() {
                       <div className="flex items-center justify-between">
                         <Badge
                           variant={product.in_stock ? "default" : "secondary"}
-                          className="text-xs"
+                          className={cn(
+                            "text-xs",
+                            product.in_stock
+                              ? "bg-green-600 text-white"
+                              : "bg-gray-400 text-white"
+                          )}
                         >
                           {product.in_stock ? "In Stock" : "Out of Stock"}
                         </Badge>
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
                           {product.category}
                         </span>
                       </div>
@@ -274,14 +280,14 @@ export default function CollectionPage() {
 
         {/* You May Also Like Section */}
         {recommendedProducts.length > 0 && (
-          <div className="border-t pt-16">
+          <div className="border-t border-gray-200 pt-16">
             <div className="flex items-center gap-3 mb-8">
               <Heart className="h-6 w-6 text-oma-plum" />
               <h2 className="text-2xl font-canela text-gray-900">
                 You May Also Like
               </h2>
               {user && (
-                <span className="text-sm text-oma-cocoa/60 ml-2">
+                <span className="text-sm text-gray-500 ml-2">
                   Based on your favorites
                 </span>
               )}
@@ -293,8 +299,8 @@ export default function CollectionPage() {
                   href={`/product/${product.id}`}
                   className="group block"
                 >
-                  <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 border border-gray-100 hover:border-oma-plum/20 hover:shadow-lg">
-                    <div className="aspect-square relative overflow-hidden">
+                  <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 border border-gray-200 hover:border-oma-plum/30">
+                    <div className="aspect-square relative overflow-hidden bg-gray-100">
                       <AuthImage
                         src={product.image}
                         alt={product.title}
@@ -321,10 +327,10 @@ export default function CollectionPage() {
                       )}
                     </div>
                     <div className="p-4">
-                      <h3 className="font-semibold text-gray-900 group-hover:text-oma-plum transition-colors mb-1">
+                      <h3 className="font-semibold text-gray-900 group-hover:text-oma-plum transition-colors mb-2">
                         {product.title}
                       </h3>
-                      <div className="flex items-center gap-2 mb-2">
+                      <div className="flex items-center gap-2 mb-3">
                         <span className="text-lg font-bold text-oma-plum">
                           ${product.sale_price || product.price}
                         </span>
@@ -337,11 +343,16 @@ export default function CollectionPage() {
                       <div className="flex items-center justify-between">
                         <Badge
                           variant={product.in_stock ? "default" : "secondary"}
-                          className="text-xs"
+                          className={cn(
+                            "text-xs",
+                            product.in_stock
+                              ? "bg-green-600 text-white"
+                              : "bg-gray-400 text-white"
+                          )}
                         >
                           {product.in_stock ? "In Stock" : "Out of Stock"}
                         </Badge>
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
                           {product.category}
                         </span>
                       </div>
