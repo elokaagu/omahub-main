@@ -251,10 +251,10 @@ export default function EditProductPage() {
 
   if (isLoadingProduct) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-oma-beige/30 to-white">
+      <div className="min-h-screen bg-white">
         <div className="max-w-4xl mx-auto px-6 py-24">
           <div className="flex justify-center items-center h-64">
-            <div className="animate-spin h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full"></div>
+            <div className="animate-spin h-8 w-8 border-4 border-gray-400 border-t-transparent rounded-full"></div>
           </div>
         </div>
       </div>
@@ -263,13 +263,13 @@ export default function EditProductPage() {
 
   if (!product) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-oma-beige/30 to-white">
+      <div className="min-h-screen bg-white">
         <div className="max-w-4xl mx-auto px-6 py-24">
           <div className="text-center">
-            <h1 className="text-2xl font-canela text-oma-cocoa mb-4">
+            <h1 className="text-2xl font-canela text-black mb-4">
               Product Not Found
             </h1>
-            <Button asChild className="bg-oma-plum hover:bg-oma-plum/90">
+            <Button asChild className="bg-black hover:bg-gray-800">
               <NavigationLink href="/studio/products">
                 Back to Products
               </NavigationLink>
@@ -281,7 +281,7 @@ export default function EditProductPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-oma-beige/30 to-white">
+    <div className="min-h-screen bg-white">
       <div className="max-w-4xl mx-auto px-6 py-24">
         {/* Header */}
         <div className="flex items-center gap-4 mb-12">
@@ -289,33 +289,30 @@ export default function EditProductPage() {
             variant="outline"
             size="icon"
             asChild
-            className="border-oma-cocoa/20 hover:bg-oma-beige/30"
+            className="border-gray-300 hover:bg-gray-100"
           >
-            <NavigationLink href="/studio/products">
-              <ArrowLeft className="h-4 w-4" />
-            </NavigationLink>
+            <NavigationLink href="/studio/products">←</NavigationLink>
           </Button>
           <div>
-            <h1 className="text-4xl font-canela text-oma-cocoa mb-2">
+            <h1 className="text-4xl font-canela text-black mb-2">
               Edit Product
             </h1>
-            <p className="text-oma-cocoa/70">Update product information</p>
+            <p className="text-gray-600">Update product information</p>
           </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Basic Information */}
-          <Card className="border border-oma-gold/20 bg-white shadow-sm">
+          <Card className="border border-gray-200 bg-white shadow-sm">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-oma-cocoa font-canela">
-                <Package className="h-5 w-5" />
+              <CardTitle className="text-black font-canela">
                 Basic Information
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="title" className="text-oma-cocoa">
+                  <Label htmlFor="title" className="text-black">
                     Product Title *
                   </Label>
                   <Input
@@ -323,12 +320,12 @@ export default function EditProductPage() {
                     value={formData.title}
                     onChange={(e) => handleInputChange("title", e.target.value)}
                     placeholder="Enter product title"
-                    className="border-oma-cocoa/20 focus:border-oma-plum"
+                    className="border-gray-300 focus:border-gray-500"
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="category" className="text-oma-cocoa">
+                  <Label htmlFor="category" className="text-black">
                     Category
                   </Label>
                   <Input
@@ -338,13 +335,13 @@ export default function EditProductPage() {
                       handleInputChange("category", e.target.value)
                     }
                     placeholder="e.g., Dresses, Accessories"
-                    className="border-oma-cocoa/20 focus:border-oma-plum"
+                    className="border-gray-300 focus:border-gray-500"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="description" className="text-oma-cocoa">
+                <Label htmlFor="description" className="text-black">
                   Description *
                 </Label>
                 <Textarea
@@ -355,13 +352,13 @@ export default function EditProductPage() {
                   }
                   placeholder="Describe the product..."
                   rows={4}
-                  className="border-oma-cocoa/20 focus:border-oma-plum"
+                  className="border-gray-300 focus:border-gray-500"
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="image" className="text-oma-cocoa">
+                <Label htmlFor="image" className="text-black">
                   Product Image URL
                 </Label>
                 <Input
@@ -369,14 +366,14 @@ export default function EditProductPage() {
                   value={formData.image}
                   onChange={(e) => handleInputChange("image", e.target.value)}
                   placeholder="https://example.com/image.jpg"
-                  className="border-oma-cocoa/20 focus:border-oma-plum"
+                  className="border-gray-300 focus:border-gray-500"
                 />
                 {formData.image && (
                   <div className="mt-2">
                     <img
                       src={formData.image}
                       alt="Product preview"
-                      className="w-32 h-32 object-cover rounded-lg border border-oma-gold/20"
+                      className="w-32 h-32 object-cover rounded-lg border border-gray-200"
                       onError={(e) => {
                         e.currentTarget.src =
                           "https://via.placeholder.com/128x128?text=Invalid+Image";
@@ -389,16 +386,16 @@ export default function EditProductPage() {
           </Card>
 
           {/* Brand and Collection */}
-          <Card className="border border-oma-gold/20 bg-white shadow-sm">
+          <Card className="border border-gray-200 bg-white shadow-sm">
             <CardHeader>
-              <CardTitle className="text-oma-cocoa font-canela">
+              <CardTitle className="text-black font-canela">
                 Brand & Collection
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="brand" className="text-oma-cocoa">
+                  <Label htmlFor="brand" className="text-black">
                     Brand *
                   </Label>
                   <Select
@@ -407,7 +404,7 @@ export default function EditProductPage() {
                       handleInputChange("brand_id", value)
                     }
                   >
-                    <SelectTrigger className="border-oma-cocoa/20 focus:border-oma-plum">
+                    <SelectTrigger className="border-gray-300 focus:border-gray-500">
                       <SelectValue placeholder="Select a brand" />
                     </SelectTrigger>
                     <SelectContent>
@@ -418,7 +415,7 @@ export default function EditProductPage() {
                             {brand.is_verified && (
                               <Badge
                                 variant="secondary"
-                                className="text-xs bg-oma-plum text-white"
+                                className="text-xs bg-blue-500 text-white"
                               >
                                 Verified
                               </Badge>
@@ -431,7 +428,7 @@ export default function EditProductPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="collection" className="text-oma-cocoa">
+                  <Label htmlFor="collection" className="text-black">
                     Collection (Optional)
                   </Label>
                   <Select
@@ -440,7 +437,7 @@ export default function EditProductPage() {
                       handleInputChange("collection_id", value)
                     }
                   >
-                    <SelectTrigger className="border-oma-cocoa/20 focus:border-oma-plum">
+                    <SelectTrigger className="border-gray-300 focus:border-gray-500">
                       <SelectValue placeholder="Select a collection" />
                     </SelectTrigger>
                     <SelectContent>
@@ -458,17 +455,14 @@ export default function EditProductPage() {
           </Card>
 
           {/* Pricing */}
-          <Card className="border border-oma-gold/20 bg-white shadow-sm">
+          <Card className="border border-gray-200 bg-white shadow-sm">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-oma-cocoa font-canela">
-                <DollarSign className="h-5 w-5" />
-                Pricing
-              </CardTitle>
+              <CardTitle className="text-black font-canela">Pricing</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="price" className="text-oma-cocoa">
+                  <Label htmlFor="price" className="text-black">
                     Regular Price *
                   </Label>
                   <Input
@@ -478,12 +472,12 @@ export default function EditProductPage() {
                     value={formData.price}
                     onChange={(e) => handleInputChange("price", e.target.value)}
                     placeholder="0.00"
-                    className="border-oma-cocoa/20 focus:border-oma-plum"
+                    className="border-gray-300 focus:border-gray-500"
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="sale_price" className="text-oma-cocoa">
+                  <Label htmlFor="sale_price" className="text-black">
                     Sale Price (Optional)
                   </Label>
                   <Input
@@ -495,7 +489,7 @@ export default function EditProductPage() {
                       handleInputChange("sale_price", e.target.value)
                     }
                     placeholder="0.00"
-                    className="border-oma-cocoa/20 focus:border-oma-plum"
+                    className="border-gray-300 focus:border-gray-500"
                   />
                 </div>
               </div>
@@ -503,20 +497,20 @@ export default function EditProductPage() {
           </Card>
 
           {/* Product Details */}
-          <Card className="border border-oma-gold/20 bg-white shadow-sm">
+          <Card className="border border-gray-200 bg-white shadow-sm">
             <CardHeader>
-              <CardTitle className="text-oma-cocoa font-canela">
+              <CardTitle className="text-black font-canela">
                 Product Details
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Available Sizes */}
               <div className="space-y-2">
-                <Label className="text-oma-cocoa">Available Sizes</Label>
+                <Label className="text-black">Available Sizes</Label>
                 <div className="flex gap-2">
                   <Input
                     placeholder="Add size (e.g., S, M, L, XL)"
-                    className="border-oma-cocoa/20 focus:border-oma-plum"
+                    className="border-gray-300 focus:border-gray-500"
                     onKeyPress={(e) => {
                       if (e.key === "Enter") {
                         e.preventDefault();
@@ -530,7 +524,7 @@ export default function EditProductPage() {
                     type="button"
                     variant="outline"
                     size="icon"
-                    className="border-oma-cocoa/20 hover:bg-oma-beige/30"
+                    className="border-gray-300 hover:bg-gray-100"
                     onClick={(e) => {
                       const input = (e.target as HTMLElement)
                         .previousElementSibling as HTMLInputElement;
@@ -540,7 +534,7 @@ export default function EditProductPage() {
                       }
                     }}
                   >
-                    <Plus className="h-4 w-4" />
+                    +
                   </Button>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -548,7 +542,7 @@ export default function EditProductPage() {
                     <Badge
                       key={index}
                       variant="secondary"
-                      className="flex items-center gap-1 bg-oma-beige text-oma-plum"
+                      className="flex items-center gap-1 bg-gray-100 text-black"
                     >
                       {size}
                       <button
@@ -556,7 +550,7 @@ export default function EditProductPage() {
                         onClick={() => removeArrayItem("sizes", index)}
                         className="ml-1 hover:text-red-600"
                       >
-                        <Trash2 className="h-3 w-3" />
+                        ×
                       </button>
                     </Badge>
                   ))}
@@ -565,11 +559,11 @@ export default function EditProductPage() {
 
               {/* Available Colors */}
               <div className="space-y-2">
-                <Label className="text-oma-cocoa">Available Colors</Label>
+                <Label className="text-black">Available Colors</Label>
                 <div className="flex gap-2">
                   <Input
                     placeholder="Add color (e.g., Red, Blue, Black)"
-                    className="border-oma-cocoa/20 focus:border-oma-plum"
+                    className="border-gray-300 focus:border-gray-500"
                     onKeyPress={(e) => {
                       if (e.key === "Enter") {
                         e.preventDefault();
@@ -583,7 +577,7 @@ export default function EditProductPage() {
                     type="button"
                     variant="outline"
                     size="icon"
-                    className="border-oma-cocoa/20 hover:bg-oma-beige/30"
+                    className="border-gray-300 hover:bg-gray-100"
                     onClick={(e) => {
                       const input = (e.target as HTMLElement)
                         .previousElementSibling as HTMLInputElement;
@@ -593,7 +587,7 @@ export default function EditProductPage() {
                       }
                     }}
                   >
-                    <Plus className="h-4 w-4" />
+                    +
                   </Button>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -601,7 +595,7 @@ export default function EditProductPage() {
                     <Badge
                       key={index}
                       variant="secondary"
-                      className="flex items-center gap-1 bg-oma-beige text-oma-plum"
+                      className="flex items-center gap-1 bg-gray-100 text-black"
                     >
                       {color}
                       <button
@@ -609,7 +603,7 @@ export default function EditProductPage() {
                         onClick={() => removeArrayItem("colors", index)}
                         className="ml-1 hover:text-red-600"
                       >
-                        <Trash2 className="h-3 w-3" />
+                        ×
                       </button>
                     </Badge>
                   ))}
@@ -618,11 +612,11 @@ export default function EditProductPage() {
 
               {/* Materials */}
               <div className="space-y-2">
-                <Label className="text-oma-cocoa">Materials</Label>
+                <Label className="text-black">Materials</Label>
                 <div className="flex gap-2">
                   <Input
                     placeholder="Add material (e.g., Cotton, Silk, Polyester)"
-                    className="border-oma-cocoa/20 focus:border-oma-plum"
+                    className="border-gray-300 focus:border-gray-500"
                     onKeyPress={(e) => {
                       if (e.key === "Enter") {
                         e.preventDefault();
@@ -636,7 +630,7 @@ export default function EditProductPage() {
                     type="button"
                     variant="outline"
                     size="icon"
-                    className="border-oma-cocoa/20 hover:bg-oma-beige/30"
+                    className="border-gray-300 hover:bg-gray-100"
                     onClick={(e) => {
                       const input = (e.target as HTMLElement)
                         .previousElementSibling as HTMLInputElement;
@@ -646,7 +640,7 @@ export default function EditProductPage() {
                       }
                     }}
                   >
-                    <Plus className="h-4 w-4" />
+                    +
                   </Button>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -654,7 +648,7 @@ export default function EditProductPage() {
                     <Badge
                       key={index}
                       variant="secondary"
-                      className="flex items-center gap-1 bg-oma-beige text-oma-plum"
+                      className="flex items-center gap-1 bg-gray-100 text-black"
                     >
                       {material}
                       <button
@@ -662,7 +656,7 @@ export default function EditProductPage() {
                         onClick={() => removeArrayItem("materials", index)}
                         className="ml-1 hover:text-red-600"
                       >
-                        <Trash2 className="h-3 w-3" />
+                        ×
                       </button>
                     </Badge>
                   ))}
@@ -671,7 +665,7 @@ export default function EditProductPage() {
 
               {/* Care Instructions */}
               <div className="space-y-2">
-                <Label htmlFor="care_instructions" className="text-oma-cocoa">
+                <Label htmlFor="care_instructions" className="text-black">
                   Care Instructions
                 </Label>
                 <Textarea
@@ -682,13 +676,13 @@ export default function EditProductPage() {
                   }
                   placeholder="e.g., Hand wash only, Dry clean recommended"
                   rows={3}
-                  className="border-oma-cocoa/20 focus:border-oma-plum"
+                  className="border-gray-300 focus:border-gray-500"
                 />
               </div>
 
               {/* Lead Time */}
               <div className="space-y-2">
-                <Label htmlFor="lead_time" className="text-oma-cocoa">
+                <Label htmlFor="lead_time" className="text-black">
                   Lead Time (for custom items)
                 </Label>
                 <Input
@@ -698,24 +692,22 @@ export default function EditProductPage() {
                     handleInputChange("lead_time", e.target.value)
                   }
                   placeholder="e.g., 2-3 weeks"
-                  className="border-oma-cocoa/20 focus:border-oma-plum"
+                  className="border-gray-300 focus:border-gray-500"
                 />
               </div>
             </CardContent>
           </Card>
 
           {/* Settings */}
-          <Card className="border border-oma-gold/20 bg-white shadow-sm">
+          <Card className="border border-gray-200 bg-white shadow-sm">
             <CardHeader>
-              <CardTitle className="text-oma-cocoa font-canela">
-                Settings
-              </CardTitle>
+              <CardTitle className="text-black font-canela">Settings</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label className="text-oma-cocoa">In Stock</Label>
-                  <p className="text-sm text-oma-cocoa/70">
+                  <Label className="text-black">In Stock</Label>
+                  <p className="text-sm text-gray-600">
                     Whether this product is currently available
                   </p>
                 </div>
@@ -729,8 +721,8 @@ export default function EditProductPage() {
 
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label className="text-oma-cocoa">Custom/Tailored Item</Label>
-                  <p className="text-sm text-oma-cocoa/70">
+                  <Label className="text-black">Custom/Tailored Item</Label>
+                  <p className="text-sm text-gray-600">
                     Mark if this is a custom or made-to-order item
                   </p>
                 </div>
@@ -750,14 +742,14 @@ export default function EditProductPage() {
               type="button"
               variant="outline"
               onClick={() => router.push("/studio/products")}
-              className="border-oma-cocoa/20 text-oma-cocoa hover:bg-oma-beige/30"
+              className="border-gray-300 text-black hover:bg-gray-100"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={isLoading}
-              className="bg-oma-plum hover:bg-oma-plum/90 text-white"
+              className="bg-black hover:bg-gray-800 text-white"
             >
               {isLoading ? (
                 <>
@@ -765,10 +757,7 @@ export default function EditProductPage() {
                   Updating Product...
                 </>
               ) : (
-                <>
-                  <Save className="h-4 w-4 mr-2" />
-                  Update Product
-                </>
+                <>Update Product</>
               )}
             </Button>
           </div>
