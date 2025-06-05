@@ -230,7 +230,7 @@ export default function CollectionPage() {
                         <div className="absolute top-2 left-2">
                           <Badge
                             variant="destructive"
-                            className="bg-red-500 text-white"
+                            className="bg-oma-plum text-white"
                           >
                             Sale
                           </Badge>
@@ -240,7 +240,7 @@ export default function CollectionPage() {
                         <div className="absolute top-2 right-2">
                           <Badge
                             variant="secondary"
-                            className="bg-blue-500 text-white"
+                            className="bg-oma-gold text-oma-cocoa"
                           >
                             Custom
                           </Badge>
@@ -267,13 +267,13 @@ export default function CollectionPage() {
                           className={cn(
                             "text-xs",
                             product.in_stock
-                              ? "bg-green-500 text-white"
-                              : "bg-gray-400 text-white"
+                              ? "bg-oma-gold text-oma-cocoa"
+                              : "bg-oma-cocoa/40 text-white"
                           )}
                         >
                           {product.in_stock ? "In Stock" : "Out of Stock"}
                         </Badge>
-                        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                        <span className="text-xs text-oma-cocoa/60 bg-oma-beige/50 px-2 py-1 rounded">
                           {product.category}
                         </span>
                       </div>
@@ -319,7 +319,7 @@ export default function CollectionPage() {
                         <div className="absolute top-2 left-2">
                           <Badge
                             variant="destructive"
-                            className="bg-red-500 text-white"
+                            className="bg-oma-plum text-white"
                           >
                             Sale
                           </Badge>
@@ -329,7 +329,7 @@ export default function CollectionPage() {
                         <div className="absolute top-2 right-2">
                           <Badge
                             variant="secondary"
-                            className="bg-blue-500 text-white"
+                            className="bg-oma-gold text-oma-cocoa"
                           >
                             Custom
                           </Badge>
@@ -356,13 +356,13 @@ export default function CollectionPage() {
                           className={cn(
                             "text-xs",
                             product.in_stock
-                              ? "bg-green-500 text-white"
-                              : "bg-gray-400 text-white"
+                              ? "bg-oma-gold text-oma-cocoa"
+                              : "bg-oma-cocoa/40 text-white"
                           )}
                         >
                           {product.in_stock ? "In Stock" : "Out of Stock"}
                         </Badge>
-                        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                        <span className="text-xs text-oma-cocoa/60 bg-oma-beige/50 px-2 py-1 rounded">
                           {product.category}
                         </span>
                       </div>
