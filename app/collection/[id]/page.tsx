@@ -89,31 +89,35 @@ export default function CollectionPage() {
 
   if (error) {
     return (
-      <div className="container mx-auto px-6 py-24 text-center">
-        <h1 className="text-2xl font-bold text-red-600 mb-4">Error</h1>
-        <p className="text-gray-600">{error}</p>
+      <div className="min-h-screen bg-gradient-to-b from-oma-beige/30 to-white">
+        <div className="max-w-7xl mx-auto px-6 py-24 text-center">
+          <h1 className="text-2xl font-canela text-oma-cocoa mb-4">Error</h1>
+          <p className="text-oma-cocoa/70">{error}</p>
+        </div>
       </div>
     );
   }
 
   if (!collection) {
     return (
-      <div className="container mx-auto px-6 py-24 text-center">
-        <h1 className="text-2xl font-bold text-gray-900 mb-4">
-          Collection Not Found
-        </h1>
-        <p className="text-gray-600">
-          The collection you're looking for doesn't exist.
-        </p>
+      <div className="min-h-screen bg-gradient-to-b from-oma-beige/30 to-white">
+        <div className="max-w-7xl mx-auto px-6 py-24 text-center">
+          <h1 className="text-2xl font-canela text-oma-cocoa mb-4">
+            Collection Not Found
+          </h1>
+          <p className="text-oma-cocoa/70">
+            The collection you're looking for doesn't exist.
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="container mx-auto px-4 sm:px-6 py-8">
+    <div className="min-h-screen bg-gradient-to-b from-oma-beige/30 to-white">
+      <div className="max-w-7xl mx-auto px-6 py-24">
         {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-sm text-gray-600 mb-8">
+        <div className="flex items-center gap-2 text-sm text-oma-cocoa/70 mb-8">
           <NavigationLink href="/collections" className="hover:text-oma-plum">
             Collections
           </NavigationLink>
@@ -125,7 +129,7 @@ export default function CollectionPage() {
             {collection.brand.name}
           </NavigationLink>
           <span>/</span>
-          <span className="text-gray-900">{collection.title}</span>
+          <span className="text-oma-cocoa">{collection.title}</span>
         </div>
 
         {/* Collection Header */}
@@ -133,7 +137,7 @@ export default function CollectionPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             {/* Collection Image */}
             <div className="relative">
-              <div className="aspect-square rounded-lg overflow-hidden bg-gray-100">
+              <div className="aspect-square rounded-lg overflow-hidden bg-oma-beige/20 border border-oma-gold/10">
                 <AuthImage
                   src={collection.image}
                   alt={collection.title}
@@ -147,22 +151,22 @@ export default function CollectionPage() {
             {/* Collection Info */}
             <div className="space-y-6">
               <div>
-                <h1 className="text-3xl font-canela text-gray-900 mb-4">
+                <h1 className="text-3xl font-canela text-oma-cocoa mb-4">
                   {collection.title}
                 </h1>
-                <p className="text-lg text-gray-600 leading-relaxed">
+                <p className="text-lg text-oma-cocoa/80 leading-relaxed">
                   {collection.description}
                 </p>
               </div>
 
               {/* Brand Info */}
-              <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">
+              <div className="bg-white rounded-lg p-6 border border-oma-gold/20 shadow-sm">
+                <h3 className="text-lg font-semibold text-oma-cocoa mb-3">
                   About the Designer
                 </h3>
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <span className="font-medium text-gray-900">
+                    <span className="font-medium text-oma-cocoa">
                       {collection.brand.name}
                     </span>
                     {collection.brand.is_verified && (
@@ -174,11 +178,11 @@ export default function CollectionPage() {
                       </Badge>
                     )}
                   </div>
-                  <div className="flex items-center gap-2 text-gray-600">
+                  <div className="flex items-center gap-2 text-oma-cocoa/70">
                     <MapPin className="h-4 w-4" />
                     <span className="text-sm">{collection.brand.location}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-gray-600">
+                  <div className="flex items-center gap-2 text-oma-cocoa/70">
                     <Calendar className="h-4 w-4" />
                     <span className="text-sm">
                       Collection launched{" "}
@@ -195,13 +199,13 @@ export default function CollectionPage() {
 
         {/* Products Section */}
         <div className="mb-16">
-          <h2 className="text-2xl font-canela text-gray-900 mb-8">
+          <h2 className="text-2xl font-canela text-oma-cocoa mb-8">
             Products in This Collection
           </h2>
 
           {products.length === 0 ? (
-            <div className="text-center py-16 bg-gray-50 rounded-lg border border-gray-200">
-              <p className="text-lg text-gray-600">
+            <div className="text-center py-16 bg-white rounded-lg border border-oma-gold/20 shadow-sm">
+              <p className="text-lg text-oma-cocoa/70">
                 No products available in this collection yet.
               </p>
             </div>
@@ -213,8 +217,8 @@ export default function CollectionPage() {
                   href={`/product/${product.id}`}
                   className="group block"
                 >
-                  <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200 border border-gray-200 hover:border-oma-plum/30">
-                    <div className="aspect-square relative overflow-hidden bg-gray-100">
+                  <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 border border-oma-gold/10 hover:border-oma-plum/30">
+                    <div className="aspect-square relative overflow-hidden bg-oma-beige/20">
                       <AuthImage
                         src={product.image}
                         alt={product.title}
@@ -241,7 +245,7 @@ export default function CollectionPage() {
                       )}
                     </div>
                     <div className="p-4">
-                      <h3 className="font-semibold text-gray-900 group-hover:text-oma-plum transition-colors mb-2">
+                      <h3 className="font-semibold text-oma-cocoa group-hover:text-oma-plum transition-colors mb-2">
                         {product.title}
                       </h3>
                       <div className="flex items-center gap-2 mb-3">
@@ -249,7 +253,7 @@ export default function CollectionPage() {
                           ${product.sale_price || product.price}
                         </span>
                         {product.sale_price && (
-                          <span className="text-sm text-gray-500 line-through">
+                          <span className="text-sm text-oma-cocoa/60 line-through">
                             ${product.price}
                           </span>
                         )}
@@ -261,12 +265,12 @@ export default function CollectionPage() {
                             "text-xs",
                             product.in_stock
                               ? "bg-green-600 text-white"
-                              : "bg-gray-400 text-white"
+                              : "bg-oma-cocoa/40 text-white"
                           )}
                         >
                           {product.in_stock ? "In Stock" : "Out of Stock"}
                         </Badge>
-                        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                        <span className="text-xs text-oma-cocoa/60 bg-oma-beige/30 px-2 py-1 rounded">
                           {product.category}
                         </span>
                       </div>
@@ -280,14 +284,14 @@ export default function CollectionPage() {
 
         {/* You May Also Like Section */}
         {recommendedProducts.length > 0 && (
-          <div className="border-t border-gray-200 pt-16">
+          <div className="border-t border-oma-gold/20 pt-16">
             <div className="flex items-center gap-3 mb-8">
               <Heart className="h-6 w-6 text-oma-plum" />
-              <h2 className="text-2xl font-canela text-gray-900">
+              <h2 className="text-2xl font-canela text-oma-cocoa">
                 You May Also Like
               </h2>
               {user && (
-                <span className="text-sm text-gray-500 ml-2">
+                <span className="text-sm text-oma-cocoa/60 ml-2">
                   Based on your favorites
                 </span>
               )}
@@ -299,8 +303,8 @@ export default function CollectionPage() {
                   href={`/product/${product.id}`}
                   className="group block"
                 >
-                  <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 border border-gray-200 hover:border-oma-plum/30">
-                    <div className="aspect-square relative overflow-hidden bg-gray-100">
+                  <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 border border-oma-gold/10 hover:border-oma-plum/30">
+                    <div className="aspect-square relative overflow-hidden bg-oma-beige/20">
                       <AuthImage
                         src={product.image}
                         alt={product.title}
@@ -327,7 +331,7 @@ export default function CollectionPage() {
                       )}
                     </div>
                     <div className="p-4">
-                      <h3 className="font-semibold text-gray-900 group-hover:text-oma-plum transition-colors mb-2">
+                      <h3 className="font-semibold text-oma-cocoa group-hover:text-oma-plum transition-colors mb-2">
                         {product.title}
                       </h3>
                       <div className="flex items-center gap-2 mb-3">
@@ -335,7 +339,7 @@ export default function CollectionPage() {
                           ${product.sale_price || product.price}
                         </span>
                         {product.sale_price && (
-                          <span className="text-sm text-gray-500 line-through">
+                          <span className="text-sm text-oma-cocoa/60 line-through">
                             ${product.price}
                           </span>
                         )}
@@ -347,12 +351,12 @@ export default function CollectionPage() {
                             "text-xs",
                             product.in_stock
                               ? "bg-green-600 text-white"
-                              : "bg-gray-400 text-white"
+                              : "bg-oma-cocoa/40 text-white"
                           )}
                         >
                           {product.in_stock ? "In Stock" : "Out of Stock"}
                         </Badge>
-                        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                        <span className="text-xs text-oma-cocoa/60 bg-oma-beige/30 px-2 py-1 rounded">
                           {product.category}
                         </span>
                       </div>
