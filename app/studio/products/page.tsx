@@ -194,9 +194,7 @@ export default function ProductsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-12">
         <div>
-          <h1 className="text-3xl font-canela text-gray-900 mb-2">
-            Products Management
-          </h1>
+          <h1 className="text-3xl font-canela text-gray-900 mb-2">Products</h1>
           <p className="text-gray-600">
             Manage all products across the platform. Create, edit, and organize
             products from all brands and collections.
