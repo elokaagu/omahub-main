@@ -193,14 +193,16 @@ export default function ProductsPage() {
     <div className="min-h-screen bg-gradient-to-b from-oma-beige/30 to-white">
       <div className="max-w-7xl mx-auto px-6 py-24">
         {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-canela text-oma-cocoa mb-4">
-            Products Management
-          </h1>
-          <p className="text-lg text-oma-cocoa/80 max-w-2xl mx-auto mb-8">
-            Manage all products across the platform. Create, edit, and organize
-            products from all brands and collections.
-          </p>
+        <div className="flex items-center justify-between mb-12">
+          <div>
+            <h1 className="text-4xl font-canela text-oma-plum mb-2">
+              Products Management
+            </h1>
+            <p className="text-oma-cocoa/80">
+              Manage all products across the platform. Create, edit, and
+              organize products from all brands and collections.
+            </p>
+          </div>
           <Button asChild className="bg-oma-plum hover:bg-oma-plum/90">
             <NavigationLink href="/studio/products/create">
               <Plus className="h-4 w-4 mr-2" />
@@ -210,73 +212,80 @@ export default function ProductsPage() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
-          <Card className="border-l-4 border-l-oma-plum border-oma-beige/50">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-oma-cocoa/70">
-                    Total Products
-                  </p>
-                  <p className="text-2xl font-canela text-oma-plum">
-                    {products.length}
-                  </p>
-                </div>
-                <Package className="h-8 w-8 text-oma-plum" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+          <Card className="border-l-4 border-l-oma-plum border-oma-beige">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-oma-cocoa">
+                Total Products
+              </CardTitle>
+              <Package className="h-4 w-4 text-oma-plum" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-canela text-oma-plum">
+                {products.length}
               </div>
+              <p className="text-xs text-oma-cocoa mt-2">
+                Products across all brands
+              </p>
             </CardContent>
           </Card>
-          <Card className="border-l-4 border-l-green-500 border-oma-beige/50">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-oma-cocoa/70">
-                    In Stock
-                  </p>
-                  <p className="text-2xl font-canela text-green-600">
-                    {products.filter((p) => p.in_stock).length}
-                  </p>
-                </div>
-                <ShoppingBag className="h-8 w-8 text-green-600" />
+
+          <Card className="border-l-4 border-l-green-500 border-oma-beige">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-oma-cocoa">
+                In Stock
+              </CardTitle>
+              <ShoppingBag className="h-4 w-4 text-green-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-canela text-oma-plum">
+                {products.filter((p) => p.in_stock).length}
               </div>
+              <p className="text-xs text-oma-cocoa mt-2">
+                Available for purchase
+              </p>
             </CardContent>
           </Card>
-          <Card className="border-l-4 border-l-red-500 border-oma-beige/50">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-oma-cocoa/70">
-                    Out of Stock
-                  </p>
-                  <p className="text-2xl font-canela text-red-600">
-                    {products.filter((p) => !p.in_stock).length}
-                  </p>
-                </div>
-                <Package className="h-8 w-8 text-red-600" />
+
+          <Card className="border-l-4 border-l-red-500 border-oma-beige">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-oma-cocoa">
+                Out of Stock
+              </CardTitle>
+              <Package className="h-4 w-4 text-red-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-canela text-oma-plum">
+                {products.filter((p) => !p.in_stock).length}
               </div>
+              <p className="text-xs text-oma-cocoa mt-2">
+                Currently unavailable
+              </p>
             </CardContent>
           </Card>
-          <Card className="border-l-4 border-l-oma-cocoa border-oma-beige/50">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-oma-cocoa/70">
-                    Avg. Price
-                  </p>
-                  <p className="text-2xl font-canela text-oma-cocoa">
-                    $
-                    {products.length > 0
-                      ? Math.round(
-                          products.reduce(
-                            (sum, p) => sum + (p.sale_price || p.price),
-                            0
-                          ) / products.length
-                        )
-                      : 0}
-                  </p>
-                </div>
-                <DollarSign className="h-8 w-8 text-oma-cocoa" />
+
+          <Card className="border-l-4 border-l-oma-cocoa border-oma-beige">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-oma-cocoa">
+                Avg. Price
+              </CardTitle>
+              <DollarSign className="h-4 w-4 text-oma-cocoa" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-canela text-oma-plum">
+                $
+                {products.length > 0
+                  ? Math.round(
+                      products.reduce(
+                        (sum, p) => sum + (p.sale_price || p.price),
+                        0
+                      ) / products.length
+                    )
+                  : 0}
               </div>
+              <p className="text-xs text-oma-cocoa mt-2">
+                Average product price
+              </p>
             </CardContent>
           </Card>
         </div>
