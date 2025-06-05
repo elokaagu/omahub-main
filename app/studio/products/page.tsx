@@ -588,8 +588,8 @@ export default function ProductsPage() {
                       className={cn(
                         "text-xs",
                         product.in_stock
-                          ? "bg-oma-cocoa text-white"
-                          : "bg-oma-cocoa/60 text-white"
+                          ? "bg-oma-gold text-oma-cocoa"
+                          : "bg-oma-cocoa/40 text-white"
                       )}
                     >
                       {product.in_stock ? "In Stock" : "Out of Stock"}
@@ -667,8 +667,8 @@ export default function ProductsPage() {
                             className={cn(
                               "text-xs",
                               product.in_stock
-                                ? "bg-oma-cocoa text-white"
-                                : "bg-oma-cocoa/60 text-white"
+                                ? "bg-oma-gold text-oma-cocoa"
+                                : "bg-oma-cocoa/40 text-white"
                             )}
                           >
                             {product.in_stock ? "In Stock" : "Out of Stock"}

@@ -201,7 +201,15 @@ export default function ProductPage() {
                     </span>
                   )}
                 </div>
-                <Badge variant={product.in_stock ? "default" : "secondary"}>
+                <Badge
+                  variant={product.in_stock ? "default" : "secondary"}
+                  className={cn(
+                    "text-xs",
+                    product.in_stock
+                      ? "bg-oma-gold text-oma-cocoa"
+                      : "bg-oma-cocoa/40 text-white"
+                  )}
+                >
                   {product.in_stock ? "In Stock" : "Out of Stock"}
                 </Badge>
               </div>

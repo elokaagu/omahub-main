@@ -228,7 +228,10 @@ export default function CollectionPage() {
                       />
                       {product.sale_price && (
                         <div className="absolute top-2 left-2">
-                          <Badge variant="destructive" className="bg-red-600">
+                          <Badge
+                            variant="destructive"
+                            className="bg-oma-plum text-white"
+                          >
                             Sale
                           </Badge>
                         </div>
@@ -264,7 +267,7 @@ export default function CollectionPage() {
                           className={cn(
                             "text-xs",
                             product.in_stock
-                              ? "bg-green-600 text-white"
+                              ? "bg-oma-gold text-oma-cocoa"
                               : "bg-oma-cocoa/40 text-white"
                           )}
                         >
@@ -314,7 +317,10 @@ export default function CollectionPage() {
                       />
                       {product.sale_price && (
                         <div className="absolute top-2 left-2">
-                          <Badge variant="destructive" className="bg-red-600">
+                          <Badge
+                            variant="destructive"
+                            className="bg-oma-plum text-white"
+                          >
                             Sale
                           </Badge>
                         </div>
@@ -350,7 +356,7 @@ export default function CollectionPage() {
                           className={cn(
                             "text-xs",
                             product.in_stock
-                              ? "bg-green-600 text-white"
+                              ? "bg-oma-gold text-oma-cocoa"
                               : "bg-oma-cocoa/40 text-white"
                           )}
                         >
