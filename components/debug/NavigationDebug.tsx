@@ -14,6 +14,7 @@ export function NavigationDebug() {
   const [navigationStartTime, setNavigationStartTime] = useState<number | null>(
     null
   );
+  const [errorCount, setErrorCount] = useState(0);
 
   useEffect(() => {
     setNavigationHistory((prev) => [...prev, pathname].slice(-5)); // Keep last 5 paths
@@ -27,6 +28,40 @@ export function NavigationDebug() {
     }
   }, [isNavigating, navigationStartTime]);
 
+  // Monitor for errors
+  useEffect(() => {
+    const handleError = (event: ErrorEvent) => {
+      if (
+        event.message.includes("navigation") ||
+        event.message.includes("router")
+      ) {
+        setErrorCount((prev) => prev + 1);
+        console.error("Navigation-related error detected:", event.error);
+      }
+    };
+
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      if (
+        event.reason?.message?.includes("navigation") ||
+        event.reason?.message?.includes("router")
+      ) {
+        setErrorCount((prev) => prev + 1);
+        console.error("Navigation-related promise rejection:", event.reason);
+      }
+    };
+
+    window.addEventListener("error", handleError);
+    window.addEventListener("unhandledrejection", handleUnhandledRejection);
+
+    return () => {
+      window.removeEventListener("error", handleError);
+      window.removeEventListener(
+        "unhandledrejection",
+        handleUnhandledRejection
+      );
+    };
+  }, []);
+
   // Only show in development
   if (process.env.NODE_ENV !== "development") {
     return null;
@@ -35,15 +70,22 @@ export function NavigationDebug() {
   const navigationDuration = navigationStartTime
     ? Date.now() - navigationStartTime
     : 0;
-  const isStuck = isNavigating && navigationDuration > 2000; // Consider stuck after 2 seconds
+  const isStuck = isNavigating && navigationDuration > 2000;
+  const isVeryStuck = isNavigating && navigationDuration > 5000;
 
   return (
     <div
-      className={`fixed bottom-4 right-4 bg-black text-white p-4 rounded-lg text-xs max-w-sm z-[9999] opacity-90 ${isStuck ? "border-2 border-red-500" : ""}`}
+      className={`fixed bottom-4 right-4 bg-black text-white p-4 rounded-lg text-xs max-w-sm z-[9999] opacity-90 ${
+        isVeryStuck
+          ? "border-2 border-red-500 animate-pulse"
+          : isStuck
+            ? "border-2 border-yellow-500"
+            : ""
+      }`}
     >
       <div className="font-bold mb-2 flex items-center justify-between">
         Navigation Debug
-        {isStuck && (
+        {(isStuck || errorCount > 0) && (
           <button
             onClick={forceReset}
             className="bg-red-600 hover:bg-red-700 px-2 py-1 rounded text-xs ml-2"
@@ -53,21 +95,38 @@ export function NavigationDebug() {
           </button>
         )}
       </div>
+
       <div>Current Path: {pathname}</div>
       <div>User ID: {user?.id || "None"}</div>
-      <div>User Email: {user?.email || "None"}</div>
       <div>User Role: {user?.role || "None"}</div>
       <div>Auth Loading: {loading ? "Yes" : "No"}</div>
+
       <div className={`${isNavigating ? "text-yellow-300" : "text-green-300"}`}>
         Navigation: {isNavigating ? "Loading" : "Idle"}
       </div>
+
       {isNavigating && navigationDuration > 0 && (
-        <div className={`${isStuck ? "text-red-300" : "text-yellow-300"}`}>
+        <div
+          className={`${
+            isVeryStuck
+              ? "text-red-300 font-bold"
+              : isStuck
+                ? "text-orange-300"
+                : "text-yellow-300"
+          }`}
+        >
           Duration: {Math.round(navigationDuration / 100) / 10}s
-          {isStuck && " (STUCK!)"}
+          {isVeryStuck && " (VERY STUCK!)"}
+          {isStuck && !isVeryStuck && " (STUCK!)"}
         </div>
       )}
+
+      {errorCount > 0 && (
+        <div className="text-red-300">Navigation Errors: {errorCount}</div>
+      )}
+
       <div>Is Studio: {pathname?.startsWith("/studio") ? "Yes" : "No"}</div>
+
       <div className="mt-2">
         <div className="font-bold">Recent Paths:</div>
         {navigationHistory.map((path, index) => (
@@ -76,7 +135,8 @@ export function NavigationDebug() {
           </div>
         ))}
       </div>
-      <div className="flex gap-1 mt-2">
+
+      <div className="flex gap-1 mt-2 flex-wrap">
         <button
           onClick={() => {
             console.log("🔍 Navigation Debug Info:", {
@@ -86,15 +146,18 @@ export function NavigationDebug() {
               isNavigating,
               navigationDuration,
               isStuck,
+              isVeryStuck,
               navigationHistory,
+              errorCount,
               userAgent: navigator.userAgent,
-              cookies: document.cookie,
+              timestamp: new Date().toISOString(),
             });
           }}
           className="bg-blue-600 px-2 py-1 rounded text-xs"
         >
           Log Debug
         </button>
+
         {isNavigating && (
           <button
             onClick={forceReset}
@@ -103,7 +166,35 @@ export function NavigationDebug() {
             Force Reset
           </button>
         )}
+
+        <button
+          onClick={() => {
+            setErrorCount(0);
+            setNavigationHistory([pathname]);
+          }}
+          className="bg-gray-600 hover:bg-gray-700 px-2 py-1 rounded text-xs"
+        >
+          Clear
+        </button>
+
+        {isVeryStuck && (
+          <button
+            onClick={() => {
+              console.log("🚨 Emergency page reload triggered");
+              window.location.reload();
+            }}
+            className="bg-red-600 hover:bg-red-700 px-2 py-1 rounded text-xs"
+          >
+            Reload Page
+          </button>
+        )}
       </div>
+
+      {isStuck && (
+        <div className="mt-2 text-xs text-yellow-200">
+          💡 Press Escape key to force reset navigation
+        </div>
+      )}
     </div>
   );
 }

@@ -21,10 +21,10 @@ interface RootLayoutClientProps {
 
 function LoadingSpinner() {
   return (
-    <div className="fixed inset-0 bg-white/80 backdrop-blur-sm z-50 flex items-center justify-center">
-      <div className="flex flex-col items-center gap-4">
-        <div className="animate-spin h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full"></div>
-        <p className="text-oma-cocoa text-sm">Loading...</p>
+    <div className="fixed inset-0 bg-white z-50 flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full mx-auto mb-4"></div>
+        <p className="text-oma-cocoa">Loading...</p>
       </div>
     </div>
   );
@@ -33,9 +33,23 @@ function LoadingSpinner() {
 function LayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { loading: authLoading } = useAuth();
-  const { isNavigating } = useNavigation();
+  const { isNavigating, forceReset } = useNavigation();
   const isHomePage = pathname === "/";
   const isStudioPage = pathname?.startsWith("/studio") || false;
+
+  // Emergency reset for stuck navigation states
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Allow users to force reset with Escape key
+      if (e.key === "Escape" && isNavigating) {
+        console.log("🔄 Emergency navigation reset triggered by Escape key");
+        forceReset();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isNavigating, forceReset]);
 
   // Show loading spinner for auth loading or navigation loading
   if (authLoading || isNavigating) {

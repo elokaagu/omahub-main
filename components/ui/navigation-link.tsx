@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { useNavigation } from "@/contexts/NavigationContext";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 interface NavigationLinkProps {
   href: string;
@@ -25,34 +25,30 @@ export function NavigationLink({
 }: NavigationLinkProps) {
   const { setIsNavigating, isNavigating } = useNavigation();
   const router = useRouter();
+  const currentPathname = usePathname();
 
   const handleClick = (e: React.MouseEvent) => {
     try {
       // Get current path more reliably
-      const currentPath = window.location.pathname + window.location.search;
+      const currentPath =
+        currentPathname +
+        (typeof window !== "undefined" ? window.location.search : "");
       const targetPath = href;
 
-      // Only show loading for different routes
-      if (targetPath !== currentPath && !isNavigating) {
-        console.log(
-          "🔗 NavigationLink: Starting navigation from",
-          currentPath,
-          "to",
-          targetPath
-        );
-        setIsNavigating(true);
-
-        // Set a backup timeout in case the navigation context doesn't reset
-        setTimeout(() => {
-          console.log("🔗 NavigationLink: Backup timeout triggered");
-          setIsNavigating(false);
-        }, 4000);
-      }
-
-      // Call custom onClick handler if provided
+      // Call custom onClick handler first
       if (onClick) {
         onClick();
       }
+
+      // Don't show loading for same route or if already navigating
+      if (targetPath === currentPath || isNavigating) {
+        return;
+      }
+
+      console.log(
+        `🔗 NavigationLink: Starting navigation from ${currentPath} to ${targetPath}`
+      );
+      setIsNavigating(true);
 
       // For studio navigation or complex routes, use programmatic navigation
       if (href.startsWith("/studio") && currentPath !== href) {
@@ -63,6 +59,16 @@ export function NavigationLink({
         } else {
           router.push(href);
         }
+        return;
+      }
+
+      // For external links, don't show loading
+      if (
+        href.startsWith("http") ||
+        href.startsWith("mailto:") ||
+        href.startsWith("tel:")
+      ) {
+        setIsNavigating(false);
         return;
       }
     } catch (error) {
