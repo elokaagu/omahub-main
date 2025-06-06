@@ -71,9 +71,9 @@ const fallbackCarouselItems: CarouselItem[] = [
   {
     id: 1,
     image: "/lovable-uploads/827fb8c0-e5da-4520-a979-6fc054eefc6e.png",
-    title: "Collections",
+    title: "Catalogues",
     subtitle: "Shop for an occasion, holiday, or ready to wear piece",
-    link: "/collections",
+    link: "/catalogues",
     heroTitle: "New Season",
     isEditorial: true,
     width: 1920,
@@ -154,7 +154,7 @@ export default function HomeContent() {
             !link.includes("?") &&
             !link.includes("#")
           ) {
-            // Only add "/" for simple paths like "directory" or "collections"
+            // Only add "/" for simple paths like "directory" or "catalogues"
             link = "/" + link;
           }
 
@@ -256,19 +256,19 @@ export default function HomeContent() {
             Browse by Category
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Collections Card */}
+            {/* Catalogues Card */}
             <div className="relative group overflow-hidden rounded-lg">
-              <Link href="/collections">
+              <Link href="/catalogues">
                 <div className="relative h-[400px]">
                   <Image
                     src="/lovable-uploads/827fb8c0-e5da-4520-a979-6fc054eefc6e.png"
-                    alt="Collections"
+                    alt="Catalogues"
                     fill
                     className="object-cover transition-transform duration-300 group-hover:scale-105"
                   />
                   <div className="absolute inset-0 bg-black/30 transition-opacity group-hover:bg-black/40" />
                   <div className="absolute bottom-6 left-6 text-white">
-                    <h3 className="text-2xl font-canela mb-2">Collections</h3>
+                    <h3 className="text-2xl font-canela mb-2">Catalogues</h3>
                     <p className="text-sm">
                       Shop for an occasion, holiday, or ready to wear piece
                     </p>
