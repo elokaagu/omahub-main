@@ -4,10 +4,10 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getAllBrands } from "@/lib/services/brandService";
 import {
-  getCollectionById,
-  updateCollection,
-} from "@/lib/services/collectionService";
-import { Brand, Collection } from "@/lib/supabase";
+  getCatalogueById,
+  updateCatalogue,
+} from "@/lib/services/catalogueService";
+import { Brand, Catalogue } from "@/lib/supabase";
 import {
   Card,
   CardContent,
@@ -27,11 +27,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { FileUpload } from "@/components/ui/file-upload";
-import { CollectionImageManager } from "@/components/studio/CollectionImageManager";
+import { CatalogueImageManager } from "@/components/studio/CatalogueImageManager";
 import { ArrowLeft, Save } from "lucide-react";
 import { toast } from "sonner";
 
-export default function EditCollectionPage({
+export default function EditCataloguePage({
   params,
 }: {
   params: { id: string };
@@ -42,7 +42,7 @@ export default function EditCollectionPage({
   const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [collection, setCollection] = useState<Collection | null>(null);
+  const [catalogue, setCatalogue] = useState<Catalogue | null>(null);
 
   // Form state
   const [title, setTitle] = useState("");
@@ -54,27 +54,27 @@ export default function EditCollectionPage({
     const fetchData = async () => {
       setLoading(true);
       try {
-        // Fetch the collection
-        const collectionData = await getCollectionById(id);
-        if (!collectionData) {
-          toast.error("Collection not found");
-          router.push("/studio/collections");
+        // Fetch the catalogue
+        const catalogueData = await getCatalogueById(id);
+        if (!catalogueData) {
+          toast.error("Catalogue not found");
+          router.push("/studio/catalogues");
           return;
         }
-        setCollection(collectionData);
+        setCatalogue(catalogueData);
 
         // Initialize form data
-        setTitle(collectionData.title);
-        setDescription(collectionData.description || "");
-        setBrandId(collectionData.brand_id);
-        setImage(collectionData.image);
+        setTitle(catalogueData.title);
+        setDescription(catalogueData.description || "");
+        setBrandId(catalogueData.brand_id);
+        setImage(catalogueData.image);
 
         // Fetch brands for dropdown
         const brandsData = await getAllBrands();
         setBrands(brandsData);
       } catch (error) {
         console.error("Error fetching data:", error);
-        toast.error("Failed to load collection data");
+        toast.error("Failed to load catalogue data");
       } finally {
         setLoading(false);
       }
@@ -88,7 +88,7 @@ export default function EditCollectionPage({
 
     // Validate form
     if (!title.trim()) {
-      toast.error("Please enter a collection title");
+      toast.error("Please enter a catalogue title");
       return;
     }
 
@@ -104,18 +104,18 @@ export default function EditCollectionPage({
 
     setSaving(true);
     try {
-      await updateCollection(id, {
+      await updateCatalogue(id, {
         title,
         description: description.trim() || undefined,
         brand_id: brandId,
         image,
       });
 
-      toast.success("Collection updated successfully");
-      router.push("/studio/collections");
+      toast.success("Catalogue updated successfully");
+      router.push("/studio/catalogues");
     } catch (error) {
-      console.error("Error updating collection:", error);
-      toast.error("Failed to update collection");
+      console.error("Error updating catalogue:", error);
+      toast.error("Failed to update catalogue");
     } finally {
       setSaving(false);
     }
@@ -140,32 +140,30 @@ export default function EditCollectionPage({
           variant="outline"
           size="icon"
           className="mr-4"
-          onClick={() => router.push("/studio/collections")}
+          onClick={() => router.push("/studio/catalogues")}
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <h1 className="text-3xl font-canela text-gray-900">Edit Collection</h1>
+        <h1 className="text-3xl font-canela text-gray-900">Edit Catalogue</h1>
       </div>
 
       <div className="space-y-8">
-        {/* Collection Details Card */}
+        {/* Catalogue Details Card */}
         <Card>
           <CardHeader>
-            <CardTitle>Collection Details</CardTitle>
-            <CardDescription>
-              Update your collection information
-            </CardDescription>
+            <CardTitle>Catalogue Details</CardTitle>
+            <CardDescription>Update your catalogue information</CardDescription>
           </CardHeader>
           <CardContent className="p-6">
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="title">Collection Title</Label>
+                  <Label htmlFor="title">Catalogue Title</Label>
                   <Input
                     id="title"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    placeholder="Enter collection title"
+                    placeholder="Enter catalogue title"
                   />
                 </div>
 
@@ -192,21 +190,21 @@ export default function EditCollectionPage({
                   id="description"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Enter a brief description of this collection..."
+                  placeholder="Enter a brief description of this catalogue..."
                   rows={3}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label>Main Collection Image</Label>
+                <Label>Main Catalogue Image</Label>
                 <p className="text-sm text-gray-600 mb-2">
-                  This image will be used as the main collection thumbnail
+                  This image will be used as the main catalogue thumbnail
                 </p>
                 <FileUpload
                   onUploadComplete={handleImageUpload}
                   defaultValue={image}
                   bucket="brand-assets"
-                  path="collections"
+                  path="catalogues"
                 />
               </div>
 
@@ -224,19 +222,19 @@ export default function EditCollectionPage({
           </CardContent>
         </Card>
 
-        {/* Collection Images Manager */}
+        {/* Catalogue Images Manager */}
         <Card>
           <CardHeader>
-            <CardTitle>Collection Gallery</CardTitle>
+            <CardTitle>Catalogue Gallery</CardTitle>
             <CardDescription>
-              Manage additional images for this collection. These images will be
-              displayed in the collection gallery.
+              Manage additional images for this catalogue. These images will be
+              displayed in the catalogue gallery.
             </CardDescription>
           </CardHeader>
           <CardContent className="p-6">
-            <CollectionImageManager
-              collectionId={id}
-              collectionTitle={title || "Collection"}
+            <CatalogueImageManager
+              catalogueId={id}
+              catalogueTitle={title || "Catalogue"}
             />
           </CardContent>
         </Card>

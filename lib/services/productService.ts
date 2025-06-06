@@ -67,10 +67,10 @@ export async function getProductsByBrand(brandId: string): Promise<Product[]> {
 }
 
 /**
- * Fetch products by collection ID
+ * Fetch products by catalogue ID
  */
-export async function getProductsByCollection(
-  collectionId: string
+export async function getProductsByCatalogue(
+  catalogueId: string
 ): Promise<Product[]> {
   if (!supabase) {
     throw new Error("Supabase client not available");
@@ -79,11 +79,11 @@ export async function getProductsByCollection(
   const { data, error } = await supabase
     .from("products")
     .select("*")
-    .eq("collection_id", collectionId)
+    .eq("catalogue_id", catalogueId)
     .order("created_at", { ascending: false });
 
   if (error) {
-    console.error("Error fetching products by collection:", error);
+    console.error("Error fetching products by catalogue:", error);
     throw error;
   }
 
@@ -91,12 +91,12 @@ export async function getProductsByCollection(
 }
 
 /**
- * Fetch products with brand and collection information
+ * Fetch products with brand and catalogue information
  */
 export async function getProductsWithDetails(): Promise<
   (Product & {
     brand: { name: string; id: string; location: string; is_verified: boolean };
-    collection?: { title: string; id: string };
+    catalogue?: { title: string; id: string };
   })[]
 > {
   if (!supabase) {
@@ -120,25 +120,23 @@ export async function getProductsWithDetails(): Promise<
       return [];
     }
 
-    // Get all collections to manually join
-    const { data: collections, error: collectionsError } = await supabase
-      .from("collections")
+    // Get all catalogues to manually join
+    const { data: catalogues, error: cataloguesError } = await supabase
+      .from("catalogues")
       .select("id, title");
 
-    if (collectionsError) {
-      console.error("Error fetching collections:", collectionsError);
-      // Continue without collections data
+    if (cataloguesError) {
+      console.error("Error fetching catalogues:", cataloguesError);
+      // Continue without catalogues data
     }
 
-    // Manually join collections data
+    // Manually join catalogues data
     const productsWithDetails = productsWithBrands.map((product) => {
-      const collection = collections?.find(
-        (c) => c.id === product.collection_id
-      );
+      const catalogue = catalogues?.find((c) => c.id === product.catalogue_id);
       return {
         ...product,
-        collection: collection
-          ? { id: collection.id, title: collection.title }
+        catalogue: catalogue
+          ? { id: catalogue.id, title: catalogue.title }
           : undefined,
       };
     });
@@ -169,7 +167,7 @@ export async function createProduct(
       sale_price: productData.sale_price || null,
       image: productData.image,
       brand_id: productData.brand_id,
-      collection_id: productData.collection_id || null,
+      catalogue_id: productData.catalogue_id || null,
       category: productData.category,
       in_stock: productData.in_stock ?? true,
       sizes: productData.sizes || [],
@@ -337,46 +335,53 @@ export async function getFeaturedProducts(
 }
 
 /**
- * Get related products from the same brand or collection, excluding the current product
+ * Get related products based on brand and catalogue
  */
 export async function getRelatedProducts(
   currentProductId: string,
   brandId?: string,
-  collectionId?: string,
+  catalogueId?: string,
   limit: number = 4
 ): Promise<Product[]> {
   if (!supabase) {
     throw new Error("Supabase client not available");
   }
 
-  let query = supabase
-    .from("products")
-    .select("*")
-    .neq("id", currentProductId) // Exclude current product
-    .limit(limit);
+  try {
+    let query = supabase
+      .from("products")
+      .select("*")
+      .neq("id", currentProductId)
+      .limit(limit);
 
-  // Prioritize products from the same collection, then same brand
-  if (collectionId) {
-    query = query.eq("collection_id", collectionId);
-  } else if (brandId) {
-    query = query.eq("brand_id", brandId);
-  }
+    // Prioritize products from the same catalogue, then same brand
+    if (catalogueId) {
+      query = query.eq("catalogue_id", catalogueId);
+    } else if (brandId) {
+      query = query.eq("brand_id", brandId);
+    }
 
-  const { data, error } = await query.order("created_at", { ascending: false });
+    const { data, error } = await query.order("created_at", {
+      ascending: false,
+    });
 
-  if (error) {
-    console.error("Error fetching related products:", error);
+    if (error) {
+      console.error("Error fetching related products:", error);
+      throw error;
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error("Error in getRelatedProducts:", error);
     throw error;
   }
-
-  return data || [];
 }
 
 /**
- * Get products from the same collection for collection page recommendations
+ * Get catalogue recommendations (products from same catalogue)
  */
-export async function getCollectionRecommendations(
-  collectionId: string,
+export async function getCatalogueRecommendations(
+  catalogueId: string,
   excludeProductId?: string,
   limit: number = 4
 ): Promise<Product[]> {
@@ -384,167 +389,128 @@ export async function getCollectionRecommendations(
     throw new Error("Supabase client not available");
   }
 
-  let query = supabase
-    .from("products")
-    .select("*")
-    .eq("collection_id", collectionId)
-    .limit(limit);
+  try {
+    let query = supabase
+      .from("products")
+      .select("*")
+      .eq("catalogue_id", catalogueId)
+      .limit(limit);
 
-  if (excludeProductId) {
-    query = query.neq("id", excludeProductId);
-  }
+    if (excludeProductId) {
+      query = query.neq("id", excludeProductId);
+    }
 
-  const { data, error } = await query.order("created_at", { ascending: false });
+    const { data, error } = await query.order("created_at", {
+      ascending: false,
+    });
 
-  if (error) {
-    console.error("Error fetching collection recommendations:", error);
+    if (error) {
+      console.error("Error fetching catalogue recommendations:", error);
+      throw error;
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error("Error in getCatalogueRecommendations:", error);
     throw error;
   }
-
-  return data || [];
 }
 
 /**
- * Get intelligent recommendations based on user favorites and collection context
- * Prioritizes products from user's favorite brands, then falls back to collection products
+ * Get intelligent recommendations based on user favorites and catalogue/brand
  */
 export async function getIntelligentRecommendations(
-  collectionId: string,
   userId?: string,
-  excludeProductId?: string,
+  catalogueId?: string,
+  brandId?: string,
   limit: number = 4
 ): Promise<Product[]> {
   if (!supabase) {
     throw new Error("Supabase client not available");
   }
 
-  let recommendations: Product[] = [];
+  try {
+    let recommendations: Product[] = [];
 
-  // If user is logged in, get products from their favorite brands first
-  if (userId) {
-    try {
-      // Get user's favorite brands
-      const { data: favorites, error: favError } = await supabase
+    // If user is logged in, get recommendations based on their favorite brands
+    if (userId) {
+      // Get user's favorite products to understand their preferred brands
+      const { data: favorites } = await supabase
         .from("favorites")
-        .select("brand_id")
+        .select("product_id")
         .eq("user_id", userId);
 
-      if (!favError && favorites && favorites.length > 0) {
-        const favoriteBrandIds = favorites.map((f) => f.brand_id);
-
-        // Get products from favorite brands (excluding current product)
-        let favoriteQuery = supabase
+      if (favorites && favorites.length > 0) {
+        // Get the brands of favorited products
+        const { data: favoritedProducts } = await supabase
           .from("products")
-          .select("*")
-          .in("brand_id", favoriteBrandIds)
-          .eq("in_stock", true)
-          .limit(limit * 2); // Get more to have variety
+          .select("brand_id")
+          .in(
+            "id",
+            favorites.map((f) => f.product_id)
+          );
 
-        if (excludeProductId) {
-          favoriteQuery = favoriteQuery.neq("id", excludeProductId);
-        }
+        if (favoritedProducts && favoritedProducts.length > 0) {
+          const favoriteBrandIds = [
+            ...new Set(favoritedProducts.map((p) => p.brand_id)),
+          ];
 
-        const { data: favoriteProducts, error: favProdError } =
-          await favoriteQuery.order("created_at", { ascending: false });
+          // Get products from favorite brands (up to half of the limit)
+          const favoriteLimit = Math.ceil(limit / 2);
+          const { data: favoriteBasedProducts } = await supabase
+            .from("products")
+            .select("*")
+            .in("brand_id", favoriteBrandIds)
+            .limit(favoriteLimit)
+            .order("created_at", { ascending: false });
 
-        if (!favProdError && favoriteProducts) {
-          // Shuffle and take up to half the limit from favorite brands
-          const shuffled = favoriteProducts.sort(() => Math.random() - 0.5);
-          recommendations = shuffled.slice(0, Math.ceil(limit / 2));
+          if (favoriteBasedProducts) {
+            recommendations.push(...favoriteBasedProducts);
+          }
         }
       }
-    } catch (error) {
-      console.error("Error fetching favorite brand products:", error);
-      // Continue with fallback logic
     }
-  }
 
-  // Fill remaining slots with products from the same collection
-  const remainingSlots = limit - recommendations.length;
-  if (remainingSlots > 0) {
-    try {
-      let collectionQuery = supabase
+    // Fill remaining slots with catalogue products
+    const remainingLimit = limit - recommendations.length;
+    if (remainingLimit > 0 && catalogueId) {
+      const { data: catalogueProducts } = await supabase
         .from("products")
         .select("*")
-        .eq("collection_id", collectionId)
-        .eq("in_stock", true)
-        .limit(remainingSlots * 2); // Get more for variety
+        .eq("catalogue_id", catalogueId)
+        .not("id", "in", `(${recommendations.map((r) => r.id).join(",")})`)
+        .limit(remainingLimit)
+        .order("created_at", { ascending: false });
 
-      if (excludeProductId) {
-        collectionQuery = collectionQuery.neq("id", excludeProductId);
+      if (catalogueProducts) {
+        recommendations.push(...catalogueProducts);
       }
-
-      // Exclude products already in recommendations
-      if (recommendations.length > 0) {
-        const existingIds = recommendations.map((p) => p.id);
-        collectionQuery = collectionQuery.not(
-          "id",
-          "in",
-          `(${existingIds.join(",")})`
-        );
-      }
-
-      const { data: collectionProducts, error: collError } =
-        await collectionQuery.order("created_at", { ascending: false });
-
-      if (!collError && collectionProducts) {
-        // Shuffle and add to recommendations
-        const shuffled = collectionProducts.sort(() => Math.random() - 0.5);
-        recommendations = [
-          ...recommendations,
-          ...shuffled.slice(0, remainingSlots),
-        ];
-      }
-    } catch (error) {
-      console.error("Error fetching collection products:", error);
     }
-  }
 
-  // If still not enough, get products from the same brand as the collection
-  if (recommendations.length < limit) {
-    try {
-      // First get the collection to find its brand
-      const { data: collection, error: collectionError } = await supabase
-        .from("collections")
-        .select("brand_id")
-        .eq("id", collectionId)
-        .single();
+    // If still need more, get products from the same brand
+    const stillNeedMore = limit - recommendations.length;
+    if (stillNeedMore > 0 && brandId) {
+      const { data: brandProducts } = await supabase
+        .from("products")
+        .select("*")
+        .eq("brand_id", brandId)
+        .not("id", "in", `(${recommendations.map((r) => r.id).join(",")})`)
+        .limit(stillNeedMore)
+        .order("created_at", { ascending: false });
 
-      if (!collectionError && collection) {
-        const remainingSlots = limit - recommendations.length;
-
-        let brandQuery = supabase
-          .from("products")
-          .select("*")
-          .eq("brand_id", collection.brand_id)
-          .eq("in_stock", true)
-          .limit(remainingSlots * 2);
-
-        if (excludeProductId) {
-          brandQuery = brandQuery.neq("id", excludeProductId);
-        }
-
-        // Exclude products already in recommendations
-        if (recommendations.length > 0) {
-          const existingIds = recommendations.map((p) => p.id);
-          brandQuery = brandQuery.not("id", "in", `(${existingIds.join(",")})`);
-        }
-
-        const { data: brandProducts, error: brandError } =
-          await brandQuery.order("created_at", { ascending: false });
-
-        if (!brandError && brandProducts) {
-          const shuffled = brandProducts.sort(() => Math.random() - 0.5);
-          recommendations = [
-            ...recommendations,
-            ...shuffled.slice(0, remainingSlots),
-          ];
-        }
+      if (brandProducts) {
+        recommendations.push(...brandProducts);
       }
-    } catch (error) {
-      console.error("Error fetching brand products:", error);
     }
-  }
 
-  return recommendations.slice(0, limit);
+    // Shuffle the recommendations for variety
+    return recommendations.sort(() => Math.random() - 0.5);
+  } catch (error) {
+    console.error("Error in getIntelligentRecommendations:", error);
+    // Fallback to catalogue products if intelligent recommendations fail
+    if (catalogueId) {
+      return getCatalogueRecommendations(catalogueId, undefined, limit);
+    }
+    return [];
+  }
 }

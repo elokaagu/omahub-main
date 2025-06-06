@@ -19,40 +19,29 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
-  getCollectionImages,
-  addCollectionImage,
-  updateCollectionImage,
-  deleteCollectionImage,
-  reorderCollectionImages,
-  setFeaturedImage,
-  type CollectionImage,
-} from "@/lib/services/collectionImageService";
+  getCatalogueImages,
+  addCatalogueImage,
+  updateCatalogueImage,
+  deleteCatalogueImage,
+  reorderCatalogueImages,
+  type CatalogueImage,
+} from "@/lib/services/catalogueImageService";
 import { FileUpload } from "@/components/ui/file-upload";
 import { AuthImage } from "@/components/ui/auth-image";
-import {
-  Plus,
-  Trash2,
-  Star,
-  StarOff,
-  ArrowUp,
-  ArrowDown,
-  Edit,
-  Save,
-  X,
-} from "lucide-react";
+import { Plus, Trash2, ArrowUp, ArrowDown, Edit, Save, X } from "lucide-react";
 import { toast } from "sonner";
 
-interface CollectionImageManagerProps {
-  collectionId: string;
-  collectionTitle: string;
+interface CatalogueImageManagerProps {
+  catalogueId: string;
+  catalogueTitle: string;
 }
 
-export function CollectionImageManager({
-  collectionId,
-  collectionTitle,
-}: CollectionImageManagerProps) {
+export function CatalogueImageManager({
+  catalogueId,
+  catalogueTitle,
+}: CatalogueImageManagerProps) {
   const { user } = useAuth();
-  const [images, setImages] = useState<CollectionImage[]>([]);
+  const [images, setImages] = useState<CatalogueImage[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [editingImage, setEditingImage] = useState<string | null>(null);
@@ -60,16 +49,16 @@ export function CollectionImageManager({
 
   useEffect(() => {
     fetchImages();
-  }, [collectionId]);
+  }, [catalogueId]);
 
   const fetchImages = async () => {
     try {
       setLoading(true);
-      const collectionImages = await getCollectionImages(collectionId);
-      setImages(collectionImages);
+      const catalogueImages = await getCatalogueImages(catalogueId);
+      setImages(catalogueImages);
     } catch (error) {
-      console.error("Error fetching collection images:", error);
-      toast.error("Failed to load collection images");
+      console.error("Error fetching catalogue images:", error);
+      toast.error("Failed to load catalogue images");
     } finally {
       setLoading(false);
     }
@@ -80,15 +69,16 @@ export function CollectionImageManager({
 
     try {
       setUploading(true);
-      const newImage = await addCollectionImage(user.id, {
-        collection_id: collectionId,
-        image_url: imageUrl,
-        alt_text: `${collectionTitle} image`,
-        is_featured: images.length === 0, // First image is featured by default
-      });
+      const newImage = await addCatalogueImage(
+        catalogueId,
+        imageUrl,
+        `${catalogueTitle} image`
+      );
 
-      setImages((prev) => [...prev, newImage]);
-      toast.success("Image added successfully");
+      if (newImage) {
+        setImages((prev) => [...prev, newImage]);
+        toast.success("Image added successfully");
+      }
     } catch (error) {
       console.error("Error adding image:", error);
       toast.error("Failed to add image");
@@ -101,30 +91,12 @@ export function CollectionImageManager({
     if (!user) return;
 
     try {
-      await deleteCollectionImage(user.id, imageId);
+      await deleteCatalogueImage(imageId);
       setImages((prev) => prev.filter((img) => img.id !== imageId));
       toast.success("Image deleted successfully");
     } catch (error) {
       console.error("Error deleting image:", error);
       toast.error("Failed to delete image");
-    }
-  };
-
-  const handleSetFeatured = async (imageId: string) => {
-    if (!user) return;
-
-    try {
-      await setFeaturedImage(user.id, collectionId, imageId);
-      setImages((prev) =>
-        prev.map((img) => ({
-          ...img,
-          is_featured: img.id === imageId,
-        }))
-      );
-      toast.success("Featured image updated");
-    } catch (error) {
-      console.error("Error setting featured image:", error);
-      toast.error("Failed to update featured image");
     }
   };
 
@@ -138,9 +110,13 @@ export function CollectionImageManager({
         newImages[index - 1],
       ];
 
-      const imageIds = newImages.map((img) => img.id);
-      await reorderCollectionImages(user.id, collectionId, imageIds);
+      // Update display orders
+      const imageOrders = newImages.map((img, idx) => ({
+        id: img.id,
+        display_order: idx,
+      }));
 
+      await reorderCatalogueImages(catalogueId, imageOrders);
       setImages(newImages);
       toast.success("Images reordered successfully");
     } catch (error) {
@@ -159,9 +135,13 @@ export function CollectionImageManager({
         newImages[index],
       ];
 
-      const imageIds = newImages.map((img) => img.id);
-      await reorderCollectionImages(user.id, collectionId, imageIds);
+      // Update display orders
+      const imageOrders = newImages.map((img, idx) => ({
+        id: img.id,
+        display_order: idx,
+      }));
 
+      await reorderCatalogueImages(catalogueId, imageOrders);
       setImages(newImages);
       toast.success("Images reordered successfully");
     } catch (error) {
@@ -179,7 +159,7 @@ export function CollectionImageManager({
     if (!user) return;
 
     try {
-      await updateCollectionImage(user.id, imageId, {
+      await updateCatalogueImage(imageId, {
         alt_text: editAltText,
       });
 
@@ -215,10 +195,10 @@ export function CollectionImageManager({
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
-          <h3 className="text-lg font-semibold">Collection Images</h3>
+          <h3 className="text-lg font-semibold">Catalogue Images</h3>
           <p className="text-sm text-gray-600">
-            Manage images for this collection. The first image will be used as
-            the main collection image.
+            Manage images for this catalogue. The first image will be used as
+            the main catalogue image.
           </p>
         </div>
         <div className="w-full sm:w-auto">
@@ -236,7 +216,7 @@ export function CollectionImageManager({
               No images yet
             </h4>
             <p className="text-gray-600 text-center mb-6">
-              Add images to showcase this collection
+              Add images to showcase this catalogue
             </p>
             <FileUpload onUploadComplete={handleImageUpload} />
           </CardContent>
@@ -248,18 +228,15 @@ export function CollectionImageManager({
               <div className="aspect-square relative">
                 <AuthImage
                   src={image.image_url}
-                  alt={
-                    image.alt_text || `${collectionTitle} image ${index + 1}`
-                  }
+                  alt={image.alt_text || `${catalogueTitle} image ${index + 1}`}
                   width={400}
                   height={400}
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute top-2 right-2 flex gap-1">
-                  {image.is_featured && (
+                  {index === 0 && (
                     <Badge className="bg-yellow-500 hover:bg-yellow-600">
-                      <Star className="h-3 w-3 mr-1" />
-                      Featured
+                      Main Image
                     </Badge>
                   )}
                   <Badge variant="secondary">#{index + 1}</Badge>
@@ -334,25 +311,15 @@ export function CollectionImageManager({
                   </div>
 
                   <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleSetFeatured(image.id)}
-                      disabled={image.is_featured}
-                      className="flex-1"
-                    >
-                      {image.is_featured ? (
-                        <StarOff className="h-3 w-3 mr-1" />
-                      ) : (
-                        <Star className="h-3 w-3 mr-1" />
-                      )}
-                      {image.is_featured ? "Featured" : "Set Featured"}
-                    </Button>
-
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button size="sm" variant="destructive">
-                          <Trash2 className="h-3 w-3" />
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          className="flex-1"
+                        >
+                          <Trash2 className="h-3 w-3 mr-1" />
+                          Delete
                         </Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>

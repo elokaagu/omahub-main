@@ -172,7 +172,7 @@ export type Review = {
   updated_at?: string;
 };
 
-export type Collection = {
+export type Catalogue = {
   id: string;
   brand_id: string;
   title: string;
@@ -189,7 +189,7 @@ export type Product = {
   image: string;
   images?: string[]; // Multiple product images
   brand_id: string;
-  collection_id?: string;
+  catalogue_id?: string;
   category: string;
   in_stock: boolean;
   sizes?: string[];
@@ -198,7 +198,7 @@ export type Product = {
   care_instructions?: string;
   is_custom?: boolean; // For tailored/custom pieces
   lead_time?: string; // e.g., "2-3 weeks"
-  created_at: string;
+  created_at?: string;
   updated_at?: string;
 };
 

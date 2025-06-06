@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getAllBrands } from "@/lib/services/brandService";
-import { createCollection } from "@/lib/services/collectionService";
+import { createCatalogue } from "@/lib/services/catalogueService";
 import { Brand } from "@/lib/supabase";
 import {
   Card,
@@ -27,7 +27,7 @@ import { FileUpload } from "@/components/ui/file-upload";
 import { ArrowLeft, Save } from "lucide-react";
 import { toast } from "sonner";
 
-export default function CreateCollectionPage() {
+export default function CreateCataloguePage() {
   const router = useRouter();
   const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(true);
@@ -67,7 +67,7 @@ export default function CreateCollectionPage() {
 
     // Validate form
     if (!title.trim()) {
-      toast.error("Please enter a collection title");
+      toast.error("Please enter a catalogue title");
       return;
     }
 
@@ -83,18 +83,18 @@ export default function CreateCollectionPage() {
 
     setSaving(true);
     try {
-      await createCollection({
+      await createCatalogue({
         title,
         description: description.trim() || undefined,
         brand_id: brandId,
         image,
       });
 
-      toast.success("Collection created successfully");
-      router.push("/studio/collections");
+      toast.success("Catalogue created successfully");
+      router.push("/studio/catalogues");
     } catch (error) {
-      console.error("Error creating collection:", error);
-      toast.error("Failed to create collection");
+      console.error("Error creating catalogue:", error);
+      toast.error("Failed to create catalogue");
     } finally {
       setSaving(false);
     }
@@ -119,29 +119,27 @@ export default function CreateCollectionPage() {
           variant="outline"
           size="icon"
           className="mr-4"
-          onClick={() => router.push("/studio/collections")}
+          onClick={() => router.push("/studio/catalogues")}
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <h1 className="text-3xl font-canela text-gray-900">
-          Create Collection
-        </h1>
+        <h1 className="text-3xl font-canela text-gray-900">Create Catalogue</h1>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>New Collection</CardTitle>
-          <CardDescription>Create a new collection for a brand</CardDescription>
+          <CardTitle>New Catalogue</CardTitle>
+          <CardDescription>Create a new catalogue for a brand</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="title">Collection Title</Label>
+              <Label htmlFor="title">Catalogue Title</Label>
               <Input
                 id="title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Enter collection title"
+                placeholder="Enter catalogue title"
               />
             </div>
 
@@ -151,7 +149,7 @@ export default function CreateCollectionPage() {
                 id="description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Enter a brief description of this collection..."
+                placeholder="Enter a brief description of this catalogue..."
                 rows={3}
               />
             </div>
@@ -173,11 +171,11 @@ export default function CreateCollectionPage() {
             </div>
 
             <div className="space-y-2">
-              <Label>Collection Image</Label>
+              <Label>Catalogue Image</Label>
               <FileUpload
                 onUploadComplete={handleImageUpload}
                 bucket="brand-assets"
-                path="collections"
+                path="catalogues"
               />
             </div>
 
@@ -188,7 +186,7 @@ export default function CreateCollectionPage() {
                 disabled={saving}
               >
                 <Save className="h-4 w-4" />
-                {saving ? "Creating..." : "Create Collection"}
+                {saving ? "Creating..." : "Create Catalogue"}
               </Button>
             </div>
           </form>

@@ -5,7 +5,9 @@ import type { Database } from "../types/supabase";
 export type Permission =
   | "studio.access"
   | "studio.brands.manage"
-  | "studio.collections.manage"
+  | "studio.catalogues.manage"
+  | "studio.catalogues.create"
+  | "studio.products.manage"
   | "studio.settings.manage";
 
 export type Role = "user" | "brand_admin" | "admin" | "super_admin";
@@ -15,13 +17,16 @@ const rolePermissions: Record<Role, Permission[]> = {
   brand_admin: [
     "studio.access",
     "studio.brands.manage",
-    "studio.collections.manage",
+    "studio.catalogues.manage",
+    "studio.catalogues.create",
   ],
-  admin: ["studio.access", "studio.brands.manage", "studio.collections.manage"],
+  admin: ["studio.access", "studio.brands.manage", "studio.catalogues.manage"],
   super_admin: [
     "studio.access",
     "studio.brands.manage",
-    "studio.collections.manage",
+    "studio.catalogues.manage",
+    "studio.catalogues.create",
+    "studio.products.manage",
     "studio.settings.manage",
   ],
 };
@@ -161,8 +166,12 @@ export async function canManageBrands(userId: string): Promise<boolean> {
   return hasPermission(userId, "studio.brands.manage");
 }
 
-export async function canManageCollections(userId: string): Promise<boolean> {
-  return hasPermission(userId, "studio.collections.manage");
+export async function canManageCatalogues(userId: string): Promise<boolean> {
+  return hasPermission(userId, "studio.catalogues.manage");
+}
+
+export async function canManageProducts(userId: string): Promise<boolean> {
+  return hasPermission(userId, "studio.products.manage");
 }
 
 export async function canManageSettings(userId: string): Promise<boolean> {

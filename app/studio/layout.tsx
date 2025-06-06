@@ -263,17 +263,17 @@ export default function StudioLayout({
                 </span>
               </NavigationLink>
             )}
-            {permissions.includes("studio.collections.manage") && (
+            {permissions.includes("studio.catalogues.manage") && (
               <NavigationLink
-                href="/studio/collections"
+                href="/studio/catalogues"
                 className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100"
                 onClick={() => setSidebarOpen(false)}
               >
                 <ImageIcon className="h-5 w-5" />
                 <span>
                   {user?.role === "brand_admin"
-                    ? "Your Collections"
-                    : "Collections"}
+                    ? "Your Catalogues"
+                    : "Catalogues"}
                 </span>
               </NavigationLink>
             )}

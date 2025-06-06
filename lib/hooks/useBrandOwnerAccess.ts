@@ -6,7 +6,7 @@ import {
   getUserPermissions,
   Permission,
 } from "@/lib/services/permissionsService";
-import { Brand, Collection } from "@/lib/supabase";
+import { Brand, Catalogue } from "@/lib/supabase";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
@@ -24,7 +24,7 @@ interface BrandOwnerAccess {
   // Brand access
   ownedBrandIds: string[];
   canManageBrands: boolean;
-  canManageCollections: boolean;
+  canManageCatalogues: boolean;
   canManageSettings: boolean;
 
   // Loading states
@@ -33,9 +33,9 @@ interface BrandOwnerAccess {
 
   // Utility functions
   filterBrandsByOwnership: (brands: Brand[]) => Brand[];
-  filterCollectionsByOwnership: (collections: Collection[]) => Collection[];
+  filterCataloguesByOwnership: (catalogues: Catalogue[]) => Catalogue[];
   canAccessBrand: (brandId: string) => boolean;
-  canAccessCollection: (collection: Collection) => boolean;
+  canAccessCatalogue: (catalogue: Catalogue) => boolean;
 
   // Refresh function
   refresh: () => Promise<void>;
@@ -137,8 +137,8 @@ export function useBrandOwnerAccess(): BrandOwnerAccess {
 
   // Permission checks
   const canManageBrands = userPermissions.includes("studio.brands.manage");
-  const canManageCollections = userPermissions.includes(
-    "studio.collections.manage"
+  const canManageCatalogues = userPermissions.includes(
+    "studio.catalogues.manage"
   );
   const canManageSettings = userPermissions.includes("studio.settings.manage");
 
@@ -190,16 +190,16 @@ export function useBrandOwnerAccess(): BrandOwnerAccess {
     return []; // No access for other roles
   };
 
-  const filterCollectionsByOwnership = (
-    collections: Collection[]
-  ): Collection[] => {
+  const filterCataloguesByOwnership = (
+    catalogues: Catalogue[]
+  ): Catalogue[] => {
     if (isAdmin) {
-      return collections; // Admins see all collections
+      return catalogues; // Admins see all catalogues
     }
 
     if (isBrandOwner && ownedBrandIds.length > 0) {
-      return collections.filter((collection) =>
-        ownedBrandIds.includes(collection.brand_id)
+      return catalogues.filter((catalogue) =>
+        ownedBrandIds.includes(catalogue.brand_id)
       );
     }
 
@@ -212,9 +212,11 @@ export function useBrandOwnerAccess(): BrandOwnerAccess {
     return false;
   };
 
-  const canAccessCollection = (collection: Collection): boolean => {
+  const canAccessCatalogue = (catalogue: Catalogue): boolean => {
     if (isAdmin) return true;
-    if (isBrandOwner) return ownedBrandIds.includes(collection.brand_id);
+    if (isBrandOwner) {
+      return ownedBrandIds.includes(catalogue.brand_id);
+    }
     return false;
   };
 
@@ -232,7 +234,7 @@ export function useBrandOwnerAccess(): BrandOwnerAccess {
     // Brand access
     ownedBrandIds,
     canManageBrands,
-    canManageCollections,
+    canManageCatalogues,
     canManageSettings,
 
     // Loading states
@@ -241,9 +243,9 @@ export function useBrandOwnerAccess(): BrandOwnerAccess {
 
     // Utility functions
     filterBrandsByOwnership,
-    filterCollectionsByOwnership,
+    filterCataloguesByOwnership,
     canAccessBrand,
-    canAccessCollection,
+    canAccessCatalogue,
 
     // Refresh function
     refresh: fetchUserData,
