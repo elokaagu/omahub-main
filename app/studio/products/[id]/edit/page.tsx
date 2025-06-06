@@ -13,9 +13,9 @@ import { Badge } from "@/components/ui/badge";
 import { Loading } from "@/components/ui/loading";
 import { NavigationLink } from "@/components/ui/navigation-link";
 import { getProductById, updateProduct } from "@/lib/services/productService";
-import { getAllCollections } from "@/lib/services/collectionService";
+import { getAllCatalogues } from "@/lib/services/catalogueService";
 import { getAllBrands } from "@/lib/services/brandService";
-import { Product, Brand, Collection } from "@/lib/supabase";
+import { Product, Brand, Catalogue } from "@/lib/supabase";
 import {
   ArrowLeft,
   Plus,
@@ -44,10 +44,8 @@ export default function EditProductPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingProduct, setIsLoadingProduct] = useState(true);
   const [brands, setBrands] = useState<Brand[]>([]);
-  const [collections, setCollections] = useState<Collection[]>([]);
-  const [filteredCollections, setFilteredCollections] = useState<Collection[]>(
-    []
-  );
+  const [catalogues, setCatalogues] = useState<Catalogue[]>([]);
+  const [filteredCatalogues, setFilteredCatalogues] = useState<Catalogue[]>([]);
   const [product, setProduct] = useState<Product | null>(null);
   const [formData, setFormData] = useState({
     title: "",
@@ -56,7 +54,7 @@ export default function EditProductPage() {
     sale_price: "",
     image: "",
     brand_id: "",
-    collection_id: "",
+    catalogue_id: "",
     category: "",
     in_stock: true,
     sizes: [] as string[],
@@ -81,10 +79,10 @@ export default function EditProductPage() {
       try {
         setIsLoadingProduct(true);
 
-        const [productData, brandsData, collectionsData] = await Promise.all([
+        const [productData, brandsData, cataloguesData] = await Promise.all([
           getProductById(productId),
           getAllBrands(),
-          getAllCollections(),
+          getAllCatalogues(),
         ]);
 
         if (!productData) {
@@ -95,7 +93,7 @@ export default function EditProductPage() {
 
         setProduct(productData);
         setBrands(brandsData);
-        setCollections(collectionsData);
+        setCatalogues(cataloguesData);
 
         // Populate form with existing product data
         setFormData({
@@ -105,7 +103,7 @@ export default function EditProductPage() {
           sale_price: productData.sale_price?.toString() || "",
           image: productData.image || "",
           brand_id: productData.brand_id || "",
-          collection_id: productData.collection_id || "",
+          catalogue_id: productData.catalogue_id || "",
           category: productData.category || "",
           in_stock: productData.in_stock ?? true,
           sizes: productData.sizes || [],
@@ -129,17 +127,17 @@ export default function EditProductPage() {
     }
   }, [user, productId, router]);
 
-  // Filter collections based on selected brand
+  // Filter catalogues based on selected brand
   useEffect(() => {
     if (formData.brand_id) {
-      const brandCollections = collections.filter(
-        (collection) => collection.brand_id === formData.brand_id
+      const brandCatalogues = catalogues.filter(
+        (catalogue) => catalogue.brand_id === formData.brand_id
       );
-      setFilteredCollections(brandCollections);
+      setFilteredCatalogues(brandCatalogues);
     } else {
-      setFilteredCollections([]);
+      setFilteredCatalogues([]);
     }
-  }, [formData.brand_id, collections]);
+  }, [formData.brand_id, catalogues]);
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData((prev) => ({
@@ -197,7 +195,7 @@ export default function EditProductPage() {
           formData.image ||
           "https://via.placeholder.com/400x400?text=Product+Image",
         brand_id: formData.brand_id,
-        collection_id: formData.collection_id || undefined,
+        catalogue_id: formData.catalogue_id || undefined,
         category: formData.category || "General",
         in_stock: formData.in_stock,
         sizes: formData.sizes.length > 0 ? formData.sizes : [],
@@ -432,19 +430,19 @@ export default function EditProductPage() {
                     Collection (Optional)
                   </Label>
                   <Select
-                    value={formData.collection_id}
+                    value={formData.catalogue_id}
                     onValueChange={(value) =>
-                      handleInputChange("collection_id", value)
+                      handleInputChange("catalogue_id", value)
                     }
                   >
                     <SelectTrigger className="border-gray-300 focus:border-gray-500">
-                      <SelectValue placeholder="Select a collection" />
+                      <SelectValue placeholder="Select a collection (optional)" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="">No Collection</SelectItem>
-                      {filteredCollections.map((collection) => (
-                        <SelectItem key={collection.id} value={collection.id}>
-                          {collection.title}
+                      {filteredCatalogues.map((catalogue) => (
+                        <SelectItem key={catalogue.id} value={catalogue.id}>
+                          {catalogue.title}
                         </SelectItem>
                       ))}
                     </SelectContent>

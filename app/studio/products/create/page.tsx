@@ -13,9 +13,9 @@ import { Badge } from "@/components/ui/badge";
 import { Loading } from "@/components/ui/loading";
 import { NavigationLink } from "@/components/ui/navigation-link";
 import { createProduct } from "@/lib/services/productService";
-import { getAllCollections } from "@/lib/services/collectionService";
+import { getAllCatalogues } from "@/lib/services/catalogueService";
 import { getAllBrands } from "@/lib/services/brandService";
-import { Product, Brand, Collection } from "@/lib/supabase";
+import { Product, Brand, Catalogue } from "@/lib/supabase";
 import {
   ArrowLeft,
   Plus,
@@ -39,10 +39,8 @@ export default function CreateProductPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [brands, setBrands] = useState<Brand[]>([]);
-  const [collections, setCollections] = useState<Collection[]>([]);
-  const [filteredCollections, setFilteredCollections] = useState<Collection[]>(
-    []
-  );
+  const [catalogues, setCatalogues] = useState<Catalogue[]>([]);
+  const [filteredCatalogues, setFilteredCatalogues] = useState<Catalogue[]>([]);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -50,7 +48,7 @@ export default function CreateProductPage() {
     sale_price: "",
     image: "",
     brand_id: "",
-    collection_id: "",
+    catalogue_id: "",
     category: "",
     in_stock: true,
     sizes: [] as string[],
@@ -69,19 +67,19 @@ export default function CreateProductPage() {
     }
   }, [user, router]);
 
-  // Fetch brands and collections
+  // Fetch brands and catalogues
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [brandsData, collectionsData] = await Promise.all([
+        const [brandsData, cataloguesData] = await Promise.all([
           getAllBrands(),
-          getAllCollections(),
+          getAllCatalogues(),
         ]);
         setBrands(brandsData);
-        setCollections(collectionsData);
+        setCatalogues(cataloguesData);
       } catch (error) {
         console.error("Error fetching data:", error);
-        toast.error("Failed to load brands and collections");
+        toast.error("Failed to load brands and catalogues");
       }
     };
 
@@ -90,17 +88,17 @@ export default function CreateProductPage() {
     }
   }, [user]);
 
-  // Filter collections based on selected brand
+  // Filter catalogues based on selected brand
   useEffect(() => {
     if (formData.brand_id) {
-      const brandCollections = collections.filter(
-        (collection) => collection.brand_id === formData.brand_id
+      const brandCatalogues = catalogues.filter(
+        (catalogue) => catalogue.brand_id === formData.brand_id
       );
-      setFilteredCollections(brandCollections);
+      setFilteredCatalogues(brandCatalogues);
     } else {
-      setFilteredCollections([]);
+      setFilteredCatalogues([]);
     }
-  }, [formData.brand_id, collections]);
+  }, [formData.brand_id, catalogues]);
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData((prev) => ({
@@ -108,11 +106,11 @@ export default function CreateProductPage() {
       [field]: value,
     }));
 
-    // Reset collection when brand changes
+    // Reset catalogue when brand changes
     if (field === "brand_id") {
       setFormData((prev) => ({
         ...prev,
-        collection_id: "",
+        catalogue_id: "",
       }));
     }
   };
@@ -167,7 +165,7 @@ export default function CreateProductPage() {
           formData.image ||
           "https://via.placeholder.com/400x400?text=Product+Image",
         brand_id: formData.brand_id,
-        collection_id: formData.collection_id || null,
+        catalogue_id: formData.catalogue_id || null,
         category: formData.category || "General",
         in_stock: formData.in_stock,
         sizes: formData.sizes.length > 0 ? formData.sizes : [],
@@ -206,7 +204,7 @@ export default function CreateProductPage() {
         );
         console.error("Schema error - missing columns in products table");
       } else if (error.message?.includes("foreign key")) {
-        toast.error("Invalid brand or collection selected");
+        toast.error("Invalid brand or catalogue selected");
       } else if (error.message?.includes("permission")) {
         toast.error("You don't have permission to create products");
       } else {
@@ -326,11 +324,11 @@ export default function CreateProductPage() {
             </CardContent>
           </Card>
 
-          {/* Brand and Collection */}
+          {/* Brand and Catalogue */}
           <Card className="border border-oma-gold/10 bg-white">
             <CardHeader>
               <CardTitle className="text-oma-cocoa">
-                Brand & Collection
+                Brand & Catalogue
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -369,29 +367,23 @@ export default function CreateProductPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="collection" className="text-oma-cocoa">
-                    Collection (Optional)
+                  <Label htmlFor="catalogue" className="text-oma-cocoa">
+                    Catalogue (Optional)
                   </Label>
                   <Select
-                    value={formData.collection_id}
+                    value={formData.catalogue_id}
                     onValueChange={(value) =>
-                      handleInputChange("collection_id", value)
+                      handleInputChange("catalogue_id", value)
                     }
-                    disabled={!formData.brand_id}
                   >
-                    <SelectTrigger className="border-oma-cocoa/20 focus:border-oma-plum">
-                      <SelectValue
-                        placeholder={
-                          formData.brand_id
-                            ? "Select a collection"
-                            : "Select brand first"
-                        }
-                      />
+                    <SelectTrigger className="border-gray-300 focus:border-gray-500">
+                      <SelectValue placeholder="Select a catalogue (optional)" />
                     </SelectTrigger>
                     <SelectContent>
-                      {filteredCollections.map((collection) => (
-                        <SelectItem key={collection.id} value={collection.id}>
-                          {collection.title}
+                      <SelectItem value="">No Catalogue</SelectItem>
+                      {filteredCatalogues.map((catalogue) => (
+                        <SelectItem key={catalogue.id} value={catalogue.id}>
+                          {catalogue.title}
                         </SelectItem>
                       ))}
                     </SelectContent>
