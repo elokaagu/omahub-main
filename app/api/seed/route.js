@@ -424,7 +424,7 @@ export async function GET(request) {
 
   try {
     console.log("Starting data migration to Supabase...");
-    const results = { brands: [], reviews: [], collections: [] };
+    const results = { brands: [], reviews: [], catalogues: [] };
 
     // Migrate brands
     for (const [id, brand] of Object.entries(brandsData)) {
@@ -487,10 +487,10 @@ export async function GET(request) {
         }
       }
 
-      // Migrate collections
+      // Migrate catalogues
       for (const collection of brand.collections) {
-        const { data: collectionData, error: collectionError } = await supabase
-          .from("collections")
+        const { data: catalogueData, error: catalogueError } = await supabase
+          .from("catalogues")
           .insert({
             brand_id: id,
             title: collection.title,
@@ -498,13 +498,10 @@ export async function GET(request) {
           })
           .select();
 
-        if (collectionError) {
-          console.error(
-            `Error inserting collection for ${id}:`,
-            collectionError
-          );
-        } else if (collectionData) {
-          results.collections.push(collectionData[0]);
+        if (catalogueError) {
+          console.error(`Error inserting catalogue for ${id}:`, catalogueError);
+        } else if (catalogueData) {
+          results.catalogues.push(catalogueData[0]);
         }
       }
     }
@@ -515,7 +512,7 @@ export async function GET(request) {
       results: {
         brandsCount: results.brands.length,
         reviewsCount: results.reviews.length,
-        collectionsCount: results.collections.length,
+        cataloguesCount: results.catalogues.length,
       },
     });
   } catch (error) {
