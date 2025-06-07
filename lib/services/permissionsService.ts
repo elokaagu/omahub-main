@@ -18,6 +18,7 @@ const rolePermissions: Record<Role, Permission[]> = {
     "studio.brands.manage",
     "studio.catalogues.manage",
     "studio.catalogues.create",
+    "studio.products.manage",
   ],
   admin: ["studio.access", "studio.brands.manage", "studio.catalogues.manage"],
   super_admin: [
@@ -221,5 +222,11 @@ export async function canManageCatalogues(userId: string): Promise<boolean> {
 }
 
 export async function canManageSettings(userId: string): Promise<boolean> {
-  return hasPermission(userId, "studio.settings.manage");
+  const permissions = await getUserPermissions(userId);
+  return permissions.includes("studio.settings.manage");
+}
+
+export async function canManageProducts(userId: string): Promise<boolean> {
+  const permissions = await getUserPermissions(userId);
+  return permissions.includes("studio.products.manage");
 }

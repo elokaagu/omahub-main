@@ -34,6 +34,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { supabase } from "@/lib/supabase";
 
 export default function CreateProductPage() {
   const { user } = useAuth();
@@ -60,9 +61,9 @@ export default function CreateProductPage() {
     lead_time: "",
   });
 
-  // Check if user is super admin
+  // Check if user is super admin or brand owner
   useEffect(() => {
-    if (user && user.role !== "super_admin") {
+    if (user && user.role !== "super_admin" && user.role !== "brand_admin") {
       router.push("/studio");
       return;
     }
@@ -76,7 +77,36 @@ export default function CreateProductPage() {
           getAllBrands(),
           getAllCatalogues(),
         ]);
-        setBrands(brandsData);
+
+        // Filter brands based on user role
+        if (user?.role === "super_admin") {
+          // Super admins see all brands
+          setBrands(brandsData);
+        } else if (user?.role === "brand_admin") {
+          // Brand owners see only their owned brands
+          if (!supabase) {
+            console.error("Supabase client not available");
+            setBrands([]);
+            return;
+          }
+
+          const userProfile = await supabase
+            .from("profiles")
+            .select("owned_brands")
+            .eq("id", user.id)
+            .single();
+
+          if (userProfile.data?.owned_brands) {
+            const ownedBrandIds = userProfile.data.owned_brands;
+            const ownedBrands = brandsData.filter((brand) =>
+              ownedBrandIds.includes(brand.id)
+            );
+            setBrands(ownedBrands);
+          } else {
+            setBrands([]);
+          }
+        }
+
         setCatalogues(cataloguesData);
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -84,7 +114,7 @@ export default function CreateProductPage() {
       }
     };
 
-    if (user?.role === "super_admin") {
+    if (user?.role === "super_admin" || user?.role === "brand_admin") {
       fetchData();
     }
   }, [user]);
@@ -221,7 +251,7 @@ export default function CreateProductPage() {
     }
   };
 
-  if (user?.role !== "super_admin") {
+  if (user?.role !== "super_admin" && user?.role !== "brand_admin") {
     return <Loading />;
   }
 

@@ -35,6 +35,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { supabase } from "@/lib/supabase";
 
 export default function EditProductPage() {
   const { user } = useAuth();
@@ -66,9 +67,9 @@ export default function EditProductPage() {
     lead_time: "",
   });
 
-  // Check if user is super admin
+  // Check if user is super admin or brand owner
   useEffect(() => {
-    if (user && user.role !== "super_admin") {
+    if (user && user.role !== "super_admin" && user.role !== "brand_admin") {
       router.push("/studio");
       return;
     }
@@ -92,8 +93,58 @@ export default function EditProductPage() {
           return;
         }
 
+        // Check if brand owner has access to this product
+        if (user?.role === "brand_admin") {
+          if (!supabase) {
+            console.error("Supabase client not available");
+            router.push("/studio/products");
+            return;
+          }
+
+          const userProfile = await supabase
+            .from("profiles")
+            .select("owned_brands")
+            .eq("id", user.id)
+            .single();
+
+          const ownedBrandIds = userProfile.data?.owned_brands || [];
+
+          if (!ownedBrandIds.includes(productData.brand_id)) {
+            toast.error("You don't have permission to edit this product");
+            router.push("/studio/products");
+            return;
+          }
+        }
+
         setProduct(productData);
-        setBrands(brandsData);
+
+        // Filter brands based on user role
+        if (user?.role === "super_admin") {
+          setBrands(brandsData);
+        } else if (user?.role === "brand_admin") {
+          if (!supabase) {
+            console.error("Supabase client not available");
+            setBrands([]);
+            return;
+          }
+
+          const userProfile = await supabase
+            .from("profiles")
+            .select("owned_brands")
+            .eq("id", user.id)
+            .single();
+
+          if (userProfile.data?.owned_brands) {
+            const ownedBrandIds = userProfile.data.owned_brands;
+            const ownedBrands = brandsData.filter((brand) =>
+              ownedBrandIds.includes(brand.id)
+            );
+            setBrands(ownedBrands);
+          } else {
+            setBrands([]);
+          }
+        }
+
         setCatalogues(cataloguesData);
 
         // Populate form with existing product data
@@ -123,7 +174,10 @@ export default function EditProductPage() {
       }
     };
 
-    if (user?.role === "super_admin" && productId) {
+    if (
+      (user?.role === "super_admin" || user?.role === "brand_admin") &&
+      productId
+    ) {
       fetchProductData();
     }
   }, [user, productId, router]);
@@ -251,7 +305,7 @@ export default function EditProductPage() {
     }
   };
 
-  if (user?.role !== "super_admin") {
+  if (user?.role !== "super_admin" && user?.role !== "brand_admin") {
     return <Loading />;
   }
 

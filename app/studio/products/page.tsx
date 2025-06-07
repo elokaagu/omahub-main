@@ -44,6 +44,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/lib/supabase";
 
 type ProductWithDetails = Product & {
   brand: { name: string; id: string; location: string; is_verified: boolean };
@@ -66,9 +67,9 @@ export default function ProductsPage() {
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
 
-  // Check if user is super admin
+  // Check if user is super admin or brand owner
   useEffect(() => {
-    if (user && user.role !== "super_admin") {
+    if (user && user.role !== "super_admin" && user.role !== "brand_admin") {
       router.push("/studio");
       return;
     }
@@ -80,8 +81,39 @@ export default function ProductsPage() {
       try {
         setLoading(true);
         const productsData = await getProductsWithDetails();
-        setProducts(productsData);
-        setFilteredProducts(productsData);
+
+        // Filter products based on user role
+        if (user?.role === "super_admin") {
+          // Super admins see all products
+          setProducts(productsData);
+          setFilteredProducts(productsData);
+        } else if (user?.role === "brand_admin") {
+          // Brand owners see only products from their owned brands
+          if (!supabase) {
+            console.error("Supabase client not available");
+            setProducts([]);
+            setFilteredProducts([]);
+            return;
+          }
+
+          const userProfile = await supabase
+            .from("profiles")
+            .select("owned_brands")
+            .eq("id", user.id)
+            .single();
+
+          if (userProfile.data?.owned_brands) {
+            const ownedBrandIds = userProfile.data.owned_brands;
+            const ownedProducts = productsData.filter((product) =>
+              ownedBrandIds.includes(product.brand_id)
+            );
+            setProducts(ownedProducts);
+            setFilteredProducts(ownedProducts);
+          } else {
+            setProducts([]);
+            setFilteredProducts([]);
+          }
+        }
       } catch (error) {
         console.error("Error fetching products:", error);
         toast.error("Failed to load products");
@@ -90,7 +122,7 @@ export default function ProductsPage() {
       }
     };
 
-    if (user?.role === "super_admin") {
+    if (user?.role === "super_admin" || user?.role === "brand_admin") {
       fetchProducts();
     }
   }, [user]);
@@ -173,7 +205,7 @@ export default function ProductsPage() {
     new Set(products.map((p) => ({ id: p.brand_id, name: p.brand.name })))
   ).sort((a, b) => a.name.localeCompare(b.name));
 
-  if (user?.role !== "super_admin") {
+  if (user?.role !== "super_admin" && user?.role !== "brand_admin") {
     return <Loading />;
   }
 
