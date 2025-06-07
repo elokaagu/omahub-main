@@ -1,14 +1,17 @@
-import { createServerSupabaseClient } from "@/lib/supabase-server";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
+  console.log("🔄 OAuth callback triggered");
+
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
   const state = searchParams.get("state");
   const error = searchParams.get("error");
   const errorDescription = searchParams.get("error_description");
 
-  console.log("🔄 OAuth callback received:", {
+  console.log("📋 OAuth callback parameters:", {
     hasCode: !!code,
     hasState: !!state,
     error,
@@ -16,64 +19,158 @@ export async function GET(request: Request) {
     origin,
   });
 
-  // Handle OAuth errors
+  // Handle OAuth errors from provider
   if (error) {
-    console.error("❌ OAuth error:", { error, errorDescription });
-    const errorMessage = errorDescription || error;
-    return NextResponse.redirect(
-      `${origin}/login?error=${encodeURIComponent(error)}&message=${encodeURIComponent(errorMessage)}`
+    console.error("❌ OAuth provider error:", error, errorDescription);
+    const redirectUrl = new URL("/login", origin);
+    redirectUrl.searchParams.set("error", error);
+    redirectUrl.searchParams.set(
+      "message",
+      errorDescription || "OAuth authentication failed"
     );
+    return NextResponse.redirect(redirectUrl);
   }
 
-  if (code) {
-    const supabase = createServerSupabaseClient();
+  // Check for authorization code
+  if (!code) {
+    console.error("❌ No authorization code received");
+    const redirectUrl = new URL("/login", origin);
+    redirectUrl.searchParams.set("error", "no_code");
+    redirectUrl.searchParams.set(
+      "message",
+      "No authorization code received from OAuth provider"
+    );
+    return NextResponse.redirect(redirectUrl);
+  }
 
-    try {
-      console.log("🔄 Exchanging code for session");
-      const { data, error: exchangeError } =
-        await supabase.auth.exchangeCodeForSession(code);
+  try {
+    const cookieStore = cookies();
 
-      if (exchangeError) {
-        console.error("❌ Code exchange error:", exchangeError);
-        return NextResponse.redirect(
-          `${origin}/login?error=code_exchange_failed&message=${encodeURIComponent(exchangeError.message)}`
+    // Create Supabase client with enhanced cookie handling
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            const cookie = cookieStore.get(name);
+            console.log(
+              `🍪 Getting cookie ${name}:`,
+              cookie ? "found" : "not found"
+            );
+            return cookie?.value;
+          },
+          set(name: string, value: string, options: any) {
+            try {
+              console.log(`🍪 Setting cookie ${name}`);
+              cookieStore.set({ name, value, ...options });
+            } catch (error) {
+              console.error(`❌ Error setting cookie ${name}:`, error);
+            }
+          },
+          remove(name: string, options: any) {
+            try {
+              console.log(`🍪 Removing cookie ${name}`);
+              cookieStore.set({ name, value: "", ...options });
+            } catch (error) {
+              console.error(`❌ Error removing cookie ${name}:`, error);
+            }
+          },
+        },
+      }
+    );
+
+    console.log("🔄 Exchanging code for session...");
+
+    // Exchange the code for a session with enhanced error handling
+    const { data: sessionData, error: sessionError } =
+      await supabase.auth.exchangeCodeForSession(code);
+
+    if (sessionError) {
+      console.error("❌ Session exchange failed:", sessionError);
+
+      // Handle specific state validation errors
+      if (
+        sessionError.message?.includes("state") ||
+        sessionError.message?.includes("invalid_request")
+      ) {
+        console.log("🔄 State validation failed, attempting recovery...");
+
+        // Try to redirect back to login with a fresh state
+        const redirectUrl = new URL("/login", origin);
+        redirectUrl.searchParams.set("error", "state_mismatch");
+        redirectUrl.searchParams.set(
+          "message",
+          "OAuth state validation failed. Please try signing in again."
         );
+        return NextResponse.redirect(redirectUrl);
       }
 
-      if (data.session) {
-        console.log("✅ Session created successfully:", {
-          userId: data.session.user.id,
-          email: data.session.user.email,
-        });
-
-        // Ensure user profile exists
-        await ensureUserProfile(supabase, data.session);
-
-        // Determine redirect destination
-        const redirectTo = state ? decodeURIComponent(state) : "/studio";
-
-        console.log("🔄 Redirecting to:", redirectTo);
-
-        // Ensure the redirect URL is safe (starts with /)
-        const safeRedirectTo = redirectTo.startsWith("/")
-          ? redirectTo
-          : "/studio";
-
-        return NextResponse.redirect(`${origin}${safeRedirectTo}`);
-      }
-    } catch (error) {
-      console.error("❌ Unexpected error during code exchange:", error);
-      return NextResponse.redirect(
-        `${origin}/login?error=unexpected_error&message=${encodeURIComponent("Authentication failed")}`
+      // Handle other session errors
+      const redirectUrl = new URL("/login", origin);
+      redirectUrl.searchParams.set("error", "session_error");
+      redirectUrl.searchParams.set(
+        "message",
+        sessionError.message || "Failed to create session"
       );
+      return NextResponse.redirect(redirectUrl);
     }
-  }
 
-  // No code provided
-  console.error("❌ No authorization code provided");
-  return NextResponse.redirect(
-    `${origin}/login?error=no_code&message=${encodeURIComponent("No authorization code provided")}`
-  );
+    if (!sessionData?.session) {
+      console.error("❌ No session data received");
+      const redirectUrl = new URL("/login", origin);
+      redirectUrl.searchParams.set("error", "no_session");
+      redirectUrl.searchParams.set("message", "No session created after OAuth");
+      return NextResponse.redirect(redirectUrl);
+    }
+
+    console.log("✅ Session created successfully:", {
+      userId: sessionData.session.user.id,
+      email: sessionData.session.user.email,
+      provider: sessionData.session.user.app_metadata?.provider,
+    });
+
+    // Validate the user with server for security
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      console.error("❌ User validation failed:", userError);
+      const redirectUrl = new URL("/login", origin);
+      redirectUrl.searchParams.set("error", "user_validation");
+      redirectUrl.searchParams.set(
+        "message",
+        "User validation failed after OAuth"
+      );
+      return NextResponse.redirect(redirectUrl);
+    }
+
+    console.log("✅ User validated successfully");
+
+    // Determine redirect destination
+    const redirectTo = searchParams.get("redirect_to") || "/studio";
+    const finalRedirectUrl = new URL(redirectTo, origin);
+
+    console.log("🔄 Redirecting to:", finalRedirectUrl.toString());
+
+    // Add success parameters
+    finalRedirectUrl.searchParams.set("auth", "success");
+
+    return NextResponse.redirect(finalRedirectUrl);
+  } catch (error) {
+    console.error("❌ OAuth callback error:", error);
+
+    const redirectUrl = new URL("/login", origin);
+    redirectUrl.searchParams.set("error", "callback_error");
+    redirectUrl.searchParams.set(
+      "message",
+      error instanceof Error ? error.message : "OAuth callback failed"
+    );
+
+    return NextResponse.redirect(redirectUrl);
+  }
 }
 
 async function ensureUserProfile(supabase: any, session: any) {

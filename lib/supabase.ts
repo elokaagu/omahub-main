@@ -13,20 +13,13 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 console.log("🔄 Initializing Supabase client:", {
   hasUrl: !!supabaseUrl,
-  hasKey: !!supabaseAnonKey.substring(0, 10) + "...",
+  hasKey: supabaseAnonKey ? `${supabaseAnonKey.substring(0, 4)}...` : "missing",
   env: process.env.NODE_ENV,
-  isBuildTime,
+  isBuildTime: typeof window === "undefined",
 });
 
 // Create a function to initialize the Supabase client
-const createClient = () => {
-  // Only return null during actual build time, not during SSR
-  if (isBuildTime) {
-    console.log("🏗️ Build time detected, returning null client");
-    return null;
-  }
-
-  // For SSR, we still create the client but it will only work after hydration
+function createClient() {
   if (typeof window === "undefined") {
     console.log("🖥️ Server-side rendering, creating client for hydration");
   }
@@ -39,55 +32,15 @@ const createClient = () => {
       flowType: "pkce",
       storage: typeof window !== "undefined" ? window.localStorage : undefined,
       storageKey: "omahub-auth-token",
-      debug: process.env.NODE_ENV === "development",
     },
     global: {
       fetch: fetch,
       headers: {
         "x-application-name": "omahub",
-        "Cache-Control": "no-cache",
-      },
-    },
-    cookies: {
-      get: (name: string) => {
-        if (typeof document === "undefined") return undefined;
-        const value = document.cookie
-          .split("; ")
-          .find((row) => row.startsWith(`${name}=`))
-          ?.split("=")[1];
-        return value ? decodeURIComponent(value) : undefined;
-      },
-      set: (name: string, value: string, options: any) => {
-        if (typeof document === "undefined") return;
-        const cookieOptions = {
-          path: "/",
-          maxAge: 60 * 60 * 24 * 7, // 7 days
-          sameSite: "lax",
-          secure: process.env.NODE_ENV === "production",
-          ...options,
-        };
-        const cookieString = `${name}=${encodeURIComponent(value)}; ${Object.entries(
-          cookieOptions
-        )
-          .map(([key, val]) => `${key}=${val}`)
-          .join("; ")}`;
-        document.cookie = cookieString;
-      },
-      remove: (name: string, options: any) => {
-        if (typeof document === "undefined") return;
-        const cookieOptions = {
-          path: "/",
-          ...options,
-        };
-        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; ${Object.entries(
-          cookieOptions
-        )
-          .map(([key, val]) => `${key}=${val}`)
-          .join("; ")}`;
       },
     },
   });
-};
+}
 
 // Create the client instance
 export const supabase = createClient();

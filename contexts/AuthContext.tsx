@@ -124,22 +124,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         AuthDebug.log("🔍 Initializing auth with Supabase client");
 
-        // Get initial session
+        // Get initial session and validate user
         const {
           data: { session: initialSession },
-          error,
+          error: sessionError,
         } = await supabase.auth.getSession();
 
-        if (error) {
-          AuthDebug.error("❌ Error getting initial session:", error);
-        } else {
-          AuthDebug.log("📊 Initial session check:", {
-            hasSession: !!initialSession,
-          });
+        if (sessionError) {
+          AuthDebug.error("❌ Error getting initial session:", sessionError);
         }
 
+        // If we have a session, validate the user with the server for security
+        let validatedSession = initialSession;
+        if (initialSession) {
+          const {
+            data: { user },
+            error: userError,
+          } = await supabase.auth.getUser();
+
+          if (userError || !user) {
+            AuthDebug.error("❌ Session validation failed:", userError);
+            // Session exists but user validation failed - clear the session
+            validatedSession = null;
+          } else {
+            AuthDebug.log("✅ Session validated with server");
+          }
+        }
+
+        AuthDebug.log("📊 Initial session check:", {
+          hasSession: !!validatedSession,
+          validated: !!validatedSession,
+        });
+
         if (mounted) {
-          await handleAuthStateChange("INITIAL", initialSession);
+          await handleAuthStateChange("INITIAL", validatedSession);
           setLoading(false);
         }
 

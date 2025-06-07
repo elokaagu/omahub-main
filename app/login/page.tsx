@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { signIn } from "@/lib/services/authService";
 import { Button } from "@/components/ui/button";
-import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
 import ErrorBoundary from "../components/ErrorBoundary";
 import {
   saveRememberMe,
@@ -42,26 +41,23 @@ function LoginForm() {
         // Get error from URL manually instead of using useSearchParams
         const urlParams = new URLSearchParams(window.location.search);
         const errorParam = urlParams.get("error");
-        const errorDescription = urlParams.get("error_description");
+        const errorMessage = urlParams.get("message");
         const details = urlParams.get("details");
 
         if (errorParam) {
           const decodedError = decodeURIComponent(errorParam);
           setUrlError(decodedError);
 
-          // Create a user-friendly error message
+          // Create a user-friendly error message based on the specific error
           let friendlyMessage = "Authentication failed. Please try again.";
 
-          if (decodedError === "callback_error") {
-            friendlyMessage =
-              "There was an issue completing your sign-in. Please try again.";
-          } else if (decodedError === "access_denied") {
+          if (decodedError === "access_denied") {
             friendlyMessage = "Access was denied. Please try signing in again.";
           } else if (decodedError === "service_unavailable") {
             friendlyMessage =
               "Authentication service is temporarily unavailable.";
-          } else if (errorDescription) {
-            friendlyMessage = decodeURIComponent(errorDescription);
+          } else if (errorMessage) {
+            friendlyMessage = decodeURIComponent(errorMessage);
           }
 
           setError(friendlyMessage);
@@ -70,14 +66,20 @@ function LoginForm() {
           if (process.env.NODE_ENV === "development") {
             const debugData = {
               error: decodedError,
-              description: errorDescription
-                ? decodeURIComponent(errorDescription)
-                : null,
+              message: errorMessage ? decodeURIComponent(errorMessage) : null,
               details: details ? decodeURIComponent(details) : null,
               timestamp: new Date().toISOString(),
+              userAgent: navigator.userAgent,
             };
             setDebugInfo(JSON.stringify(debugData, null, 2));
           }
+
+          // Clear the error from URL after displaying it
+          const newUrl = new URL(window.location.href);
+          newUrl.searchParams.delete("error");
+          newUrl.searchParams.delete("message");
+          newUrl.searchParams.delete("details");
+          window.history.replaceState({}, "", newUrl.toString());
         }
       }
     } catch (err) {
@@ -225,27 +227,6 @@ function LoginForm() {
           </Button>
         </div>
       </form>
-
-      <div className="mt-6">
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-300" />
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white text-oma-cocoa">
-              Or continue with
-            </span>
-          </div>
-        </div>
-
-        <div className="mt-6">
-          <GoogleSignInButton
-            className="w-full"
-            variant="outline"
-            redirectTo={`${window.location.origin}/auth/callback`}
-          />
-        </div>
-      </div>
 
       <div className="mt-6 text-center">
         <p className="text-sm text-oma-cocoa">
