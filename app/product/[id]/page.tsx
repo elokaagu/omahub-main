@@ -202,12 +202,12 @@ export default function ProductPage() {
                   )}
                 </div>
                 <Badge
-                  variant={product.in_stock ? "default" : "secondary"}
+                  variant="secondary"
                   className={cn(
                     "text-xs",
                     product.in_stock
-                      ? "bg-oma-gold text-oma-cocoa"
-                      : "bg-oma-cocoa/40 text-white"
+                      ? "bg-oma-gold text-oma-cocoa hover:bg-oma-gold/90 hover:text-oma-cocoa"
+                      : "bg-oma-cocoa/40 text-white hover:bg-oma-cocoa/50"
                   )}
                 >
                   {product.in_stock ? "In Stock" : "Out of Stock"}
