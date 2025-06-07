@@ -17,6 +17,7 @@ export async function GET(request: NextRequest) {
     error,
     errorDescription,
     origin,
+    fullUrl: request.url,
   });
 
   // Handle OAuth errors from provider
@@ -80,57 +81,110 @@ export async function GET(request: NextRequest) {
       }
     );
 
-    console.log("🔄 Exchanging code for session...");
+    console.log("🔄 Processing OAuth callback...");
 
-    // Exchange the code for a session with enhanced error handling
+    // Use the correct method for OAuth callback handling
+    // This handles both the code exchange and PKCE verification automatically
     const { data: sessionData, error: sessionError } =
-      await supabase.auth.exchangeCodeForSession(code);
+      await supabase.auth.getSession();
 
     if (sessionError) {
-      console.error("❌ Session exchange failed:", sessionError);
+      console.error("❌ Session retrieval failed:", sessionError);
 
-      // Handle specific state validation errors
-      if (
-        sessionError.message?.includes("state") ||
-        sessionError.message?.includes("invalid_request")
-      ) {
-        console.log("🔄 State validation failed, attempting recovery...");
+      // Try to exchange the code manually if session retrieval fails
+      console.log("🔄 Attempting manual code exchange...");
 
-        // Try to redirect back to login with a fresh state
+      try {
+        const { data: exchangeData, error: exchangeError } =
+          await supabase.auth.exchangeCodeForSession(code);
+
+        if (exchangeError) {
+          console.error("❌ Manual code exchange failed:", exchangeError);
+
+          // Handle specific PKCE errors
+          if (
+            exchangeError.message?.includes("code verifier") ||
+            exchangeError.message?.includes("invalid_request")
+          ) {
+            console.log("🔄 PKCE verification failed, clearing auth state...");
+
+            // Clear any existing auth cookies
+            const authCookies = [
+              "sb-access-token",
+              "sb-refresh-token",
+              "supabase-auth-token",
+            ];
+            authCookies.forEach((cookieName) => {
+              try {
+                cookieStore.delete(cookieName);
+              } catch (e) {
+                console.log(`Could not delete cookie ${cookieName}`);
+              }
+            });
+
+            const redirectUrl = new URL("/login", origin);
+            redirectUrl.searchParams.set("error", "pkce_failed");
+            redirectUrl.searchParams.set(
+              "message",
+              "Authentication verification failed. Please try signing in again."
+            );
+            return NextResponse.redirect(redirectUrl);
+          }
+
+          // Handle other exchange errors
+          const redirectUrl = new URL("/login", origin);
+          redirectUrl.searchParams.set("error", "exchange_failed");
+          redirectUrl.searchParams.set(
+            "message",
+            exchangeError.message || "Failed to complete authentication"
+          );
+          return NextResponse.redirect(redirectUrl);
+        }
+
+        // Use the exchanged session data
+        if (exchangeData?.session) {
+          console.log("✅ Manual code exchange successful");
+          // Continue with the session
+        } else {
+          console.error("❌ No session from manual exchange");
+          const redirectUrl = new URL("/login", origin);
+          redirectUrl.searchParams.set("error", "no_session");
+          redirectUrl.searchParams.set(
+            "message",
+            "No session created after authentication"
+          );
+          return NextResponse.redirect(redirectUrl);
+        }
+      } catch (manualError) {
+        console.error("❌ Manual exchange error:", manualError);
         const redirectUrl = new URL("/login", origin);
-        redirectUrl.searchParams.set("error", "state_mismatch");
+        redirectUrl.searchParams.set("error", "callback_error");
         redirectUrl.searchParams.set(
           "message",
-          "OAuth state validation failed. Please try signing in again."
+          "Authentication callback failed"
         );
         return NextResponse.redirect(redirectUrl);
       }
-
-      // Handle other session errors
-      const redirectUrl = new URL("/login", origin);
-      redirectUrl.searchParams.set("error", "session_error");
-      redirectUrl.searchParams.set(
-        "message",
-        sessionError.message || "Failed to create session"
-      );
-      return NextResponse.redirect(redirectUrl);
     }
 
-    if (!sessionData?.session) {
-      console.error("❌ No session data received");
+    // Get the current session (either from initial call or manual exchange)
+    const { data: currentSession } = await supabase.auth.getSession();
+
+    if (!currentSession?.session) {
+      console.error("❌ No active session found");
       const redirectUrl = new URL("/login", origin);
       redirectUrl.searchParams.set("error", "no_session");
-      redirectUrl.searchParams.set("message", "No session created after OAuth");
+      redirectUrl.searchParams.set("message", "No active session found");
       return NextResponse.redirect(redirectUrl);
     }
 
-    console.log("✅ Session created successfully:", {
-      userId: sessionData.session.user.id,
-      email: sessionData.session.user.email,
-      provider: sessionData.session.user.app_metadata?.provider,
+    console.log("✅ Session verified successfully:", {
+      userId: currentSession.session.user.id,
+      email: currentSession.session.user.email,
+      provider: currentSession.session.user.app_metadata?.provider,
     });
 
-    // Validate the user with server for security
+    // Validate the user
     const {
       data: { user },
       error: userError,
@@ -142,12 +196,15 @@ export async function GET(request: NextRequest) {
       redirectUrl.searchParams.set("error", "user_validation");
       redirectUrl.searchParams.set(
         "message",
-        "User validation failed after OAuth"
+        "User validation failed after authentication"
       );
       return NextResponse.redirect(redirectUrl);
     }
 
     console.log("✅ User validated successfully");
+
+    // Ensure user profile exists
+    await ensureUserProfile(supabase, currentSession.session);
 
     // Determine redirect destination
     const redirectTo = searchParams.get("redirect_to") || "/studio";

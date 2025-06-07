@@ -43,6 +43,12 @@ export default function TestOAuthPage() {
       } else {
         addLog("✅ Supabase connection successful");
         addLog(`📊 Current session: ${data.session ? "Active" : "None"}`);
+        if (data.session) {
+          addLog(`👤 User: ${data.session.user.email}`);
+          addLog(
+            `🔐 Provider: ${data.session.user.app_metadata?.provider || "email"}`
+          );
+        }
       }
     } catch (err) {
       addLog(`❌ Supabase test error: ${err}`);
@@ -71,6 +77,8 @@ export default function TestOAuthPage() {
         addLog(`⚠️ OAuth config issue: ${error.message}`);
         if (error.message.includes("Provider not found")) {
           addLog("💡 Google OAuth provider not configured in Supabase");
+        } else if (error.message.includes("Invalid client")) {
+          addLog("💡 Google OAuth credentials may be incorrect");
         }
       } else {
         addLog("✅ OAuth configuration looks good");
@@ -80,6 +88,78 @@ export default function TestOAuthPage() {
       }
     } catch (err) {
       addLog(`❌ OAuth test error: ${err}`);
+    }
+  };
+
+  const testPKCEFlow = async () => {
+    addLog("🔐 Testing PKCE flow...");
+
+    if (!supabase) {
+      addLog("❌ Supabase client not available");
+      return;
+    }
+
+    try {
+      // Clear any existing session first
+      addLog("🧹 Clearing existing session...");
+      await supabase.auth.signOut();
+
+      // Test PKCE flow configuration
+      addLog("🔄 Testing PKCE configuration...");
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          skipBrowserRedirect: true,
+          queryParams: {
+            access_type: "offline",
+            prompt: "consent",
+          },
+        },
+      });
+
+      if (error) {
+        addLog(`❌ PKCE test failed: ${error.message}`);
+        if (error.message.includes("code verifier")) {
+          addLog("💡 PKCE code verifier issue detected");
+        }
+      } else {
+        addLog("✅ PKCE flow configuration successful");
+        if (data?.url) {
+          addLog("🔗 PKCE-enabled OAuth URL generated");
+          addLog(
+            `📋 URL contains state parameter: ${data.url.includes("state=") ? "Yes" : "No"}`
+          );
+          addLog(
+            `📋 URL contains code_challenge: ${data.url.includes("code_challenge=") ? "Yes" : "No"}`
+          );
+        }
+      }
+    } catch (err) {
+      addLog(`❌ PKCE test error: ${err}`);
+    }
+  };
+
+  const clearAuthState = async () => {
+    addLog("🧹 Clearing authentication state...");
+
+    try {
+      await supabase.auth.signOut();
+      addLog("✅ Authentication state cleared");
+
+      // Also clear any local storage items
+      if (typeof window !== "undefined") {
+        const authKeys = Object.keys(localStorage).filter(
+          (key) => key.includes("supabase") || key.includes("auth")
+        );
+        authKeys.forEach((key) => {
+          localStorage.removeItem(key);
+          addLog(`🗑️ Cleared localStorage: ${key}`);
+        });
+      }
+    } catch (err) {
+      addLog(`❌ Error clearing auth state: ${err}`);
     }
   };
 
@@ -149,6 +229,18 @@ export default function TestOAuthPage() {
                 Test OAuth Config
               </button>
               <button
+                onClick={testPKCEFlow}
+                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+              >
+                Test PKCE Flow
+              </button>
+              <button
+                onClick={clearAuthState}
+                className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700"
+              >
+                Clear Auth State
+              </button>
+              <button
                 onClick={() => setLogs([])}
                 className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
               >
@@ -203,7 +295,12 @@ export default function TestOAuthPage() {
                 <strong>3. Environment Variables:</strong> Add Google Client ID
               </p>
               <p>
-                <strong>4. Test:</strong> Use the OAuth button above
+                <strong>4. Test PKCE Flow:</strong> Use the PKCE test button
+                above
+              </p>
+              <p>
+                <strong>5. Test OAuth Button:</strong> Use the OAuth button
+                above
               </p>
             </div>
           </div>

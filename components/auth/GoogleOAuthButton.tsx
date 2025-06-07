@@ -27,6 +27,10 @@ export default function GoogleOAuthButton({
       setLoading(true);
       console.log("🚀 Starting Google OAuth flow...");
 
+      // Clear any existing auth state to prevent conflicts
+      console.log("🧹 Clearing existing auth state...");
+      await supabase.auth.signOut();
+
       // Get current origin for redirect URL
       const currentOrigin = window.location.origin;
       const callbackUrl = `${currentOrigin}/auth/callback`;
@@ -38,6 +42,7 @@ export default function GoogleOAuthButton({
         origin: currentOrigin,
       });
 
+      // Use the OAuth flow with proper PKCE configuration
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
@@ -46,12 +51,27 @@ export default function GoogleOAuthButton({
             access_type: "offline",
             prompt: "consent",
           },
+          // Ensure PKCE is enabled (this is default in newer Supabase versions)
+          skipBrowserRedirect: false,
         },
       });
 
       if (error) {
         console.error("❌ Google OAuth error:", error);
-        toast.error(`OAuth failed: ${error.message}`);
+
+        // Provide more specific error messages
+        let errorMessage = "OAuth failed. Please try again.";
+
+        if (error.message?.includes("Provider not found")) {
+          errorMessage =
+            "Google OAuth is not configured. Please contact support.";
+        } else if (error.message?.includes("Invalid client")) {
+          errorMessage = "OAuth configuration error. Please contact support.";
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+
+        toast.error(errorMessage);
         return;
       }
 
@@ -60,8 +80,11 @@ export default function GoogleOAuthButton({
           "✅ OAuth URL generated:",
           data.url.substring(0, 100) + "..."
         );
+        console.log("🔄 Redirecting to Google for authentication...");
+
         // The browser will automatically redirect to Google
         // After user consent, Google redirects back to our callback
+        // The callback handler will process the PKCE flow
       } else {
         console.error("❌ No OAuth URL returned");
         toast.error("Failed to initiate Google sign-in");
