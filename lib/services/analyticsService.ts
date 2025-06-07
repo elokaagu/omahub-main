@@ -3,7 +3,7 @@ import { supabase } from "@/lib/supabase";
 export interface AnalyticsData {
   totalBrands: number;
   totalReviews: number;
-  totalCollections: number;
+  totalProducts: number;
   totalPageViews: number;
   activeBrands: number;
   verifiedBrands: number;
@@ -47,17 +47,17 @@ async function getVercelPageViews(): Promise<number | null> {
 function calculateEstimatedPageViews(
   totalBrands: number,
   totalReviews: number,
-  totalCollections: number,
+  totalProducts: number,
   verifiedBrands: number,
   recentBrands: number
 ): number {
   // Enhanced formula based on realistic engagement patterns
-  // Base formula: (brands * 25) + (reviews * 8) + (collections * 15) + (verified_brands * 50)
-  // This assumes verified brands get more views, reviews indicate engagement, collections are browsed
+  // Base formula: (brands * 25) + (reviews * 8) + (products * 15) + (verified_brands * 50)
+  // This assumes verified brands get more views, reviews indicate engagement, products are browsed
   return Math.round(
     totalBrands * 25 +
       totalReviews * 8 +
-      totalCollections * 15 +
+      totalProducts * 15 +
       verifiedBrands * 50 +
       recentBrands * 100 // New brands get initial traffic boost
   );
@@ -82,7 +82,7 @@ export async function getAnalyticsData(): Promise<AnalyticsData> {
     const [
       brandsResult,
       reviewsResult,
-      collectionsResult,
+      productsResult,
       recentBrandsResult,
       recentReviewsResult,
       vercelPageViews,
@@ -100,8 +100,8 @@ export async function getAnalyticsData(): Promise<AnalyticsData> {
       // All reviews
       supabase.from("reviews").select("id, rating, created_at, brand_id"),
 
-      // Collections count
-      supabase.from("collections").select("id", { count: "exact", head: true }),
+      // Products count
+      supabase.from("products").select("id", { count: "exact", head: true }),
 
       // Recent brands (last 30 days)
       supabase
@@ -122,7 +122,7 @@ export async function getAnalyticsData(): Promise<AnalyticsData> {
     // Handle errors
     if (brandsResult.error) throw brandsResult.error;
     if (reviewsResult.error) throw reviewsResult.error;
-    if (collectionsResult.error) throw collectionsResult.error;
+    if (productsResult.error) throw productsResult.error;
     if (recentBrandsResult.error) throw recentBrandsResult.error;
     if (recentReviewsResult.error) throw recentReviewsResult.error;
 
@@ -152,7 +152,7 @@ export async function getAnalyticsData(): Promise<AnalyticsData> {
         : 0;
 
     // Get counts
-    const totalCollections = collectionsResult.count || 0;
+    const totalProducts = productsResult.count || 0;
     const recentBrands = recentBrandsResult.count || 0;
     const recentReviews = recentReviewsResult.count || 0;
 
@@ -163,7 +163,7 @@ export async function getAnalyticsData(): Promise<AnalyticsData> {
         : calculateEstimatedPageViews(
             totalBrands,
             totalReviews,
-            totalCollections,
+            totalProducts,
             verifiedBrands,
             recentBrands
           );
@@ -197,7 +197,7 @@ export async function getAnalyticsData(): Promise<AnalyticsData> {
     const analyticsData: AnalyticsData = {
       totalBrands,
       totalReviews,
-      totalCollections,
+      totalProducts,
       totalPageViews,
       activeBrands,
       verifiedBrands,
@@ -448,7 +448,7 @@ export async function getBrandOwnerAnalyticsData(
       return {
         totalBrands: 0,
         totalReviews: 0,
-        totalCollections: 0,
+        totalProducts: 0,
         totalPageViews: 0,
         activeBrands: 0,
         verifiedBrands: 0,
@@ -463,17 +463,13 @@ export async function getBrandOwnerAnalyticsData(
     const thirtyDaysAgoISO = thirtyDaysAgo.toISOString();
 
     // Fetch data filtered by owned brands
-    const [
-      brandsResult,
-      reviewsResult,
-      collectionsResult,
-      recentReviewsResult,
-    ] = await Promise.all([
-      // Owned brands with their review counts
-      supabase
-        .from("brands")
-        .select(
-          `
+    const [brandsResult, reviewsResult, productsResult, recentReviewsResult] =
+      await Promise.all([
+        // Owned brands with their review counts
+        supabase
+          .from("brands")
+          .select(
+            `
           id, 
           name, 
           rating, 
@@ -481,33 +477,33 @@ export async function getBrandOwnerAnalyticsData(
           created_at,
           reviews:reviews(rating, created_at)
         `
-        )
-        .in("id", ownedBrandIds),
+          )
+          .in("id", ownedBrandIds),
 
-      // Reviews for owned brands only
-      supabase
-        .from("reviews")
-        .select("id, rating, created_at, brand_id")
-        .in("brand_id", ownedBrandIds),
+        // Reviews for owned brands only
+        supabase
+          .from("reviews")
+          .select("id, rating, created_at, brand_id")
+          .in("brand_id", ownedBrandIds),
 
-      // Collections for owned brands only
-      supabase
-        .from("collections")
-        .select("id", { count: "exact", head: true })
-        .in("brand_id", ownedBrandIds),
+        // Products for owned brands only
+        supabase
+          .from("products")
+          .select("id", { count: "exact", head: true })
+          .in("brand_id", ownedBrandIds),
 
-      // Recent reviews for owned brands (last 30 days)
-      supabase
-        .from("reviews")
-        .select("id", { count: "exact", head: true })
-        .in("brand_id", ownedBrandIds)
-        .gte("created_at", thirtyDaysAgoISO),
-    ]);
+        // Recent reviews for owned brands (last 30 days)
+        supabase
+          .from("reviews")
+          .select("id", { count: "exact", head: true })
+          .in("brand_id", ownedBrandIds)
+          .gte("created_at", thirtyDaysAgoISO),
+      ]);
 
     // Handle errors
     if (brandsResult.error) throw brandsResult.error;
     if (reviewsResult.error) throw reviewsResult.error;
-    if (collectionsResult.error) throw collectionsResult.error;
+    if (productsResult.error) throw productsResult.error;
     if (recentReviewsResult.error) throw recentReviewsResult.error;
 
     // Process brands data
@@ -530,7 +526,7 @@ export async function getBrandOwnerAnalyticsData(
         : 0;
 
     // Get counts
-    const totalCollections = collectionsResult.count || 0;
+    const totalProducts = productsResult.count || 0;
     const recentReviews = recentReviewsResult.count || 0;
     const recentBrands = 0; // Brand owners don't create new brands frequently
 
@@ -539,14 +535,14 @@ export async function getBrandOwnerAnalyticsData(
     const totalPageViews = Math.round(
       totalBrands * 15 +
         totalReviews * 5 +
-        totalCollections * 10 +
+        totalProducts * 10 +
         verifiedBrands * 30
     );
 
     const analyticsData: AnalyticsData = {
       totalBrands,
       totalReviews,
-      totalCollections,
+      totalProducts,
       totalPageViews,
       activeBrands,
       verifiedBrands,
@@ -586,7 +582,7 @@ export async function getBrandOwnerGrowthData(
     // For brand owners, growth is typically about collections/products, not new brands
     // So we'll show collection growth instead
     const { data, error } = await supabase
-      .from("collections")
+      .from("products")
       .select("created_at")
       .in("brand_id", ownedBrandIds)
       .order("created_at");
@@ -594,34 +590,34 @@ export async function getBrandOwnerGrowthData(
     if (error) throw error;
 
     // Group by month for the last 6 months
-    const months: { date: Date; month: string; collections: number }[] = [];
+    const months: { date: Date; month: string; products: number }[] = [];
     const now = new Date();
     for (let i = 5; i >= 0; i--) {
       const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
       months.push({
         date,
         month: date.toLocaleDateString("en-US", { month: "short" }),
-        collections: 0,
+        products: 0,
       });
     }
 
-    // Count collections by month
-    (data || []).forEach((collection) => {
-      const createdDate = new Date(collection.created_at);
+    // Count products by month
+    (data || []).forEach((product) => {
+      const createdDate = new Date(product.created_at);
       const monthIndex = months.findIndex(
         (m) =>
           m.date.getMonth() === createdDate.getMonth() &&
           m.date.getFullYear() === createdDate.getFullYear()
       );
       if (monthIndex !== -1) {
-        months[monthIndex].collections++;
+        months[monthIndex].products++;
       }
     });
 
-    // Convert to cumulative count (total collections up to each month)
+    // Convert to cumulative count (total products up to each month)
     let cumulative = 0;
     return months.map((month) => {
-      cumulative += month.collections;
+      cumulative += month.products;
       return {
         month: month.month,
         brands: cumulative, // Using 'brands' key for consistency with existing interface
