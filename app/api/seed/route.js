@@ -295,8 +295,11 @@ const brandsData = {
     name: "Lagos Bridal House",
     description:
       "Lagos Bridal House creates contemporary bridal wear that honors Nigerian traditions while embracing modern design elements, offering bespoke services to brides seeking unique cultural expressions.",
-    longDescription:
-      "Founded in 2017 by designer duo Folake and Tunde Adeleke, Lagos Bridal House has quickly become Nigeria's premier destination for bespoke bridal wear. The brand specializes in creating wedding attire that honors the rich cultural heritage of Nigeria while incorporating contemporary design elements.\n\nThe brand is known for its innovative use of traditional Nigerian textiles such as aso-oke, adire, and akwete, which are masterfully incorporated into modern silhouettes. Their designs often feature intricate beadwork and embroidery that tell stories of the couple's heritage and personal journey.\n\nLagos Bridal House offers a fully customized experience, with multiple consultations to ensure that each bride's vision is perfectly realized. Their flagship atelier in Victoria Island serves as both a studio and a creative hub where brides can explore various design possibilities.",
+    longDescription: `Founded in 2017 by designer duo Folake and Tunde Adeleke, Lagos Bridal House has quickly become Nigeria's premier destination for bespoke bridal wear. The brand specialises in creating wedding attire that honours the rich cultural heritage of Nigeria while incorporating contemporary design elements.
+
+The brand is known for its innovative use of traditional Nigerian textiles such as aso-oke, adire, and akwete, which are masterfully incorporated into modern silhouettes. Their designs often feature intricate beadwork and embroidery that tell stories of the couple's heritage and personal journey.
+
+Lagos Bridal House offers a fully customised experience, with multiple consultations to ensure that each bride's vision is perfectly realised. Their flagship atelier in Victoria Island serves as both a studio and a creative hub where brides can explore various design possibilities.`,
     location: "Lagos, Nigeria",
     priceRange: "₦300,000 - ₦2,500,000",
     category: "Bridal",

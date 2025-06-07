@@ -195,9 +195,9 @@ export default function ProductsPage() {
       <div className="flex items-center justify-between mb-12">
         <div>
           <h1 className="text-3xl font-canela text-gray-900 mb-2">Products</h1>
-          <p className="text-gray-600">
-            Manage all products across the platform. Create, edit, and organize
-            products from all brands and collections.
+          <p className="text-oma-cocoa/80 mb-8">
+            Manage all products across the platform. Create, edit, and organise
+            your product catalogue with ease.
           </p>
         </div>
         <Button asChild className="bg-oma-plum hover:bg-oma-plum/90">

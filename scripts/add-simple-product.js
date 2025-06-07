@@ -32,7 +32,7 @@ async function addSimpleProduct() {
     const productData = {
       title: "Elegant Evening Gown",
       description:
-        "A stunning custom-tailored evening gown perfect for special occasions. Features intricate beadwork and flowing silhouette that can be customized to your exact measurements and style preferences.",
+        "Elegant evening gown with intricate beadwork and flowing silhouette that can be customised to your exact measurements and style preferences.",
       price: 450.0,
       sale_price: 380.0,
       image:

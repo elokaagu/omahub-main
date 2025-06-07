@@ -24,7 +24,7 @@ async function addMoreSampleProducts() {
       {
         title: "Sophisticated Cocktail Dress",
         description:
-          "A chic cocktail dress perfect for evening events. Features elegant draping and can be customized with your preferred neckline and sleeve style.",
+          "A chic cocktail dress perfect for evening events. Features elegant draping and can be customised with your preferred neckline and sleeve style.",
         price: 320,
         sale_price: 280,
         image:

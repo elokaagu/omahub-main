@@ -494,10 +494,10 @@ export default function CreateProductPage() {
 
               {/* Colors */}
               <div className="space-y-2">
-                <Label className="text-black">Available Colors</Label>
+                <Label className="text-black">Available Colours</Label>
                 <div className="flex gap-2 mb-2">
                   <Input
-                    placeholder="Add color (e.g., Red, Blue, Black)"
+                    placeholder="Add colour (e.g., Red, Blue, Black)"
                     className="border-oma-cocoa/20 focus:border-oma-plum"
                     onKeyPress={(e) => {
                       if (e.key === "Enter") {

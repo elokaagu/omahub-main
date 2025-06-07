@@ -558,37 +558,33 @@ export default function EditProductPage() {
                 </div>
               </div>
 
-              {/* Available Colors */}
+              {/* Available Colours */}
               <div className="space-y-2">
-                <Label className="text-black">Available Colors</Label>
-                <div className="flex gap-2">
+                <Label className="text-black">Available Colours</Label>
+                <div className="flex gap-2 mb-2">
                   <Input
-                    placeholder="Add color (e.g., Red, Blue, Black)"
-                    className="border-gray-300 focus:border-gray-500"
+                    placeholder="Add colour (e.g., Red, Blue, Black)"
+                    className="border-oma-cocoa/20 focus:border-oma-plum"
                     onKeyPress={(e) => {
                       if (e.key === "Enter") {
                         e.preventDefault();
-                        const input = e.target as HTMLInputElement;
-                        handleArrayChange("colors", input.value);
-                        input.value = "";
+                        handleArrayChange("colors", e.currentTarget.value);
+                        e.currentTarget.value = "";
                       }
                     }}
                   />
                   <Button
                     type="button"
                     variant="outline"
-                    size="icon"
-                    className="border-gray-300 hover:bg-gray-100"
+                    className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white"
                     onClick={(e) => {
-                      const input = (e.target as HTMLElement)
+                      const input = e.currentTarget
                         .previousElementSibling as HTMLInputElement;
-                      if (input?.value) {
-                        handleArrayChange("colors", input.value);
-                        input.value = "";
-                      }
+                      handleArrayChange("colors", input.value);
+                      input.value = "";
                     }}
                   >
-                    +
+                    <Plus className="h-4 w-4" />
                   </Button>
                 </div>
                 <div className="flex flex-wrap gap-2">

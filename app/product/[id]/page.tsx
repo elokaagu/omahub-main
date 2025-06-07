@@ -271,24 +271,22 @@ export default function ProductPage() {
                   </div>
                 )}
 
-                {product.colors && product.colors.length > 0 && (
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-1">
-                      Available Colors
-                    </h4>
-                    <div className="flex flex-wrap gap-1">
-                      {product.colors.map((color, index) => (
-                        <Badge
-                          key={index}
-                          variant="outline"
-                          className="text-xs"
-                        >
-                          {color}
-                        </Badge>
-                      ))}
-                    </div>
+                <div className="space-y-3">
+                  <h4 className="font-medium text-oma-cocoa">
+                    Available Colours
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {product.colors?.map((color, index) => (
+                      <Badge
+                        key={index}
+                        variant="outline"
+                        className="border-oma-plum text-oma-plum"
+                      >
+                        {color}
+                      </Badge>
+                    ))}
                   </div>
-                )}
+                </div>
               </div>
 
               {/* Custom Tailoring Info */}
