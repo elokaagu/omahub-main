@@ -306,7 +306,7 @@ export default function UsersPage() {
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
       case "super_admin":
-        return "bg-red-500 text-white";
+        return "bg-oma-plum text-white";
       case "brand_admin":
         return "bg-blue-500 text-white";
       case "admin":
