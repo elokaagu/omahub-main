@@ -45,6 +45,8 @@ import {
   Shield,
   Mail,
   Building,
+  Search,
+  Filter,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
@@ -66,10 +68,13 @@ export default function UsersPage() {
   const { user } = useAuth();
   const router = useRouter();
   const [users, setUsers] = useState<UserWithBrands[]>([]);
+  const [filteredUsers, setFilteredUsers] = useState<UserWithBrands[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [roleFilter, setRoleFilter] = useState("all");
   const [formData, setFormData] = useState({
     email: "",
     role: "user",
@@ -125,6 +130,7 @@ export default function UsersPage() {
         }));
 
         setUsers(usersWithBrands);
+        setFilteredUsers(usersWithBrands);
       } catch (error) {
         console.error("Error fetching data:", error);
         toast.error("Failed to load data");
@@ -137,6 +143,29 @@ export default function UsersPage() {
       fetchData();
     }
   }, [user]);
+
+  // Filter users based on search term and role filter
+  useEffect(() => {
+    let filtered = users;
+
+    // Apply search filter
+    if (searchTerm) {
+      filtered = filtered.filter(
+        (user) =>
+          user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          user.brandNames.some((brandName) =>
+            brandName.toLowerCase().includes(searchTerm.toLowerCase())
+          )
+      );
+    }
+
+    // Apply role filter
+    if (roleFilter !== "all") {
+      filtered = filtered.filter((user) => user.role === roleFilter);
+    }
+
+    setFilteredUsers(filtered);
+  }, [users, searchTerm, roleFilter]);
 
   const handleInputChange = (field: string, value: string | string[]) => {
     setFormData((prev) => ({
@@ -287,6 +316,11 @@ export default function UsersPage() {
     }
   };
 
+  const clearFilters = () => {
+    setSearchTerm("");
+    setRoleFilter("all");
+  };
+
   if (user?.role !== "super_admin") {
     return <Loading />;
   }
@@ -404,60 +438,98 @@ export default function UsersPage() {
         </Dialog>
       </div>
 
+      {/* Search and Filter Controls */}
+      <div className="flex flex-col sm:flex-row gap-4 mb-8">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-oma-cocoa/60" />
+          <Input
+            placeholder="Search by email or brand name..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        <div className="flex gap-2">
+          <Select value={roleFilter} onValueChange={setRoleFilter}>
+            <SelectTrigger className="w-48">
+              <Filter className="h-4 w-4 mr-2" />
+              <SelectValue placeholder="Filter by role" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Roles</SelectItem>
+              <SelectItem value="user">Users</SelectItem>
+              <SelectItem value="brand_admin">Brand Admins</SelectItem>
+              <SelectItem value="admin">Admins</SelectItem>
+              <SelectItem value="super_admin">Super Admins</SelectItem>
+            </SelectContent>
+          </Select>
+          {(searchTerm || roleFilter !== "all") && (
+            <Button variant="outline" onClick={clearFilters}>
+              Clear Filters
+            </Button>
+          )}
+        </div>
+      </div>
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
         <Card className="border-l-4 border-l-oma-plum border-oma-beige">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-oma-cocoa">
-              Total Users
+            <CardTitle className="text-sm font-medium text-black">
+              {roleFilter === "all" ? "Total Users" : "Filtered Users"}
             </CardTitle>
             <Users className="h-4 w-4 text-oma-cocoa" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-canela text-oma-plum">
-              {users.length}
+              {filteredUsers.length}
             </div>
+            {roleFilter !== "all" && (
+              <p className="text-xs text-oma-cocoa/60 mt-1">
+                of {users.length} total
+              </p>
+            )}
           </CardContent>
         </Card>
 
         <Card className="border-l-4 border-l-blue-500 border-oma-beige">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-oma-cocoa">
+            <CardTitle className="text-sm font-medium text-black">
               Brand Admins
             </CardTitle>
             <Shield className="h-4 w-4 text-oma-cocoa" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-canela text-oma-plum">
-              {users.filter((u) => u.role === "brand_admin").length}
+              {filteredUsers.filter((u) => u.role === "brand_admin").length}
             </div>
           </CardContent>
         </Card>
 
         <Card className="border-l-4 border-l-green-500 border-oma-beige">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-oma-cocoa">
+            <CardTitle className="text-sm font-medium text-black">
               Regular Users
             </CardTitle>
             <Users className="h-4 w-4 text-oma-cocoa" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-canela text-oma-plum">
-              {users.filter((u) => u.role === "user").length}
+              {filteredUsers.filter((u) => u.role === "user").length}
             </div>
           </CardContent>
         </Card>
 
         <Card className="border-l-4 border-l-red-500 border-oma-beige">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-oma-cocoa">
+            <CardTitle className="text-sm font-medium text-black">
               Super Admins
             </CardTitle>
             <Shield className="h-4 w-4 text-oma-cocoa" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-canela text-oma-plum">
-              {users.filter((u) => u.role === "super_admin").length}
+              {filteredUsers.filter((u) => u.role === "super_admin").length}
             </div>
           </CardContent>
         </Card>
@@ -466,85 +538,108 @@ export default function UsersPage() {
       {/* Users Table */}
       <Card className="border border-oma-gold/10 bg-white">
         <CardHeader>
-          <CardTitle className="text-black">All Users</CardTitle>
+          <CardTitle className="text-black">
+            {roleFilter === "all"
+              ? "All Users"
+              : `${roleFilter.replace("_", " ").replace(/\b\w/g, (l) => l.toUpperCase())}s`}
+            {searchTerm && (
+              <span className="text-sm font-normal text-oma-cocoa/70 ml-2">
+                matching "{searchTerm}"
+              </span>
+            )}
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Email</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Assigned Brands</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {users.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell className="font-medium">
-                    <div className="flex items-center gap-2">
-                      <Mail className="h-4 w-4 text-oma-cocoa/60" />
-                      {user.email}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge className={getRoleBadgeColor(user.role)}>
-                      {user.role.replace("_", " ").toUpperCase()}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      {user.brandNames.length > 0 ? (
-                        user.brandNames.map((brandName, index) => (
-                          <Badge
-                            key={index}
-                            variant="secondary"
-                            className="text-xs bg-oma-beige text-oma-plum"
-                          >
-                            <Building className="h-3 w-3 mr-1" />
-                            {brandName}
-                          </Badge>
-                        ))
-                      ) : (
-                        <span className="text-oma-cocoa/60 text-sm">
-                          No brands assigned
-                        </span>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-oma-cocoa/70">
-                    {new Date(user.created_at).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          setFormData({
-                            email: user.email,
-                            role: user.role,
-                            selectedBrands: user.owned_brands || [],
-                          });
-                          setIsDialogOpen(true);
-                        }}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => handleDeleteUser(user.id, user.email)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
+          {filteredUsers.length === 0 ? (
+            <div className="text-center py-12">
+              <Users className="h-12 w-12 text-oma-cocoa/30 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-black mb-2">
+                No users found
+              </h3>
+              <p className="text-oma-cocoa/60">
+                {searchTerm || roleFilter !== "all"
+                  ? "Try adjusting your search or filter criteria."
+                  : "No users have been created yet."}
+              </p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Assigned Brands</TableHead>
+                  <TableHead>Created</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredUsers.map((user) => (
+                  <TableRow key={user.id}>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        <Mail className="h-4 w-4 text-oma-cocoa/60" />
+                        {user.email}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={getRoleBadgeColor(user.role)}>
+                        {user.role.replace("_", " ").toUpperCase()}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        {user.brandNames.length > 0 ? (
+                          user.brandNames.map((brandName, index) => (
+                            <Badge
+                              key={index}
+                              variant="secondary"
+                              className="text-xs bg-oma-beige text-oma-plum"
+                            >
+                              <Building className="h-3 w-3 mr-1" />
+                              {brandName}
+                            </Badge>
+                          ))
+                        ) : (
+                          <span className="text-oma-cocoa/60 text-sm">
+                            No brands assigned
+                          </span>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-oma-cocoa/70">
+                      {new Date(user.created_at).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setFormData({
+                              email: user.email,
+                              role: user.role,
+                              selectedBrands: user.owned_brands || [],
+                            });
+                            setIsDialogOpen(true);
+                          }}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => handleDeleteUser(user.id, user.email)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </div>
