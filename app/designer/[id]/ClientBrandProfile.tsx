@@ -39,8 +39,8 @@ export default function ClientBrandProfile({
   const [showReviewForm, setShowReviewForm] = useState(false);
 
   // Scroll to collections function
-  const scrollToCollections = () => {
-    const collectionsSection = document.getElementById("collections-section");
+  const scrollToCatalogues = () => {
+    const collectionsSection = document.getElementById("catalogues-section");
     if (collectionsSection) {
       collectionsSection.scrollIntoView({ behavior: "smooth" });
     }
@@ -103,10 +103,10 @@ export default function ClientBrandProfile({
 
           <div className="flex gap-4">
             <Button
-              onClick={scrollToCollections}
+              onClick={scrollToCatalogues}
               className="bg-oma-plum hover:bg-oma-plum/90"
             >
-              View Collections
+              View Catalogues
             </Button>
             <Button
               onClick={handleOpenContactModal}
@@ -118,23 +118,23 @@ export default function ClientBrandProfile({
           </div>
         </div>
 
-        {/* Collection Grid */}
+        {/* Catalogue Grid */}
         <div
-          id="collections-section"
+          id="catalogues-section"
           className="my-12 slide-up scroll-mt-24"
           style={{ animationDelay: "100ms" }}
         >
-          <h2 className="heading-sm mb-6">Collections</h2>
+          <h2 className="heading-sm mb-6">Catalogues</h2>
           {brandData.collections.length === 0 ? (
             <div className="text-center py-12 text-gray-500">
-              <p>No collections available yet.</p>
+              <p>No catalogues available yet.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {brandData.collections.map((collection, index) => (
                 <NavigationLink
                   key={collection.id}
-                  href={`/collection/${collection.id}`}
+                  href={`/catalogue/${collection.id}`}
                   className="block group"
                 >
                   <div
@@ -152,7 +152,7 @@ export default function ClientBrandProfile({
                         {collection.title}
                       </h3>
                       <p className="text-white/80 text-sm mt-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        Click to view collection
+                        Click to view catalogue
                       </p>
                     </div>
                   </div>
