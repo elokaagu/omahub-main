@@ -40,10 +40,11 @@ export default function GoogleSignInButton({
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${callbackUrl}?redirect_to=${encodeURIComponent(redirectTo)}`,
+          redirectTo: callbackUrl,
           queryParams: {
             access_type: "offline",
             prompt: "consent",
+            state: encodeURIComponent(redirectTo),
           },
           scopes: "email profile",
         },

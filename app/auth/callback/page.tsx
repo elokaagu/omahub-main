@@ -88,7 +88,11 @@ export default function AuthCallback() {
 
           toast.success("Successfully signed in!");
 
-          const redirectTo = searchParams.get("redirect_to") || "/studio";
+          // Get redirect destination from state parameter or fallback to studio
+          const redirectTo = searchParams.get("state")
+            ? decodeURIComponent(searchParams.get("state")!)
+            : searchParams.get("redirect_to") || "/studio";
+
           addDebugLog("🔄 Redirecting to", { redirectTo });
 
           // Use window.location.href for a full page reload to ensure auth state is properly updated
@@ -116,7 +120,11 @@ export default function AuthCallback() {
             toast.success("Successfully signed in!");
             subscription.unsubscribe();
 
-            const redirectTo = searchParams.get("redirect_to") || "/studio";
+            // Get redirect destination from state parameter or fallback to studio
+            const redirectTo = searchParams.get("state")
+              ? decodeURIComponent(searchParams.get("state")!)
+              : searchParams.get("redirect_to") || "/studio";
+
             addDebugLog("🔄 Redirecting to", { redirectTo });
 
             // Use window.location.href for a full page reload
@@ -147,7 +155,11 @@ export default function AuthCallback() {
                 toast.success("Successfully signed in!");
                 subscription.unsubscribe();
 
-                const redirectTo = searchParams.get("redirect_to") || "/studio";
+                // Get redirect destination from state parameter or fallback to studio
+                const redirectTo = searchParams.get("state")
+                  ? decodeURIComponent(searchParams.get("state")!)
+                  : searchParams.get("redirect_to") || "/studio";
+
                 window.location.href = redirectTo;
               } else {
                 addDebugLog(
