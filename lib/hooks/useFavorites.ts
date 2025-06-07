@@ -43,7 +43,7 @@ const useFavorites = () => {
       setError(null);
     } catch (err) {
       console.error("Error fetching favorites:", err);
-      setError("Failed to load favorites");
+      setError("Failed to load favourites");
     } finally {
       setLoading(false);
     }
@@ -55,7 +55,7 @@ const useFavorites = () => {
       if (!user) {
         return {
           success: false,
-          message: "You must be logged in to add favorites",
+          message: "You must be logged in to add favourites",
         };
       }
 
@@ -96,7 +96,7 @@ const useFavorites = () => {
       if (!user) {
         return {
           success: false,
-          message: "You must be logged in to remove favorites",
+          message: "You must be logged in to remove favourites",
         };
       }
 

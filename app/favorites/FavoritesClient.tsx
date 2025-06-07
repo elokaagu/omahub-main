@@ -36,7 +36,7 @@ export default function FavoritesClient() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[300px]">
         <Loader2 className="h-8 w-8 text-oma-plum animate-spin mb-4" />
-        <p className="text-oma-cocoa">Loading your favorites...</p>
+        <p className="text-oma-cocoa">Loading your favourites...</p>
       </div>
     );
   }
@@ -57,9 +57,9 @@ export default function FavoritesClient() {
   if (!favorites || favorites.length === 0) {
     return (
       <div className="text-center py-16 bg-oma-beige/20 rounded-lg">
-        <h2 className="text-2xl font-semibold mb-2">No favorites yet</h2>
+        <h2 className="text-2xl font-semibold mb-2">No favourites yet</h2>
         <p className="text-lg text-oma-cocoa mb-8">
-          Save your favorite fashion brands to find them easily later.
+          Save your favourite fashion brands to find them easily later.
         </p>
         <Button
           onClick={() => router.push("/")}

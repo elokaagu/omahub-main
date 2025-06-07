@@ -25,7 +25,7 @@ const FavoriteButton = ({ brandId, className = "" }: FavoriteButtonProps) => {
     if (!user) {
       toast({
         title: "Authentication required",
-        description: "Please log in to save favorites",
+        description: "Please log in to save favourites",
         variant: "destructive",
       });
       return;
@@ -40,15 +40,15 @@ const FavoriteButton = ({ brandId, className = "" }: FavoriteButtonProps) => {
     if (!result.success) {
       toast({
         title: "Error",
-        description: result.message || "Failed to update favorites",
+        description: result.message || "Failed to update favourites",
         variant: "destructive",
       });
     } else {
       toast({
-        title: isFavorited ? "Removed from favorites" : "Added to favorites",
+        title: isFavorited ? "Removed from favourites" : "Added to favourites",
         description: isFavorited
-          ? "The designer has been removed from your favorites"
-          : "The designer has been added to your favorites",
+          ? "The designer has been removed from your favourites"
+          : "The designer has been added to your favourites",
       });
     }
   };
@@ -62,7 +62,7 @@ const FavoriteButton = ({ brandId, className = "" }: FavoriteButtonProps) => {
           ? "text-red-500 hover:text-red-600"
           : "text-gray-400 hover:text-red-500"
       } ${className}`}
-      aria-label={isFavorited ? "Remove from favorites" : "Add to favorites"}
+      aria-label={isFavorited ? "Remove from favourites" : "Add to favourites"}
     >
       {isFavorited ? (
         <HeartSolidIcon className="w-5 h-5" />

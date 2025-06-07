@@ -310,7 +310,7 @@ export default function Header() {
                             href="/favorites"
                             className="flex items-center gap-2 w-full rounded-md p-2 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-oma-plum transition-colors"
                           >
-                            Favorites
+                            Favourites
                           </NavigationLink>
                         </NavigationMenuLink>
                       </li>
@@ -504,7 +504,7 @@ export default function Header() {
                     className="-mx-3 flex items-center gap-3 rounded-lg px-3 py-3 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 transition-colors"
                   >
                     <Heart className="h-5 w-5 text-gray-500" />
-                    Favorites
+                    Favourites
                   </NavigationLink>
 
                   {/* Studio Access for Admins */}

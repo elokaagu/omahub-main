@@ -287,7 +287,7 @@ export default function CataloguePage() {
               </h2>
               {user && (
                 <span className="text-sm text-black/60 bg-oma-beige/50 px-3 py-1 rounded-full">
-                  Based on your favorites
+                  Based on your favourites
                 </span>
               )}
             </div>
