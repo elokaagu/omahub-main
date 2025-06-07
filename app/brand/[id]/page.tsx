@@ -7,14 +7,14 @@ import {
   getBrandReviews,
   getBrandCollections,
 } from "@/lib/services/brandService";
-import { Brand, Review, Collection } from "@/lib/supabase";
+import { Brand, Review, Catalogue } from "@/lib/supabase";
 import ClientBrandProfile from "./ClientBrandProfile";
 
 export default function BrandPage() {
   const { id } = useParams();
   const [brand, setBrand] = useState<Brand | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
-  const [collections, setCollections] = useState<Collection[]>([]);
+  const [catalogues, setCatalogues] = useState<Catalogue[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -28,14 +28,14 @@ export default function BrandPage() {
         setBrand(brandData);
 
         if (brandData) {
-          // Fetch reviews and collections in parallel
-          const [reviewsData, collectionsData] = await Promise.all([
+          // Fetch reviews and catalogues in parallel
+          const [reviewsData, cataloguesData] = await Promise.all([
             getBrandReviews(id),
             getBrandCollections(id),
           ]);
 
           setReviews(reviewsData);
-          setCollections(collectionsData);
+          setCatalogues(cataloguesData);
         }
       } catch (err) {
         console.error("Error fetching brand data:", err);
@@ -74,7 +74,7 @@ export default function BrandPage() {
   const brandData = {
     id: brand.id,
     name: brand.name,
-    description: brand.description,
+    description: brand.description || "",
     longDescription: brand.long_description,
     location: brand.location,
     priceRange: brand.price_range,
@@ -82,11 +82,11 @@ export default function BrandPage() {
     rating: brand.rating,
     isVerified: brand.is_verified,
     image: brand.image,
-    collections: collections.map((collection) => ({
-      id: collection.id,
-      title: collection.title,
-      image: collection.image,
-      description: collection.description || "",
+    collections: catalogues.map((catalogue) => ({
+      id: catalogue.id,
+      title: catalogue.title,
+      image: catalogue.image,
+      description: catalogue.description || "",
     })),
   };
 

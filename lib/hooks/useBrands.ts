@@ -10,7 +10,7 @@ import {
   searchBrands,
   forceRefreshBrands,
 } from "../services/brandService";
-import { Brand, Review, Collection } from "../supabase";
+import { Brand, Review, Catalogue } from "../supabase";
 
 export function useAllBrands() {
   const [brands, setBrands] = useState<Brand[]>([]);
@@ -114,15 +114,15 @@ export function useBrandReviews(brandId: string) {
 }
 
 export function useBrandCollections(brandId: string) {
-  const [collections, setCollections] = useState<Collection[]>([]);
+  const [catalogues, setCatalogues] = useState<Catalogue[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    async function fetchCollections() {
+    async function fetchCatalogues() {
       try {
         const data = await getBrandCollections(brandId);
-        setCollections(data);
+        setCatalogues(data);
       } catch (err) {
         setError(err as Error);
       } finally {
@@ -131,11 +131,11 @@ export function useBrandCollections(brandId: string) {
     }
 
     if (brandId) {
-      fetchCollections();
+      fetchCatalogues();
     }
   }, [brandId]);
 
-  return { collections, loading, error };
+  return { catalogues, loading, error };
 }
 
 export function useSearchBrands(query: string) {
