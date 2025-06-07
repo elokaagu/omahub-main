@@ -46,6 +46,9 @@ export async function GET(request: Request) {
           email: data.session.user.email,
         });
 
+        // Ensure user profile exists
+        await ensureUserProfile(supabase, data.session);
+
         // Determine redirect destination
         const redirectTo = state ? decodeURIComponent(state) : "/studio";
 
@@ -71,4 +74,48 @@ export async function GET(request: Request) {
   return NextResponse.redirect(
     `${origin}/login?error=no_code&message=${encodeURIComponent("No authorization code provided")}`
   );
+}
+
+async function ensureUserProfile(supabase: any, session: any) {
+  try {
+    console.log("🔍 Checking user profile for:", session.user.id);
+
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("id", session.user.id)
+      .single();
+
+    if (profileError && profileError.code === "PGRST116") {
+      console.log("🔄 Creating user profile");
+
+      const { error: createError } = await supabase.from("profiles").insert({
+        id: session.user.id,
+        email: session.user.email,
+        role: "user",
+        owned_brands: [],
+        first_name: session.user.user_metadata?.full_name?.split(" ")[0] || "",
+        last_name:
+          session.user.user_metadata?.full_name
+            ?.split(" ")
+            .slice(1)
+            .join(" ") || "",
+        avatar_url: session.user.user_metadata?.avatar_url || "",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
+
+      if (createError) {
+        console.error("❌ Profile creation failed:", createError);
+      } else {
+        console.log("✅ Profile created successfully");
+      }
+    } else if (profile) {
+      console.log("✅ Profile already exists");
+    } else if (profileError) {
+      console.error("❌ Profile check error:", profileError);
+    }
+  } catch (error) {
+    console.error("❌ Profile check/creation error:", error);
+  }
 }
