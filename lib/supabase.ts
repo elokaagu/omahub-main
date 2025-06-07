@@ -3,14 +3,13 @@ import { AuthDebug } from "./utils/debug";
 
 // Check if we're in a build process
 const isBuildTime =
+  typeof window === "undefined" &&
   process.env.NODE_ENV === "production" &&
-  (process.env.NEXT_PHASE === "phase-production-build" ||
-    (process.env.VERCEL_ENV === "production" &&
-      process.env.VERCEL_BUILD_STEP === "true"));
+  !process.env.NEXT_PUBLIC_SUPABASE_URL;
 
 // Safely access environment variables with fallbacks
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 console.log("🔄 Initializing Supabase client:", {
   hasUrl: !!supabaseUrl,
@@ -39,6 +38,8 @@ const createClient = () => {
       detectSessionInUrl: true,
       flowType: "pkce",
       storage: typeof window !== "undefined" ? window.localStorage : undefined,
+      storageKey: "omahub-auth-token",
+      debug: process.env.NODE_ENV === "development",
     },
     global: {
       fetch: fetch,
@@ -59,9 +60,11 @@ const createClient = () => {
       set: (name: string, value: string, options: any) => {
         if (typeof document === "undefined") return;
         const cookieOptions = {
-          ...options,
+          path: "/",
+          maxAge: 60 * 60 * 24 * 7, // 7 days
           sameSite: "lax",
           secure: process.env.NODE_ENV === "production",
+          ...options,
         };
         const cookieString = `${name}=${encodeURIComponent(value)}; ${Object.entries(
           cookieOptions
@@ -72,8 +75,12 @@ const createClient = () => {
       },
       remove: (name: string, options: any) => {
         if (typeof document === "undefined") return;
+        const cookieOptions = {
+          path: "/",
+          ...options,
+        };
         document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; ${Object.entries(
-          options || {}
+          cookieOptions
         )
           .map(([key, val]) => `${key}=${val}`)
           .join("; ")}`;
@@ -82,8 +89,24 @@ const createClient = () => {
   });
 };
 
-// Initialize the client
+// Create the client instance
 export const supabase = createClient();
+
+// Export a function to get a fresh client instance if needed
+export const getSupabaseClient = () => createClient();
+
+// Helper function to check if client is available
+export const isSupabaseAvailable = () => !!supabase;
+
+// Debug logging for development
+if (process.env.NODE_ENV === "development") {
+  console.log("🔧 Supabase client initialized:", {
+    hasClient: !!supabase,
+    url: supabaseUrl,
+    hasAnonKey: !!supabaseAnonKey,
+    isBrowser: typeof window !== "undefined",
+  });
+}
 
 // Set up auth state change listener and run tests if in browser environment
 if (supabase && typeof window !== "undefined") {

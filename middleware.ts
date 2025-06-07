@@ -5,18 +5,16 @@ import { hasStudioAccess } from "@/lib/services/permissionsService.server";
 export async function middleware(request: NextRequest) {
   console.log("🚀 Middleware triggered for:", request.nextUrl.pathname);
 
-  // Log cookies for debugging
-  const authCookies: { name: string; value: string }[] = [];
-  request.cookies.getAll().forEach((cookie) => {
-    if (cookie.name.includes("supabase") || cookie.name.includes("auth")) {
-      authCookies.push({
-        name: cookie.name,
-        value: cookie.value.substring(0, 20) + "...",
-      });
-    }
-  });
-
-  console.log("🍪 Auth cookies found:", authCookies.length, authCookies);
+  // Skip middleware for static files, API routes, and auth callback
+  if (
+    request.nextUrl.pathname.startsWith("/_next") ||
+    request.nextUrl.pathname.startsWith("/api") ||
+    request.nextUrl.pathname.startsWith("/auth/callback") ||
+    request.nextUrl.pathname.includes(".")
+  ) {
+    console.log("⏭️ Skipping middleware for:", request.nextUrl.pathname);
+    return NextResponse.next();
+  }
 
   let response = NextResponse.next({
     request: {
@@ -24,67 +22,59 @@ export async function middleware(request: NextRequest) {
     },
   });
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          const value = request.cookies.get(name)?.value;
-          if (name.includes("supabase") && value) {
-            console.log(
-              `🔍 Getting cookie ${name}: ${value.substring(0, 20)}...`
-            );
-          }
-          return value;
-        },
-        set(name: string, value: string, options: any) {
-          if (name.includes("supabase")) {
-            console.log(
-              `🔧 Setting cookie ${name}: ${value.substring(0, 20)}...`
-            );
-          }
-          request.cookies.set({
-            name,
-            value,
-            ...options,
-          });
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          });
-          response.cookies.set({
-            name,
-            value,
-            ...options,
-          });
-        },
-        remove(name: string, options: any) {
-          if (name.includes("supabase")) {
-            console.log(`🗑️ Removing cookie ${name}`);
-          }
-          request.cookies.set({
-            name,
-            value: "",
-            ...options,
-          });
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          });
-          response.cookies.set({
-            name,
-            value: "",
-            ...options,
-          });
-        },
-      },
-    }
-  );
-
   try {
+    // Create a Supabase client configured to use cookies
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return request.cookies.get(name)?.value;
+          },
+          set(name: string, value: string, options: any) {
+            // Set the cookie in the request for immediate use
+            request.cookies.set({
+              name,
+              value,
+              ...options,
+            });
+            // Set the cookie in the response for future requests
+            response = NextResponse.next({
+              request: {
+                headers: request.headers,
+              },
+            });
+            response.cookies.set({
+              name,
+              value,
+              ...options,
+            });
+          },
+          remove(name: string, options: any) {
+            // Remove the cookie from the request
+            request.cookies.set({
+              name,
+              value: "",
+              ...options,
+            });
+            // Remove the cookie from the response
+            response = NextResponse.next({
+              request: {
+                headers: request.headers,
+              },
+            });
+            response.cookies.set({
+              name,
+              value: "",
+              ...options,
+            });
+          },
+        },
+      }
+    );
+
+    // Refresh session if expired - this is important for OAuth flows
     const {
       data: { session },
       error: sessionError,
@@ -106,17 +96,54 @@ export async function middleware(request: NextRequest) {
     );
 
     if (isProtectedRoute && !session) {
-      console.log("❌ No session found for studio route");
+      console.log("❌ No session found for protected route");
       console.log("🔄 Redirecting to sign-in page");
       const redirectUrl = new URL("/login", request.url);
       redirectUrl.searchParams.set("redirect_to", request.nextUrl.pathname);
       return NextResponse.redirect(redirectUrl);
     }
 
+    // If we have a session, ensure it's properly set in cookies
+    if (session) {
+      console.log("✅ Valid session found, ensuring cookies are set");
+
+      // Refresh the session to ensure it's valid and update cookies
+      const {
+        data: { session: refreshedSession },
+        error: refreshError,
+      } = await supabase.auth.refreshSession();
+
+      if (refreshError) {
+        console.log("⚠️ Session refresh failed:", refreshError.message);
+        // If refresh fails and we're on a protected route, redirect to login
+        if (isProtectedRoute) {
+          const redirectUrl = new URL("/login", request.url);
+          redirectUrl.searchParams.set("redirect_to", request.nextUrl.pathname);
+          return NextResponse.redirect(redirectUrl);
+        }
+      } else if (refreshedSession) {
+        console.log("✅ Session refreshed successfully");
+      }
+    }
+
     console.log("✅ Access granted");
     return response;
   } catch (error) {
     console.error("❌ Middleware error:", error);
+
+    // For protected routes, redirect to login on error
+    const protectedRoutes = ["/studio"];
+    const isProtectedRoute = protectedRoutes.some((route) =>
+      request.nextUrl.pathname.startsWith(route)
+    );
+
+    if (isProtectedRoute) {
+      console.log("🔄 Redirecting to login due to middleware error");
+      const redirectUrl = new URL("/login", request.url);
+      redirectUrl.searchParams.set("redirect_to", request.nextUrl.pathname);
+      return NextResponse.redirect(redirectUrl);
+    }
+
     console.log("✅ Access granted (fallback due to error)");
     return response;
   }
@@ -129,7 +156,7 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * - public folder
+     * Feel free to modify this pattern to include more paths.
      */
     "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],

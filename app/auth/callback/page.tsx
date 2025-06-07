@@ -9,44 +9,41 @@ export default function AuthCallback() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(true);
-  const [debugInfo, setDebugInfo] = useState<any[]>([]);
+  const [debugLogs, setDebugLogs] = useState<string[]>([]);
 
   const addDebugLog = (message: string, data?: any) => {
-    const logEntry = {
-      timestamp: new Date().toISOString(),
-      message,
-      data: data ? JSON.stringify(data, null, 2) : null,
-    };
-    console.log(`🔍 [AUTH DEBUG] ${message}`, data);
-    setDebugInfo((prev) => [...prev, logEntry]);
+    const timestamp = new Date().toISOString();
+    const logMessage = `[${timestamp}] ${message}`;
+    if (data) {
+      console.log(logMessage, data);
+    } else {
+      console.log(logMessage);
+    }
+    setDebugLogs((prev) => [
+      ...prev,
+      logMessage + (data ? ` ${JSON.stringify(data)}` : ""),
+    ]);
   };
 
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        addDebugLog("Starting simplified auth callback process");
+        addDebugLog("🔄 Starting OAuth callback process");
 
         if (!supabase) {
-          addDebugLog("ERROR: Supabase client not available");
+          addDebugLog("❌ Supabase client not available");
           toast.error("Authentication service unavailable");
           router.push("/login?error=service_unavailable");
           return;
         }
 
-        // Log all URL parameters for debugging
-        const allParams: Record<string, string> = {};
-        searchParams.forEach((value, key) => {
-          allParams[key] = value;
-        });
-        addDebugLog("URL parameters received", allParams);
-
-        // Check for error parameters first
+        // Check for OAuth errors in URL
         const error = searchParams.get("error");
         const errorDescription = searchParams.get("error_description");
         const errorCode = searchParams.get("error_code");
 
         if (error) {
-          addDebugLog("OAuth error detected", {
+          addDebugLog("❌ OAuth error detected", {
             error,
             errorDescription,
             errorCode,
@@ -60,126 +57,83 @@ export default function AuthCallback() {
           }
 
           toast.error(errorMessage);
-          router.push(
-            `/login?error=${encodeURIComponent(error)}&error_description=${encodeURIComponent(errorDescription || "")}`
-          );
+          router.push(`/login?error=${encodeURIComponent(error)}`);
           return;
         }
 
-        // Simplified approach: Let Supabase handle the OAuth callback automatically
-        addDebugLog("Waiting for Supabase to process OAuth callback...");
-
-        // Set up a single auth state change listener
-        const {
-          data: { subscription },
-        } = supabase.auth.onAuthStateChange(async (event, session) => {
-          addDebugLog("Auth state change detected", {
-            event,
-            hasSession: !!session,
-            userId: session?.user?.id,
-            email: session?.user?.email,
-          });
-
-          if (event === "SIGNED_IN" && session) {
-            addDebugLog("User signed in successfully", {
-              userId: session.user.id,
-              email: session.user.email,
-              provider: session.user.app_metadata?.provider,
-            });
-
-            // Create profile if it doesn't exist
-            try {
-              if (!supabase) {
-                addDebugLog(
-                  "Supabase client not available for profile creation"
-                );
-                return;
-              }
-
-              const { data: profile, error: profileError } = await supabase
-                .from("profiles")
-                .select("id")
-                .eq("id", session.user.id)
-                .single();
-
-              if (profileError && profileError.code === "PGRST116") {
-                addDebugLog("Creating user profile");
-                const { error: createError } = await supabase
-                  .from("profiles")
-                  .insert({
-                    id: session.user.id,
-                    email: session.user.email,
-                    role: "user",
-                    owned_brands: [],
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString(),
-                  });
-
-                if (createError) {
-                  addDebugLog("Profile creation failed", createError);
-                } else {
-                  addDebugLog("Profile created successfully");
-                }
-              }
-            } catch (profileErr) {
-              addDebugLog("Profile check/creation error", profileErr);
-            }
-
-            toast.success("Successfully signed in!");
-
-            // Clean up subscription
-            subscription.unsubscribe();
-
-            // Redirect after a short delay
-            const redirectTo = searchParams.get("redirect_to") || "/studio";
-            addDebugLog("Redirecting user", { redirectTo });
-
-            setTimeout(() => {
-              // Use window.location.href for a full page reload to ensure middleware picks up the session
-              window.location.href = redirectTo;
-            }, 1000);
-
-            return;
-          }
-
-          if (event === "SIGNED_OUT") {
-            addDebugLog("User signed out");
-            subscription.unsubscribe();
-            router.push("/login");
-            return;
-          }
-        });
+        addDebugLog("🔍 Checking for existing session");
 
         // Check if we already have a session
         const {
-          data: { session: currentSession },
+          data: { session },
+          error: sessionError,
         } = await supabase.auth.getSession();
 
-        if (currentSession) {
-          addDebugLog("Existing session found", {
-            userId: currentSession.user.id,
-            email: currentSession.user.email,
-          });
-
-          toast.success("Successfully signed in!");
-          subscription.unsubscribe();
-
-          const redirectTo = searchParams.get("redirect_to") || "/studio";
-          setTimeout(() => {
-            window.location.href = redirectTo;
-          }, 1000);
+        if (sessionError) {
+          addDebugLog("❌ Session check error", sessionError);
+          toast.error("Failed to verify authentication");
+          router.push("/login?error=session_check_failed");
           return;
         }
 
-        // If no immediate session, wait for the auth state change
-        addDebugLog("No immediate session, waiting for auth state change...");
+        if (session) {
+          addDebugLog("✅ Session found", {
+            userId: session.user.id,
+            email: session.user.email,
+            provider: session.user.app_metadata?.provider,
+          });
+
+          // Ensure user profile exists
+          await ensureUserProfile(session);
+
+          toast.success("Successfully signed in!");
+
+          const redirectTo = searchParams.get("redirect_to") || "/studio";
+          addDebugLog("🔄 Redirecting to", { redirectTo });
+
+          // Use window.location.href for a full page reload to ensure auth state is properly updated
+          window.location.href = redirectTo;
+          return;
+        }
+
+        addDebugLog("⚠️ No session found, waiting for auth state change");
+
+        // Set up auth state listener for OAuth callback
+        const {
+          data: { subscription },
+        } = supabase.auth.onAuthStateChange(async (event, session) => {
+          addDebugLog("🔄 Auth state change", { event, hasSession: !!session });
+
+          if (event === "SIGNED_IN" && session) {
+            addDebugLog("✅ User signed in successfully", {
+              userId: session.user.id,
+              email: session.user.email,
+            });
+
+            // Ensure user profile exists
+            await ensureUserProfile(session);
+
+            toast.success("Successfully signed in!");
+            subscription.unsubscribe();
+
+            const redirectTo = searchParams.get("redirect_to") || "/studio";
+            addDebugLog("🔄 Redirecting to", { redirectTo });
+
+            // Use window.location.href for a full page reload
+            window.location.href = redirectTo;
+          } else if (event === "SIGNED_OUT") {
+            addDebugLog("❌ User signed out during callback");
+            subscription.unsubscribe();
+            router.push("/login?error=signed_out_during_callback");
+          }
+        });
 
         // Set a timeout to handle cases where auth state change doesn't fire
         setTimeout(() => {
-          addDebugLog("Timeout reached, checking session one more time");
+          addDebugLog("⏰ Timeout reached, checking session one more time");
 
           if (!supabase) {
-            addDebugLog("Supabase client not available for timeout check");
+            addDebugLog("❌ Supabase client not available for timeout check");
             router.push("/login?error=service_unavailable");
             setLoading(false);
             return;
@@ -189,9 +143,7 @@ export default function AuthCallback() {
             .getSession()
             .then(({ data: { session: timeoutSession } }) => {
               if (timeoutSession) {
-                addDebugLog("Session found on timeout check", {
-                  userId: timeoutSession.user.id,
-                });
+                addDebugLog("✅ Session found on timeout check");
                 toast.success("Successfully signed in!");
                 subscription.unsubscribe();
 
@@ -199,84 +151,118 @@ export default function AuthCallback() {
                 window.location.href = redirectTo;
               } else {
                 addDebugLog(
-                  "No session found after timeout - this indicates an OAuth flow issue"
+                  "❌ No session found after timeout - OAuth flow failed"
                 );
                 subscription.unsubscribe();
 
-                // More specific error message
-                const errorDetails =
-                  "OAuth callback completed but session was not established. This may be due to redirect URI configuration.";
-                router.push(
-                  `/login?error=oauth_session_failed&details=${encodeURIComponent(errorDetails)}`
-                );
+                toast.error("Authentication failed. Please try again.");
+                router.push("/login?error=oauth_timeout");
               }
               setLoading(false);
             });
-        }, 5000);
+        }, 10000); // 10 second timeout
 
-        // Clean up subscription after 10 seconds
+        // Clean up subscription after 15 seconds
         setTimeout(() => {
           subscription.unsubscribe();
           if (loading) {
             setLoading(false);
           }
-        }, 10000);
-      } catch (error: unknown) {
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error";
-        const errorStack = error instanceof Error ? error.stack : undefined;
-
-        addDebugLog("Unexpected error in auth callback", {
-          error: errorMessage,
-          stack: errorStack,
-        });
-
-        console.error("Unexpected auth callback error:", error);
-        toast.error("Authentication failed");
-        router.push(
-          `/login?error=unexpected_error&details=${encodeURIComponent(errorMessage)}`
-        );
+        }, 15000);
+      } catch (error) {
+        addDebugLog("❌ Callback error", error);
+        console.error("Auth callback error:", error);
+        toast.error("Authentication failed. Please try again.");
+        router.push("/login?error=callback_error");
         setLoading(false);
       }
     };
 
+    const ensureUserProfile = async (session: any) => {
+      try {
+        addDebugLog("🔍 Checking user profile");
+
+        if (!supabase) {
+          addDebugLog(
+            "❌ Supabase client not available for profile operations"
+          );
+          return;
+        }
+
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("id", session.user.id)
+          .single();
+
+        if (profileError && profileError.code === "PGRST116") {
+          addDebugLog("🔄 Creating user profile");
+
+          const { error: createError } = await supabase
+            .from("profiles")
+            .insert({
+              id: session.user.id,
+              email: session.user.email,
+              role: "user",
+              owned_brands: [],
+              first_name:
+                session.user.user_metadata?.full_name?.split(" ")[0] || "",
+              last_name:
+                session.user.user_metadata?.full_name
+                  ?.split(" ")
+                  .slice(1)
+                  .join(" ") || "",
+              avatar_url: session.user.user_metadata?.avatar_url || "",
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            });
+
+          if (createError) {
+            addDebugLog("❌ Profile creation failed", createError);
+          } else {
+            addDebugLog("✅ Profile created successfully");
+          }
+        } else if (profile) {
+          addDebugLog("✅ Profile already exists");
+        }
+      } catch (error) {
+        addDebugLog("❌ Profile check/creation error", error);
+      }
+    };
+
     handleAuthCallback();
-  }, [router, searchParams, loading]);
+  }, [router, searchParams]);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="text-center max-w-md">
-          <div className="animate-spin h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-gray-600 mb-4">Completing sign in...</p>
-          <p className="text-sm text-gray-500">This may take a few seconds</p>
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-oma-beige/50 to-white flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+          <div className="text-center">
+            <div className="animate-spin h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full mx-auto mb-4"></div>
+            <h2 className="text-lg font-canela text-oma-plum mb-2">
+              Completing Sign In
+            </h2>
+            <p className="text-sm text-oma-cocoa">
+              Please wait while we complete your authentication...
+            </p>
+          </div>
 
-          {/* Debug information in development */}
-          {process.env.NODE_ENV === "development" && debugInfo.length > 0 && (
-            <div className="mt-8 text-left bg-gray-100 p-4 rounded-lg max-h-64 overflow-y-auto">
-              <h3 className="font-semibold mb-2">Debug Log:</h3>
-              {debugInfo.map((log, index) => (
-                <div key={index} className="text-xs mb-2 border-b pb-1">
-                  <div className="font-mono text-gray-500">{log.timestamp}</div>
-                  <div className="font-semibold">{log.message}</div>
-                  {log.data && (
-                    <pre className="text-gray-600 mt-1 whitespace-pre-wrap">
-                      {log.data}
-                    </pre>
-                  )}
-                </div>
-              ))}
+          {/* Debug logs for development */}
+          {process.env.NODE_ENV === "development" && debugLogs.length > 0 && (
+            <div className="mt-6 bg-gray-50 p-4 rounded-lg">
+              <h3 className="text-sm font-semibold text-gray-700 mb-2">
+                Debug Logs (Development Only)
+              </h3>
+              <div className="text-xs text-gray-600 space-y-1 max-h-40 overflow-y-auto">
+                {debugLogs.map((log, index) => (
+                  <div key={index} className="font-mono">
+                    {log}
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-white">
-      <div className="text-center">
-        <p className="text-gray-600">Redirecting...</p>
       </div>
     </div>
   );
