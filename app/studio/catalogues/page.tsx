@@ -254,7 +254,7 @@ export default function CataloguesPage() {
   if (!canManageCatalogues) {
     return (
       <div className="flex items-center justify-center h-64">
-        <p className="text-gray-500">
+        <p className="text-black">
           You don't have permission to manage catalogues.
         </p>
       </div>
@@ -268,7 +268,7 @@ export default function CataloguesPage() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-4xl font-canela text-black mb-2">Catalogues</h1>
-            <p className="text-oma-cocoa/70">
+            <p className="text-black/70">
               Create and manage your brand catalogues
             </p>
           </div>
@@ -286,36 +286,36 @@ export default function CataloguesPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <Card className="border-oma-gold/20 bg-white/80">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-oma-cocoa/70">
+              <CardTitle className="text-sm font-medium text-black/70">
                 Total Catalogues
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-oma-cocoa">
+              <div className="text-2xl font-bold text-black">
                 {catalogues.length}
               </div>
             </CardContent>
           </Card>
           <Card className="border-oma-gold/20 bg-white/80">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-oma-cocoa/70">
+              <CardTitle className="text-sm font-medium text-black/70">
                 Active Brands
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-oma-cocoa">
+              <div className="text-2xl font-bold text-black">
                 {brands.length}
               </div>
             </CardContent>
           </Card>
           <Card className="border-oma-gold/20 bg-white/80">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-oma-cocoa/70">
+              <CardTitle className="text-sm font-medium text-black/70">
                 This Month
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-oma-cocoa">
+              <div className="text-2xl font-bold text-black">
                 {
                   catalogues.filter((c) => {
                     // Since created_at might not be available in the Catalogue type,
@@ -331,7 +331,7 @@ export default function CataloguesPage() {
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-4 mb-8">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-oma-cocoa/40 w-4 h-4" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-black/40 w-4 h-4" />
             <Input
               placeholder="Search catalogues..."
               value={searchQuery}
@@ -358,11 +358,11 @@ export default function CataloguesPage() {
         {filteredCatalogues.length === 0 ? (
           <Card className="border-oma-gold/20 bg-white/80">
             <CardContent className="flex flex-col items-center justify-center py-16">
-              <Package className="w-16 h-16 text-oma-cocoa/30 mb-4" />
-              <h3 className="text-xl font-canela text-oma-cocoa mb-2">
+              <Package className="w-16 h-16 text-black/30 mb-4" />
+              <h3 className="text-xl font-canela text-black mb-2">
                 No catalogues found
               </h3>
-              <p className="text-oma-cocoa/60 text-center mb-6">
+              <p className="text-black/60 text-center mb-6">
                 {catalogues.length === 0
                   ? "Get started by creating your first catalogue"
                   : "Try adjusting your search or filter criteria"}
@@ -396,10 +396,10 @@ export default function CataloguesPage() {
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <CardTitle className="text-lg font-canela text-oma-cocoa mb-1">
+                      <CardTitle className="text-lg font-canela text-black mb-1">
                         {catalogue.title}
                       </CardTitle>
-                      <CardDescription className="text-oma-cocoa/60">
+                      <CardDescription className="text-black/60">
                         {catalogue.brand.name}
                       </CardDescription>
                     </div>
@@ -411,7 +411,7 @@ export default function CataloguesPage() {
                       variant="outline"
                       size="sm"
                       onClick={() => handleViewCatalogue(catalogue.id)}
-                      className="border-oma-cocoa/20 text-oma-cocoa hover:bg-oma-cocoa/5"
+                      className="border-oma-cocoa/20 text-black hover:bg-oma-cocoa/5"
                     >
                       <Eye className="w-4 h-4 mr-1" />
                       View
@@ -420,7 +420,7 @@ export default function CataloguesPage() {
                       variant="outline"
                       size="sm"
                       onClick={() => handleEditCatalogue(catalogue.id)}
-                      className="border-oma-cocoa/20 text-oma-cocoa hover:bg-oma-cocoa/5"
+                      className="border-oma-cocoa/20 text-black hover:bg-oma-cocoa/5"
                     >
                       <Edit className="w-4 h-4 mr-1" />
                       Edit
