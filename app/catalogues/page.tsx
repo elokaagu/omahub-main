@@ -138,13 +138,13 @@ export default function CataloguesPage() {
           <div className="flex flex-col lg:flex-row gap-6 items-center justify-between">
             {/* Search */}
             <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-oma-cocoa/40 w-5 h-5" />
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-black/40 w-5 h-5" />
               <input
                 type="text"
                 placeholder="Search catalogues..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 border border-oma-cocoa/20 rounded-lg focus:outline-none focus:border-oma-plum/50 bg-white/80 text-oma-cocoa placeholder-oma-cocoa/50"
+                className="w-full pl-12 pr-4 py-3 border border-oma-cocoa/20 rounded-lg focus:outline-none focus:border-oma-plum/50 bg-white/80 text-black placeholder-black/50"
               />
             </div>
 
@@ -156,7 +156,7 @@ export default function CataloguesPage() {
                   className={`p-2 rounded-md transition-colors ${
                     viewMode === "grid"
                       ? "bg-oma-plum text-white"
-                      : "text-oma-cocoa/60 hover:text-oma-cocoa"
+                      : "text-black/60 hover:text-black"
                   }`}
                 >
                   <Grid className="w-5 h-5" />
@@ -166,7 +166,7 @@ export default function CataloguesPage() {
                   className={`p-2 rounded-md transition-colors ${
                     viewMode === "list"
                       ? "bg-oma-plum text-white"
-                      : "text-oma-cocoa/60 hover:text-oma-cocoa"
+                      : "text-black/60 hover:text-black"
                   }`}
                 >
                   <List className="w-5 h-5" />
@@ -184,7 +184,7 @@ export default function CataloguesPage() {
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                   selectedCategory === category
                     ? "bg-oma-plum text-white"
-                    : "bg-white/80 text-oma-cocoa/70 hover:bg-oma-cocoa/10 border border-oma-cocoa/20"
+                    : "bg-white/80 text-black/70 hover:bg-oma-cocoa/10 border border-oma-cocoa/20"
                 }`}
               >
                 {category === "all" ? "All Categories" : category}
@@ -195,7 +195,7 @@ export default function CataloguesPage() {
 
         {/* Results Count */}
         <div className="mb-8">
-          <p className="text-oma-cocoa/60">
+          <p className="text-black/60">
             {filteredCatalogues.length} catalogue
             {filteredCatalogues.length !== 1 ? "s" : ""} found
           </p>
@@ -204,11 +204,11 @@ export default function CataloguesPage() {
         {/* Catalogues Grid/List */}
         {filteredCatalogues.length === 0 ? (
           <div className="text-center py-16">
-            <Filter className="w-16 h-16 text-oma-cocoa/30 mx-auto mb-4" />
-            <h3 className="text-xl font-canela text-oma-cocoa mb-2">
+            <Filter className="w-16 h-16 text-black/30 mx-auto mb-4" />
+            <h3 className="text-xl font-canela text-black mb-2">
               No catalogues found
             </h3>
-            <p className="text-oma-cocoa/60">
+            <p className="text-black/60">
               Try adjusting your search or filter criteria
             </p>
           </div>
@@ -241,23 +241,23 @@ export default function CataloguesPage() {
                       />
                     </div>
                     <div className="p-6">
-                      <h3 className="text-xl font-canela text-oma-cocoa mb-2 group-hover:text-oma-plum transition-colors">
+                      <h3 className="text-xl font-canela text-black mb-2 group-hover:text-oma-plum transition-colors">
                         {catalogue.title}
                       </h3>
-                      <p className="text-oma-cocoa/70 mb-3 line-clamp-2">
+                      <p className="text-black/70 mb-3 line-clamp-2">
                         {catalogue.description}
                       </p>
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-sm font-medium text-oma-cocoa">
+                          <p className="text-sm font-medium text-black">
                             {catalogue.brand.name}
                           </p>
-                          <p className="text-xs text-oma-cocoa/60">
+                          <p className="text-xs text-black/60">
                             {catalogue.brand.location}
                           </p>
                         </div>
                         {catalogue.brand.is_verified && (
-                          <div className="bg-oma-gold/20 text-oma-cocoa text-xs px-2 py-1 rounded-full">
+                          <div className="bg-oma-gold/20 text-black text-xs px-2 py-1 rounded-full">
                             Verified
                           </div>
                         )}
@@ -275,23 +275,23 @@ export default function CataloguesPage() {
                       />
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-xl font-canela text-oma-cocoa mb-2 group-hover:text-oma-plum transition-colors">
+                      <h3 className="text-xl font-canela text-black mb-2 group-hover:text-oma-plum transition-colors">
                         {catalogue.title}
                       </h3>
-                      <p className="text-oma-cocoa/70 mb-3 line-clamp-2">
+                      <p className="text-black/70 mb-3 line-clamp-2">
                         {catalogue.description}
                       </p>
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-sm font-medium text-oma-cocoa">
+                          <p className="text-sm font-medium text-black">
                             {catalogue.brand.name}
                           </p>
-                          <p className="text-xs text-oma-cocoa/60">
+                          <p className="text-xs text-black/60">
                             {catalogue.brand.location}
                           </p>
                         </div>
                         {catalogue.brand.is_verified && (
-                          <div className="bg-oma-gold/20 text-oma-cocoa text-xs px-2 py-1 rounded-full">
+                          <div className="bg-oma-gold/20 text-black text-xs px-2 py-1 rounded-full">
                             Verified
                           </div>
                         )}

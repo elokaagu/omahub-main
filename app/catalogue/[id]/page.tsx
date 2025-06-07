@@ -101,7 +101,7 @@ export default function CataloguePage() {
       <div className="min-h-screen bg-gradient-to-b from-oma-beige/30 to-white">
         <div className="max-w-7xl mx-auto px-6 py-24">
           <div className="text-center">
-            <h1 className="text-3xl font-canela text-oma-cocoa mb-4">
+            <h1 className="text-3xl font-canela text-black mb-4">
               {error || "Catalogue not found"}
             </h1>
             <Link
@@ -123,7 +123,7 @@ export default function CataloguePage() {
         {/* Back Button */}
         <Link
           href="/catalogues"
-          className="inline-flex items-center gap-2 text-oma-cocoa/70 hover:text-oma-cocoa transition-colors mb-8"
+          className="inline-flex items-center gap-2 text-black/70 hover:text-black transition-colors mb-8"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Catalogues
@@ -145,7 +145,7 @@ export default function CataloguePage() {
           {/* Catalogue Info */}
           <div className="space-y-6">
             <div>
-              <h1 className="text-4xl font-canela text-oma-cocoa mb-4">
+              <h1 className="text-4xl font-canela text-black mb-4">
                 {catalogue.title}
               </h1>
 
@@ -165,7 +165,7 @@ export default function CataloguePage() {
               </div>
 
               {/* Brand Details */}
-              <div className="flex flex-wrap gap-4 text-sm text-oma-cocoa/70 mb-6">
+              <div className="flex flex-wrap gap-4 text-sm text-black/70 mb-6">
                 <div className="flex items-center gap-1">
                   <MapPin className="w-4 h-4" />
                   {catalogue.brand.location}
@@ -174,20 +174,20 @@ export default function CataloguePage() {
                   <Star className="w-4 h-4 fill-current text-oma-gold" />
                   {catalogue.brand.rating}/5
                 </div>
-                <div className="bg-oma-gold/20 text-oma-cocoa px-2 py-1 rounded-full text-xs">
+                <div className="bg-oma-gold/20 text-black px-2 py-1 rounded-full text-xs">
                   {catalogue.brand.category}
                 </div>
               </div>
 
               {/* Description */}
               {catalogue.description && (
-                <p className="text-oma-cocoa/80 leading-relaxed mb-6">
+                <p className="text-black/80 leading-relaxed mb-6">
                   {catalogue.description}
                 </p>
               )}
 
               {/* Brand Description */}
-              <p className="text-oma-cocoa/70 leading-relaxed">
+              <p className="text-black/70 leading-relaxed">
                 {catalogue.brand.long_description}
               </p>
             </div>
@@ -200,7 +200,7 @@ export default function CataloguePage() {
               >
                 View Designer Profile
               </Link>
-              <button className="border border-oma-cocoa/20 text-oma-cocoa px-6 py-3 rounded-lg hover:bg-oma-cocoa/5 transition-colors flex items-center gap-2">
+              <button className="border border-oma-cocoa/20 text-black px-6 py-3 rounded-lg hover:bg-oma-cocoa/5 transition-colors flex items-center gap-2">
                 <Heart className="w-4 h-4" />
                 Save Catalogue
               </button>
@@ -211,19 +211,19 @@ export default function CataloguePage() {
         {/* Products in This Catalogue */}
         <div className="mb-16">
           <div className="flex items-center gap-3 mb-8">
-            <ShoppingBag className="w-6 h-6 text-oma-cocoa" />
-            <h2 className="text-3xl font-canela text-oma-cocoa">
+            <ShoppingBag className="w-6 h-6 text-black" />
+            <h2 className="text-3xl font-canela text-black">
               Products in This Catalogue
             </h2>
           </div>
 
           {products.length === 0 ? (
             <div className="text-center py-16 bg-white/50 rounded-xl border border-oma-gold/10">
-              <ShoppingBag className="w-16 h-16 text-oma-cocoa/30 mx-auto mb-4" />
-              <h3 className="text-xl font-canela text-oma-cocoa mb-2">
+              <ShoppingBag className="w-16 h-16 text-black/30 mx-auto mb-4" />
+              <h3 className="text-xl font-canela text-black mb-2">
                 No products yet
               </h3>
-              <p className="text-oma-cocoa/60">
+              <p className="text-black/60">
                 This catalogue doesn't have any products at the moment.
               </p>
             </div>
@@ -250,7 +250,7 @@ export default function CataloguePage() {
                       )}
                     </div>
                     <div className="p-4">
-                      <h3 className="font-medium text-oma-cocoa mb-2 group-hover:text-oma-plum transition-colors line-clamp-2">
+                      <h3 className="font-medium text-black mb-2 group-hover:text-oma-plum transition-colors line-clamp-2">
                         {product.title}
                       </h3>
                       <div className="flex items-center gap-2">
@@ -259,12 +259,12 @@ export default function CataloguePage() {
                             <span className="text-lg font-semibold text-oma-plum">
                               ${product.sale_price}
                             </span>
-                            <span className="text-sm text-oma-cocoa/60 line-through">
+                            <span className="text-sm text-black/60 line-through">
                               ${product.price}
                             </span>
                           </>
                         ) : (
-                          <span className="text-lg font-semibold text-oma-cocoa">
+                          <span className="text-lg font-semibold text-black">
                             ${product.price}
                           </span>
                         )}
@@ -281,12 +281,12 @@ export default function CataloguePage() {
         {recommendedProducts.length > 0 && (
           <div>
             <div className="flex items-center gap-3 mb-8">
-              <Heart className="w-6 h-6 text-oma-cocoa" />
-              <h2 className="text-3xl font-canela text-oma-cocoa">
+              <Heart className="w-6 h-6 text-black" />
+              <h2 className="text-3xl font-canela text-black">
                 You May Also Like
               </h2>
               {user && (
-                <span className="text-sm text-oma-cocoa/60 bg-oma-beige/50 px-3 py-1 rounded-full">
+                <span className="text-sm text-black/60 bg-oma-beige/50 px-3 py-1 rounded-full">
                   Based on your favorites
                 </span>
               )}
@@ -314,7 +314,7 @@ export default function CataloguePage() {
                       )}
                     </div>
                     <div className="p-4">
-                      <h3 className="font-medium text-oma-cocoa mb-2 group-hover:text-oma-plum transition-colors line-clamp-2">
+                      <h3 className="font-medium text-black mb-2 group-hover:text-oma-plum transition-colors line-clamp-2">
                         {product.title}
                       </h3>
                       <div className="flex items-center gap-2">
@@ -323,12 +323,12 @@ export default function CataloguePage() {
                             <span className="text-lg font-semibold text-oma-plum">
                               ${product.sale_price}
                             </span>
-                            <span className="text-sm text-oma-cocoa/60 line-through">
+                            <span className="text-sm text-black/60 line-through">
                               ${product.price}
                             </span>
                           </>
                         ) : (
-                          <span className="text-lg font-semibold text-oma-cocoa">
+                          <span className="text-lg font-semibold text-black">
                             ${product.price}
                           </span>
                         )}
