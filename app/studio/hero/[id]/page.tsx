@@ -251,10 +251,11 @@ export default function EditHeroSlidePage() {
                     "image/jpeg": [".jpg", ".jpeg"],
                     "image/webp": [".webp"],
                   }}
-                  maxSize={10}
+                  maxSize={20}
                 />
                 <p className="text-xs text-oma-cocoa/70 mt-1">
-                  High-resolution image (recommended: 1920x1080 or larger)
+                  High-resolution image (recommended: 1920x1080 or larger, max
+                  20MB)
                 </p>
               </div>
               <div>

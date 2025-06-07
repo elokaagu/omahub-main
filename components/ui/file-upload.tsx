@@ -62,11 +62,20 @@ export function FileUpload({
       path: filePath,
     });
 
-    // Create a timeout promise
+    // Create a timeout promise with dynamic timeout based on file size
+    // Base timeout of 60 seconds + 30 seconds per MB for large files
+    const fileSizeMB = file.size / (1024 * 1024);
+    const timeoutDuration = Math.max(60000, 60000 + fileSizeMB * 30000); // Min 60s, +30s per MB
+
     const timeoutPromise = new Promise((_, reject) => {
       setTimeout(
-        () => reject(new Error("Upload timeout after 30 seconds")),
-        30000
+        () =>
+          reject(
+            new Error(
+              `Upload timeout after ${Math.round(timeoutDuration / 1000)} seconds`
+            )
+          ),
+        timeoutDuration
       );
     });
 
