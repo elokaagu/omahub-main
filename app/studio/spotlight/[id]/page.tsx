@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
+import { FileUpload } from "@/components/ui/file-upload";
 import {
   getSpotlightContent,
   updateSpotlightContent,
@@ -104,6 +105,13 @@ export default function EditSpotlightPage() {
     }));
   };
 
+  const handleMainImageUpload = (url: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      main_image: url,
+    }));
+  };
+
   const handleProductChange = (
     index: number,
     field: keyof FeaturedProduct,
@@ -116,6 +124,10 @@ export default function EditSpotlightPage() {
           i === index ? { ...product, [field]: value } : product
         ) || [],
     }));
+  };
+
+  const handleProductImageUpload = (index: number, url: string) => {
+    handleProductChange(index, "image", url);
   };
 
   const addProduct = () => {
@@ -170,7 +182,7 @@ export default function EditSpotlightPage() {
       return;
     }
     if (!formData.main_image?.trim()) {
-      toast.error("Main image URL is required");
+      toast.error("Main image is required");
       return;
     }
     if (!formData.brand_link?.trim()) {
@@ -323,17 +335,23 @@ export default function EditSpotlightPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="main_image">Main Image URL *</Label>
-                <Input
-                  id="main_image"
-                  value={formData.main_image || ""}
-                  onChange={(e) =>
-                    handleInputChange("main_image", e.target.value)
-                  }
-                  placeholder="https://example.com/image.jpg"
-                  required
+              <div className="space-y-2">
+                <Label htmlFor="main_image">Main Image *</Label>
+                <FileUpload
+                  onUploadComplete={handleMainImageUpload}
+                  defaultValue={formData.main_image}
+                  bucket="spotlight-images"
+                  path="main"
+                  accept={{
+                    "image/png": [".png"],
+                    "image/jpeg": [".jpg", ".jpeg"],
+                    "image/webp": [".webp"],
+                  }}
+                  maxSize={10}
                 />
+                <p className="text-xs text-oma-cocoa/70 mt-1">
+                  High-resolution main spotlight image
+                </p>
               </div>
               <div>
                 <Label htmlFor="brand_link">Brand Link *</Label>
@@ -437,17 +455,24 @@ export default function EditSpotlightPage() {
                           placeholder="e.g., Heritage Collection"
                         />
                       </div>
-                      <div>
+                      <div className="space-y-2">
                         <Label htmlFor={`product_image_${index}`}>
-                          Image URL
+                          Product Image
                         </Label>
-                        <Input
-                          id={`product_image_${index}`}
-                          value={product.image}
-                          onChange={(e) =>
-                            handleProductChange(index, "image", e.target.value)
+                        <FileUpload
+                          onUploadComplete={(url: string) =>
+                            handleProductImageUpload(index, url)
                           }
-                          placeholder="https://example.com/product.jpg"
+                          defaultValue={product.image}
+                          bucket="spotlight-images"
+                          path="products"
+                          accept={{
+                            "image/png": [".png"],
+                            "image/jpeg": [".jpg", ".jpeg"],
+                            "image/webp": [".webp"],
+                          }}
+                          maxSize={5}
+                          className="h-32"
                         />
                       </div>
                     </div>

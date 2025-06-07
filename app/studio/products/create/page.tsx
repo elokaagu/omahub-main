@@ -12,6 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Loading } from "@/components/ui/loading";
 import { NavigationLink } from "@/components/ui/navigation-link";
+import { FileUpload } from "@/components/ui/file-upload";
 import { createProduct } from "@/lib/services/productService";
 import { getAllCatalogues } from "@/lib/services/catalogueService";
 import { getAllBrands } from "@/lib/services/brandService";
@@ -115,6 +116,13 @@ export default function CreateProductPage() {
     }
   };
 
+  const handleImageUpload = (url: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      image: url,
+    }));
+  };
+
   const handleArrayChange = (
     field: "sizes" | "colors" | "materials",
     value: string
@@ -160,12 +168,12 @@ export default function CreateProductPage() {
         price: parseFloat(formData.price),
         sale_price: formData.sale_price
           ? parseFloat(formData.sale_price)
-          : null,
+          : undefined,
         image:
           formData.image ||
           "https://via.placeholder.com/400x400?text=Product+Image",
         brand_id: formData.brand_id,
-        catalogue_id: formData.catalogue_id || null,
+        catalogue_id: formData.catalogue_id || undefined,
         category: formData.category || "General",
         in_stock: formData.in_stock,
         sizes: formData.sizes.length > 0 ? formData.sizes : [],
@@ -196,17 +204,15 @@ export default function CreateProductPage() {
 
       // Provide more specific error messages
       if (
-        error.message?.includes("schema cache") ||
-        error.message?.includes("column")
+        error instanceof Error &&
+        (error.message?.includes("schema cache") ||
+          error.message?.includes("column"))
       ) {
         toast.error(
-          "Database schema issue detected. Please contact administrator."
+          "Database schema error. Some fields may not be supported yet."
         );
-        console.error("Schema error - missing columns in products table");
-      } else if (error.message?.includes("foreign key")) {
-        toast.error("Invalid brand or catalogue selected");
-      } else if (error.message?.includes("permission")) {
-        toast.error("You don't have permission to create products");
+      } else if (error instanceof Error) {
+        toast.error(`Failed to create product: ${error.message}`);
       } else {
         toast.error("Failed to create product. Please try again.");
       }
@@ -298,28 +304,23 @@ export default function CreateProductPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="image" className="text-oma-cocoa">
-                  Product Image URL
+                  Product Image
                 </Label>
-                <Input
-                  id="image"
-                  value={formData.image}
-                  onChange={(e) => handleInputChange("image", e.target.value)}
-                  placeholder="https://example.com/image.jpg"
-                  className="border-oma-cocoa/20 focus:border-oma-plum"
+                <FileUpload
+                  onUploadComplete={handleImageUpload}
+                  defaultValue={formData.image}
+                  bucket="product-images"
+                  path="products"
+                  accept={{
+                    "image/png": [".png"],
+                    "image/jpeg": [".jpg", ".jpeg"],
+                    "image/webp": [".webp"],
+                  }}
+                  maxSize={5}
                 />
-                {formData.image && (
-                  <div className="mt-2">
-                    <img
-                      src={formData.image}
-                      alt="Product preview"
-                      className="w-32 h-32 object-cover rounded-lg border border-oma-gold/20"
-                      onError={(e) => {
-                        e.currentTarget.src =
-                          "https://via.placeholder.com/128x128?text=Invalid+Image";
-                      }}
-                    />
-                  </div>
-                )}
+                <p className="text-xs text-oma-cocoa/70 mt-1">
+                  Upload a high-quality product image
+                </p>
               </div>
             </CardContent>
           </Card>

@@ -12,6 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Loading } from "@/components/ui/loading";
 import { NavigationLink } from "@/components/ui/navigation-link";
+import { FileUpload } from "@/components/ui/file-upload";
 import { getProductById, updateProduct } from "@/lib/services/productService";
 import { getAllCatalogues } from "@/lib/services/catalogueService";
 import { getAllBrands } from "@/lib/services/brandService";
@@ -143,6 +144,13 @@ export default function EditProductPage() {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
+    }));
+  };
+
+  const handleImageUpload = (url: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      image: url,
     }));
   };
 
@@ -357,28 +365,23 @@ export default function EditProductPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="image" className="text-black">
-                  Product Image URL
+                  Product Image
                 </Label>
-                <Input
-                  id="image"
-                  value={formData.image}
-                  onChange={(e) => handleInputChange("image", e.target.value)}
-                  placeholder="https://example.com/image.jpg"
-                  className="border-gray-300 focus:border-gray-500"
+                <FileUpload
+                  onUploadComplete={handleImageUpload}
+                  defaultValue={formData.image}
+                  bucket="product-images"
+                  path="products"
+                  accept={{
+                    "image/png": [".png"],
+                    "image/jpeg": [".jpg", ".jpeg"],
+                    "image/webp": [".webp"],
+                  }}
+                  maxSize={5}
                 />
-                {formData.image && (
-                  <div className="mt-2">
-                    <img
-                      src={formData.image}
-                      alt="Product preview"
-                      className="w-32 h-32 object-cover rounded-lg border border-gray-200"
-                      onError={(e) => {
-                        e.currentTarget.src =
-                          "https://via.placeholder.com/128x128?text=Invalid+Image";
-                      }}
-                    />
-                  </div>
-                )}
+                <p className="text-xs text-gray-600 mt-1">
+                  Upload a high-quality product image
+                </p>
               </div>
             </CardContent>
           </Card>

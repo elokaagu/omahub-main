@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
+import { FileUpload } from "@/components/ui/file-upload";
 import {
   getHeroSlide,
   updateHeroSlide,
@@ -98,6 +99,13 @@ export default function EditHeroSlidePage() {
     }));
   };
 
+  const handleImageUpload = (url: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      image: url,
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -108,7 +116,7 @@ export default function EditHeroSlidePage() {
 
     // Validation
     if (!formData.image?.trim()) {
-      toast.error("Image URL is required");
+      toast.error("Hero image is required");
       return;
     }
     if (!formData.title?.trim()) {
@@ -231,17 +239,22 @@ export default function EditHeroSlidePage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="image">Image URL *</Label>
-                <Input
-                  id="image"
-                  value={formData.image || ""}
-                  onChange={(e) => handleInputChange("image", e.target.value)}
-                  placeholder="https://example.com/image.jpg"
-                  required
+              <div className="space-y-2">
+                <Label htmlFor="image">Hero Image *</Label>
+                <FileUpload
+                  onUploadComplete={handleImageUpload}
+                  defaultValue={formData.image}
+                  bucket="hero-images"
+                  path="slides"
+                  accept={{
+                    "image/png": [".png"],
+                    "image/jpeg": [".jpg", ".jpeg"],
+                    "image/webp": [".webp"],
+                  }}
+                  maxSize={10}
                 />
                 <p className="text-xs text-oma-cocoa/70 mt-1">
-                  High-resolution image (recommended: 1920x1080)
+                  High-resolution image (recommended: 1920x1080 or larger)
                 </p>
               </div>
               <div>
