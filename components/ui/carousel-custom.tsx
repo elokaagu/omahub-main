@@ -183,7 +183,7 @@ export function Carousel({
                       item.link && item.link.trim() ? item.link : "/directory"
                     }
                   >
-                    {item.isEditorial ? "View Collection" : "Explore Designers"}
+                    {item.isEditorial ? "View Catalogue" : "Explore Designers"}
                   </Link>
                 </Button>
               ) : null}

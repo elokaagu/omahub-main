@@ -125,7 +125,7 @@ export default function CataloguesPage() {
       <div className="max-w-7xl mx-auto px-6 py-24">
         {/* Header */}
         <div className="text-center mb-16">
-          <h1 className="text-5xl font-canela text-oma-cocoa mb-6">
+          <h1 className="text-5xl font-canela text-black mb-6">
             Designer Catalogues
           </h1>
           <p className="text-xl text-oma-cocoa/80 max-w-3xl mx-auto">

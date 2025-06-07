@@ -361,7 +361,7 @@ export default function EditHeroSlidePage() {
                   )}
                   <div className="bg-white text-black px-6 py-3 rounded font-medium">
                     {formData.is_editorial
-                      ? "View Collection"
+                      ? "View Catalogue"
                       : "Explore Designers"}
                   </div>
                 </div>
