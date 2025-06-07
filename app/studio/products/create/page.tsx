@@ -236,12 +236,10 @@ export default function CreateProductPage() {
             </NavigationLink>
           </Button>
           <div>
-            <h1 className="text-4xl font-canela text-oma-cocoa mb-2">
+            <h1 className="text-4xl font-canela text-black mb-2">
               Create Product
             </h1>
-            <p className="text-oma-cocoa/80">
-              Add a new product to the platform
-            </p>
+            <p className="text-black/80">Add a new product to the platform</p>
           </div>
         </div>
 
@@ -249,7 +247,7 @@ export default function CreateProductPage() {
           {/* Basic Information */}
           <Card className="border border-oma-gold/10 bg-white">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-oma-cocoa">
+              <CardTitle className="flex items-center gap-2 text-black">
                 <Package className="h-5 w-5" />
                 Basic Information
               </CardTitle>
@@ -257,7 +255,7 @@ export default function CreateProductPage() {
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="title" className="text-oma-cocoa">
+                  <Label htmlFor="title" className="text-black">
                     Product Title *
                   </Label>
                   <Input
@@ -270,7 +268,7 @@ export default function CreateProductPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="category" className="text-oma-cocoa">
+                  <Label htmlFor="category" className="text-black">
                     Category
                   </Label>
                   <Input
@@ -286,7 +284,7 @@ export default function CreateProductPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="description" className="text-oma-cocoa">
+                <Label htmlFor="description" className="text-black">
                   Description *
                 </Label>
                 <Textarea
@@ -303,7 +301,7 @@ export default function CreateProductPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="image" className="text-oma-cocoa">
+                <Label htmlFor="image" className="text-black">
                   Product Image
                 </Label>
                 <FileUpload
@@ -318,7 +316,7 @@ export default function CreateProductPage() {
                   }}
                   maxSize={5}
                 />
-                <p className="text-xs text-oma-cocoa/70 mt-1">
+                <p className="text-xs text-black/70 mt-1">
                   Upload a high-quality product image
                 </p>
               </div>
@@ -328,14 +326,12 @@ export default function CreateProductPage() {
           {/* Brand and Catalogue */}
           <Card className="border border-oma-gold/10 bg-white">
             <CardHeader>
-              <CardTitle className="text-oma-cocoa">
-                Brand & Catalogue
-              </CardTitle>
+              <CardTitle className="text-black">Brand & Catalogue</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="brand" className="text-oma-cocoa">
+                  <Label htmlFor="brand" className="text-black">
                     Brand *
                   </Label>
                   <Select
@@ -368,7 +364,7 @@ export default function CreateProductPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="catalogue" className="text-oma-cocoa">
+                  <Label htmlFor="catalogue" className="text-black">
                     Catalogue (Optional)
                   </Label>
                   <Select
@@ -397,7 +393,7 @@ export default function CreateProductPage() {
           {/* Pricing */}
           <Card className="border border-oma-gold/10 bg-white">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-oma-cocoa">
+              <CardTitle className="flex items-center gap-2 text-black">
                 <DollarSign className="h-5 w-5" />
                 Pricing
               </CardTitle>
@@ -405,7 +401,7 @@ export default function CreateProductPage() {
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="price" className="text-oma-cocoa">
+                  <Label htmlFor="price" className="text-black">
                     Regular Price *
                   </Label>
                   <Input
@@ -421,7 +417,7 @@ export default function CreateProductPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="sale_price" className="text-oma-cocoa">
+                  <Label htmlFor="sale_price" className="text-black">
                     Sale Price (Optional)
                   </Label>
                   <Input
@@ -444,12 +440,12 @@ export default function CreateProductPage() {
           {/* Product Details */}
           <Card className="border border-oma-gold/10 bg-white">
             <CardHeader>
-              <CardTitle className="text-oma-cocoa">Product Details</CardTitle>
+              <CardTitle className="text-black">Product Details</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Sizes */}
               <div className="space-y-2">
-                <Label className="text-oma-cocoa">Available Sizes</Label>
+                <Label className="text-black">Available Sizes</Label>
                 <div className="flex gap-2 mb-2">
                   <Input
                     placeholder="Add size (e.g., S, M, L, XL)"
@@ -498,7 +494,7 @@ export default function CreateProductPage() {
 
               {/* Colors */}
               <div className="space-y-2">
-                <Label className="text-oma-cocoa">Available Colors</Label>
+                <Label className="text-black">Available Colors</Label>
                 <div className="flex gap-2 mb-2">
                   <Input
                     placeholder="Add color (e.g., Red, Blue, Black)"
@@ -547,7 +543,7 @@ export default function CreateProductPage() {
 
               {/* Materials */}
               <div className="space-y-2">
-                <Label className="text-oma-cocoa">Materials</Label>
+                <Label className="text-black">Materials</Label>
                 <div className="flex gap-2 mb-2">
                   <Input
                     placeholder="Add material (e.g., Cotton, Silk, Polyester)"
@@ -595,7 +591,7 @@ export default function CreateProductPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="care_instructions" className="text-oma-cocoa">
+                <Label htmlFor="care_instructions" className="text-black">
                   Care Instructions
                 </Label>
                 <Textarea
@@ -611,7 +607,7 @@ export default function CreateProductPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="lead_time" className="text-oma-cocoa">
+                <Label htmlFor="lead_time" className="text-black">
                   Lead Time (for custom items)
                 </Label>
                 <Input
@@ -630,18 +626,15 @@ export default function CreateProductPage() {
           {/* Settings */}
           <Card className="border border-oma-gold/10 bg-white">
             <CardHeader>
-              <CardTitle className="text-oma-cocoa">Settings</CardTitle>
+              <CardTitle className="text-black">Settings</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex items-center justify-between p-4 bg-oma-beige/30 rounded-lg">
                 <div className="space-y-0.5">
-                  <Label
-                    htmlFor="in_stock"
-                    className="text-oma-cocoa font-medium"
-                  >
+                  <Label htmlFor="in_stock" className="text-black font-medium">
                     In Stock
                   </Label>
-                  <p className="text-sm text-oma-cocoa/70">
+                  <p className="text-sm text-black/70">
                     Whether this product is currently available
                   </p>
                 </div>
@@ -656,13 +649,10 @@ export default function CreateProductPage() {
 
               <div className="flex items-center justify-between p-4 bg-oma-beige/30 rounded-lg">
                 <div className="space-y-0.5">
-                  <Label
-                    htmlFor="is_custom"
-                    className="text-oma-cocoa font-medium"
-                  >
+                  <Label htmlFor="is_custom" className="text-black font-medium">
                     Custom/Tailored Item
                   </Label>
-                  <p className="text-sm text-oma-cocoa/70">
+                  <p className="text-sm text-black/70">
                     Mark if this is a custom or made-to-order item
                   </p>
                 </div>
@@ -684,7 +674,7 @@ export default function CreateProductPage() {
               variant="outline"
               onClick={() => router.push("/studio/products")}
               disabled={isLoading}
-              className="border-oma-cocoa text-oma-cocoa hover:bg-oma-cocoa hover:text-white"
+              className="border-oma-cocoa text-black hover:bg-oma-cocoa hover:text-white"
             >
               Cancel
             </Button>
