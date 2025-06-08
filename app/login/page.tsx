@@ -239,11 +239,7 @@ function LoginForm() {
         </div>
 
         <div className="mt-6">
-          <GoogleSignInButton
-            className="w-full"
-            variant="outline"
-            redirectTo={`${window.location.origin}/auth/callback`}
-          />
+          <GoogleSignInButton className="w-full" redirectTo="/studio" />
         </div>
       </div>
 
