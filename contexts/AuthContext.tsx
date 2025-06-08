@@ -42,7 +42,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (shouldRefreshSession === "true" && supabase) {
       AuthDebug.log(
-        "🔄 OAuth session refresh signal detected, refreshing session..."
+        "🔄 Session refresh signal detected, refreshing session..."
       );
 
       // Remove the parameter from URL
@@ -52,17 +52,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         (urlParams.toString() ? "?" + urlParams.toString() : "");
       window.history.replaceState({}, "", newUrl);
 
-      // Force refresh the session
-      supabase.auth.refreshSession().then(({ data, error }) => {
-        if (error) {
-          AuthDebug.error("❌ OAuth session refresh failed:", error);
-        } else {
-          AuthDebug.log("✅ OAuth session refreshed successfully");
-          if (data.session) {
-            handleAuthStateChange("TOKEN_REFRESHED", data.session);
-          }
+      // Force refresh the session with multiple attempts
+      const refreshSession = async () => {
+        if (!supabase) {
+          AuthDebug.error(
+            "❌ Supabase client not available for session refresh"
+          );
+          return;
         }
-      });
+
+        try {
+          // First attempt: refresh session
+          const { data, error } = await supabase.auth.refreshSession();
+          if (error) {
+            AuthDebug.error("❌ Session refresh failed:", error);
+
+            // Second attempt: get current session
+            const { data: sessionData, error: sessionError } =
+              await supabase.auth.getSession();
+            if (sessionError) {
+              AuthDebug.error("❌ Get session failed:", sessionError);
+            } else if (sessionData.session) {
+              AuthDebug.log("✅ Found existing session, updating auth state");
+              handleAuthStateChange("SIGNED_IN", sessionData.session);
+            } else {
+              AuthDebug.log("❌ No session found after refresh attempts");
+            }
+          } else {
+            AuthDebug.log("✅ Session refreshed successfully");
+            if (data.session) {
+              handleAuthStateChange("TOKEN_REFRESHED", data.session);
+            }
+          }
+        } catch (error) {
+          AuthDebug.error("❌ Session refresh exception:", error);
+        }
+      };
+
+      // Add a small delay to ensure cookies are set
+      setTimeout(refreshSession, 100);
     }
   }, [isClient]);
 

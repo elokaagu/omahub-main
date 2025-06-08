@@ -38,6 +38,7 @@ const createClient = () => {
       detectSessionInUrl: true,
       flowType: "pkce",
       debug: process.env.NODE_ENV === "development",
+      // Use default localStorage for session persistence
       storage: typeof window !== "undefined" ? window.localStorage : undefined,
       storageKey: "sb-auth-token",
     },
@@ -45,67 +46,10 @@ const createClient = () => {
       fetch: fetch,
       headers: {
         "x-application-name": "omahub",
-        "Cache-Control": "no-cache",
       },
     },
-    cookies: {
-      get: (name: string) => {
-        if (typeof document === "undefined") return undefined;
-
-        // Get cookie value from document.cookie
-        const value = document.cookie
-          .split("; ")
-          .find((row) => row.startsWith(`${name}=`))
-          ?.split("=")[1];
-
-        return value ? decodeURIComponent(value) : undefined;
-      },
-      set: (name: string, value: string, options: any) => {
-        if (typeof document === "undefined") return;
-
-        // Set cookie with proper options for Supabase auth
-        const cookieOptions = {
-          path: "/",
-          maxAge: options?.maxAge || 60 * 60 * 24 * 7, // 7 days default
-          sameSite: "lax",
-          secure: process.env.NODE_ENV === "production",
-          domain:
-            process.env.NODE_ENV === "production" ? undefined : "localhost",
-          ...options,
-        };
-
-        let cookieString = `${name}=${encodeURIComponent(value)}`;
-
-        // Add options to cookie string
-        Object.entries(cookieOptions).forEach(([key, val]) => {
-          if (val !== undefined && val !== null) {
-            cookieString += `; ${key}=${val}`;
-          }
-        });
-
-        document.cookie = cookieString;
-      },
-      remove: (name: string, options: any) => {
-        if (typeof document === "undefined") return;
-
-        const cookieOptions = {
-          path: "/",
-          domain:
-            process.env.NODE_ENV === "production" ? undefined : "localhost",
-          ...options,
-        };
-
-        let cookieString = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
-
-        Object.entries(cookieOptions).forEach(([key, val]) => {
-          if (val !== undefined && val !== null) {
-            cookieString += `; ${key}=${val}`;
-          }
-        });
-
-        document.cookie = cookieString;
-      },
-    },
+    // Remove custom cookie handling - let Supabase handle it automatically
+    // This should fix the cookie synchronization issues
   });
 };
 

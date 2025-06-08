@@ -12,6 +12,7 @@ import {
   getRememberedData,
   clearRememberMe,
 } from "@/lib/utils/rememberMe";
+import { supabase } from "@/lib/supabase";
 
 // Component to handle search params
 function LoginForm() {
@@ -114,11 +115,34 @@ function LoginForm() {
         // Save or clear remember me preference
         saveRememberMe(email, rememberMe);
 
-        // Add a small delay to ensure auth state is updated
-        await new Promise((resolve) => setTimeout(resolve, 500));
+        console.log("✅ Login successful, waiting for auth context sync...");
 
-        // Force a hard refresh to ensure auth state is properly updated
-        window.location.href = redirectTo;
+        // Wait longer for auth context to sync with the new session
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+
+        // Check if we have a valid session in the client
+        if (supabase) {
+          const { data: clientSession } = await supabase.auth.getSession();
+          console.log("🔍 Client session check:", {
+            hasSession: !!clientSession.session,
+            userId: clientSession.session?.user?.id,
+          });
+
+          if (clientSession.session) {
+            console.log("✅ Client session confirmed, redirecting...");
+            // Use router.push instead of window.location.href for better Next.js handling
+            window.location.href = redirectTo + "?session_refresh=true";
+          } else {
+            console.log("⚠️ Client session not found, forcing refresh...");
+            // If client session is not available, add a refresh parameter
+            window.location.href = redirectTo + "?session_refresh=true";
+          }
+        } else {
+          console.log(
+            "⚠️ Supabase client not available, using fallback redirect..."
+          );
+          window.location.href = redirectTo + "?session_refresh=true";
+        }
       }
     } catch (err) {
       console.error("Login error:", err);
