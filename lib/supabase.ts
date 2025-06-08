@@ -38,6 +38,8 @@ const createClient = () => {
       detectSessionInUrl: true,
       flowType: "pkce",
       debug: process.env.NODE_ENV === "development",
+      storage: typeof window !== "undefined" ? window.localStorage : undefined,
+      storageKey: "sb-auth-token",
     },
     global: {
       fetch: fetch,
@@ -67,6 +69,8 @@ const createClient = () => {
           maxAge: options?.maxAge || 60 * 60 * 24 * 7, // 7 days default
           sameSite: "lax",
           secure: process.env.NODE_ENV === "production",
+          domain:
+            process.env.NODE_ENV === "production" ? undefined : "localhost",
           ...options,
         };
 
@@ -86,6 +90,8 @@ const createClient = () => {
 
         const cookieOptions = {
           path: "/",
+          domain:
+            process.env.NODE_ENV === "production" ? undefined : "localhost",
           ...options,
         };
 

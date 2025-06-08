@@ -4,6 +4,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { AuthDebug } from "@/lib/utils/debug";
+import { SessionPersistence } from "@/lib/utils/sessionPersistence";
 import { User, getProfile } from "@/lib/services/authService";
 
 interface AuthContextType {
@@ -25,6 +26,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Check if we're on the client side
   useEffect(() => {
     setIsClient(true);
+
+    // Initialize session persistence when client-side
+    if (typeof window !== "undefined") {
+      SessionPersistence.initialize();
+    }
   }, []);
 
   // Check for session refresh signal from OAuth callback
@@ -123,8 +129,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (event === "SIGNED_OUT" || !newSession) {
       setUser(null);
+      SessionPersistence.clearSessionState();
       AuthDebug.log("👋 User signed out");
     } else if (newSession?.user) {
+      // Save session state for persistence across tabs
+      SessionPersistence.saveSessionState(newSession);
       await loadUserProfile(newSession.user.id, newSession.user.email);
     }
   };
@@ -132,6 +141,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let mounted = true;
     let authSubscription: any = null;
+    let visibilityListener: (() => void) | null = null;
 
     const initializeAuth = async () => {
       // Only initialize if we're on the client side
@@ -176,21 +186,61 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setLoading(false);
         }
 
-        // Listen for auth changes
+        // Listen for auth changes with improved handling
         const {
           data: { subscription },
         } = supabase.auth.onAuthStateChange(async (event, session) => {
           if (!mounted) return;
 
-          AuthDebug.log("🔄 Auth state changed:", event);
-          setLoading(true);
-          await handleAuthStateChange(event, session);
-          if (mounted) {
-            setLoading(false);
+          // Ignore certain events that might cause unnecessary logouts
+          if (event === "TOKEN_REFRESHED" && session) {
+            AuthDebug.log("🔄 Token refreshed, updating session silently");
+            setSession(session);
+            return;
+          }
+
+          // Only show loading for significant auth changes
+          if (event === "SIGNED_OUT" || event === "SIGNED_IN") {
+            AuthDebug.log("🔄 Significant auth state changed:", event);
+            setLoading(true);
+            await handleAuthStateChange(event, session);
+            if (mounted) {
+              setLoading(false);
+            }
+          } else {
+            AuthDebug.log("🔄 Minor auth state changed:", event);
+            await handleAuthStateChange(event, session);
           }
         });
 
         authSubscription = subscription;
+
+        // Handle page visibility changes to prevent logout on tab switch
+        if (typeof window !== "undefined") {
+          visibilityListener = () => {
+            if (document.visibilityState === "visible") {
+              AuthDebug.log("👁️ Tab became visible, checking session validity");
+              // Only refresh session if we have one and it's close to expiring
+              if (session && session.expires_at) {
+                const expiresAt = session.expires_at * 1000;
+                const now = Date.now();
+                const timeUntilExpiry = expiresAt - now;
+
+                // Refresh if expiring within 5 minutes
+                if (timeUntilExpiry < 5 * 60 * 1000) {
+                  AuthDebug.log("🔄 Session expiring soon, refreshing...");
+                  if (supabase) {
+                    supabase.auth.refreshSession().catch((error) => {
+                      AuthDebug.error("❌ Failed to refresh session:", error);
+                    });
+                  }
+                }
+              }
+            }
+          };
+
+          document.addEventListener("visibilitychange", visibilityListener);
+        }
       } catch (error) {
         AuthDebug.error("❌ Error in auth initialization:", error);
         if (mounted) {
@@ -206,6 +256,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (authSubscription) {
         authSubscription.unsubscribe();
       }
+      if (visibilityListener && typeof window !== "undefined") {
+        document.removeEventListener("visibilitychange", visibilityListener);
+      }
+      // Clean up session persistence
+      SessionPersistence.cleanup();
     };
   }, [isClient]);
 
@@ -218,6 +273,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       AuthDebug.log("🔄 Signing out...");
       setLoading(true);
+
+      // Clear session persistence state first
+      SessionPersistence.clearSessionState();
 
       const { error } = await supabase.auth.signOut();
       if (error) {
