@@ -54,9 +54,6 @@ export async function POST(request: NextRequest) {
         id: data.user.id,
         email: data.user.email,
         role: "user",
-        owned_brands: [],
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
       });
     }
 
