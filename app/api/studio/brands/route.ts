@@ -47,49 +47,49 @@ export async function POST(request: NextRequest) {
 
     console.log("Supabase client created");
 
-    // Authenticate user with server validation for security
-    let user, userError;
+    // Get session with better error handling
+    let session, sessionError;
     try {
-      const result = await supabase.auth.getUser();
-      user = result.data.user;
-      userError = result.error;
+      const result = await supabase.auth.getSession();
+      session = result.data.session;
+      sessionError = result.error;
       console.log(
-        "User authentication check:",
-        user ? "authenticated" : "not authenticated",
-        userError ? `error: ${userError.message}` : "no error"
+        "Session check:",
+        session ? "found" : "not found",
+        sessionError ? `error: ${sessionError.message}` : "no error"
       );
     } catch (error) {
-      console.error("Error authenticating user:", error);
+      console.error("Error getting session:", error);
       return NextResponse.json(
         {
-          error: "Authentication failed",
+          error: "Session retrieval failed",
           details: error instanceof Error ? error.message : "Unknown error",
         },
         { status: 500 }
       );
     }
 
-    if (userError || !user) {
+    if (sessionError || !session) {
       console.log(
         "Authentication failed:",
-        userError?.message || "No authenticated user"
+        sessionError?.message || "No session"
       );
       return NextResponse.json(
         {
           error: "Authentication required",
-          details: userError?.message || "No authenticated user found",
+          details: sessionError?.message || "No active session found",
         },
         { status: 401 }
       );
     }
 
-    console.log("User authenticated:", user.id);
+    console.log("User authenticated:", session.user.id);
 
     // Get user profile to check permissions
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("role")
-      .eq("id", user.id)
+      .eq("id", session.user.id)
       .single();
 
     console.log(

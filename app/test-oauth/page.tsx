@@ -1,309 +1,169 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { supabase } from "@/lib/supabase";
-import GoogleOAuthButton from "@/components/auth/GoogleOAuthButton";
+import { Button } from "@/components/ui/button";
 
 export default function TestOAuthPage() {
-  const [logs, setLogs] = useState<string[]>([]);
-  const [envCheck, setEnvCheck] = useState<any>({});
+  const [loading, setLoading] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<any>(null);
 
-  const addLog = (message: string) => {
-    const timestamp = new Date().toLocaleTimeString();
-    setLogs((prev) => [`[${timestamp}] ${message}`, ...prev]);
-    console.log(message);
-  };
-
-  useEffect(() => {
-    // Check environment variables
-    const env = {
-      supabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-      supabaseKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-      googleClientId: !!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
-      nodeEnv: process.env.NODE_ENV,
-      currentUrl:
-        typeof window !== "undefined" ? window.location.origin : "unknown",
-    };
-    setEnvCheck(env);
-    addLog("🔍 Environment check completed");
-  }, []);
-
-  const testSupabaseConnection = async () => {
-    addLog("🧪 Testing Supabase connection...");
-
-    if (!supabase) {
-      addLog("❌ Supabase client not available");
-      return;
-    }
-
+  const testOAuthFlow = async () => {
+    setLoading(true);
     try {
-      const { data, error } = await supabase.auth.getSession();
-      if (error) {
-        addLog(`❌ Supabase connection failed: ${error.message}`);
-      } else {
-        addLog("✅ Supabase connection successful");
-        addLog(`📊 Current session: ${data.session ? "Active" : "None"}`);
-        if (data.session) {
-          addLog(`👤 User: ${data.session.user.email}`);
-          addLog(
-            `🔐 Provider: ${data.session.user.app_metadata?.provider || "email"}`
-          );
-        }
+      console.log("🔍 Testing OAuth flow...");
+
+      if (!supabase) {
+        throw new Error("Supabase client not available");
       }
-    } catch (err) {
-      addLog(`❌ Supabase test error: ${err}`);
-    }
-  };
 
-  const testOAuthConfig = async () => {
-    addLog("🔧 Testing OAuth configuration...");
-
-    if (!supabase) {
-      addLog("❌ Supabase client not available");
-      return;
-    }
-
-    try {
-      // This will fail if Google OAuth is not configured, but we can see the error
+      // Test OAuth URL generation
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
-          skipBrowserRedirect: true, // Don't actually redirect, just test the config
-        },
-      });
-
-      if (error) {
-        addLog(`⚠️ OAuth config issue: ${error.message}`);
-        if (error.message.includes("Provider not found")) {
-          addLog("💡 Google OAuth provider not configured in Supabase");
-        } else if (error.message.includes("Invalid client")) {
-          addLog("💡 Google OAuth credentials may be incorrect");
-        }
-      } else {
-        addLog("✅ OAuth configuration looks good");
-        if (data?.url) {
-          addLog(`🔗 OAuth URL would be: ${data.url.substring(0, 50)}...`);
-        }
-      }
-    } catch (err) {
-      addLog(`❌ OAuth test error: ${err}`);
-    }
-  };
-
-  const testPKCEFlow = async () => {
-    addLog("🔐 Testing PKCE flow...");
-
-    if (!supabase) {
-      addLog("❌ Supabase client not available");
-      return;
-    }
-
-    try {
-      // Clear any existing session first
-      addLog("🧹 Clearing existing session...");
-      await supabase.auth.signOut();
-
-      // Test PKCE flow configuration
-      addLog("🔄 Testing PKCE configuration...");
-
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-          skipBrowserRedirect: true,
           queryParams: {
             access_type: "offline",
             prompt: "consent",
           },
+          scopes: "email profile",
         },
       });
 
       if (error) {
-        addLog(`❌ PKCE test failed: ${error.message}`);
-        if (error.message.includes("code verifier")) {
-          addLog("💡 PKCE code verifier issue detected");
-        }
+        console.error("OAuth error:", error);
+        setDebugInfo({ error: error.message, type: "oauth_error" });
       } else {
-        addLog("✅ PKCE flow configuration successful");
-        if (data?.url) {
-          addLog("🔗 PKCE-enabled OAuth URL generated");
-          addLog(
-            `📋 URL contains state parameter: ${data.url.includes("state=") ? "Yes" : "No"}`
-          );
-          addLog(
-            `📋 URL contains code_challenge: ${data.url.includes("code_challenge=") ? "Yes" : "No"}`
-          );
+        console.log("OAuth data:", data);
+        setDebugInfo({
+          url: data.url,
+          provider: data.provider,
+          type: "oauth_success",
+          redirectTo: `${window.location.origin}/auth/callback`,
+        });
+
+        // The user should be redirected automatically
+        // If not, we can manually redirect
+        if (data.url) {
+          window.location.href = data.url;
         }
       }
-    } catch (err) {
-      addLog(`❌ PKCE test error: ${err}`);
+    } catch (error) {
+      console.error("Test error:", error);
+      setDebugInfo({
+        error: error instanceof Error ? error.message : "Unknown error",
+        type: "test_error",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
-  const clearAuthState = async () => {
-    addLog("🧹 Clearing authentication state...");
-
+  const checkCurrentSession = async () => {
     try {
-      await supabase.auth.signOut();
-      addLog("✅ Authentication state cleared");
-
-      // Also clear any local storage items
-      if (typeof window !== "undefined") {
-        const authKeys = Object.keys(localStorage).filter(
-          (key) => key.includes("supabase") || key.includes("auth")
-        );
-        authKeys.forEach((key) => {
-          localStorage.removeItem(key);
-          addLog(`🗑️ Cleared localStorage: ${key}`);
-        });
+      if (!supabase) {
+        throw new Error("Supabase client not available");
       }
-    } catch (err) {
-      addLog(`❌ Error clearing auth state: ${err}`);
+
+      const {
+        data: { session },
+        error,
+      } = await supabase.auth.getSession();
+
+      setDebugInfo({
+        type: "session_check",
+        hasSession: !!session,
+        userId: session?.user?.id,
+        email: session?.user?.email,
+        expiresAt: session?.expires_at,
+        error: error?.message,
+      });
+    } catch (error) {
+      setDebugInfo({
+        type: "session_error",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
     }
   };
+
+  const testApiEndpoint = async () => {
+    try {
+      const response = await fetch("/api/test-oauth-flow");
+      const data = await response.json();
+      setDebugInfo({
+        type: "api_test",
+        ...data,
+      });
+    } catch (error) {
+      setDebugInfo({
+        type: "api_error",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  };
+
+  if (process.env.NODE_ENV === "production") {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p>Test page only available in development</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4">
-      <div className="max-w-4xl mx-auto">
-        <div className="bg-white rounded-lg shadow-lg p-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-8">
-            🧪 Google OAuth Test Lab
-          </h1>
+      <div className="max-w-2xl mx-auto">
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">
+          OAuth Flow Test
+        </h1>
 
-          {/* Environment Check */}
-          <div className="mb-8 p-6 bg-blue-50 rounded-lg">
-            <h2 className="text-xl font-semibold mb-4">🔍 Environment Check</h2>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <span className="font-medium">Supabase URL:</span>
-                <span
-                  className={`ml-2 ${envCheck.supabaseUrl ? "text-green-600" : "text-red-600"}`}
-                >
-                  {envCheck.supabaseUrl ? "✅ Set" : "❌ Missing"}
-                </span>
-              </div>
-              <div>
-                <span className="font-medium">Supabase Key:</span>
-                <span
-                  className={`ml-2 ${envCheck.supabaseKey ? "text-green-600" : "text-red-600"}`}
-                >
-                  {envCheck.supabaseKey ? "✅ Set" : "❌ Missing"}
-                </span>
-              </div>
-              <div>
-                <span className="font-medium">Google Client ID:</span>
-                <span
-                  className={`ml-2 ${envCheck.googleClientId ? "text-green-600" : "text-orange-600"}`}
-                >
-                  {envCheck.googleClientId ? "✅ Set" : "⚠️ Not Set"}
-                </span>
-              </div>
-              <div>
-                <span className="font-medium">Environment:</span>
-                <span className="ml-2 text-blue-600">{envCheck.nodeEnv}</span>
-              </div>
-              <div className="col-span-2">
-                <span className="font-medium">Current URL:</span>
-                <span className="ml-2 text-blue-600">
-                  {envCheck.currentUrl}
-                </span>
-              </div>
-            </div>
+        <div className="bg-white rounded-lg shadow p-6 space-y-4">
+          <div className="space-y-4">
+            <Button
+              onClick={testOAuthFlow}
+              disabled={loading}
+              className="w-full"
+            >
+              {loading ? "Testing..." : "Test Google OAuth Flow"}
+            </Button>
+
+            <Button
+              onClick={checkCurrentSession}
+              variant="outline"
+              className="w-full"
+            >
+              Check Current Session
+            </Button>
+
+            <Button
+              onClick={testApiEndpoint}
+              variant="outline"
+              className="w-full"
+            >
+              Test API Endpoint
+            </Button>
           </div>
 
-          {/* Test Buttons */}
-          <div className="mb-8 space-y-4">
-            <h2 className="text-xl font-semibold mb-4">🧪 Tests</h2>
-            <div className="flex flex-wrap gap-4">
-              <button
-                onClick={testSupabaseConnection}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-              >
-                Test Supabase Connection
-              </button>
-              <button
-                onClick={testOAuthConfig}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-              >
-                Test OAuth Config
-              </button>
-              <button
-                onClick={testPKCEFlow}
-                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
-              >
-                Test PKCE Flow
-              </button>
-              <button
-                onClick={clearAuthState}
-                className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700"
-              >
-                Clear Auth State
-              </button>
-              <button
-                onClick={() => setLogs([])}
-                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
-              >
-                Clear Logs
-              </button>
+          {debugInfo && (
+            <div className="mt-6 bg-gray-100 p-4 rounded-lg">
+              <h3 className="font-semibold mb-2">Debug Info:</h3>
+              <pre className="text-xs overflow-auto whitespace-pre-wrap">
+                {JSON.stringify(debugInfo, null, 2)}
+              </pre>
             </div>
-          </div>
+          )}
+        </div>
 
-          {/* OAuth Button Test */}
-          <div className="mb-8 p-6 bg-yellow-50 rounded-lg">
-            <h2 className="text-xl font-semibold mb-4">🔐 OAuth Button Test</h2>
-            <p className="text-gray-600 mb-4">
-              This will attempt the actual OAuth flow. Make sure you have Google
-              OAuth configured first.
-            </p>
-            <div className="max-w-sm">
-              <GoogleOAuthButton redirectTo="/test-oauth" />
-            </div>
-          </div>
-
-          {/* Logs */}
-          <div className="mb-8">
-            <h2 className="text-xl font-semibold mb-4">📋 Logs</h2>
-            <div className="bg-gray-900 text-green-400 p-4 rounded-lg h-64 overflow-y-auto font-mono text-sm">
-              {logs.length === 0 ? (
-                <div className="text-gray-500">
-                  No logs yet. Run some tests!
-                </div>
-              ) : (
-                logs.map((log, index) => (
-                  <div key={index} className="mb-1">
-                    {log}
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-
-          {/* Configuration Guide */}
-          <div className="p-6 bg-gray-50 rounded-lg">
-            <h2 className="text-xl font-semibold mb-4">📚 Next Steps</h2>
-            <div className="space-y-2 text-sm">
-              <p>
-                <strong>1. Google Cloud Console:</strong> Set up OAuth 2.0
-                credentials
-              </p>
-              <p>
-                <strong>2. Supabase Dashboard:</strong> Configure Google
-                provider
-              </p>
-              <p>
-                <strong>3. Environment Variables:</strong> Add Google Client ID
-              </p>
-              <p>
-                <strong>4. Test PKCE Flow:</strong> Use the PKCE test button
-                above
-              </p>
-              <p>
-                <strong>5. Test OAuth Button:</strong> Use the OAuth button
-                above
-              </p>
-            </div>
-          </div>
+        <div className="mt-8 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <h3 className="font-semibold text-yellow-800 mb-2">
+            Expected Redirect URIs in Google Cloud Console:
+          </h3>
+          <ul className="text-sm text-yellow-700 space-y-1">
+            <li>• http://localhost:3000/auth/callback</li>
+            <li>• http://localhost:54321/auth/v1/callback</li>
+            <li>• https://gswduyodzdgucjscjtvz.supabase.co/auth/v1/callback</li>
+            <li>• https://omahub-main.vercel.app/auth/callback</li>
+          </ul>
         </div>
       </div>
     </div>

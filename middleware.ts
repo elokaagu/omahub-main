@@ -1,15 +1,15 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import { hasStudioAccess } from "@/lib/services/permissionsService.server";
 
 export async function middleware(request: NextRequest) {
   console.log("🚀 Middleware triggered for:", request.nextUrl.pathname);
 
-  // Skip middleware for static files, API routes, auth callback, and debug pages
+  // Skip middleware for static files, API routes, and auth callback
   if (
     request.nextUrl.pathname.startsWith("/_next") ||
     request.nextUrl.pathname.startsWith("/api") ||
     request.nextUrl.pathname.startsWith("/auth/callback") ||
-    request.nextUrl.pathname.startsWith("/debug-oauth") ||
     request.nextUrl.pathname.includes(".")
   ) {
     console.log("⏭️ Skipping middleware for:", request.nextUrl.pathname);
@@ -74,18 +74,19 @@ export async function middleware(request: NextRequest) {
       }
     );
 
-    // Use getUser() instead of getSession() for security - this validates with the server
+    // Refresh session if expired - this is important for OAuth flows
     const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession();
 
-    console.log("🔑 User check:", {
-      hasUser: !!user,
-      userId: user?.id,
-      email: user?.email,
-      provider: user?.app_metadata?.provider,
-      userError: userError?.message,
+    console.log("🔑 Session check:", {
+      hasSession: !!session,
+      userId: session?.user?.id,
+      email: session?.user?.email,
+      expiresAt: session?.expires_at,
+      provider: session?.user?.app_metadata?.provider,
+      sessionError: sessionError?.message,
     });
 
     // Protected routes that require authentication
@@ -94,17 +95,35 @@ export async function middleware(request: NextRequest) {
       request.nextUrl.pathname.startsWith(route)
     );
 
-    if (isProtectedRoute && !user) {
-      console.log("❌ No authenticated user found for protected route");
+    if (isProtectedRoute && !session) {
+      console.log("❌ No session found for protected route");
       console.log("🔄 Redirecting to sign-in page");
       const redirectUrl = new URL("/login", request.url);
       redirectUrl.searchParams.set("redirect_to", request.nextUrl.pathname);
       return NextResponse.redirect(redirectUrl);
     }
 
-    // If we have a user, log success
-    if (user) {
-      console.log("✅ Authenticated user found");
+    // If we have a session, ensure it's properly set in cookies
+    if (session) {
+      console.log("✅ Valid session found, ensuring cookies are set");
+
+      // Refresh the session to ensure it's valid and update cookies
+      const {
+        data: { session: refreshedSession },
+        error: refreshError,
+      } = await supabase.auth.refreshSession();
+
+      if (refreshError) {
+        console.log("⚠️ Session refresh failed:", refreshError.message);
+        // If refresh fails and we're on a protected route, redirect to login
+        if (isProtectedRoute) {
+          const redirectUrl = new URL("/login", request.url);
+          redirectUrl.searchParams.set("redirect_to", request.nextUrl.pathname);
+          return NextResponse.redirect(redirectUrl);
+        }
+      } else if (refreshedSession) {
+        console.log("✅ Session refreshed successfully");
+      }
     }
 
     console.log("✅ Access granted");
