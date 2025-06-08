@@ -68,8 +68,8 @@ export default function UserProfile() {
   }
 
   const displayName =
-    user?.first_name && user?.last_name
-      ? `${user.first_name} ${user.last_name}`
+    user?.first_name || user?.last_name
+      ? `${user.first_name || ""} ${user.last_name || ""}`.trim()
       : session?.user?.user_metadata?.full_name
         ? session.user.user_metadata.full_name
         : session?.user?.email?.split("@")[0] || "User";
