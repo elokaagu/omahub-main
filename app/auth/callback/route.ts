@@ -81,7 +81,6 @@ export async function GET(request: NextRequest) {
               id: data.user.id,
               email: data.user.email,
               role: "user",
-              owned_brands: [],
               first_name:
                 data.user.user_metadata?.full_name?.split(" ")[0] || "",
               last_name:
@@ -90,15 +89,24 @@ export async function GET(request: NextRequest) {
                   .slice(1)
                   .join(" ") || "",
               avatar_url: data.user.user_metadata?.avatar_url || "",
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
             });
 
           if (insertError) {
             console.error("❌ Profile creation error:", insertError);
+            // Don't fail the OAuth flow if profile creation fails
+            // The user can still be authenticated even without a profile
+            console.log(
+              "⚠️ Continuing OAuth flow despite profile creation error"
+            );
           } else {
             console.log("✅ Profile created successfully");
           }
+        } else if (profileError) {
+          console.error("❌ Profile check error:", profileError);
+          // Log the error but don't fail the OAuth flow
+          console.log("⚠️ Continuing OAuth flow despite profile check error");
+        } else {
+          console.log("✅ Profile already exists for user:", data.user.email);
         }
 
         // Create redirect URL with session refresh signal
