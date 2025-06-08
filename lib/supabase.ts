@@ -37,8 +37,6 @@ const createClient = () => {
       autoRefreshToken: true,
       detectSessionInUrl: true,
       flowType: "pkce",
-      storage: typeof window !== "undefined" ? window.localStorage : undefined,
-      storageKey: "omahub-auth-token",
       debug: process.env.NODE_ENV === "development",
     },
     global: {
@@ -51,39 +49,55 @@ const createClient = () => {
     cookies: {
       get: (name: string) => {
         if (typeof document === "undefined") return undefined;
+
+        // Get cookie value from document.cookie
         const value = document.cookie
           .split("; ")
           .find((row) => row.startsWith(`${name}=`))
           ?.split("=")[1];
+
         return value ? decodeURIComponent(value) : undefined;
       },
       set: (name: string, value: string, options: any) => {
         if (typeof document === "undefined") return;
+
+        // Set cookie with proper options for Supabase auth
         const cookieOptions = {
           path: "/",
-          maxAge: 60 * 60 * 24 * 7, // 7 days
+          maxAge: options?.maxAge || 60 * 60 * 24 * 7, // 7 days default
           sameSite: "lax",
           secure: process.env.NODE_ENV === "production",
           ...options,
         };
-        const cookieString = `${name}=${encodeURIComponent(value)}; ${Object.entries(
-          cookieOptions
-        )
-          .map(([key, val]) => `${key}=${val}`)
-          .join("; ")}`;
+
+        let cookieString = `${name}=${encodeURIComponent(value)}`;
+
+        // Add options to cookie string
+        Object.entries(cookieOptions).forEach(([key, val]) => {
+          if (val !== undefined && val !== null) {
+            cookieString += `; ${key}=${val}`;
+          }
+        });
+
         document.cookie = cookieString;
       },
       remove: (name: string, options: any) => {
         if (typeof document === "undefined") return;
+
         const cookieOptions = {
           path: "/",
           ...options,
         };
-        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; ${Object.entries(
-          cookieOptions
-        )
-          .map(([key, val]) => `${key}=${val}`)
-          .join("; ")}`;
+
+        let cookieString = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+
+        Object.entries(cookieOptions).forEach(([key, val]) => {
+          if (val !== undefined && val !== null) {
+            cookieString += `; ${key}=${val}`;
+          }
+        });
+
+        document.cookie = cookieString;
       },
     },
   });
