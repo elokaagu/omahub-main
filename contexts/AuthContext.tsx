@@ -27,6 +27,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsClient(true);
   }, []);
 
+  // Check for session refresh signal from OAuth callback
+  useEffect(() => {
+    if (!isClient || typeof window === "undefined") return;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const shouldRefreshSession = urlParams.get("session_refresh");
+
+    if (shouldRefreshSession === "true" && supabase) {
+      AuthDebug.log(
+        "🔄 OAuth session refresh signal detected, refreshing session..."
+      );
+
+      // Remove the parameter from URL
+      urlParams.delete("session_refresh");
+      const newUrl =
+        window.location.pathname +
+        (urlParams.toString() ? "?" + urlParams.toString() : "");
+      window.history.replaceState({}, "", newUrl);
+
+      // Force refresh the session
+      supabase.auth.refreshSession().then(({ data, error }) => {
+        if (error) {
+          AuthDebug.error("❌ OAuth session refresh failed:", error);
+        } else {
+          AuthDebug.log("✅ OAuth session refreshed successfully");
+          if (data.session) {
+            handleAuthStateChange("TOKEN_REFRESHED", data.session);
+          }
+        }
+      });
+    }
+  }, [isClient]);
+
   const refreshUserProfile = async () => {
     if (!session?.user?.id) return;
 

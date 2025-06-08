@@ -60,6 +60,17 @@ function LoginForm() {
           } else if (decodedError === "service_unavailable") {
             friendlyMessage =
               "Authentication service is temporarily unavailable.";
+          } else if (decodedError === "oauth_error") {
+            friendlyMessage = "Google sign-in failed. Please try again.";
+          } else if (decodedError === "session_error") {
+            friendlyMessage =
+              "Session creation failed. Please try signing in again.";
+          } else if (decodedError === "unexpected_error") {
+            friendlyMessage =
+              "An unexpected error occurred during sign-in. Please try again.";
+          } else if (decodedError === "no_code") {
+            friendlyMessage =
+              "Authorization failed. Please try signing in again.";
           } else if (errorDescription) {
             friendlyMessage = decodeURIComponent(errorDescription);
           }
