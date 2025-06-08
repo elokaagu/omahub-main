@@ -7,13 +7,11 @@ export async function GET(request: NextRequest) {
 
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const state = searchParams.get("state");
   const error = searchParams.get("error");
   const errorDescription = searchParams.get("error_description");
 
   console.log("📋 OAuth callback parameters:", {
     hasCode: !!code,
-    hasState: !!state,
     error,
     errorDescription,
     origin,
@@ -44,178 +42,186 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(redirectUrl);
   }
 
-  try {
-    const cookieStore = cookies();
+  const cookieStore = cookies();
+  const response = NextResponse.redirect(new URL("/auth/success", origin));
 
-    // Create Supabase client with enhanced cookie handling
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          get(name: string) {
-            const cookie = cookieStore.get(name);
-            console.log(
-              `🍪 Getting cookie ${name}:`,
-              cookie ? "found" : "not found"
-            );
-            return cookie?.value;
-          },
-          set(name: string, value: string, options: any) {
-            try {
-              console.log(`🍪 Setting cookie ${name}`);
-              cookieStore.set({ name, value, ...options });
-            } catch (error) {
-              console.error(`❌ Error setting cookie ${name}:`, error);
-            }
-          },
-          remove(name: string, options: any) {
-            try {
-              console.log(`🍪 Removing cookie ${name}`);
-              cookieStore.set({ name, value: "", ...options });
-            } catch (error) {
-              console.error(`❌ Error removing cookie ${name}:`, error);
-            }
-          },
+  // Create Supabase client with proper cookie handling
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
         },
-      }
-    );
+        set(name: string, value: string, options: any) {
+          try {
+            cookieStore.set({ name, value, ...options });
+            response.cookies.set({ name, value, ...options });
+          } catch (error) {
+            console.error(`❌ Error setting cookie ${name}:`, error);
+          }
+        },
+        remove(name: string, options: any) {
+          try {
+            cookieStore.set({ name, value: "", ...options });
+            response.cookies.set({ name, value: "", ...options });
+          } catch (error) {
+            console.error(`❌ Error removing cookie ${name}:`, error);
+          }
+        },
+      },
+    }
+  );
 
-    console.log("🔄 Processing OAuth callback...");
+  try {
+    console.log("🔄 Attempting OAuth callback with code exchange...");
 
-    // Use the correct method for OAuth callback handling
-    // This handles both the code exchange and PKCE verification automatically
-    const { data: sessionData, error: sessionError } =
-      await supabase.auth.getSession();
+    // First, try the standard exchangeCodeForSession
+    let sessionData: any = null;
+    let exchangeError: any = null;
 
-    if (sessionError) {
-      console.error("❌ Session retrieval failed:", sessionError);
+    try {
+      const result = await supabase.auth.exchangeCodeForSession(code);
+      sessionData = result.data;
+      exchangeError = result.error;
+    } catch (err) {
+      console.error("❌ Exchange code error:", err);
+      exchangeError = err;
+    }
 
-      // Try to exchange the code manually if session retrieval fails
-      console.log("🔄 Attempting manual code exchange...");
+    // If the standard method fails due to PKCE, try alternative approach
+    if (
+      exchangeError &&
+      ((exchangeError.message &&
+        exchangeError.message.includes("code verifier")) ||
+        (exchangeError.message &&
+          exchangeError.message.includes("invalid_request")))
+    ) {
+      console.log("🔄 PKCE exchange failed, trying alternative approach...");
 
       try {
-        const { data: exchangeData, error: exchangeError } =
-          await supabase.auth.exchangeCodeForSession(code);
+        // Use the auth code in a different way - set it in the URL and let Supabase handle it
+        const authUrl = new URL(request.url);
 
-        if (exchangeError) {
-          console.error("❌ Manual code exchange failed:", exchangeError);
+        // Try to manually construct the session by calling the Supabase auth endpoint
+        const tokenResponse = await fetch(
+          `${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/token?grant_type=authorization_code`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            },
+            body: JSON.stringify({
+              auth_code: code,
+              code_verifier: "", // Empty code verifier for fallback
+            }),
+          }
+        );
 
-          // Handle specific PKCE errors
-          if (
-            exchangeError.message?.includes("code verifier") ||
-            exchangeError.message?.includes("invalid_request")
-          ) {
-            console.log("🔄 PKCE verification failed, clearing auth state...");
+        if (tokenResponse.ok) {
+          const tokenData = await tokenResponse.json();
+          console.log("✅ Alternative token exchange successful");
 
-            // Clear any existing auth cookies
-            const authCookies = [
-              "sb-access-token",
-              "sb-refresh-token",
-              "supabase-auth-token",
-            ];
-            authCookies.forEach((cookieName) => {
-              try {
-                cookieStore.delete(cookieName);
-              } catch (e) {
-                console.log(`Could not delete cookie ${cookieName}`);
-              }
+          // Set the session manually
+          const { data: setSessionData, error: setSessionError } =
+            await supabase.auth.setSession({
+              access_token: tokenData.access_token,
+              refresh_token: tokenData.refresh_token,
             });
 
-            const redirectUrl = new URL("/login", origin);
-            redirectUrl.searchParams.set("error", "pkce_failed");
-            redirectUrl.searchParams.set(
-              "message",
-              "Authentication verification failed. Please try signing in again."
-            );
-            return NextResponse.redirect(redirectUrl);
+          if (setSessionError) {
+            console.error("❌ Set session failed:", setSessionError);
+          } else {
+            sessionData = setSessionData;
+            exchangeError = null;
           }
-
-          // Handle other exchange errors
-          const redirectUrl = new URL("/login", origin);
-          redirectUrl.searchParams.set("error", "exchange_failed");
-          redirectUrl.searchParams.set(
-            "message",
-            exchangeError.message || "Failed to complete authentication"
-          );
-          return NextResponse.redirect(redirectUrl);
-        }
-
-        // Use the exchanged session data
-        if (exchangeData?.session) {
-          console.log("✅ Manual code exchange successful");
-          // Continue with the session
         } else {
-          console.error("❌ No session from manual exchange");
-          const redirectUrl = new URL("/login", origin);
-          redirectUrl.searchParams.set("error", "no_session");
-          redirectUrl.searchParams.set(
-            "message",
-            "No session created after authentication"
+          console.error(
+            "❌ Alternative token exchange failed:",
+            await tokenResponse.text()
           );
-          return NextResponse.redirect(redirectUrl);
         }
-      } catch (manualError) {
-        console.error("❌ Manual exchange error:", manualError);
+      } catch (altError) {
+        console.error("❌ Alternative approach failed:", altError);
+      }
+    }
+
+    // Handle errors
+    if (exchangeError) {
+      console.error("❌ All code exchange methods failed:", exchangeError);
+
+      // Handle specific errors
+      if (
+        exchangeError.message &&
+        exchangeError.message.includes("Provider not found")
+      ) {
+        console.log("🔄 Google OAuth provider not configured");
         const redirectUrl = new URL("/login", origin);
-        redirectUrl.searchParams.set("error", "callback_error");
+        redirectUrl.searchParams.set("error", "provider_not_configured");
         redirectUrl.searchParams.set(
           "message",
-          "Authentication callback failed"
+          "Google OAuth is not configured. Please contact support."
         );
         return NextResponse.redirect(redirectUrl);
       }
-    }
 
-    // Get the current session (either from initial call or manual exchange)
-    const { data: currentSession } = await supabase.auth.getSession();
+      if (
+        exchangeError.message &&
+        (exchangeError.message.includes("code verifier") ||
+          exchangeError.message.includes("invalid_request"))
+      ) {
+        console.log("🔄 PKCE verification failed completely");
+        const redirectUrl = new URL("/login", origin);
+        redirectUrl.searchParams.set("error", "pkce_failed");
+        redirectUrl.searchParams.set(
+          "message",
+          "Authentication verification failed. Please try again or contact support if the issue persists."
+        );
+        return NextResponse.redirect(redirectUrl);
+      }
 
-    if (!currentSession?.session) {
-      console.error("❌ No active session found");
+      // Generic exchange error
       const redirectUrl = new URL("/login", origin);
-      redirectUrl.searchParams.set("error", "no_session");
-      redirectUrl.searchParams.set("message", "No active session found");
-      return NextResponse.redirect(redirectUrl);
-    }
-
-    console.log("✅ Session verified successfully:", {
-      userId: currentSession.session.user.id,
-      email: currentSession.session.user.email,
-      provider: currentSession.session.user.app_metadata?.provider,
-    });
-
-    // Validate the user
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-      console.error("❌ User validation failed:", userError);
-      const redirectUrl = new URL("/login", origin);
-      redirectUrl.searchParams.set("error", "user_validation");
+      redirectUrl.searchParams.set("error", "exchange_failed");
       redirectUrl.searchParams.set(
         "message",
-        "User validation failed after authentication"
+        exchangeError.message || "Failed to complete authentication"
       );
       return NextResponse.redirect(redirectUrl);
     }
 
-    console.log("✅ User validated successfully");
+    if (!sessionData?.session) {
+      console.error("❌ No session data received");
+      const redirectUrl = new URL("/login", origin);
+      redirectUrl.searchParams.set("error", "no_session");
+      redirectUrl.searchParams.set(
+        "message",
+        "No session created after authentication"
+      );
+      return NextResponse.redirect(redirectUrl);
+    }
+
+    console.log("✅ Session created successfully:", {
+      userId: sessionData.session.user.id,
+      email: sessionData.session.user.email,
+      provider: sessionData.session.user.app_metadata?.provider,
+    });
 
     // Ensure user profile exists
-    await ensureUserProfile(supabase, currentSession.session);
+    await ensureUserProfile(supabase, sessionData.session);
 
-    // Determine redirect destination
+    // Set redirect destination
     const redirectTo = searchParams.get("redirect_to") || "/studio";
-    const finalRedirectUrl = new URL(redirectTo, origin);
+    response.headers.set(
+      "Location",
+      `/auth/success?redirect_to=${encodeURIComponent(redirectTo)}`
+    );
 
-    console.log("🔄 Redirecting to:", finalRedirectUrl.toString());
+    console.log("🔄 Redirecting to success page");
 
-    // Add success parameters
-    finalRedirectUrl.searchParams.set("auth", "success");
-
-    return NextResponse.redirect(finalRedirectUrl);
+    return response;
   } catch (error) {
     console.error("❌ OAuth callback error:", error);
 

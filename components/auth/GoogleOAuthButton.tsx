@@ -11,7 +11,7 @@ interface GoogleOAuthButtonProps {
 }
 
 export default function GoogleOAuthButton({
-  redirectTo = "/",
+  redirectTo = "/studio",
   className = "",
   disabled = false,
 }: GoogleOAuthButtonProps) {
@@ -29,7 +29,31 @@ export default function GoogleOAuthButton({
 
       // Clear any existing auth state to prevent conflicts
       console.log("🧹 Clearing existing auth state...");
-      await supabase.auth.signOut();
+      const { error: signOutError } = await supabase.auth.signOut();
+      if (signOutError) {
+        console.warn("⚠️ Sign out warning:", signOutError.message);
+      }
+
+      // Clear any existing auth cookies manually
+      if (typeof window !== "undefined") {
+        // Clear localStorage
+        const authKeys = Object.keys(localStorage).filter(
+          (key) => key.includes("supabase") || key.includes("auth")
+        );
+        authKeys.forEach((key) => {
+          localStorage.removeItem(key);
+          console.log(`🗑️ Cleared localStorage: ${key}`);
+        });
+
+        // Clear sessionStorage
+        const sessionKeys = Object.keys(sessionStorage).filter(
+          (key) => key.includes("supabase") || key.includes("auth")
+        );
+        sessionKeys.forEach((key) => {
+          sessionStorage.removeItem(key);
+          console.log(`🗑️ Cleared sessionStorage: ${key}`);
+        });
+      }
 
       // Get current origin for redirect URL
       const currentOrigin = window.location.origin;
@@ -51,7 +75,7 @@ export default function GoogleOAuthButton({
             access_type: "offline",
             prompt: "consent",
           },
-          // Ensure PKCE is enabled (this is default in newer Supabase versions)
+          // Ensure PKCE is enabled and browser redirect happens
           skipBrowserRedirect: false,
         },
       });
@@ -64,9 +88,17 @@ export default function GoogleOAuthButton({
 
         if (error.message?.includes("Provider not found")) {
           errorMessage =
-            "Google OAuth is not configured. Please contact support.";
+            "Google OAuth is not configured in Supabase. Please contact support.";
+          console.error(
+            "💡 Google OAuth provider not found in Supabase configuration"
+          );
         } else if (error.message?.includes("Invalid client")) {
           errorMessage = "OAuth configuration error. Please contact support.";
+          console.error("💡 Google OAuth client configuration is invalid");
+        } else if (error.message?.includes("redirect_uri")) {
+          errorMessage =
+            "OAuth redirect configuration error. Please contact support.";
+          console.error("💡 OAuth redirect URI not configured properly");
         } else if (error.message) {
           errorMessage = error.message;
         }
@@ -76,22 +108,38 @@ export default function GoogleOAuthButton({
       }
 
       if (data?.url) {
-        console.log(
-          "✅ OAuth URL generated:",
-          data.url.substring(0, 100) + "..."
-        );
+        console.log("✅ OAuth URL generated successfully");
         console.log("🔄 Redirecting to Google for authentication...");
+        console.log("📋 OAuth URL details:", {
+          hasState: data.url.includes("state="),
+          hasCodeChallenge: data.url.includes("code_challenge="),
+          hasRedirectUri: data.url.includes("redirect_uri="),
+        });
 
         // The browser will automatically redirect to Google
         // After user consent, Google redirects back to our callback
         // The callback handler will process the PKCE flow
       } else {
-        console.error("❌ No OAuth URL returned");
-        toast.error("Failed to initiate Google sign-in");
+        console.error("❌ No OAuth URL returned from Supabase");
+        toast.error("Failed to initiate Google sign-in. Please try again.");
       }
     } catch (error) {
-      console.error("❌ Unexpected error:", error);
-      toast.error("An unexpected error occurred");
+      console.error("❌ Unexpected OAuth error:", error);
+
+      let errorMessage = "An unexpected error occurred";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+
+        // Handle specific error types
+        if (error.message.includes("fetch")) {
+          errorMessage =
+            "Network error. Please check your connection and try again.";
+        } else if (error.message.includes("CORS")) {
+          errorMessage = "Configuration error. Please contact support.";
+        }
+      }
+
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -106,7 +154,7 @@ export default function GoogleOAuthButton({
       {loading ? (
         <>
           <div className="animate-spin h-4 w-4 border-2 border-gray-300 border-t-blue-600 rounded-full mr-2"></div>
-          Connecting...
+          Connecting to Google...
         </>
       ) : (
         <>
