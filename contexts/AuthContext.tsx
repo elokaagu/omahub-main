@@ -74,7 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [isClient, session]);
 
-  // Check for session refresh signal from OAuth callback
+  // Check for session refresh signal from OAuth callback or email login
   useEffect(() => {
     if (!isClient || typeof window === "undefined") return;
 
@@ -83,7 +83,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (shouldRefreshSession === "true" && supabase) {
       AuthDebug.log(
-        "🔄 OAuth session refresh signal detected, refreshing session..."
+        "🔄 Session refresh signal detected, refreshing session..."
       );
 
       // Remove the parameter from URL
@@ -96,9 +96,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Force refresh the session
       supabase.auth.refreshSession().then(({ data, error }) => {
         if (error) {
-          AuthDebug.error("❌ OAuth session refresh failed:", error);
+          AuthDebug.error("❌ Session refresh failed:", error);
         } else {
-          AuthDebug.log("✅ OAuth session refreshed successfully");
+          AuthDebug.log("✅ Session refreshed successfully");
           if (data.session) {
             handleAuthStateChange("TOKEN_REFRESHED", data.session);
           }

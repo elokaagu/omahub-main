@@ -102,7 +102,7 @@ function LoginForm() {
     setError(null);
 
     try {
-      const { session } = await signIn(email, password);
+      const { session, refreshSession } = await signIn(email, password);
       if (session) {
         // Save or clear remember me preference
         saveRememberMe(email, rememberMe);
@@ -110,8 +110,14 @@ function LoginForm() {
         // Add a small delay to ensure auth state is updated
         await new Promise((resolve) => setTimeout(resolve, 500));
 
-        // Force a hard refresh to ensure auth state is properly updated
-        window.location.href = "/";
+        // If the API indicates we should refresh session (like OAuth), add the parameter
+        if (refreshSession) {
+          // Redirect with session refresh signal
+          window.location.href = "/?session_refresh=true";
+        } else {
+          // Force a hard refresh to ensure auth state is properly updated
+          window.location.href = "/";
+        }
       }
     } catch (err) {
       console.error("Login error:", err);
