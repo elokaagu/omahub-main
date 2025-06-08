@@ -257,7 +257,7 @@ function LoginForm() {
         </div>
 
         <div className="mt-6">
-          <GoogleSignInButton className="w-full" redirectTo="/studio" />
+          <GoogleSignInButton className="w-full" redirectTo={redirectTo} />
         </div>
       </div>
 

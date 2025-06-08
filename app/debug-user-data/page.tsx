@@ -31,8 +31,8 @@ export default function DebugUserDataPage() {
   }, [user?.id]);
 
   const displayName =
-    user?.first_name && user?.last_name
-      ? `${user.first_name} ${user.last_name}`
+    user?.first_name || user?.last_name
+      ? `${user.first_name || ""} ${user.last_name || ""}`.trim()
       : session?.user?.user_metadata?.full_name
         ? session.user.user_metadata.full_name
         : session?.user?.email?.split("@")[0] || "User";
@@ -94,7 +94,7 @@ export default function DebugUserDataPage() {
             <h2 className="text-xl font-semibold mb-4">Display Name Logic</h2>
             <div className="space-y-2 text-sm">
               <div>
-                <strong>Condition 1:</strong> user?.first_name &&
+                <strong>Condition 1:</strong> user?.first_name ||
                 user?.last_name
                 <br />
                 <span className="ml-4">
@@ -108,8 +108,8 @@ export default function DebugUserDataPage() {
                 </span>
                 <br />
                 <span className="ml-4">
-                  Both present:{" "}
-                  {user?.first_name && user?.last_name ? "✅ YES" : "❌ NO"}
+                  Either present:{" "}
+                  {user?.first_name || user?.last_name ? "✅ YES" : "❌ NO"}
                 </span>
               </div>
 
@@ -142,8 +142,8 @@ export default function DebugUserDataPage() {
             </h2>
             <div className="space-y-2 text-sm">
               <p>
-                1. If you have a name but it's not showing, check if both
-                first_name AND last_name are set in your profile.
+                1. If you have a name but it's not showing, check if either
+                first_name OR last_name is set in your profile.
               </p>
               <p>
                 2. You can update your profile at{" "}
@@ -160,8 +160,8 @@ export default function DebugUserDataPage() {
                 user_metadata.full_name
               </p>
               <p>
-                4. The display logic requires BOTH first and last name to be
-                present, not just one.
+                4. The display logic now shows your name if either first_name OR
+                last_name is present.
               </p>
             </div>
           </div>
