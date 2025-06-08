@@ -19,6 +19,7 @@ function LoginForm() {
 
   // More defensive approach for search params
   const [urlError, setUrlError] = useState<string | null>(null);
+  const [redirectTo, setRedirectTo] = useState<string>("/");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
@@ -44,6 +45,12 @@ function LoginForm() {
         const errorParam = urlParams.get("error");
         const errorDescription = urlParams.get("error_description");
         const details = urlParams.get("details");
+        const redirectParam = urlParams.get("redirect");
+
+        // Set redirect destination
+        if (redirectParam) {
+          setRedirectTo(decodeURIComponent(redirectParam));
+        }
 
         if (errorParam) {
           const decodedError = decodeURIComponent(errorParam);
@@ -111,7 +118,7 @@ function LoginForm() {
         await new Promise((resolve) => setTimeout(resolve, 500));
 
         // Force a hard refresh to ensure auth state is properly updated
-        window.location.href = "/";
+        window.location.href = redirectTo;
       }
     } catch (err) {
       console.error("Login error:", err);
