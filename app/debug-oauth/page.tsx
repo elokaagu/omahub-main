@@ -11,7 +11,7 @@ export default function DebugOAuthPage() {
   const [supabaseConfig, setSupabaseConfig] = useState<any>({});
 
   // Email/password test state
-  const [testEmail, setTestEmail] = useState("test@example.com");
+  const [testEmail, setTestEmail] = useState("testuser@gmail.com");
   const [testPassword, setTestPassword] = useState("testpassword123");
   const [emailLoading, setEmailLoading] = useState(false);
 
@@ -110,6 +110,15 @@ export default function DebugOAuthPage() {
           addLog("   1. Go to Supabase Dashboard > Authentication > Users");
           addLog("   2. Create a test user manually, or");
           addLog("   3. Use the signup form to create a user first");
+        } else if (data.error === "Email not confirmed") {
+          addLog("💡 Email confirmation required:");
+          addLog("   1. Check your email for confirmation link");
+          addLog("   2. Click the confirmation link to verify email");
+          addLog("   3. Or disable email confirmation in Supabase Dashboard");
+          addLog("   4. Go to Authentication > Settings > Email Auth");
+          addLog("   5. Turn off 'Enable email confirmations'");
+        } else if (data.error.includes("signup")) {
+          addLog("💡 Signup may be disabled or restricted");
         }
       }
     } catch (error) {
@@ -123,24 +132,29 @@ export default function DebugOAuthPage() {
     setEmailLoading(true);
     addLog("🧪 Testing email/password signup...");
     addLog(`📧 Email: ${testEmail}`);
+    addLog(`🔑 Password: ${testPassword.replace(/./g, "*")}`);
 
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email: testEmail,
-        password: testPassword,
+      // Test the signup API endpoint
+      const response = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: testEmail,
+          password: testPassword,
+        }),
       });
 
-      if (error) {
-        addLog(`❌ Signup failed: ${error.message}`);
+      const data = await response.json();
 
-        if (error.message.includes("already registered")) {
-          addLog("💡 User already exists - you can try logging in");
-        }
-      } else {
-        addLog("✅ Signup successful!");
+      if (response.ok) {
+        addLog("✅ Email/password signup successful!");
         addLog(`👤 User ID: ${data.user?.id}`);
         addLog(`📧 Email: ${data.user?.email}`);
         addLog(`🔐 Session created: ${!!data.session}`);
+        addLog(`📝 Message: ${data.message}`);
 
         if (data.user && !data.session) {
           addLog("📧 Check your email for confirmation link");
@@ -148,6 +162,14 @@ export default function DebugOAuthPage() {
 
         // Refresh session check
         await checkCurrentSession();
+      } else {
+        addLog(`❌ Email/password signup failed: ${data.error}`);
+
+        if (data.error.includes("already registered")) {
+          addLog("💡 User already exists - you can try logging in instead");
+        } else if (data.error.includes("Password")) {
+          addLog("💡 Password requirements not met");
+        }
       }
     } catch (error) {
       addLog(`❌ Signup test error: ${error}`);
@@ -364,6 +386,89 @@ export default function DebugOAuthPage() {
     }
   };
 
+  const testProductionAuth = async () => {
+    addLog("🌐 Testing production authentication environment...");
+
+    try {
+      // Test environment variables
+      addLog("🔍 Checking environment configuration...");
+      addLog(
+        `📋 Supabase URL: ${process.env.NEXT_PUBLIC_SUPABASE_URL ? "Set" : "Missing"}`
+      );
+      addLog(
+        `📋 Anon Key: ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? "Set" : "Missing"}`
+      );
+      addLog(`📋 Environment: ${process.env.NODE_ENV}`);
+
+      // Test Supabase connection
+      addLog("🔗 Testing Supabase connection...");
+      const { data: healthCheck, error: healthError } = await supabase
+        .from("profiles")
+        .select("count")
+        .limit(1);
+
+      if (healthError) {
+        addLog(`❌ Supabase connection failed: ${healthError.message}`);
+      } else {
+        addLog("✅ Supabase connection successful");
+      }
+
+      // Test auth configuration
+      addLog("🔐 Testing auth configuration...");
+      const { data: authData, error: authError } =
+        await supabase.auth.getSession();
+
+      if (authError) {
+        addLog(`❌ Auth configuration error: ${authError.message}`);
+      } else {
+        addLog("✅ Auth configuration working");
+      }
+
+      // Test API endpoints
+      addLog("🌐 Testing API endpoints...");
+
+      // Test login endpoint
+      try {
+        const loginResponse = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: "test@test.com", password: "test" }),
+        });
+
+        if (loginResponse.status === 401) {
+          addLog(
+            "✅ Login API endpoint is accessible (returned 401 as expected)"
+          );
+        } else {
+          addLog(`⚠️ Login API endpoint returned: ${loginResponse.status}`);
+        }
+      } catch (err) {
+        addLog(`❌ Login API endpoint error: ${err}`);
+      }
+
+      // Test signup endpoint
+      try {
+        const signupResponse = await fetch("/api/auth/signup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: "test@test.com", password: "test" }),
+        });
+
+        if (signupResponse.status === 400 || signupResponse.status === 201) {
+          addLog("✅ Signup API endpoint is accessible");
+        } else {
+          addLog(`⚠️ Signup API endpoint returned: ${signupResponse.status}`);
+        }
+      } catch (err) {
+        addLog(`❌ Signup API endpoint error: ${err}`);
+      }
+
+      addLog("📝 Production test complete. Check logs above for issues.");
+    } catch (error) {
+      addLog(`❌ Production test error: ${error}`);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-4xl mx-auto">
@@ -544,6 +649,12 @@ export default function DebugOAuthPage() {
               >
                 Clear Logs
               </button>
+              <button
+                onClick={testProductionAuth}
+                className="px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700"
+              >
+                Test Production Auth
+              </button>
             </div>
           </div>
 
@@ -637,6 +748,76 @@ export default function DebugOAuthPage() {
               <div>
                 ☐ <strong>Email/Password:</strong> Create test user or use
                 signup test
+              </div>
+            </div>
+          </div>
+
+          {/* Email Confirmation Troubleshooting */}
+          <div className="mb-8 p-6 bg-orange-50 rounded-lg">
+            <h2 className="text-xl font-semibold mb-4">
+              📧 Email Confirmation Troubleshooting
+            </h2>
+            <div className="space-y-3 text-sm">
+              <div>
+                <strong>Common Issues on Deployed Version:</strong>
+              </div>
+              <div className="ml-4 space-y-2">
+                <div>
+                  ✅ <strong>Email Confirmation Required:</strong> Most likely
+                  cause
+                  <ul className="ml-6 mt-1 space-y-1 text-xs">
+                    <li>
+                      • Users must click email confirmation link before login
+                    </li>
+                    <li>• Check spam/junk folder for confirmation email</li>
+                    <li>
+                      • Error: "Email not confirmed" or "Invalid login
+                      credentials"
+                    </li>
+                  </ul>
+                </div>
+                <div>
+                  ⚙️ <strong>Disable Email Confirmation (for testing):</strong>
+                  <ul className="ml-6 mt-1 space-y-1 text-xs">
+                    <li>
+                      • Go to Supabase Dashboard → Authentication → Settings
+                    </li>
+                    <li>• Find "Email Auth" section</li>
+                    <li>• Turn OFF "Enable email confirmations"</li>
+                    <li>• Save settings and test again</li>
+                  </ul>
+                </div>
+                <div>
+                  🔧 <strong>Environment Variables:</strong>
+                  <ul className="ml-6 mt-1 space-y-1 text-xs">
+                    <li>
+                      • Verify NEXT_PUBLIC_SUPABASE_URL is set in production
+                    </li>
+                    <li>
+                      • Verify NEXT_PUBLIC_SUPABASE_ANON_KEY is set in
+                      production
+                    </li>
+                    <li>• Check deployment platform environment variables</li>
+                  </ul>
+                </div>
+                <div>
+                  👤 <strong>User Account Issues:</strong>
+                  <ul className="ml-6 mt-1 space-y-1 text-xs">
+                    <li>• User might not exist in production database</li>
+                    <li>• Use signup first to create account</li>
+                    <li>• Check Supabase Dashboard → Authentication → Users</li>
+                  </ul>
+                </div>
+              </div>
+              <div className="mt-4 p-3 bg-orange-100 rounded">
+                <strong>Quick Fix for Testing:</strong>
+                <ol className="ml-4 mt-2 space-y-1 text-xs">
+                  <li>1. Go to your Supabase Dashboard</li>
+                  <li>2. Authentication → Settings → Email Auth</li>
+                  <li>3. Disable "Enable email confirmations"</li>
+                  <li>4. Try login again</li>
+                  <li>5. Re-enable email confirmations after testing</li>
+                </ol>
               </div>
             </div>
           </div>
