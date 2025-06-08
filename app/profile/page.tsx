@@ -24,7 +24,7 @@ export default function ProfilePage() {
   useEffect(() => {
     async function loadProfile() {
       if (!user) {
-        router.push("/login?redirect=/profile");
+        router.push("/login");
         return;
       }
 

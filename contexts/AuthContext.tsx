@@ -4,7 +4,6 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { AuthDebug } from "@/lib/utils/debug";
-import { SessionPersistence } from "@/lib/utils/sessionPersistence";
 import { User, getProfile } from "@/lib/services/authService";
 
 interface AuthContextType {
@@ -26,12 +25,54 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Check if we're on the client side
   useEffect(() => {
     setIsClient(true);
-
-    // Initialize session persistence when client-side
-    if (typeof window !== "undefined") {
-      SessionPersistence.initialize();
-    }
   }, []);
+
+  // Handle page visibility changes to prevent logout on tab switch
+  useEffect(() => {
+    if (!isClient || typeof window === "undefined") return;
+
+    const handleVisibilityChange = () => {
+      // When tab becomes visible again, check if session is still valid
+      // but don't force refresh unless necessary
+      if (!document.hidden && session) {
+        AuthDebug.log("🔍 Tab became visible, checking session validity...");
+
+        // Only check session validity, don't force refresh
+        supabase?.auth.getSession().then(({ data, error }) => {
+          if (error) {
+            AuthDebug.error("❌ Session check failed on tab focus:", error);
+          } else if (!data.session && session) {
+            AuthDebug.log(
+              "⚠️ Session lost while tab was hidden, attempting recovery..."
+            );
+            // Try to refresh session once
+            supabase?.auth
+              .refreshSession()
+              .then(({ data: refreshData, error: refreshError }) => {
+                if (refreshError) {
+                  AuthDebug.error("❌ Session recovery failed:", refreshError);
+                  // Only sign out if refresh explicitly fails
+                  setSession(null);
+                  setUser(null);
+                } else if (refreshData.session) {
+                  AuthDebug.log("✅ Session recovered successfully");
+                  handleAuthStateChange("TOKEN_REFRESHED", refreshData.session);
+                }
+              });
+          } else {
+            AuthDebug.log("✅ Session still valid after tab focus");
+          }
+        });
+      }
+    };
+
+    // Add event listener for page visibility changes
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [isClient, session]);
 
   // Check for session refresh signal from OAuth callback
   useEffect(() => {
@@ -42,7 +83,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (shouldRefreshSession === "true" && supabase) {
       AuthDebug.log(
-        "🔄 Session refresh signal detected, refreshing session..."
+        "🔄 OAuth session refresh signal detected, refreshing session..."
       );
 
       // Remove the parameter from URL
@@ -52,45 +93,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         (urlParams.toString() ? "?" + urlParams.toString() : "");
       window.history.replaceState({}, "", newUrl);
 
-      // Force refresh the session with multiple attempts
-      const refreshSession = async () => {
-        if (!supabase) {
-          AuthDebug.error(
-            "❌ Supabase client not available for session refresh"
-          );
-          return;
-        }
-
-        try {
-          // First attempt: refresh session
-          const { data, error } = await supabase.auth.refreshSession();
-          if (error) {
-            AuthDebug.error("❌ Session refresh failed:", error);
-
-            // Second attempt: get current session
-            const { data: sessionData, error: sessionError } =
-              await supabase.auth.getSession();
-            if (sessionError) {
-              AuthDebug.error("❌ Get session failed:", sessionError);
-            } else if (sessionData.session) {
-              AuthDebug.log("✅ Found existing session, updating auth state");
-              handleAuthStateChange("SIGNED_IN", sessionData.session);
-            } else {
-              AuthDebug.log("❌ No session found after refresh attempts");
-            }
-          } else {
-            AuthDebug.log("✅ Session refreshed successfully");
-            if (data.session) {
-              handleAuthStateChange("TOKEN_REFRESHED", data.session);
-            }
+      // Force refresh the session
+      supabase.auth.refreshSession().then(({ data, error }) => {
+        if (error) {
+          AuthDebug.error("❌ OAuth session refresh failed:", error);
+        } else {
+          AuthDebug.log("✅ OAuth session refreshed successfully");
+          if (data.session) {
+            handleAuthStateChange("TOKEN_REFRESHED", data.session);
           }
-        } catch (error) {
-          AuthDebug.error("❌ Session refresh exception:", error);
         }
-      };
-
-      // Add a small delay to ensure cookies are set
-      setTimeout(refreshSession, 100);
+      });
     }
   }, [isClient]);
 
@@ -157,11 +170,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (event === "SIGNED_OUT" || !newSession) {
       setUser(null);
-      SessionPersistence.clearSessionState();
       AuthDebug.log("👋 User signed out");
     } else if (newSession?.user) {
-      // Save session state for persistence across tabs
-      SessionPersistence.saveSessionState(newSession);
       await loadUserProfile(newSession.user.id, newSession.user.email);
     }
   };
@@ -169,7 +179,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let mounted = true;
     let authSubscription: any = null;
-    let visibilityListener: (() => void) | null = null;
 
     const initializeAuth = async () => {
       // Only initialize if we're on the client side
@@ -214,61 +223,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setLoading(false);
         }
 
-        // Listen for auth changes with improved handling
+        // Listen for auth changes
         const {
           data: { subscription },
         } = supabase.auth.onAuthStateChange(async (event, session) => {
           if (!mounted) return;
 
-          // Ignore certain events that might cause unnecessary logouts
-          if (event === "TOKEN_REFRESHED" && session) {
-            AuthDebug.log("🔄 Token refreshed, updating session silently");
-            setSession(session);
-            return;
-          }
-
-          // Only show loading for significant auth changes
-          if (event === "SIGNED_OUT" || event === "SIGNED_IN") {
-            AuthDebug.log("🔄 Significant auth state changed:", event);
-            setLoading(true);
-            await handleAuthStateChange(event, session);
-            if (mounted) {
-              setLoading(false);
-            }
-          } else {
-            AuthDebug.log("🔄 Minor auth state changed:", event);
-            await handleAuthStateChange(event, session);
+          AuthDebug.log("🔄 Auth state changed:", event);
+          setLoading(true);
+          await handleAuthStateChange(event, session);
+          if (mounted) {
+            setLoading(false);
           }
         });
 
         authSubscription = subscription;
-
-        // Handle page visibility changes to prevent logout on tab switch
-        if (typeof window !== "undefined") {
-          visibilityListener = () => {
-            if (document.visibilityState === "visible") {
-              AuthDebug.log("👁️ Tab became visible, checking session validity");
-              // Only refresh session if we have one and it's close to expiring
-              if (session && session.expires_at) {
-                const expiresAt = session.expires_at * 1000;
-                const now = Date.now();
-                const timeUntilExpiry = expiresAt - now;
-
-                // Refresh if expiring within 5 minutes
-                if (timeUntilExpiry < 5 * 60 * 1000) {
-                  AuthDebug.log("🔄 Session expiring soon, refreshing...");
-                  if (supabase) {
-                    supabase.auth.refreshSession().catch((error) => {
-                      AuthDebug.error("❌ Failed to refresh session:", error);
-                    });
-                  }
-                }
-              }
-            }
-          };
-
-          document.addEventListener("visibilitychange", visibilityListener);
-        }
       } catch (error) {
         AuthDebug.error("❌ Error in auth initialization:", error);
         if (mounted) {
@@ -284,11 +253,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (authSubscription) {
         authSubscription.unsubscribe();
       }
-      if (visibilityListener && typeof window !== "undefined") {
-        document.removeEventListener("visibilitychange", visibilityListener);
-      }
-      // Clean up session persistence
-      SessionPersistence.cleanup();
     };
   }, [isClient]);
 
@@ -301,9 +265,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       AuthDebug.log("🔄 Signing out...");
       setLoading(true);
-
-      // Clear session persistence state first
-      SessionPersistence.clearSessionState();
 
       const { error } = await supabase.auth.signOut();
       if (error) {

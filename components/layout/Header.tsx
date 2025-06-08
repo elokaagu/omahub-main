@@ -290,9 +290,7 @@ export default function Header() {
                     ) : (
                       <User className="h-4 w-4 mr-2" />
                     )}
-                    {user.first_name || user.last_name
-                      ? `${user.first_name || ""} ${user.last_name || ""}`.trim()
-                      : "My Account"}
+                    {user.first_name ? `${user.first_name}` : "My Account"}
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
                     <ul className="grid w-[200px] gap-2 p-4 bg-white shadow-lg rounded-lg border border-gray-100">

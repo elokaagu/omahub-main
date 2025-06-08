@@ -126,24 +126,6 @@ export function NavigationProvider({
     };
   }, []);
 
-  // Emergency reset on window focus (helps with stuck states)
-  useEffect(() => {
-    const handleFocus = () => {
-      if (isNavigating && navigationStartRef.current) {
-        const duration = Date.now() - navigationStartRef.current;
-        if (duration > 5000) {
-          console.warn(
-            "⚠️ Navigation: Long-running navigation detected on focus, resetting"
-          );
-          forceReset();
-        }
-      }
-    };
-
-    window.addEventListener("focus", handleFocus);
-    return () => window.removeEventListener("focus", handleFocus);
-  }, [isNavigating, forceReset]);
-
   const value = {
     isNavigating,
     setIsNavigating,

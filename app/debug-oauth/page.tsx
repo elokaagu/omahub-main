@@ -28,7 +28,7 @@ export default function DebugOAuthPage() {
       if (error) {
         addLog(`Session check error: ${error.message}`);
       } else {
-        addLog(
+          addLog(
           `Session check result: ${data.session ? "Session exists" : "No session"}`
         );
         setSession(data.session);
@@ -90,26 +90,26 @@ export default function DebugOAuthPage() {
           </h1>
 
           <div className="space-y-4 mb-6">
-            <button
+                <button
               onClick={checkSession}
               className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-            >
+                >
               Check Current Session
-            </button>
+                </button>
 
-            <button
+                <button
               onClick={testOAuthFlow}
               className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 ml-2"
-            >
+                >
               Test OAuth Flow
-            </button>
+                </button>
 
-            <button
+              <button
               onClick={clearLogs}
               className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 ml-2"
-            >
-              Clear Logs
-            </button>
+              >
+                Clear Logs
+              </button>
           </div>
 
           <div className="mb-6">
