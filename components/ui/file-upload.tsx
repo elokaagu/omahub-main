@@ -80,9 +80,61 @@ export function FileUpload({
       userEmail: user.email,
     });
 
+    // Check user profile and permissions for product uploads
+    if (bucket === "product-images") {
+      debugLog(`Checking user permissions for product uploads`, LogLevel.INFO);
+
+      try {
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("role, owned_brands")
+          .eq("id", user.id)
+          .single();
+
+        if (profileError) {
+          debugLog(`Profile check failed`, LogLevel.ERROR, {
+            error: profileError.message,
+          });
+          throw new Error(`Profile check failed: ${profileError.message}`);
+        }
+
+        if (!profile) {
+          throw new Error("User profile not found");
+        }
+
+        debugLog(`User profile found`, LogLevel.INFO, {
+          role: profile.role,
+          ownedBrands: profile.owned_brands?.length || 0,
+        });
+
+        // Check if user has permission to upload product images
+        const canUploadProducts =
+          profile.role === "super_admin" ||
+          profile.role === "admin" ||
+          profile.role === "brand_admin";
+
+        if (!canUploadProducts) {
+          throw new Error(
+            `Insufficient permissions: Only admins and brand owners can upload product images. Your role: ${profile.role}`
+          );
+        }
+
+        debugLog(
+          `User has permission to upload product images`,
+          LogLevel.INFO,
+          {
+            role: profile.role,
+          }
+        );
+      } catch (permissionError) {
+        debugLog(`Permission check failed`, LogLevel.ERROR, permissionError);
+        throw permissionError;
+      }
+    }
+
     // Create unique filename with user ID prefix
     const fileExtension = file.name.split(".").pop() || "jpg";
-    const uniqueFileName = `${bucket}/${user.id.substring(0, 8)}_${Date.now()}.${fileExtension}`;
+    const uniqueFileName = `${user.id.substring(0, 8)}_${Date.now()}.${fileExtension}`;
 
     debugLog(`Starting upload`, LogLevel.INFO, {
       fileName: uniqueFileName,
@@ -134,6 +186,10 @@ export function FileUpload({
       ) {
         throw new Error(
           `Storage bucket '${bucket}' not found. Please contact support to set up the storage bucket.`
+        );
+      } else if (error.message.includes("row-level security")) {
+        throw new Error(
+          `Database security policy blocked the upload. Please ensure you have the correct permissions for ${bucket} bucket.`
         );
       } else {
         throw new Error(`Upload failed: ${error.message}`);
