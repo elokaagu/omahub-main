@@ -12,8 +12,8 @@ let brandsCache: {
   isLoading: false,
 };
 
-// Cache expiration time (15 minutes)
-const CACHE_EXPIRY = 5 * 1000; // Reduced to 5 seconds for testing
+// Cache expiration time (reduced for better tab switching experience)
+const CACHE_EXPIRY = 30 * 1000; // 30 seconds instead of 5 seconds
 
 // Define essential fields to reduce payload size
 const ESSENTIAL_BRAND_FIELDS = "*";
@@ -492,4 +492,16 @@ export async function getBrandProducts(brandId: string): Promise<Product[]> {
   }
 
   return data || [];
+}
+
+/**
+ * Invalidate the brands cache (useful for tab switching scenarios)
+ */
+export function invalidateBrandsCache() {
+  console.log("🗑️ Invalidating brands cache");
+  brandsCache = {
+    data: null,
+    timestamp: 0,
+    isLoading: false,
+  };
 }

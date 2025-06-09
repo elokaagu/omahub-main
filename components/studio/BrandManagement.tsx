@@ -2,7 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import { getAllBrands } from "@/lib/services/brandService";
+import {
+  getAllBrands,
+  invalidateBrandsCache,
+} from "@/lib/services/brandService";
 import { useBrandOwnerAccess } from "@/lib/hooks/useBrandOwnerAccess";
 import { Brand } from "@/lib/supabase";
 import {
@@ -66,6 +69,35 @@ export default function BrandManagement({ className }: BrandManagementProps) {
       fetchBrands();
     }
   }, [accessLoading, user, canManageBrands]);
+
+  // Add tab visibility change listener to refresh brands when tab becomes active
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden && user && canManageBrands && !accessLoading) {
+        console.log("👁️ Tab became visible, refreshing brands...");
+        invalidateBrandsCache(); // Clear cache to ensure fresh data
+        fetchBrands();
+      }
+    };
+
+    const handleFocus = () => {
+      if (user && canManageBrands && !accessLoading) {
+        console.log("🎯 Window focused, refreshing brands...");
+        invalidateBrandsCache(); // Clear cache to ensure fresh data
+        fetchBrands();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("focus", handleFocus);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, [user, canManageBrands, accessLoading]);
 
   const fetchBrands = async () => {
     try {

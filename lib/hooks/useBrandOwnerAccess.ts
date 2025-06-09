@@ -122,6 +122,35 @@ export function useBrandOwnerAccess(): BrandOwnerAccess {
     fetchUserData();
   }, [user]);
 
+  // Add tab visibility change listener to refresh data when tab becomes active
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden && user) {
+        console.log("👁️ Tab became visible, refreshing brand access data...");
+        fetchUserData();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    // Also listen for window focus events as a backup
+    const handleFocus = () => {
+      if (user) {
+        console.log("🎯 Window focused, refreshing brand access data...");
+        fetchUserData();
+      }
+    };
+
+    window.addEventListener("focus", handleFocus);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, [user]);
+
   // Derived values
   const effectiveProfile = userProfile || {
     role: user?.role || "user",

@@ -198,7 +198,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const {
           data: { subscription },
         } = supabase.auth.onAuthStateChange(async (event, session) => {
-          AuthDebug.log("🔄 Auth state change event:", event);
           if (mounted) {
             await handleAuthStateChange(event, session);
           }
@@ -222,6 +221,61 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     };
   }, [isClient]);
+
+  // Add tab visibility change listener to refresh session when tab becomes active
+  useEffect(() => {
+    if (!isClient || typeof window === "undefined" || !supabase) return;
+
+    const handleVisibilityChange = async () => {
+      if (!document.hidden && session) {
+        AuthDebug.log("👁️ Tab became visible, checking session validity...");
+
+        try {
+          const {
+            data: { session: currentSession },
+            error,
+          } = await supabase.auth.getSession();
+
+          if (error) {
+            AuthDebug.error("❌ Error checking session on tab focus:", error);
+            return;
+          }
+
+          // If session has changed or expired, update it
+          if (!currentSession && session) {
+            AuthDebug.log("⚠️ Session expired while tab was hidden");
+            await handleAuthStateChange("SIGNED_OUT", null);
+          } else if (
+            currentSession &&
+            (!session || currentSession.access_token !== session.access_token)
+          ) {
+            AuthDebug.log("🔄 Session updated while tab was hidden");
+            await handleAuthStateChange("TOKEN_REFRESHED", currentSession);
+          }
+        } catch (error) {
+          AuthDebug.error(
+            "❌ Error during tab visibility session check:",
+            error
+          );
+        }
+      }
+    };
+
+    const handleFocus = async () => {
+      if (session) {
+        AuthDebug.log("🎯 Window focused, refreshing user profile...");
+        await refreshUserProfile();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("focus", handleFocus);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, [isClient, session]);
 
   const signOut = async () => {
     try {
