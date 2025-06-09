@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { signUp } from "@/lib/services/authService";
 import { Button } from "@/components/ui/button";
-import GoogleOAuthButton from "@/components/auth/GoogleOAuthButton";
 
 // Component to handle search params
 function SignupForm() {
@@ -133,23 +132,6 @@ function SignupForm() {
           </Button>
         </div>
       </form>
-
-      <div className="mt-6">
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-300" />
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white text-oma-cocoa">
-              Or continue with
-            </span>
-          </div>
-        </div>
-
-        <div className="mt-6">
-          <GoogleOAuthButton redirectTo="/studio" />
-        </div>
-      </div>
 
       <div className="mt-6 text-center">
         <p className="text-sm text-oma-cocoa">

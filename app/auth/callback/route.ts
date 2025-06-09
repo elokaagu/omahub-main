@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
   if (error) {
     console.error("❌ OAuth error:", error, errorDescription);
     const errorUrl = new URL("/login", origin);
-    errorUrl.searchParams.set("error", "oauth_error");
+    errorUrl.searchParams.set("error", "callback_error");
     errorUrl.searchParams.set("message", errorDescription || error);
     return NextResponse.redirect(errorUrl.toString());
   }

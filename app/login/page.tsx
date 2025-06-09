@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { signIn } from "@/lib/services/authService";
 import { Button } from "@/components/ui/button";
-import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
 import ErrorBoundary from "../components/ErrorBoundary";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -61,8 +60,6 @@ function LoginForm() {
           } else if (decodedError === "service_unavailable") {
             friendlyMessage =
               "Authentication service is temporarily unavailable.";
-          } else if (decodedError === "oauth_error") {
-            friendlyMessage = "Google sign-in failed. Please try again.";
           } else if (decodedError === "session_error") {
             friendlyMessage =
               "Session creation failed. Please try signing in again.";
@@ -253,23 +250,6 @@ function LoginForm() {
           </Button>
         </div>
       </form>
-
-      <div className="mt-6">
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-300" />
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white text-oma-cocoa">
-              Or continue with
-            </span>
-          </div>
-        </div>
-
-        <div className="mt-6">
-          <GoogleSignInButton className="w-full" redirectTo="/studio" />
-        </div>
-      </div>
 
       <div className="mt-6 text-center">
         <p className="text-sm text-oma-cocoa">

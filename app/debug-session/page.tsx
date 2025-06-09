@@ -164,40 +164,6 @@ export default function DebugSessionPage() {
     }
   };
 
-  const testGoogleOAuth = () => {
-    addLog("🔄 Testing Google OAuth...");
-
-    if (!supabase) {
-      addLog("❌ Supabase client not available");
-      return;
-    }
-
-    // Redirect to Google OAuth with debug redirect
-    const currentUrl = window.location.origin;
-    const callbackUrl = `${currentUrl}/auth/callback`;
-    const redirectTo = "/debug-session";
-
-    supabase.auth
-      .signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: `${callbackUrl}?redirect_to=${encodeURIComponent(redirectTo)}`,
-          queryParams: {
-            access_type: "offline",
-            prompt: "consent",
-          },
-          scopes: "email profile",
-        },
-      })
-      .then(({ data, error }) => {
-        if (error) {
-          addLog(`❌ Google OAuth initiation failed: ${error.message}`);
-        } else {
-          addLog("🔄 Google OAuth initiated, redirecting...");
-        }
-      });
-  };
-
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-4xl mx-auto">
@@ -253,12 +219,6 @@ export default function DebugSessionPage() {
             className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 ml-4"
           >
             Force Refresh Session
-          </button>
-          <button
-            onClick={testGoogleOAuth}
-            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 ml-4"
-          >
-            Test Google OAuth
           </button>
         </div>
 

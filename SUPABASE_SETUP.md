@@ -175,7 +175,7 @@ npx ts-node scripts/migrateToSupabase.ts
 
 1. In the Supabase dashboard, go to Authentication > Settings
 2. Configure your site URL (e.g., http://localhost:3000 for development)
-3. Enable the authentication providers you want to use (Email, Google, Facebook, etc.)
+3. Enable email authentication and configure email templates as needed
 4. For email authentication, you can customize the email templates
 
 ## Step 7: Test the Integration

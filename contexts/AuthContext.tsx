@@ -27,7 +27,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsClient(true);
   }, []);
 
-  // Check for session refresh signal from OAuth callback or email login
+  // Check for session refresh signal from authentication callback or email login
   useEffect(() => {
     if (!isClient || typeof window === "undefined") return;
 
@@ -207,7 +207,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     try {
-      AuthDebug.log("�� Signing out...");
+      AuthDebug.log("👋 Signing out...");
 
       // Clear local state first
       setUser(null);
