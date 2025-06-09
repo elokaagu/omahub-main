@@ -98,24 +98,6 @@ export default function BrandManagement({ className }: BrandManagementProps) {
       setIsLoading(true);
       console.log("🔄 Manual session refresh requested...");
 
-      // First check if we have a session
-      const { data: currentSession, error: currentSessionError } =
-        await supabase.auth.getSession();
-
-      if (currentSessionError) {
-        console.error("❌ Error getting current session:", currentSessionError);
-        toast.error("Authentication error - please sign in again");
-        return;
-      }
-
-      if (!currentSession.session) {
-        console.error("❌ No session found to refresh");
-        toast.error("No authentication session found - please sign in again");
-        return;
-      }
-
-      console.log("✅ Current session found, attempting refresh...");
-
       const { data: refreshData, error: refreshError } =
         await supabase.auth.refreshSession();
 
@@ -207,47 +189,7 @@ export default function BrandManagement({ className }: BrandManagementProps) {
         ownedBrandIds,
       });
 
-      // First, check if we have any session at all
-      console.log("🔍 Checking current session...");
-      const { data: currentSession, error: currentSessionError } =
-        await supabase.auth.getSession();
-
-      if (currentSessionError) {
-        console.error("❌ Error getting current session:", currentSessionError);
-        throw new Error("Authentication error - please sign in again");
-      }
-
-      if (!currentSession.session) {
-        console.error("❌ No session found");
-        throw new Error("No authentication session - please sign in again");
-      }
-
-      console.log("✅ Current session found, attempting refresh...");
-
-      // Try to refresh the session
-      const { data: refreshData, error: refreshError } =
-        await supabase.auth.refreshSession();
-
-      if (refreshError) {
-        console.error("❌ Session refresh failed:", refreshError);
-        // If refresh fails, try to use the current session
-        console.log("⚠️ Using current session instead of refreshed session");
-      } else {
-        console.log("✅ Session refreshed successfully");
-      }
-
-      // Verify we still have a valid session after refresh attempt
-      const { data: sessionData, error: sessionError } =
-        await supabase.auth.getSession();
-
-      if (sessionError || !sessionData.session) {
-        console.error("❌ No valid session after refresh:", sessionError);
-        throw new Error(
-          "Authentication session invalid - please sign in again"
-        );
-      }
-
-      console.log("✅ Valid session confirmed, updating brand...");
+      console.log("✅ Updating brand...");
 
       const { data, error } = await supabase
         .from("brands")
@@ -266,7 +208,7 @@ export default function BrandManagement({ className }: BrandManagementProps) {
           );
         } else if (error.code === "42501") {
           throw new Error(
-            "Database permission denied - please try refreshing your session"
+            "Database permission denied - please try signing in again"
           );
         } else if (error.message.includes("RLS")) {
           throw new Error(
@@ -292,17 +234,7 @@ export default function BrandManagement({ className }: BrandManagementProps) {
       console.error("❌ Error updating brand:", error);
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error occurred";
-
-      // If it's an authentication error, set the auth error state and suggest signing in again
-      if (
-        errorMessage.includes("sign in again") ||
-        errorMessage.includes("Authentication")
-      ) {
-        setAuthError(errorMessage);
-        toast.error(`${errorMessage}. Please try the recovery options below.`);
-      } else {
-        toast.error(`Failed to update brand: ${errorMessage}`);
-      }
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
