@@ -102,20 +102,47 @@ function LoginForm() {
     setError(null);
 
     try {
-      const { session, refreshSession } = await signIn(email, password);
-      if (session) {
+      const { session, refreshSession, clientSession } = await signIn(
+        email,
+        password
+      );
+      if (session || clientSession) {
         // Save or clear remember me preference
         saveRememberMe(email, rememberMe);
 
-        // Add a small delay to ensure auth state is updated
-        await new Promise((resolve) => setTimeout(resolve, 500));
+        // If we have a client session, wait for AuthContext to detect it
+        if (clientSession) {
+          console.log(
+            "✅ Client session available, waiting for auth state update..."
+          );
 
-        // If the API indicates we should refresh session (like OAuth), add the parameter
-        if (refreshSession) {
-          // Redirect with session refresh signal
+          // Wait for AuthContext to detect the session change
+          let attempts = 0;
+          const maxAttempts = 10; // 5 seconds max
+
+          while (attempts < maxAttempts) {
+            await new Promise((resolve) => setTimeout(resolve, 500));
+
+            // Check if AuthContext has detected the session
+            // We can't directly access AuthContext here, so we'll use a reasonable delay
+            attempts++;
+
+            if (attempts >= 3) {
+              // After 1.5 seconds, assume it's ready
+              console.log("✅ Auth state should be updated, redirecting...");
+              break;
+            }
+          }
+
+          // Redirect normally without session refresh parameter
+          window.location.href = "/";
+        } else if (refreshSession) {
+          // Fallback to session refresh redirect if client session not available
+          console.log("🔄 Using session refresh redirect as fallback");
           window.location.href = "/?session_refresh=true";
         } else {
-          // Force a hard refresh to ensure auth state is properly updated
+          // Add a longer delay to ensure auth state is updated
+          await new Promise((resolve) => setTimeout(resolve, 1500));
           window.location.href = "/";
         }
       }
