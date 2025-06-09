@@ -30,7 +30,8 @@ const createClient = () => {
       autoRefreshToken: true,
       detectSessionInUrl: true,
       flowType: "pkce",
-      debug: process.env.NODE_ENV === "development",
+      debug: false, // Disable debug to reduce console noise
+      storageKey: "omahub-auth-token",
     },
     global: {
       fetch: fetch,
@@ -52,47 +53,17 @@ export const isSupabaseAvailable = () => !!supabase;
 
 // Debug logging for development
 if (process.env.NODE_ENV === "development") {
-  console.log("🔧 Supabase client initialized:", {
-    hasClient: !!supabase,
-    url: supabaseUrl,
-    hasAnonKey: !!supabaseAnonKey,
-    isBrowser: typeof window !== "undefined",
-  });
+  console.log("🔧 Supabase client initialized");
 }
 
-// Set up auth state change listener and run tests if in browser environment
+// Set up auth state change listener if in browser environment
 if (supabase && typeof window !== "undefined") {
   // Set up auth state change listener
   supabase.auth.onAuthStateChange((event, session) => {
-    AuthDebug.state(event, session);
-    AuthDebug.session(session);
-  });
-
-  // Test the connection
-  supabase.auth.getSession().then(({ data, error }) => {
-    if (error) {
-      AuthDebug.error("Supabase auth test failed", error);
-    } else {
-      AuthDebug.log("Supabase auth test successful", {
-        hasSession: !!data.session,
-      });
-      AuthDebug.session(data.session);
+    if (process.env.NODE_ENV === "development") {
+      console.log("Auth state changed:", event, !!session);
     }
   });
-
-  // Test a simple database query
-  supabase
-    .from("brands")
-    .select("*", { count: "exact", head: true })
-    .then(({ data, error, count }) => {
-      if (error) {
-        AuthDebug.error("Supabase database test failed", error);
-      } else {
-        AuthDebug.log("Supabase database test successful", {
-          brandCount: count,
-        });
-      }
-    });
 }
 
 // Helper function to safely execute database operations

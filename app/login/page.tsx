@@ -7,6 +7,7 @@ import { signIn } from "@/lib/services/authService";
 import { Button } from "@/components/ui/button";
 import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
 import ErrorBoundary from "../components/ErrorBoundary";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   saveRememberMe,
   getRememberedData,
@@ -110,15 +111,13 @@ function LoginForm() {
         // Save or clear remember me preference
         saveRememberMe(email, rememberMe);
 
-        // If we have a client session, wait for AuthContext to detect it
+        // If we have a client session, the auth state should be updated automatically
         if (clientSession) {
           console.log(
             "✅ Client session available, waiting for auth state update..."
           );
-
           // Wait longer for AuthContext to detect the session change and load profile
           await new Promise((resolve) => setTimeout(resolve, 2000));
-
           console.log("✅ Auth state should be updated, redirecting...");
           window.location.href = "/";
         } else if (refreshSession) {
