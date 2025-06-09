@@ -47,6 +47,7 @@ export default function BrandManagement({ className }: BrandManagementProps) {
     filterBrandsByOwnership,
     canAccessBrand,
     loading: accessLoading,
+    refresh,
   } = useBrandOwnerAccess();
 
   const supabase = createClientComponentClient();
@@ -285,18 +286,32 @@ export default function BrandManagement({ className }: BrandManagementProps) {
 
     try {
       setIsLoading(true);
-      const { error } = await supabase
-        .from("brands")
-        .delete()
-        .eq("id", brandId);
 
-      if (error) throw error;
+      // Use API route for deletion to handle permissions properly
+      const response = await fetch(`/api/brands/${brandId}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to delete brand");
+      }
+
+      // Remove brand from local state
       setBrands(brands.filter((brand) => brand.id !== brandId));
-      toast.success("Brand deleted successfully");
+      toast.success(result.message || "Brand deleted successfully");
+
+      // Refresh user data to update owned_brands array
+      refresh();
     } catch (error) {
       console.error("Error deleting brand:", error);
-      toast.error("Failed to delete brand");
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to delete brand";
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -486,7 +501,7 @@ export default function BrandManagement({ className }: BrandManagementProps) {
                     <Pencil className="h-4 w-4 mr-1" />
                     Edit
                   </Button>
-                  {isAdmin && (
+                  {(isAdmin || canAccessBrand(brand.id)) && (
                     <Button
                       variant="outline"
                       size="sm"
