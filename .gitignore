@@ -42,3 +42,28 @@ next-env.d.ts
 # Supabase
 /supabase/.temp
 /supabase/.env
+
+# Prevent bloat - test and debug files
+**/test-*
+**/debug-*
+**/*test*.js
+**/*debug*.js
+*.swp
+*.swo
+*~
+
+# Temporary files
+*.tmp
+*.temp
+response.txt
+test-image.*
+
+# Backup files
+*.backup
+*-backup/
+deployment-backup/
+
+# Build artifacts
+build-override.js
+vercel-build.js
+simplified-*.js
