@@ -1,10 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
-import { hasStudioAccess } from "@/lib/services/permissionsService.server";
 
 export async function middleware(request: NextRequest) {
-  console.log("🚀 Middleware triggered for:", request.nextUrl.pathname);
-
   // Skip middleware for static files, API routes, and auth callback
   if (
     request.nextUrl.pathname.startsWith("/_next") ||
@@ -12,18 +9,16 @@ export async function middleware(request: NextRequest) {
     request.nextUrl.pathname.startsWith("/auth/callback") ||
     request.nextUrl.pathname.includes(".")
   ) {
-    console.log("⏭️ Skipping middleware for:", request.nextUrl.pathname);
     return NextResponse.next();
   }
 
-  let response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
-  });
+  // Only protect /studio routes - let everything else pass through
+  if (!request.nextUrl.pathname.startsWith("/studio")) {
+    return NextResponse.next();
+  }
 
+  // Simple session check for protected routes only
   try {
-    // Create a Supabase client configured to use cookies
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -32,144 +27,29 @@ export async function middleware(request: NextRequest) {
           get(name: string) {
             return request.cookies.get(name)?.value;
           },
-          set(name: string, value: string, options: any) {
-            // Set the cookie in the request for immediate use
-            request.cookies.set({
-              name,
-              value,
-              ...options,
-            });
-            // Set the cookie in the response for future requests
-            response = NextResponse.next({
-              request: {
-                headers: request.headers,
-              },
-            });
-            response.cookies.set({
-              name,
-              value,
-              ...options,
-            });
-          },
-          remove(name: string, options: any) {
-            // Remove the cookie from the request
-            request.cookies.set({
-              name,
-              value: "",
-              ...options,
-            });
-            // Remove the cookie from the response
-            response = NextResponse.next({
-              request: {
-                headers: request.headers,
-              },
-            });
-            response.cookies.set({
-              name,
-              value: "",
-              ...options,
-            });
-          },
+          set() {}, // No-op for middleware
+          remove() {}, // No-op for middleware
         },
       }
     );
 
-    // Refresh session if expired - this is important for OAuth flows
     const {
       data: { session },
-      error: sessionError,
     } = await supabase.auth.getSession();
 
-    console.log("🔑 Session check:", {
-      hasSession: !!session,
-      userId: session?.user?.id,
-      email: session?.user?.email,
-      expiresAt: session?.expires_at,
-      provider: session?.user?.app_metadata?.provider,
-      sessionError: sessionError?.message,
-    });
-
-    // Protected routes that require authentication
-    const protectedRoutes = ["/studio"];
-    const isProtectedRoute = protectedRoutes.some((route) =>
-      request.nextUrl.pathname.startsWith(route)
-    );
-
-    if (isProtectedRoute && !session) {
-      console.log("❌ No session found for protected route");
-      console.log("🔄 Redirecting to sign-in page");
+    // If no session on protected route, redirect to login
+    if (!session) {
       const redirectUrl = new URL("/login", request.url);
       redirectUrl.searchParams.set("redirect_to", request.nextUrl.pathname);
       return NextResponse.redirect(redirectUrl);
     }
 
-    // If we have a session, check if it needs refreshing
-    if (session) {
-      console.log("✅ Valid session found");
-
-      // Only refresh if session is close to expiring (within 5 minutes)
-      const expiresAt = session.expires_at;
-      if (expiresAt) {
-        const now = Math.floor(Date.now() / 1000);
-        const timeUntilExpiry = expiresAt - now;
-        const shouldRefresh = timeUntilExpiry < 300; // 5 minutes
-
-        console.log("🕒 Session timing:", {
-          expiresAt: new Date(expiresAt * 1000).toISOString(),
-          timeUntilExpiry: `${Math.floor(timeUntilExpiry / 60)} minutes`,
-          shouldRefresh,
-        });
-
-        if (shouldRefresh) {
-          console.log("🔄 Session close to expiry, refreshing...");
-
-          const {
-            data: { session: refreshedSession },
-            error: refreshError,
-          } = await supabase.auth.refreshSession();
-
-          if (refreshError) {
-            console.log("⚠️ Session refresh failed:", refreshError.message);
-            // If refresh fails and we're on a protected route, redirect to login
-            if (isProtectedRoute) {
-              const redirectUrl = new URL("/login", request.url);
-              redirectUrl.searchParams.set(
-                "redirect_to",
-                request.nextUrl.pathname
-              );
-              return NextResponse.redirect(redirectUrl);
-            }
-          } else if (refreshedSession) {
-            console.log("✅ Session refreshed successfully");
-          }
-        } else {
-          console.log("✅ Session still valid, no refresh needed");
-        }
-      } else {
-        console.log("⚠️ Session has no expiry time, assuming it's valid");
-      }
-    }
-
-    console.log("✅ Access granted");
-    return response;
+    return NextResponse.next();
   } catch (error) {
-    console.error("❌ Middleware error:", error);
-
-    // For protected routes, redirect to login on error
-    const protectedRoutes = ["/studio"];
-    const isProtectedRoute = protectedRoutes.some((route) =>
-      request.nextUrl.pathname.startsWith(route)
-    );
-
-    if (isProtectedRoute) {
-      console.log("🔄 Redirecting to login due to middleware error");
-      const redirectUrl = new URL("/login", request.url);
-      redirectUrl.searchParams.set("redirect_to", request.nextUrl.pathname);
-      return NextResponse.redirect(redirectUrl);
-    }
-
-    console.log("✅ Access granted (fallback due to error)");
-    return response;
+    // On any error, redirect to login for protected routes
+    const redirectUrl = new URL("/login", request.url);
+    redirectUrl.searchParams.set("redirect_to", request.nextUrl.pathname);
+    return NextResponse.redirect(redirectUrl);
   }
 }
 
@@ -180,7 +60,6 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * Feel free to modify this pattern to include more paths.
      */
     "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
