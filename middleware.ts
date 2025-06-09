@@ -103,26 +103,50 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(redirectUrl);
     }
 
-    // If we have a session, ensure it's properly set in cookies
+    // If we have a session, check if it needs refreshing
     if (session) {
-      console.log("✅ Valid session found, ensuring cookies are set");
+      console.log("✅ Valid session found");
 
-      // Refresh the session to ensure it's valid and update cookies
-      const {
-        data: { session: refreshedSession },
-        error: refreshError,
-      } = await supabase.auth.refreshSession();
+      // Only refresh if session is close to expiring (within 5 minutes)
+      const expiresAt = session.expires_at;
+      if (expiresAt) {
+        const now = Math.floor(Date.now() / 1000);
+        const timeUntilExpiry = expiresAt - now;
+        const shouldRefresh = timeUntilExpiry < 300; // 5 minutes
 
-      if (refreshError) {
-        console.log("⚠️ Session refresh failed:", refreshError.message);
-        // If refresh fails and we're on a protected route, redirect to login
-        if (isProtectedRoute) {
-          const redirectUrl = new URL("/login", request.url);
-          redirectUrl.searchParams.set("redirect_to", request.nextUrl.pathname);
-          return NextResponse.redirect(redirectUrl);
+        console.log("🕒 Session timing:", {
+          expiresAt: new Date(expiresAt * 1000).toISOString(),
+          timeUntilExpiry: `${Math.floor(timeUntilExpiry / 60)} minutes`,
+          shouldRefresh,
+        });
+
+        if (shouldRefresh) {
+          console.log("🔄 Session close to expiry, refreshing...");
+
+          const {
+            data: { session: refreshedSession },
+            error: refreshError,
+          } = await supabase.auth.refreshSession();
+
+          if (refreshError) {
+            console.log("⚠️ Session refresh failed:", refreshError.message);
+            // If refresh fails and we're on a protected route, redirect to login
+            if (isProtectedRoute) {
+              const redirectUrl = new URL("/login", request.url);
+              redirectUrl.searchParams.set(
+                "redirect_to",
+                request.nextUrl.pathname
+              );
+              return NextResponse.redirect(redirectUrl);
+            }
+          } else if (refreshedSession) {
+            console.log("✅ Session refreshed successfully");
+          }
+        } else {
+          console.log("✅ Session still valid, no refresh needed");
         }
-      } else if (refreshedSession) {
-        console.log("✅ Session refreshed successfully");
+      } else {
+        console.log("⚠️ Session has no expiry time, assuming it's valid");
       }
     }
 
