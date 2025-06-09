@@ -1,4 +1,5 @@
-import { supabase, Brand, Collection } from "../supabase";
+import { supabase, Brand } from "../supabase";
+import { Collection } from "../data/brands";
 import { getProfile, isAdmin as checkIsAdmin } from "./authService";
 
 /**
@@ -18,7 +19,9 @@ export async function createBrand(
   // Check admin access first
   const hasAccess = await isAdmin(userId);
   if (!hasAccess) {
-    throw new Error("Unauthorized: Only admins can create brands");
+    throw new Error(
+      "Unauthorized: Only admins and super admins can create brands"
+    );
   }
 
   // Generate a URL-friendly slug from the brand name
@@ -56,7 +59,9 @@ export async function updateBrand(
   // Check admin access
   const hasAccess = await isAdmin(userId);
   if (!hasAccess) {
-    throw new Error("Unauthorized: Only admins can update brands");
+    throw new Error(
+      "Unauthorized: Only admins and super admins can update brands"
+    );
   }
 
   const { data, error } = await supabase
@@ -81,7 +86,9 @@ export async function deleteBrand(userId: string, id: string): Promise<void> {
   // Check admin access
   const hasAccess = await isAdmin(userId);
   if (!hasAccess) {
-    throw new Error("Unauthorized: Only admins can delete brands");
+    throw new Error(
+      "Unauthorized: Only admins and super admins can delete brands"
+    );
   }
 
   const { error } = await supabase.from("brands").delete().eq("id", id);

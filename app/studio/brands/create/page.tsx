@@ -36,10 +36,6 @@ const CATEGORIES = [
   "Casual Wear",
   "Formal Wear",
   "Ready to Wear",
-  "Streetwear",
-  "Active Wear",
-  "Traditional",
-  "Footwear",
   "Luxury",
 ];
 

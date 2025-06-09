@@ -1,5 +1,5 @@
 import { supabase, Brand, Review, Catalogue, Product } from "../supabase";
-import { getProfile } from "./authService";
+import { getProfile, isAdmin } from "./authService";
 
 // Cache configuration
 let brandsCache: {
@@ -345,11 +345,12 @@ export async function deleteBrand(
     throw new Error("Supabase client not available");
   }
 
-  const profile = await getProfile(userId);
-
-  // Only admins can delete brands
-  if (profile?.role !== "admin") {
-    throw new Error("Unauthorized: Only admins can delete brands");
+  // Check if user has admin privileges (includes both admin and super_admin)
+  const hasAdminAccess = await isAdmin(userId);
+  if (!hasAdminAccess) {
+    throw new Error(
+      "Unauthorized: Only admins and super admins can delete brands"
+    );
   }
 
   const { error } = await supabase.from("brands").delete().eq("id", id);
