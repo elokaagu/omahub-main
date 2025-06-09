@@ -108,22 +108,16 @@ function LoginForm() {
         // Save or clear remember me preference
         saveRememberMe(email, rememberMe);
 
-        // If we have a client session, the auth state should be updated automatically
+        // Immediate redirect without delays - let AuthContext handle the state updates
         if (clientSession) {
           console.log(
-            "✅ Client session available, waiting for auth state update..."
+            "✅ Client session available, redirecting immediately..."
           );
-          // Wait longer for AuthContext to detect the session change and load profile
-          await new Promise((resolve) => setTimeout(resolve, 2000));
-          console.log("✅ Auth state should be updated, redirecting...");
           window.location.href = "/";
         } else if (refreshSession) {
-          // Fallback to session refresh redirect if client session not available
-          console.log("🔄 Using session refresh redirect as fallback");
+          console.log("🔄 Using session refresh redirect");
           window.location.href = "/?session_refresh=true";
         } else {
-          // Add a longer delay to ensure auth state is updated
-          await new Promise((resolve) => setTimeout(resolve, 1500));
           window.location.href = "/";
         }
       }

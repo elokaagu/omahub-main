@@ -2,6 +2,15 @@ import { createServerClient } from "@supabase/ssr";
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
+const SUPER_ADMIN_EMAILS = ["eloka.agu@icloud.com", "shannonalisa@oma-hub.com"];
+const BRAND_ADMIN_EMAILS = ["eloka@culturin.com"];
+
+function getUserRole(email: string): string {
+  if (SUPER_ADMIN_EMAILS.includes(email)) return "super_admin";
+  if (BRAND_ADMIN_EMAILS.includes(email)) return "brand_admin";
+  return "user";
+}
+
 export async function POST(request: NextRequest) {
   const { email, password } = await request.json();
 
@@ -41,20 +50,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 401 });
     }
 
-    // Check if profile exists, create if not
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", data.user.id)
-      .single();
+    // Check if profile exists and create if not - use upsert for efficiency
+    const userRole = getUserRole(data.user.email || "");
 
-    if (profileError && profileError.code === "PGRST116") {
-      // Profile doesn't exist, create it
-      await supabase.from("profiles").insert({
+    const { error: profileError } = await supabase.from("profiles").upsert(
+      {
         id: data.user.id,
         email: data.user.email,
-        role: "user",
-      });
+        role: userRole,
+        owned_brands: [],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      {
+        onConflict: "id",
+        ignoreDuplicates: false,
+      }
+    );
+
+    if (profileError) {
+      console.error("Profile upsert error:", profileError);
+      // Don't fail login if profile creation fails
     }
 
     // Create response with session refresh instruction

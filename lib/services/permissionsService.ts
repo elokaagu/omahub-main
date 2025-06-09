@@ -54,68 +54,80 @@ export async function getUserPermissions(
     console.log("🔍 Client Permissions: Getting permissions for user:", userId);
     console.log("🔍 Client Permissions: User email provided:", userEmail);
 
-    // If we have the user's email and it's a super admin, return super admin permissions immediately
-    if (userEmail && isSuperAdminEmail(userEmail)) {
-      console.log(
-        "✅ Client Permissions: Super admin email detected, returning super admin permissions"
-      );
-      return rolePermissions.super_admin;
-    }
-
-    // If we have the user's email and it's a brand admin, return brand admin permissions immediately
-    if (userEmail && isBrandAdminEmail(userEmail)) {
-      console.log(
-        "✅ Client Permissions: Brand admin email detected, returning brand admin permissions"
-      );
-      return rolePermissions.brand_admin;
+    // Fast path: If we have the user's email, check for admin roles immediately
+    if (userEmail) {
+      if (isSuperAdminEmail(userEmail)) {
+        console.log(
+          "✅ Client Permissions: Super admin email detected, returning super admin permissions"
+        );
+        return rolePermissions.super_admin;
+      }
+      if (isBrandAdminEmail(userEmail)) {
+        console.log(
+          "✅ Client Permissions: Brand admin email detected, returning brand admin permissions"
+        );
+        return rolePermissions.brand_admin;
+      }
     }
 
     const supabase = createClientComponentClient<Database>();
 
-    // First, verify we have a valid session
-    console.log("🔍 Client Permissions: Checking session...");
+    // Get session and profile data in parallel for better performance
+    const [sessionResult, profileResult] = await Promise.all([
+      supabase.auth.getSession(),
+      supabase.from("profiles").select("role").eq("id", userId).single(),
+    ]);
+
     const {
       data: { session },
       error: sessionError,
-    } = await supabase.auth.getSession();
-    console.log("🔍 Client Permissions: Session check result:", {
+    } = sessionResult;
+    const { data: profile, error: profileError } = profileResult;
+
+    console.log("🔍 Client Permissions: Session and profile results:", {
       hasSession: !!session,
       sessionUserId: session?.user?.id,
       sessionError,
+      profile,
+      profileError,
     });
 
     if (sessionError) {
       console.error("❌ Client Permissions: Session error:", sessionError);
-      // If session fails but we have user email, try to determine role from email
-      if (userEmail && isSuperAdminEmail(userEmail)) {
-        console.log(
-          "🔄 Client Permissions: Session failed but super admin email provided, returning super admin permissions"
-        );
-        return rolePermissions.super_admin;
-      }
-      if (userEmail && isBrandAdminEmail(userEmail)) {
-        console.log(
-          "🔄 Client Permissions: Session failed but brand admin email provided, returning brand admin permissions"
-        );
-        return rolePermissions.brand_admin;
+      // Fallback to email-based permissions if available
+      if (userEmail) {
+        if (isSuperAdminEmail(userEmail)) {
+          console.log(
+            "🔄 Client Permissions: Session failed but super admin email provided"
+          );
+          return rolePermissions.super_admin;
+        }
+        if (isBrandAdminEmail(userEmail)) {
+          console.log(
+            "🔄 Client Permissions: Session failed but brand admin email provided"
+          );
+          return rolePermissions.brand_admin;
+        }
       }
       return [];
     }
 
     if (!session) {
       console.error("❌ Client Permissions: No valid session found");
-      // If no session but we have user email, try to determine role from email
-      if (userEmail && isSuperAdminEmail(userEmail)) {
-        console.log(
-          "🔄 Client Permissions: No session but super admin email provided, returning super admin permissions"
-        );
-        return rolePermissions.super_admin;
-      }
-      if (userEmail && isBrandAdminEmail(userEmail)) {
-        console.log(
-          "🔄 Client Permissions: No session but brand admin email provided, returning brand admin permissions"
-        );
-        return rolePermissions.brand_admin;
+      // Fallback to email-based permissions if available
+      if (userEmail) {
+        if (isSuperAdminEmail(userEmail)) {
+          console.log(
+            "🔄 Client Permissions: No session but super admin email provided"
+          );
+          return rolePermissions.super_admin;
+        }
+        if (isBrandAdminEmail(userEmail)) {
+          console.log(
+            "🔄 Client Permissions: No session but brand admin email provided"
+          );
+          return rolePermissions.brand_admin;
+        }
       }
       return [];
     }
@@ -128,30 +140,15 @@ export async function getUserPermissions(
       return [];
     }
 
-    console.log(
-      "🔍 Client Permissions: Supabase client created, querying profiles..."
-    );
-    const { data: profile, error } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", userId)
-      .single();
-
-    console.log("🔍 Client Permissions: Profile query result:", {
-      profile,
-      error,
-    });
-
-    if (error) {
+    if (profileError) {
       console.error(
         "❌ Client Permissions: Error getting user permissions:",
-        error
+        profileError
       );
-      console.error("❌ Client Permissions: Error code:", error.code);
-      console.error("❌ Client Permissions: Error message:", error.message);
+      console.error("❌ Client Permissions: Error code:", profileError.code);
 
-      // If profile doesn't exist but we have a valid session, create it
-      if (error.code === "PGRST116" && session?.user?.email) {
+      // If profile doesn't exist but we have a valid session, create it with optimized role detection
+      if (profileError.code === "PGRST116" && session?.user?.email) {
         console.log(
           "⚠️ Client Permissions: Profile not found, attempting to create..."
         );

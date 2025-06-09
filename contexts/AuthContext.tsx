@@ -79,9 +79,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       AuthDebug.log("🔄 Loading user profile for:", userId);
 
-      // Add timeout to prevent hanging
+      // Reduce timeout to prevent hanging but allow reasonable time for loading
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error("Profile loading timeout")), 10000);
+        setTimeout(() => reject(new Error("Profile loading timeout")), 3000);
       });
 
       const profilePromise = getProfile(userId);
@@ -109,7 +109,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error) {
       AuthDebug.error("❌ Error loading user profile:", error);
-      setUser(null);
+      // Don't set user to null on timeout - create basic user instead
+      if (
+        error instanceof Error &&
+        error.message === "Profile loading timeout"
+      ) {
+        const basicUser: User = {
+          id: userId,
+          email: email || "",
+          first_name: "",
+          last_name: "",
+          avatar_url: "",
+          role: "user",
+          owned_brands: [],
+        };
+        setUser(basicUser);
+        AuthDebug.log("⚠️ Profile loading timeout, created basic user:", email);
+      } else {
+        setUser(null);
+      }
     }
   };
 
@@ -145,13 +163,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           AuthDebug.log(
             "⚠️ Supabase client not available, waiting for hydration..."
           );
-          // Set a timeout to prevent infinite loading
+          // Reduce timeout to prevent long loading states
           setTimeout(() => {
             if (mounted) {
               AuthDebug.log("⏰ Timeout reached, setting loading to false");
               setLoading(false);
             }
-          }, 5000);
+          }, 2000);
           return;
         }
 

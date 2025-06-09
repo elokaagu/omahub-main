@@ -145,11 +145,17 @@ export async function getProfile(userId: string): Promise<User | null> {
       return null;
     }
 
-    // First get the user's email from auth
+    // Get user and profile data in parallel for better performance
+    const [userResult, profileResult] = await Promise.all([
+      supabase.auth.getUser(),
+      supabase.from("profiles").select("*").eq("id", userId).single(),
+    ]);
+
     const {
       data: { user },
       error: userError,
-    } = await supabase.auth.getUser();
+    } = userResult;
+    const { data: profileData, error: profileError } = profileResult;
 
     if (userError) {
       console.error("❌ Error getting user:", userError);
@@ -157,25 +163,30 @@ export async function getProfile(userId: string): Promise<User | null> {
     }
 
     console.log("✅ Got auth user:", { id: user?.id, email: user?.email });
+    console.log("📊 Profile query result:", {
+      data: profileData,
+      error: profileError,
+    });
 
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", userId)
-      .single();
-
-    console.log("📊 Profile query result:", { data, error });
-
-    if (error) {
-      if (error.code === "PGRST116") {
+    if (profileError) {
+      if (profileError.code === "PGRST116") {
         console.log("⚠️ Profile not found, creating new profile");
-        // Profile not found, create a new one
+        // Profile not found, create a new one with optimized role detection
+        const userEmail = user?.email || "";
+        const role =
+          userEmail === "eloka.agu@icloud.com" ||
+          userEmail === "shannonalisa@oma-hub.com"
+            ? "super_admin"
+            : userEmail === "eloka@culturin.com"
+              ? "brand_admin"
+              : "user";
+
         const { data: newProfile, error: createError } = await supabase
           .from("profiles")
           .insert({
             id: userId,
-            email: user?.email || "",
-            role: "user",
+            email: userEmail,
+            role: role,
             owned_brands: [],
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
@@ -191,7 +202,7 @@ export async function getProfile(userId: string): Promise<User | null> {
         console.log("✅ New profile created:", newProfile);
         return {
           id: newProfile.id,
-          email: newProfile.email || user?.email || "",
+          email: newProfile.email || userEmail,
           first_name: newProfile.first_name || "",
           last_name: newProfile.last_name || "",
           avatar_url: newProfile.avatar_url || "",
@@ -199,30 +210,30 @@ export async function getProfile(userId: string): Promise<User | null> {
           owned_brands: newProfile.owned_brands || [],
         };
       }
-      console.error("❌ Error fetching profile:", error);
+      console.error("❌ Error fetching profile:", profileError);
       return null;
     }
 
     console.log("✅ Profile fetched successfully:", {
-      id: data.id,
-      role: data.role,
-      email: data.email || user?.email,
-      first_name: data.first_name,
-      owned_brands: data.owned_brands?.length || 0,
+      id: profileData.id,
+      role: profileData.role,
+      email: profileData.email || user?.email,
+      first_name: profileData.first_name,
+      owned_brands: profileData.owned_brands?.length || 0,
     });
 
-    const profileResult = {
-      id: data.id,
-      email: data.email || user?.email || "",
-      first_name: data.first_name || "",
-      last_name: data.last_name || "",
-      avatar_url: data.avatar_url || "",
-      role: data.role || "user",
-      owned_brands: data.owned_brands || [],
+    const userProfile = {
+      id: profileData.id,
+      email: profileData.email || user?.email || "",
+      first_name: profileData.first_name || "",
+      last_name: profileData.last_name || "",
+      avatar_url: profileData.avatar_url || "",
+      role: profileData.role || "user",
+      owned_brands: profileData.owned_brands || [],
     };
 
-    console.log("🎯 Returning profile:", profileResult);
-    return profileResult;
+    console.log("🎯 Returning profile:", userProfile);
+    return userProfile;
   } catch (err) {
     console.error("❌ Error in getProfile:", err);
     return null;
