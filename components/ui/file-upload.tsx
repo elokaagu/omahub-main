@@ -47,7 +47,19 @@ export function FileUpload({
       throw new Error("Supabase client not available");
     }
 
-    // Check if user is authenticated
+    // Force session refresh to ensure we have a valid token
+    debugLog(`Refreshing session before upload`, LogLevel.INFO);
+    const { data: sessionData, error: sessionError } =
+      await supabase.auth.refreshSession();
+
+    if (sessionError) {
+      debugLog(`Session refresh failed`, LogLevel.ERROR, {
+        error: sessionError.message,
+      });
+      throw new Error(`Session refresh failed: ${sessionError.message}`);
+    }
+
+    // Check if user is authenticated after refresh
     const {
       data: { user },
       error: authError,
@@ -68,124 +80,89 @@ export function FileUpload({
       userEmail: user.email,
     });
 
-    // Create a unique file name with original extension
-    const fileExt = file.name.split(".").pop();
-    const fileName = `${Math.random()
-      .toString(36)
-      .substring(2, 15)}_${Date.now()}.${fileExt}`;
-    const filePath = path ? `${path}/${fileName}` : fileName;
+    // Create unique filename with user ID prefix
+    const fileExtension = file.name.split(".").pop() || "jpg";
+    const uniqueFileName = `${bucket}/${user.id.substring(0, 8)}_${Date.now()}.${fileExtension}`;
 
-    debugLog(`Starting file upload`, LogLevel.INFO, {
-      file: file.name,
-      size: `${(file.size / 1024 / 1024).toFixed(2)} MB`,
-      type: file.type,
-      bucket,
-      path: filePath,
-      userId: user.id,
+    debugLog(`Starting upload`, LogLevel.INFO, {
+      fileName: uniqueFileName,
+      fileSize: file.size,
+      fileType: file.type,
+      bucket: bucket,
     });
 
-    // Create a timeout promise with dynamic timeout based on file size
-    // Base timeout of 60 seconds + 30 seconds per MB for large files
-    const fileSizeMB = file.size / (1024 * 1024);
-    const timeoutDuration = Math.max(60000, 60000 + fileSizeMB * 30000); // Min 60s, +30s per MB
+    // Upload with timeout
+    const uploadPromise = supabase.storage
+      .from(bucket)
+      .upload(uniqueFileName, file, {
+        cacheControl: "3600",
+        upsert: false,
+      });
 
-    const timeoutPromise = new Promise((_, reject) => {
+    const timeoutPromise = new Promise((_, reject) =>
       setTimeout(
-        () =>
-          reject(
-            new Error(
-              `Upload timeout after ${Math.round(timeoutDuration / 1000)} seconds`
-            )
-          ),
-        timeoutDuration
-      );
+        () => reject(new Error("Upload timeout after 30 seconds")),
+        30000
+      )
+    );
+
+    const { data, error } = (await Promise.race([
+      uploadPromise,
+      timeoutPromise,
+    ])) as any;
+
+    if (error) {
+      debugLog(`Upload failed`, LogLevel.ERROR, {
+        error: error.message,
+        bucket: bucket,
+        filePath: uniqueFileName,
+        userId: user.id,
+        timestamp: new Date().toISOString(),
+      });
+
+      // Provide more specific error messages
+      if (
+        error.message.includes("403") ||
+        error.message.includes("Unauthorized")
+      ) {
+        throw new Error(
+          `Upload unauthorized: You may not have permission to upload to the ${bucket} bucket. Please check your account permissions.`
+        );
+      } else if (
+        error.message.includes("404") ||
+        error.message.includes("not found")
+      ) {
+        throw new Error(
+          `Storage bucket '${bucket}' not found. Please contact support to set up the storage bucket.`
+        );
+      } else {
+        throw new Error(`Upload failed: ${error.message}`);
+      }
+    }
+
+    if (!data?.path) {
+      throw new Error("Upload succeeded but no file path returned");
+    }
+
+    debugLog(`Upload successful`, LogLevel.INFO, {
+      path: data.path,
+      bucket: bucket,
     });
 
-    try {
-      // Race between upload and timeout
-      const uploadPromise = supabase.storage
-        .from(bucket)
-        .upload(filePath, file, {
-          cacheControl: "3600",
-          upsert: true,
-        });
+    // Get the public URL
+    const { data: urlData } = supabase.storage
+      .from(bucket)
+      .getPublicUrl(data.path);
 
-      const { data, error } = (await Promise.race([
-        uploadPromise,
-        timeoutPromise,
-      ])) as any;
-
-      if (error) {
-        debugLog(`Upload error`, LogLevel.ERROR, {
-          ...extractErrorDetails(error),
-          bucket,
-          filePath,
-          userId: user.id,
-        });
-
-        // Provide more specific error messages
-        if (
-          error.message?.includes("Unauthorized") ||
-          error.statusCode === "403"
-        ) {
-          throw new Error(
-            `Upload unauthorized: You may not have permission to upload to the ${bucket} bucket. Please check your account permissions.`
-          );
-        } else if (
-          error.message?.includes("not found") ||
-          error.statusCode === "404"
-        ) {
-          throw new Error(
-            `Storage bucket '${bucket}' not found. Please contact support.`
-          );
-        } else {
-          throw error;
-        }
-      }
-
-      if (!data) {
-        throw new Error("No data returned from upload");
-      }
-
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from(bucket)
-        .getPublicUrl(data.path);
-
-      if (!urlData?.publicUrl) {
-        throw new Error("Failed to get public URL");
-      }
-
-      debugLog(`Upload successful`, LogLevel.INFO, {
-        path: data.path,
-        url: urlData.publicUrl,
-        userId: user.id,
-      });
-
-      return urlData.publicUrl;
-    } catch (error) {
-      const errorDetails = extractErrorDetails(error);
-      debugLog("Upload failed", LogLevel.ERROR, {
-        ...errorDetails,
-        bucket,
-        filePath,
-        userId: user?.id,
-      });
-      setDebugInfo(
-        JSON.stringify(
-          {
-            ...errorDetails,
-            bucket,
-            filePath,
-            userId: user?.id,
-            timestamp: new Date().toISOString(),
-          },
-          null,
-          2
-        )
-      );
-      throw error;
+    if (!urlData?.publicUrl) {
+      throw new Error("Failed to get public URL for uploaded file");
     }
+
+    debugLog(`Public URL generated`, LogLevel.INFO, {
+      publicUrl: urlData.publicUrl,
+    });
+
+    return urlData.publicUrl;
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
