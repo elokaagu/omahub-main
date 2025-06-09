@@ -111,11 +111,11 @@ export function FileUpload({
         const canUploadProducts =
           profile.role === "super_admin" ||
           profile.role === "admin" ||
-          profile.role === "brand_admin";
+          profile.role === "brand_owner";
 
         if (!canUploadProducts) {
           throw new Error(
-            `Insufficient permissions: Only admins and brand owners can upload product images. Your role: ${profile.role}`
+            `Insufficient permissions: Only super admins, admins, and brand owners can upload product images. Your role: ${profile.role}`
           );
         }
 
