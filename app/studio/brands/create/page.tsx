@@ -35,6 +35,7 @@ const CATEGORIES = [
   "Accessories",
   "Casual Wear",
   "Formal Wear",
+  "Ready to Wear",
   "Streetwear",
   "Active Wear",
   "Traditional",

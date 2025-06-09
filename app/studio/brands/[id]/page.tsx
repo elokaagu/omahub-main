@@ -96,6 +96,7 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
     "Accessories",
     "Casual Wear",
     "Formal Wear",
+    "Ready to Wear",
     "Streetwear",
     "Active Wear",
     "Traditional",
