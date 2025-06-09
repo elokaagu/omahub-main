@@ -76,6 +76,26 @@ export async function signIn(email: string, password: string) {
       throw new Error(data.error || "Login failed");
     }
 
+    // If we have session data from the API, set it in the client-side Supabase client
+    if (data.session && supabase) {
+      console.log("🔄 Setting session in client-side Supabase client...");
+
+      const { data: setSessionData, error: setSessionError } =
+        await supabase.auth.setSession({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token,
+        });
+
+      if (setSessionError) {
+        console.error("❌ Error setting session in client:", setSessionError);
+        // Don't throw here, still return the API response
+      } else {
+        console.log("✅ Session set successfully in client");
+        // Update the response to include the client session
+        data.clientSession = setSessionData.session;
+      }
+    }
+
     return data;
   } catch (error) {
     console.error("Error signing in:", error);

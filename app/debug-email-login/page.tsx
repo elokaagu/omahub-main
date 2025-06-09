@@ -8,7 +8,7 @@ export default function DebugEmailLoginPage() {
   const [logs, setLogs] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [testEmail, setTestEmail] = useState("eloka.agu@icloud.com");
-  const [testPassword, setTestPassword] = useState("");
+  const [testPassword, setTestPassword] = useState("Honour18!!");
 
   const addLog = (message: string) => {
     const timestamp = new Date().toISOString();
@@ -187,6 +187,138 @@ export default function DebugEmailLoginPage() {
     }
   };
 
+  const testSessionSync = async () => {
+    setLoading(true);
+    addLog("Testing complete session synchronization flow...");
+
+    try {
+      addLog(`📧 Email: ${testEmail}`);
+      addLog(`🔑 Password: ${"*".repeat(testPassword.length)}`);
+
+      // Step 1: Test API login
+      addLog("Step 1: Testing API login...");
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: testEmail,
+          password: testPassword,
+        }),
+      });
+
+      const apiData = await response.json();
+      addLog(
+        `📊 API Response: ${response.status} ${response.ok ? "OK" : "FAILED"}`
+      );
+
+      if (!response.ok) {
+        addLog(`❌ API login failed: ${apiData.error}`);
+        return;
+      }
+
+      addLog(`✅ API login successful!`);
+      addLog(`   RefreshSession flag: ${apiData.refreshSession}`);
+
+      // Check what cookies were set by the API
+      addLog("Step 1.5: Checking cookies after API login...");
+      const allCookies = document.cookie;
+      addLog(`🍪 All cookies: ${allCookies || "None"}`);
+
+      const authCookies = allCookies
+        .split(";")
+        .filter(
+          (cookie) =>
+            cookie.includes("supabase") ||
+            cookie.includes("omahub") ||
+            cookie.includes("auth") ||
+            cookie.includes("sb-")
+        );
+      addLog(
+        `🔐 Auth cookies: ${authCookies.length > 0 ? authCookies.join("; ") : "None found"}`
+      );
+
+      // Step 2: Check if client can see session immediately
+      addLog("Step 2: Checking immediate client session...");
+      if (!supabase) {
+        addLog("❌ Supabase client not available");
+        return;
+      }
+
+      const { data: immediateSession, error: immediateError } =
+        await supabase.auth.getSession();
+
+      if (immediateError) {
+        addLog(`❌ Immediate session check error: ${immediateError.message}`);
+      } else {
+        addLog(
+          `📊 Immediate session: ${immediateSession.session ? "Found" : "Not found"}`
+        );
+      }
+
+      // Step 3: Force session refresh (like our fix does)
+      addLog("Step 3: Force refreshing session...");
+      const { data: refreshData, error: refreshError } =
+        await supabase.auth.refreshSession();
+
+      if (refreshError) {
+        addLog(`❌ Session refresh error: ${refreshError.message}`);
+
+        // Step 3.5: Try to manually set the session from API response
+        addLog("Step 3.5: Attempting to manually set session...");
+        if (apiData.session) {
+          try {
+            const { data: setSessionData, error: setSessionError } =
+              await supabase.auth.setSession({
+                access_token: apiData.session.access_token,
+                refresh_token: apiData.session.refresh_token,
+              });
+
+            if (setSessionError) {
+              addLog(`❌ Manual session set error: ${setSessionError.message}`);
+            } else {
+              addLog(`✅ Manual session set successful!`);
+              addLog(
+                `   Session exists: ${setSessionData.session ? "Yes" : "No"}`
+              );
+
+              if (setSessionData.session) {
+                addLog(`   User: ${setSessionData.session.user.email}`);
+                addLog(
+                  `   Expires: ${new Date(setSessionData.session.expires_at! * 1000).toISOString()}`
+                );
+              }
+            }
+          } catch (manualError) {
+            addLog(`❌ Manual session set failed: ${manualError}`);
+          }
+        } else {
+          addLog(`❌ No session data in API response to set manually`);
+        }
+      } else {
+        addLog(`✅ Session refresh successful!`);
+        addLog(`   Session exists: ${refreshData.session ? "Yes" : "No"}`);
+
+        if (refreshData.session) {
+          addLog(`   User: ${refreshData.session.user.email}`);
+          addLog(
+            `   Expires: ${new Date(refreshData.session.expires_at! * 1000).toISOString()}`
+          );
+        }
+      }
+
+      // Step 4: Test the redirect with session_refresh parameter
+      addLog("Step 4: Testing session_refresh parameter...");
+      addLog("💡 In real flow, this would redirect to /?session_refresh=true");
+      addLog("💡 AuthContext would detect this and call refreshSession()");
+    } catch (error) {
+      addLog(`❌ Session sync test error: ${error}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const clearLogs = () => {
     setLogs([]);
   };
@@ -274,6 +406,14 @@ export default function DebugEmailLoginPage() {
                 {loading ? "Testing..." : "Test AuthService"}
               </button>
             </div>
+
+            <button
+              onClick={testSessionSync}
+              disabled={loading || !testEmail || !testPassword}
+              className="bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700 disabled:opacity-50"
+            >
+              {loading ? "Testing..." : "Test Session Sync"}
+            </button>
 
             <button
               onClick={clearLogs}
