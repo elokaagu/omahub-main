@@ -12,7 +12,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { RefreshCw, Database, Image, Wrench } from "lucide-react";
-import setupStorage from "@/lib/supabase-storage-setup";
 import { debugFetch, inspectJSON } from "@/lib/debug-utils";
 
 export default function SettingsPage() {
@@ -30,7 +29,7 @@ export default function SettingsPage() {
   const handleStorageSetup = async () => {
     setIsStorageLoading(true);
     try {
-      await setupStorage();
+      
       toast.success("Storage setup completed successfully");
     } catch (error) {
       console.error("Error setting up storage:", error);

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -13,7 +13,7 @@ import { PageFade } from "@/app/components/ui/animations";
 import { AnimatePresence } from "framer-motion";
 import { Toaster } from "sonner";
 import { LoadingPage } from "@/components/ui/loading";
-import { NavigationDebug } from "@/components/debug/NavigationDebug";
+import { AuthDebug } from "@/lib/utils/debug";
 
 interface RootLayoutClientProps {
   children: React.ReactNode;
@@ -38,7 +38,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
   const isStudioPage = pathname?.startsWith("/studio") || false;
 
   // Emergency reset for stuck navigation states
-  React.useEffect(() => {
+  useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Allow users to force reset with Escape key
       if (e.key === "Escape" && isNavigating) {
@@ -66,10 +66,6 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
       </main>
       {!isStudioPage && <Footer />}
       <Toaster />
-      {/* Only show NavigationDebug in development and not in studio (since studio has its own) */}
-      {process.env.NODE_ENV === "development" && !isStudioPage && (
-        <NavigationDebug />
-      )}
     </>
   );
 }

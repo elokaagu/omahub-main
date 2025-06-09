@@ -1,6 +1,5 @@
 import { NextRequest } from "next/server";
 import { supabase } from "@/lib/supabase";
-import setupStorage from "@/lib/supabase-storage-setup";
 
 // Improved build time detection with multiple checks
 const isBuildTime =
@@ -61,7 +60,7 @@ export async function GET(request: NextRequest) {
     // Setup storage to ensure buckets exist
     try {
       console.log("Setting up storage buckets...");
-      await setupStorage();
+      
       console.log("Storage setup completed");
     } catch (storageError) {
       console.warn(

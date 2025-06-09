@@ -25,7 +25,6 @@ import {
 import { LoadingPage } from "@/components/ui/loading";
 import UserProfile from "@/components/auth/UserProfile";
 import { NavigationLink } from "@/components/ui/navigation-link";
-import { NavigationDebug } from "@/components/debug/NavigationDebug";
 
 export default function StudioLayout({
   children,
@@ -377,7 +376,6 @@ export default function StudioLayout({
       )}
 
       <Toaster />
-      <NavigationDebug />
     </div>
   );
 }
