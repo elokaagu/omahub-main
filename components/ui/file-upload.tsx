@@ -47,6 +47,27 @@ export function FileUpload({
       throw new Error("Supabase client not available");
     }
 
+    // Check if user is authenticated
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      debugLog(`Authentication check failed`, LogLevel.ERROR, {
+        authError: authError?.message,
+        hasUser: !!user,
+      });
+      throw new Error(
+        `Authentication required: ${authError?.message || "No user session"}`
+      );
+    }
+
+    debugLog(`User authenticated`, LogLevel.INFO, {
+      userId: user.id,
+      userEmail: user.email,
+    });
+
     // Create a unique file name with original extension
     const fileExt = file.name.split(".").pop();
     const fileName = `${Math.random()
@@ -60,6 +81,7 @@ export function FileUpload({
       type: file.type,
       bucket,
       path: filePath,
+      userId: user.id,
     });
 
     // Create a timeout promise with dynamic timeout based on file size
@@ -94,8 +116,31 @@ export function FileUpload({
       ])) as any;
 
       if (error) {
-        debugLog(`Upload error`, LogLevel.ERROR, extractErrorDetails(error));
-        throw error;
+        debugLog(`Upload error`, LogLevel.ERROR, {
+          ...extractErrorDetails(error),
+          bucket,
+          filePath,
+          userId: user.id,
+        });
+
+        // Provide more specific error messages
+        if (
+          error.message?.includes("Unauthorized") ||
+          error.statusCode === "403"
+        ) {
+          throw new Error(
+            `Upload unauthorized: You may not have permission to upload to the ${bucket} bucket. Please check your account permissions.`
+          );
+        } else if (
+          error.message?.includes("not found") ||
+          error.statusCode === "404"
+        ) {
+          throw new Error(
+            `Storage bucket '${bucket}' not found. Please contact support.`
+          );
+        } else {
+          throw error;
+        }
       }
 
       if (!data) {
@@ -114,13 +159,31 @@ export function FileUpload({
       debugLog(`Upload successful`, LogLevel.INFO, {
         path: data.path,
         url: urlData.publicUrl,
+        userId: user.id,
       });
 
       return urlData.publicUrl;
     } catch (error) {
       const errorDetails = extractErrorDetails(error);
-      debugLog("Upload failed", LogLevel.ERROR, errorDetails);
-      setDebugInfo(JSON.stringify(errorDetails, null, 2));
+      debugLog("Upload failed", LogLevel.ERROR, {
+        ...errorDetails,
+        bucket,
+        filePath,
+        userId: user?.id,
+      });
+      setDebugInfo(
+        JSON.stringify(
+          {
+            ...errorDetails,
+            bucket,
+            filePath,
+            userId: user?.id,
+            timestamp: new Date().toISOString(),
+          },
+          null,
+          2
+        )
+      );
       throw error;
     }
   };
@@ -214,6 +277,34 @@ export function FileUpload({
         timestamp: new Date().toISOString(),
         supabaseClient: !!supabase ? "Connected" : "Not connected",
       };
+
+      // Test authentication
+      if (supabase) {
+        try {
+          const {
+            data: { user },
+            error: authError,
+          } = await supabase.auth.getUser();
+          if (authError) {
+            info.authTest = `Error: ${authError.message}`;
+            info.userAuthenticated = false;
+          } else if (user) {
+            info.authTest = "Success - User authenticated";
+            info.userAuthenticated = true;
+            info.userId = user.id;
+            info.userEmail = user.email;
+          } else {
+            info.authTest = "No user session found";
+            info.userAuthenticated = false;
+          }
+        } catch (error) {
+          info.authTest = `Exception: ${error instanceof Error ? error.message : "Unknown error"}`;
+          info.userAuthenticated = false;
+        }
+      } else {
+        info.authTest = "Supabase client not available";
+        info.userAuthenticated = false;
+      }
 
       // Test storage connection
       if (supabase) {

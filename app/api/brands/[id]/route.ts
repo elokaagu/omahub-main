@@ -7,6 +7,8 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
+    console.log("🗑️ Brand deletion API called for brand ID:", params.id);
+
     const supabase = createRouteHandlerClient({ cookies });
     const brandId = params.id;
 
@@ -16,7 +18,15 @@ export async function DELETE(
       error: authError,
     } = await supabase.auth.getUser();
 
+    console.log("👤 User authentication check:", {
+      hasUser: !!user,
+      userId: user?.id,
+      userEmail: user?.email,
+      authError: authError?.message,
+    });
+
     if (authError || !user) {
+      console.log("❌ Authentication failed");
       return NextResponse.json(
         { error: "Authentication required" },
         { status: 401 }
@@ -30,7 +40,15 @@ export async function DELETE(
       .eq("id", user.id)
       .single();
 
+    console.log("👤 User profile check:", {
+      hasProfile: !!profile,
+      role: profile?.role,
+      ownedBrands: profile?.owned_brands,
+      profileError: profileError?.message,
+    });
+
     if (profileError || !profile) {
+      console.log("❌ Profile not found");
       return NextResponse.json(
         { error: "User profile not found" },
         { status: 404 }
@@ -42,7 +60,17 @@ export async function DELETE(
     const isBrandOwner =
       profile.role === "brand_admin" && profile.owned_brands?.includes(brandId);
 
+    console.log("🔐 Permission check:", {
+      isAdmin,
+      isBrandOwner,
+      userRole: profile.role,
+      brandId,
+      ownedBrands: profile.owned_brands,
+      canDelete: isAdmin || isBrandOwner,
+    });
+
     if (!isAdmin && !isBrandOwner) {
+      console.log("❌ Permission denied");
       return NextResponse.json(
         { error: "You don't have permission to delete this brand" },
         { status: 403 }
@@ -56,7 +84,14 @@ export async function DELETE(
       .eq("id", brandId)
       .single();
 
+    console.log("🏷️ Brand verification:", {
+      brandFound: !!brand,
+      brandName: brand?.name,
+      brandError: brandError?.message,
+    });
+
     if (brandError || !brand) {
+      console.log("❌ Brand not found");
       return NextResponse.json({ error: "Brand not found" }, { status: 404 });
     }
 
@@ -73,22 +108,31 @@ export async function DELETE(
       }
     );
 
+    console.log("🔧 Using admin client for deletion");
+
     // Delete the brand using admin client
     const { error: deleteError } = await supabaseAdmin
       .from("brands")
       .delete()
       .eq("id", brandId);
 
+    console.log("🗑️ Brand deletion result:", {
+      success: !deleteError,
+      deleteError: deleteError?.message,
+      deleteErrorCode: deleteError?.code,
+    });
+
     if (deleteError) {
-      console.error("Error deleting brand:", deleteError);
+      console.error("❌ Error deleting brand:", deleteError);
       return NextResponse.json(
-        { error: "Failed to delete brand" },
+        { error: "Failed to delete brand: " + deleteError.message },
         { status: 500 }
       );
     }
 
     // If user is a brand owner, remove the brand from their owned_brands array
     if (isBrandOwner) {
+      console.log("🔄 Updating user's owned_brands array");
       const updatedOwnedBrands =
         profile.owned_brands?.filter((id: string) => id !== brandId) || [];
 
@@ -97,23 +141,34 @@ export async function DELETE(
         .update({ owned_brands: updatedOwnedBrands })
         .eq("id", user.id);
 
+      console.log("👤 Profile update result:", {
+        success: !updateError,
+        updateError: updateError?.message,
+        newOwnedBrands: updatedOwnedBrands,
+      });
+
       if (updateError) {
         console.warn(
-          "Warning: Could not update user's owned_brands array:",
+          "⚠️ Warning: Could not update user's owned_brands array:",
           updateError
         );
         // Don't fail the request for this, as the brand is already deleted
       }
     }
 
+    console.log("✅ Brand deletion completed successfully");
     return NextResponse.json(
       { message: `Brand "${brand.name}" deleted successfully` },
       { status: 200 }
     );
   } catch (error) {
-    console.error("Error in brand deletion API:", error);
+    console.error("❌ Error in brand deletion API:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      {
+        error:
+          "Internal server error: " +
+          (error instanceof Error ? error.message : String(error)),
+      },
       { status: 500 }
     );
   }
