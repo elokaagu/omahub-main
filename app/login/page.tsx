@@ -116,25 +116,10 @@ function LoginForm() {
             "✅ Client session available, waiting for auth state update..."
           );
 
-          // Wait for AuthContext to detect the session change
-          let attempts = 0;
-          const maxAttempts = 10; // 5 seconds max
+          // Wait longer for AuthContext to detect the session change and load profile
+          await new Promise((resolve) => setTimeout(resolve, 2000));
 
-          while (attempts < maxAttempts) {
-            await new Promise((resolve) => setTimeout(resolve, 500));
-
-            // Check if AuthContext has detected the session
-            // We can't directly access AuthContext here, so we'll use a reasonable delay
-            attempts++;
-
-            if (attempts >= 3) {
-              // After 1.5 seconds, assume it's ready
-              console.log("✅ Auth state should be updated, redirecting...");
-              break;
-            }
-          }
-
-          // Redirect normally without session refresh parameter
+          console.log("✅ Auth state should be updated, redirecting...");
           window.location.href = "/";
         } else if (refreshSession) {
           // Fallback to session refresh redirect if client session not available
