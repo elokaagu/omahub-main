@@ -3,8 +3,8 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
+import { getProfile, User } from "@/lib/services/authService";
 import { AuthDebug } from "@/lib/utils/debug";
-import { User, getProfile } from "@/lib/services/authService";
 
 interface AuthContextType {
   user: User | null;
@@ -22,57 +22,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [isClient, setIsClient] = useState(false);
 
-  // Check if we're on the client side
+  // Ensure we're on the client side
   useEffect(() => {
     setIsClient(true);
   }, []);
-
-  // Handle page visibility changes to prevent logout on tab switch
-  useEffect(() => {
-    if (!isClient || typeof window === "undefined") return;
-
-    const handleVisibilityChange = () => {
-      // When tab becomes visible again, check if session is still valid
-      // but don't force refresh unless necessary
-      if (!document.hidden && session) {
-        AuthDebug.log("🔍 Tab became visible, checking session validity...");
-
-        // Only check session validity, don't force refresh
-        supabase?.auth.getSession().then(({ data, error }) => {
-          if (error) {
-            AuthDebug.error("❌ Session check failed on tab focus:", error);
-          } else if (!data.session && session) {
-            AuthDebug.log(
-              "⚠️ Session lost while tab was hidden, attempting recovery..."
-            );
-            // Try to refresh session once
-            supabase?.auth
-              .refreshSession()
-              .then(({ data: refreshData, error: refreshError }) => {
-                if (refreshError) {
-                  AuthDebug.error("❌ Session recovery failed:", refreshError);
-                  // Only sign out if refresh explicitly fails
-                  setSession(null);
-                  setUser(null);
-                } else if (refreshData.session) {
-                  AuthDebug.log("✅ Session recovered successfully");
-                  handleAuthStateChange("TOKEN_REFRESHED", refreshData.session);
-                }
-              });
-          } else {
-            AuthDebug.log("✅ Session still valid after tab focus");
-          }
-        });
-      }
-    };
-
-    // Add event listener for page visibility changes
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, [isClient, session]);
 
   // Check for session refresh signal from OAuth callback or email login
   useEffect(() => {
@@ -227,19 +180,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const {
           data: { subscription },
         } = supabase.auth.onAuthStateChange(async (event, session) => {
-          if (!mounted) return;
-
-          AuthDebug.log("🔄 Auth state changed:", event);
-          setLoading(true);
-          await handleAuthStateChange(event, session);
+          AuthDebug.log("🔄 Auth state change event:", event);
           if (mounted) {
-            setLoading(false);
+            await handleAuthStateChange(event, session);
           }
         });
 
         authSubscription = subscription;
       } catch (error) {
-        AuthDebug.error("❌ Error in auth initialization:", error);
+        AuthDebug.error("❌ Error initializing auth:", error);
         if (mounted) {
           setLoading(false);
         }
@@ -257,27 +206,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [isClient]);
 
   const signOut = async () => {
-    if (!supabase) {
-      AuthDebug.error("❌ Cannot sign out: Supabase client not available");
-      return;
-    }
-
     try {
-      AuthDebug.log("🔄 Signing out...");
-      setLoading(true);
+      AuthDebug.log("�� Signing out...");
 
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        AuthDebug.error("❌ Sign out error:", error);
-      } else {
-        AuthDebug.log("✅ Sign out successful");
-        setUser(null);
-        setSession(null);
+      // Clear local state first
+      setUser(null);
+      setSession(null);
+
+      // Then sign out from Supabase
+      if (supabase) {
+        const { error } = await supabase.auth.signOut();
+        if (error) {
+          AuthDebug.error("❌ Error signing out:", error);
+        } else {
+          AuthDebug.log("✅ Successfully signed out");
+        }
       }
     } catch (error) {
-      AuthDebug.error("❌ Sign out error:", error);
-    } finally {
-      setLoading(false);
+      AuthDebug.error("❌ Error during sign out:", error);
     }
   };
 
