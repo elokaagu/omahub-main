@@ -181,15 +181,25 @@ export default function CataloguePage() {
 
               {/* Description */}
               {catalogue.description && (
-                <p className="text-black/80 leading-relaxed mb-6">
-                  {catalogue.description}
-                </p>
+                <div className="prose text-oma-black max-w-none mb-6">
+                  {catalogue.description.split("\n\n").map((paragraph, i) => (
+                    <p key={i} className="mb-4 text-black/80 leading-relaxed">
+                      {paragraph}
+                    </p>
+                  ))}
+                </div>
               )}
 
               {/* Brand Description */}
-              <p className="text-black/70 leading-relaxed">
-                {catalogue.brand.long_description}
-              </p>
+              <div className="prose text-oma-black max-w-none">
+                {catalogue.brand.long_description
+                  .split("\n\n")
+                  .map((paragraph, i) => (
+                    <p key={i} className="mb-4 text-black/70 leading-relaxed">
+                      {paragraph}
+                    </p>
+                  ))}
+              </div>
             </div>
 
             {/* Action Buttons */}

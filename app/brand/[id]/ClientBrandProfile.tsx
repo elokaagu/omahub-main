@@ -99,7 +99,13 @@ export default function ClientBrandProfile({
             </div>
           </div>
 
-          <p className="text-lg max-w-3xl mb-6">{brandData.description}</p>
+          <div className="prose text-oma-black max-w-none">
+            {brandData.description.split("\n\n").map((paragraph, i) => (
+              <p key={i} className="mb-4">
+                {paragraph}
+              </p>
+            ))}
+          </div>
 
           <div className="flex gap-4">
             <Button

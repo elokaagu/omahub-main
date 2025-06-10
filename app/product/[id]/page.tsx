@@ -221,9 +221,13 @@ export default function ProductPage() {
                 <h3 className="font-semibold text-gray-900 mb-2">
                   Description
                 </h3>
-                <p className="text-gray-600 leading-relaxed">
-                  {product.description}
-                </p>
+                <div className="prose text-oma-black max-w-none">
+                  {product.description.split("\n\n").map((paragraph, i) => (
+                    <p key={i} className="mb-4 text-gray-600 leading-relaxed">
+                      {paragraph}
+                    </p>
+                  ))}
+                </div>
               </div>
 
               {/* Product Attributes */}

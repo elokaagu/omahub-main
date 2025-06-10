@@ -41,6 +41,22 @@ import {
 } from "@/lib/utils/priceFormatter";
 import { Checkbox } from "@/components/ui/checkbox";
 
+// Common currencies used across Africa
+const CURRENCIES = [
+  { code: "NGN", symbol: "₦", name: "Nigerian Naira" },
+  { code: "KES", symbol: "KSh", name: "Kenyan Shilling" },
+  { code: "GHS", symbol: "GHS", name: "Ghanaian Cedi" },
+  { code: "ZAR", symbol: "R", name: "South African Rand" },
+  { code: "EGP", symbol: "EGP", name: "Egyptian Pound" },
+  { code: "MAD", symbol: "MAD", name: "Moroccan Dirham" },
+  { code: "TND", symbol: "TND", name: "Tunisian Dinar" },
+  { code: "XOF", symbol: "XOF", name: "West African CFA Franc" },
+  { code: "DZD", symbol: "DA", name: "Algerian Dinar" },
+  { code: "USD", symbol: "$", name: "US Dollar" },
+  { code: "EUR", symbol: "€", name: "Euro" },
+  { code: "GBP", symbol: "£", name: "British Pound" },
+];
+
 // Brand categories
 const CATEGORIES = [
   "Bridal",
@@ -74,6 +90,7 @@ export default function CreateProductPage() {
   const [filteredCatalogues, setFilteredCatalogues] = useState<Catalogue[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [selectedBrandCurrency, setSelectedBrandCurrency] = useState("$"); // Default to USD symbol
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -165,6 +182,29 @@ export default function CreateProductPage() {
       setFilteredCatalogues([]);
     }
   }, [formData.brand_id, catalogues]);
+
+  // Function to extract currency symbol from brand price range
+  const extractCurrencyFromBrand = (brandId: string): string => {
+    const selectedBrand = brands.find((brand) => brand.id === brandId);
+    if (!selectedBrand || !selectedBrand.price_range) {
+      return "$"; // Default to USD
+    }
+
+    // Parse price range to extract currency symbol (e.g., "₦15,000 - ₦120,000")
+    const priceRangeMatch = selectedBrand.price_range.match(
+      /^(.+?)(\d+(?:,\d+)*)\s*-\s*(.+?)(\d+(?:,\d+)*)$/
+    );
+
+    if (priceRangeMatch) {
+      const [, symbol1] = priceRangeMatch;
+      const foundCurrency = CURRENCIES.find((c) => c.symbol === symbol1.trim());
+      if (foundCurrency) {
+        return foundCurrency.symbol;
+      }
+    }
+
+    return "$"; // Default fallback
+  };
 
   const handleInputChange = (name: string, value: string | boolean) => {
     // Handle price formatting for price and sale_price fields
@@ -579,7 +619,7 @@ export default function CreateProductPage() {
                 </Label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
-                    $
+                    {selectedBrandCurrency}
                   </span>
                   <Input
                     id="price"
@@ -601,7 +641,7 @@ export default function CreateProductPage() {
                 </Label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
-                    $
+                    {selectedBrandCurrency}
                   </span>
                   <Input
                     id="sale_price"
