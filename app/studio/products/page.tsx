@@ -45,6 +45,7 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
+import { formatPrice } from "@/lib/utils/priceFormatter";
 
 type ProductWithDetails = Product & {
   brand: { name: string; id: string; location: string; is_verified: boolean };
@@ -301,7 +302,7 @@ export default function ProductsPage() {
                 ? (
                     products.reduce((sum, p) => sum + p.price, 0) /
                     products.length
-                  ).toFixed(0)
+                  ).toLocaleString(undefined, { maximumFractionDigits: 0 })
                 : 0}
             </div>
             <p className="text-xs text-oma-cocoa mt-2">Average regular price</p>
@@ -323,7 +324,7 @@ export default function ProductsPage() {
                       (sum, p) => sum + (p.sale_price || p.price),
                       0
                     ) / products.length
-                  ).toFixed(0)
+                  ).toLocaleString(undefined, { maximumFractionDigits: 0 })
                 : 0}
             </div>
             <p className="text-xs text-oma-cocoa mt-2">Average selling price</p>
@@ -626,11 +627,11 @@ export default function ProductsPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-lg font-bold text-oma-plum">
-                      ${product.sale_price || product.price}
+                      {formatPrice(product.sale_price || product.price)}
                     </span>
                     {product.sale_price && (
                       <span className="text-sm text-oma-cocoa/60 line-through">
-                        ${product.price}
+                        {formatPrice(product.price)}
                       </span>
                     )}
                   </div>
@@ -705,11 +706,11 @@ export default function ProductsPage() {
                       <div className="text-right space-y-2">
                         <div className="flex items-center gap-2">
                           <span className="text-lg font-bold text-oma-plum">
-                            ${product.sale_price || product.price}
+                            {formatPrice(product.sale_price || product.price)}
                           </span>
                           {product.sale_price && (
                             <span className="text-sm text-oma-cocoa/60 line-through">
-                              ${product.price}
+                              {formatPrice(product.price)}
                             </span>
                           )}
                         </div>

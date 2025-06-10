@@ -27,6 +27,10 @@ import {
 import { MultiSelect } from "@/components/ui/multi-select";
 import { ArrowLeft, Save, Globe, Instagram } from "lucide-react";
 import Link from "next/link";
+import {
+  formatPriceRange,
+  formatNumberWithCommas,
+} from "@/lib/utils/priceFormatter";
 
 // Brand categories
 const CATEGORIES = [
@@ -61,6 +65,9 @@ const FOUNDING_YEARS = Array.from(
   (_, i) => (new Date().getFullYear() - i).toString()
 );
 
+// Character limits
+const SHORT_DESCRIPTION_LIMIT = 150;
+
 export default function CreateBrandPage() {
   const router = useRouter();
   const { user } = useAuth();
@@ -86,6 +93,12 @@ export default function CreateBrandPage() {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
+
+    // Handle character limit for short description
+    if (name === "description" && value.length > SHORT_DESCRIPTION_LIMIT) {
+      return; // Don't update if exceeding limit
+    }
+
     setFormData({
       ...formData,
       [name]: value,
@@ -153,7 +166,11 @@ export default function CreateBrandPage() {
     if (formData.price_min && formData.price_max) {
       const currency = CURRENCIES.find((c) => c.code === formData.currency);
       const symbol = currency?.symbol || "$";
-      priceRange = `${symbol}${formData.price_min} - ${symbol}${formData.price_max}`;
+      priceRange = formatPriceRange(
+        formData.price_min,
+        formData.price_max,
+        symbol
+      );
     }
 
     setSubmitting(true);
@@ -197,6 +214,9 @@ export default function CreateBrandPage() {
     }
   };
 
+  // Calculate remaining characters for short description
+  const remainingChars = SHORT_DESCRIPTION_LIMIT - formData.description.length;
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
       <div className="flex items-center gap-4 mb-8">
@@ -232,15 +252,27 @@ export default function CreateBrandPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="description">Short Description *</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="description">Short Description *</Label>
+                    <span
+                      className={`text-sm ${remainingChars < 20 ? "text-red-500" : "text-muted-foreground"}`}
+                    >
+                      {remainingChars} characters remaining
+                    </span>
+                  </div>
                   <Textarea
                     id="description"
                     name="description"
                     value={formData.description}
                     onChange={handleInputChange}
-                    placeholder="A brief description of the brand (100-150 characters)"
+                    placeholder="A brief description of the brand (max 150 characters)"
                     required
+                    className={remainingChars < 0 ? "border-red-500" : ""}
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Keep it concise - this appears in brand listings and
+                    previews
+                  </p>
                 </div>
 
                 <div className="space-y-2">
@@ -322,16 +354,12 @@ export default function CreateBrandPage() {
                       formData.currency ? (
                         <>
                           Preview:{" "}
-                          {
+                          {formatPriceRange(
+                            formData.price_min,
+                            formData.price_max,
                             CURRENCIES.find((c) => c.code === formData.currency)
-                              ?.symbol
-                          }
-                          {formData.price_min} -{" "}
-                          {
-                            CURRENCIES.find((c) => c.code === formData.currency)
-                              ?.symbol
-                          }
-                          {formData.price_max}
+                              ?.symbol || "$"
+                          )}
                         </>
                       ) : (
                         "Enter minimum and maximum prices to see preview"

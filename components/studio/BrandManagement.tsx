@@ -37,6 +37,9 @@ interface BrandManagementProps {
   className?: string;
 }
 
+// Character limits
+const SHORT_DESCRIPTION_LIMIT = 150;
+
 export default function BrandManagement({ className }: BrandManagementProps) {
   const {
     user,
@@ -328,7 +331,13 @@ export default function BrandManagement({ className }: BrandManagementProps) {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    setEditForm((prev) => ({ ...prev, [name]: value }));
+
+    // Handle character limit for description
+    if (name === "description" && value.length > SHORT_DESCRIPTION_LIMIT) {
+      return; // Don't update if exceeding limit
+    }
+
+    setEditForm({ ...editForm, [name]: value });
   };
 
   const handleCategoryChange = (value: string) => {
@@ -338,6 +347,10 @@ export default function BrandManagement({ className }: BrandManagementProps) {
   const handleImageUpload = (url: string) => {
     setEditForm((prev) => ({ ...prev, image: url }));
   };
+
+  // Calculate remaining characters for description
+  const remainingChars =
+    SHORT_DESCRIPTION_LIMIT - (editForm.description || "").length;
 
   // Show loading state while checking access
   if (accessLoading) {
@@ -542,14 +555,27 @@ export default function BrandManagement({ className }: BrandManagementProps) {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="description">Description</Label>
+                    <span
+                      className={`text-sm ${remainingChars < 20 ? "text-red-500" : "text-muted-foreground"}`}
+                    >
+                      {remainingChars} characters remaining
+                    </span>
+                  </div>
                   <Textarea
                     id="description"
                     name="description"
                     value={editForm.description}
                     onChange={handleFormChange}
                     rows={3}
+                    placeholder="A brief description of the brand (max 150 characters)"
+                    className={remainingChars < 0 ? "border-red-500" : ""}
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Keep it concise - this appears in brand listings and
+                    previews
+                  </p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">

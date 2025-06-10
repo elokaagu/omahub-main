@@ -36,6 +36,34 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/lib/supabase";
+import {
+  formatNumberWithCommas,
+  parseFormattedNumber,
+} from "@/lib/utils/priceFormatter";
+
+// Brand categories
+const CATEGORIES = [
+  "Bridal",
+  "Jewelry",
+  "Accessories",
+  "Casual Wear",
+  "Formal Wear",
+  "Ready to Wear",
+  "Luxury",
+  "Dresses",
+  "Tops & Blouses",
+  "Bottoms",
+  "Outerwear",
+  "Shoes",
+  "Bags & Purses",
+  "Traditional Wear",
+  "Swimwear",
+  "Lingerie",
+  "Activewear",
+  "Maternity",
+  "Plus Size",
+  "Children's Wear",
+];
 
 export default function EditProductPage() {
   const { user } = useAuth();
@@ -55,6 +83,7 @@ export default function EditProductPage() {
     price: "",
     sale_price: "",
     image: "",
+    images: [] as string[], // Array for multiple images
     brand_id: "",
     catalogue_id: "",
     category: "",
@@ -154,6 +183,7 @@ export default function EditProductPage() {
           price: productData.price?.toString() || "",
           sale_price: productData.sale_price?.toString() || "",
           image: productData.image || "",
+          images: productData.images || [], // Load existing images array
           brand_id: productData.brand_id || "",
           catalogue_id: productData.catalogue_id || "",
           category: productData.category || "",
@@ -194,18 +224,72 @@ export default function EditProductPage() {
     }
   }, [formData.brand_id, catalogues]);
 
-  const handleInputChange = (field: string, value: string | boolean) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+  const handleInputChange = (name: string, value: string | boolean) => {
+    // Handle price formatting for price and sale_price fields
+    if (
+      (name === "price" || name === "sale_price") &&
+      typeof value === "string"
+    ) {
+      // Remove any non-numeric characters except decimal point
+      const numericValue = value.replace(/[^\d.]/g, "");
+
+      // Validate that it's a valid number
+      if (numericValue === "" || !isNaN(parseFloat(numericValue))) {
+        setFormData({
+          ...formData,
+          [name]: numericValue,
+        });
+      }
+      return;
+    }
+
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
   };
 
-  const handleImageUpload = (url: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      image: url,
-    }));
+  // Format price for display
+  const formatPriceForDisplay = (price: string): string => {
+    if (!price || price === "") return "";
+    const numericPrice = parseFloat(price);
+    if (isNaN(numericPrice)) return price;
+    return formatNumberWithCommas(numericPrice);
+  };
+
+  const handleImageUpload = (url: string, index?: number) => {
+    if (index !== undefined) {
+      // Handle multiple images
+      setFormData((prev) => {
+        const newImages = [...prev.images];
+        newImages[index] = url;
+        return {
+          ...prev,
+          images: newImages,
+          // Set the first image as the main image for backward compatibility
+          image: index === 0 ? url : prev.image || url,
+        };
+      });
+    } else {
+      // Handle single image (backward compatibility)
+      setFormData((prev) => ({
+        ...prev,
+        image: url,
+        images: prev.images.length === 0 ? [url] : prev.images,
+      }));
+    }
+  };
+
+  const removeImage = (index: number) => {
+    setFormData((prev) => {
+      const newImages = prev.images.filter((_, i) => i !== index);
+      return {
+        ...prev,
+        images: newImages,
+        // Update main image if we removed the first one
+        image: index === 0 && newImages.length > 0 ? newImages[0] : prev.image,
+      };
+    });
   };
 
   const handleArrayChange = (
@@ -243,6 +327,11 @@ export default function EditProductPage() {
       return;
     }
 
+    if (!formData.category) {
+      toast.error("Please select a category");
+      return;
+    }
+
     try {
       setIsLoading(true);
 
@@ -255,10 +344,18 @@ export default function EditProductPage() {
           : undefined,
         image:
           formData.image ||
+          formData.images[0] ||
           "https://via.placeholder.com/400x400?text=Product+Image",
+        images:
+          formData.images.length > 0
+            ? formData.images.filter((img) => img)
+            : [
+                formData.image ||
+                  "https://via.placeholder.com/400x400?text=Product+Image",
+              ],
         brand_id: formData.brand_id,
         catalogue_id: formData.catalogue_id || undefined,
-        category: formData.category || "General",
+        category: formData.category,
         in_stock: formData.in_stock,
         sizes: formData.sizes.length > 0 ? formData.sizes : [],
         colors: formData.colors.length > 0 ? formData.colors : [],
@@ -386,17 +483,25 @@ export default function EditProductPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="category" className="text-black">
-                    Category
+                    Category *
                   </Label>
-                  <Input
-                    id="category"
+                  <Select
                     value={formData.category}
-                    onChange={(e) =>
-                      handleInputChange("category", e.target.value)
+                    onValueChange={(value) =>
+                      handleInputChange("category", value)
                     }
-                    placeholder="e.g., Dresses, Accessories"
-                    className="border-gray-300 focus:border-gray-500"
-                  />
+                  >
+                    <SelectTrigger className="border-gray-300 focus:border-gray-500">
+                      <SelectValue placeholder="Select a category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CATEGORIES.map((category) => (
+                        <SelectItem key={category} value={category}>
+                          {category}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
@@ -418,23 +523,49 @@ export default function EditProductPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="image" className="text-black">
-                  Product Image
+                <Label className="text-black">
+                  Product Images (Up to 4 images)
                 </Label>
-                <FileUpload
-                  onUploadComplete={handleImageUpload}
-                  defaultValue={formData.image}
-                  bucket="product-images"
-                  path="products"
-                  accept={{
-                    "image/png": [".png"],
-                    "image/jpeg": [".jpg", ".jpeg"],
-                    "image/webp": [".webp"],
-                  }}
-                  maxSize={5}
-                />
-                <p className="text-xs text-gray-600 mt-1">
-                  Upload a high-quality product image
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {[0, 1, 2, 3].map((index) => (
+                    <div key={index} className="space-y-2">
+                      <Label className="text-sm text-gray-600">
+                        Image {index + 1} {index === 0 && "(Main)"}
+                      </Label>
+                      <div className="relative">
+                        <FileUpload
+                          onUploadComplete={(url) =>
+                            handleImageUpload(url, index)
+                          }
+                          defaultValue={formData.images[index] || ""}
+                          bucket="product-images"
+                          path="products"
+                          accept={{
+                            "image/png": [".png"],
+                            "image/jpeg": [".jpg", ".jpeg"],
+                            "image/webp": [".webp"],
+                          }}
+                          maxSize={5}
+                        />
+                        {formData.images[index] && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="mt-2 text-red-600 border-red-200 hover:bg-red-50"
+                            onClick={() => removeImage(index)}
+                          >
+                            <Trash2 className="h-4 w-4 mr-1" />
+                            Remove
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-gray-600 mt-2">
+                  Upload up to 4 high-quality product images. The first image
+                  will be used as the main product image.
                 </p>
               </div>
             </CardContent>
@@ -520,32 +651,48 @@ export default function EditProductPage() {
                   <Label htmlFor="price" className="text-black">
                     Regular Price *
                   </Label>
-                  <Input
-                    id="price"
-                    type="number"
-                    step="0.01"
-                    value={formData.price}
-                    onChange={(e) => handleInputChange("price", e.target.value)}
-                    placeholder="0.00"
-                    className="border-gray-300 focus:border-gray-500"
-                    required
-                  />
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                      $
+                    </span>
+                    <Input
+                      id="price"
+                      type="text"
+                      value={formatPriceForDisplay(formData.price)}
+                      onChange={(e) =>
+                        handleInputChange("price", e.target.value)
+                      }
+                      placeholder="0"
+                      className="border-gray-300 focus:border-gray-500 pl-8"
+                      required
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Enter the regular selling price (e.g., 15,000)
+                  </p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="sale_price" className="text-black">
                     Sale Price (Optional)
                   </Label>
-                  <Input
-                    id="sale_price"
-                    type="number"
-                    step="0.01"
-                    value={formData.sale_price}
-                    onChange={(e) =>
-                      handleInputChange("sale_price", e.target.value)
-                    }
-                    placeholder="0.00"
-                    className="border-gray-300 focus:border-gray-500"
-                  />
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                      $
+                    </span>
+                    <Input
+                      id="sale_price"
+                      type="text"
+                      value={formatPriceForDisplay(formData.sale_price)}
+                      onChange={(e) =>
+                        handleInputChange("sale_price", e.target.value)
+                      }
+                      placeholder="0"
+                      className="border-gray-300 focus:border-gray-500 pl-8"
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Optional discounted price (must be less than regular price)
+                  </p>
                 </div>
               </div>
             </CardContent>

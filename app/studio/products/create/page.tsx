@@ -35,6 +35,35 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/lib/supabase";
+import {
+  formatNumberWithCommas,
+  parseFormattedNumber,
+} from "@/lib/utils/priceFormatter";
+import { Checkbox } from "@/components/ui/checkbox";
+
+// Brand categories
+const CATEGORIES = [
+  "Bridal",
+  "Jewelry",
+  "Accessories",
+  "Casual Wear",
+  "Formal Wear",
+  "Ready to Wear",
+  "Luxury",
+  "Dresses",
+  "Tops & Blouses",
+  "Bottoms",
+  "Outerwear",
+  "Shoes",
+  "Bags & Purses",
+  "Traditional Wear",
+  "Swimwear",
+  "Lingerie",
+  "Activewear",
+  "Maternity",
+  "Plus Size",
+  "Children's Wear",
+];
 
 export default function CreateProductPage() {
   const { user } = useAuth();
@@ -43,12 +72,15 @@ export default function CreateProductPage() {
   const [brands, setBrands] = useState<Brand[]>([]);
   const [catalogues, setCatalogues] = useState<Catalogue[]>([]);
   const [filteredCatalogues, setFilteredCatalogues] = useState<Catalogue[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     price: "",
     sale_price: "",
     image: "",
+    images: [] as string[], // Array for multiple images
     brand_id: "",
     catalogue_id: "",
     category: "",
@@ -134,14 +166,32 @@ export default function CreateProductPage() {
     }
   }, [formData.brand_id, catalogues]);
 
-  const handleInputChange = (field: string, value: string | boolean) => {
+  const handleInputChange = (name: string, value: string | boolean) => {
+    // Handle price formatting for price and sale_price fields
+    if (
+      (name === "price" || name === "sale_price") &&
+      typeof value === "string"
+    ) {
+      // Remove any non-numeric characters except decimal point
+      const numericValue = value.replace(/[^\d.]/g, "");
+
+      // Validate that it's a valid number
+      if (numericValue === "" || !isNaN(parseFloat(numericValue))) {
+        setFormData({
+          ...formData,
+          [name]: numericValue,
+        });
+      }
+      return;
+    }
+
     setFormData((prev) => ({
       ...prev,
-      [field]: value,
+      [name]: value,
     }));
 
     // Reset catalogue when brand changes
-    if (field === "brand_id") {
+    if (name === "brand_id") {
       setFormData((prev) => ({
         ...prev,
         catalogue_id: "",
@@ -149,11 +199,39 @@ export default function CreateProductPage() {
     }
   };
 
-  const handleImageUpload = (url: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      image: url,
-    }));
+  const handleImageUpload = (url: string, index?: number) => {
+    if (index !== undefined) {
+      // Handle multiple images
+      setFormData((prev) => {
+        const newImages = [...prev.images];
+        newImages[index] = url;
+        return {
+          ...prev,
+          images: newImages,
+          // Set the first image as the main image for backward compatibility
+          image: index === 0 ? url : prev.image || url,
+        };
+      });
+    } else {
+      // Handle single image (backward compatibility)
+      setFormData((prev) => ({
+        ...prev,
+        image: url,
+        images: prev.images.length === 0 ? [url] : prev.images,
+      }));
+    }
+  };
+
+  const removeImage = (index: number) => {
+    setFormData((prev) => {
+      const newImages = prev.images.filter((_, i) => i !== index);
+      return {
+        ...prev,
+        images: newImages,
+        // Update main image if we removed the first one
+        image: index === 0 && newImages.length > 0 ? newImages[0] : prev.image,
+      };
+    });
   };
 
   const handleArrayChange = (
@@ -191,6 +269,18 @@ export default function CreateProductPage() {
       return;
     }
 
+    if (!formData.category) {
+      toast.error("Please select a category");
+      return;
+    }
+
+    // Check if at least one image is uploaded
+    const hasImages = formData.image || formData.images.some((img) => img);
+    if (!hasImages) {
+      toast.error("Please upload at least one product image");
+      return;
+    }
+
     try {
       setIsLoading(true);
 
@@ -204,10 +294,18 @@ export default function CreateProductPage() {
           : undefined,
         image:
           formData.image ||
+          formData.images[0] ||
           "https://via.placeholder.com/400x400?text=Product+Image",
+        images:
+          formData.images.length > 0
+            ? formData.images.filter((img) => img) // Filter out empty strings
+            : [
+                formData.image ||
+                  "https://via.placeholder.com/400x400?text=Product+Image",
+              ],
         brand_id: formData.brand_id,
         catalogue_id: formData.catalogue_id || undefined,
-        category: formData.category || "General",
+        category: formData.category,
         in_stock: formData.in_stock,
         sizes: formData.sizes.length > 0 ? formData.sizes : [],
         colors: formData.colors.length > 0 ? formData.colors : [],
@@ -252,6 +350,14 @@ export default function CreateProductPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Format price for display
+  const formatPriceForDisplay = (price: string): string => {
+    if (!price || price === "") return "";
+    const numericPrice = parseFloat(price);
+    if (isNaN(numericPrice)) return price;
+    return formatNumberWithCommas(numericPrice);
   };
 
   // Don't render the form if user doesn't have proper permissions or is still loading
@@ -303,17 +409,25 @@ export default function CreateProductPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="category" className="text-black">
-                    Category
+                    Category *
                   </Label>
-                  <Input
-                    id="category"
+                  <Select
                     value={formData.category}
-                    onChange={(e) =>
-                      handleInputChange("category", e.target.value)
+                    onValueChange={(value) =>
+                      handleInputChange("category", value)
                     }
-                    placeholder="e.g., Dresses, Accessories"
-                    className="border-oma-cocoa/20 focus:border-oma-plum"
-                  />
+                  >
+                    <SelectTrigger className="border-oma-cocoa/20 focus:border-oma-plum">
+                      <SelectValue placeholder="Select a category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CATEGORIES.map((category) => (
+                        <SelectItem key={category} value={category}>
+                          {category}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
@@ -335,23 +449,49 @@ export default function CreateProductPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="image" className="text-black">
-                  Product Image
+                <Label className="text-black">
+                  Product Images (Up to 4 images)
                 </Label>
-                <FileUpload
-                  onUploadComplete={handleImageUpload}
-                  defaultValue={formData.image}
-                  bucket="product-images"
-                  path="products"
-                  accept={{
-                    "image/png": [".png"],
-                    "image/jpeg": [".jpg", ".jpeg"],
-                    "image/webp": [".webp"],
-                  }}
-                  maxSize={5}
-                />
-                <p className="text-xs text-black/70 mt-1">
-                  Upload a high-quality product image
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {[0, 1, 2, 3].map((index) => (
+                    <div key={index} className="space-y-2">
+                      <Label className="text-sm text-gray-600">
+                        Image {index + 1} {index === 0 && "(Main)"}
+                      </Label>
+                      <div className="relative">
+                        <FileUpload
+                          onUploadComplete={(url) =>
+                            handleImageUpload(url, index)
+                          }
+                          defaultValue={formData.images[index] || ""}
+                          bucket="product-images"
+                          path="products"
+                          accept={{
+                            "image/png": [".png"],
+                            "image/jpeg": [".jpg", ".jpeg"],
+                            "image/webp": [".webp"],
+                          }}
+                          maxSize={5}
+                        />
+                        {formData.images[index] && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="mt-2 text-red-600 border-red-200 hover:bg-red-50"
+                            onClick={() => removeImage(index)}
+                          >
+                            <Trash2 className="h-4 w-4 mr-1" />
+                            Remove
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-black/70 mt-2">
+                  Upload up to 4 high-quality product images. The first image
+                  will be used as the main product image.
                 </p>
               </div>
             </CardContent>
@@ -433,40 +573,50 @@ export default function CreateProductPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="price" className="text-black">
-                    Regular Price *
-                  </Label>
+              <div className="space-y-2">
+                <Label htmlFor="price" className="text-black">
+                  Regular Price *
+                </Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                    $
+                  </span>
                   <Input
                     id="price"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={formData.price}
+                    type="text"
+                    value={formatPriceForDisplay(formData.price)}
                     onChange={(e) => handleInputChange("price", e.target.value)}
-                    placeholder="0.00"
-                    className="border-oma-cocoa/20 focus:border-oma-plum"
+                    placeholder="0"
+                    className="border-oma-cocoa/20 focus:border-oma-plum pl-8"
                     required
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="sale_price" className="text-black">
-                    Sale Price (Optional)
-                  </Label>
+                <p className="text-xs text-muted-foreground">
+                  Enter the regular selling price (e.g., 15,000)
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="sale_price" className="text-black">
+                  Sale Price (Optional)
+                </Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                    $
+                  </span>
                   <Input
                     id="sale_price"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={formData.sale_price}
+                    type="text"
+                    value={formatPriceForDisplay(formData.sale_price)}
                     onChange={(e) =>
                       handleInputChange("sale_price", e.target.value)
                     }
-                    placeholder="0.00"
-                    className="border-oma-cocoa/20 focus:border-oma-plum"
+                    placeholder="0"
+                    className="border-oma-cocoa/20 focus:border-oma-plum pl-8"
                   />
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  Optional discounted price (must be less than regular price)
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -672,7 +822,7 @@ export default function CreateProductPage() {
                     Whether this product is currently available
                   </p>
                 </div>
-                <Switch
+                <Checkbox
                   id="in_stock"
                   checked={formData.in_stock}
                   onCheckedChange={(checked) =>
@@ -690,7 +840,7 @@ export default function CreateProductPage() {
                     Mark if this is a custom or made-to-order item
                   </p>
                 </div>
-                <Switch
+                <Checkbox
                   id="is_custom"
                   checked={formData.is_custom}
                   onCheckedChange={(checked) =>

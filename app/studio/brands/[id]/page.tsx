@@ -55,6 +55,13 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { AuthImage } from "@/components/ui/auth-image";
+import {
+  formatPriceRange,
+  formatNumberWithCommas,
+} from "@/lib/utils/priceFormatter";
+
+// Character limits
+const SHORT_DESCRIPTION_LIMIT = 150;
 
 // Common currencies used across Africa
 const CURRENCIES = [
@@ -156,6 +163,12 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
+
+    // Handle character limit for short description
+    if (name === "description" && value.length > SHORT_DESCRIPTION_LIMIT) {
+      return; // Don't update if exceeding limit
+    }
+
     if (brand) {
       setBrand({
         ...brand,
@@ -258,6 +271,11 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
     }
   };
 
+  // Calculate remaining characters for short description
+  const remainingChars = brand
+    ? SHORT_DESCRIPTION_LIMIT - (brand.description || "").length
+    : SHORT_DESCRIPTION_LIMIT;
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -311,16 +329,27 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="description">Description</Label>
+                    <span
+                      className={`text-sm ${remainingChars < 20 ? "text-red-500" : "text-muted-foreground"}`}
+                    >
+                      {remainingChars} characters remaining
+                    </span>
+                  </div>
                   <Textarea
                     id="description"
                     name="description"
                     value={brand.description}
                     onChange={handleChange}
-                    placeholder="Enter brand description"
-                    className="min-h-32"
-                    required
+                    rows={3}
+                    placeholder="A brief description of the brand (max 150 characters)"
+                    className={remainingChars < 0 ? "border-red-500" : ""}
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Keep it concise - this appears in brand listings and
+                    previews
+                  </p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -382,10 +411,12 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
                     {priceMin && priceMax && currency ? (
                       <>
                         Preview:{" "}
-                        {CURRENCIES.find((c) => c.code === currency)?.symbol}
-                        {priceMin} -{" "}
-                        {CURRENCIES.find((c) => c.code === currency)?.symbol}
-                        {priceMax}
+                        {formatPriceRange(
+                          priceMin,
+                          priceMax,
+                          CURRENCIES.find((c) => c.code === currency)?.symbol ||
+                            "$"
+                        )}
                       </>
                     ) : (
                       <>Current: {brand.price_range || "Contact for pricing"}</>
@@ -572,7 +603,12 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
                       <span className="font-medium">Price Range:</span>
                       <span className="ml-1">
                         {priceMin && priceMax && currency
-                          ? `${CURRENCIES.find((c) => c.code === currency)?.symbol}${priceMin} - ${CURRENCIES.find((c) => c.code === currency)?.symbol}${priceMax}`
+                          ? formatPriceRange(
+                              priceMin,
+                              priceMax,
+                              CURRENCIES.find((c) => c.code === currency)
+                                ?.symbol || "$"
+                            )
                           : brand.price_range}
                       </span>
                     </div>
