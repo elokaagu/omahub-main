@@ -68,12 +68,12 @@ export default function ProductsPage() {
   const [showFilters, setShowFilters] = useState(false);
 
   // Check if user is super admin or brand owner
-  useEffect(() => {
-    if (user && user.role !== "super_admin" && user.role !== "brand_admin") {
-      router.push("/studio");
-      return;
-    }
-  }, [user, router]);
+  // useEffect(() => {
+  //   if (user && user.role !== "super_admin" && user.role !== "brand_admin") {
+  //     router.push("/studio");
+  //     return;
+  //   }
+  // }, [user, router]);
 
   // Fetch products
   useEffect(() => {

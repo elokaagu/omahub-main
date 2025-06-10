@@ -38,12 +38,12 @@ export default function CreateSpotlightPage() {
   });
 
   // Check if user is super admin
-  useEffect(() => {
-    if (user && user.role !== "super_admin") {
-      router.push("/studio");
-      return;
-    }
-  }, [user, router]);
+  // useEffect(() => {
+  //   if (user && user.role !== "super_admin") {
+  //     router.push("/studio");
+  //     return;
+  //   }
+  // }, [user, router]);
 
   const handleInputChange = (
     field: keyof CreateSpotlightData,

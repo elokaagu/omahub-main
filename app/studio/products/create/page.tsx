@@ -62,15 +62,15 @@ export default function CreateProductPage() {
   });
 
   // Check if user is super admin or brand owner
-  useEffect(() => {
-    // Don't redirect if we're still loading or if user is null (temporary state)
-    if (!user) return;
+  // useEffect(() => {
+  //   // Don't redirect if we're still loading or if user is null (temporary state)
+  //   if (!user) return;
 
-    if (user.role !== "super_admin" && user.role !== "brand_admin") {
-      router.push("/studio");
-      return;
-    }
-  }, [user, router]);
+  //   if (user.role !== "super_admin" && user.role !== "brand_admin") {
+  //     router.push("/studio");
+  //     return;
+  //   }
+  // }, [user, router]);
 
   // Fetch brands and catalogues
   useEffect(() => {
