@@ -241,7 +241,7 @@ export default function ProductsPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-12">
         <Card className="border-l-4 border-l-oma-plum border-oma-beige">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-oma-cocoa">
@@ -298,15 +298,35 @@ export default function ProductsPage() {
             <div className="text-2xl font-canela text-oma-plum">
               $
               {products.length > 0
-                ? Math.round(
+                ? (
+                    products.reduce((sum, p) => sum + p.price, 0) /
+                    products.length
+                  ).toFixed(0)
+                : 0}
+            </div>
+            <p className="text-xs text-oma-cocoa mt-2">Average regular price</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-l-4 border-l-oma-gold border-oma-beige">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-oma-cocoa">
+              Avg. Selling
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-canela text-oma-plum">
+              $
+              {products.length > 0
+                ? (
                     products.reduce(
                       (sum, p) => sum + (p.sale_price || p.price),
                       0
                     ) / products.length
-                  )
+                  ).toFixed(0)
                 : 0}
             </div>
-            <p className="text-xs text-oma-cocoa mt-2">Average product price</p>
+            <p className="text-xs text-oma-cocoa mt-2">Average selling price</p>
           </CardContent>
         </Card>
       </div>
