@@ -236,6 +236,10 @@ export default function CreateProductPage() {
         ...prev,
         catalogue_id: "",
       }));
+
+      // Update currency symbol based on selected brand
+      const newCurrency = extractCurrencyFromBrand(value as string);
+      setSelectedBrandCurrency(newCurrency);
     }
   };
 

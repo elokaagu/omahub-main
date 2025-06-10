@@ -40,6 +40,8 @@ import {
   formatNumberWithCommas,
   parseFormattedNumber,
 } from "@/lib/utils/priceFormatter";
+import { getBrandCurrency } from "@/lib/utils/currencyUtils";
+import { Checkbox } from "@/components/ui/checkbox";
 
 // Brand categories
 const CATEGORIES = [
@@ -77,6 +79,7 @@ export default function EditProductPage() {
   const [catalogues, setCatalogues] = useState<Catalogue[]>([]);
   const [filteredCatalogues, setFilteredCatalogues] = useState<Catalogue[]>([]);
   const [product, setProduct] = useState<Product | null>(null);
+  const [selectedBrandCurrency, setSelectedBrandCurrency] = useState("$"); // Default to USD symbol
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -195,6 +198,17 @@ export default function EditProductPage() {
           is_custom: productData.is_custom ?? false,
           lead_time: productData.lead_time || "",
         });
+
+        // Set initial currency based on product's brand
+        if (productData.brand_id) {
+          const selectedBrand = brandsData.find(
+            (brand) => brand.id === productData.brand_id
+          );
+          if (selectedBrand) {
+            const currency = getBrandCurrency(selectedBrand);
+            setSelectedBrandCurrency(currency);
+          }
+        }
       } catch (error) {
         console.error("Error fetching product data:", error);
         toast.error("Failed to load product data");
@@ -247,6 +261,15 @@ export default function EditProductPage() {
       ...formData,
       [name]: value,
     });
+
+    // Update currency when brand changes
+    if (name === "brand_id" && typeof value === "string") {
+      const selectedBrand = brands.find((brand) => brand.id === value);
+      if (selectedBrand) {
+        const currency = getBrandCurrency(selectedBrand);
+        setSelectedBrandCurrency(currency);
+      }
+    }
   };
 
   // Format price for display
@@ -653,7 +676,7 @@ export default function EditProductPage() {
                   </Label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
-                      $
+                      {selectedBrandCurrency}
                     </span>
                     <Input
                       id="price"
@@ -677,7 +700,7 @@ export default function EditProductPage() {
                   </Label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
-                      $
+                      {selectedBrandCurrency}
                     </span>
                     <Input
                       id="sale_price"
