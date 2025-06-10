@@ -63,7 +63,10 @@ export default function CreateProductPage() {
 
   // Check if user is super admin or brand owner
   useEffect(() => {
-    if (user && user.role !== "super_admin" && user.role !== "brand_admin") {
+    // Don't redirect if we're still loading or if user is null (temporary state)
+    if (!user) return;
+
+    if (user.role !== "super_admin" && user.role !== "brand_admin") {
       router.push("/studio");
       return;
     }
@@ -251,7 +254,8 @@ export default function CreateProductPage() {
     }
   };
 
-  if (user?.role !== "super_admin" && user?.role !== "brand_admin") {
+  // Don't render the form if user doesn't have proper permissions or is still loading
+  if (!user || (user.role !== "super_admin" && user.role !== "brand_admin")) {
     return <Loading />;
   }
 

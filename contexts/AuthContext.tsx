@@ -72,6 +72,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error) {
       AuthDebug.error("❌ Error refreshing user profile:", error);
+      // Don't disrupt user state on refresh errors - just log and continue
+      AuthDebug.log("⚠️ Profile refresh failed, keeping current user state");
     }
   };
 
@@ -109,10 +111,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error) {
       AuthDebug.error("❌ Error loading user profile:", error);
-      // Don't set user to null on timeout - create basic user instead
+      // Don't set user to null on timeout or temporary errors - create basic user instead
       if (
         error instanceof Error &&
-        error.message === "Profile loading timeout"
+        (error.message === "Profile loading timeout" ||
+          error.message.includes("network") ||
+          error.message.includes("timeout"))
       ) {
         const basicUser: User = {
           id: userId,
@@ -124,8 +128,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           owned_brands: [],
         };
         setUser(basicUser);
-        AuthDebug.log("⚠️ Profile loading timeout, created basic user:", email);
+        AuthDebug.log("⚠️ Profile loading error, created basic user:", email);
       } else {
+        // Only set user to null for actual authentication errors
+        AuthDebug.log("❌ Authentication error, setting user to null");
         setUser(null);
       }
     }
