@@ -258,6 +258,10 @@ export function FileUpload({
       debugLog(`Starting upload process`, LogLevel.INFO);
       const url = await uploadToSupabase(file);
       debugLog(`Upload completed successfully`, LogLevel.INFO, { url });
+
+      // Update preview with the uploaded URL so it stays visible
+      setPreview(url);
+
       onUploadComplete(url);
       toast.success("Image uploaded successfully!");
     } catch (error) {
@@ -283,6 +287,7 @@ export function FileUpload({
       setPreview(defaultValue || null);
     } finally {
       setUploading(false);
+      // Clean up the temporary object URL
       URL.revokeObjectURL(objectUrl);
     }
   };
