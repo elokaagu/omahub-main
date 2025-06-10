@@ -126,6 +126,20 @@ export type Catalogue = {
   description?: string;
 };
 
+export type Tailor = {
+  id: string;
+  brand_id: string;
+  title: string;
+  image: string;
+  description?: string;
+  specialties?: string[];
+  price_range?: string;
+  lead_time?: string;
+  consultation_fee?: number;
+  created_at?: string;
+  updated_at?: string;
+};
+
 export type Product = {
   id: string;
   title: string;

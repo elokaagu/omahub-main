@@ -557,6 +557,7 @@ export default function EditProductPage() {
                       </Label>
                       <div className="relative">
                         <FileUpload
+                          key={`image-${index}-${formData.images[index] || "empty"}`}
                           onUploadComplete={(url) =>
                             handleImageUpload(url, index)
                           }

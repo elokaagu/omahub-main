@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Button } from "./button";
 import { Upload, X, Image as ImageIcon } from "lucide-react";
 import { supabase } from "@/lib/supabase";
@@ -31,6 +31,11 @@ export function FileUpload({
   const [preview, setPreview] = useState<string | null>(defaultValue || null);
   const [debugInfo, setDebugInfo] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Update preview when defaultValue changes
+  useEffect(() => {
+    setPreview(defaultValue || null);
+  }, [defaultValue]);
 
   // Process accept parameter to handle both string and object formats
   const acceptString =

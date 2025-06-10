@@ -84,7 +84,7 @@ const fallbackCarouselItems: CarouselItem[] = [
     image: "/lovable-uploads/bb152c0b-6378-419b-a0e6-eafce44631b2.png",
     title: "Tailored",
     subtitle: "Masters of craft creating perfectly fitted garments",
-    link: "/directory?category=Tailored",
+    link: "/tailors",
     heroTitle: "Bespoke Craft",
     isEditorial: true,
     width: 1920,
@@ -279,7 +279,7 @@ export default function HomeContent() {
 
             {/* Tailored Card */}
             <div className="relative group overflow-hidden rounded-lg">
-              <Link href="/directory?category=Tailored">
+              <Link href="/tailors">
                 <div className="relative h-[400px]">
                   <Image
                     src="/lovable-uploads/bb152c0b-6378-419b-a0e6-eafce44631b2.png"
