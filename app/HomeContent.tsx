@@ -324,7 +324,7 @@ export default function HomeContent() {
           ...category,
           brands: brandsData
             .filter((brand) => brand.category === category.title)
-            .slice(0, 8)
+            .slice(0, category.title === "Accessories" ? undefined : 8) // Show all accessories, limit others to 8
             .map((brand) => ({
               id: brand.id,
               name: brand.name,
