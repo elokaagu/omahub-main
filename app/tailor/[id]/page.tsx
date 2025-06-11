@@ -19,6 +19,24 @@ type TailorWithBrand = Tailor & {
   brand: Brand;
 };
 
+// Smart focal point detection for fashion/tailor images
+const getImageFocalPoint = (imageUrl: string, title: string) => {
+  // For fashion and tailor images, we typically want to focus on the upper portion
+  // where faces, necklines, and key design elements are usually located
+  const lowerTitle = title.toLowerCase();
+
+  if (lowerTitle.includes("bridal") || lowerTitle.includes("wedding")) {
+    return "object-top"; // Focus on top for bridal shots to capture face/neckline
+  }
+
+  if (lowerTitle.includes("evening") || lowerTitle.includes("gown")) {
+    return "object-center"; // Center for full gown shots
+  }
+
+  // Default to top-center for most fashion photography to avoid cutting off faces
+  return "object-top";
+};
+
 export default function TailorPage() {
   const params = useParams();
   const [tailor, setTailor] = useState<TailorWithBrand | null>(null);
@@ -112,7 +130,9 @@ export default function TailorPage() {
               src={tailor.image}
               alt={tailor.title}
               fill
-              className="object-cover"
+              className={`object-cover ${getImageFocalPoint(tailor.image, tailor.title)}`}
+              sizes="(max-width: 1024px) 100vw, 50vw"
+              priority={true}
             />
           </div>
 

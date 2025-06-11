@@ -25,6 +25,24 @@ type TailorWithBrand = Tailor & {
   };
 };
 
+// Smart focal point detection for fashion/tailor images
+const getImageFocalPoint = (imageUrl: string, title: string) => {
+  // For fashion and tailor images, we typically want to focus on the upper portion
+  // where faces, necklines, and key design elements are usually located
+  const lowerTitle = title.toLowerCase();
+
+  if (lowerTitle.includes("bridal") || lowerTitle.includes("wedding")) {
+    return "object-top"; // Focus on top for bridal shots to capture face/neckline
+  }
+
+  if (lowerTitle.includes("evening") || lowerTitle.includes("gown")) {
+    return "object-center"; // Center for full gown shots
+  }
+
+  // Default to top-center for most fashion photography to avoid cutting off faces
+  return "object-top";
+};
+
 export default function TailorsPage() {
   const [tailors, setTailors] = useState<TailorWithBrand[]>([]);
   const [filteredTailors, setFilteredTailors] = useState<TailorWithBrand[]>([]);
@@ -246,7 +264,9 @@ export default function TailorsPage() {
                         src={tailor.image}
                         alt={tailor.title}
                         fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-300"
+                        className={`object-cover ${getImageFocalPoint(tailor.image, tailor.title)} group-hover:scale-105 transition-transform duration-300`}
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        priority={false}
                       />
                     </div>
                     <div className="p-6">
@@ -320,7 +340,9 @@ export default function TailorsPage() {
                         src={tailor.image}
                         alt={tailor.title}
                         fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-300"
+                        className={`object-cover ${getImageFocalPoint(tailor.image, tailor.title)} group-hover:scale-105 transition-transform duration-300`}
+                        sizes="192px"
+                        priority={false}
                       />
                     </div>
                     <div className="flex-1">
