@@ -228,12 +228,6 @@ const categoryDefinitions = [
     customCta: "Looks for the every day that isn't.",
   },
   {
-    title: "Tailoring",
-    image: "/lovable-uploads/99ca757a-bed8-422e-b155-0b9d365b58e0.png",
-    href: "/directory?category=Tailoring",
-    customCta: "Custom fits. Clean lines.",
-  },
-  {
     title: "Accessories",
     image: "/lovable-uploads/25c3fe26-3fc4-43ef-83ac-6931a74468c0.png",
     href: "/directory?category=Accessories",
