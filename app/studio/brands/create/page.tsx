@@ -67,6 +67,7 @@ const FOUNDING_YEARS = Array.from(
 
 // Character limits
 const SHORT_DESCRIPTION_LIMIT = 150;
+const BRAND_NAME_LIMIT = 50; // Add brand name character limit
 
 export default function CreateBrandPage() {
   const router = useRouter();
@@ -93,6 +94,11 @@ export default function CreateBrandPage() {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
+
+    // Handle character limit for brand name
+    if (name === "name" && value.length > BRAND_NAME_LIMIT) {
+      return; // Don't update if exceeding limit
+    }
 
     // Handle character limit for short description
     if (name === "description" && value.length > SHORT_DESCRIPTION_LIMIT) {
@@ -217,6 +223,9 @@ export default function CreateBrandPage() {
   // Calculate remaining characters for short description
   const remainingChars = SHORT_DESCRIPTION_LIMIT - formData.description.length;
 
+  // Calculate remaining characters for brand name
+  const remainingNameChars = BRAND_NAME_LIMIT - formData.name.length;
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
       <div className="flex items-center gap-4 mb-8">
@@ -240,7 +249,14 @@ export default function CreateBrandPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Brand Name *</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="name">Brand Name *</Label>
+                    <span
+                      className={`text-sm ${remainingNameChars < 10 ? "text-red-500" : "text-muted-foreground"}`}
+                    >
+                      {remainingNameChars} characters remaining
+                    </span>
+                  </div>
                   <Input
                     id="name"
                     name="name"
@@ -248,7 +264,11 @@ export default function CreateBrandPage() {
                     onChange={handleInputChange}
                     placeholder="e.g. Adire Designs"
                     required
+                    className={remainingNameChars < 0 ? "border-red-500" : ""}
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Keep it concise and memorable (max 50 characters)
+                  </p>
                 </div>
 
                 <div className="space-y-2">

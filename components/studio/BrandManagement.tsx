@@ -39,6 +39,7 @@ interface BrandManagementProps {
 
 // Character limits
 const SHORT_DESCRIPTION_LIMIT = 150;
+const BRAND_NAME_LIMIT = 50; // Add brand name character limit
 
 export default function BrandManagement({ className }: BrandManagementProps) {
   const {
@@ -227,35 +228,22 @@ export default function BrandManagement({ className }: BrandManagementProps) {
 
       console.log("✅ Updating brand...");
 
-      const { data, error } = await supabase
-        .from("brands")
-        .update(updates)
-        .eq("id", brandId)
-        .select()
-        .single();
+      // Use the new API endpoint that handles name propagation
+      const response = await fetch(`/api/studio/brands/${brandId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updates),
+      });
 
-      if (error) {
-        console.error("❌ Database update error:", error);
+      const result = await response.json();
 
-        // Provide specific error messages based on error codes
-        if (error.code === "PGRST116") {
-          throw new Error(
-            "No matching record found or insufficient permissions"
-          );
-        } else if (error.code === "42501") {
-          throw new Error(
-            "Database permission denied - please try signing in again"
-          );
-        } else if (error.message.includes("RLS")) {
-          throw new Error(
-            "Row Level Security policy violation - please contact support"
-          );
-        } else {
-          throw new Error(`Database error: ${error.message}`);
-        }
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to update brand");
       }
 
-      console.log("✅ Brand updated successfully:", data);
+      console.log("✅ Brand updated successfully:", result.brand);
 
       // Update local state
       setBrands(
@@ -264,7 +252,13 @@ export default function BrandManagement({ className }: BrandManagementProps) {
         )
       );
 
-      toast.success("Brand updated successfully");
+      if (result.nameChanged) {
+        toast.success(
+          "Brand updated successfully! Name changes have been propagated across all connections."
+        );
+      } else {
+        toast.success("Brand updated successfully");
+      }
       setEditingBrand(null);
     } catch (error) {
       console.error("❌ Error updating brand:", error);
@@ -332,6 +326,11 @@ export default function BrandManagement({ className }: BrandManagementProps) {
   ) => {
     const { name, value } = e.target;
 
+    // Handle character limit for brand name
+    if (name === "name" && value.length > BRAND_NAME_LIMIT) {
+      return; // Don't update if exceeding limit
+    }
+
     // Handle character limit for description
     if (name === "description" && value.length > SHORT_DESCRIPTION_LIMIT) {
       return; // Don't update if exceeding limit
@@ -351,6 +350,9 @@ export default function BrandManagement({ className }: BrandManagementProps) {
   // Calculate remaining characters for description
   const remainingChars =
     SHORT_DESCRIPTION_LIMIT - (editForm.description || "").length;
+
+  // Calculate remaining characters for brand name
+  const remainingNameChars = BRAND_NAME_LIMIT - (editForm.name || "").length;
 
   // Show loading state while checking access
   if (accessLoading) {
@@ -544,14 +546,25 @@ export default function BrandManagement({ className }: BrandManagementProps) {
             <form onSubmit={handleFormSubmit}>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Brand Name</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="name">Brand Name</Label>
+                    <span
+                      className={`text-sm ${remainingNameChars < 10 ? "text-red-500" : "text-muted-foreground"}`}
+                    >
+                      {remainingNameChars} characters remaining
+                    </span>
+                  </div>
                   <Input
                     id="name"
                     name="name"
                     value={editForm.name}
                     onChange={handleFormChange}
                     required
+                    className={remainingNameChars < 0 ? "border-red-500" : ""}
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Keep it concise and memorable (max 50 characters)
+                  </p>
                 </div>
 
                 <div className="space-y-2">

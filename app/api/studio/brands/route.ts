@@ -156,6 +156,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate character limits
+    if (brandData.name && brandData.name.length > 50) {
+      return NextResponse.json(
+        { error: "Brand name must be 50 characters or less" },
+        { status: 400 }
+      );
+    }
+
+    if (brandData.description && brandData.description.length > 150) {
+      return NextResponse.json(
+        { error: "Brand description must be 150 characters or less" },
+        { status: 400 }
+      );
+    }
+
     // Generate a URL-friendly slug from the brand name
     const id = brandData.name
       .toLowerCase()

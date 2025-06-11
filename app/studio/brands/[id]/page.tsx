@@ -62,6 +62,7 @@ import {
 
 // Character limits
 const SHORT_DESCRIPTION_LIMIT = 150;
+const BRAND_NAME_LIMIT = 50;
 
 // Common currencies used across Africa
 const CURRENCIES = [
@@ -164,6 +165,11 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
   ) => {
     const { name, value } = e.target;
 
+    // Handle character limit for brand name
+    if (name === "name" && value.length > BRAND_NAME_LIMIT) {
+      return; // Don't update if exceeding limit
+    }
+
     // Handle character limit for short description
     if (name === "description" && value.length > SHORT_DESCRIPTION_LIMIT) {
       return; // Don't update if exceeding limit
@@ -232,22 +238,45 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
 
     setSaving(true);
     try {
-      await updateBrand(user.id, brand.id, {
-        description: brand.description,
-        category: brand.category,
-        categories: brand.categories,
-        location: brand.location,
-        price_range: priceRange,
-        website: brand.website,
-        instagram: brand.instagram,
-        founded_year: brand.founded_year,
-        is_verified: brand.is_verified,
-        image: imageUrl,
+      // Use the new API endpoint that handles name propagation
+      const response = await fetch(`/api/studio/brands/${brand.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: brand.name,
+          description: brand.description,
+          category: brand.category,
+          categories: brand.categories,
+          location: brand.location,
+          price_range: priceRange,
+          website: brand.website,
+          instagram: brand.instagram,
+          founded_year: brand.founded_year,
+          is_verified: brand.is_verified,
+          image: imageUrl,
+        }),
       });
-      toast.success("Brand updated successfully");
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to update brand");
+      }
+
+      if (result.nameChanged) {
+        toast.success(
+          "Brand updated successfully! Name changes have been propagated across all connections."
+        );
+      } else {
+        toast.success("Brand updated successfully");
+      }
     } catch (error) {
       console.error("Error updating brand:", error);
-      toast.error("Failed to update brand");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to update brand"
+      );
     } finally {
       setSaving(false);
     }
@@ -275,6 +304,11 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
   const remainingChars = brand
     ? SHORT_DESCRIPTION_LIMIT - (brand.description || "").length
     : SHORT_DESCRIPTION_LIMIT;
+
+  // Calculate remaining characters for brand name
+  const remainingNameChars = brand
+    ? BRAND_NAME_LIMIT - (brand.name || "").length
+    : BRAND_NAME_LIMIT;
 
   if (loading) {
     return (
@@ -317,7 +351,14 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Brand Name</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="name">Brand Name</Label>
+                    <span
+                      className={`text-sm ${remainingNameChars < 10 ? "text-red-500" : "text-muted-foreground"}`}
+                    >
+                      {remainingNameChars} characters remaining
+                    </span>
+                  </div>
                   <Input
                     id="name"
                     name="name"
@@ -325,7 +366,11 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
                     onChange={handleChange}
                     placeholder="Enter brand name"
                     required
+                    className={remainingNameChars < 0 ? "border-red-500" : ""}
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Keep it concise and memorable (max 50 characters)
+                  </p>
                 </div>
 
                 <div className="space-y-2">
