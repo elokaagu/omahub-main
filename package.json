@@ -25,7 +25,9 @@
     "build:clean": "node scripts/clear-cache.js && NEXT_IGNORE_TYPESCRIPT_ERRORS=true NEXT_IGNORE_ESM_VALIDATE=true next build",
     "fix-animations": "node scripts/fix-animations.js",
     "fix-all-animations": "node scripts/fix-all-animations.js",
-    "migrate:tailors": "node scripts/migrate-tailoring-brands.js"
+    "insert:tailoring-brands": "node scripts/insert-tailoring-brands.js",
+    "migrate:tailors": "node scripts/migrate-tailoring-brands.js",
+    "migrate:real-tailored": "node scripts/migrate-real-tailored-brands.js"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
