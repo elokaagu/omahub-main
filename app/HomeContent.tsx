@@ -387,17 +387,17 @@ export default function HomeContent() {
           <h2 className="text-3xl font-canela text-center mb-12">
             Browse by Category
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {/* Catalogues Card */}
-            <div className="relative group overflow-hidden rounded-lg">
+            <div className="relative group overflow-hidden rounded-lg max-w-md mx-auto">
               <Link href="/catalogues">
-                <div className="relative aspect-[4/5]">
+                <div className="relative aspect-[3/4]">
                   <Image
                     src={categoryImages.catalogueImage}
                     alt="Catalogues"
                     fill
                     priority
-                    sizes="(max-width: 768px) 100vw, 50vw"
+                    sizes="(max-width: 768px) 90vw, 400px"
                     className={`${getCategoryImageFocalPoint("catalogues")} transition-transform duration-300 group-hover:scale-105`}
                   />
                   <div className="absolute inset-0 bg-black/30 transition-opacity group-hover:bg-black/40" />
@@ -412,15 +412,15 @@ export default function HomeContent() {
             </div>
 
             {/* Tailored Card */}
-            <div className="relative group overflow-hidden rounded-lg">
+            <div className="relative group overflow-hidden rounded-lg max-w-md mx-auto">
               <Link href="/tailors">
-                <div className="relative aspect-[4/5]">
+                <div className="relative aspect-[3/4]">
                   <Image
                     src={categoryImages.tailoredImage}
                     alt="Tailored"
                     fill
                     priority
-                    sizes="(max-width: 768px) 100vw, 50vw"
+                    sizes="(max-width: 768px) 90vw, 400px"
                     className={`${getCategoryImageFocalPoint("tailored")} transition-transform duration-300 group-hover:scale-105`}
                   />
                   <div className="absolute inset-0 bg-black/30 transition-opacity group-hover:bg-black/40" />
