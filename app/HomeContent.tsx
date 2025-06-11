@@ -391,11 +391,12 @@ export default function HomeContent() {
             {/* Catalogues Card */}
             <div className="relative group overflow-hidden rounded-lg">
               <Link href="/catalogues">
-                <div className="relative h-[400px]">
+                <div className="relative aspect-[3/2]">
                   <Image
                     src={categoryImages.catalogueImage}
                     alt="Catalogues"
                     fill
+                    sizes="(max-width: 768px) 100vw, 50vw"
                     className={`${getCategoryImageFocalPoint("catalogues")} transition-transform duration-300 group-hover:scale-105`}
                   />
                   <div className="absolute inset-0 bg-black/30 transition-opacity group-hover:bg-black/40" />
@@ -412,11 +413,12 @@ export default function HomeContent() {
             {/* Tailored Card */}
             <div className="relative group overflow-hidden rounded-lg">
               <Link href="/tailors">
-                <div className="relative h-[400px]">
+                <div className="relative aspect-[3/2]">
                   <Image
                     src={categoryImages.tailoredImage}
                     alt="Tailored"
                     fill
+                    sizes="(max-width: 768px) 100vw, 50vw"
                     className={`${getCategoryImageFocalPoint("tailored")} transition-transform duration-300 group-hover:scale-105`}
                   />
                   <div className="absolute inset-0 bg-black/30 transition-opacity group-hover:bg-black/40" />
@@ -575,11 +577,12 @@ export default function HomeContent() {
               },
             ].map((occasion, index) => (
               <Link key={index} href={occasion.href} className="group">
-                <div className="relative h-64 rounded-lg overflow-hidden">
+                <div className="relative aspect-[4/5] rounded-lg overflow-hidden">
                   <Image
                     src={occasion.image}
                     alt={occasion.title}
                     fill
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 280px"
                     className="object-cover transition-transform duration-300 group-hover:scale-105"
                   />
                   <div className="absolute inset-0 bg-black/30 transition-opacity group-hover:bg-black/40" />
