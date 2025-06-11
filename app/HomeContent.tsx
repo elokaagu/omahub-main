@@ -156,10 +156,14 @@ const generateDynamicCategoryImages = async (): Promise<{
   tailoredImage: string;
 }> => {
   try {
+    console.log("Fetching dynamic category images...");
     const [catalogues, tailors] = await Promise.all([
       getCataloguesWithBrands(),
       getTailorsWithBrands(),
     ]);
+
+    console.log("Catalogues found:", catalogues.length);
+    console.log("Tailors found:", tailors.length);
 
     let catalogueImage =
       "/lovable-uploads/827fb8c0-e5da-4520-a979-6fc054eefc6e.png"; // fallback
@@ -171,15 +175,19 @@ const generateDynamicCategoryImages = async (): Promise<{
       const randomCatalogue =
         catalogues[Math.floor(Math.random() * catalogues.length)];
       catalogueImage = randomCatalogue.image;
+      console.log("Selected catalogue image:", catalogueImage);
     }
 
     // Get a random tailor image
     if (tailors.length > 0) {
       const randomTailor = tailors[Math.floor(Math.random() * tailors.length)];
       tailoredImage = randomTailor.image;
+      console.log("Selected tailor image:", tailoredImage);
     }
 
-    return { catalogueImage, tailoredImage };
+    const result = { catalogueImage, tailoredImage };
+    console.log("Final category images:", result);
+    return result;
   } catch (error) {
     console.error("Error generating dynamic category images:", error);
     return {
@@ -387,9 +395,16 @@ export default function HomeContent() {
           <h2 className="text-3xl font-canela text-center mb-12">
             Browse by Category
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          {/* Debug info */}
+          {process.env.NODE_ENV === "development" && (
+            <div className="text-xs text-gray-500 text-center mb-4">
+              Debug: Catalogue Image: {categoryImages.catalogueImage} | Tailored
+              Image: {categoryImages.tailoredImage}
+            </div>
+          )}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Catalogues Card */}
-            <div className="relative group overflow-hidden rounded-lg max-w-md mx-auto">
+            <div className="relative group overflow-hidden rounded-lg bg-gray-100 min-h-[400px]">
               <Link href="/catalogues">
                 <div className="relative aspect-[3/4]">
                   <Image
@@ -397,8 +412,14 @@ export default function HomeContent() {
                     alt="Catalogues"
                     fill
                     priority
-                    sizes="(max-width: 768px) 90vw, 400px"
+                    sizes="(max-width: 768px) 100vw, 50vw"
                     className={`${getCategoryImageFocalPoint("catalogues")} transition-transform duration-300 group-hover:scale-105`}
+                    onError={(e) => {
+                      console.error(
+                        "Failed to load catalogue image:",
+                        categoryImages.catalogueImage
+                      );
+                    }}
                   />
                   <div className="absolute inset-0 bg-black/30 transition-opacity group-hover:bg-black/40" />
                   <div className="absolute bottom-6 left-6 text-white">
@@ -412,7 +433,7 @@ export default function HomeContent() {
             </div>
 
             {/* Tailored Card */}
-            <div className="relative group overflow-hidden rounded-lg max-w-md mx-auto">
+            <div className="relative group overflow-hidden rounded-lg bg-gray-100 min-h-[400px]">
               <Link href="/tailors">
                 <div className="relative aspect-[3/4]">
                   <Image
@@ -420,8 +441,14 @@ export default function HomeContent() {
                     alt="Tailored"
                     fill
                     priority
-                    sizes="(max-width: 768px) 90vw, 400px"
+                    sizes="(max-width: 768px) 100vw, 50vw"
                     className={`${getCategoryImageFocalPoint("tailored")} transition-transform duration-300 group-hover:scale-105`}
+                    onError={(e) => {
+                      console.error(
+                        "Failed to load tailored image:",
+                        categoryImages.tailoredImage
+                      );
+                    }}
                   />
                   <div className="absolute inset-0 bg-black/30 transition-opacity group-hover:bg-black/40" />
                   <div className="absolute bottom-6 left-6 text-white">
