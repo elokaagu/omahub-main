@@ -195,8 +195,9 @@ const generateDynamicCategoryImages = async (): Promise<{
 const getCategoryImageFocalPoint = (category: string): string => {
   switch (category.toLowerCase()) {
     case "catalogues":
-      // Fashion photography typically benefits from top positioning to show faces/styling
-      return "object-top";
+      // For catalogue images, use center positioning to show full garment details
+      // This works better for detailed pieces like sequined dresses, embellishments, etc.
+      return "object-center";
     case "tailored":
       // Tailoring images often show full garments, center positioning works well
       return "object-center";
@@ -396,6 +397,7 @@ export default function HomeContent() {
                     src={categoryImages.catalogueImage}
                     alt="Catalogues"
                     fill
+                    priority
                     sizes="(max-width: 768px) 100vw, 50vw"
                     className={`${getCategoryImageFocalPoint("catalogues")} transition-transform duration-300 group-hover:scale-105`}
                   />
@@ -418,6 +420,7 @@ export default function HomeContent() {
                     src={categoryImages.tailoredImage}
                     alt="Tailored"
                     fill
+                    priority
                     sizes="(max-width: 768px) 100vw, 50vw"
                     className={`${getCategoryImageFocalPoint("tailored")} transition-transform duration-300 group-hover:scale-105`}
                   />
