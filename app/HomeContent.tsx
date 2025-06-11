@@ -392,7 +392,7 @@ export default function HomeContent() {
             {/* Catalogues Card */}
             <div className="relative group overflow-hidden rounded-lg">
               <Link href="/catalogues">
-                <div className="relative aspect-[3/2]">
+                <div className="relative aspect-[5/4]">
                   <Image
                     src={categoryImages.catalogueImage}
                     alt="Catalogues"
@@ -415,7 +415,7 @@ export default function HomeContent() {
             {/* Tailored Card */}
             <div className="relative group overflow-hidden rounded-lg">
               <Link href="/tailors">
-                <div className="relative aspect-[3/2]">
+                <div className="relative aspect-[5/4]">
                   <Image
                     src={categoryImages.tailoredImage}
                     alt="Tailored"
