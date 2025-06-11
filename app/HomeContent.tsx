@@ -530,7 +530,14 @@ export default function HomeContent() {
       {/* Brand Categories */}
       {categories.length > 0 ? (
         categories
-          .filter((category) => category.brands.length >= 4) // Only show categories with 4 or more brands
+          .filter((category) => {
+            // Special handling for Accessories - show if there are any brands
+            if (category.title === "Accessories") {
+              return category.brands.length > 0;
+            }
+            // For other categories, require at least 2 brands (reduced from 4)
+            return category.brands.length >= 2;
+          })
           .map((category, index) => (
             <section
               key={category.title}
