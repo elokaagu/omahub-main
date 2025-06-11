@@ -10,6 +10,8 @@ import {
   StaggerItem,
 } from "@/app/components/ui/animations";
 import { getAllBrands } from "@/lib/services/brandService";
+import { getCataloguesWithBrands } from "@/lib/services/catalogueService";
+import { getTailorsWithBrands } from "@/lib/services/tailorService";
 import { SectionHeader } from "@/components/ui/section-header";
 import { CategoryCard } from "@/components/ui/category-card";
 import { Button } from "@/components/ui/button";
@@ -66,8 +68,8 @@ interface CarouselItem {
   height: number;
 }
 
-// Fallback carousel items (used if no hero slides are available)
-const fallbackCarouselItems: CarouselItem[] = [
+// Dynamic fallback carousel items (will be populated with real data)
+let fallbackCarouselItems: CarouselItem[] = [
   {
     id: 1,
     image: "/lovable-uploads/827fb8c0-e5da-4520-a979-6fc054eefc6e.png",
@@ -91,6 +93,62 @@ const fallbackCarouselItems: CarouselItem[] = [
     height: 1080,
   },
 ];
+
+// Function to generate dynamic fallback items
+const generateDynamicFallbackItems = async (): Promise<CarouselItem[]> => {
+  try {
+    const [catalogues, tailors] = await Promise.all([
+      getCataloguesWithBrands(),
+      getTailorsWithBrands(),
+    ]);
+
+    const items: CarouselItem[] = [];
+
+    // Get a random catalogue image
+    if (catalogues.length > 0) {
+      const randomCatalogue =
+        catalogues[Math.floor(Math.random() * catalogues.length)];
+      items.push({
+        id: 1,
+        image: randomCatalogue.image,
+        title: "Catalogues",
+        subtitle: "Shop for an occasion, holiday, or ready to wear piece",
+        link: "/catalogues",
+        heroTitle: "New Season",
+        isEditorial: true,
+        width: 1920,
+        height: 1080,
+      });
+    } else {
+      // Fallback to original image if no catalogues
+      items.push(fallbackCarouselItems[0]);
+    }
+
+    // Get a random tailor image
+    if (tailors.length > 0) {
+      const randomTailor = tailors[Math.floor(Math.random() * tailors.length)];
+      items.push({
+        id: 2,
+        image: randomTailor.image,
+        title: "Tailored",
+        subtitle: "Masters of craft creating perfectly fitted garments",
+        link: "/tailors",
+        heroTitle: "Bespoke Craft",
+        isEditorial: true,
+        width: 1920,
+        height: 1080,
+      });
+    } else {
+      // Fallback to original image if no tailors
+      items.push(fallbackCarouselItems[1]);
+    }
+
+    return items;
+  } catch (error) {
+    console.error("Error generating dynamic fallback items:", error);
+    return fallbackCarouselItems; // Return original fallback items on error
+  }
+};
 
 // Define the categories
 const categoryDefinitions = [
@@ -136,6 +194,9 @@ export default function HomeContent() {
   const [heroSlides, setHeroSlides] = useState<HeroSlide[]>([]);
   const [spotlightContent, setSpotlightContent] =
     useState<SpotlightContent | null>(null);
+  const [dynamicFallbackItems, setDynamicFallbackItems] = useState<
+    CarouselItem[]
+  >(fallbackCarouselItems);
 
   // Transform hero slides to carousel items
   const carouselItems: CarouselItem[] =
@@ -170,7 +231,7 @@ export default function HomeContent() {
             height: 1080,
           };
         })
-      : fallbackCarouselItems;
+      : dynamicFallbackItems;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -178,12 +239,17 @@ export default function HomeContent() {
         setIsLoading(true);
         setError(null);
 
-        // Fetch hero slides and spotlight content in parallel
-        const [brandsData, heroData, spotlightData] = await Promise.all([
-          getAllBrands(),
-          getActiveHeroSlides(),
-          getActiveSpotlightContent(),
-        ]);
+        // Fetch hero slides, spotlight content, and generate dynamic fallback items in parallel
+        const [brandsData, heroData, spotlightData, dynamicItems] =
+          await Promise.all([
+            getAllBrands(),
+            getActiveHeroSlides(),
+            getActiveSpotlightContent(),
+            generateDynamicFallbackItems(),
+          ]);
+
+        // Set dynamic fallback items
+        setDynamicFallbackItems(dynamicItems);
 
         // Process brands data
         const updatedCategories = initialCategories.map((category) => ({
