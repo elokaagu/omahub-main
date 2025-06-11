@@ -150,6 +150,61 @@ const generateDynamicFallbackItems = async (): Promise<CarouselItem[]> => {
   }
 };
 
+// Generate dynamic category images for Browse by Category section
+const generateDynamicCategoryImages = async (): Promise<{
+  catalogueImage: string;
+  tailoredImage: string;
+}> => {
+  try {
+    const [catalogues, tailors] = await Promise.all([
+      getCataloguesWithBrands(),
+      getTailorsWithBrands(),
+    ]);
+
+    let catalogueImage =
+      "/lovable-uploads/827fb8c0-e5da-4520-a979-6fc054eefc6e.png"; // fallback
+    let tailoredImage =
+      "/lovable-uploads/bb152c0b-6378-419b-a0e6-eafce44631b2.png"; // fallback
+
+    // Get a random catalogue image
+    if (catalogues.length > 0) {
+      const randomCatalogue =
+        catalogues[Math.floor(Math.random() * catalogues.length)];
+      catalogueImage = randomCatalogue.image;
+    }
+
+    // Get a random tailor image
+    if (tailors.length > 0) {
+      const randomTailor = tailors[Math.floor(Math.random() * tailors.length)];
+      tailoredImage = randomTailor.image;
+    }
+
+    return { catalogueImage, tailoredImage };
+  } catch (error) {
+    console.error("Error generating dynamic category images:", error);
+    return {
+      catalogueImage:
+        "/lovable-uploads/827fb8c0-e5da-4520-a979-6fc054eefc6e.png",
+      tailoredImage:
+        "/lovable-uploads/bb152c0b-6378-419b-a0e6-eafce44631b2.png",
+    };
+  }
+};
+
+// Smart focal point detection for category images
+const getCategoryImageFocalPoint = (category: string): string => {
+  switch (category.toLowerCase()) {
+    case "catalogues":
+      // Fashion photography typically benefits from top positioning to show faces/styling
+      return "object-top";
+    case "tailored":
+      // Tailoring images often show full garments, center positioning works well
+      return "object-center";
+    default:
+      return "object-center";
+  }
+};
+
 // Define the categories
 const categoryDefinitions = [
   {
@@ -197,6 +252,10 @@ export default function HomeContent() {
   const [dynamicFallbackItems, setDynamicFallbackItems] = useState<
     CarouselItem[]
   >(fallbackCarouselItems);
+  const [categoryImages, setCategoryImages] = useState({
+    catalogueImage: "/lovable-uploads/827fb8c0-e5da-4520-a979-6fc054eefc6e.png",
+    tailoredImage: "/lovable-uploads/bb152c0b-6378-419b-a0e6-eafce44631b2.png",
+  });
 
   // Transform hero slides to carousel items
   const carouselItems: CarouselItem[] =
@@ -239,17 +298,24 @@ export default function HomeContent() {
         setIsLoading(true);
         setError(null);
 
-        // Fetch hero slides, spotlight content, and generate dynamic fallback items in parallel
-        const [brandsData, heroData, spotlightData, dynamicItems] =
-          await Promise.all([
-            getAllBrands(),
-            getActiveHeroSlides(),
-            getActiveSpotlightContent(),
-            generateDynamicFallbackItems(),
-          ]);
+        // Fetch hero slides, spotlight content, dynamic fallback items, and category images in parallel
+        const [
+          brandsData,
+          heroData,
+          spotlightData,
+          dynamicItems,
+          categoryImgs,
+        ] = await Promise.all([
+          getAllBrands(),
+          getActiveHeroSlides(),
+          getActiveSpotlightContent(),
+          generateDynamicFallbackItems(),
+          generateDynamicCategoryImages(),
+        ]);
 
-        // Set dynamic fallback items
+        // Set dynamic fallback items and category images
         setDynamicFallbackItems(dynamicItems);
+        setCategoryImages(categoryImgs);
 
         // Process brands data
         const updatedCategories = initialCategories.map((category) => ({
@@ -327,10 +393,10 @@ export default function HomeContent() {
               <Link href="/catalogues">
                 <div className="relative h-[400px]">
                   <Image
-                    src="/lovable-uploads/827fb8c0-e5da-4520-a979-6fc054eefc6e.png"
+                    src={categoryImages.catalogueImage}
                     alt="Catalogues"
                     fill
-                    className="object-cover transition-transform duration-300 group-hover:scale-105"
+                    className={`${getCategoryImageFocalPoint("catalogues")} transition-transform duration-300 group-hover:scale-105`}
                   />
                   <div className="absolute inset-0 bg-black/30 transition-opacity group-hover:bg-black/40" />
                   <div className="absolute bottom-6 left-6 text-white">
@@ -348,10 +414,10 @@ export default function HomeContent() {
               <Link href="/tailors">
                 <div className="relative h-[400px]">
                   <Image
-                    src="/lovable-uploads/bb152c0b-6378-419b-a0e6-eafce44631b2.png"
+                    src={categoryImages.tailoredImage}
                     alt="Tailored"
                     fill
-                    className="object-cover transition-transform duration-300 group-hover:scale-105"
+                    className={`${getCategoryImageFocalPoint("tailored")} transition-transform duration-300 group-hover:scale-105`}
                   />
                   <div className="absolute inset-0 bg-black/30 transition-opacity group-hover:bg-black/40" />
                   <div className="absolute bottom-6 left-6 text-white">
