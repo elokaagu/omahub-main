@@ -195,9 +195,8 @@ const generateDynamicCategoryImages = async (): Promise<{
 const getCategoryImageFocalPoint = (category: string): string => {
   switch (category.toLowerCase()) {
     case "catalogues":
-      // For catalogue images, use center positioning to show full garment details
-      // This works better for detailed pieces like sequined dresses, embellishments, etc.
-      return "object-center";
+      // For catalogue images with people, use top positioning to show faces/upper body
+      return "object-top";
     case "tailored":
       // Tailoring images often show full garments, center positioning works well
       return "object-center";
@@ -392,7 +391,7 @@ export default function HomeContent() {
             {/* Catalogues Card */}
             <div className="relative group overflow-hidden rounded-lg">
               <Link href="/catalogues">
-                <div className="relative aspect-[5/4]">
+                <div className="relative aspect-[4/5]">
                   <Image
                     src={categoryImages.catalogueImage}
                     alt="Catalogues"
@@ -415,7 +414,7 @@ export default function HomeContent() {
             {/* Tailored Card */}
             <div className="relative group overflow-hidden rounded-lg">
               <Link href="/tailors">
-                <div className="relative aspect-[5/4]">
+                <div className="relative aspect-[4/5]">
                   <Image
                     src={categoryImages.tailoredImage}
                     alt="Tailored"
