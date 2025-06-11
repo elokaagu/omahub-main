@@ -30,7 +30,8 @@
     "migrate:real-tailored": "node scripts/migrate-real-tailored-brands.js",
     "insert:accessories": "node scripts/insert-accessories-brands.js",
     "test:accessories-links": "node scripts/test-accessories-links.js",
-    "fix:swimwear-brand": "node scripts/fix-swimwear-brand-name.js"
+    "fix:swimwear-brand": "node scripts/fix-swimwear-brand-name.js",
+    "check:category-counts": "node scripts/check-category-counts.js"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",

@@ -324,7 +324,7 @@ export default function HomeContent() {
           ...category,
           brands: brandsData
             .filter((brand) => brand.category === category.title)
-            .slice(0, category.title === "Accessories" ? undefined : 8) // Show all accessories, limit others to 8
+            .slice(0, 8) // Limit all categories to 8 brands for consistent display
             .map((brand) => ({
               id: brand.id,
               name: brand.name,
@@ -623,12 +623,9 @@ export default function HomeContent() {
       {categories.length > 0 ? (
         categories
           .filter((category) => {
-            // Special handling for Accessories - show if there are any brands
-            if (category.title === "Accessories") {
-              return category.brands.length > 0;
-            }
-            // For other categories, require at least 2 brands (reduced from 4)
-            return category.brands.length >= 2;
+            // Show all categories with 4+ brands as distinct rows
+            // This ensures we display all major categories
+            return category.brands.length >= 4;
           })
           .map((category, index) => (
             <section
