@@ -71,24 +71,7 @@ export async function POST(request: NextRequest) {
     console.log("✅ Signup successful for:", data.user.email);
 
     // Create user profile
-    if (data.user.id) {
-      console.log("🔄 Creating user profile");
-      const { error: createError } = await supabase.from("profiles").insert({
-        id: data.user.id,
-        email: data.user.email,
-        role: "user",
-        owned_brands: [],
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      });
-
-      if (createError) {
-        console.error("❌ Profile creation failed:", createError);
-        // Don't fail the signup if profile creation fails
-      } else {
-        console.log("✅ Profile created successfully");
-      }
-    }
+    // (No manual insert needed; Supabase trigger creates profile with default 'user' role)
 
     // Return success response
     return NextResponse.json(
