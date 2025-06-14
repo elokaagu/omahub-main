@@ -164,7 +164,7 @@ export default function CataloguesPage() {
         {/* Header */}
         <div className="text-center mb-16">
           <h1 className="text-5xl font-canela text-black mb-6">
-            Designer Catalogues
+            Our Catalogues
           </h1>
           <p className="text-xl text-oma-cocoa/80 max-w-3xl mx-auto">
             Explore curated catalogues from Africa's most talented designers
