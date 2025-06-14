@@ -1,11 +1,21 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, Grid, List, Filter } from "lucide-react";
+import { Search, Grid, List, Filter, X } from "lucide-react";
 import { getCataloguesWithBrands } from "@/lib/services/catalogueService";
-import { Catalogue, Brand } from "@/lib/supabase";
+import { getAllProducts } from "@/lib/services/productService";
+import { Catalogue, Brand, Product } from "@/lib/supabase";
 import Link from "next/link";
 import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type CatalogueWithBrand = Catalogue & {
   brand: {
@@ -65,29 +75,43 @@ export default function CataloguesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [showAllProducts, setShowAllProducts] = useState(false);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [productSearch, setProductSearch] = useState("");
+  const [selectedBrand, setSelectedBrand] = useState("all");
+  const [selectedProductCategory, setSelectedProductCategory] = useState("all");
+  const [productsLoading, setProductsLoading] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
 
+  // Fetch catalogues and products
   useEffect(() => {
-    async function fetchCatalogues() {
+    async function fetchData() {
       try {
         setLoading(true);
-        const data = await getCataloguesWithBrands();
-        setCatalogues(data);
-        setFilteredCatalogues(data);
+        const [catalogueData, productData] = await Promise.all([
+          getCataloguesWithBrands(),
+          getAllProducts(),
+        ]);
+        setCatalogues(catalogueData);
+        setFilteredCatalogues(catalogueData);
+        setProducts(productData);
+        setFilteredProducts(productData);
       } catch (err) {
-        console.error("Error fetching catalogues:", err);
-        setError("Failed to load catalogue information");
+        console.error("Error fetching data:", err);
+        setError("Failed to load information");
       } finally {
         setLoading(false);
       }
     }
 
-    fetchCatalogues();
+    fetchData();
   }, []);
 
+  // Filter catalogues
   useEffect(() => {
     let filtered = catalogues;
 
-    // Filter by search term
     if (searchTerm) {
       filtered = filtered.filter(
         (catalogue) =>
@@ -101,7 +125,6 @@ export default function CataloguesPage() {
       );
     }
 
-    // Filter by category
     if (selectedCategory !== "all") {
       filtered = filtered.filter(
         (catalogue) => catalogue.brand.category === selectedCategory
@@ -111,9 +134,46 @@ export default function CataloguesPage() {
     setFilteredCatalogues(filtered);
   }, [catalogues, searchTerm, selectedCategory]);
 
+  // Filter products
+  useEffect(() => {
+    let filtered = products;
+
+    if (productSearch) {
+      filtered = filtered.filter(
+        (product) =>
+          product.name.toLowerCase().includes(productSearch.toLowerCase()) ||
+          product.description
+            ?.toLowerCase()
+            .includes(productSearch.toLowerCase())
+      );
+    }
+
+    if (selectedBrand !== "all") {
+      filtered = filtered.filter(
+        (product) => product.brand_id === selectedBrand
+      );
+    }
+
+    if (selectedProductCategory !== "all") {
+      filtered = filtered.filter(
+        (product) => product.category === selectedProductCategory
+      );
+    }
+
+    setFilteredProducts(filtered);
+  }, [products, productSearch, selectedBrand, selectedProductCategory]);
+
   const categories = [
     "all",
     ...Array.from(new Set(catalogues.map((c) => c.brand.category))),
+  ];
+  const brands = [
+    "all",
+    ...Array.from(new Set(catalogues.map((c) => c.brand.name))),
+  ];
+  const productCategories = [
+    "all",
+    ...Array.from(new Set(products.map((p) => p.category))),
   ];
 
   if (loading) {
@@ -162,186 +222,227 @@ export default function CataloguesPage() {
     <div className="min-h-screen bg-gradient-to-b from-oma-beige/30 to-white">
       <div className="max-w-7xl mx-auto px-6 py-24">
         {/* Header */}
-        <div className="text-center mb-16">
+        <div className="text-center mb-8">
           <h1 className="text-5xl font-canela text-black mb-6">
-            Our Catalogues
+            {showAllProducts ? "All Products" : "Our Catalogues"}
           </h1>
           <p className="text-xl text-oma-cocoa/80 max-w-3xl mx-auto">
-            Explore curated catalogues from Africa's most talented designers
+            {showAllProducts
+              ? "Browse our complete collection of products"
+              : "Explore curated catalogues from Africa's most talented designers"}
           </p>
         </div>
 
         {/* Search and Filters */}
-        <div className="mb-12">
-          <div className="flex flex-col lg:flex-row gap-6 items-center justify-between">
-            {/* Search */}
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-black/40 w-5 h-5" />
-              <input
+        <div className="mb-8 space-y-4">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1">
+              <Input
                 type="text"
-                placeholder="Search catalogues..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 border border-oma-cocoa/20 rounded-lg focus:outline-none focus:border-oma-plum/50 bg-white/80 text-black placeholder-black/50"
+                placeholder={
+                  showAllProducts ? "Search products..." : "Search brands..."
+                }
+                value={showAllProducts ? productSearch : searchTerm}
+                onChange={(e) =>
+                  showAllProducts
+                    ? setProductSearch(e.target.value)
+                    : setSearchTerm(e.target.value)
+                }
+                className="w-full"
               />
             </div>
-
-            {/* View Toggle */}
-            <div className="flex items-center gap-4">
-              <div className="flex bg-white/80 rounded-lg p-1 border border-oma-cocoa/20">
-                <button
-                  onClick={() => setViewMode("grid")}
-                  className={`p-2 rounded-md transition-colors ${
-                    viewMode === "grid"
-                      ? "bg-oma-plum text-white"
-                      : "text-black/60 hover:text-black"
-                  }`}
-                >
-                  <Grid className="w-5 h-5" />
-                </button>
-                <button
-                  onClick={() => setViewMode("list")}
-                  className={`p-2 rounded-md transition-colors ${
-                    viewMode === "list"
-                      ? "bg-oma-plum text-white"
-                      : "text-black/60 hover:text-black"
-                  }`}
-                >
-                  <List className="w-5 h-5" />
-                </button>
-              </div>
+            <div className="flex gap-4">
+              <Button
+                variant="outline"
+                onClick={() => setShowFilters(!showFilters)}
+                className="flex items-center gap-2"
+              >
+                <Filter className="h-4 w-4" />
+                Filters
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() =>
+                  setViewMode(viewMode === "grid" ? "list" : "grid")
+                }
+                className="flex items-center gap-2"
+              >
+                {viewMode === "grid" ? (
+                  <List className="h-4 w-4" />
+                ) : (
+                  <Grid className="h-4 w-4" />
+                )}
+                {viewMode === "grid" ? "List View" : "Grid View"}
+              </Button>
+              <Button
+                onClick={() => setShowAllProducts(!showAllProducts)}
+                className="bg-oma-plum text-white hover:bg-oma-plum/90"
+              >
+                {showAllProducts ? "View Brands" : "View All Products"}
+              </Button>
             </div>
           </div>
 
-          {/* Category Filter */}
-          <div className="mt-6 flex flex-wrap gap-3">
-            {categories.map((category) => (
-              <button
-                key={category}
-                onClick={() => setSelectedCategory(category)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                  selectedCategory === category
-                    ? "bg-oma-plum text-white"
-                    : "bg-white/80 text-black/70 hover:bg-oma-cocoa/10 border border-oma-cocoa/20"
-                }`}
+          {/* Filter Panel */}
+          {showFilters && (
+            <div className="bg-white p-4 rounded-lg shadow-sm space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="font-medium">Filters</h3>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowFilters(false)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {showAllProducts ? (
+                  <>
+                    <Select
+                      value={selectedBrand}
+                      onValueChange={setSelectedBrand}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select Brand" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {brands.map((brand) => (
+                          <SelectItem key={brand} value={brand}>
+                            {brand === "all" ? "All Brands" : brand}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Select
+                      value={selectedProductCategory}
+                      onValueChange={setSelectedProductCategory}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select Category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {productCategories.map((category) => (
+                          <SelectItem key={category} value={category}>
+                            {category === "all" ? "All Categories" : category}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </>
+                ) : (
+                  <Select
+                    value={selectedCategory}
+                    onValueChange={setSelectedCategory}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((category) => (
+                        <SelectItem key={category} value={category}>
+                          {category === "all" ? "All Categories" : category}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Content */}
+        {showAllProducts ? (
+          // Products Grid/List
+          <div
+            className={`grid gap-6 ${
+              viewMode === "grid"
+                ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+                : "grid-cols-1"
+            }`}
+          >
+            {filteredProducts.map((product) => (
+              <div
+                key={product.id}
+                className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow"
               >
-                {category === "all" ? "All Categories" : category}
-              </button>
+                <Link href={`/product/${product.id}`}>
+                  <div className="relative aspect-square">
+                    <Image
+                      src={product.image || "/placeholder.png"}
+                      alt={product.title}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                  <div className="p-4">
+                    <h3 className="font-medium text-lg mb-1">
+                      {product.title}
+                    </h3>
+                    <p className="text-oma-cocoa/70 text-sm mb-2">
+                      {
+                        catalogues.find((c) => c.brand_id === product.brand_id)
+                          ?.brand.name
+                      }
+                    </p>
+                    <p className="text-oma-plum font-medium">
+                      ${product.price.toFixed(2)}
+                    </p>
+                  </div>
+                </Link>
+              </div>
             ))}
           </div>
-        </div>
-
-        {/* Results Count */}
-        <div className="mb-8">
-          <p className="text-black/60">
-            {filteredCatalogues.length} catalogue
-            {filteredCatalogues.length !== 1 ? "s" : ""} found
-          </p>
-        </div>
-
-        {/* Catalogues Grid/List */}
-        {filteredCatalogues.length === 0 ? (
-          <div className="text-center py-16">
-            <Filter className="w-16 h-16 text-black/30 mx-auto mb-4" />
-            <h3 className="text-xl font-canela text-black mb-2">
-              No catalogues found
-            </h3>
-            <p className="text-black/60">
-              Try adjusting your search or filter criteria
-            </p>
-          </div>
         ) : (
+          // Brands Grid/List
           <div
-            className={
+            className={`grid gap-6 ${
               viewMode === "grid"
-                ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-                : "space-y-6"
-            }
+                ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+                : "grid-cols-1"
+            }`}
           >
             {filteredCatalogues.map((catalogue) => (
-              <Link
+              <div
                 key={catalogue.id}
-                href={`/catalogue/${catalogue.id}`}
-                className={`group block ${
-                  viewMode === "list"
-                    ? "bg-white/80 rounded-xl p-6 border border-oma-gold/10 hover:border-oma-gold/30 transition-all duration-300 hover:shadow-lg"
-                    : ""
-                }`}
+                className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow"
               >
-                {viewMode === "grid" ? (
-                  <div className="bg-white/80 rounded-xl overflow-hidden border border-oma-gold/10 hover:border-oma-gold/30 transition-all duration-300 hover:shadow-lg group-hover:-translate-y-1">
-                    <div className="aspect-[4/3] relative overflow-hidden">
-                      <Image
-                        src={catalogue.image}
-                        alt={catalogue.title}
-                        fill
-                        className={`object-cover ${getImageFocalPoint(catalogue.image, catalogue.title, catalogue.brand.category)} group-hover:scale-105 transition-transform duration-300`}
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                        priority={false}
-                      />
-                    </div>
-                    <div className="p-6">
-                      <h3 className="text-xl font-canela text-black mb-2 group-hover:text-oma-plum transition-colors">
-                        {catalogue.title}
-                      </h3>
-                      <p className="text-black/70 mb-3 line-clamp-2">
-                        {catalogue.description}
-                      </p>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-medium text-black">
-                            {catalogue.brand.name}
-                          </p>
-                          <p className="text-xs text-black/60">
-                            {catalogue.brand.location}
-                          </p>
-                        </div>
-                        {catalogue.brand.is_verified && (
-                          <div className="bg-oma-gold/20 text-black text-xs px-2 py-1 rounded-full">
-                            Verified
-                          </div>
-                        )}
-                      </div>
+                <Link href={`/catalogue/${catalogue.id}`}>
+                  <div className="relative aspect-[4/3]">
+                    <Image
+                      src={catalogue.image || "/placeholder.png"}
+                      alt={catalogue.title}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                  <div className="p-4">
+                    <h3 className="font-medium text-lg mb-1">
+                      {catalogue.brand.name}
+                    </h3>
+                    <p className="text-oma-cocoa/70 text-sm mb-2">
+                      {catalogue.title}
+                    </p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-oma-cocoa/70">
+                        {catalogue.brand.location}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setShowAllProducts(true);
+                          setSelectedBrand(catalogue.brand.name);
+                        }}
+                      >
+                        View Products
+                      </Button>
                     </div>
                   </div>
-                ) : (
-                  <div className="flex gap-6">
-                    <div className="w-48 h-36 relative overflow-hidden rounded-lg flex-shrink-0">
-                      <Image
-                        src={catalogue.image}
-                        alt={catalogue.title}
-                        fill
-                        className={`object-cover ${getImageFocalPoint(catalogue.image, catalogue.title, catalogue.brand.category)} group-hover:scale-105 transition-transform duration-300`}
-                        sizes="192px"
-                        priority={false}
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-xl font-canela text-black mb-2 group-hover:text-oma-plum transition-colors">
-                        {catalogue.title}
-                      </h3>
-                      <p className="text-black/70 mb-3 line-clamp-2">
-                        {catalogue.description}
-                      </p>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-medium text-black">
-                            {catalogue.brand.name}
-                          </p>
-                          <p className="text-xs text-black/60">
-                            {catalogue.brand.location}
-                          </p>
-                        </div>
-                        {catalogue.brand.is_verified && (
-                          <div className="bg-oma-gold/20 text-black text-xs px-2 py-1 rounded-full">
-                            Verified
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </Link>
+                </Link>
+              </div>
             ))}
           </div>
         )}
