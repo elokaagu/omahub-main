@@ -5,7 +5,6 @@ export default function PrivacyPolicy() {
     <div className="max-w-4xl mx-auto px-6 py-16">
       <SectionHeader
         title="Privacy Policy"
-        subtitle="Last updated: April 25, 2025"
         titleClassName="font-canela text-3xl md:text-4xl"
       />
 

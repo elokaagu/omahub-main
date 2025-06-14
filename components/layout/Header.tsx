@@ -89,7 +89,7 @@ export default function Header() {
     async function checkCategoryBrands() {
       const collectionsBrands = await getBrandsByCategory("Ready to Wear");
       setCollectionsHasBrands(collectionsBrands.length > 0);
-      const tailoredBrands = await getBrandsByCategory("Tailoring");
+      const tailoredBrands = await getBrandsByCategory("Tailored");
       setTailoredHasBrands(tailoredBrands.length > 0);
     }
     checkCategoryBrands();

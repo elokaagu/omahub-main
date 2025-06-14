@@ -5,7 +5,6 @@ export default function TermsOfService() {
     <div className="max-w-4xl mx-auto px-6 py-16">
       <SectionHeader
         title="Terms of Service"
-        subtitle="Last updated: April 25, 2025"
         titleClassName="font-canela text-3xl md:text-4xl"
       />
 
