@@ -54,110 +54,49 @@ const useFavourites = () => {
 
   // Add to favourites
   const addFavourite = useCallback(
-    async (brandId: string): Promise<FavouriteResult> => {
-      if (!user) {
-        return {
-          id: "",
-          user_id: "",
-          item_id: "",
-          item_type: "brand",
-        };
-      }
-
+    async (userId: string, brandId: string) => {
       try {
-        const response = await fetch("/api/favourites", {
+        const res = await fetch("/api/favourites", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            userId: user.id,
-            brandId,
-          }),
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId, brandId }),
         });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || "Failed to add favourite");
-        }
-
-        // Refresh favourites list
-        fetchFavourites();
+        if (!res.ok) throw new Error("Failed to add favourite");
         toast({ title: "Favourite added successfully" });
-        return {
-          id: "",
-          user_id: "",
-          item_id: "",
-          item_type: "brand",
-        };
-      } catch (err) {
-        console.error("Error adding favourite:", err);
+        fetchFavourites();
+      } catch (err: any) {
         toast({
           title: "Error",
-          description: err instanceof Error ? err.message : "Unknown error",
+          description: err.message || "Failed to add favourite",
           variant: "destructive",
         });
-        return {
-          id: "",
-          user_id: "",
-          item_id: "",
-          item_type: "brand",
-        };
       }
     },
-    [user, fetchFavourites]
+    [fetchFavourites]
   );
 
   // Remove from favourites
   const removeFavourite = useCallback(
-    async (brandId: string): Promise<FavouriteResult> => {
-      if (!user) {
-        return {
-          id: "",
-          user_id: "",
-          item_id: "",
-          item_type: "brand",
-        };
-      }
-
+    async (userId: string, brandId: string) => {
       try {
-        const response = await fetch(
-          `/api/favourites?userId=${user.id}&brandId=${brandId}`,
+        const res = await fetch(
+          `/api/favourites?userId=${userId}&brandId=${brandId}`,
           {
             method: "DELETE",
           }
         );
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || "Failed to remove favourite");
-        }
-
-        // Refresh favourites list
-        fetchFavourites();
+        if (!res.ok) throw new Error("Failed to remove favourite");
         toast({ title: "Favourite removed successfully" });
-        return {
-          id: "",
-          user_id: "",
-          item_id: "",
-          item_type: "brand",
-        };
-      } catch (err) {
-        console.error("Error removing favourite:", err);
+        fetchFavourites();
+      } catch (err: any) {
         toast({
           title: "Error",
-          description: err instanceof Error ? err.message : "Unknown error",
+          description: err.message || "Failed to remove favourite",
           variant: "destructive",
         });
-        return {
-          id: "",
-          user_id: "",
-          item_id: "",
-          item_type: "brand",
-        };
       }
     },
-    [user, fetchFavourites]
+    [fetchFavourites]
   );
 
   // Check if a brand is favourited
@@ -170,14 +109,14 @@ const useFavourites = () => {
 
   // Toggle favourite
   const toggleFavourite = useCallback(
-    async (brandId: string): Promise<FavouriteResult> => {
+    async (brandId: string): Promise<void> => {
       if (isFavourite(brandId)) {
-        return removeFavourite(brandId);
+        await removeFavourite(user?.id || "", brandId);
       } else {
-        return addFavourite(brandId);
+        await addFavourite(user?.id || "", brandId);
       }
     },
-    [isFavourite, removeFavourite, addFavourite]
+    [isFavourite, removeFavourite, addFavourite, user]
   );
 
   // Fetch favourites on component mount or user change

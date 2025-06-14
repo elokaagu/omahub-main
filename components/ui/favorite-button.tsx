@@ -5,6 +5,7 @@ import { Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import useFavourites from "@/lib/hooks/useFavourites";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface FavouriteButtonProps {
   itemId: string;
@@ -23,19 +24,29 @@ export function FavouriteButton({
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { addFavourite, removeFavourite } = useFavourites();
+  const { user } = useAuth();
 
   const handleToggleFavourite = async () => {
     try {
       setIsLoading(true);
+      if (!user) {
+        toast({
+          title: "Authentication required",
+          description: "Please log in to save favourites",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
       if (isFavourited) {
-        await removeFavourite(itemId, itemType);
+        await removeFavourite(user.id, itemId);
         setIsFavourited(false);
         toast({
           title: "Removed from favourites",
           description: "Item has been removed from your favourites.",
         });
       } else {
-        await addFavourite(itemId, itemType);
+        await addFavourite(user.id, itemId);
         setIsFavourited(true);
         toast({
           title: "Added to favourites",
