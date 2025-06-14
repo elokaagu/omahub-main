@@ -19,7 +19,7 @@ const getSupabaseClient = () => {
   return createClient(supabaseUrl, supabaseServiceKey);
 };
 
-// GET endpoint to retrieve user favorites
+// GET endpoint to retrieve user favourites
 export async function GET(request) {
   try {
     const supabase = getSupabaseClient();
@@ -33,43 +33,43 @@ export async function GET(request) {
       );
     }
 
-    // Get user favorites
+    // Get user favourites
     const { data, error } = await supabase
-      .from("favorites")
+      .from("favourites")
       .select("brand_id")
       .eq("user_id", userId);
 
     if (error) {
-      console.error("Error fetching favorites:", error);
+      console.error("Error fetching favourites:", error);
       return NextResponse.json(
-        { error: "Failed to fetch favorites" },
+        { error: "Failed to fetch favourites" },
         { status: 500 }
       );
     }
 
-    // If no favorites, return empty array
+    // If no favourites, return empty array
     if (!data || data.length === 0) {
-      return NextResponse.json({ favorites: [] });
+      return NextResponse.json({ favourites: [] });
     }
 
     // Extract brand IDs
-    const brandIds = data.map((favorite) => favorite.brand_id);
+    const brandIds = data.map((favourite) => favourite.brand_id);
 
-    // Get full brand details for each favorite
+    // Get full brand details for each favourite
     const { data: brandsData, error: brandsError } = await supabase
       .from("brands")
       .select("*")
       .in("id", brandIds);
 
     if (brandsError) {
-      console.error("Error fetching favorite brands:", brandsError);
+      console.error("Error fetching favourite brands:", brandsError);
       return NextResponse.json(
-        { error: "Failed to fetch favorite brands" },
+        { error: "Failed to fetch favourite brands" },
         { status: 500 }
       );
     }
 
-    return NextResponse.json({ favorites: brandsData || [] });
+    return NextResponse.json({ favourites: brandsData || [] });
   } catch (error) {
     console.error("Unexpected error:", error);
     return NextResponse.json(
@@ -79,7 +79,7 @@ export async function GET(request) {
   }
 }
 
-// POST endpoint to add a favorite
+// POST endpoint to add a favourite
 export async function POST(request) {
   try {
     const supabase = getSupabaseClient();
@@ -93,9 +93,9 @@ export async function POST(request) {
       );
     }
 
-    // Check if favorite already exists
-    const { data: existingFavorite, error: checkError } = await supabase
-      .from("favorites")
+    // Check if favourite already exists
+    const { data: existingFavourite, error: checkError } = await supabase
+      .from("favourites")
       .select("*")
       .eq("user_id", userId)
       .eq("brand_id", brandId)
@@ -103,35 +103,38 @@ export async function POST(request) {
 
     if (checkError && checkError.code !== "PGRST116") {
       // PGRST116 is "Results contain 0 rows" - that's expected
-      console.error("Error checking favorite:", checkError);
+      console.error("Error checking favourite:", checkError);
       return NextResponse.json(
-        { error: "Failed to check if favorite exists" },
+        { error: "Failed to check if favourite exists" },
         { status: 500 }
       );
     }
 
-    // If favorite already exists, return success
-    if (existingFavorite) {
-      return NextResponse.json({ success: true, message: "Already favorited" });
+    // If favourite already exists, return success
+    if (existingFavourite) {
+      return NextResponse.json({
+        success: true,
+        message: "Already favourited",
+      });
     }
 
-    // Add favorite
-    const { error } = await supabase.from("favorites").insert({
+    // Add favourite
+    const { error } = await supabase.from("favourites").insert({
       user_id: userId,
       brand_id: brandId,
     });
 
     if (error) {
-      console.error("Error adding favorite:", error);
+      console.error("Error adding favourite:", error);
       return NextResponse.json(
-        { error: "Failed to add favorite" },
+        { error: "Failed to add favourite" },
         { status: 500 }
       );
     }
 
     return NextResponse.json({
       success: true,
-      message: "Favorite added successfully",
+      message: "Favourite added successfully",
     });
   } catch (error) {
     console.error("Unexpected error:", error);
@@ -142,7 +145,7 @@ export async function POST(request) {
   }
 }
 
-// DELETE endpoint to remove a favorite
+// DELETE endpoint to remove a favourite
 export async function DELETE(request) {
   try {
     const supabase = getSupabaseClient();
@@ -157,24 +160,24 @@ export async function DELETE(request) {
       );
     }
 
-    // Remove favorite
+    // Remove favourite
     const { error } = await supabase
-      .from("favorites")
+      .from("favourites")
       .delete()
       .eq("user_id", userId)
       .eq("brand_id", brandId);
 
     if (error) {
-      console.error("Error removing favorite:", error);
+      console.error("Error removing favourite:", error);
       return NextResponse.json(
-        { error: "Failed to remove favorite" },
+        { error: "Failed to remove favourite" },
         { status: 500 }
       );
     }
 
     return NextResponse.json({
       success: true,
-      message: "Favorite removed successfully",
+      message: "Favourite removed successfully",
     });
   } catch (error) {
     console.error("Unexpected error:", error);
