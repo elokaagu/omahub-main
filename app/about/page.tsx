@@ -148,7 +148,7 @@ export default function About() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
             <motion.div variants={scaleIn}>
               <img
-                src="/lovable-uploads/ecd30635-4578-4835-8c10-63882603a3f1.png"
+                src="/community.jpg"
                 alt="OmaHub Community"
                 className="rounded-2xl shadow-lg w-full h-[400px] object-cover"
               />
