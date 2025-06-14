@@ -41,6 +41,10 @@ export default function TermsOfService() {
           We reserve the right to modify or discontinue our service at any time,
           with or without notice.
         </p>
+
+        <p className="text-sm text-oma-cocoa mb-8">
+          Effective Date: <strong>1st July 2025</strong>
+        </p>
       </div>
     </div>
   );

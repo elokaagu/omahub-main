@@ -9,6 +9,10 @@ export default function PrivacyPolicy() {
         titleClassName="font-canela text-3xl md:text-4xl"
       />
 
+      <p className="text-sm text-oma-cocoa mb-8">
+        Effective Date: <strong>1st July 2025</strong>
+      </p>
+
       <div className="prose prose-oma max-w-none">
         <h2 className="heading-sm mb-4">1. Information We Collect</h2>
         <p className="mb-6 text-oma-cocoa">
