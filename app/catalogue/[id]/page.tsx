@@ -20,6 +20,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
 import Image from "next/image";
 import { FavouriteButton } from "@/components/ui/favorite-button";
+import { Button } from "@/components/ui/button";
 
 type CatalogueWithBrand = Catalogue & {
   brand: Brand;
@@ -246,14 +247,16 @@ export default function CataloguePage() {
             <div className="flex gap-4">
               <Link
                 href={`/designer/${catalogue.brand.id}`}
-                className="bg-oma-plum text-white px-6 py-3 rounded-lg hover:bg-oma-plum/90 transition-colors"
+                className="min-w-[180px]"
               >
-                View Designer Profile
+                <Button className="w-full px-6 py-3 text-base">
+                  View Designer Profile
+                </Button>
               </Link>
               <FavouriteButton
                 itemId={catalogue.id}
                 itemType="catalogue"
-                className="px-6 py-3"
+                className="w-full px-6 py-3 min-w-[180px] text-base"
               />
             </div>
           </div>
