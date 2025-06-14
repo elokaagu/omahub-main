@@ -366,10 +366,19 @@ export default function HomeContent() {
         Work: "Ready to Wear",
         Vacation: "Accessories",
       };
+      const usedBrandIds = new Set();
       const newImages: any = {};
       for (const [occasion, category] of Object.entries(mapping)) {
         const brands = await getBrandsByCategory(category);
-        if (brands && brands.length > 0) {
+        // Filter out brands already used for other occasions
+        const availableBrands = brands.filter((b) => !usedBrandIds.has(b.id));
+        if (availableBrands.length > 0) {
+          const randomBrand =
+            availableBrands[Math.floor(Math.random() * availableBrands.length)];
+          newImages[occasion] = randomBrand.image;
+          usedBrandIds.add(randomBrand.id);
+        } else if (brands.length > 0) {
+          // Fallback: if all brands are used, allow reuse
           const randomBrand = brands[Math.floor(Math.random() * brands.length)];
           newImages[occasion] = randomBrand.image;
         } else {
@@ -636,7 +645,7 @@ export default function HomeContent() {
               },
             ].map((occasion, index) => (
               <Link key={index} href={occasion.href} className="group">
-                <div className="relative aspect-[4/5] rounded-lg overflow-hidden">
+                <div className="relative aspect-square rounded-lg overflow-hidden">
                   <Image
                     src={occasion.image}
                     alt={occasion.title}
