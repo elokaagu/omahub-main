@@ -152,7 +152,7 @@ export default function TailorsPage() {
         {/* Header */}
         <div className="text-center mb-16">
           <h1 className="text-5xl font-canela text-black mb-6">
-            0ur Designers
+            Our Designers
           </h1>
           <p className="text-xl text-oma-cocoa/80 max-w-3xl mx-auto">
             Discover skilled artisans creating bespoke garments with precision
