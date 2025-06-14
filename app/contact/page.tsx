@@ -180,40 +180,53 @@ export default function ContactPage() {
                 <div>
                   <p className="font-medium text-oma-black">Email</p>
                   <a
-                    href="mailto:eloka@satellitelabs.xyz"
+                    href="mailto:contact@omahub.com"
                     className="text-oma-cocoa hover:text-oma-plum expand-underline"
                   >
-                    eloka@satellitelabs.xyz
+                    contact@omahub.com
                   </a>
                 </div>
               </div>
 
               <div className="flex items-start gap-4">
                 <div className="bg-oma-beige p-3 rounded-full">
-                  <Phone className="h-5 w-5 text-oma-plum" />
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5 text-oma-plum"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <rect width="20" height="20" x="2" y="2" rx="5" />
+                    <circle cx="12" cy="12" r="5" />
+                    <circle cx="17.5" cy="6.5" r="1.5" />
+                  </svg>
                 </div>
                 <div>
-                  <p className="font-medium text-oma-black">Phone</p>
+                  <p className="font-medium text-oma-black">Instagram</p>
                   <a
-                    href="tel:+1234567890"
+                    href="https://instagram.com/omahub.official"
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="text-oma-cocoa hover:text-oma-plum expand-underline"
                   >
-                    +123 456 7890
+                    @omahub.official
                   </a>
                 </div>
               </div>
 
               <div className="flex items-start gap-4">
                 <div className="bg-oma-beige p-3 rounded-full">
-                  <MapPin className="h-5 w-5 text-oma-plum" />
+                  <Mail className="h-5 w-5 text-oma-plum" />
                 </div>
                 <div>
-                  <p className="font-medium text-oma-black">Address</p>
-                  <address className="text-oma-cocoa not-italic">
-                    1 Coldbath Square
-                    <br />
-                    London, Farringdon
-                  </address>
+                  <p className="font-medium text-oma-black">Collaboration</p>
+                  <a
+                    href="mailto:collaborate@omahub.com"
+                    className="text-oma-cocoa hover:text-oma-plum expand-underline"
+                  >
+                    collaborate@omahub.com
+                  </a>
                 </div>
               </div>
             </div>
