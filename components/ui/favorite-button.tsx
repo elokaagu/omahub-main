@@ -1,76 +1,73 @@
-import { useState } from "react";
-import { HeartIcon } from "@heroicons/react/24/outline";
-import { HeartIcon as HeartSolidIcon } from "@heroicons/react/24/solid";
-import { useToast } from "@/components/ui/use-toast";
-import { useAuth } from "@/contexts/AuthContext";
-import useFavorites from "@/lib/hooks/useFavorites";
+"use client";
 
-interface FavoriteButtonProps {
-  brandId: string;
+import { useState } from "react";
+import { Heart } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/use-toast";
+import useFavourites from "@/lib/hooks/useFavourites";
+
+interface FavouriteButtonProps {
+  itemId: string;
+  itemType: "brand" | "catalogue" | "product";
+  initialIsFavourited?: boolean;
   className?: string;
 }
 
-const FavoriteButton = ({ brandId, className = "" }: FavoriteButtonProps) => {
+export function FavouriteButton({
+  itemId,
+  itemType,
+  initialIsFavourited = false,
+  className = "",
+}: FavouriteButtonProps) {
+  const [isFavourited, setIsFavourited] = useState(initialIsFavourited);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const { user } = useAuth();
-  const { isFavorite, toggleFavorite } = useFavorites();
-  const [isProcessing, setIsProcessing] = useState(false);
+  const { addFavourite, removeFavourite } = useFavourites();
 
-  const isFavorited = isFavorite(brandId);
-
-  const handleToggleFavorite = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    if (!user) {
-      toast({
-        title: "Authentication required",
-        description: "Please log in to save favourites",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (isProcessing) return;
-
-    setIsProcessing(true);
-    const result = await toggleFavorite(brandId);
-    setIsProcessing(false);
-
-    if (!result.success) {
+  const handleToggleFavourite = async () => {
+    try {
+      setIsLoading(true);
+      if (isFavourited) {
+        await removeFavourite(itemId, itemType);
+        setIsFavourited(false);
+        toast({
+          title: "Removed from favourites",
+          description: "Item has been removed from your favourites.",
+        });
+      } else {
+        await addFavourite(itemId, itemType);
+        setIsFavourited(true);
+        toast({
+          title: "Added to favourites",
+          description: "Item has been added to your favourites.",
+        });
+      }
+    } catch (error) {
+      console.error("Error toggling favourite:", error);
       toast({
         title: "Error",
-        description: result.message || "Failed to update favourites",
+        description: "Failed to update favourites. Please try again.",
         variant: "destructive",
       });
-    } else {
-      toast({
-        title: isFavorited ? "Removed from favourites" : "Added to favourites",
-        description: isFavorited
-          ? "The designer has been removed from your favourites"
-          : "The designer has been added to your favourites",
-      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <button
-      onClick={handleToggleFavorite}
-      disabled={isProcessing}
-      className={`relative p-2 rounded-full transition-colors ${
-        isFavorited
-          ? "text-red-500 hover:text-red-600"
-          : "text-gray-400 hover:text-red-500"
-      } ${className}`}
-      aria-label={isFavorited ? "Remove from favourites" : "Add to favourites"}
+    <Button
+      variant="ghost"
+      size="icon"
+      onClick={handleToggleFavourite}
+      disabled={isLoading}
+      className={`hover:bg-oma-plum/10 ${className}`}
+      aria-label={isFavourited ? "Remove from favourites" : "Add to favourites"}
     >
-      {isFavorited ? (
-        <HeartSolidIcon className="w-5 h-5" />
-      ) : (
-        <HeartIcon className="w-5 h-5" />
-      )}
-    </button>
+      <Heart
+        className={`h-5 w-5 ${
+          isFavourited ? "fill-oma-plum text-oma-plum" : "text-oma-cocoa"
+        }`}
+      />
+    </Button>
   );
-};
-
-export default FavoriteButton;
+}

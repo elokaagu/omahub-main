@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import useFavorites from "@/lib/hooks/useFavorites";
+import useFavourites from "@/lib/hooks/useFavourites";
 import { useAuth } from "@/contexts/AuthContext";
 import { BrandCard } from "@/components/ui/brand-card";
 import { Button } from "@/components/ui/button";
@@ -19,15 +19,15 @@ interface Brand {
   rating: number;
 }
 
-export default function FavoritesClient() {
+export default function FavouritesClient() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
-  const { favorites, loading, error } = useFavorites();
+  const { favourites, loading, error } = useFavourites();
 
   useEffect(() => {
     // Redirect to login if not authenticated and auth is not loading
     if (!authLoading && !user) {
-      router.push("/login?redirect=favorites");
+      router.push("/login?redirect=favourites");
     }
   }, [user, authLoading, router]);
 
@@ -54,7 +54,7 @@ export default function FavoritesClient() {
   }
 
   // Show empty state
-  if (!favorites || favorites.length === 0) {
+  if (!favourites || favourites.length === 0) {
     return (
       <div className="text-center py-16 bg-oma-beige/20 rounded-lg">
         <h2 className="text-2xl font-semibold mb-2">No favourites yet</h2>
@@ -71,11 +71,11 @@ export default function FavoritesClient() {
     );
   }
 
-  // Show favorites
+  // Show favourites
   return (
     <div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {(favorites as Brand[]).map((brand) => (
+        {(favourites as Brand[]).map((brand) => (
           <BrandCard
             key={brand.id}
             id={brand.id}
