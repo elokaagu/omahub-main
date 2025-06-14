@@ -35,6 +35,7 @@ import {
   type NavigationItem,
 } from "@/components/ui/navigation";
 import { supabase } from "@/lib/supabase";
+import { getBrandsByCategory } from "@/lib/services/brandService";
 
 const collectionItems = collections.map((category) => ({
   name: category,
@@ -58,6 +59,8 @@ export default function Header() {
   const [isCollectionsOpen, setIsCollectionsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [isNavigatingToStudio, setIsNavigatingToStudio] = useState(false);
+  const [collectionsHasBrands, setCollectionsHasBrands] = useState(false);
+  const [tailoredHasBrands, setTailoredHasBrands] = useState(false);
 
   useEffect(() => {
     const hasAdminAccess =
@@ -81,6 +84,16 @@ export default function Header() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, [user]);
+
+  useEffect(() => {
+    async function checkCategoryBrands() {
+      const collectionsBrands = await getBrandsByCategory("Ready to Wear");
+      setCollectionsHasBrands(collectionsBrands.length > 0);
+      const tailoredBrands = await getBrandsByCategory("Tailoring");
+      setTailoredHasBrands(tailoredBrands.length > 0);
+    }
+    checkCategoryBrands();
+  }, []);
 
   const handleSignOut = async () => {
     try {
@@ -197,44 +210,51 @@ export default function Header() {
                   </NavigationMenuLink>
                 </NavigationMenuItem>
               ))}
-              {navigationItems.map((category) => (
-                <NavigationMenuItem key={category.title}>
-                  <NavigationMenuTrigger
-                    className={cn(
-                      "text-sm font-semibold leading-6 gap-x-2 bg-transparent",
-                      scrolled || !isHomePage
-                        ? "text-oma-black hover:text-oma-plum"
-                        : "text-white hover:text-white/80"
-                    )}
-                  >
-                    {category.title}
-                  </NavigationMenuTrigger>
-                  <NavigationMenuContent>
-                    <div className="w-[400px] p-4 bg-white/90 backdrop-blur-sm shadow-lg rounded-lg">
-                      <div className="mb-3">
-                        <h3 className="text-lg font-semibold mb-1 text-oma-black">
-                          {category.title}
-                        </h3>
-                        <p className="text-sm text-gray-500">
-                          {category.description}
-                        </p>
+              {navigationItems
+                .filter((category) => {
+                  if (category.title === "Collections")
+                    return collectionsHasBrands;
+                  if (category.title === "Tailored") return tailoredHasBrands;
+                  return true;
+                })
+                .map((category) => (
+                  <NavigationMenuItem key={category.title}>
+                    <NavigationMenuTrigger
+                      className={cn(
+                        "text-sm font-semibold leading-6 gap-x-2 bg-transparent",
+                        scrolled || !isHomePage
+                          ? "text-oma-black hover:text-oma-plum"
+                          : "text-white hover:text-white/80"
+                      )}
+                    >
+                      {category.title}
+                    </NavigationMenuTrigger>
+                    <NavigationMenuContent>
+                      <div className="w-[400px] p-4 bg-white/90 backdrop-blur-sm shadow-lg rounded-lg">
+                        <div className="mb-3">
+                          <h3 className="text-lg font-semibold mb-1 text-oma-black">
+                            {category.title}
+                          </h3>
+                          <p className="text-sm text-gray-500">
+                            {category.description}
+                          </p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          {category.items.map((item) => (
+                            <NavigationMenuLink key={item.title} asChild>
+                              <NavigationLink
+                                href={item.href}
+                                className="block select-none rounded-md p-3 text-sm leading-none no-underline outline-none transition-colors hover:bg-oma-beige/50 hover:text-oma-plum focus:bg-oma-beige/50 focus:text-oma-plum"
+                              >
+                                {item.title}
+                              </NavigationLink>
+                            </NavigationMenuLink>
+                          ))}
+                        </div>
                       </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        {category.items.map((item) => (
-                          <NavigationMenuLink key={item.title} asChild>
-                            <NavigationLink
-                              href={item.href}
-                              className="block select-none rounded-md p-3 text-sm leading-none no-underline outline-none transition-colors hover:bg-oma-beige/50 hover:text-oma-plum focus:bg-oma-beige/50 focus:text-oma-plum"
-                            >
-                              {item.title}
-                            </NavigationLink>
-                          </NavigationMenuLink>
-                        ))}
-                      </div>
-                    </div>
-                  </NavigationMenuContent>
-                </NavigationMenuItem>
-              ))}
+                    </NavigationMenuContent>
+                  </NavigationMenuItem>
+                ))}
             </NavigationMenuList>
           </NavigationMenu>
         </div>
@@ -424,29 +444,36 @@ export default function Header() {
               <h3 className="text-xs font-medium uppercase tracking-wider text-gray-500 mb-3">
                 Categories
               </h3>
-              {navigationItems.map((category) => (
-                <div key={category.title} className="space-y-2">
-                  <NavigationLink
-                    href={category.href}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="-mx-3 block rounded-lg px-3 py-3 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 transition-colors"
-                  >
-                    {category.title}
-                  </NavigationLink>
-                  <div className="pl-4 space-y-1">
-                    {category.items.map((item) => (
-                      <NavigationLink
-                        key={item.title}
-                        href={item.href}
-                        onClick={() => setMobileMenuOpen(false)}
-                        className="-mx-3 block rounded-lg px-3 py-2 text-sm leading-7 text-gray-700 hover:bg-gray-50 transition-colors"
-                      >
-                        {item.title}
-                      </NavigationLink>
-                    ))}
+              {navigationItems
+                .filter((category) => {
+                  if (category.title === "Collections")
+                    return collectionsHasBrands;
+                  if (category.title === "Tailored") return tailoredHasBrands;
+                  return true;
+                })
+                .map((category) => (
+                  <div key={category.title} className="space-y-2">
+                    <NavigationLink
+                      href={category.href}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="-mx-3 block rounded-lg px-3 py-3 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 transition-colors"
+                    >
+                      {category.title}
+                    </NavigationLink>
+                    <div className="pl-4 space-y-1">
+                      {category.items.map((item) => (
+                        <NavigationLink
+                          key={item.title}
+                          href={item.href}
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="-mx-3 block rounded-lg px-3 py-2 text-sm leading-7 text-gray-700 hover:bg-gray-50 transition-colors"
+                        >
+                          {item.title}
+                        </NavigationLink>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
             </div>
 
             {/* User Section */}
