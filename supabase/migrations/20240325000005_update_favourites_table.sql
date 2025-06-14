@@ -25,27 +25,13 @@ UPDATE favourites
 SET item_type = 'brand'
 WHERE item_type IS NULL;
 
--- Add foreign key constraints for each item type
+-- NOTE: PostgreSQL does not support conditional foreign keys.
+-- The following foreign key only enforces referential integrity for brands.
 ALTER TABLE favourites
-ADD CONSTRAINT favourites_brand_fkey
+ADD CONSTRAINT favourites_item_id_fkey
 FOREIGN KEY (item_id)
 REFERENCES brands(id)
-ON DELETE CASCADE
-WHERE item_type = 'brand';
-
-ALTER TABLE favourites
-ADD CONSTRAINT favourites_catalogue_fkey
-FOREIGN KEY (item_id)
-REFERENCES catalogues(id)
-ON DELETE CASCADE
-WHERE item_type = 'catalogue';
-
-ALTER TABLE favourites
-ADD CONSTRAINT favourites_product_fkey
-FOREIGN KEY (item_id)
-REFERENCES products(id)
-ON DELETE CASCADE
-WHERE item_type = 'product';
+ON DELETE CASCADE;
 
 -- Update RLS policies
 DROP POLICY IF EXISTS "Users can view their own favourites" ON favourites;
