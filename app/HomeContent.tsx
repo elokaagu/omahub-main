@@ -9,7 +9,7 @@ import {
   StaggerContainer,
   StaggerItem,
 } from "@/app/components/ui/animations";
-import { getAllBrands } from "@/lib/services/brandService";
+import { getAllBrands, getBrandsByCategory } from "@/lib/services/brandService";
 import { getCataloguesWithBrands } from "@/lib/services/catalogueService";
 import { getTailorsWithBrands } from "@/lib/services/tailorService";
 import { SectionHeader } from "@/components/ui/section-header";
@@ -258,6 +258,13 @@ export default function HomeContent() {
     catalogueImage: "/lovable-uploads/827fb8c0-e5da-4520-a979-6fc054eefc6e.png",
     tailoredImage: "/lovable-uploads/bb152c0b-6378-419b-a0e6-eafce44631b2.png",
   });
+  const [occasionImages, setOccasionImages] = useState({
+    Wedding: "",
+    Party: "",
+    Work: "",
+    Vacation: "",
+  });
+  const [occasionLoading, setOccasionLoading] = useState(true);
 
   // Transform hero slides to carousel items
   const carouselItems: CarouselItem[] =
@@ -348,6 +355,31 @@ export default function HomeContent() {
     };
 
     fetchData();
+  }, []);
+
+  useEffect(() => {
+    async function fetchOccasionImages() {
+      setOccasionLoading(true);
+      const mapping = {
+        Wedding: "Bridal",
+        Party: "Ready to Wear",
+        Work: "Ready to Wear",
+        Vacation: "Accessories",
+      };
+      const newImages: any = {};
+      for (const [occasion, category] of Object.entries(mapping)) {
+        const brands = await getBrandsByCategory(category);
+        if (brands && brands.length > 0) {
+          const randomBrand = brands[Math.floor(Math.random() * brands.length)];
+          newImages[occasion] = randomBrand.image;
+        } else {
+          newImages[occasion] = "/placeholder-image.jpg";
+        }
+      }
+      setOccasionImages(newImages);
+      setOccasionLoading(false);
+    }
+    fetchOccasionImages();
   }, []);
 
   if (error) {
@@ -577,24 +609,28 @@ export default function HomeContent() {
               {
                 title: "Wedding",
                 image:
+                  occasionImages.Wedding ||
                   "/lovable-uploads/57cc6a40-0f0d-4a7d-8786-41f15832ebfb.png",
                 href: "/directory?occasion=Wedding",
               },
               {
                 title: "Party",
                 image:
+                  occasionImages.Party ||
                   "/lovable-uploads/4a7c7e86-6cde-4d07-a246-a5aa4cb6fa51.png",
                 href: "/directory?occasion=Party",
               },
               {
                 title: "Work",
                 image:
+                  occasionImages.Work ||
                   "/lovable-uploads/99ca757a-bed8-422e-b155-0b9d365b58e0.png",
                 href: "/directory?occasion=Work",
               },
               {
                 title: "Vacation",
                 image:
+                  occasionImages.Vacation ||
                   "/lovable-uploads/25c3fe26-3fc4-43ef-83ac-6931a74468c0.png",
                 href: "/directory?occasion=Vacation",
               },
