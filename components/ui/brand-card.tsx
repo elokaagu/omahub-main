@@ -1,7 +1,7 @@
 import { NavigationLink } from "./navigation-link";
 import { CheckCircle, Star } from "@/components/ui/icons";
 import { cn } from "@/lib/utils";
-import FavoriteButton from "./favorite-button";
+import { FavouriteButton } from "./favorite-button";
 import { AuthImage } from "./auth-image";
 
 interface BrandCardProps {
@@ -53,7 +53,7 @@ export function BrandCard({
           )}
         />
         <div className="absolute top-2 right-2 z-10">
-          <FavoriteButton brandId={id} />
+          <FavouriteButton itemId={id} itemType="brand" />
         </div>
       </div>
       <div
