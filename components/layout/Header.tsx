@@ -327,7 +327,7 @@ export default function Header() {
                       <li>
                         <NavigationMenuLink asChild>
                           <NavigationLink
-                            href="/favorites"
+                            href="/favourites"
                             className="flex items-center gap-2 w-full rounded-md p-2 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-oma-plum transition-colors"
                           >
                             Favourites
@@ -526,7 +526,7 @@ export default function Header() {
                   </NavigationLink>
 
                   <NavigationLink
-                    href="/favorites"
+                    href="/favourites"
                     onClick={() => setMobileMenuOpen(false)}
                     className="-mx-3 flex items-center gap-3 rounded-lg px-3 py-3 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 transition-colors"
                   >
