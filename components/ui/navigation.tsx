@@ -21,12 +21,12 @@ export const navigationItems: NavigationItem[] = [
     })),
   },
   {
-    title: "Tailored",
-    href: "/directory?category=Tailored",
+    title: "Tailoring",
+    href: "/directory?category=Tailoring",
     description: "Masters of craft creating perfectly fitted garments",
     items: subcategories.Tailored.map((subcategory) => ({
       title: subcategory,
-      href: `/directory?category=Tailored&subcategory=${subcategory.replace(/ /g, "+")}`,
+      href: `/directory?category=Tailoring&subcategory=${subcategory.replace(/ /g, "+")}`,
     })),
   },
 ];
