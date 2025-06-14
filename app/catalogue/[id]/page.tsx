@@ -19,6 +19,7 @@ import { Catalogue, Brand, Product } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
 import Image from "next/image";
+import { FavouriteButton } from "@/components/ui/favorite-button";
 
 type CatalogueWithBrand = Catalogue & {
   brand: Brand;
@@ -249,10 +250,11 @@ export default function CataloguePage() {
               >
                 View Designer Profile
               </Link>
-              <button className="border border-oma-cocoa/20 text-black px-6 py-3 rounded-lg hover:bg-oma-cocoa/5 transition-colors flex items-center gap-2">
-                <Heart className="w-4 h-4" />
-                Save Catalogue
-              </button>
+              <FavouriteButton
+                itemId={catalogue.id}
+                itemType="catalogue"
+                className="px-6 py-3"
+              />
             </div>
           </div>
         </div>

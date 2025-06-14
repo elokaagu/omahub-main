@@ -22,6 +22,7 @@ import {
   Heart,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { FavouriteButton } from "@/components/ui/favorite-button";
 
 export default function ProductPage() {
   const params = useParams();
@@ -340,19 +341,11 @@ export default function ProductPage() {
                 {product.is_custom ? "Order Custom Piece" : "Add to Basket"}
               </Button>
 
-              <Button
-                variant="outline"
-                onClick={() => setIsFavorited(!isFavorited)}
+              <FavouriteButton
+                itemId={product.id}
+                itemType="product"
                 className="w-full"
-              >
-                <Heart
-                  className={cn(
-                    "h-4 w-4 mr-2",
-                    isFavorited ? "fill-red-500 text-red-500" : ""
-                  )}
-                />
-                {isFavorited ? "Remove from Favorites" : "Add to Favorites"}
-              </Button>
+              />
             </div>
 
             {/* Brand Rating */}

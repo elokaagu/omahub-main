@@ -36,7 +36,7 @@ export async function GET(request) {
     // Get user favourites
     const { data, error } = await supabase
       .from("favourites")
-      .select("brand_id")
+      .select("*")
       .eq("user_id", userId);
 
     if (error) {
@@ -52,24 +52,52 @@ export async function GET(request) {
       return NextResponse.json({ favourites: [] });
     }
 
-    // Extract brand IDs
-    const brandIds = data.map((favourite) => favourite.brand_id);
+    // Group favourites by type
+    const brandFavourites = data.filter((f) => f.item_type === "brand");
+    const catalogueFavourites = data.filter((f) => f.item_type === "catalogue");
+    const productFavourites = data.filter((f) => f.item_type === "product");
 
-    // Get full brand details for each favourite
-    const { data: brandsData, error: brandsError } = await supabase
-      .from("brands")
-      .select("*")
-      .in("id", brandIds);
+    // Fetch details for each type
+    const [brandsData, cataloguesData, productsData] = await Promise.all([
+      // Fetch brands
+      brandFavourites.length > 0
+        ? supabase
+            .from("brands")
+            .select("*")
+            .in(
+              "id",
+              brandFavourites.map((f) => f.item_id)
+            )
+            .then(({ data }) => data || [])
+        : [],
+      // Fetch catalogues
+      catalogueFavourites.length > 0
+        ? supabase
+            .from("catalogues")
+            .select("*")
+            .in(
+              "id",
+              catalogueFavourites.map((f) => f.item_id)
+            )
+            .then(({ data }) => data || [])
+        : [],
+      // Fetch products
+      productFavourites.length > 0
+        ? supabase
+            .from("products")
+            .select("*")
+            .in(
+              "id",
+              productFavourites.map((f) => f.item_id)
+            )
+            .then(({ data }) => data || [])
+        : [],
+    ]);
 
-    if (brandsError) {
-      console.error("Error fetching favourite brands:", brandsError);
-      return NextResponse.json(
-        { error: "Failed to fetch favourite brands" },
-        { status: 500 }
-      );
-    }
+    // Combine all favourites
+    const favourites = [...brandsData, ...cataloguesData, ...productsData];
 
-    return NextResponse.json({ favourites: brandsData || [] });
+    return NextResponse.json({ favourites });
   } catch (error) {
     console.error("Unexpected error:", error);
     return NextResponse.json(
@@ -84,13 +112,18 @@ export async function POST(request) {
   try {
     const supabase = getSupabaseClient();
     const body = await request.json();
-    const { userId, brandId } = body;
+    const { userId, itemId, itemType } = body;
 
-    if (!userId || !brandId) {
+    if (!userId || !itemId || !itemType) {
       return NextResponse.json(
-        { error: "User ID and Brand ID are required" },
+        { error: "User ID, Item ID, and Item Type are required" },
         { status: 400 }
       );
+    }
+
+    // Validate item type
+    if (!["brand", "catalogue", "product"].includes(itemType)) {
+      return NextResponse.json({ error: "Invalid item type" }, { status: 400 });
     }
 
     // Check if favourite already exists
@@ -98,7 +131,8 @@ export async function POST(request) {
       .from("favourites")
       .select("*")
       .eq("user_id", userId)
-      .eq("brand_id", brandId)
+      .eq("item_id", itemId)
+      .eq("item_type", itemType)
       .single();
 
     if (checkError && checkError.code !== "PGRST116") {
@@ -121,7 +155,8 @@ export async function POST(request) {
     // Add favourite
     const { error } = await supabase.from("favourites").insert({
       user_id: userId,
-      brand_id: brandId,
+      item_id: itemId,
+      item_type: itemType,
     });
 
     if (error) {
@@ -151,13 +186,19 @@ export async function DELETE(request) {
     const supabase = getSupabaseClient();
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get("userId");
-    const brandId = searchParams.get("brandId");
+    const itemId = searchParams.get("itemId");
+    const itemType = searchParams.get("itemType");
 
-    if (!userId || !brandId) {
+    if (!userId || !itemId || !itemType) {
       return NextResponse.json(
-        { error: "User ID and Brand ID are required" },
+        { error: "User ID, Item ID, and Item Type are required" },
         { status: 400 }
       );
+    }
+
+    // Validate item type
+    if (!["brand", "catalogue", "product"].includes(itemType)) {
+      return NextResponse.json({ error: "Invalid item type" }, { status: 400 });
     }
 
     // Remove favourite
@@ -165,7 +206,8 @@ export async function DELETE(request) {
       .from("favourites")
       .delete()
       .eq("user_id", userId)
-      .eq("brand_id", brandId);
+      .eq("item_id", itemId)
+      .eq("item_type", itemType);
 
     if (error) {
       console.error("Error removing favourite:", error);

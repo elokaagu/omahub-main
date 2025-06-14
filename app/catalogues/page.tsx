@@ -16,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { FavouriteButton } from "@/components/ui/favorite-button";
 
 type CatalogueWithBrand = Catalogue & {
   brand: {
@@ -428,6 +429,10 @@ export default function CataloguesPage() {
                       <span className="text-sm text-oma-cocoa/70">
                         {catalogue.brand.location}
                       </span>
+                      <FavouriteButton
+                        itemId={catalogue.id}
+                        itemType="catalogue"
+                      />
                       <Button
                         variant="outline"
                         size="sm"

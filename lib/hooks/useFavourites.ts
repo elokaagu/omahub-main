@@ -12,6 +12,24 @@ interface Brand {
   rating: number;
 }
 
+interface Catalogue {
+  id: string;
+  title: string;
+  image: string;
+  brand_id: string;
+  description?: string;
+}
+
+interface Product {
+  id: string;
+  title: string;
+  image: string;
+  brand_id: string;
+  price: number;
+  sale_price?: number;
+  category: string;
+}
+
 export interface FavouriteResult {
   id: string;
   user_id: string;
@@ -19,9 +37,11 @@ export interface FavouriteResult {
   item_type: "brand" | "catalogue" | "product";
 }
 
+type FavouriteItem = Brand | Catalogue | Product;
+
 const useFavourites = () => {
   const { user } = useAuth();
-  const [favourites, setFavourites] = useState<Brand[]>([]);
+  const [favourites, setFavourites] = useState<FavouriteItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -54,12 +74,16 @@ const useFavourites = () => {
 
   // Add to favourites
   const addFavourite = useCallback(
-    async (userId: string, brandId: string) => {
+    async (
+      userId: string,
+      itemId: string,
+      itemType: "brand" | "catalogue" | "product"
+    ) => {
       try {
         const res = await fetch("/api/favourites", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId, brandId }),
+          body: JSON.stringify({ userId, itemId, itemType }),
         });
         if (!res.ok) throw new Error("Failed to add favourite");
         toast({ title: "Favourite added successfully" });
@@ -77,10 +101,14 @@ const useFavourites = () => {
 
   // Remove from favourites
   const removeFavourite = useCallback(
-    async (userId: string, brandId: string) => {
+    async (
+      userId: string,
+      itemId: string,
+      itemType: "brand" | "catalogue" | "product"
+    ) => {
       try {
         const res = await fetch(
-          `/api/favourites?userId=${userId}&brandId=${brandId}`,
+          `/api/favourites?userId=${userId}&itemId=${itemId}&itemType=${itemType}`,
           {
             method: "DELETE",
           }
@@ -99,21 +127,24 @@ const useFavourites = () => {
     [fetchFavourites]
   );
 
-  // Check if a brand is favourited
+  // Check if an item is favourited
   const isFavourite = useCallback(
-    (brandId: string): boolean => {
-      return favourites.some((favourite) => favourite.id === brandId);
+    (itemId: string, itemType: "brand" | "catalogue" | "product"): boolean => {
+      return favourites.some((favourite) => favourite.id === itemId);
     },
     [favourites]
   );
 
   // Toggle favourite
   const toggleFavourite = useCallback(
-    async (brandId: string): Promise<void> => {
-      if (isFavourite(brandId)) {
-        await removeFavourite(user?.id || "", brandId);
+    async (
+      itemId: string,
+      itemType: "brand" | "catalogue" | "product"
+    ): Promise<void> => {
+      if (isFavourite(itemId, itemType)) {
+        await removeFavourite(user?.id || "", itemId, itemType);
       } else {
-        await addFavourite(user?.id || "", brandId);
+        await addFavourite(user?.id || "", itemId, itemType);
       }
     },
     [isFavourite, removeFavourite, addFavourite, user]
