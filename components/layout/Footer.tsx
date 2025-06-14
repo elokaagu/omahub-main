@@ -109,7 +109,7 @@ export default function Footer() {
             <ul className="flex flex-col items-center space-y-3 md:items-start">
               <li>
                 <a
-                  href="https://instagram.com"
+                  href="https://www.instagram.com/_omahub/"
                   className="text-sm text-oma-cocoa hover:text-oma-plum flex items-center gap-2 group"
                 >
                   <Instagram className="h-4 w-4 transition group-hover:text-oma-plum" />

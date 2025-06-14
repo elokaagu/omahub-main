@@ -168,12 +168,12 @@ export default function About() {
                 and discovery.
               </p>
               <a
-                href="https://instagram.com/omahub"
+                href="https://www.instagram.com/_omahub/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="bg-oma-plum hover:bg-oma-plum/90 text-white px-6 py-3 rounded-lg font-medium transition-colors"
               >
-                Join Our Community
+                @omahub
               </a>
             </motion.div>
           </div>

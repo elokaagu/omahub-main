@@ -45,7 +45,7 @@ export default function PrivacyPolicy() {
         <h2 className="heading-sm mb-4">5. Contact Us</h2>
         <p className="mb-6 text-oma-cocoa">
           If you have any questions about this Privacy Policy, please contact us
-          at privacy@omahub.com
+          at info@oma-hub.com
         </p>
       </div>
     </div>

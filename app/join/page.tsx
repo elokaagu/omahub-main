@@ -354,7 +354,7 @@ export default function Join() {
                     help.
                   </p>
                   <a
-                    href="mailto:designers@omahub.com"
+                    href="mailto:info@oma-hub.com"
                     className="text-oma-plum font-medium hover:text-oma-plum/80 expand-underline"
                   >
                     Contact Our Designer Relations Team

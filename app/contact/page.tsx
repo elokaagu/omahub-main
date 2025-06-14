@@ -180,10 +180,10 @@ export default function ContactPage() {
                 <div>
                   <p className="font-medium text-oma-black">Email</p>
                   <a
-                    href="mailto:contact@omahub.com"
+                    href="mailto:info@oma-hub.com"
                     className="text-oma-cocoa hover:text-oma-plum expand-underline"
                   >
-                    contact@omahub.com
+                    info@oma-hub.com
                   </a>
                 </div>
               </div>
@@ -205,12 +205,12 @@ export default function ContactPage() {
                 <div>
                   <p className="font-medium text-oma-black">Instagram</p>
                   <a
-                    href="https://instagram.com/omahub.official"
+                    href="https://www.instagram.com/_omahub/"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-oma-cocoa hover:text-oma-plum expand-underline"
                   >
-                    @omahub.official
+                    @omahub
                   </a>
                 </div>
               </div>
@@ -222,10 +222,10 @@ export default function ContactPage() {
                 <div>
                   <p className="font-medium text-oma-black">Collaboration</p>
                   <a
-                    href="mailto:collaborate@omahub.com"
+                    href="mailto:info@oma-hub.com"
                     className="text-oma-cocoa hover:text-oma-plum expand-underline"
                   >
-                    collaborate@omahub.com
+                    info@oma-hub.com
                   </a>
                 </div>
               </div>
