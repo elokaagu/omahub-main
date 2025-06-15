@@ -1,7 +1,6 @@
 import { NavigationLink } from "./navigation-link";
 import { CheckCircle, Star } from "@/components/ui/icons";
 import { cn } from "@/lib/utils";
-import { FavouriteButton } from "./favourite-button";
 import { AuthImage } from "./auth-image";
 
 interface BrandCardProps {
@@ -52,9 +51,6 @@ export function BrandCard({
             isPortrait ? "object-center object-top" : ""
           )}
         />
-        <div className="absolute top-2 right-2 z-10">
-          <FavouriteButton itemId={id} itemType="brand" />
-        </div>
       </div>
       <div
         className={cn(
