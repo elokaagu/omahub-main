@@ -12,7 +12,7 @@ import {
 } from "../services/brandService";
 import { Brand, Review, Catalogue } from "../supabase";
 
-export function useAllBrands() {
+export function useAllBrands(filterEmptyBrands: boolean = false) {
   const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -21,7 +21,7 @@ export function useAllBrands() {
     async function fetchBrands() {
       try {
         console.log("🔄 useAllBrands: Force refreshing brands...");
-        const data = await forceRefreshBrands();
+        const data = await forceRefreshBrands(filterEmptyBrands);
         console.log("✅ useAllBrands: Got", data.length, "brands");
         setBrands(data);
       } catch (err) {
@@ -33,7 +33,7 @@ export function useAllBrands() {
     }
 
     fetchBrands();
-  }, []);
+  }, [filterEmptyBrands]);
 
   return { brands, loading, error };
 }

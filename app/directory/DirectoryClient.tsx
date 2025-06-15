@@ -104,8 +104,8 @@ export default function DirectoryClient() {
   const [displayedBrands, setDisplayedBrands] = useState<BrandDisplay[]>([]);
   const [isGridView, setIsGridView] = useState(true);
 
-  // Use the useAllBrands hook
-  const { brands: allBrands, loading, error } = useAllBrands();
+  // Use the useAllBrands hook with filtering for brands that have products
+  const { brands: allBrands, loading, error } = useAllBrands(true);
 
   // Handle URL parameters on component mount
   useEffect(() => {

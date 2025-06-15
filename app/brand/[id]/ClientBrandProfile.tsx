@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, MapPin, Star } from "@/components/ui/icons";
+import { ShoppingBag } from "lucide-react";
 import ContactDesignerModal from "@/components/ContactDesignerModal";
 import { ReviewForm } from "@/components/ui/review-form";
 import useReviews from "@/lib/hooks/useReviews";
@@ -14,6 +15,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { NavigationLink } from "@/components/ui/navigation-link";
+import { getProductsByBrand } from "@/lib/services/productService";
+import { Product } from "@/lib/supabase";
+import Image from "next/image";
 
 interface ClientBrandProfileProps {
   brandData: BrandData;
@@ -37,12 +41,38 @@ export default function ClientBrandProfile({
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   const { reviews, loading, error, fetchReviews } = useReviews(id as string);
   const [showReviewForm, setShowReviewForm] = useState(false);
+  const [showAllProducts, setShowAllProducts] = useState(false);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [productsLoading, setProductsLoading] = useState(false);
 
   // Scroll to catalogues function
   const scrollToCatalogues = () => {
     const cataloguesSection = document.getElementById("catalogues-section");
     if (cataloguesSection) {
       cataloguesSection.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  // Scroll to products function
+  const scrollToProducts = () => {
+    const productsSection = document.getElementById("products-section");
+    if (productsSection) {
+      productsSection.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  // Fetch products for this brand
+  const fetchProducts = async () => {
+    if (!id) return;
+
+    try {
+      setProductsLoading(true);
+      const brandProducts = await getProductsByBrand(id);
+      setProducts(brandProducts);
+    } catch (error) {
+      console.error("Error fetching brand products:", error);
+    } finally {
+      setProductsLoading(false);
     }
   };
 
@@ -53,6 +83,13 @@ export default function ClientBrandProfile({
       fetchReviews();
     }
   }, [fetchReviews, id]);
+
+  // Fetch products when showAllProducts is toggled
+  useEffect(() => {
+    if (showAllProducts && products.length === 0) {
+      fetchProducts();
+    }
+  }, [showAllProducts]);
 
   const handleReviewSubmitted = () => {
     // Hide the review form and refresh reviews
@@ -68,6 +105,14 @@ export default function ClientBrandProfile({
   const handleOpenContactModal = () => {
     console.log("Opening contact modal for brand:", brandData.name);
     setIsContactModalOpen(true);
+  };
+
+  const handleToggleProducts = () => {
+    setShowAllProducts(!showAllProducts);
+    if (!showAllProducts) {
+      // Scroll to products section when showing
+      setTimeout(() => scrollToProducts(), 100);
+    }
   };
 
   return (
@@ -115,6 +160,14 @@ export default function ClientBrandProfile({
               View Catalogues
             </Button>
             <Button
+              onClick={handleToggleProducts}
+              variant="outline"
+              className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white"
+            >
+              <ShoppingBag size={16} className="mr-2" />
+              {showAllProducts ? "Hide Products" : "View All Products"}
+            </Button>
+            <Button
               onClick={handleOpenContactModal}
               variant="outline"
               className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white"
@@ -123,6 +176,81 @@ export default function ClientBrandProfile({
             </Button>
           </div>
         </div>
+
+        {/* Products Section */}
+        {showAllProducts && (
+          <div
+            id="products-section"
+            className="my-12 slide-up scroll-mt-24"
+            style={{ animationDelay: "50ms" }}
+          >
+            <h2 className="heading-sm mb-6">All Products</h2>
+            {productsLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="space-y-3">
+                    <Skeleton className="aspect-square w-full" />
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-4 w-1/2" />
+                  </div>
+                ))}
+              </div>
+            ) : products.length === 0 ? (
+              <div className="text-center py-12 text-gray-500">
+                <ShoppingBag className="w-16 h-16 text-oma-cocoa/30 mx-auto mb-4" />
+                <p>No products available yet.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {products.map((product, index) => (
+                  <NavigationLink
+                    key={product.id}
+                    href={`/product/${product.id}`}
+                    className="block group"
+                  >
+                    <div
+                      className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 animate-[fadeIn_500ms_ease-in-out_forwards] opacity-0"
+                      style={{ animationDelay: `${index * 100}ms` }}
+                    >
+                      <div className="aspect-square relative overflow-hidden">
+                        <Image
+                          src={product.image || "/placeholder.png"}
+                          alt={product.title}
+                          fill
+                          className="object-cover group-hover:scale-105 transition-transform duration-300"
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                        />
+                      </div>
+                      <div className="p-4">
+                        <h3 className="font-medium text-lg mb-1 group-hover:text-oma-plum transition-colors">
+                          {product.title}
+                        </h3>
+                        <p className="text-oma-cocoa/70 text-sm mb-2">
+                          {product.category}
+                        </p>
+                        <div className="flex items-center justify-between">
+                          <p className="text-oma-plum font-medium">
+                            ${product.sale_price || product.price}
+                          </p>
+                          <Badge
+                            variant="secondary"
+                            className={
+                              product.in_stock
+                                ? "bg-oma-gold text-oma-cocoa"
+                                : "bg-oma-cocoa/40 text-white"
+                            }
+                          >
+                            {product.in_stock ? "In Stock" : "Out of Stock"}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                  </NavigationLink>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Catalogue Grid */}
         <div

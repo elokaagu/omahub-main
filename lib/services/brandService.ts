@@ -41,10 +41,73 @@ async function hasPermission(
 }
 
 /**
- * Fetch all brands from the database
+ * Fetch all brands with product counts
  */
-export async function getAllBrands(): Promise<Brand[]> {
+export async function getAllBrandsWithProductCounts(): Promise<
+  (Brand & { product_count: number })[]
+> {
   try {
+    if (!supabase) {
+      throw new Error("Supabase client not available");
+    }
+
+    // Get brands with product counts using a join
+    const { data, error } = await supabase
+      .from("brands")
+      .select(
+        `
+        *,
+        products(count)
+      `
+      )
+      .order("name");
+
+    if (error) {
+      console.error("Error fetching brands with product counts:", error);
+      throw error;
+    }
+
+    if (!data) {
+      return [];
+    }
+
+    // Map the data to include product_count
+    const brandsWithCounts: (Brand & { product_count: number })[] = data.map(
+      (item) => ({
+        id: item.id || `temp-id-${Math.random().toString(36).substring(2, 9)}`,
+        name: item.name || "Brand Name",
+        description: item.description || "Brand description",
+        long_description: item.long_description || "Long brand description",
+        location: item.location || "Unknown location",
+        price_range: item.price_range || "$$",
+        category: item.category || "Other",
+        rating: item.rating || 4.5,
+        is_verified: item.is_verified || false,
+        image: item.image || "/placeholder-image.jpg",
+        product_count: item.products?.[0]?.count || 0,
+      })
+    );
+
+    return brandsWithCounts;
+  } catch (err) {
+    console.error("Error in getAllBrandsWithProductCounts:", err);
+    throw err;
+  }
+}
+
+/**
+ * Fetch all brands, optionally filtering out those with no products
+ */
+export async function getAllBrands(
+  filterEmptyBrands: boolean = false
+): Promise<Brand[]> {
+  try {
+    if (filterEmptyBrands) {
+      // Get brands with product counts and filter out empty ones
+      const brandsWithCounts = await getAllBrandsWithProductCounts();
+      return brandsWithCounts.filter((brand) => brand.product_count > 0);
+    }
+
     // Check if we're already loading brands
     if (brandsCache.isLoading) {
       console.log("🔄 Already fetching brands, waiting for completion...");
@@ -227,10 +290,12 @@ export function clearBrandsCache(): void {
   };
 }
 
-export async function forceRefreshBrands(): Promise<Brand[]> {
+export async function forceRefreshBrands(
+  filterEmptyBrands: boolean = false
+): Promise<Brand[]> {
   console.log("Force refreshing brands data");
   clearBrandsCache();
-  return getAllBrands();
+  return getAllBrands(filterEmptyBrands);
 }
 
 /**
