@@ -281,9 +281,7 @@ export default function Header() {
                 : "border-white text-white bg-black/20 hover:bg-black/40 hover:text-white hover:border-white/50"
             )}
           >
-            <NavigationLink href="/directory">
-              Explore Brand Directory
-            </NavigationLink>
+            <NavigationLink href="/directory">Explore Brands</NavigationLink>
           </Button>
 
           {user ? (
@@ -435,7 +433,7 @@ export default function Header() {
                 onClick={() => setMobileMenuOpen(false)}
                 className="-mx-3 block rounded-lg px-3 py-3 text-base font-semibold leading-7 text-oma-plum hover:bg-oma-beige/50 transition-colors"
               >
-                Explore Brand Directory
+                Explore Brands
               </NavigationLink>
             </div>
 
