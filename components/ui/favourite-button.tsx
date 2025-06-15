@@ -27,18 +27,14 @@ export function FavouriteButton({
   const { addFavourite, removeFavourite } = useFavourites();
   const { user } = useAuth();
 
+  // Don't render the button if user is not signed in
+  if (!user) {
+    return null;
+  }
+
   const handleToggleFavourite = async () => {
     try {
       setIsLoading(true);
-      if (!user) {
-        toast({
-          title: "Authentication required",
-          description: "Please log in to save favourites",
-          variant: "destructive",
-        });
-        setIsLoading(false);
-        return;
-      }
       if (isFavourited) {
         await removeFavourite(user.id, itemId, itemType);
         setIsFavourited(false);
