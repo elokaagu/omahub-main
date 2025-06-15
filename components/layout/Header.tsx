@@ -282,7 +282,7 @@ export default function Header() {
             )}
           >
             <NavigationLink href="/directory">
-              Explore the Directory
+              Explore Brand Directory
             </NavigationLink>
           </Button>
 
@@ -435,7 +435,7 @@ export default function Header() {
                 onClick={() => setMobileMenuOpen(false)}
                 className="-mx-3 block rounded-lg px-3 py-3 text-base font-semibold leading-7 text-oma-plum hover:bg-oma-beige/50 transition-colors"
               >
-                Explore Directory
+                Explore Brand Directory
               </NavigationLink>
             </div>
 

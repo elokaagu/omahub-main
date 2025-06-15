@@ -36,7 +36,7 @@ export default function About() {
               continent's rich design heritage.
             </p>
             <Button asChild className="bg-oma-plum hover:bg-oma-plum/90">
-              <Link href="/directory">Discover Our Designers</Link>
+              <Link href="/directory">Discover Our Brand Directory</Link>
             </Button>
           </motion.div>
           <motion.div variants={scaleIn} className="order-1 lg:order-2">
@@ -127,7 +127,7 @@ export default function About() {
           >
             <h3 className="font-canela text-2xl mb-4">Curation</h3>
             <p className="text-oma-cocoa">
-              We carefully curate our directory to showcase designers who
+              We carefully curate our brand directory to showcase designers who
               demonstrate excellence in their craft, authenticity in their
               vision, and commitment to ethical practices. Our verification
               process ensures a standard of quality our community can trust.
@@ -163,9 +163,9 @@ export default function About() {
               <p className="text-oma-cocoa text-lg mb-8">
                 We provide a platform where this community can connect,
                 collaborate, and collectively elevate African fashion on the
-                global stage. Through our directory, newsletters, and future
-                events, we're creating opportunities for meaningful engagement
-                and discovery.
+                global stage. Through our brand directory, newsletters, and
+                future events, we're creating opportunities for meaningful
+                engagement and discovery.
               </p>
               <a
                 href="https://www.instagram.com/_omahub/"

@@ -44,7 +44,7 @@ export default function HowItWorksClient() {
               icon: <Search className="h-10 w-10 mb-4 text-oma-plum" />,
               title: "Discover",
               description:
-                "Browse our curated directory of top fashion designers and filter by style, location, and specialty.",
+                "Browse our curated brand directory of top fashion designers and filter by style, location, and specialty.",
             },
             {
               icon: <MessageCircle className="h-10 w-10 mb-4 text-oma-plum" />,
@@ -105,7 +105,7 @@ export default function HowItWorksClient() {
                       ),
                     },
                     {
-                      title: "Browse the Directory",
+                      title: "Browse the Brand Directory",
                       description:
                         "Explore our curated selection of designers filtered by specialty, location, and style.",
                       icon: (
@@ -152,7 +152,7 @@ export default function HowItWorksClient() {
                     asChild
                     className="bg-oma-plum hover:bg-oma-plum/90 px-8"
                   >
-                    <Link href="/directory">Browse Designers</Link>
+                    <Link href="/directory">Browse Brand Directory</Link>
                   </Button>
                 </div>
               </div>
@@ -314,7 +314,7 @@ export default function HowItWorksClient() {
                 id: "faq1",
                 question: "How do I find a designer for my specific needs?",
                 answer:
-                  "You can browse our directory and filter by location, specialty, and style. Each designer profile includes their portfolio, reviews, and areas of expertise to help you find the perfect match.",
+                  "You can browse our brand directory and filter by location, specialty, and style. Each designer profile includes their portfolio, reviews, and areas of expertise to help you find the perfect match.",
               },
               {
                 id: "faq2",

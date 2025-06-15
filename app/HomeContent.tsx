@@ -786,7 +786,7 @@ export default function HomeContent() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button asChild className="bg-oma-plum hover:bg-oma-plum/90">
-                  <Link href="/directory">Find Your Designer</Link>
+                  <Link href="/directory">Browse Brand Directory</Link>
                 </Button>
                 <Button
                   asChild
