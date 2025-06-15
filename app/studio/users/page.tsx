@@ -49,7 +49,6 @@ import {
   Filter,
 } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/lib/supabase";
 
 interface UserProfile {
   id: string;
@@ -95,39 +94,35 @@ export default function UsersPage() {
       try {
         setLoading(true);
 
-        if (!supabase) {
-          toast.error("Database connection not available");
-          return;
-        }
-
-        // Fetch all users
-        const { data: usersData, error: usersError } = await supabase
-          .from("profiles")
-          .select("*")
-          .order("created_at", { ascending: false });
-
-        if (usersError) {
-          console.error("Error fetching users:", usersError);
+        // Fetch all users via API route (uses service role)
+        const usersResponse = await fetch("/api/admin/users");
+        if (!usersResponse.ok) {
+          const errorData = await usersResponse.json();
+          console.error("Error fetching users:", errorData);
           toast.error("Failed to load users");
           return;
         }
+
+        const { users: usersData } = await usersResponse.json();
 
         // Fetch all brands
         const brandsData = await getAllBrands();
         setBrands(brandsData);
 
         // Map users with brand names
-        const usersWithBrands: UserWithBrands[] = usersData.map((user) => ({
-          ...user,
-          brandNames: user.owned_brands
-            ? user.owned_brands
-                .map(
-                  (brandId: string) =>
-                    brandsData.find((brand) => brand.id === brandId)?.name
-                )
-                .filter(Boolean)
-            : [],
-        }));
+        const usersWithBrands: UserWithBrands[] = usersData.map(
+          (user: UserProfile) => ({
+            ...user,
+            brandNames: user.owned_brands
+              ? user.owned_brands
+                  .map(
+                    (brandId: string) =>
+                      brandsData.find((brand) => brand.id === brandId)?.name
+                  )
+                  .filter(Boolean)
+              : [],
+          })
+        );
 
         setUsers(usersWithBrands);
         setFilteredUsers(usersWithBrands);
@@ -191,69 +186,34 @@ export default function UsersPage() {
       return;
     }
 
-    if (!supabase) {
-      toast.error("Database connection not available");
-      return;
-    }
-
     try {
       setIsLoading(true);
 
-      // Check if user already exists
-      const { data: existingUser, error: checkError } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("email", formData.email)
-        .single();
+      const response = await fetch("/api/admin/users", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          role: formData.role,
+          owned_brands: formData.selectedBrands,
+        }),
+      });
 
-      if (checkError && checkError.code !== "PGRST116") {
-        console.error("Error checking user:", checkError);
-        toast.error("Error checking if user exists");
+      const result = await response.json();
+
+      if (!response.ok) {
+        console.error("Error submitting form:", result);
+        toast.error(result.error || "Failed to save user");
         return;
       }
 
-      if (existingUser) {
-        // Update existing user
-        const { data: updatedUser, error: updateError } = await supabase
-          .from("profiles")
-          .update({
-            role: formData.role,
-            owned_brands: formData.selectedBrands,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("email", formData.email)
-          .select()
-          .single();
-
-        if (updateError) {
-          console.error("Error updating user:", updateError);
-          toast.error("Failed to update user");
-          return;
-        }
-
-        toast.success("User updated successfully");
-      } else {
-        // Create new user profile
-        const { data: newUser, error: createError } = await supabase
-          .from("profiles")
-          .insert({
-            email: formData.email,
-            role: formData.role,
-            owned_brands: formData.selectedBrands,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          })
-          .select()
-          .single();
-
-        if (createError) {
-          console.error("Error creating user:", createError);
-          toast.error("Failed to create user");
-          return;
-        }
-
-        toast.success("User created successfully");
-      }
+      toast.success(
+        result.action === "updated"
+          ? "User updated successfully"
+          : "User created successfully"
+      );
 
       // Reset form and close dialog
       setFormData({
@@ -278,25 +238,22 @@ export default function UsersPage() {
       return;
     }
 
-    if (!supabase) {
-      toast.error("Database connection not available");
-      return;
-    }
-
     try {
-      const { error } = await supabase
-        .from("profiles")
-        .delete()
-        .eq("id", userId);
+      const response = await fetch(`/api/admin/users?id=${userId}`, {
+        method: "DELETE",
+      });
 
-      if (error) {
-        console.error("Error deleting user:", error);
-        toast.error("Failed to delete user");
+      const result = await response.json();
+
+      if (!response.ok) {
+        console.error("Error deleting user:", result);
+        toast.error(result.error || "Failed to delete user");
         return;
       }
 
       toast.success("User deleted successfully");
       setUsers((prev) => prev.filter((user) => user.id !== userId));
+      setFilteredUsers((prev) => prev.filter((user) => user.id !== userId));
     } catch (error) {
       console.error("Error deleting user:", error);
       toast.error("Failed to delete user");
