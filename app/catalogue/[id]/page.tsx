@@ -20,6 +20,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
+import { FavouriteButton } from "@/components/ui/favourite-button";
 
 type CatalogueWithBrand = Catalogue & {
   brand: Brand;
@@ -252,6 +253,11 @@ export default function CataloguePage() {
                   View Designer Profile
                 </Button>
               </Link>
+              <FavouriteButton
+                itemId={catalogue.id}
+                itemType="catalogue"
+                className="w-full px-6 py-3 min-w-[180px] text-base"
+              />
             </div>
           </div>
         </div>
