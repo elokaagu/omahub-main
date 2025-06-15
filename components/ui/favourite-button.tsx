@@ -66,7 +66,7 @@ export function FavouriteButton({
         variant={isFavourited ? "default" : "outline"}
         onClick={handleToggleFavourite}
         disabled={isLoading}
-        className={`flex items-center justify-center ${isFavourited ? "bg-oma-plum text-white hover:bg-oma-plum/90" : "border-oma-plum text-oma-plum hover:bg-oma-plum/10"} ${className}`}
+        className={`flex items-center gap-2 ${isFavourited ? "bg-oma-plum text-white hover:bg-oma-plum/90" : "border-oma-plum text-oma-plum hover:bg-oma-plum/10"} ${className}`}
         aria-label={
           isFavourited ? "Remove from favourites" : "Add to favourites"
         }
@@ -75,6 +75,7 @@ export function FavouriteButton({
           className={`h-5 w-5 ${isFavourited ? "fill-current" : ""}`}
           fill={isFavourited ? "currentColor" : "none"}
         />
+        <span>{isFavourited ? "Favourited" : "Add to Favourites"}</span>
       </Button>
       {/* Modal Popup */}
       {showModal && (
