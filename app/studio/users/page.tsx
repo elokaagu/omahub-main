@@ -95,7 +95,9 @@ export default function UsersPage() {
         setLoading(true);
 
         // Fetch all users via API route (uses service role)
-        const usersResponse = await fetch("/api/admin/users");
+        const usersResponse = await fetch("/api/admin/users", {
+          credentials: "include",
+        });
         if (!usersResponse.ok) {
           const errorData = await usersResponse.json();
           console.error("Error fetching users:", errorData);
@@ -194,6 +196,7 @@ export default function UsersPage() {
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify({
           email: formData.email,
           role: formData.role,
@@ -241,6 +244,7 @@ export default function UsersPage() {
     try {
       const response = await fetch(`/api/admin/users?id=${userId}`, {
         method: "DELETE",
+        credentials: "include",
       });
 
       const result = await response.json();

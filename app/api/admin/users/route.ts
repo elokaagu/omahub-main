@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -8,35 +9,36 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 // Service role client (bypasses RLS)
 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
-// Regular client for auth verification
-const supabaseClient = createClient(
-  supabaseUrl,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+// Helper function to create authenticated supabase client
+function createAuthenticatedClient() {
+  const cookieStore = cookies();
+
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+      },
+    }
+  );
+}
 
 export async function GET(request: NextRequest) {
   try {
-    // Get the session from cookies
-    const cookieStore = cookies();
-    const authCookie =
-      cookieStore.get("sb-access-token") ||
-      cookieStore.get("supabase-auth-token");
+    // Create authenticated client
+    const supabase = createAuthenticatedClient();
 
-    if (!authCookie) {
-      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
-    }
-
-    // Verify the user is authenticated and is a super admin
+    // Get the current user
     const {
       data: { user },
       error: authError,
-    } = await supabaseClient.auth.getUser(authCookie.value);
+    } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      return NextResponse.json(
-        { error: "Invalid authentication" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
     // Get user profile to check role
@@ -82,27 +84,17 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { email, role, owned_brands } = body;
 
-    // Get the session from cookies
-    const cookieStore = cookies();
-    const authCookie =
-      cookieStore.get("sb-access-token") ||
-      cookieStore.get("supabase-auth-token");
+    // Create authenticated client
+    const supabase = createAuthenticatedClient();
 
-    if (!authCookie) {
-      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
-    }
-
-    // Verify the user is authenticated and is a super admin
+    // Get the current user
     const {
       data: { user },
       error: authError,
-    } = await supabaseClient.auth.getUser(authCookie.value);
+    } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      return NextResponse.json(
-        { error: "Invalid authentication" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
     // Get user profile to check role
@@ -201,27 +193,17 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Get the session from cookies
-    const cookieStore = cookies();
-    const authCookie =
-      cookieStore.get("sb-access-token") ||
-      cookieStore.get("supabase-auth-token");
+    // Create authenticated client
+    const supabase = createAuthenticatedClient();
 
-    if (!authCookie) {
-      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
-    }
-
-    // Verify the user is authenticated and is a super admin
+    // Get the current user
     const {
       data: { user },
       error: authError,
-    } = await supabaseClient.auth.getUser(authCookie.value);
+    } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      return NextResponse.json(
-        { error: "Invalid authentication" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
     // Get user profile to check role
