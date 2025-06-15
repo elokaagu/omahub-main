@@ -249,7 +249,7 @@ export default function CataloguePage() {
                 href={`/designer/${catalogue.brand.id}`}
                 className="min-w-[180px]"
               >
-                <Button className="w-full px-6 py-3 text-base">
+                <Button className="w-full px-6 py-3 text-base bg-oma-plum hover:bg-oma-plum/90 text-white">
                   View Designer Profile
                 </Button>
               </Link>
