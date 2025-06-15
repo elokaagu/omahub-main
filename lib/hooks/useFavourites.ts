@@ -80,15 +80,30 @@ const useFavourites = () => {
       itemType: "brand" | "catalogue" | "product"
     ) => {
       try {
+        // Add debugging
+        console.log("🔍 addFavourite called with:", {
+          userId,
+          itemId,
+          itemType,
+          userIdType: typeof userId,
+          userIdLength: userId?.length,
+        });
+
         const res = await fetch("/api/favourites", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ userId, itemId, itemType }),
         });
+
+        console.log("🔍 API response status:", res.status);
+        const responseData = await res.json();
+        console.log("🔍 API response data:", responseData);
+
         if (!res.ok) throw new Error("Failed to add favourite");
         toast({ title: "Favourite added successfully" });
         fetchFavourites();
       } catch (err: any) {
+        console.error("❌ Error in addFavourite:", err);
         toast({
           title: "Error",
           description: err.message || "Failed to add favourite",

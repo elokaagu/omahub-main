@@ -114,7 +114,17 @@ export async function POST(request) {
     const body = await request.json();
     const { userId, itemId, itemType } = body;
 
+    // Add debugging
+    console.log("🔍 POST /api/favourites received:", {
+      userId,
+      itemId,
+      itemType,
+      userIdType: typeof userId,
+      userIdLength: userId?.length,
+    });
+
     if (!userId || !itemId || !itemType) {
+      console.log("❌ Missing required fields:", { userId, itemId, itemType });
       return NextResponse.json(
         { error: "User ID, Item ID, and Item Type are required" },
         { status: 400 }
@@ -146,6 +156,7 @@ export async function POST(request) {
 
     // If favourite already exists, return success
     if (existingFavourite) {
+      console.log("✅ Favourite already exists");
       return NextResponse.json({
         success: true,
         message: "Already favourited",
@@ -153,6 +164,7 @@ export async function POST(request) {
     }
 
     // Add favourite
+    console.log("🔄 Attempting to insert favourite...");
     const { error } = await supabase.from("favourites").insert({
       user_id: userId,
       item_id: itemId,
@@ -167,6 +179,7 @@ export async function POST(request) {
       );
     }
 
+    console.log("✅ Favourite added successfully");
     return NextResponse.json({
       success: true,
       message: "Favourite added successfully",
