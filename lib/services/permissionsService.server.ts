@@ -8,7 +8,8 @@ export type Permission =
   | "studio.catalogues.manage"
   | "studio.catalogues.create"
   | "studio.products.manage"
-  | "studio.settings.manage";
+  | "studio.settings.manage"
+  | "studio.users.manage";
 
 export type Role = "user" | "brand_admin" | "admin" | "super_admin";
 
@@ -28,6 +29,7 @@ const rolePermissions: Record<Role, Permission[]> = {
     "studio.catalogues.create",
     "studio.products.manage",
     "studio.settings.manage",
+    "studio.users.manage",
   ],
 };
 
@@ -176,4 +178,8 @@ export async function canManageProducts(userId: string): Promise<boolean> {
 
 export async function canManageSettings(userId: string): Promise<boolean> {
   return hasPermission(userId, "studio.settings.manage");
+}
+
+export async function canManageUsers(userId: string): Promise<boolean> {
+  return hasPermission(userId, "studio.users.manage");
 }
