@@ -13,6 +13,9 @@ const getSupabaseClient = () => {
   // Use service role key for API operations if available, fallback to anon key
   if (!supabaseUrl || !supabaseAnonKey) {
     console.error("Required Supabase environment variables are missing");
+    console.error("NEXT_PUBLIC_SUPABASE_URL:", !!supabaseUrl);
+    console.error("NEXT_PUBLIC_SUPABASE_ANON_KEY:", !!supabaseAnonKey);
+    console.error("SUPABASE_SERVICE_ROLE_KEY:", !!supabaseServiceKey);
     throw new Error("Supabase configuration is missing");
   }
 
@@ -110,7 +113,20 @@ export async function GET(request) {
 // POST endpoint to add a favourite
 export async function POST(request) {
   try {
-    const supabase = getSupabaseClient();
+    console.log("🔍 POST /api/favourites - Starting request processing");
+
+    let supabase;
+    try {
+      supabase = getSupabaseClient();
+      console.log("✅ Supabase client created successfully");
+    } catch (clientError) {
+      console.error("❌ Failed to create Supabase client:", clientError);
+      return NextResponse.json(
+        { error: "Database configuration error" },
+        { status: 500 }
+      );
+    }
+
     const body = await request.json();
     const { userId, itemId, itemType } = body;
 
@@ -137,6 +153,7 @@ export async function POST(request) {
     }
 
     // Check if favourite already exists
+    console.log("🔄 Checking if favourite already exists...");
     const { data: existingFavourite, error: checkError } = await supabase
       .from("favourites")
       .select("*")
@@ -147,9 +164,12 @@ export async function POST(request) {
 
     if (checkError && checkError.code !== "PGRST116") {
       // PGRST116 is "Results contain 0 rows" - that's expected
-      console.error("Error checking favourite:", checkError);
+      console.error("❌ Error checking favourite:", checkError);
       return NextResponse.json(
-        { error: "Failed to check if favourite exists" },
+        {
+          error: "Failed to check if favourite exists",
+          details: checkError.message,
+        },
         { status: 500 }
       );
     }
@@ -172,9 +192,9 @@ export async function POST(request) {
     });
 
     if (error) {
-      console.error("Error adding favourite:", error);
+      console.error("❌ Error adding favourite:", error);
       return NextResponse.json(
-        { error: "Failed to add favourite" },
+        { error: "Failed to add favourite", details: error.message },
         { status: 500 }
       );
     }
@@ -185,9 +205,9 @@ export async function POST(request) {
       message: "Favourite added successfully",
     });
   } catch (error) {
-    console.error("Unexpected error:", error);
+    console.error("❌ Unexpected error in POST /api/favourites:", error);
     return NextResponse.json(
-      { error: "An unexpected error occurred" },
+      { error: "An unexpected error occurred", details: error.message },
       { status: 500 }
     );
   }
