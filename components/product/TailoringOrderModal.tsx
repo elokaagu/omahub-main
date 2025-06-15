@@ -1,16 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Product,
   Brand,
   CustomerMeasurements,
   DeliveryAddress,
 } from "@/lib/supabase";
-import {
-  createTailoringOrder,
-  calculateTailoringPrice,
-} from "@/lib/services/tailoringOrderService";
+import { calculateTailoringPrice } from "@/lib/services/tailoringOrderService";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -53,6 +51,7 @@ export function TailoringOrderModal({
   isOpen,
   onClose,
 }: TailoringOrderModalProps) {
+  const { user } = useAuth();
   const [currentTab, setCurrentTab] = useState("measurements");
   const [loading, setLoading] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
@@ -65,7 +64,7 @@ export function TailoringOrderModal({
   const [deliveryAddress, setDeliveryAddress] = useState<DeliveryAddress>({
     full_name: "",
     phone: "",
-    email: "",
+    email: user?.email || "",
     address_line_1: "",
     city: "",
     state: "",
@@ -96,22 +95,42 @@ export function TailoringOrderModal({
   };
 
   const handleSubmitOrder = async () => {
+    if (!user) {
+      alert("Please sign in to submit an order.");
+      return;
+    }
+
+    if (!isFormValid()) {
+      alert("Please fill in all required delivery information.");
+      return;
+    }
+
     try {
       setLoading(true);
 
       const orderData = {
-        user_id: "",
+        user_id: user.id,
         product_id: product.id,
         brand_id: product.brand_id,
-        status: "pending" as const,
-        total_amount: finalPrice,
-        currency: "USD",
         customer_notes: customerNotes,
-        measurements,
         delivery_address: deliveryAddress,
+        total_amount: finalPrice,
       };
 
-      await createTailoringOrder(orderData);
+      const response = await fetch("/api/orders/custom", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(orderData),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to submit order");
+      }
+
       setOrderComplete(true);
     } catch (error) {
       console.error("Error creating order:", error);
@@ -143,7 +162,7 @@ export function TailoringOrderModal({
               Order Submitted Successfully!
             </h3>
             <p className="text-gray-600 mb-6">
-              Your tailoring order has been sent to {brand.name}. They will
+              Your custom order request has been sent to {brand.name}. They will
               contact you within 24-48 hours to confirm details and
               measurements.
             </p>
@@ -174,6 +193,139 @@ export function TailoringOrderModal({
             </p>
           </div>
 
+          {/* Customer Information Form */}
+          <div className="space-y-4">
+            <h4 className="font-medium text-gray-900">Contact Information</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="full_name">Full Name *</Label>
+                <Input
+                  id="full_name"
+                  value={deliveryAddress.full_name}
+                  onChange={(e) =>
+                    handleAddressChange("full_name", e.target.value)
+                  }
+                  placeholder="Enter your full name"
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="phone">Phone Number *</Label>
+                <Input
+                  id="phone"
+                  value={deliveryAddress.phone}
+                  onChange={(e) => handleAddressChange("phone", e.target.value)}
+                  placeholder="Enter your phone number"
+                  required
+                />
+              </div>
+              <div className="md:col-span-2">
+                <Label htmlFor="email">Email Address *</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={deliveryAddress.email}
+                  onChange={(e) => handleAddressChange("email", e.target.value)}
+                  placeholder="Enter your email address"
+                  required
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Delivery Address */}
+          <div className="space-y-4">
+            <h4 className="font-medium text-gray-900">Delivery Address</h4>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="address_line_1">Street Address *</Label>
+                <Input
+                  id="address_line_1"
+                  value={deliveryAddress.address_line_1}
+                  onChange={(e) =>
+                    handleAddressChange("address_line_1", e.target.value)
+                  }
+                  placeholder="Enter your street address"
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label htmlFor="city">City *</Label>
+                  <Input
+                    id="city"
+                    value={deliveryAddress.city}
+                    onChange={(e) =>
+                      handleAddressChange("city", e.target.value)
+                    }
+                    placeholder="City"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="state">State *</Label>
+                  <Input
+                    id="state"
+                    value={deliveryAddress.state}
+                    onChange={(e) =>
+                      handleAddressChange("state", e.target.value)
+                    }
+                    placeholder="State"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="postal_code">Postal Code *</Label>
+                  <Input
+                    id="postal_code"
+                    value={deliveryAddress.postal_code}
+                    onChange={(e) =>
+                      handleAddressChange("postal_code", e.target.value)
+                    }
+                    placeholder="Postal Code"
+                    required
+                  />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="country">Country</Label>
+                <Select
+                  value={deliveryAddress.country}
+                  onValueChange={(value) =>
+                    handleAddressChange("country", value)
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select country" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Nigeria">Nigeria</SelectItem>
+                    <SelectItem value="Ghana">Ghana</SelectItem>
+                    <SelectItem value="Kenya">Kenya</SelectItem>
+                    <SelectItem value="South Africa">South Africa</SelectItem>
+                    <SelectItem value="United States">United States</SelectItem>
+                    <SelectItem value="United Kingdom">
+                      United Kingdom
+                    </SelectItem>
+                    <SelectItem value="Canada">Canada</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+
+          {/* Customer Notes */}
+          <div className="space-y-2">
+            <Label htmlFor="customer_notes">Special Requests or Notes</Label>
+            <Textarea
+              id="customer_notes"
+              value={customerNotes}
+              onChange={(e) => setCustomerNotes(e.target.value)}
+              placeholder="Any special requests, measurements, or notes for the designer..."
+              rows={3}
+            />
+          </div>
+
           <div className="bg-oma-beige/30 rounded-lg p-4">
             <h4 className="font-medium text-gray-900 mb-2">
               What happens next?
@@ -196,9 +348,10 @@ export function TailoringOrderModal({
             </Button>
             <Button
               onClick={handleSubmitOrder}
+              disabled={loading || !isFormValid()}
               className="flex-1 bg-oma-plum hover:bg-oma-plum/90"
             >
-              Submit Order Request
+              {loading ? "Submitting..." : "Submit Order Request"}
             </Button>
           </div>
         </div>
