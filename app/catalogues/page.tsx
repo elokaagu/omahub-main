@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FavouriteButton } from "@/components/ui/favorite-button";
+import { FavouriteButton } from "@/components/ui/favourite-button";
 
 type CatalogueWithBrand = Catalogue & {
   brand: {

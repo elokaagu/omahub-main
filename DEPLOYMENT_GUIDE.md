@@ -30,7 +30,7 @@ Before deploying, ensure the Supabase database is properly configured:
    - collections
    - products (with collection_id as UUID type)
    - profiles
-   - favorites
+   - favourites
 
 ## 2. Storage Setup
 

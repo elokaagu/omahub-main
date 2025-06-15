@@ -250,7 +250,7 @@ export type OrderItem = {
   color?: string;
 };
 
-export type Favorite = {
+export type Favourite = {
   id: string;
   user_id: string;
   product_id: string;

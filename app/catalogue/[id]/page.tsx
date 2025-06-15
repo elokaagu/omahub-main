@@ -19,7 +19,7 @@ import { Catalogue, Brand, Product } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
 import Image from "next/image";
-import { FavouriteButton } from "@/components/ui/favorite-button";
+import { FavouriteButton } from "@/components/ui/favourite-button";
 import { Button } from "@/components/ui/button";
 
 type CatalogueWithBrand = Catalogue & {

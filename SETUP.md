@@ -24,7 +24,7 @@ This document outlines the updates made to fix issues with the brand dashboard a
 
 4. **API Routes**
 
-   - Fixed favorites API to properly handle Supabase authentication
+   - Fixed favourites API to properly handle Supabase authentication
    - Added database setup API for initializing required resources
 
 5. **Setup Script**
@@ -62,7 +62,7 @@ The system now includes the following tables:
 - `brands`: Core brand information
 - `collections`: Brand collections
 - `products`: Products linked to brands and collections
-- `favorites`: User's favorite brands
+- `favourites`: User's favourite brands
 - `reviews`: Brand reviews from users
 
 ## Storage Buckets

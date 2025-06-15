@@ -49,8 +49,8 @@ async function testIntelligentRecommendations() {
       });
     }
 
-    // 2. Test with user favorites (simulate)
-    console.log("\n2️⃣ Testing recommendations with user favorites...");
+    // 2. Test with user favourites (simulate)
+    console.log("\n2️⃣ Testing recommendations with user favourites...");
 
     // First, let's see what brands we have
     const { data: brands, error: brandsError } = await supabase
@@ -65,50 +65,50 @@ async function testIntelligentRecommendations() {
         `✅ Available brands: ${brands.map((b) => b.name).join(", ")}`
       );
 
-      // Simulate user having favorites for some brands
-      const favoriteBrandIds = brands.slice(0, 2).map((b) => b.id);
+      // Simulate user having favourites for some brands
+      const favouriteBrandIds = brands.slice(0, 2).map((b) => b.id);
       console.log(
-        `🤍 Simulating user favorites for brands: ${favoriteBrandIds.join(", ")}`
+        `🤍 Simulating user favourites for brands: ${favouriteBrandIds.join(", ")}`
       );
 
-      // Get products from favorite brands
-      const { data: favoriteProducts, error: favError } = await supabase
+      // Get products from favourite brands
+      const { data: favouriteProducts, error: favError } = await supabase
         .from("products")
         .select("*")
-        .in("brand_id", favoriteBrandIds)
+        .in("brand_id", favouriteBrandIds)
         .eq("in_stock", true)
         .limit(8);
 
       if (favError) {
-        console.error("❌ Error fetching favorite brand products:", favError);
+        console.error("❌ Error fetching favourite brand products:", favError);
       } else {
         console.log(
-          `✅ Found ${favoriteProducts.length} products from favorite brands`
+          `✅ Found ${favouriteProducts.length} products from favourite brands`
         );
 
-        // Take up to 2 from favorites
-        const favoriteRecommendations = favoriteProducts
+        // Take up to 2 from favourites
+        const favouriteRecommendations = favouriteProducts
           .sort(() => Math.random() - 0.5)
           .slice(0, 2);
 
         // Fill remaining with collection products
         const remainingFromCollection = collectionProducts
-          .filter((p) => !favoriteRecommendations.some((fp) => fp.id === p.id))
+          .filter((p) => !favouriteRecommendations.some((fp) => fp.id === p.id))
           .sort(() => Math.random() - 0.5)
           .slice(0, 2);
 
         const intelligentRecommendations = [
-          ...favoriteRecommendations,
+          ...favouriteRecommendations,
           ...remainingFromCollection,
         ];
 
-        console.log("🧠 Intelligent recommendations with user favorites:");
+        console.log("🧠 Intelligent recommendations with user favourites:");
         intelligentRecommendations.forEach((product, index) => {
-          const isFromFavorite = favoriteRecommendations.some(
+          const isFromFavourite = favouriteRecommendations.some(
             (fp) => fp.id === product.id
           );
           console.log(
-            `   ${index + 1}. ${product.title} - $${product.sale_price || product.price} ${isFromFavorite ? "💖 (from favorite brand)" : "📦 (from collection)"}`
+            `   ${index + 1}. ${product.title} - $${product.sale_price || product.price} ${isFromFavourite ? "💖 (from favourite brand)" : "📦 (from collection)"}`
           );
         });
       }
@@ -144,32 +144,32 @@ async function testIntelligentRecommendations() {
       console.log(`   Location: ${collections.brand.location}`);
     }
 
-    // 4. Test favorites table structure
-    console.log("\n4️⃣ Testing favorites table structure...");
+    // 4. Test favourites table structure
+    console.log("\n4️⃣ Testing favourites table structure...");
 
-    const { data: favoritesStructure, error: favStructError } = await supabase
-      .from("favorites")
+    const { data: favouritesStructure, error: favStructError } = await supabase
+      .from("favourites")
       .select("*")
       .limit(1);
 
     if (favStructError) {
       console.log(
-        "⚠️ Favorites table might not exist or be empty:",
+        "⚠️ Favourites table might not exist or be empty:",
         favStructError.message
       );
     } else {
-      console.log("✅ Favorites table structure confirmed");
-      if (favoritesStructure.length > 0) {
-        console.log("   Sample favorite:", favoritesStructure[0]);
+      console.log("✅ Favourites table structure confirmed");
+      if (favouritesStructure.length > 0) {
+        console.log("   Sample favourite:", favouritesStructure[0]);
       } else {
-        console.log("   No favorites found (table is empty)");
+        console.log("   No favourites found (table is empty)");
       }
     }
 
     console.log("\n🎉 Intelligent Recommendations System Test Complete!");
     console.log("💡 The system will:");
-    console.log("   ✓ Prioritize products from user's favorite brands");
-    console.log("   ✓ Fall back to collection products when no favorites");
+    console.log("   ✓ Prioritize products from user's favourite brands");
+    console.log("   ✓ Fall back to collection products when no favourites");
     console.log("   ✓ Fill remaining slots with brand products");
     console.log("   ✓ Shuffle results for variety on each visit");
     console.log("   ✓ Show personalization indicator when user is logged in");

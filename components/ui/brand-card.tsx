@@ -1,7 +1,7 @@
 import { NavigationLink } from "./navigation-link";
 import { CheckCircle, Star } from "@/components/ui/icons";
 import { cn } from "@/lib/utils";
-import { FavouriteButton } from "./favorite-button";
+import { FavouriteButton } from "./favourite-button";
 import { AuthImage } from "./auth-image";
 
 interface BrandCardProps {

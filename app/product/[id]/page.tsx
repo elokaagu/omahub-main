@@ -22,7 +22,7 @@ import {
   Heart,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { FavouriteButton } from "@/components/ui/favorite-button";
+import { FavouriteButton } from "@/components/ui/favourite-button";
 
 export default function ProductPage() {
   const params = useParams();
@@ -34,7 +34,7 @@ export default function ProductPage() {
   const [error, setError] = useState<string | null>(null);
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [selectedImage, setSelectedImage] = useState(0);
-  const [isFavorited, setIsFavorited] = useState(false);
+  const [isFavourited, setIsFavourited] = useState(false);
 
   useEffect(() => {
     fetchProductData();

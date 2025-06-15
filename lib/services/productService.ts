@@ -417,7 +417,7 @@ export async function getCatalogueRecommendations(
 }
 
 /**
- * Get intelligent recommendations based on user favorites and catalogue/brand
+ * Get intelligent recommendations based on user favourites and catalogue/brand
  */
 export async function getIntelligentRecommendations(
   userId?: string,
@@ -432,40 +432,40 @@ export async function getIntelligentRecommendations(
   try {
     let recommendations: Product[] = [];
 
-    // If user is logged in, get recommendations based on their favorite brands
+    // If user is logged in, get recommendations based on their favourite brands
     if (userId) {
-      // Get user's favorite products to understand their preferred brands
-      const { data: favorites } = await supabase
-        .from("favorites")
+      // Get user's favourite products to understand their preferred brands
+      const { data: favourites } = await supabase
+        .from("favourites")
         .select("product_id")
         .eq("user_id", userId);
 
-      if (favorites && favorites.length > 0) {
-        // Get the brands of favorited products
-        const { data: favoritedProducts } = await supabase
+      if (favourites && favourites.length > 0) {
+        // Get the brands of favourited products
+        const { data: favouritedProducts } = await supabase
           .from("products")
           .select("brand_id")
           .in(
             "id",
-            favorites.map((f) => f.product_id)
+            favourites.map((f) => f.product_id)
           );
 
-        if (favoritedProducts && favoritedProducts.length > 0) {
-          const favoriteBrandIds = [
-            ...new Set(favoritedProducts.map((p) => p.brand_id)),
+        if (favouritedProducts && favouritedProducts.length > 0) {
+          const favouriteBrandIds = [
+            ...new Set(favouritedProducts.map((p) => p.brand_id)),
           ];
 
-          // Get products from favorite brands (up to half of the limit)
-          const favoriteLimit = Math.ceil(limit / 2);
-          const { data: favoriteBasedProducts } = await supabase
+          // Get products from favourite brands (up to half of the limit)
+          const favouriteLimit = Math.ceil(limit / 2);
+          const { data: favouriteBasedProducts } = await supabase
             .from("products")
             .select("*")
-            .in("brand_id", favoriteBrandIds)
-            .limit(favoriteLimit)
+            .in("brand_id", favouriteBrandIds)
+            .limit(favouriteLimit)
             .order("created_at", { ascending: false });
 
-          if (favoriteBasedProducts) {
-            recommendations.push(...favoriteBasedProducts);
+          if (favouriteBasedProducts) {
+            recommendations.push(...favouriteBasedProducts);
           }
         }
       }
