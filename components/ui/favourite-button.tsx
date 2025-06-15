@@ -10,21 +10,18 @@ import { useAuth } from "@/contexts/AuthContext";
 interface FavouriteButtonProps {
   itemId: string;
   itemType: "brand" | "catalogue" | "product";
-  initialIsFavourited?: boolean;
   className?: string;
 }
 
 export function FavouriteButton({
   itemId,
   itemType,
-  initialIsFavourited = false,
   className = "",
 }: FavouriteButtonProps) {
-  const [isFavourited, setIsFavourited] = useState(initialIsFavourited);
   const [isLoading, setIsLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const { toast } = useToast();
-  const { addFavourite, removeFavourite } = useFavourites();
+  const { isFavourite, toggleFavourite } = useFavourites();
   const { user } = useAuth();
 
   // Don't render the button if user is not signed in
@@ -32,23 +29,23 @@ export function FavouriteButton({
     return null;
   }
 
+  const isFavourited = isFavourite(itemId, itemType);
+
   const handleToggleFavourite = async () => {
     try {
       setIsLoading(true);
-      if (isFavourited) {
-        await removeFavourite(user.id, itemId, itemType);
-        setIsFavourited(false);
-        toast({
-          title: "Removed from favourites",
-          description: "Item has been removed from your favourites.",
-        });
-      } else {
-        await addFavourite(user.id, itemId, itemType);
-        setIsFavourited(true);
+      await toggleFavourite(itemId, itemType);
+
+      if (!isFavourited) {
         setShowModal(true);
         toast({
           title: "Added to favourites",
           description: "Item has been added to your favourites.",
+        });
+      } else {
+        toast({
+          title: "Removed from favourites",
+          description: "Item has been removed from your favourites.",
         });
       }
     } catch (error) {
