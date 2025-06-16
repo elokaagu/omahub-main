@@ -18,7 +18,7 @@ import {
 import { Catalogue, Brand, Product } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
-import Image from "next/image";
+import { LazyImage } from "@/components/ui/lazy-image";
 import { Button } from "@/components/ui/button";
 import { FavouriteButton } from "@/components/ui/favourite-button";
 
@@ -173,13 +173,15 @@ export default function CataloguePage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
           {/* Catalogue Image */}
           <div className="relative aspect-[4/3] rounded-xl overflow-hidden">
-            <Image
+            <LazyImage
               src={catalogue.image}
               alt={catalogue.title}
               fill
               className={`object-cover ${getImageFocalPoint(catalogue.image, catalogue.title, catalogue.brand.category)}`}
               sizes="(max-width: 1024px) 100vw, 50vw"
               priority={true}
+              aspectRatio="4/3"
+              quality={85}
             />
           </div>
 
@@ -291,7 +293,7 @@ export default function CataloguePage() {
                 >
                   <div className="bg-white/80 rounded-xl overflow-hidden border border-oma-gold/10 hover:border-oma-gold/30 transition-all duration-300 hover:shadow-lg group-hover:-translate-y-1">
                     <div className="aspect-square relative overflow-hidden">
-                      <Image
+                      <LazyImage
                         src={product.image}
                         alt={product.title}
                         fill
@@ -302,6 +304,8 @@ export default function CataloguePage() {
                         )} group-hover:scale-105 transition-transform duration-300`}
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
                         priority={false}
+                        aspectRatio="square"
+                        quality={80}
                       />
                       {product.sale_price && (
                         <div className="absolute top-3 left-3 bg-oma-plum text-white text-xs px-2 py-1 rounded-full">
@@ -361,7 +365,7 @@ export default function CataloguePage() {
                 >
                   <div className="bg-white/80 rounded-xl overflow-hidden border border-oma-gold/10 hover:border-oma-gold/30 transition-all duration-300 hover:shadow-lg group-hover:-translate-y-1">
                     <div className="aspect-square relative overflow-hidden">
-                      <Image
+                      <LazyImage
                         src={product.image}
                         alt={product.title}
                         fill
@@ -372,6 +376,8 @@ export default function CataloguePage() {
                         )} group-hover:scale-105 transition-transform duration-300`}
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
                         priority={false}
+                        aspectRatio="square"
+                        quality={80}
                       />
                       {product.sale_price && (
                         <div className="absolute top-3 left-3 bg-oma-plum text-white text-xs px-2 py-1 rounded-full">

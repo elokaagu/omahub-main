@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -17,7 +17,7 @@ import Link from "next/link";
 import { NavigationLink } from "@/components/ui/navigation-link";
 import { getProductsByBrand } from "@/lib/services/productService";
 import { Product } from "@/lib/supabase";
-import Image from "next/image";
+import { LazyImage } from "@/components/ui/lazy-image";
 
 interface ClientBrandProfileProps {
   brandData: BrandData;
@@ -225,12 +225,15 @@ export default function ClientBrandProfile({
                       style={{ animationDelay: `${index * 100}ms` }}
                     >
                       <div className="aspect-square relative overflow-hidden">
-                        <Image
+                        <LazyImage
                           src={product.image || "/placeholder.png"}
                           alt={product.title}
                           fill
                           className="object-cover group-hover:scale-105 transition-transform duration-300"
                           sizes="(max-width: 640px) 50vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                          priority={true}
+                          aspectRatio="square"
+                          quality={85}
                         />
                       </div>
                       <div className="p-3 sm:p-4">
@@ -291,11 +294,18 @@ export default function ClientBrandProfile({
                     className="aspect-[4/5] relative overflow-hidden rounded-xl sm:rounded-2xl animate-[fadeIn_500ms_ease-in-out_forwards] opacity-0 transition-transform duration-300 group-hover:scale-105"
                     style={{ animationDelay: `${index * 150}ms` }}
                   >
-                    <img
-                      src={collection.image}
-                      alt={collection.title}
-                      className="w-full h-full object-cover rounded-xl sm:rounded-2xl"
-                    />
+                    <div className="aspect-square relative overflow-hidden rounded-lg">
+                      <LazyImage
+                        src={collection.image}
+                        alt={collection.title}
+                        fill
+                        className="object-cover rounded-xl sm:rounded-2xl"
+                        sizes="(max-width: 768px) 100vw, 400px"
+                        priority={true}
+                        aspectRatio="square"
+                        quality={85}
+                      />
+                    </div>
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent group-hover:from-black/70 transition-colors duration-300" />
                     <div className="absolute bottom-0 left-0 p-4 sm:p-6">
                       <h3 className="text-white text-lg sm:text-xl font-source group-hover:text-oma-gold transition-colors duration-300">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Search,
   Grid,
@@ -13,7 +13,19 @@ import {
 import { getTailorsWithBrands } from "@/lib/services/tailorService";
 import { Tailor, Brand } from "@/lib/supabase";
 import Link from "next/link";
-import Image from "next/image";
+import { LazyImage } from "@/components/ui/lazy-image";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Loading } from "@/components/ui/loading";
 
 type TailorWithBrand = Tailor & {
   brand: {
@@ -260,13 +272,15 @@ export default function TailorsPage() {
                 {viewMode === "grid" ? (
                   <div className="bg-white/80 rounded-xl overflow-hidden border border-oma-gold/10 hover:border-oma-gold/30 transition-all duration-300 hover:shadow-lg group-hover:-translate-y-1">
                     <div className="aspect-[4/3] relative overflow-hidden">
-                      <Image
+                      <LazyImage
                         src={tailor.image}
                         alt={tailor.title}
                         fill
                         className={`object-cover ${getImageFocalPoint(tailor.image, tailor.title)} group-hover:scale-105 transition-transform duration-300`}
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                         priority={false}
+                        aspectRatio="4/3"
+                        quality={80}
                       />
                     </div>
                     <div className="p-6">
@@ -336,14 +350,17 @@ export default function TailorsPage() {
                 ) : (
                   <div className="flex gap-6">
                     <div className="w-48 h-36 relative overflow-hidden rounded-lg flex-shrink-0">
-                      <Image
-                        src={tailor.image}
-                        alt={tailor.title}
-                        fill
-                        className={`object-cover ${getImageFocalPoint(tailor.image, tailor.title)} group-hover:scale-105 transition-transform duration-300`}
-                        sizes="192px"
-                        priority={false}
-                      />
+                      <div className="aspect-[4/3] relative overflow-hidden rounded-lg">
+                        <LazyImage
+                          src={tailor.image}
+                          alt={tailor.title}
+                          fill
+                          className={`object-cover ${getImageFocalPoint(tailor.image, tailor.title)}`}
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                          aspectRatio="4/3"
+                          quality={80}
+                        />
+                      </div>
                     </div>
                     <div className="flex-1">
                       <h3 className="text-xl font-canela text-black mb-2 group-hover:text-oma-plum transition-colors">

@@ -4,8 +4,9 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { getTailorWithBrand } from "@/lib/services/tailorService";
 import { Tailor, Brand } from "@/lib/supabase";
-import Image from "next/image";
 import Link from "next/link";
+import { LazyImage } from "@/components/ui/lazy-image";
+import { Button } from "@/components/ui/button";
 import {
   ArrowLeft,
   Clock,
@@ -13,7 +14,10 @@ import {
   MapPin,
   Star,
   CheckCircle,
+  Calendar,
+  ExternalLink,
 } from "lucide-react";
+import { Verified } from "lucide-react";
 
 type TailorWithBrand = Tailor & {
   brand: Brand;
@@ -124,15 +128,17 @@ export default function TailorPage() {
         </Link>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          {/* Image */}
+          {/* Tailor Image */}
           <div className="relative aspect-[4/3] rounded-xl overflow-hidden">
-            <Image
+            <LazyImage
               src={tailor.image}
               alt={tailor.title}
               fill
-              className={`object-cover ${getImageFocalPoint(tailor.image, tailor.title)}`}
+              className="object-cover"
               sizes="(max-width: 1024px) 100vw, 50vw"
               priority={true}
+              aspectRatio="4/3"
+              quality={85}
             />
           </div>
 

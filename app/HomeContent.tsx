@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
+import { LazyImage } from "@/components/ui/lazy-image";
 import React, { useState, useEffect } from "react";
 import {
   FadeIn,
@@ -442,14 +442,14 @@ export default function HomeContent() {
             <div className="relative group overflow-hidden rounded-lg bg-gray-100 min-h-[400px]">
               <Link href="/catalogues">
                 <div className="relative aspect-[3/4]">
-                  <Image
+                  <LazyImage
                     src={categoryImages.catalogueImage}
                     alt="Catalogues"
                     fill
                     priority
                     sizes="(max-width: 768px) 100vw, 50vw"
                     className={`${getCategoryImageFocalPoint("catalogues")} transition-transform duration-300 group-hover:scale-105`}
-                    onError={(e) => {
+                    onError={() => {
                       console.error(
                         "Failed to load catalogue image:",
                         categoryImages.catalogueImage
@@ -471,14 +471,14 @@ export default function HomeContent() {
             <div className="relative group overflow-hidden rounded-lg bg-gray-100 min-h-[400px]">
               <Link href="/tailors">
                 <div className="relative aspect-[3/4]">
-                  <Image
+                  <LazyImage
                     src={categoryImages.tailoredImage}
                     alt="Tailored"
                     fill
                     priority
                     sizes="(max-width: 768px) 100vw, 50vw"
                     className={`${getCategoryImageFocalPoint("tailored")} transition-transform duration-300 group-hover:scale-105`}
-                    onError={(e) => {
+                    onError={() => {
                       console.error(
                         "Failed to load tailored image:",
                         categoryImages.tailoredImage
@@ -516,12 +516,15 @@ export default function HomeContent() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center mt-10">
               <SlideUp delay={0.2}>
                 <div className="rounded-2xl overflow-hidden relative group">
-                  <Image
+                  <LazyImage
                     src={spotlightContent.main_image}
                     alt={`${spotlightContent.brand_name} collection`}
                     width={800}
                     height={1000}
                     className="w-full h-[500px] object-cover transition-transform duration-700 group-hover:scale-105"
+                    aspectRatio="4/5"
+                    sizes="(max-width: 768px) 100vw, 800px"
+                    quality={85}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-oma-black/70 via-oma-black/30 to-transparent"></div>
                   <div className="absolute bottom-8 left-8 right-8 text-white">
@@ -580,12 +583,15 @@ export default function HomeContent() {
                         href={spotlightContent.brand_link}
                         className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 group"
                       >
-                        <Image
+                        <LazyImage
                           src={product.image}
                           alt={`${spotlightContent.brand_name} ${product.name}`}
                           width={400}
                           height={300}
                           className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
+                          aspectRatio="4/3"
+                          sizes="400px"
+                          quality={80}
                         />
                         <div className="p-4">
                           <h5 className="font-medium text-oma-black group-hover:text-oma-plum transition-colors">
@@ -646,12 +652,14 @@ export default function HomeContent() {
             ].map((occasion, index) => (
               <Link key={index} href={occasion.href} className="group">
                 <div className="relative aspect-square rounded-lg overflow-hidden">
-                  <Image
+                  <LazyImage
                     src={occasion.image}
                     alt={occasion.title}
                     fill
                     sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 280px"
                     className="object-cover transition-transform duration-300 group-hover:scale-105"
+                    aspectRatio="square"
+                    quality={80}
                   />
                   <div className="absolute inset-0 bg-black/30 transition-opacity group-hover:bg-black/40" />
                   <div className="absolute bottom-4 left-4 text-white">
@@ -704,12 +712,14 @@ export default function HomeContent() {
                             className="flex-none w-[220px] sm:w-[280px] group block bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
                           >
                             <div className="aspect-[4/5] relative">
-                              <Image
+                              <LazyImage
                                 src={brand.image}
                                 alt={brand.name}
                                 fill
                                 sizes="(max-width: 640px) 220px, 280px"
                                 className="object-cover transition-transform duration-300 group-hover:scale-105"
+                                aspectRatio="4/5"
+                                quality={80}
                               />
                             </div>
                             <div className="p-3 sm:p-4">

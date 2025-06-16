@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
+import { LazyImage } from "@/components/ui/lazy-image";
 import { SectionHeader } from "@/components/ui/section-header";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -35,6 +35,17 @@ export default function HowItWorksClient() {
           centered={true}
           titleClassName="font-canela text-3xl md:text-4xl"
           subtitleClassName="text-oma-cocoa/80"
+        />
+
+        <LazyImage
+          src="/lovable-uploads/how-it-works-hero.jpg"
+          alt="How OmaHub Works"
+          width={600}
+          height={400}
+          className="w-full h-64 object-cover rounded-lg"
+          aspectRatio="3/2"
+          sizes="600px"
+          quality={85}
         />
 
         {/* Three-step process */}
@@ -279,7 +290,7 @@ export default function HowItWorksClient() {
                 className="group overflow-hidden rounded-lg bg-white shadow-sm hover:shadow-md transition-all"
               >
                 <div className="aspect-[4/3] relative">
-                  <Image
+                  <LazyImage
                     src={category.image}
                     alt={category.name}
                     fill

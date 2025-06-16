@@ -3,7 +3,7 @@
 import useFavourites from "@/lib/hooks/useFavourites";
 import { Loading } from "@/components/ui/loading";
 import Link from "next/link";
-import Image from "next/image";
+import { LazyImage } from "@/components/ui/lazy-image";
 import { Button } from "@/components/ui/button";
 import { Heart, Store, BookOpen, ShoppingBag } from "lucide-react";
 
@@ -54,13 +54,15 @@ export default function FavouritesPage() {
               href={getHref(item)}
               className="group block bg-white rounded-xl overflow-hidden border border-oma-gold/10 hover:border-oma-gold/30 transition-all duration-300 hover:shadow-lg"
             >
-              <div className="aspect-[4/3] relative overflow-hidden">
-                <Image
-                  src={item.image || "/placeholder.png"}
-                  alt={item.title || item.name}
+              <div className="aspect-square relative overflow-hidden rounded-lg">
+                <LazyImage
+                  src={item.image}
+                  alt={item.title}
                   fill
                   className="object-cover group-hover:scale-105 transition-transform duration-300"
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  aspectRatio="square"
+                  quality={80}
                 />
               </div>
               <div className="p-4">

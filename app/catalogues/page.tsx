@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Search, Grid, List, Filter, X } from "lucide-react";
 import { getCataloguesWithBrands } from "@/lib/services/catalogueService";
 import { getAllProducts } from "@/lib/services/productService";
 import { Catalogue, Brand, Product } from "@/lib/supabase";
 import Link from "next/link";
-import Image from "next/image";
+import { LazyImage } from "@/components/ui/lazy-image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -16,6 +16,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Loading } from "@/components/ui/loading";
 
 type CatalogueWithBrand = Catalogue & {
   brand: {
@@ -369,7 +372,7 @@ export default function CataloguesPage() {
               >
                 <Link href={`/product/${product.id}`}>
                   <div className="relative aspect-square">
-                    <Image
+                    <LazyImage
                       src={product.image || "/placeholder.png"}
                       alt={product.title}
                       fill
@@ -409,12 +412,15 @@ export default function CataloguesPage() {
                 className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow"
               >
                 <Link href={`/catalogue/${catalogue.id}`}>
-                  <div className="relative aspect-[4/3]">
-                    <Image
-                      src={catalogue.image || "/placeholder.png"}
+                  <div className="aspect-[4/3] relative overflow-hidden rounded-lg">
+                    <LazyImage
+                      src={catalogue.image}
                       alt={catalogue.title}
                       fill
-                      className="object-cover"
+                      className="object-cover group-hover:scale-105 transition-transform duration-300"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      aspectRatio="4/3"
+                      quality={80}
                     />
                   </div>
                   <div className="p-4">
