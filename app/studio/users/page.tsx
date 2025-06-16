@@ -660,7 +660,15 @@ export default function UsersPage() {
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
-                        {user.brand_names.length > 0 ? (
+                        {user.role === "super_admin" ? (
+                          <Badge
+                            variant="secondary"
+                            className="text-xs bg-oma-plum text-white"
+                          >
+                            <Building className="h-3 w-3 mr-1" />
+                            All brands
+                          </Badge>
+                        ) : user.brand_names.length > 0 ? (
                           user.brand_names.map((brandName, index) => (
                             <Badge
                               key={index}
