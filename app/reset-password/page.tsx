@@ -145,7 +145,30 @@ function ResetPasswordForm() {
 
       if (updateError) {
         console.error("❌ Password update error:", updateError);
-        throw updateError;
+
+        // Provide more specific error messages
+        let errorMessage = "Failed to update password. Please try again.";
+
+        if (
+          updateError.message
+            ?.toLowerCase()
+            .includes("new password should be different")
+        ) {
+          errorMessage =
+            "Your new password must be different from your current password. Please choose a different password.";
+        } else if (updateError.message?.toLowerCase().includes("password")) {
+          errorMessage = updateError.message;
+        } else if (updateError.message?.toLowerCase().includes("session")) {
+          errorMessage =
+            "Your password reset session has expired. Please request a new password reset link.";
+        } else if (updateError.message?.toLowerCase().includes("invalid")) {
+          errorMessage =
+            "Invalid password reset session. Please request a new password reset link.";
+        }
+
+        setError(errorMessage);
+        setLoading(false);
+        return;
       }
 
       console.log("✅ Password updated successfully");
@@ -153,7 +176,25 @@ function ResetPasswordForm() {
       toast.success("Password updated successfully!");
     } catch (error: any) {
       console.error("Error updating password:", error);
-      setError(error.message || "Failed to update password. Please try again.");
+
+      // Handle different types of errors
+      let errorMessage = "Failed to update password. Please try again.";
+
+      if (
+        error.message
+          ?.toLowerCase()
+          .includes("new password should be different")
+      ) {
+        errorMessage =
+          "Your new password must be different from your current password. Please choose a different password.";
+      } else if (error.message?.toLowerCase().includes("session")) {
+        errorMessage =
+          "Your password reset session has expired. Please request a new password reset link.";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
