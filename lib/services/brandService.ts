@@ -571,3 +571,41 @@ export function invalidateBrandsCache() {
     isLoading: false,
   };
 }
+
+/**
+ * Fetch only brand IDs and names for lightweight operations
+ * Use this when you only need to map brand IDs to names
+ */
+export async function getBrandNamesMap(): Promise<Map<string, string>> {
+  try {
+    if (!supabase) {
+      throw new Error("Supabase client not available");
+    }
+
+    console.log("🔄 Fetching lightweight brand names map...");
+
+    // Only select id and name for minimal payload
+    const { data, error } = await supabase
+      .from("brands")
+      .select("id, name")
+      .order("name");
+
+    if (error) {
+      console.error("Error fetching brand names:", error);
+      throw error;
+    }
+
+    if (!data) {
+      return new Map();
+    }
+
+    // Create and return the Map directly
+    const brandMap = new Map(data.map((brand) => [brand.id, brand.name]));
+    console.log(`✅ Created brand names map with ${brandMap.size} entries`);
+
+    return brandMap;
+  } catch (err) {
+    console.error("Error in getBrandNamesMap:", err);
+    throw err;
+  }
+}

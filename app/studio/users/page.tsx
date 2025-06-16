@@ -34,7 +34,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { getAllBrands } from "@/lib/services/brandService";
+import { getAllBrands, getBrandNamesMap } from "@/lib/services/brandService";
 import { Brand } from "@/lib/supabase";
 import {
   Users,
@@ -94,13 +94,27 @@ export default function UsersPage() {
   // Fetch users and brands
   useEffect(() => {
     const fetchData = async () => {
+      const startTime = performance.now();
+
       try {
         setLoading(true);
+        console.log("🚀 Users page: Starting data fetch...");
 
-        // Fetch all users via API route (uses service role)
-        const usersResponse = await fetch("/api/admin/users", {
-          credentials: "include",
-        });
+        // Fetch users and brand names in parallel for better performance
+        // Use getBrandNamesMap for lighter payload since we only need names
+        const [usersResponse, brandNamesMap, brandsData] = await Promise.all([
+          fetch("/api/admin/users", {
+            credentials: "include",
+          }),
+          getBrandNamesMap(), // Lightweight brand names only
+          getAllBrands(), // Full brand data for the form dropdown
+        ]);
+
+        const fetchTime = performance.now();
+        console.log(
+          `⏱️ Users page: API calls completed in ${Math.round(fetchTime - startTime)}ms`
+        );
+
         if (!usersResponse.ok) {
           const errorData = await usersResponse.json();
           console.error("Error fetching users:", errorData);
@@ -109,28 +123,30 @@ export default function UsersPage() {
         }
 
         const { users: usersData } = await usersResponse.json();
+        setBrands(brandsData); // Full brand data for form
 
-        // Fetch all brands
-        const brandsData = await getAllBrands();
-        setBrands(brandsData);
-
-        // Map users with brand names
+        // Map users with brand names using the pre-built Map for O(1) performance
         const usersWithBrands: UserWithBrands[] = usersData.map(
           (user: UserProfile) => ({
             ...user,
             brand_names: user.owned_brands
-              ? user.owned_brands
-                  .map(
-                    (brandId: string) =>
-                      brandsData.find((brand) => brand.id === brandId)?.name
-                  )
-                  .filter(Boolean)
+              ? (user.owned_brands
+                  .map((brandId: string) => brandNamesMap.get(brandId))
+                  .filter(Boolean) as string[])
               : [],
           })
         );
 
         setUsers(usersWithBrands);
         setFilteredUsers(usersWithBrands);
+
+        const endTime = performance.now();
+        console.log(
+          `✅ Users page: Total load time ${Math.round(endTime - startTime)}ms`
+        );
+        console.log(
+          `📊 Users page: Loaded ${usersWithBrands.length} users and ${brandsData.length} brands`
+        );
       } catch (error) {
         console.error("Error fetching data:", error);
         toast.error("Failed to load data");
@@ -356,10 +372,55 @@ export default function UsersPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-oma-beige/30 to-white">
-        <div className="max-w-7xl mx-auto px-6 py-24">
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full"></div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+        {/* Header Skeleton */}
+        <div className="flex items-center justify-between mb-12">
+          <div>
+            <div className="h-8 w-64 bg-gray-200 rounded animate-pulse mb-2"></div>
+            <div className="h-4 w-96 bg-gray-200 rounded animate-pulse"></div>
+          </div>
+          <div className="flex space-x-3">
+            <div className="h-10 w-32 bg-gray-200 rounded animate-pulse"></div>
+            <div className="h-10 w-24 bg-gray-200 rounded animate-pulse"></div>
+          </div>
+        </div>
+
+        {/* Search and Filter Skeleton */}
+        <div className="flex flex-col sm:flex-row gap-4 mb-8">
+          <div className="h-10 flex-1 bg-gray-200 rounded animate-pulse"></div>
+          <div className="h-10 w-48 bg-gray-200 rounded animate-pulse"></div>
+        </div>
+
+        {/* Stats Cards Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="border border-gray-200 rounded-lg p-6">
+              <div className="flex items-center justify-between mb-2">
+                <div className="h-4 w-24 bg-gray-200 rounded animate-pulse"></div>
+                <div className="h-4 w-4 bg-gray-200 rounded animate-pulse"></div>
+              </div>
+              <div className="h-8 w-16 bg-gray-200 rounded animate-pulse"></div>
+            </div>
+          ))}
+        </div>
+
+        {/* Table Skeleton */}
+        <div className="border border-gray-200 rounded-lg bg-white">
+          <div className="p-6 border-b">
+            <div className="h-6 w-32 bg-gray-200 rounded animate-pulse"></div>
+          </div>
+          <div className="p-6">
+            <div className="space-y-4">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="flex items-center space-x-4">
+                  <div className="h-4 w-48 bg-gray-200 rounded animate-pulse"></div>
+                  <div className="h-4 w-24 bg-gray-200 rounded animate-pulse"></div>
+                  <div className="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
+                  <div className="h-4 w-20 bg-gray-200 rounded animate-pulse"></div>
+                  <div className="h-4 w-16 bg-gray-200 rounded animate-pulse"></div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>

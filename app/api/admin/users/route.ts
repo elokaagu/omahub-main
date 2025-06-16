@@ -56,19 +56,27 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch all users using service role (bypasses RLS)
+    // Only select essential fields to reduce payload size
     const { data: users, error: usersError } = await supabaseAdmin
       .from("profiles")
-      .select("*")
+      .select("id, email, role, owned_brands, created_at, updated_at")
       .order("created_at", { ascending: false });
 
     if (usersError) {
       console.error("Error fetching users:", usersError);
       return NextResponse.json(
-        { error: "Failed to fetch users" },
+        { error: "Failed to fetch users", details: usersError.message },
         { status: 500 }
       );
     }
 
+    // Add basic validation
+    if (!users || users.length === 0) {
+      console.log("No users found in database");
+      return NextResponse.json({ users: [] });
+    }
+
+    console.log(`✅ Successfully fetched ${users.length} users`);
     return NextResponse.json({ users });
   } catch (error) {
     console.error("Error in admin users API:", error);
