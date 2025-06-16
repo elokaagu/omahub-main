@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { getAllBrands } from "@/lib/services/brandService";
 import {
   getUserPermissions,
@@ -55,27 +55,7 @@ export default function BrandsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
 
-  useEffect(() => {
-    fetchData();
-  }, [user]);
-
-  useEffect(() => {
-    if (searchQuery.trim() === "") {
-      setFilteredBrands(brands);
-    } else {
-      const query = searchQuery.toLowerCase();
-      const filtered = brands.filter(
-        (brand) =>
-          brand.name.toLowerCase().includes(query) ||
-          (brand.description?.toLowerCase() || "").includes(query) ||
-          brand.category.toLowerCase().includes(query) ||
-          brand.location.toLowerCase().includes(query)
-      );
-      setFilteredBrands(filtered);
-    }
-  }, [searchQuery, brands]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     if (!user) {
       setLoading(false);
       return;
@@ -169,7 +149,27 @@ export default function BrandsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, refreshUserProfile, supabase]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  useEffect(() => {
+    if (searchQuery.trim() === "") {
+      setFilteredBrands(brands);
+    } else {
+      const query = searchQuery.toLowerCase();
+      const filtered = brands.filter(
+        (brand) =>
+          brand.name.toLowerCase().includes(query) ||
+          (brand.description?.toLowerCase() || "").includes(query) ||
+          brand.category.toLowerCase().includes(query) ||
+          brand.location.toLowerCase().includes(query)
+      );
+      setFilteredBrands(filtered);
+    }
+  }, [searchQuery, brands]);
 
   const handleBrandClick = (brandId: string) => {
     router.push(

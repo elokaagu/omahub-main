@@ -163,8 +163,13 @@ export default function StudioPage() {
       }
     }
 
-    fetchData();
-  }, [user, refreshUserProfile]);
+    // Only fetch data when user changes, not on every refreshUserProfile change
+    if (user) {
+      fetchData();
+    } else {
+      setLoading(false);
+    }
+  }, [user]); // Simplified dependency array - only depend on user
 
   if (loading) {
     return (

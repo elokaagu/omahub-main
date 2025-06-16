@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import type { Database } from "@/lib/types/supabase";
@@ -44,20 +44,40 @@ interface BrandOwnerAccess {
 export function useBrandOwnerAccess(): BrandOwnerAccess {
   const { user } = useAuth();
   const supabase = createClientComponentClient<Database>();
-
   const [userProfile, setUserProfile] = useState<Profile | null>(null);
   const [userPermissions, setUserPermissions] = useState<Permission[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchUserData = async () => {
+  // Add refs to track fetch state and prevent duplicate calls
+  const isFetchingRef = useRef(false);
+  const lastFetchTimeRef = useRef(0);
+  const FETCH_DEBOUNCE_MS = 1000; // Prevent fetches more frequent than 1 second
+
+  const fetchUserData = useCallback(async () => {
     if (!user) {
-      console.log("🔍 useBrandOwnerAccess: No user, setting loading to false");
       setLoading(false);
       return;
     }
 
+    // Prevent duplicate concurrent fetches
+    if (isFetchingRef.current) {
+      console.log(
+        "🔄 useBrandOwnerAccess: Fetch already in progress, skipping..."
+      );
+      return;
+    }
+
+    // Debounce rapid successive calls
+    const now = Date.now();
+    if (now - lastFetchTimeRef.current < FETCH_DEBOUNCE_MS) {
+      console.log("🔄 useBrandOwnerAccess: Fetch too recent, skipping...");
+      return;
+    }
+
     try {
+      isFetchingRef.current = true;
+      lastFetchTimeRef.current = now;
       setLoading(true);
       setError(null);
 
@@ -115,43 +135,54 @@ export function useBrandOwnerAccess(): BrandOwnerAccess {
       setError("Failed to load user data");
     } finally {
       setLoading(false);
+      isFetchingRef.current = false;
     }
-  };
+  }, [user, supabase]);
 
   useEffect(() => {
     fetchUserData();
-  }, [user]);
+  }, [fetchUserData]);
 
-  // Add tab visibility change listener to refresh data when tab becomes active
+  // Optimized tab visibility change listener with longer debounce
   useEffect(() => {
     if (typeof window === "undefined") return;
 
+    let visibilityTimeout: NodeJS.Timeout;
+    let focusTimeout: NodeJS.Timeout;
+    const VISIBILITY_DEBOUNCE_MS = 5000; // Increased debounce to 5 seconds
+
     const handleVisibilityChange = () => {
       if (!document.hidden && user) {
-        console.log("👁️ Tab became visible, refreshing brand access data...");
-        fetchUserData();
+        clearTimeout(visibilityTimeout);
+        visibilityTimeout = setTimeout(() => {
+          console.log("👁️ Tab became visible, refreshing brand access data...");
+          fetchUserData();
+        }, VISIBILITY_DEBOUNCE_MS);
+      }
+    };
+
+    const handleFocus = () => {
+      if (user) {
+        clearTimeout(focusTimeout);
+        focusTimeout = setTimeout(() => {
+          console.log("🎯 Window focused, refreshing brand access data...");
+          fetchUserData();
+        }, VISIBILITY_DEBOUNCE_MS);
       }
     };
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    // Also listen for window focus events as a backup
-    const handleFocus = () => {
-      if (user) {
-        console.log("🎯 Window focused, refreshing brand access data...");
-        fetchUserData();
-      }
-    };
-
     window.addEventListener("focus", handleFocus);
 
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("focus", handleFocus);
+      clearTimeout(visibilityTimeout);
+      clearTimeout(focusTimeout);
     };
-  }, [user]);
+  }, [user, fetchUserData]);
 
-  // Derived values
+  // Memoized derived values to prevent unnecessary recalculations
   const effectiveProfile = userProfile || {
     role: user?.role || "user",
     owned_brands: user?.owned_brands || [],
@@ -171,83 +202,102 @@ export function useBrandOwnerAccess(): BrandOwnerAccess {
   );
   const canManageSettings = userPermissions.includes("studio.settings.manage");
 
-  // Debug logging for derived values
-  console.log("🎯 useBrandOwnerAccess: Derived values:", {
+  // Debug logging for derived values (only log when values actually change)
+  useEffect(() => {
+    console.log("🎯 useBrandOwnerAccess: Derived values:", {
+      isBrandOwner,
+      isAdmin,
+      ownedBrandIds,
+      canManageBrands,
+      effectiveProfileRole: effectiveProfile.role,
+      userProfileExists: !!userProfile,
+    });
+  }, [
     isBrandOwner,
     isAdmin,
-    ownedBrandIds,
+    ownedBrandIds.join(","),
     canManageBrands,
-    effectiveProfileRole: effectiveProfile.role,
-    userProfileExists: !!userProfile,
-  });
+    effectiveProfile.role,
+    !!userProfile,
+  ]);
 
-  // Utility functions
-  const filterBrandsByOwnership = (brands: Brand[]): Brand[] => {
-    console.log("🔍 filterBrandsByOwnership: Input brands:", brands.length);
-    console.log("🔍 filterBrandsByOwnership: User access:", {
-      isAdmin,
-      isBrandOwner,
-      ownedBrandIds,
-    });
+  // Memoized utility functions to prevent recreation on every render
+  const filterBrandsByOwnership = useCallback(
+    (brands: Brand[]): Brand[] => {
+      console.log("🔍 filterBrandsByOwnership: Input brands:", brands.length);
+      console.log("🔍 filterBrandsByOwnership: User access:", {
+        isAdmin,
+        isBrandOwner,
+        ownedBrandIds,
+      });
 
-    if (isAdmin) {
+      if (isAdmin) {
+        console.log(
+          "👑 filterBrandsByOwnership: Admin access - returning all brands"
+        );
+        return brands; // Admins see all brands
+      }
+
+      if (isBrandOwner && ownedBrandIds.length > 0) {
+        const filtered = brands.filter((brand) =>
+          ownedBrandIds.includes(brand.id)
+        );
+        console.log(
+          "🏷️ filterBrandsByOwnership: Brand owner access - filtered brands:",
+          {
+            totalBrands: brands.length,
+            ownedBrandIds,
+            filteredCount: filtered.length,
+            filteredBrands: filtered.map((b) => `${b.name} (${b.id})`),
+          }
+        );
+        return filtered;
+      }
+
       console.log(
-        "👑 filterBrandsByOwnership: Admin access - returning all brands"
+        "🚫 filterBrandsByOwnership: No access - returning empty array"
       );
-      return brands; // Admins see all brands
-    }
+      return []; // No access for other roles
+    },
+    [isAdmin, isBrandOwner, ownedBrandIds]
+  );
 
-    if (isBrandOwner && ownedBrandIds.length > 0) {
-      const filtered = brands.filter((brand) =>
-        ownedBrandIds.includes(brand.id)
-      );
-      console.log(
-        "🏷️ filterBrandsByOwnership: Brand owner access - filtered brands:",
-        {
-          totalBrands: brands.length,
-          ownedBrandIds,
-          filteredCount: filtered.length,
-          filteredBrands: filtered.map((b) => `${b.name} (${b.id})`),
-        }
-      );
-      return filtered;
-    }
+  const filterCataloguesByOwnership = useCallback(
+    (catalogues: Catalogue[]): Catalogue[] => {
+      if (isAdmin) {
+        return catalogues; // Admins see all catalogues
+      }
 
-    console.log(
-      "🚫 filterBrandsByOwnership: No access - returning empty array"
-    );
-    return []; // No access for other roles
-  };
+      if (isBrandOwner && ownedBrandIds.length > 0) {
+        return catalogues.filter((catalogue) =>
+          ownedBrandIds.includes(catalogue.brand_id)
+        );
+      }
 
-  const filterCataloguesByOwnership = (
-    catalogues: Catalogue[]
-  ): Catalogue[] => {
-    if (isAdmin) {
-      return catalogues; // Admins see all catalogues
-    }
+      return []; // No access for other roles
+    },
+    [isAdmin, isBrandOwner, ownedBrandIds]
+  );
 
-    if (isBrandOwner && ownedBrandIds.length > 0) {
-      return catalogues.filter((catalogue) =>
-        ownedBrandIds.includes(catalogue.brand_id)
-      );
-    }
+  const canAccessBrand = useCallback(
+    (brandId: string): boolean => {
+      if (isAdmin) return true;
+      if (isBrandOwner) return ownedBrandIds.includes(brandId);
+      return false;
+    },
+    [isAdmin, isBrandOwner, ownedBrandIds]
+  );
 
-    return []; // No access for other roles
-  };
-
-  const canAccessBrand = (brandId: string): boolean => {
-    if (isAdmin) return true;
-    if (isBrandOwner) return ownedBrandIds.includes(brandId);
-    return false;
-  };
-
-  const canAccessCatalogue = (catalogue: Catalogue): boolean => {
-    if (isAdmin) return true;
-    if (isBrandOwner) {
-      return ownedBrandIds.includes(catalogue.brand_id);
-    }
-    return false;
-  };
+  const canAccessCatalogue = useCallback(
+    (catalogue: Catalogue): boolean => {
+      if (isAdmin) return true;
+      if (isBrandOwner) {
+        return ownedBrandIds.includes(catalogue.brand_id);
+      }
+      return false;
+    },
+    [isAdmin, isBrandOwner, ownedBrandIds]
+  );
 
   return {
     // User info

@@ -75,57 +75,32 @@ export default function BrandManagement({ className }: BrandManagementProps) {
     }
   }, [accessLoading, user, canManageBrands]);
 
-  // Add tab visibility change listener to refresh brands when tab becomes active
+  // Simplified tab visibility change listener with much longer debounce
   useEffect(() => {
     if (typeof window === "undefined") return;
 
     let refreshTimeout: NodeJS.Timeout;
-    let lastRefreshTime = 0;
-    const REFRESH_DEBOUNCE_MS = 2000; // Only refresh if it's been 2+ seconds since last refresh
+    const REFRESH_DEBOUNCE_MS = 10000; // Increased to 10 seconds to reduce aggressive refreshing
 
     const handleVisibilityChange = () => {
+      // Only refresh if tab was hidden for a significant time and user has permissions
       if (!document.hidden && user && canManageBrands && !accessLoading) {
-        const now = Date.now();
-
-        // Only refresh if enough time has passed since last refresh
-        if (now - lastRefreshTime > REFRESH_DEBOUNCE_MS) {
-          console.log("👁️ Tab became visible, refreshing brands...");
-          lastRefreshTime = now;
-          invalidateBrandsCache(); // Clear cache to ensure fresh data
-          fetchBrands();
-        } else {
-          console.log(
-            "👁️ Tab became visible, but skipping refresh (too recent)"
-          );
-        }
-      }
-    };
-
-    const handleFocus = () => {
-      if (user && canManageBrands && !accessLoading) {
-        const now = Date.now();
-
-        // Debounce focus refreshes to prevent rapid-fire refreshes
         clearTimeout(refreshTimeout);
         refreshTimeout = setTimeout(() => {
-          if (now - lastRefreshTime > REFRESH_DEBOUNCE_MS) {
-            console.log("🎯 Window focused, refreshing brands...");
-            lastRefreshTime = now;
-            invalidateBrandsCache(); // Clear cache to ensure fresh data
-            fetchBrands();
-          } else {
-            console.log("🎯 Window focused, but skipping refresh (too recent)");
-          }
-        }, 500); // 500ms debounce for focus events
+          console.log(
+            "👁️ Tab became visible after long absence, refreshing brands..."
+          );
+          invalidateBrandsCache(); // Clear cache to ensure fresh data
+          fetchBrands();
+        }, REFRESH_DEBOUNCE_MS);
       }
     };
 
+    // Remove the aggressive focus listener - only keep visibility change
     document.addEventListener("visibilitychange", handleVisibilityChange);
-    window.addEventListener("focus", handleFocus);
 
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
-      window.removeEventListener("focus", handleFocus);
       clearTimeout(refreshTimeout);
     };
   }, [user, canManageBrands, accessLoading]);
