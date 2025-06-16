@@ -18,17 +18,82 @@ function ResetPasswordForm() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordReset, setPasswordReset] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isValidSession, setIsValidSession] = useState<boolean | null>(null);
 
-  // Check if we have the necessary tokens
+  // Check if we have a valid session for password reset
   useEffect(() => {
-    const accessToken = searchParams.get("access_token");
-    const refreshToken = searchParams.get("refresh_token");
+    const checkSession = async () => {
+      try {
+        // First check URL parameters
+        const accessToken = searchParams.get("access_token");
+        const refreshToken = searchParams.get("refresh_token");
+        const type = searchParams.get("type");
 
-    if (!accessToken || !refreshToken) {
-      setError(
-        "Invalid or expired reset link. Please request a new password reset."
-      );
-    }
+        console.log("🔍 Reset password URL params:", {
+          hasAccessToken: !!accessToken,
+          hasRefreshToken: !!refreshToken,
+          type: type,
+        });
+
+        // If we have tokens in URL, set the session
+        if (accessToken && refreshToken) {
+          console.log("🔑 Setting session from URL tokens...");
+          const { data, error: sessionError } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+
+          if (sessionError) {
+            console.error("❌ Error setting session:", sessionError);
+            setError(
+              "Invalid or expired reset link. Please request a new password reset."
+            );
+            setIsValidSession(false);
+            return;
+          }
+
+          if (data.session) {
+            console.log("✅ Session set successfully");
+            setIsValidSession(true);
+            return;
+          }
+        }
+
+        // Check if we already have a valid session
+        const {
+          data: { session },
+          error: getSessionError,
+        } = await supabase.auth.getSession();
+
+        if (getSessionError) {
+          console.error("❌ Error getting session:", getSessionError);
+          setError(
+            "Unable to verify reset session. Please request a new password reset."
+          );
+          setIsValidSession(false);
+          return;
+        }
+
+        if (session) {
+          console.log("✅ Valid session found");
+          setIsValidSession(true);
+        } else {
+          console.log("❌ No valid session found");
+          setError(
+            "Invalid or expired reset link. Please request a new password reset."
+          );
+          setIsValidSession(false);
+        }
+      } catch (err) {
+        console.error("❌ Session check error:", err);
+        setError(
+          "Unable to verify reset session. Please request a new password reset."
+        );
+        setIsValidSession(false);
+      }
+    };
+
+    checkSession();
   }, [searchParams]);
 
   const validatePassword = (password: string) => {
@@ -71,15 +136,19 @@ function ResetPasswordForm() {
         throw new Error("Supabase client not available");
       }
 
+      console.log("🔄 Updating password...");
+
       // Update the user's password
       const { error: updateError } = await supabase.auth.updateUser({
         password: password,
       });
 
       if (updateError) {
+        console.error("❌ Password update error:", updateError);
         throw updateError;
       }
 
+      console.log("✅ Password updated successfully");
       setPasswordReset(true);
       toast.success("Password updated successfully!");
     } catch (error: any) {
@@ -90,7 +159,29 @@ function ResetPasswordForm() {
     }
   };
 
-  if (error && !password && !confirmPassword) {
+  // Show loading while checking session
+  if (isValidSession === null) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-oma-beige/50 to-white flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+        <div className="sm:mx-auto sm:w-full sm:max-w-md">
+          <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+            <div className="text-center">
+              <div className="animate-spin h-8 w-8 border-2 border-oma-plum border-t-transparent rounded-full mx-auto mb-4"></div>
+              <h2 className="text-xl font-semibold text-oma-cocoa mb-2">
+                Verifying Reset Link...
+              </h2>
+              <p className="text-sm text-gray-600">
+                Please wait while we verify your password reset request.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error if session is invalid
+  if (isValidSession === false || error) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-oma-beige/50 to-white flex flex-col justify-center py-12 sm:px-6 lg:px-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
