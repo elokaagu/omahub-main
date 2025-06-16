@@ -77,31 +77,81 @@ export async function POST(request: NextRequest) {
 
     console.log("✅ Supabase authentication successful for:", data.user.email);
 
-    // Check if profile exists and create if not - use upsert for efficiency
+    // Check if profile exists first to preserve owned_brands
     const userRole = getUserRole(data.user.email || "");
 
-    console.log("🔄 Upserting user profile with role:", userRole);
+    console.log("🔄 Checking existing profile for:", data.user.email);
 
-    const { error: profileError } = await supabase.from("profiles").upsert(
-      {
+    // First, check if profile already exists
+    const { data: existingProfile, error: profileCheckError } = await supabase
+      .from("profiles")
+      .select("id, owned_brands, role")
+      .eq("id", data.user.id)
+      .single();
+
+    if (profileCheckError && profileCheckError.code !== "PGRST116") {
+      console.error("❌ Error checking existing profile:", profileCheckError);
+    }
+
+    let profileData;
+    if (existingProfile) {
+      console.log(
+        "✅ Existing profile found, preserving owned_brands:",
+        existingProfile.owned_brands
+      );
+
+      // Profile exists - only update role and email, preserve owned_brands
+      profileData = {
         id: data.user.id,
         email: data.user.email,
         role: userRole,
-        owned_brands: [],
+        owned_brands: existingProfile.owned_brands || [], // Preserve existing owned_brands
+        updated_at: new Date().toISOString(),
+      };
+    } else {
+      console.log("🆕 Creating new profile with default owned_brands");
+
+      // New profile - set default owned_brands based on role
+      let defaultOwnedBrands: string[] = [];
+
+      // Set default brands for known brand admins
+      if (
+        userRole === "brand_admin" &&
+        data.user.email === "eloka@culturin.com"
+      ) {
+        defaultOwnedBrands = ["ehbs-couture"];
+      }
+
+      profileData = {
+        id: data.user.id,
+        email: data.user.email,
+        role: userRole,
+        owned_brands: defaultOwnedBrands,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-      },
-      {
+      };
+    }
+
+    console.log("🔄 Upserting profile with data:", {
+      role: profileData.role,
+      owned_brands: profileData.owned_brands,
+      email: profileData.email,
+    });
+
+    const { error: profileError } = await supabase
+      .from("profiles")
+      .upsert(profileData, {
         onConflict: "id",
         ignoreDuplicates: false,
-      }
-    );
+      });
 
     if (profileError) {
       console.error("❌ Profile upsert error:", profileError);
       // Don't fail login if profile creation fails
     } else {
-      console.log("✅ Profile upserted successfully");
+      console.log(
+        "✅ Profile upserted successfully with preserved owned_brands"
+      );
     }
 
     // Create response with session refresh instruction
