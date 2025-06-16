@@ -40,11 +40,12 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { AuthImage } from "@/components/ui/auth-image";
 import { Loading } from "@/components/ui/loading";
+import { RefreshCw } from "lucide-react";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
 export default function BrandsPage() {
-  const { user } = useAuth();
+  const { user, refreshUserProfile } = useAuth();
   const supabase = createClientComponentClient<Database>();
   const [brands, setBrands] = useState<Brand[]>([]);
   const [filteredBrands, setFilteredBrands] = useState<Brand[]>([]);
@@ -82,6 +83,9 @@ export default function BrandsPage() {
 
     setLoading(true);
     try {
+      // Refresh user profile first to get latest owned_brands
+      await refreshUserProfile();
+
       // Get user permissions and profile
       const [permissions, profileResult] = await Promise.all([
         getUserPermissions(user.id, user.email),
@@ -92,6 +96,18 @@ export default function BrandsPage() {
 
       if (profileResult.error) {
         console.error("Error fetching profile:", profileResult.error);
+        // Use user context as fallback
+        setUserProfile({
+          id: user.id,
+          email: user.email,
+          role: user.role || "user",
+          owned_brands: user.owned_brands || [],
+          first_name: user.first_name || null,
+          last_name: user.last_name || null,
+          avatar_url: user.avatar_url || null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        } as Profile);
       } else {
         setUserProfile(profileResult.data);
       }
@@ -103,9 +119,25 @@ export default function BrandsPage() {
         return;
       }
 
-      const isBrandOwner = user.role === "brand_admin";
-      const isAdmin = user.role === "admin" || user.role === "super_admin";
-      const ownedBrandIds = profileResult.data?.owned_brands || [];
+      // Use the most up-to-date profile data
+      const effectiveProfile = profileResult.data || {
+        role: user.role,
+        owned_brands: user.owned_brands || [],
+      };
+
+      const isBrandOwner = effectiveProfile.role === "brand_admin";
+      const isAdmin =
+        effectiveProfile.role === "admin" ||
+        effectiveProfile.role === "super_admin";
+      const ownedBrandIds = effectiveProfile.owned_brands || [];
+
+      console.log("🎯 Brand Page: User access data:", {
+        userEmail: user.email,
+        role: effectiveProfile.role,
+        isBrandOwner,
+        isAdmin,
+        ownedBrandIds,
+      });
 
       // Fetch brands based on user role
       const allBrands = await getAllBrands();
@@ -114,6 +146,7 @@ export default function BrandsPage() {
         // Admins see all brands
         setBrands(allBrands);
         setFilteredBrands(allBrands);
+        console.log(`👑 Admin access: Showing all ${allBrands.length} brands`);
       } else if (isBrandOwner && ownedBrandIds.length > 0) {
         // Brand owners see only their brands
         const ownedBrands = allBrands.filter((brand) =>
@@ -121,10 +154,15 @@ export default function BrandsPage() {
         );
         setBrands(ownedBrands);
         setFilteredBrands(ownedBrands);
+        console.log(
+          `🏷️ Brand owner access: Showing ${ownedBrands.length} owned brands:`,
+          ownedBrands.map((b) => `${b.name} (${b.id})`)
+        );
       } else {
         // No access
         setBrands([]);
         setFilteredBrands([]);
+        console.log("🚫 No brand access");
       }
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -191,20 +229,31 @@ export default function BrandsPage() {
             </p>
           )}
         </div>
-        {isAdmin && (
+        <div className="flex gap-2">
           <Button
-            asChild
-            className="bg-oma-plum hover:bg-oma-plum/90 w-full sm:w-auto"
+            onClick={fetchData}
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-2"
           >
-            <Link
-              href="/studio/brands/create"
-              className="flex items-center justify-center gap-2"
-            >
-              <PlusCircle className="h-4 w-4" />
-              Add New Brand
-            </Link>
+            <RefreshCw className="h-4 w-4" />
+            Refresh
           </Button>
-        )}
+          {isAdmin && (
+            <Button
+              asChild
+              className="bg-oma-plum hover:bg-oma-plum/90 w-full sm:w-auto"
+            >
+              <Link
+                href="/studio/brands/create"
+                className="flex items-center justify-center gap-2"
+              >
+                <PlusCircle className="h-4 w-4" />
+                Add New Brand
+              </Link>
+            </Button>
+          )}
+        </div>
       </div>
 
       <Card className="mb-8">

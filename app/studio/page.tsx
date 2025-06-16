@@ -24,48 +24,47 @@ export default function StudioPage() {
   const [userPermissions, setUserPermissions] = useState<Permission[]>([]);
   const [userProfile, setUserProfile] = useState<Profile | null>(null);
   const [ownedBrands, setOwnedBrands] = useState<Brand[]>([]);
-  const { user } = useAuth();
+  const { user, refreshUserProfile } = useAuth();
   const supabase = createClientComponentClient<Database>();
 
   useEffect(() => {
     async function fetchData() {
       try {
-        console.log("🏠 Studio Page: fetchData starting...");
-        console.log("🏠 Studio Page: Current user:", {
-          userId: user?.id,
-          userEmail: user?.email,
-          userRole: user?.role,
-          userOwnedBrands: user?.owned_brands,
-        });
-
         if (!user) {
-          console.log("🏠 Studio Page: No user, setting loading to false");
+          console.log("👤 Studio Page: No user found");
           setLoading(false);
           return;
         }
 
-        // Get user permissions - pass both ID and email for better fallback
-        console.log("🔍 Studio Page: Getting permissions for user:", user.id);
-        const permissions = await getUserPermissions(user.id, user.email);
-        console.log("👤 Studio Page: User permissions received:", permissions);
+        console.log("🔄 Studio Page: Starting data fetch for user:", {
+          userId: user.id,
+          userEmail: user.email,
+          userRole: user.role,
+          userOwnedBrands: user.owned_brands,
+        });
+
+        // Refresh user profile first to get latest data
+        await refreshUserProfile();
+
+        // Get user permissions and profile
+        const [permissions, profileResult] = await Promise.all([
+          getUserPermissions(user.id, user.email),
+          supabase.from("profiles").select("*").eq("id", user.id).single(),
+        ]);
+
+        console.log("✅ Studio Page: Permissions received:", permissions);
         setUserPermissions(permissions);
 
-        // Get user profile to access owned_brands - but also use user context as fallback
-        console.log("👤 Studio Page: Fetching user profile...");
-        const { data: profile, error: profileError } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", user.id)
-          .single();
+        let profile = profileResult.data;
 
-        if (profileError) {
+        if (profileResult.error) {
           console.error(
             "❌ Studio Page: Error fetching profile:",
-            profileError
+            profileResult.error
           );
           console.log("🔄 Studio Page: Using user context as fallback");
           // Use user context as fallback
-          setUserProfile({
+          profile = {
             id: user.id,
             email: user.email,
             role: user.role || "user",
@@ -75,7 +74,8 @@ export default function StudioPage() {
             avatar_url: user.avatar_url || null,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
-          } as Profile);
+          } as Profile;
+          setUserProfile(profile);
         } else {
           console.log("👤 Studio Page: Profile fetched:", {
             role: profile?.role,
@@ -159,13 +159,12 @@ export default function StudioPage() {
       } catch (error) {
         console.error("❌ Studio Page: Error in fetchData:", error);
       } finally {
-        console.log("🏠 Studio Page: Setting loading to false");
         setLoading(false);
       }
     }
 
     fetchData();
-  }, [user, supabase]);
+  }, [user, refreshUserProfile]);
 
   if (loading) {
     return (
@@ -262,13 +261,7 @@ export default function StudioPage() {
       {/* Brand Management Section */}
       {userPermissions.includes("studio.brands.manage") && (
         <div>
-          <BrandManagement
-            initialBrands={brands}
-            userPermissions={userPermissions}
-            userId={user.id}
-            userRole={effectiveProfile.role}
-            ownedBrandIds={ownedBrandIds}
-          />
+          <BrandManagement className="mt-8" />
         </div>
       )}
 
