@@ -47,7 +47,15 @@ import { toast } from "sonner";
 import { AuthImage } from "@/components/ui/auth-image";
 import { Loading } from "@/components/ui/loading";
 
-type CatalogueWithBrand = Catalogue & { brand: { name: string; id: string } };
+type CatalogueWithBrand = Catalogue & {
+  brand: {
+    name: string;
+    id: string;
+    location: string;
+    is_verified: boolean;
+    category: string;
+  };
+};
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
 export default function CataloguesPage() {
@@ -81,9 +89,16 @@ export default function CataloguesPage() {
 
   const fetchData = async () => {
     if (!user) {
+      console.log("📚 Catalogues Page: No user, skipping fetch");
       setLoading(false);
       return;
     }
+
+    console.log("📚 Catalogues Page: Starting fetchData for user:", {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    });
 
     setLoading(true);
     try {
@@ -93,17 +108,35 @@ export default function CataloguesPage() {
         supabase.from("profiles").select("*").eq("id", user.id).single(),
       ]);
 
+      console.log("📚 Catalogues Page: Permissions:", permissions);
+      console.log("📚 Catalogues Page: Profile result:", {
+        error: profileResult.error,
+        data: profileResult.data
+          ? {
+              id: profileResult.data.id,
+              email: profileResult.data.email,
+              role: profileResult.data.role,
+              owned_brands: profileResult.data.owned_brands,
+            }
+          : null,
+      });
+
       setUserPermissions(permissions);
 
       if (profileResult.error) {
-        console.error("Error fetching profile:", profileResult.error);
+        console.error(
+          "❌ Catalogues Page: Error fetching profile:",
+          profileResult.error
+        );
       } else {
         setUserProfile(profileResult.data);
       }
 
       // Check if user has permission to manage catalogues
       if (!permissions.includes("studio.catalogues.manage")) {
-        console.log("User doesn't have permission to manage catalogues");
+        console.log(
+          "⚠️ Catalogues Page: User doesn't have permission to manage catalogues"
+        );
         setLoading(false);
         return;
       }
@@ -112,38 +145,88 @@ export default function CataloguesPage() {
       const isAdmin = user.role === "admin" || user.role === "super_admin";
       const ownedBrandIds = profileResult.data?.owned_brands || [];
 
+      console.log("📚 Catalogues Page: Role analysis:", {
+        isBrandOwner,
+        isAdmin,
+        ownedBrandIds,
+        ownedBrandCount: ownedBrandIds.length,
+      });
+
       // Fetch brands and catalogues based on user role
       if (isAdmin) {
+        console.log("📚 Catalogues Page: Admin user - fetching all data");
         // Admins see all brands and catalogues
         const [brandsData, cataloguesData] = await Promise.all([
           getAllBrands(),
           getCataloguesWithBrands(),
         ]);
+        console.log("📚 Catalogues Page: Admin data fetched:", {
+          brandsCount: brandsData.length,
+          cataloguesCount: cataloguesData.length,
+        });
         setBrands(brandsData);
         setCatalogues(cataloguesData);
       } else if (isBrandOwner && ownedBrandIds.length > 0) {
+        console.log(
+          "📚 Catalogues Page: Brand owner with owned brands - fetching filtered data"
+        );
         // Brand owners see only their brands and catalogues
         const [brandsData, cataloguesData] = await Promise.all([
-          getAllBrands().then((allBrands) =>
-            allBrands.filter((brand) => ownedBrandIds.includes(brand.id))
-          ),
-          getCataloguesWithBrands().then((allCatalogues) =>
-            allCatalogues.filter((catalogue) =>
+          getAllBrands().then((allBrands) => {
+            console.log(
+              "📚 Catalogues Page: All brands fetched:",
+              allBrands.length
+            );
+            const filtered = allBrands.filter((brand) =>
+              ownedBrandIds.includes(brand.id)
+            );
+            console.log("📚 Catalogues Page: Filtered brands for owner:", {
+              total: allBrands.length,
+              filtered: filtered.length,
+              ownedBrandIds,
+              filteredBrands: filtered.map((b) => ({ id: b.id, name: b.name })),
+            });
+            return filtered;
+          }),
+          getCataloguesWithBrands().then((allCatalogues) => {
+            console.log(
+              "📚 Catalogues Page: All catalogues fetched:",
+              allCatalogues.length
+            );
+            const filtered = allCatalogues.filter((catalogue) =>
               ownedBrandIds.includes(catalogue.brand_id)
-            )
-          ),
+            );
+            console.log("📚 Catalogues Page: Filtered catalogues for owner:", {
+              total: allCatalogues.length,
+              filtered: filtered.length,
+              ownedBrandIds,
+              filteredCatalogues: filtered.map((c) => ({
+                id: c.id,
+                title: c.title,
+                brand_id: c.brand_id,
+                brand_name: c.brand?.name,
+              })),
+            });
+            return filtered;
+          }),
         ]);
         setBrands(brandsData);
         setCatalogues(cataloguesData);
       } else {
+        console.log(
+          "📚 Catalogues Page: No access - user is not admin and has no owned brands"
+        );
         // No access
         setBrands([]);
         setCatalogues([]);
       }
     } catch (error) {
-      console.error("Error fetching data:", error);
+      console.error("❌ Catalogues Page: Error fetching data:", error);
       toast.error("Failed to load catalogues");
     } finally {
+      console.log(
+        "📚 Catalogues Page: Fetch completed, setting loading to false"
+      );
       setLoading(false);
     }
   };
@@ -260,6 +343,18 @@ export default function CataloguesPage() {
       </div>
     );
   }
+
+  // Debug logging for render
+  console.log("📚 Catalogues Page: Rendering with data:", {
+    cataloguesCount: catalogues.length,
+    filteredCataloguesCount: filteredCatalogues.length,
+    brandsCount: brands.length,
+    selectedBrand,
+    searchQuery,
+    canManageCatalogues,
+    canCreateCatalogues,
+    userRole: user?.role,
+  });
 
   return (
     <div className="min-h-screen bg-white">

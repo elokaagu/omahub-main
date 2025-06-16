@@ -151,94 +151,6 @@ const generateDynamicFallbackItems = async (): Promise<CarouselItem[]> => {
   }
 };
 
-// Simple in-memory cache for dynamic images (session-based)
-let categoryImageCache: {
-  catalogueImage: string;
-  tailoredImage: string;
-  timestamp: number;
-} | null = null;
-
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-
-// Generate dynamic category images for Browse by Category section - OPTIMIZED
-const generateDynamicCategoryImages = async (): Promise<{
-  catalogueImage: string;
-  tailoredImage: string;
-}> => {
-  try {
-    // Check cache first
-    if (
-      categoryImageCache &&
-      Date.now() - categoryImageCache.timestamp < CACHE_DURATION
-    ) {
-      return {
-        catalogueImage: categoryImageCache.catalogueImage,
-        tailoredImage: categoryImageCache.tailoredImage,
-      };
-    }
-
-    // Use Promise.allSettled to not fail if one query fails
-    const [cataloguesResult, tailorsResult] = await Promise.allSettled([
-      getCataloguesWithBrands(),
-      getTailorsWithBrands(),
-    ]);
-
-    const fallbackImages = {
-      catalogueImage:
-        "/lovable-uploads/827fb8c0-e5da-4520-a979-6fc054eefc6e.png",
-      tailoredImage:
-        "/lovable-uploads/bb152c0b-6378-419b-a0e6-eafce44631b2.png",
-    };
-
-    let catalogueImage = fallbackImages.catalogueImage;
-    let tailoredImage = fallbackImages.tailoredImage;
-
-    // Handle catalogues result
-    if (
-      cataloguesResult.status === "fulfilled" &&
-      cataloguesResult.value.length > 0
-    ) {
-      const catalogues = cataloguesResult.value;
-      const randomCatalogue =
-        catalogues[Math.floor(Math.random() * catalogues.length)];
-      if (randomCatalogue.image) {
-        catalogueImage = randomCatalogue.image;
-      }
-    }
-
-    // Handle tailors result
-    if (
-      tailorsResult.status === "fulfilled" &&
-      tailorsResult.value.length > 0
-    ) {
-      const tailors = tailorsResult.value;
-      const randomTailor = tailors[Math.floor(Math.random() * tailors.length)];
-      if (randomTailor.image) {
-        tailoredImage = randomTailor.image;
-      }
-    }
-
-    const result = { catalogueImage, tailoredImage };
-
-    // Cache the result
-    categoryImageCache = {
-      ...result,
-      timestamp: Date.now(),
-    };
-
-    return result;
-  } catch (error) {
-    console.error("Error generating dynamic category images:", error);
-    // Return fallback images on any error
-    return {
-      catalogueImage:
-        "/lovable-uploads/827fb8c0-e5da-4520-a979-6fc054eefc6e.png",
-      tailoredImage:
-        "/lovable-uploads/bb152c0b-6378-419b-a0e6-eafce44631b2.png",
-    };
-  }
-};
-
 // Smart focal point detection for category images
 const getCategoryImageFocalPoint = (category: string): string => {
   switch (category.toLowerCase()) {
@@ -283,6 +195,74 @@ const initialCategories: CategoryWithBrands[] = categoryDefinitions.map(
   })
 );
 
+// Simple in-memory cache for dynamic images (session-based) - REMOVED
+// Caching removed for simplicity and reliability
+
+// Generate dynamic category images for Browse by Category section - SIMPLIFIED
+const generateDynamicCategoryImages = async (): Promise<{
+  catalogueImage: string;
+  tailoredImage: string;
+}> => {
+  const fallbackImages = {
+    catalogueImage: "/lovable-uploads/827fb8c0-e5da-4520-a979-6fc054eefc6e.png",
+    tailoredImage: "/lovable-uploads/bb152c0b-6378-419b-a0e6-eafce44631b2.png",
+  };
+
+  try {
+    console.log("🔍 Fetching catalogues and tailors for dynamic images...");
+
+    // Fetch data with timeout
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error("Timeout")), 3000);
+    });
+
+    const results = (await Promise.race([
+      Promise.allSettled([getCataloguesWithBrands(), getTailorsWithBrands()]),
+      timeoutPromise,
+    ])) as PromiseSettledResult<any>[];
+
+    const [cataloguesResult, tailorsResult] = results;
+
+    let catalogueImage = fallbackImages.catalogueImage;
+    let tailoredImage = fallbackImages.tailoredImage;
+
+    // Handle catalogues
+    if (
+      cataloguesResult.status === "fulfilled" &&
+      cataloguesResult.value.length > 0
+    ) {
+      const randomCatalogue =
+        cataloguesResult.value[
+          Math.floor(Math.random() * cataloguesResult.value.length)
+        ];
+      if (randomCatalogue.image) {
+        catalogueImage = randomCatalogue.image;
+        console.log("✅ Using dynamic catalogue image:", catalogueImage);
+      }
+    }
+
+    // Handle tailors
+    if (
+      tailorsResult.status === "fulfilled" &&
+      tailorsResult.value.length > 0
+    ) {
+      const randomTailor =
+        tailorsResult.value[
+          Math.floor(Math.random() * tailorsResult.value.length)
+        ];
+      if (randomTailor.image) {
+        tailoredImage = randomTailor.image;
+        console.log("✅ Using dynamic tailor image:", tailoredImage);
+      }
+    }
+
+    return { catalogueImage, tailoredImage };
+  } catch (error) {
+    console.error("❌ Error generating dynamic images:", error);
+    return fallbackImages;
+  }
+};
+
 export default function HomeContent() {
   const [categories, setCategories] =
     useState<CategoryWithBrands[]>(initialCategories);
@@ -311,7 +291,9 @@ export default function HomeContent() {
   useEffect(() => {
     const loadCategoryImages = async () => {
       try {
-        // Start with fallback images immediately
+        console.log("🖼️ Loading category images...");
+
+        // Set fallback images immediately
         const fallbackImages = {
           catalogueImage:
             "/lovable-uploads/827fb8c0-e5da-4520-a979-6fc054eefc6e.png",
@@ -321,48 +303,28 @@ export default function HomeContent() {
 
         setCategoryImages(fallbackImages);
         setCategoryImagesLoaded(true);
+        console.log("✅ Fallback images set");
 
-        // Preload fallback images immediately
-        Object.values(fallbackImages).forEach((src) => {
-          const img = new Image();
-          img.src = src;
-        });
-
-        // Then try to get dynamic images in the background
+        // Try to get dynamic images
         const dynamicImages = await generateDynamicCategoryImages();
+        console.log("🎯 Dynamic images loaded:", dynamicImages);
 
-        // Only update if we got different images
+        // Update with dynamic images if they're different
         if (
           dynamicImages.catalogueImage !== fallbackImages.catalogueImage ||
           dynamicImages.tailoredImage !== fallbackImages.tailoredImage
         ) {
-          // Preload the new dynamic images
-          await Promise.all([
-            new Promise((resolve) => {
-              const img = new Image();
-              img.onload = resolve;
-              img.onerror = resolve; // Don't fail if image doesn't load
-              img.src = dynamicImages.catalogueImage;
-            }),
-            new Promise((resolve) => {
-              const img = new Image();
-              img.onload = resolve;
-              img.onerror = resolve;
-              img.src = dynamicImages.tailoredImage;
-            }),
-          ]);
-
-          // Update with dynamic images after they're preloaded
           setCategoryImages(dynamicImages);
+          console.log("🔄 Updated to dynamic images");
         }
       } catch (error) {
-        console.error("Error loading category images:", error);
-        // Keep fallback images on error
+        console.error("❌ Error loading category images:", error);
+        // Fallback images are already set, so we're good
       }
     };
 
     loadCategoryImages();
-  }, []); // Run only once on mount
+  }, []);
 
   // Transform hero slides to carousel items
   const carouselItems: CarouselItem[] =

@@ -7,7 +7,12 @@ export async function middleware(request: NextRequest) {
     request.nextUrl.pathname.startsWith("/_next") ||
     request.nextUrl.pathname.startsWith("/api") ||
     request.nextUrl.pathname.startsWith("/auth/callback") ||
-    request.nextUrl.pathname.includes(".")
+    request.nextUrl.pathname.startsWith("/lovable-uploads") ||
+    request.nextUrl.pathname.startsWith("/public") ||
+    request.nextUrl.pathname.includes(".") ||
+    /\.(png|jpg|jpeg|gif|webp|svg|ico|css|js|woff|woff2|ttf|eot)$/i.test(
+      request.nextUrl.pathname
+    )
   ) {
     return NextResponse.next();
   }
@@ -60,7 +65,9 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
+     * - lovable-uploads (image directory)
+     * - public assets
      */
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|lovable-uploads|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|woff|woff2|ttf|eot)$).*)",
   ],
 };

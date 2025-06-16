@@ -24,15 +24,9 @@ const nextConfig = {
         hostname: "**",
       },
     ],
-    unoptimized: process.env.STATIC_EXPORT ? true : false,
-    // Optimize image loading performance
-    formats: ["image/webp", "image/avif"],
-    minimumCacheTTL: 60 * 60 * 24 * 30, // 30 days
+    // Temporarily disable optimization to debug loading issues
+    unoptimized: true,
     dangerouslyAllowSVG: true,
-    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
-    // Image sizes for responsive loading
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
-    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
   reactStrictMode: true,
   swcMinify: true,
