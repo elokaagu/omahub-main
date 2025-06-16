@@ -13,6 +13,7 @@ import {
   getBrandOwnerReviewTrends,
   syncBrandRatings,
   type AnalyticsData,
+  detectAnalyticsSource,
 } from "@/lib/services/analyticsService";
 import {
   Users,
@@ -49,6 +50,7 @@ export default function AnalyticsDashboard({
   brandNames = [],
 }: AnalyticsDashboardProps) {
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
+  const [analyticsSource, setAnalyticsSource] = useState<string>("estimated");
   const [brandGrowth, setBrandGrowth] = useState<BrandGrowthData[]>([]);
   const [reviewTrends, setReviewTrends] = useState<ReviewTrendsData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -59,6 +61,10 @@ export default function AnalyticsDashboard({
     try {
       setLoading(true);
       setError(null);
+
+      // Check analytics source before fetching main data
+      const analyticsSourceResult = await detectAnalyticsSource();
+      setAnalyticsSource(analyticsSourceResult);
 
       if (isBrandOwner && ownedBrandIds.length > 0) {
         // Fetch brand owner specific data
@@ -349,11 +355,23 @@ export default function AnalyticsDashboard({
             <div className="text-2xl font-canela text-oma-plum">
               {formatNumber(analytics.totalPageViews)}
             </div>
-            <p className="text-xs text-oma-cocoa mt-2">
-              {isBrandOwner
-                ? "Estimated brand page views"
-                : "Real-time analytics via Vercel"}
-            </p>
+            <div className="flex items-center justify-between mt-2">
+              <p className="text-xs text-oma-cocoa">
+                {isBrandOwner ? "Estimated brand page views" : "Last 30 days"}
+              </p>
+              <Badge
+                variant={
+                  analyticsSource === "Estimated" ? "secondary" : "default"
+                }
+                className={
+                  analyticsSource === "Estimated"
+                    ? "bg-oma-beige text-oma-cocoa"
+                    : "bg-green-100 text-green-800"
+                }
+              >
+                {analyticsSource}
+              </Badge>
+            </div>
           </CardContent>
         </Card>
       </div>

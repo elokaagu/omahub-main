@@ -13,25 +13,76 @@ export interface AnalyticsData {
 }
 
 /**
+ * Fetch real page views from Google Analytics
+ * This function attempts to get real analytics data from Google Analytics 4
+ */
+async function getGoogleAnalyticsPageViews(): Promise<number | null> {
+  try {
+    const response = await fetch("/api/analytics/google", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      console.warn("Failed to fetch Google Analytics, trying Vercel Analytics");
+      return null;
+    }
+
+    const data = await response.json();
+
+    if (data.pageViews && typeof data.pageViews === "number") {
+      console.log("✅ Using real Google Analytics data:", {
+        pageViews: data.pageViews,
+        source: data.source,
+        message: data.message,
+      });
+      return data.pageViews;
+    }
+
+    console.log("ℹ️ Google Analytics not available:", data.message);
+    return null;
+  } catch (error) {
+    console.warn(
+      "Failed to fetch Google Analytics data, trying Vercel Analytics:",
+      error
+    );
+    return null;
+  }
+}
+
+/**
  * Fetch real page views from Vercel Analytics
  * This function attempts to get real analytics data from Vercel
  */
 async function getVercelPageViews(): Promise<number | null> {
   try {
-    // In a real implementation, you would use Vercel's Analytics API
-    // For now, we'll return null to fall back to estimated views
-    // This would require setting up Vercel Analytics API access
+    const response = await fetch("/api/analytics/pageviews", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
 
-    // Example of how this would work with Vercel Analytics API:
-    // const response = await fetch('/api/analytics/pageviews', {
-    //   headers: {
-    //     'Authorization': `Bearer ${process.env.VERCEL_ANALYTICS_TOKEN}`
-    //   }
-    // });
-    // const data = await response.json();
-    // return data.pageViews;
+    if (!response.ok) {
+      console.warn("Failed to fetch Vercel analytics, using estimated views");
+      return null;
+    }
 
-    return null; // Fallback to estimated views for now
+    const data = await response.json();
+
+    if (data.pageViews && typeof data.pageViews === "number") {
+      console.log("✅ Using real Vercel Analytics data:", {
+        pageViews: data.pageViews,
+        source: data.source,
+        message: data.message,
+      });
+      return data.pageViews;
+    }
+
+    console.log("ℹ️ Vercel Analytics not available:", data.message);
+    return null;
   } catch (error) {
     console.warn(
       "Failed to fetch Vercel analytics data, using estimated views:",
@@ -39,6 +90,30 @@ async function getVercelPageViews(): Promise<number | null> {
     );
     return null;
   }
+}
+
+/**
+ * Fetch real page views from multiple sources with fallback
+ * Tries Google Analytics first, then Vercel Analytics, then estimated
+ */
+async function getRealPageViews(): Promise<number | null> {
+  // Try Google Analytics first
+  const googlePageViews = await getGoogleAnalyticsPageViews();
+  if (googlePageViews !== null) {
+    return googlePageViews;
+  }
+
+  // Fallback to Vercel Analytics
+  const vercelPageViews = await getVercelPageViews();
+  if (vercelPageViews !== null) {
+    return vercelPageViews;
+  }
+
+  // Both failed, return null to use estimated views
+  console.log(
+    "ℹ️ No real analytics data available, using estimated page views"
+  );
+  return null;
 }
 
 /**
@@ -85,7 +160,7 @@ export async function getAnalyticsData(): Promise<AnalyticsData> {
       productsResult,
       recentBrandsResult,
       recentReviewsResult,
-      vercelPageViews,
+      realPageViews,
     ] = await Promise.all([
       // All brands with their review counts
       supabase.from("brands").select(`
@@ -116,7 +191,7 @@ export async function getAnalyticsData(): Promise<AnalyticsData> {
         .gte("created_at", thirtyDaysAgoISO),
 
       // Try to get real page views from Vercel Analytics
-      getVercelPageViews(),
+      getRealPageViews(),
     ]);
 
     // Handle errors
@@ -158,8 +233,8 @@ export async function getAnalyticsData(): Promise<AnalyticsData> {
 
     // Use real page views if available, otherwise calculate estimated views
     const totalPageViews =
-      vercelPageViews !== null
-        ? vercelPageViews
+      realPageViews !== null
+        ? realPageViews
         : calculateEstimatedPageViews(
             totalBrands,
             totalReviews,
@@ -209,8 +284,7 @@ export async function getAnalyticsData(): Promise<AnalyticsData> {
     console.log("✅ Analytics data fetched successfully:", {
       ...analyticsData,
       ratingInconsistencies,
-      pageViewsSource:
-        vercelPageViews !== null ? "Vercel Analytics" : "Estimated",
+      pageViewsSource: realPageViews !== null ? "Real Analytics" : "Estimated",
     });
 
     return analyticsData;
@@ -695,5 +769,47 @@ export async function getBrandOwnerReviewTrends(
   } catch (error) {
     console.error("❌ Error fetching brand owner review trends:", error);
     return [];
+  }
+}
+
+/**
+ * Detect which analytics source is available and working
+ * Returns the source name for display purposes
+ */
+export async function detectAnalyticsSource(): Promise<string> {
+  try {
+    // Try Google Analytics first
+    const googleResponse = await fetch("/api/analytics/google", {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    if (googleResponse.ok) {
+      const googleData = await googleResponse.json();
+      if (
+        googleData.pageViews !== null &&
+        googleData.source === "google-analytics"
+      ) {
+        return "Google Analytics";
+      }
+    }
+
+    // Try Vercel Analytics
+    const vercelResponse = await fetch("/api/analytics/pageviews", {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    if (vercelResponse.ok) {
+      const vercelData = await vercelResponse.json();
+      if (vercelData.pageViews !== null && vercelData.source === "vercel") {
+        return "Vercel Analytics";
+      }
+    }
+
+    return "Estimated";
+  } catch (error) {
+    console.warn("Error detecting analytics source:", error);
+    return "Estimated";
   }
 }
