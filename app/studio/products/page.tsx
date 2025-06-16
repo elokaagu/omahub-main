@@ -34,6 +34,8 @@ import {
   LayoutGrid,
   LayoutList,
   X,
+  Heart,
+  TrendingUp,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -52,6 +54,12 @@ type ProductWithDetails = Product & {
   collection?: { title: string; id: string };
 };
 
+interface ProductFavourites {
+  productId: string;
+  count: number;
+  productTitle?: string;
+}
+
 export default function ProductsPage() {
   const { user } = useAuth();
   const router = useRouter();
@@ -67,6 +75,13 @@ export default function ProductsPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [favouritesData, setFavouritesData] = useState<{
+    totalFavourites: number;
+    mostPopular: ProductFavourites | null;
+  }>({
+    totalFavourites: 0,
+    mostPopular: null,
+  });
 
   // Check if user is super admin or brand owner
   // useEffect(() => {
@@ -75,6 +90,74 @@ export default function ProductsPage() {
   //     return;
   //   }
   // }, [user, router]);
+
+  // Fetch favourites data
+  const fetchFavouritesData = async () => {
+    try {
+      if (!supabase) return;
+
+      // Get total favourites count for products
+      const { data: totalFavouritesData, error: totalError } = await supabase
+        .from("favourites")
+        .select("id")
+        .eq("item_type", "product");
+
+      if (totalError) {
+        console.error("Error fetching total favourites:", totalError);
+        return;
+      }
+
+      // Get favourites count per product
+      const { data: favouritesCountData, error: countError } = await supabase
+        .from("favourites")
+        .select("item_id")
+        .eq("item_type", "product");
+
+      if (countError) {
+        console.error("Error fetching favourites count:", countError);
+        return;
+      }
+
+      // Count favourites per product
+      const productFavouritesMap = favouritesCountData.reduce(
+        (acc, fav) => {
+          acc[fav.item_id] = (acc[fav.item_id] || 0) + 1;
+          return acc;
+        },
+        {} as Record<string, number>
+      );
+
+      // Find most popular product
+      let mostPopular: ProductFavourites | null = null;
+      let maxCount = 0;
+
+      Object.entries(productFavouritesMap).forEach(([productId, count]) => {
+        if (count > maxCount) {
+          maxCount = count;
+          mostPopular = { productId, count };
+        }
+      });
+
+      // Add product title to most popular
+      if (mostPopular && products.length > 0) {
+        const product = products.find((p) => p.id === mostPopular!.productId);
+        if (product) {
+          mostPopular = {
+            productId: mostPopular.productId,
+            count: mostPopular.count,
+            productTitle: product.title,
+          };
+        }
+      }
+
+      setFavouritesData({
+        totalFavourites: totalFavouritesData.length,
+        mostPopular,
+      });
+    } catch (error) {
+      console.error("Error fetching favourites data:", error);
+    }
+  };
 
   // Fetch products
   useEffect(() => {
@@ -127,6 +210,13 @@ export default function ProductsPage() {
       fetchProducts();
     }
   }, [user]);
+
+  // Fetch favourites data when products are loaded
+  useEffect(() => {
+    if (products.length > 0) {
+      fetchFavouritesData();
+    }
+  }, [products]);
 
   // Filter products based on search and filters
   useEffect(() => {
@@ -292,42 +382,43 @@ export default function ProductsPage() {
         <Card className="border-l-4 border-l-oma-cocoa border-oma-beige">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-oma-cocoa">
-              Avg. Price
+              Total Favourites
             </CardTitle>
+            <Heart className="h-4 w-4 text-oma-cocoa" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-canela text-oma-plum">
-              $
-              {products.length > 0
-                ? (
-                    products.reduce((sum, p) => sum + p.price, 0) /
-                    products.length
-                  ).toLocaleString(undefined, { maximumFractionDigits: 0 })
-                : 0}
+              {favouritesData.totalFavourites}
             </div>
-            <p className="text-xs text-oma-cocoa mt-2">Average regular price</p>
+            <p className="text-xs text-oma-cocoa mt-2">
+              Products favourited by users
+            </p>
           </CardContent>
         </Card>
 
         <Card className="border-l-4 border-l-oma-gold border-oma-beige">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-oma-cocoa">
-              Avg. Selling
+              Most Popular
             </CardTitle>
+            <TrendingUp className="h-4 w-4 text-oma-cocoa" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-canela text-oma-plum">
-              $
-              {products.length > 0
-                ? (
-                    products.reduce(
-                      (sum, p) => sum + (p.sale_price || p.price),
-                      0
-                    ) / products.length
-                  ).toLocaleString(undefined, { maximumFractionDigits: 0 })
-                : 0}
+              {favouritesData.mostPopular?.count || 0}
             </div>
-            <p className="text-xs text-oma-cocoa mt-2">Average selling price</p>
+            <p className="text-xs text-oma-cocoa mt-2">
+              {favouritesData.mostPopular?.productTitle
+                ? `${
+                    favouritesData.mostPopular.productTitle.length > 20
+                      ? favouritesData.mostPopular.productTitle.substring(
+                          0,
+                          20
+                        ) + "..."
+                      : favouritesData.mostPopular.productTitle
+                  } favourites`
+                : "No favourites yet"}
+            </p>
           </CardContent>
         </Card>
       </div>
