@@ -21,9 +21,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [isClient, setIsClient] = useState(false);
-  const [profileLoadingRef, setProfileLoadingRef] = useState<string | null>(
-    null
-  ); // Prevent duplicate loads
 
   // Ensure we're on the client side
   useEffect(() => {
@@ -64,7 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [isClient]);
 
   const refreshUserProfile = async () => {
-    if (!session?.user?.id || profileLoadingRef) return;
+    if (!session?.user?.id) return;
 
     try {
       AuthDebug.log("🔄 Refreshing user profile for:", session.user.id);
@@ -81,19 +78,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const loadUserProfile = async (userId: string, email?: string) => {
-    // Prevent duplicate profile loads for the same user
-    if (profileLoadingRef === userId) {
-      AuthDebug.log("🔄 Profile already loading for user:", userId);
-      return;
-    }
-
     try {
-      setProfileLoadingRef(userId);
       AuthDebug.log("🔄 Loading user profile for:", userId);
 
       // Reduce timeout to prevent hanging but allow reasonable time for loading
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error("Profile loading timeout")), 5000);
+        setTimeout(() => reject(new Error("Profile loading timeout")), 3000);
       });
 
       const profilePromise = getProfile(userId);
@@ -126,8 +116,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         error instanceof Error &&
         (error.message === "Profile loading timeout" ||
           error.message.includes("network") ||
-          error.message.includes("timeout") ||
-          error.message.includes("0 rows"))
+          error.message.includes("timeout"))
       ) {
         const basicUser: User = {
           id: userId,
@@ -145,8 +134,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         AuthDebug.log("❌ Authentication error, setting user to null");
         setUser(null);
       }
-    } finally {
-      setProfileLoadingRef(null);
     }
   };
 
