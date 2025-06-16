@@ -19,6 +19,7 @@ import { ArrowLeft, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Loading } from "@/components/ui/loading";
 import { NavigationLink } from "@/components/ui/navigation-link";
+import { LazyImage } from "@/components/ui/lazy-image";
 
 export default function CreateHeroSlidePage() {
   const { user } = useAuth();
@@ -312,13 +313,13 @@ export default function CreateHeroSlidePage() {
             </CardHeader>
             <CardContent>
               <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-100">
-                <img
+                <LazyImage
                   src={formData.image}
                   alt={formData.title}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    e.currentTarget.style.display = "none";
-                  }}
+                  aspectRatio="video"
+                  className="w-full h-full"
+                  sizes="(max-width: 768px) 100vw, 800px"
+                  quality={90}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-white text-center">

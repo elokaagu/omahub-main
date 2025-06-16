@@ -388,9 +388,10 @@ export default function CataloguesPage() {
                   <AuthImage
                     src={catalogue.image}
                     alt={catalogue.title}
-                    width={400}
-                    height={300}
-                    className="w-full h-full object-cover"
+                    aspectRatio="4/3"
+                    className="w-full h-full"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    quality={80}
                   />
                 </div>
                 <CardHeader>

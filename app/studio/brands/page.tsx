@@ -313,7 +313,10 @@ export default function BrandsPage() {
                           <AuthImage
                             src={brand.image}
                             alt={brand.name}
-                            className="w-full h-full object-cover"
+                            aspectRatio="square"
+                            className="w-full h-full"
+                            sizes="40px"
+                            quality={60}
                           />
                         )}
                       </div>

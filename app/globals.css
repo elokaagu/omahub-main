@@ -131,7 +131,10 @@
 /* Using Suisse International as the main font */
 @layer base {
   .font-sans {
-    font-family: var(--font-suisse), -apple-system, BlinkMacSystemFont,
+    font-family:
+      var(--font-suisse),
+      -apple-system,
+      BlinkMacSystemFont,
       sans-serif;
   }
 }
@@ -212,6 +215,20 @@ html {
     transform: translateX(0);
     opacity: 1;
   }
+}
+
+/* Shimmer animation for lazy loading images */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 1.5s infinite;
 }
 
 /* Custom scrollbar for webkit browsers */

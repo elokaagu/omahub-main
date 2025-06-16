@@ -642,9 +642,10 @@ export default function BrandManagement({ className }: BrandManagementProps) {
                       <AuthImage
                         src={editForm.image}
                         alt="Brand preview"
-                        width={200}
-                        height={100}
-                        className="rounded-md object-cover"
+                        aspectRatio="2/1"
+                        className="rounded-md"
+                        sizes="200px"
+                        quality={75}
                       />
                     </div>
                   )}

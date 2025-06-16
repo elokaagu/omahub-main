@@ -229,9 +229,10 @@ export function CatalogueImageManager({
                 <AuthImage
                   src={image.image_url}
                   alt={image.alt_text || `${catalogueTitle} image ${index + 1}`}
-                  width={400}
-                  height={400}
-                  className="w-full h-full object-cover"
+                  aspectRatio="square"
+                  className="w-full h-full"
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  quality={85}
                 />
                 <div className="absolute top-2 right-2 flex gap-1">
                   {index === 0 && (

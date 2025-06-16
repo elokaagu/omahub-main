@@ -618,9 +618,10 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
                     <AuthImage
                       src={imageUrl}
                       alt={brand.name}
-                      width={800}
-                      height={600}
-                      className="w-full h-full object-cover"
+                      aspectRatio="16/9"
+                      className="w-full h-full"
+                      sizes="800px"
+                      quality={85}
                     />
                   ) : (
                     <div className="flex items-center justify-center h-full text-gray-400">

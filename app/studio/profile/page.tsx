@@ -35,7 +35,6 @@ export default function ProfilePage() {
     const initialize = async () => {
       // Setup storage buckets to ensure they exist
       try {
-        
         console.log("Storage initialized successfully");
       } catch (error) {
         console.error("Error initializing storage:", error);
@@ -238,9 +237,11 @@ export default function ProfilePage() {
                   <AuthImage
                     src={profileData.avatar_url}
                     alt={`${profileData.first_name} ${profileData.last_name}`}
-                    width={128}
-                    height={128}
-                    className="w-32 h-32 rounded-full object-cover mb-4"
+                    aspectRatio="square"
+                    className="w-32 h-32 rounded-full mb-4"
+                    sizes="128px"
+                    quality={85}
+                    priority
                   />
                 ) : (
                   <div className="w-32 h-32 rounded-full bg-gray-100 flex items-center justify-center mb-4">

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
+import { AuthImage } from "@/components/ui/auth-image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -235,12 +235,13 @@ export default function HeroManagementPage() {
               <div className="flex flex-col lg:flex-row">
                 <div className="lg:w-1/3">
                   <div className="aspect-video lg:aspect-square relative">
-                    <Image
+                    <AuthImage
                       src={slide.image}
                       alt={slide.title}
-                      width={400}
-                      height={300}
-                      className="w-full h-full object-cover"
+                      aspectRatio="video"
+                      className="w-full h-full lg:aspect-square"
+                      sizes="(max-width: 1024px) 100vw, 400px"
+                      quality={80}
                     />
                   </div>
                 </div>

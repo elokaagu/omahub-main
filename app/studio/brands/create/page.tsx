@@ -31,6 +31,7 @@ import {
   formatPriceRange,
   formatNumberWithCommas,
 } from "@/lib/utils/priceFormatter";
+import { LazyImage } from "@/components/ui/lazy-image";
 
 // Brand categories
 const CATEGORIES = [
@@ -486,10 +487,13 @@ export default function CreateBrandPage() {
                       Image Preview
                     </p>
                     <div className="relative aspect-square w-full overflow-hidden rounded-lg border border-border">
-                      <img
+                      <LazyImage
                         src={formData.image}
                         alt="Brand preview"
-                        className="object-cover"
+                        aspectRatio="square"
+                        className="w-full h-full"
+                        sizes="400px"
+                        quality={80}
                       />
                     </div>
                   </div>
