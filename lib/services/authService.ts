@@ -136,14 +136,46 @@ export async function getCurrentUser() {
   return user;
 }
 
+// Circuit breaker for profile fetching
+const profileFetchAttempts = new Map<
+  string,
+  { count: number; lastAttempt: number }
+>();
+const MAX_ATTEMPTS = 3;
+const COOLDOWN_MS = 10000; // 10 seconds
+
 export async function getProfile(userId: string): Promise<User | null> {
   try {
+    // Check circuit breaker
+    const attempts = profileFetchAttempts.get(userId);
+    const now = Date.now();
+
+    if (attempts && attempts.count >= MAX_ATTEMPTS) {
+      if (now - attempts.lastAttempt < COOLDOWN_MS) {
+        console.log("🚫 Profile fetch blocked by circuit breaker for:", userId);
+        return null;
+      } else {
+        // Reset after cooldown
+        profileFetchAttempts.delete(userId);
+      }
+    }
+
     console.log("🔍 Fetching profile for user:", userId);
 
     if (!supabase) {
       console.error("❌ Supabase client not available");
       return null;
     }
+
+    // Record attempt
+    const currentAttempts = profileFetchAttempts.get(userId) || {
+      count: 0,
+      lastAttempt: 0,
+    };
+    profileFetchAttempts.set(userId, {
+      count: currentAttempts.count + 1,
+      lastAttempt: now,
+    });
 
     // Get user and profile data in parallel for better performance
     const [userResult, profileResult] = await Promise.all([
@@ -175,7 +207,8 @@ export async function getProfile(userId: string): Promise<User | null> {
         const userEmail = user?.email || "";
         const role =
           userEmail === "eloka.agu@icloud.com" ||
-          userEmail === "shannonalisa@oma-hub.com"
+          userEmail === "shannonalisa@oma-hub.com" ||
+          userEmail === "eloka@satellitelabs.xyz"
             ? "super_admin"
             : userEmail === "eloka@culturin.com"
               ? "brand_admin"
@@ -200,6 +233,9 @@ export async function getProfile(userId: string): Promise<User | null> {
         }
 
         console.log("✅ New profile created:", newProfile);
+        // Reset circuit breaker on success
+        profileFetchAttempts.delete(userId);
+
         return {
           id: newProfile.id,
           email: newProfile.email || userEmail,
@@ -221,6 +257,9 @@ export async function getProfile(userId: string): Promise<User | null> {
       first_name: profileData.first_name,
       owned_brands: profileData.owned_brands?.length || 0,
     });
+
+    // Reset circuit breaker on success
+    profileFetchAttempts.delete(userId);
 
     const userProfile = {
       id: profileData.id,
