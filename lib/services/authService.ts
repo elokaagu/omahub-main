@@ -31,20 +31,25 @@ export async function signUp(email: string, password: string) {
 
   // Create a profile for the new user
   if (data.user) {
-    await createProfile(data.user.id, "user");
+    await createProfile(data.user.id, email, "user");
   }
 
   return data;
 }
 
 // Function to create a new profile
-async function createProfile(userId: string, role: UserRole = "user") {
+async function createProfile(
+  userId: string,
+  email: string,
+  role: UserRole = "user"
+) {
   if (!supabase) {
     throw new Error("Supabase client not available");
   }
 
   const { error } = await supabase.from("profiles").insert({
     id: userId,
+    email: email,
     role,
     owned_brands: [],
     created_at: new Date().toISOString(),

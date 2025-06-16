@@ -70,8 +70,46 @@ export async function POST(request: NextRequest) {
 
     console.log("✅ Signup successful for:", data.user.email);
 
-    // Create user profile
-    // (No manual insert needed; Supabase trigger creates profile with default 'user' role)
+    // Create user profile explicitly as a fallback
+    // The database trigger should handle this, but we'll ensure it exists
+    try {
+      const { data: existingProfile, error: profileCheckError } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("id", data.user.id)
+        .single();
+
+      if (profileCheckError && profileCheckError.code === "PGRST116") {
+        // Profile doesn't exist, create it
+        console.log("🔧 Creating profile for new user:", data.user.email);
+
+        const { error: profileCreateError } = await supabase
+          .from("profiles")
+          .insert({
+            id: data.user.id,
+            email: data.user.email,
+            role: "user",
+            owned_brands: [],
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          });
+
+        if (profileCreateError) {
+          console.error("❌ Profile creation error:", profileCreateError);
+          // Don't fail the signup if profile creation fails
+          // The user can still be authenticated
+        } else {
+          console.log("✅ Profile created successfully");
+        }
+      } else if (profileCheckError) {
+        console.error("❌ Profile check error:", profileCheckError);
+      } else {
+        console.log("✅ Profile already exists (created by trigger)");
+      }
+    } catch (profileError) {
+      console.error("❌ Profile handling error:", profileError);
+      // Don't fail the signup process
+    }
 
     // Return success response
     return NextResponse.json(
