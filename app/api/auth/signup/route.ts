@@ -2,6 +2,46 @@ import { createServerClient } from "@supabase/ssr";
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
+// Function to trigger new account notification
+async function triggerNewAccountNotification(user: any) {
+  try {
+    const webhookUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/api/webhooks/new-account`;
+    const webhookSecret = process.env.WEBHOOK_SECRET || "your-webhook-secret";
+
+    const payload = {
+      type: "INSERT",
+      table: "profiles",
+      record: {
+        id: user.id,
+        email: user.email,
+        role: "user",
+        created_at: new Date().toISOString(),
+      },
+    };
+
+    const response = await fetch(webhookUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${webhookSecret}`,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (response.ok) {
+      console.log("✅ New account notification triggered successfully");
+    } else {
+      console.error(
+        "❌ Failed to trigger new account notification:",
+        response.status
+      );
+    }
+  } catch (error) {
+    console.error("❌ Error triggering new account notification:", error);
+    // Don't fail signup if notification fails
+  }
+}
+
 export async function POST(request: NextRequest) {
   const { email, password } = await request.json();
 
@@ -72,6 +112,7 @@ export async function POST(request: NextRequest) {
 
     // Create user profile explicitly as a fallback
     // The database trigger should handle this, but we'll ensure it exists
+    let profileCreated = false;
     try {
       const { data: existingProfile, error: profileCheckError } = await supabase
         .from("profiles")
@@ -100,15 +141,23 @@ export async function POST(request: NextRequest) {
           // The user can still be authenticated
         } else {
           console.log("✅ Profile created successfully");
+          profileCreated = true;
         }
       } else if (profileCheckError) {
         console.error("❌ Profile check error:", profileCheckError);
       } else {
         console.log("✅ Profile already exists (created by trigger)");
+        profileCreated = true;
       }
     } catch (profileError) {
       console.error("❌ Profile handling error:", profileError);
       // Don't fail the signup process
+    }
+
+    // Trigger new account notification
+    if (profileCreated || data.user) {
+      console.log("🔔 Triggering new account notification...");
+      await triggerNewAccountNotification(data.user);
     }
 
     // Return success response

@@ -6,6 +6,7 @@ import type { Database } from "@/lib/types/supabase";
 import { Brand } from "@/lib/supabase";
 import BrandManagement from "@/components/studio/BrandManagement";
 import AnalyticsDashboard from "@/components/studio/AnalyticsDashboard";
+import RecentAccountsWidget from "./dashboard/RecentAccountsWidget";
 import {
   getUserPermissions,
   Permission,
@@ -257,6 +258,18 @@ export default function StudioPage() {
             ownedBrandIds={ownedBrandIds}
             brandNames={ownedBrandNames}
           />
+        </div>
+      )}
+
+      {/* Recent Accounts Widget - Only for Admins and Super Admins */}
+      {(isAdmin || isSuperAdmin) && (
+        <div className="mb-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-1">
+              <RecentAccountsWidget />
+            </div>
+            {/* Future: Add more dashboard widgets here */}
+          </div>
         </div>
       )}
 

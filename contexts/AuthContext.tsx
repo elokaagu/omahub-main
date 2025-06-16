@@ -10,7 +10,7 @@ import React, {
 } from "react";
 import { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
-import { getProfile, User } from "@/lib/services/authService";
+import { getProfile, User, UserRole } from "@/lib/services/authService";
 import { AuthDebug } from "@/lib/utils/debug";
 
 interface AuthContextType {
@@ -33,6 +33,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const isRefreshingRef = useRef(false);
   const lastRefreshTimeRef = useRef(0);
   const REFRESH_DEBOUNCE_MS = 5000; // 5 seconds minimum between refreshes
+
+  // Helper function to determine role based on email
+  const getRoleFromEmail = (email: string): UserRole => {
+    if (
+      email === "eloka.agu@icloud.com" ||
+      email === "shannonalisa@oma-hub.com"
+    ) {
+      return "super_admin";
+    }
+    if (email === "eloka@culturin.com") {
+      return "brand_admin";
+    }
+    return "user";
+  };
+
+  // Helper function to get owned brands based on email
+  const getOwnedBrandsFromEmail = (email: string): string[] => {
+    if (email === "eloka@culturin.com") {
+      return ["ehbs-couture"];
+    }
+    return [];
+  };
 
   // Ensure we're on the client side
   useEffect(() => {
@@ -127,39 +149,55 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(profile);
         AuthDebug.log("✅ User profile loaded:", profile.email);
       } else {
-        // If no profile exists, create a basic user object from session data
+        // If no profile exists, create a basic user object with proper role detection
+        const userEmail = email || "";
+        const role = getRoleFromEmail(userEmail);
+        const ownedBrands = getOwnedBrandsFromEmail(userEmail);
+
         const basicUser: User = {
           id: userId,
-          email: email || "",
+          email: userEmail,
           first_name: "",
           last_name: "",
           avatar_url: "",
-          role: "user",
-          owned_brands: [],
+          role: role,
+          owned_brands: ownedBrands,
         };
         setUser(basicUser);
-        AuthDebug.log("⚠️ No profile found, created basic user:", email);
+        AuthDebug.log(
+          "⚠️ No profile found, created basic user with role:",
+          role,
+          userEmail
+        );
       }
     } catch (error) {
       AuthDebug.error("❌ Error loading user profile:", error);
-      // Don't set user to null on timeout or temporary errors - create basic user instead
+      // Don't set user to null on timeout or temporary errors - create basic user with proper role instead
       if (
         error instanceof Error &&
         (error.message === "Profile loading timeout" ||
           error.message.includes("network") ||
           error.message.includes("timeout"))
       ) {
+        const userEmail = email || "";
+        const role = getRoleFromEmail(userEmail);
+        const ownedBrands = getOwnedBrandsFromEmail(userEmail);
+
         const basicUser: User = {
           id: userId,
-          email: email || "",
+          email: userEmail,
           first_name: "",
           last_name: "",
           avatar_url: "",
-          role: "user",
-          owned_brands: [],
+          role: role,
+          owned_brands: ownedBrands,
         };
         setUser(basicUser);
-        AuthDebug.log("⚠️ Profile loading error, created basic user:", email);
+        AuthDebug.log(
+          "⚠️ Profile loading error, created basic user with role:",
+          role,
+          userEmail
+        );
       } else {
         // Only set user to null for actual authentication errors
         AuthDebug.log("❌ Authentication error, setting user to null");
