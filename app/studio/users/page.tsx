@@ -61,7 +61,7 @@ interface UserProfile {
 }
 
 interface UserWithBrands extends UserProfile {
-  brandNames: string[];
+  brand_names: string[];
 }
 
 export default function UsersPage() {
@@ -76,6 +76,7 @@ export default function UsersPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [isSyncing, setIsSyncing] = useState(false);
+  const [editingUser, setEditingUser] = useState<UserWithBrands | null>(null);
   const [formData, setFormData] = useState({
     email: "",
     role: "user",
@@ -117,7 +118,7 @@ export default function UsersPage() {
         const usersWithBrands: UserWithBrands[] = usersData.map(
           (user: UserProfile) => ({
             ...user,
-            brandNames: user.owned_brands
+            brand_names: user.owned_brands
               ? user.owned_brands
                   .map(
                     (brandId: string) =>
@@ -152,7 +153,7 @@ export default function UsersPage() {
       filtered = filtered.filter(
         (user) =>
           user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          user.brandNames.some((brandName) =>
+          user.brand_names.some((brandName) =>
             brandName.toLowerCase().includes(searchTerm.toLowerCase())
           )
       );
@@ -233,6 +234,7 @@ export default function UsersPage() {
         role: "user",
         selectedBrands: [],
       });
+      setEditingUser(null);
       setIsDialogOpen(false);
 
       // Refresh users list
@@ -271,6 +273,26 @@ export default function UsersPage() {
       console.error("Error deleting user:", error);
       toast.error("Failed to delete user");
     }
+  };
+
+  const handleEditUser = (userToEdit: UserWithBrands) => {
+    setEditingUser(userToEdit);
+    setFormData({
+      email: userToEdit.email,
+      role: userToEdit.role,
+      selectedBrands: userToEdit.owned_brands || [],
+    });
+    setIsDialogOpen(true);
+  };
+
+  const handleAddUser = () => {
+    setEditingUser(null);
+    setFormData({
+      email: "",
+      role: "user",
+      selectedBrands: [],
+    });
+    setIsDialogOpen(true);
   };
 
   const getRoleBadgeColor = (role: string) => {
@@ -370,16 +392,23 @@ export default function UsersPage() {
           </Button>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-oma-plum hover:bg-oma-plum/90">
+              <Button
+                className="bg-oma-plum hover:bg-oma-plum/90"
+                onClick={handleAddUser}
+              >
                 <UserPlus className="h-4 w-4 mr-2" />
                 Add User
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[600px]">
               <DialogHeader>
-                <DialogTitle>Add New User</DialogTitle>
+                <DialogTitle>
+                  {editingUser ? "Edit User" : "Add New User"}
+                </DialogTitle>
                 <DialogDescription>
-                  Create a new user account and assign them to brands
+                  {editingUser
+                    ? "Update user account and brand assignments"
+                    : "Create a new user account and assign them to brands"}
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-6">
@@ -392,7 +421,13 @@ export default function UsersPage() {
                     onChange={(e) => handleInputChange("email", e.target.value)}
                     placeholder="user@example.com"
                     required
+                    disabled={!!editingUser} // Disable email editing for existing users
                   />
+                  {editingUser && (
+                    <p className="text-xs text-muted-foreground">
+                      Email cannot be changed for existing users
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -447,7 +482,10 @@ export default function UsersPage() {
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => setIsDialogOpen(false)}
+                    onClick={() => {
+                      setIsDialogOpen(false);
+                      setEditingUser(null);
+                    }}
                   >
                     Cancel
                   </Button>
@@ -456,7 +494,13 @@ export default function UsersPage() {
                     disabled={isLoading}
                     className="bg-oma-plum hover:bg-oma-plum/90"
                   >
-                    {isLoading ? "Creating..." : "Create User"}
+                    {isLoading
+                      ? editingUser
+                        ? "Updating..."
+                        : "Creating..."
+                      : editingUser
+                        ? "Update User"
+                        : "Create User"}
                   </Button>
                 </DialogFooter>
               </form>
@@ -616,8 +660,8 @@ export default function UsersPage() {
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
-                        {user.brandNames.length > 0 ? (
-                          user.brandNames.map((brandName, index) => (
+                        {user.brand_names.length > 0 ? (
+                          user.brand_names.map((brandName, index) => (
                             <Badge
                               key={index}
                               variant="secondary"
@@ -642,14 +686,7 @@ export default function UsersPage() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => {
-                            setFormData({
-                              email: user.email,
-                              role: user.role,
-                              selectedBrands: user.owned_brands || [],
-                            });
-                            setIsDialogOpen(true);
-                          }}
+                          onClick={() => handleEditUser(user)}
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
