@@ -264,21 +264,59 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Delete the user
-    const { error: deleteError } = await supabaseAdmin
+    // Get the user's email before deletion for logging
+    const { data: userToDelete, error: getUserError } = await supabaseAdmin
       .from("profiles")
-      .delete()
-      .eq("id", userId);
+      .select("email")
+      .eq("id", userId)
+      .single();
 
-    if (deleteError) {
-      console.error("Error deleting user:", deleteError);
+    if (getUserError) {
+      console.error("Error fetching user to delete:", getUserError);
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    console.log(`🗑️ Deleting user: ${userToDelete.email} (${userId})`);
+
+    // Delete from auth.users table first (this will cascade to profiles due to foreign key)
+    const { error: authDeleteError } =
+      await supabaseAdmin.auth.admin.deleteUser(userId);
+
+    if (authDeleteError) {
+      console.error("Error deleting user from auth:", authDeleteError);
       return NextResponse.json(
-        { error: "Failed to delete user" },
+        { error: "Failed to delete user from authentication system" },
         { status: 500 }
       );
     }
 
-    return NextResponse.json({ success: true });
+    console.log(
+      `✅ Successfully deleted user from auth: ${userToDelete.email}`
+    );
+
+    // The profiles record should be automatically deleted due to CASCADE foreign key,
+    // but let's ensure it's deleted just in case
+    const { error: profileDeleteError } = await supabaseAdmin
+      .from("profiles")
+      .delete()
+      .eq("id", userId);
+
+    if (profileDeleteError) {
+      console.warn(
+        "Warning: Profile deletion error (may already be deleted by CASCADE):",
+        profileDeleteError
+      );
+      // Don't fail the request since the auth deletion succeeded
+    } else {
+      console.log(
+        `✅ Successfully deleted user profile: ${userToDelete.email}`
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: `User ${userToDelete.email} has been completely deleted from both authentication and profile systems`,
+    });
   } catch (error) {
     console.error("Error in admin users DELETE API:", error);
     return NextResponse.json(
