@@ -27,6 +27,7 @@ import {
 import { subcategories, type Subcategory } from "@/lib/data/directory";
 import { Carousel } from "@/components/ui/carousel-custom";
 import { Loading } from "@/components/ui/loading";
+import { InstantImage } from "@/components/ui/instant-image";
 
 interface Brand {
   id: string;
@@ -266,6 +267,19 @@ export default function HomeContent() {
   });
   const [occasionLoading, setOccasionLoading] = useState(true);
 
+  // Preload critical images immediately
+  useEffect(() => {
+    const preloadImages = [
+      categoryImages.catalogueImage,
+      categoryImages.tailoredImage,
+    ];
+
+    preloadImages.forEach((src) => {
+      const img = new Image();
+      img.src = src;
+    });
+  }, [categoryImages.catalogueImage, categoryImages.tailoredImage]);
+
   // Transform hero slides to carousel items
   const carouselItems: CarouselItem[] =
     heroSlides.length > 0
@@ -442,19 +456,13 @@ export default function HomeContent() {
             <div className="relative group overflow-hidden rounded-lg bg-gray-100 min-h-[400px]">
               <Link href="/catalogues">
                 <div className="relative aspect-[3/4]">
-                  <LazyImage
+                  <InstantImage
                     src={categoryImages.catalogueImage}
                     alt="Catalogues"
                     fill
-                    priority
                     sizes="(max-width: 768px) 100vw, 50vw"
                     className={`${getCategoryImageFocalPoint("catalogues")} transition-transform duration-300 group-hover:scale-105`}
-                    onError={() => {
-                      console.error(
-                        "Failed to load catalogue image:",
-                        categoryImages.catalogueImage
-                      );
-                    }}
+                    quality={90}
                   />
                   <div className="absolute inset-0 bg-black/30 transition-opacity group-hover:bg-black/40" />
                   <div className="absolute bottom-6 left-6 text-white">
@@ -471,19 +479,13 @@ export default function HomeContent() {
             <div className="relative group overflow-hidden rounded-lg bg-gray-100 min-h-[400px]">
               <Link href="/tailors">
                 <div className="relative aspect-[3/4]">
-                  <LazyImage
+                  <InstantImage
                     src={categoryImages.tailoredImage}
                     alt="Tailored"
                     fill
-                    priority
                     sizes="(max-width: 768px) 100vw, 50vw"
                     className={`${getCategoryImageFocalPoint("tailored")} transition-transform duration-300 group-hover:scale-105`}
-                    onError={() => {
-                      console.error(
-                        "Failed to load tailored image:",
-                        categoryImages.tailoredImage
-                      );
-                    }}
+                    quality={90}
                   />
                   <div className="absolute inset-0 bg-black/30 transition-opacity group-hover:bg-black/40" />
                   <div className="absolute bottom-6 left-6 text-white">

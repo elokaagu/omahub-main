@@ -381,3 +381,34 @@ html {
   opacity: 1;
   transform: translateY(0);
 }
+
+/* Image loading optimizations */
+img {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  image-rendering: optimize-contrast;
+}
+
+/* Faster image transitions */
+.image-fade-in {
+  opacity: 0;
+  transition: opacity 0.15s ease-in-out;
+}
+
+.image-fade-in.loaded {
+  opacity: 1;
+}
+
+/* Prevent layout shift during image loading */
+.aspect-square,
+.aspect-video,
+.aspect-\[3\/4\],
+.aspect-\[4\/3\] {
+  contain: layout style;
+}
+
+/* Optimize image containers */
+[data-nextjs-image-container] {
+  will-change: transform;
+  contain: layout;
+}
