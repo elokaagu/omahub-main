@@ -12,6 +12,7 @@ import { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { getProfile, User, UserRole } from "@/lib/services/authService";
 import { AuthDebug } from "@/lib/utils/debug";
+import { toast } from "sonner";
 
 interface AuthContextType {
   user: User | null;
@@ -223,79 +224,85 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    let mounted = true;
-    let authSubscription: any = null;
+    if (!isClient) return;
 
-    const initializeAuth = async () => {
-      // Only initialize if we're on the client side
-      if (!isClient) {
-        return;
-      }
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      handleAuthStateChange("INITIAL_SESSION", session);
+      setLoading(false);
+    });
 
-      try {
-        // Handle case where client is null during SSR
-        if (!supabase) {
-          AuthDebug.log(
-            "⚠️ Supabase client not available, waiting for hydration..."
-          );
-          // Reduce timeout to prevent long loading states
-          setTimeout(() => {
-            if (mounted) {
-              AuthDebug.log("⏰ Timeout reached, setting loading to false");
-              setLoading(false);
-            }
-          }, 2000);
-          return;
-        }
-
-        AuthDebug.log("🔍 Initializing auth with Supabase client");
-
-        // Get initial session
-        const {
-          data: { session: initialSession },
-          error,
-        } = await supabase.auth.getSession();
-
-        if (error) {
-          AuthDebug.error("❌ Error getting initial session:", error);
-        } else {
-          AuthDebug.log("📊 Initial session check:", {
-            hasSession: !!initialSession,
-          });
-        }
-
-        if (mounted) {
-          await handleAuthStateChange("INITIAL", initialSession);
-          setLoading(false);
-        }
-
-        // Listen for auth changes
-        const {
-          data: { subscription },
-        } = supabase.auth.onAuthStateChange(async (event, session) => {
-          if (mounted) {
-            await handleAuthStateChange(event, session);
-          }
-        });
-
-        authSubscription = subscription;
-      } catch (error) {
-        AuthDebug.error("❌ Error initializing auth:", error);
-        if (mounted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    initializeAuth();
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(handleAuthStateChange);
 
     return () => {
-      mounted = false;
-      if (authSubscription) {
-        authSubscription.unsubscribe();
-      }
+      subscription.unsubscribe();
     };
   }, [isClient]);
+
+  // Separate useEffect for real-time profile updates
+  useEffect(() => {
+    if (!isClient || !session?.user?.id) return;
+
+    console.log(
+      "🔄 Setting up real-time profile updates for user:",
+      session.user.id
+    );
+
+    const profileSubscription = supabase
+      .channel(`profile_updates_${session.user.id}`)
+      .on("broadcast", { event: "profile_updated" }, async (payload) => {
+        console.log("📡 Received real-time profile update:", payload);
+
+        if (payload.payload?.user_id === session.user.id) {
+          console.log("🔄 Profile update is for current user, refreshing...");
+
+          // Refresh user profile with the updated data
+          try {
+            const updatedProfile = await getProfile(session.user.id);
+            if (updatedProfile) {
+              setUser(updatedProfile);
+              console.log(
+                "✅ Profile refreshed from real-time update:",
+                updatedProfile.email
+              );
+
+              // Show a toast notification to the user
+              if (
+                typeof window !== "undefined" &&
+                window.location.pathname.startsWith("/studio")
+              ) {
+                // Only show notification if user is in studio
+                console.log("📢 Showing profile update notification");
+                toast.success(
+                  "Your profile has been updated! Brand access may have changed.",
+                  {
+                    description:
+                      "Your studio access and brand permissions have been refreshed.",
+                    duration: 5000,
+                  }
+                );
+              }
+            }
+          } catch (error) {
+            console.error(
+              "❌ Error refreshing profile from real-time update:",
+              error
+            );
+          }
+        }
+      })
+      .subscribe((status) => {
+        console.log("📡 Profile updates subscription status:", status);
+      });
+
+    return () => {
+      profileSubscription.unsubscribe();
+      console.log("🔌 Unsubscribed from profile updates");
+    };
+  }, [isClient, session?.user?.id]);
 
   const signOut = async () => {
     try {

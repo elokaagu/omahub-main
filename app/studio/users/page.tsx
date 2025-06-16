@@ -237,11 +237,18 @@ export default function UsersPage() {
           `${result.action === "updated" ? "User updated" : "User created"} successfully! Auto-assigned ${result.autoAssignedBrands} brands to super admin.`
         );
       } else {
-        toast.success(
-          result.action === "updated"
-            ? "User updated successfully"
-            : "User created successfully"
-        );
+        const actionText = result.action === "updated" ? "updated" : "created";
+        const brandText =
+          formData.selectedBrands.length > 0
+            ? ` with ${formData.selectedBrands.length} brand${formData.selectedBrands.length === 1 ? "" : "s"}`
+            : "";
+
+        toast.success(`User ${actionText} successfully${brandText}!`, {
+          description: result.profileRefreshTriggered
+            ? "The user will receive a real-time notification of their updated permissions."
+            : "Changes will take effect on their next login.",
+          duration: 5000,
+        });
       }
 
       // Reset form and close dialog
@@ -363,6 +370,45 @@ export default function UsersPage() {
       toast.error("Failed to sync super admin brands");
     } finally {
       setIsSyncing(false);
+    }
+  };
+
+  // Test real-time profile updates
+  const testRealTimeUpdate = async (userId: string, email: string) => {
+    try {
+      console.log("🧪 Testing real-time profile update for:", email);
+
+      const response = await fetch("/api/admin/users", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          email: email,
+          role: "brand_admin",
+          owned_brands: ["ehbs-couture"], // Test with a known brand
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        console.error("❌ Test failed:", result);
+        toast.error("Real-time update test failed");
+        return;
+      }
+
+      console.log("✅ Test successful:", result);
+      toast.success("Real-time update test completed!", {
+        description: result.profileRefreshTriggered
+          ? "Profile refresh notification was sent successfully."
+          : "Update completed but no real-time notification was sent.",
+        duration: 5000,
+      });
+    } catch (error) {
+      console.error("❌ Test error:", error);
+      toast.error("Real-time update test encountered an error");
     }
   };
 

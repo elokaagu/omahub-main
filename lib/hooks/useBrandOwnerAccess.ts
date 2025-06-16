@@ -39,6 +39,9 @@ interface BrandOwnerAccess {
 
   // Refresh function
   refresh: () => Promise<void>;
+
+  // Force refresh function
+  forceRefresh: () => Promise<void>;
 }
 
 export function useBrandOwnerAccess(): BrandOwnerAccess {
@@ -139,9 +142,51 @@ export function useBrandOwnerAccess(): BrandOwnerAccess {
     }
   }, [user, supabase]);
 
+  // Force refresh function that bypasses debouncing
+  const forceRefresh = useCallback(async () => {
+    console.log("🔄 useBrandOwnerAccess: Force refresh requested");
+    isFetchingRef.current = false;
+    lastFetchTimeRef.current = 0;
+    await fetchUserData();
+  }, [fetchUserData]);
+
   useEffect(() => {
     fetchUserData();
   }, [fetchUserData]);
+
+  // Set up real-time subscription for profile updates
+  useEffect(() => {
+    if (!user?.id) return;
+
+    console.log(
+      "📡 useBrandOwnerAccess: Setting up profile update subscription for:",
+      user.id
+    );
+
+    const subscription = supabase
+      .channel(`brand_access_updates_${user.id}`)
+      .on("broadcast", { event: "profile_updated" }, async (payload) => {
+        console.log(
+          "📡 useBrandOwnerAccess: Received profile update:",
+          payload
+        );
+
+        if (payload.payload?.user_id === user.id) {
+          console.log(
+            "🔄 useBrandOwnerAccess: Profile update for current user, refreshing access..."
+          );
+          await forceRefresh();
+        }
+      })
+      .subscribe((status) => {
+        console.log("📡 useBrandOwnerAccess: Subscription status:", status);
+      });
+
+    return () => {
+      subscription.unsubscribe();
+      console.log("🔌 useBrandOwnerAccess: Unsubscribed from profile updates");
+    };
+  }, [user?.id, forceRefresh]);
 
   // Memoized derived values to prevent unnecessary recalculations
   const effectiveProfile = userProfile || {
@@ -289,5 +334,8 @@ export function useBrandOwnerAccess(): BrandOwnerAccess {
 
     // Refresh function
     refresh: fetchUserData,
+
+    // Force refresh function
+    forceRefresh,
   };
 }
