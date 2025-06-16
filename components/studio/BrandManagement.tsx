@@ -75,36 +75,6 @@ export default function BrandManagement({ className }: BrandManagementProps) {
     }
   }, [accessLoading, user, canManageBrands]);
 
-  // Simplified tab visibility change listener with much longer debounce
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    let refreshTimeout: NodeJS.Timeout;
-    const REFRESH_DEBOUNCE_MS = 10000; // Increased to 10 seconds to reduce aggressive refreshing
-
-    const handleVisibilityChange = () => {
-      // Only refresh if tab was hidden for a significant time and user has permissions
-      if (!document.hidden && user && canManageBrands && !accessLoading) {
-        clearTimeout(refreshTimeout);
-        refreshTimeout = setTimeout(() => {
-          console.log(
-            "👁️ Tab became visible after long absence, refreshing brands..."
-          );
-          invalidateBrandsCache(); // Clear cache to ensure fresh data
-          fetchBrands();
-        }, REFRESH_DEBOUNCE_MS);
-      }
-    };
-
-    // Remove the aggressive focus listener - only keep visibility change
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-      clearTimeout(refreshTimeout);
-    };
-  }, [user, canManageBrands, accessLoading]);
-
   const fetchBrands = async () => {
     try {
       setIsLoading(true);

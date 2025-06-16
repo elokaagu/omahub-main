@@ -143,45 +143,6 @@ export function useBrandOwnerAccess(): BrandOwnerAccess {
     fetchUserData();
   }, [fetchUserData]);
 
-  // Optimized tab visibility change listener with longer debounce
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    let visibilityTimeout: NodeJS.Timeout;
-    let focusTimeout: NodeJS.Timeout;
-    const VISIBILITY_DEBOUNCE_MS = 5000; // Increased debounce to 5 seconds
-
-    const handleVisibilityChange = () => {
-      if (!document.hidden && user) {
-        clearTimeout(visibilityTimeout);
-        visibilityTimeout = setTimeout(() => {
-          console.log("👁️ Tab became visible, refreshing brand access data...");
-          fetchUserData();
-        }, VISIBILITY_DEBOUNCE_MS);
-      }
-    };
-
-    const handleFocus = () => {
-      if (user) {
-        clearTimeout(focusTimeout);
-        focusTimeout = setTimeout(() => {
-          console.log("🎯 Window focused, refreshing brand access data...");
-          fetchUserData();
-        }, VISIBILITY_DEBOUNCE_MS);
-      }
-    };
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    window.addEventListener("focus", handleFocus);
-
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-      window.removeEventListener("focus", handleFocus);
-      clearTimeout(visibilityTimeout);
-      clearTimeout(focusTimeout);
-    };
-  }, [user, fetchUserData]);
-
   // Memoized derived values to prevent unnecessary recalculations
   const effectiveProfile = userProfile || {
     role: user?.role || "user",

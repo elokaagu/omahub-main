@@ -41,6 +41,7 @@ import Image from "next/image";
 import { AuthImage } from "@/components/ui/auth-image";
 import { Loading } from "@/components/ui/loading";
 import { RefreshCw } from "lucide-react";
+import { toast } from "sonner";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
@@ -63,10 +64,7 @@ export default function BrandsPage() {
 
     setLoading(true);
     try {
-      // Refresh user profile first to get latest owned_brands
-      await refreshUserProfile();
-
-      // Get user permissions and profile
+      // Get user permissions and profile directly without refreshing
       const [permissions, profileResult] = await Promise.all([
         getUserPermissions(user.id, user.email),
         supabase.from("profiles").select("*").eq("id", user.id).single(),
@@ -92,68 +90,53 @@ export default function BrandsPage() {
         setUserProfile(profileResult.data);
       }
 
-      // Check if user has permission to manage brands
-      if (!permissions.includes("studio.brands.manage")) {
-        console.log("User doesn't have permission to manage brands");
-        setLoading(false);
-        return;
-      }
+      // Get brands based on user role
+      if (permissions.includes("studio.brands.manage")) {
+        const effectiveProfile = profileResult.data || {
+          role: user.role,
+          owned_brands: user.owned_brands || [],
+        };
 
-      // Use the most up-to-date profile data
-      const effectiveProfile = profileResult.data || {
-        role: user.role,
-        owned_brands: user.owned_brands || [],
-      };
+        const isAdmin =
+          effectiveProfile.role === "admin" ||
+          effectiveProfile.role === "super_admin";
+        const isBrandOwner = effectiveProfile.role === "brand_admin";
+        const ownedBrandIds = effectiveProfile.owned_brands || [];
 
-      const isBrandOwner = effectiveProfile.role === "brand_admin";
-      const isAdmin =
-        effectiveProfile.role === "admin" ||
-        effectiveProfile.role === "super_admin";
-      const ownedBrandIds = effectiveProfile.owned_brands || [];
+        if (isAdmin) {
+          // Admins see all brands
+          const { data: fetchedBrands, error } = await supabase
+            .from("brands")
+            .select("*")
+            .order("name");
 
-      console.log("🎯 Brand Page: User access data:", {
-        userEmail: user.email,
-        role: effectiveProfile.role,
-        isBrandOwner,
-        isAdmin,
-        ownedBrandIds,
-      });
+          if (error) throw error;
+          setBrands(fetchedBrands || []);
+        } else if (isBrandOwner && ownedBrandIds.length > 0) {
+          // Brand owners see only their brands
+          const { data: fetchedBrands, error } = await supabase
+            .from("brands")
+            .select("*")
+            .in("id", ownedBrandIds)
+            .order("name");
 
-      // Fetch brands based on user role
-      const allBrands = await getAllBrands();
-
-      if (isAdmin) {
-        // Admins see all brands
-        setBrands(allBrands);
-        setFilteredBrands(allBrands);
-        console.log(`👑 Admin access: Showing all ${allBrands.length} brands`);
-      } else if (isBrandOwner && ownedBrandIds.length > 0) {
-        // Brand owners see only their brands
-        const ownedBrands = allBrands.filter((brand) =>
-          ownedBrandIds.includes(brand.id)
-        );
-        setBrands(ownedBrands);
-        setFilteredBrands(ownedBrands);
-        console.log(
-          `🏷️ Brand owner access: Showing ${ownedBrands.length} owned brands:`,
-          ownedBrands.map((b) => `${b.name} (${b.id})`)
-        );
-      } else {
-        // No access
-        setBrands([]);
-        setFilteredBrands([]);
-        console.log("🚫 No brand access");
+          if (error) throw error;
+          setBrands(fetchedBrands || []);
+        } else {
+          setBrands([]);
+        }
       }
     } catch (error) {
       console.error("Error fetching data:", error);
+      toast.error("Failed to load data");
     } finally {
       setLoading(false);
     }
-  }, [user, refreshUserProfile, supabase]);
+  }, [user, supabase]); // Only depend on user and supabase
 
   useEffect(() => {
     fetchData();
-  }, [fetchData]);
+  }, [fetchData]); // Now safe to depend on fetchData since it's memoized
 
   useEffect(() => {
     if (searchQuery.trim() === "") {

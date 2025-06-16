@@ -43,10 +43,7 @@ export default function StudioPage() {
           userOwnedBrands: user.owned_brands,
         });
 
-        // Refresh user profile first to get latest data
-        await refreshUserProfile();
-
-        // Get user permissions and profile
+        // Get user permissions and profile directly without refreshing
         const [permissions, profileResult] = await Promise.all([
           getUserPermissions(user.id, user.email),
           supabase.from("profiles").select("*").eq("id", user.id).single(),
@@ -163,13 +160,13 @@ export default function StudioPage() {
       }
     }
 
-    // Only fetch data when user changes, not on every refreshUserProfile change
+    // Only fetch data when user changes - removed refreshUserProfile dependency
     if (user) {
       fetchData();
     } else {
       setLoading(false);
     }
-  }, [user]); // Simplified dependency array - only depend on user
+  }, [user, supabase]); // Simplified dependency array - only user and supabase
 
   if (loading) {
     return (

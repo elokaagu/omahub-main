@@ -1,6 +1,13 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+  useRef,
+} from "react";
 import { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { getProfile, User } from "@/lib/services/authService";
@@ -21,6 +28,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [isClient, setIsClient] = useState(false);
+
+  // Add refs to prevent excessive refreshes
+  const isRefreshingRef = useRef(false);
+  const lastRefreshTimeRef = useRef(0);
+  const REFRESH_DEBOUNCE_MS = 5000; // 5 seconds minimum between refreshes
 
   // Ensure we're on the client side
   useEffect(() => {
@@ -60,10 +72,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [isClient]);
 
-  const refreshUserProfile = async () => {
+  // Memoized refreshUserProfile to prevent recreation on every render
+  const refreshUserProfile = useCallback(async () => {
     if (!session?.user?.id) return;
 
+    // Prevent concurrent refreshes
+    if (isRefreshingRef.current) {
+      AuthDebug.log("🔄 Profile refresh already in progress, skipping...");
+      return;
+    }
+
+    // Debounce rapid successive calls
+    const now = Date.now();
+    if (now - lastRefreshTimeRef.current < REFRESH_DEBOUNCE_MS) {
+      AuthDebug.log("🔄 Profile refresh too recent, skipping...");
+      return;
+    }
+
     try {
+      isRefreshingRef.current = true;
+      lastRefreshTimeRef.current = now;
+
       AuthDebug.log("🔄 Refreshing user profile for:", session.user.id);
       const profile = await getProfile(session.user.id);
       if (profile) {
@@ -74,8 +103,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       AuthDebug.error("❌ Error refreshing user profile:", error);
       // Don't disrupt user state on refresh errors - just log and continue
       AuthDebug.log("⚠️ Profile refresh failed, keeping current user state");
+    } finally {
+      isRefreshingRef.current = false;
     }
-  };
+  }, [session?.user?.id]); // Only depend on user ID, not the entire session
 
   const loadUserProfile = async (userId: string, email?: string) => {
     try {
@@ -227,89 +258,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     };
   }, [isClient]);
-
-  // Add tab visibility change listener to refresh session when tab becomes active
-  useEffect(() => {
-    if (!isClient || typeof window === "undefined" || !supabase) return;
-
-    let focusTimeout: NodeJS.Timeout;
-    let lastRefreshTime = 0;
-    const REFRESH_DEBOUNCE_MS = 3000; // Only refresh if it's been 3+ seconds since last refresh
-
-    const handleVisibilityChange = async () => {
-      if (!document.hidden && session) {
-        const now = Date.now();
-
-        // Only check session if enough time has passed since last check
-        if (now - lastRefreshTime > REFRESH_DEBOUNCE_MS) {
-          AuthDebug.log("👁️ Tab became visible, checking session validity...");
-          lastRefreshTime = now;
-
-          try {
-            const {
-              data: { session: currentSession },
-              error,
-            } = await supabase.auth.getSession();
-
-            if (error) {
-              AuthDebug.error("❌ Error checking session on tab focus:", error);
-              return;
-            }
-
-            // If session has changed or expired, update it
-            if (!currentSession && session) {
-              AuthDebug.log("⚠️ Session expired while tab was hidden");
-              await handleAuthStateChange("SIGNED_OUT", null);
-            } else if (
-              currentSession &&
-              (!session || currentSession.access_token !== session.access_token)
-            ) {
-              AuthDebug.log("🔄 Session updated while tab was hidden");
-              await handleAuthStateChange("TOKEN_REFRESHED", currentSession);
-            }
-          } catch (error) {
-            AuthDebug.error(
-              "❌ Error during tab visibility session check:",
-              error
-            );
-          }
-        } else {
-          AuthDebug.log(
-            "👁️ Tab became visible, but skipping session check (too recent)"
-          );
-        }
-      }
-    };
-
-    const handleFocus = async () => {
-      if (session) {
-        const now = Date.now();
-
-        // Debounce focus refreshes to prevent rapid-fire refreshes
-        clearTimeout(focusTimeout);
-        focusTimeout = setTimeout(async () => {
-          if (now - lastRefreshTime > REFRESH_DEBOUNCE_MS) {
-            AuthDebug.log("🎯 Window focused, refreshing user profile...");
-            lastRefreshTime = now;
-            await refreshUserProfile();
-          } else {
-            AuthDebug.log(
-              "🎯 Window focused, but skipping profile refresh (too recent)"
-            );
-          }
-        }, 1000); // 1 second debounce for focus events
-      }
-    };
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    window.addEventListener("focus", handleFocus);
-
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-      window.removeEventListener("focus", handleFocus);
-      clearTimeout(focusTimeout);
-    };
-  }, [isClient, session]);
 
   const signOut = async () => {
     try {
