@@ -172,6 +172,16 @@ function ResetPasswordForm() {
       }
 
       console.log("✅ Password updated successfully");
+
+      // Clear the current session to prevent login conflicts
+      try {
+        await supabase.auth.signOut();
+        console.log("🔄 Cleared password reset session");
+      } catch (signOutError) {
+        console.warn("⚠️ Could not clear session:", signOutError);
+        // Don't fail the process if sign out fails
+      }
+
       setPasswordReset(true);
       toast.success("Password updated successfully!");
     } catch (error: any) {
@@ -270,20 +280,25 @@ function ResetPasswordForm() {
               <CheckCircle className="h-6 w-6 text-green-600" />
             </div>
             <h1 className="mt-6 text-center text-3xl font-canela text-oma-plum">
-              Password Updated
+              Password Updated Successfully
             </h1>
             <p className="mt-2 text-center text-sm text-oma-cocoa">
-              Your password has been successfully updated.
+              Your password has been successfully updated. You can now sign in
+              with your new password.
             </p>
           </div>
         </div>
 
         <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
           <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-            <div className="text-center">
+            <div className="text-center space-y-4">
+              <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md text-sm">
+                <p className="font-medium">✅ Password Reset Complete</p>
+                <p className="mt-1">Please use your new password to sign in.</p>
+              </div>
               <Link href="/login">
                 <Button className="w-full bg-oma-plum hover:bg-oma-plum/90">
-                  Sign In
+                  Sign In with New Password
                 </Button>
               </Link>
             </div>
