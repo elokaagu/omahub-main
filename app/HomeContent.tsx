@@ -301,11 +301,13 @@ export default function HomeContent() {
             "/lovable-uploads/bb152c0b-6378-419b-a0e6-eafce44631b2.png",
         };
 
+        console.log("🔧 Setting fallback images:", fallbackImages);
         setCategoryImages(fallbackImages);
         setCategoryImagesLoaded(true);
         console.log("✅ Fallback images set");
 
         // Try to get dynamic images
+        console.log("🔍 Attempting to load dynamic images...");
         const dynamicImages = await generateDynamicCategoryImages();
         console.log("🎯 Dynamic images loaded:", dynamicImages);
 
@@ -314,8 +316,11 @@ export default function HomeContent() {
           dynamicImages.catalogueImage !== fallbackImages.catalogueImage ||
           dynamicImages.tailoredImage !== fallbackImages.tailoredImage
         ) {
+          console.log("🔄 Updating to dynamic images:", dynamicImages);
           setCategoryImages(dynamicImages);
           console.log("🔄 Updated to dynamic images");
+        } else {
+          console.log("📌 Using fallback images (no dynamic images available)");
         }
       } catch (error) {
         console.error("❌ Error loading category images:", error);
@@ -496,13 +501,23 @@ export default function HomeContent() {
             <div className="relative group overflow-hidden rounded-lg bg-gray-100 min-h-[400px]">
               <Link href="/catalogues">
                 <div className="relative aspect-[3/4]">
-                  <InstantImage
+                  <img
                     src={categoryImages.catalogueImage}
                     alt="Catalogues"
-                    fill
-                    sizes="(max-width: 768px) 100vw, 50vw"
-                    className={`${getCategoryImageFocalPoint("catalogues")} transition-transform duration-300 group-hover:scale-105`}
-                    quality={90}
+                    className="w-full h-full object-cover object-top transition-transform duration-300 group-hover:scale-105"
+                    onLoad={() =>
+                      console.log(
+                        "✅ Catalogue image loaded:",
+                        categoryImages.catalogueImage
+                      )
+                    }
+                    onError={(e) =>
+                      console.error(
+                        "❌ Catalogue image failed:",
+                        categoryImages.catalogueImage,
+                        e
+                      )
+                    }
                   />
                   <div className="absolute inset-0 bg-black/30 transition-opacity group-hover:bg-black/40" />
                   <div className="absolute bottom-6 left-6 text-white">
@@ -519,13 +534,23 @@ export default function HomeContent() {
             <div className="relative group overflow-hidden rounded-lg bg-gray-100 min-h-[400px]">
               <Link href="/tailors">
                 <div className="relative aspect-[3/4]">
-                  <InstantImage
+                  <img
                     src={categoryImages.tailoredImage}
                     alt="Tailored"
-                    fill
-                    sizes="(max-width: 768px) 100vw, 50vw"
-                    className={`${getCategoryImageFocalPoint("tailored")} transition-transform duration-300 group-hover:scale-105`}
-                    quality={90}
+                    className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105"
+                    onLoad={() =>
+                      console.log(
+                        "✅ Tailored image loaded:",
+                        categoryImages.tailoredImage
+                      )
+                    }
+                    onError={(e) =>
+                      console.error(
+                        "❌ Tailored image failed:",
+                        categoryImages.tailoredImage,
+                        e
+                      )
+                    }
                   />
                   <div className="absolute inset-0 bg-black/30 transition-opacity group-hover:bg-black/40" />
                   <div className="absolute bottom-6 left-6 text-white">
