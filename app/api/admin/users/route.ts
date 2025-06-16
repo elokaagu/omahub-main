@@ -111,6 +111,32 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // If the user is being assigned super_admin role, automatically assign all brands
+    let finalOwnedBrands = owned_brands || [];
+
+    if (role === "super_admin") {
+      console.log("🔄 Auto-assigning all brands to super admin:", email);
+
+      // Fetch all brand IDs
+      const { data: allBrands, error: brandsError } = await supabaseAdmin
+        .from("brands")
+        .select("id");
+
+      if (brandsError) {
+        console.error(
+          "❌ Error fetching brands for auto-assignment:",
+          brandsError
+        );
+        // Continue with manual assignment if brand fetch fails
+      } else {
+        const allBrandIds = allBrands.map((brand) => brand.id);
+        finalOwnedBrands = allBrandIds;
+        console.log(
+          `✅ Auto-assigned ${allBrandIds.length} brands to super admin`
+        );
+      }
+    }
+
     // Check if user already exists
     const { data: existingUser, error: checkError } = await supabaseAdmin
       .from("profiles")
@@ -132,7 +158,7 @@ export async function POST(request: NextRequest) {
         .from("profiles")
         .update({
           role,
-          owned_brands: owned_brands || [],
+          owned_brands: finalOwnedBrands,
           updated_at: new Date().toISOString(),
         })
         .eq("email", email)
@@ -147,7 +173,12 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      return NextResponse.json({ user: updatedUser, action: "updated" });
+      return NextResponse.json({
+        user: updatedUser,
+        action: "updated",
+        autoAssignedBrands:
+          role === "super_admin" ? finalOwnedBrands.length : 0,
+      });
     } else {
       // Create new user profile
       const { data: newUser, error: createError } = await supabaseAdmin
@@ -155,7 +186,7 @@ export async function POST(request: NextRequest) {
         .insert({
           email,
           role,
-          owned_brands: owned_brands || [],
+          owned_brands: finalOwnedBrands,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         })
@@ -170,7 +201,12 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      return NextResponse.json({ user: newUser, action: "created" });
+      return NextResponse.json({
+        user: newUser,
+        action: "created",
+        autoAssignedBrands:
+          role === "super_admin" ? finalOwnedBrands.length : 0,
+      });
     }
   } catch (error) {
     console.error("Error in admin users POST API:", error);

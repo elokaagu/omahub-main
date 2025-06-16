@@ -47,6 +47,7 @@ import {
   Building,
   Search,
   Filter,
+  RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -74,6 +75,7 @@ export default function UsersPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
+  const [isSyncing, setIsSyncing] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     role: "user",
@@ -212,11 +214,18 @@ export default function UsersPage() {
         return;
       }
 
-      toast.success(
-        result.action === "updated"
-          ? "User updated successfully"
-          : "User created successfully"
-      );
+      // Show success message with auto-assignment info for super admins
+      if (result.autoAssignedBrands > 0) {
+        toast.success(
+          `${result.action === "updated" ? "User updated" : "User created"} successfully! Auto-assigned ${result.autoAssignedBrands} brands to super admin.`
+        );
+      } else {
+        toast.success(
+          result.action === "updated"
+            ? "User updated successfully"
+            : "User created successfully"
+        );
+      }
 
       // Reset form and close dialog
       setFormData({
@@ -282,6 +291,43 @@ export default function UsersPage() {
     setRoleFilter("all");
   };
 
+  const handleSyncSuperAdminBrands = async () => {
+    if (
+      !confirm("This will assign all brands to all super admins. Continue?")
+    ) {
+      return;
+    }
+
+    try {
+      setIsSyncing(true);
+
+      const response = await fetch("/api/admin/sync-super-admin-brands", {
+        method: "POST",
+        credentials: "include",
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        console.error("Error syncing super admin brands:", result);
+        toast.error(result.error || "Failed to sync super admin brands");
+        return;
+      }
+
+      toast.success(
+        `Sync completed! Updated ${result.summary.successful}/${result.summary.totalSuperAdmins} super admins with ${result.summary.totalBrandsAdded} brand assignments.`
+      );
+
+      // Refresh users list
+      window.location.reload();
+    } catch (error) {
+      console.error("Error syncing super admin brands:", error);
+      toast.error("Failed to sync super admin brands");
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   if (user?.role !== "super_admin") {
     return <Loading />;
   }
@@ -310,93 +356,113 @@ export default function UsersPage() {
             Manage user accounts and assign brands to users
           </p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-oma-plum hover:bg-oma-plum/90">
-              <UserPlus className="h-4 w-4 mr-2" />
-              Add User
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[600px]">
-            <DialogHeader>
-              <DialogTitle>Add New User</DialogTitle>
-              <DialogDescription>
-                Create a new user account and assign them to brands
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email Address *</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => handleInputChange("email", e.target.value)}
-                  placeholder="user@example.com"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="role">Role *</Label>
-                <Select
-                  value={formData.role}
-                  onValueChange={(value) => handleInputChange("role", value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="user">User</SelectItem>
-                    <SelectItem value="brand_admin">Brand Admin</SelectItem>
-                    <SelectItem value="admin">Admin</SelectItem>
-                    <SelectItem value="super_admin">Super Admin</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Assign Brands</Label>
-                <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto border rounded-md p-3">
-                  {brands.map((brand) => (
-                    <div key={brand.id} className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        id={`brand-${brand.id}`}
-                        checked={formData.selectedBrands.includes(brand.id)}
-                        onChange={() => handleBrandToggle(brand.id)}
-                        className="rounded border-gray-300"
-                      />
-                      <label
-                        htmlFor={`brand-${brand.id}`}
-                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                      >
-                        {brand.name}
-                      </label>
-                    </div>
-                  ))}
+        <div className="flex space-x-3">
+          <Button
+            variant="outline"
+            onClick={handleSyncSuperAdminBrands}
+            disabled={isSyncing}
+            className="text-oma-plum border-oma-plum hover:bg-oma-plum hover:text-white"
+          >
+            <RefreshCw
+              className={`h-4 w-4 mr-2 ${isSyncing ? "animate-spin" : ""}`}
+            />
+            {isSyncing ? "Syncing..." : "Sync Super Admins"}
+          </Button>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-oma-plum hover:bg-oma-plum/90">
+                <UserPlus className="h-4 w-4 mr-2" />
+                Add User
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[600px]">
+              <DialogHeader>
+                <DialogTitle>Add New User</DialogTitle>
+                <DialogDescription>
+                  Create a new user account and assign them to brands
+                </DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email Address *</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => handleInputChange("email", e.target.value)}
+                    placeholder="user@example.com"
+                    required
+                  />
                 </div>
-              </div>
 
-              <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsDialogOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={isLoading}
-                  className="bg-oma-plum hover:bg-oma-plum/90"
-                >
-                  {isLoading ? "Creating..." : "Create User"}
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+                <div className="space-y-2">
+                  <Label htmlFor="role">Role *</Label>
+                  <Select
+                    value={formData.role}
+                    onValueChange={(value) => handleInputChange("role", value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="user">User</SelectItem>
+                      <SelectItem value="brand_admin">Brand Admin</SelectItem>
+                      <SelectItem value="admin">Admin</SelectItem>
+                      <SelectItem value="super_admin">Super Admin</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Assign Brands</Label>
+                  <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto border rounded-md p-3">
+                    {brands.map((brand) => (
+                      <div
+                        key={brand.id}
+                        className="flex items-center space-x-2"
+                      >
+                        <input
+                          type="checkbox"
+                          id={`brand-${brand.id}`}
+                          checked={formData.selectedBrands.includes(brand.id)}
+                          onChange={() => handleBrandToggle(brand.id)}
+                          className="rounded border-gray-300"
+                        />
+                        <label
+                          htmlFor={`brand-${brand.id}`}
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        >
+                          {brand.name}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Note: Super admins will be automatically assigned to all
+                    brands
+                  </p>
+                </div>
+
+                <DialogFooter>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsDialogOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={isLoading}
+                    className="bg-oma-plum hover:bg-oma-plum/90"
+                  >
+                    {isLoading ? "Creating..." : "Create User"}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {/* Search and Filter Controls */}
