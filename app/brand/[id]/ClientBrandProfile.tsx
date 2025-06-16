@@ -116,61 +116,69 @@ export default function ClientBrandProfile({
   };
 
   return (
-    <section className="pt-24 pb-16 px-6 fade-in">
+    <section className="pt-20 sm:pt-24 pb-16 px-4 sm:px-6 fade-in">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-8 slide-up">
-          <div className="flex items-center mb-2">
-            <Badge className="bg-oma-beige text-oma-cocoa border-oma-gold/20">
+        <div className="mb-6 sm:mb-8 slide-up">
+          <div className="flex flex-wrap items-center gap-2 mb-3 sm:mb-2">
+            <Badge className="bg-oma-beige text-oma-cocoa border-oma-gold/20 text-xs sm:text-sm">
               {brandData.category}
             </Badge>
             {brandData.isVerified && (
-              <div className="flex items-center ml-3 text-oma-gold text-sm">
-                <CheckCircle size={16} className="mr-1" />
+              <div className="flex items-center text-oma-gold text-xs sm:text-sm">
+                <CheckCircle size={14} className="mr-1 sm:mr-1" />
                 <span>Verified Designer</span>
               </div>
             )}
           </div>
 
-          <h1 className="heading-lg mb-2">{brandData.name}</h1>
+          <h1 className="text-3xl sm:text-4xl md:text-6xl font-canela font-normal tracking-tight mb-3 sm:mb-2 leading-tight">
+            {brandData.name}
+          </h1>
 
-          <div className="flex items-center text-oma-cocoa mb-6">
-            <MapPin size={16} className="mr-1" />
-            <span>{brandData.location}</span>
-            <div className="flex items-center ml-6">
-              <Star size={16} className="mr-1 text-oma-gold" />
-              <span>
+          <div className="flex flex-col sm:flex-row sm:items-center text-oma-cocoa mb-4 sm:mb-6 gap-2 sm:gap-0">
+            <div className="flex items-center">
+              <MapPin size={14} className="mr-1 flex-shrink-0" />
+              <span className="text-sm sm:text-base">{brandData.location}</span>
+            </div>
+            <div className="flex items-center sm:ml-6">
+              <Star size={14} className="mr-1 text-oma-gold flex-shrink-0" />
+              <span className="text-sm sm:text-base">
                 {brandData.rating} ({reviews.length} reviews)
               </span>
             </div>
           </div>
 
-          <div className="prose text-oma-black max-w-none">
+          <div className="prose text-oma-black max-w-none mb-6">
             {brandData.description.split("\n\n").map((paragraph, i) => (
-              <p key={i} className="mb-4">
+              <p
+                key={i}
+                className="mb-3 sm:mb-4 text-sm sm:text-base leading-relaxed"
+              >
                 {paragraph}
               </p>
             ))}
           </div>
 
-          <div className="flex gap-4">
+          {/* Mobile-optimized button layout */}
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
             <Button
               onClick={scrollToCatalogues}
-              className="bg-oma-plum hover:bg-oma-plum/90"
+              className="bg-oma-plum hover:bg-oma-plum/90 w-full sm:w-auto min-h-[44px] text-sm sm:text-base"
             >
               View Catalogues
             </Button>
             <Button
               onClick={handleToggleProducts}
               variant="outline"
-              className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white"
+              className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white w-full sm:w-auto min-h-[44px] text-sm sm:text-base"
             >
-              <ShoppingBag size={16} className="mr-2" />
+              <ShoppingBag size={16} className="mr-2 flex-shrink-0" />
               {showAllProducts ? "Hide Products" : "View All Products"}
             </Button>
             <Button
               onClick={handleOpenContactModal}
               variant="outline"
-              className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white"
+              className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white w-full sm:w-auto min-h-[44px] text-sm sm:text-base"
             >
               Contact Designer
             </Button>
@@ -181,27 +189,31 @@ export default function ClientBrandProfile({
         {showAllProducts && (
           <div
             id="products-section"
-            className="my-12 slide-up scroll-mt-24"
+            className="my-8 sm:my-12 slide-up scroll-mt-20 sm:scroll-mt-24"
             style={{ animationDelay: "50ms" }}
           >
-            <h2 className="heading-sm mb-6">All Products</h2>
+            <h2 className="text-2xl sm:text-3xl font-canela font-normal mb-4 sm:mb-6">
+              All Products
+            </h2>
             {productsLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
                 {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="space-y-3">
+                  <div key={i} className="space-y-2 sm:space-y-3">
                     <Skeleton className="aspect-square w-full" />
-                    <Skeleton className="h-4 w-3/4" />
-                    <Skeleton className="h-4 w-1/2" />
+                    <Skeleton className="h-3 sm:h-4 w-3/4" />
+                    <Skeleton className="h-3 sm:h-4 w-1/2" />
                   </div>
                 ))}
               </div>
             ) : products.length === 0 ? (
-              <div className="text-center py-12 text-gray-500">
-                <ShoppingBag className="w-16 h-16 text-oma-cocoa/30 mx-auto mb-4" />
-                <p>No products available yet.</p>
+              <div className="text-center py-8 sm:py-12 text-gray-500">
+                <ShoppingBag className="w-12 h-12 sm:w-16 sm:h-16 text-oma-cocoa/30 mx-auto mb-3 sm:mb-4" />
+                <p className="text-sm sm:text-base">
+                  No products available yet.
+                </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
                 {products.map((product, index) => (
                   <NavigationLink
                     key={product.id}
@@ -209,7 +221,7 @@ export default function ClientBrandProfile({
                     className="block group"
                   >
                     <div
-                      className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 animate-[fadeIn_500ms_ease-in-out_forwards] opacity-0"
+                      className="bg-white rounded-lg sm:rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 animate-[fadeIn_500ms_ease-in-out_forwards] opacity-0"
                       style={{ animationDelay: `${index * 100}ms` }}
                     >
                       <div className="aspect-square relative overflow-hidden">
@@ -218,27 +230,27 @@ export default function ClientBrandProfile({
                           alt={product.title}
                           fill
                           className="object-cover group-hover:scale-105 transition-transform duration-300"
-                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                          sizes="(max-width: 640px) 50vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                         />
                       </div>
-                      <div className="p-4">
-                        <h3 className="font-medium text-lg mb-1 group-hover:text-oma-plum transition-colors">
+                      <div className="p-3 sm:p-4">
+                        <h3 className="font-medium text-sm sm:text-lg mb-1 group-hover:text-oma-plum transition-colors line-clamp-2">
                           {product.title}
                         </h3>
-                        <p className="text-oma-cocoa/70 text-sm mb-2">
+                        <p className="text-oma-cocoa/70 text-xs sm:text-sm mb-2 line-clamp-1">
                           {product.category}
                         </p>
                         <div className="flex items-center justify-between">
-                          <p className="text-oma-plum font-medium">
+                          <p className="text-oma-plum font-medium text-sm sm:text-base">
                             ${product.sale_price || product.price}
                           </p>
                           <Badge
                             variant="secondary"
-                            className={
+                            className={`text-xs ${
                               product.in_stock
                                 ? "bg-oma-gold text-oma-cocoa"
                                 : "bg-oma-cocoa/40 text-white"
-                            }
+                            }`}
                           >
                             {product.in_stock ? "In Stock" : "Out of Stock"}
                           </Badge>
@@ -255,16 +267,20 @@ export default function ClientBrandProfile({
         {/* Catalogue Grid */}
         <div
           id="catalogues-section"
-          className="my-12 slide-up scroll-mt-24"
+          className="my-8 sm:my-12 slide-up scroll-mt-20 sm:scroll-mt-24"
           style={{ animationDelay: "100ms" }}
         >
-          <h2 className="heading-sm mb-6">Catalogues</h2>
+          <h2 className="text-2xl sm:text-3xl font-canela font-normal mb-4 sm:mb-6">
+            Catalogues
+          </h2>
           {brandData.collections.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
-              <p>No catalogues available yet.</p>
+            <div className="text-center py-8 sm:py-12 text-gray-500">
+              <p className="text-sm sm:text-base">
+                No catalogues available yet.
+              </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {brandData.collections.map((collection, index) => (
                 <NavigationLink
                   key={collection.id}
@@ -272,20 +288,20 @@ export default function ClientBrandProfile({
                   className="block group"
                 >
                   <div
-                    className="aspect-[4/5] relative overflow-hidden rounded-2xl animate-[fadeIn_500ms_ease-in-out_forwards] opacity-0 transition-transform duration-300 group-hover:scale-105"
+                    className="aspect-[4/5] relative overflow-hidden rounded-xl sm:rounded-2xl animate-[fadeIn_500ms_ease-in-out_forwards] opacity-0 transition-transform duration-300 group-hover:scale-105"
                     style={{ animationDelay: `${index * 150}ms` }}
                   >
                     <img
                       src={collection.image}
                       alt={collection.title}
-                      className="w-full h-full object-cover rounded-2xl"
+                      className="w-full h-full object-cover rounded-xl sm:rounded-2xl"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent group-hover:from-black/70 transition-colors duration-300" />
-                    <div className="absolute bottom-0 left-0 p-6">
-                      <h3 className="text-white text-xl font-source group-hover:text-oma-gold transition-colors duration-300">
+                    <div className="absolute bottom-0 left-0 p-4 sm:p-6">
+                      <h3 className="text-white text-lg sm:text-xl font-source group-hover:text-oma-gold transition-colors duration-300">
                         {collection.title}
                       </h3>
-                      <p className="text-white/80 text-sm mt-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <p className="text-white/80 text-xs sm:text-sm mt-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                         Click to view catalogue
                       </p>
                     </div>
@@ -297,43 +313,56 @@ export default function ClientBrandProfile({
         </div>
 
         <div
-          className="grid grid-cols-1 md:grid-cols-3 gap-8 my-12 slide-up"
+          className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 my-8 sm:my-12 slide-up"
           style={{ animationDelay: "200ms" }}
         >
-          <div className="md:col-span-2">
-            <h2 className="heading-sm mb-4">About {brandData.name}</h2>
+          <div className="lg:col-span-2">
+            <h2 className="text-2xl sm:text-3xl font-canela font-normal mb-3 sm:mb-4">
+              About {brandData.name}
+            </h2>
             <div className="prose text-oma-black max-w-none">
               {brandData.longDescription.split("\n\n").map((paragraph, i) => (
-                <p key={i} className="mb-4">
+                <p
+                  key={i}
+                  className="mb-3 sm:mb-4 text-sm sm:text-base leading-relaxed"
+                >
                   {paragraph}
                 </p>
               ))}
             </div>
           </div>
 
-          <div className="bg-oma-beige p-6 rounded-lg h-fit">
-            <h3 className="font-canela text-xl mb-4">Designer Information</h3>
+          <div className="bg-oma-beige p-4 sm:p-6 rounded-lg h-fit order-first lg:order-last">
+            <h3 className="font-canela text-lg sm:text-xl mb-3 sm:mb-4">
+              Designer Information
+            </h3>
 
-            <div className="mb-4">
-              <h4 className="text-sm font-semibold mb-1">Price Range</h4>
-              <p>{brandData.priceRange}</p>
+            <div className="mb-3 sm:mb-4">
+              <h4 className="text-xs sm:text-sm font-semibold mb-1 uppercase tracking-wide">
+                Price Range
+              </h4>
+              <p className="text-sm sm:text-base">{brandData.priceRange}</p>
             </div>
 
-            <div className="mb-4">
-              <h4 className="text-sm font-semibold mb-1">Location</h4>
-              <p>{brandData.location}</p>
+            <div className="mb-3 sm:mb-4">
+              <h4 className="text-xs sm:text-sm font-semibold mb-1 uppercase tracking-wide">
+                Location
+              </h4>
+              <p className="text-sm sm:text-base">{brandData.location}</p>
             </div>
 
-            <div className="mb-6">
-              <h4 className="text-sm font-semibold mb-1">Category</h4>
-              <p>{brandData.category}</p>
+            <div className="mb-4 sm:mb-6">
+              <h4 className="text-xs sm:text-sm font-semibold mb-1 uppercase tracking-wide">
+                Category
+              </h4>
+              <p className="text-sm sm:text-base">{brandData.category}</p>
             </div>
 
-            <Separator className="my-6 bg-oma-gold/20" />
+            <Separator className="my-4 sm:my-6 bg-oma-gold/20" />
 
             <Button
               onClick={handleOpenContactModal}
-              className="w-full bg-oma-plum hover:bg-oma-plum/90"
+              className="w-full bg-oma-plum hover:bg-oma-plum/90 min-h-[44px] text-sm sm:text-base"
             >
               Contact Designer
             </Button>
@@ -342,15 +371,17 @@ export default function ClientBrandProfile({
 
         {/* Reviews Section */}
         <div
-          className="my-12 border border-oma-gold/20 rounded-lg p-6 bg-oma-beige/30 slide-up"
+          className="my-8 sm:my-12 border border-oma-gold/20 rounded-lg p-4 sm:p-6 bg-oma-beige/30 slide-up"
           style={{ animationDelay: "300ms" }}
         >
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="heading-sm">Customer Reviews</h2>
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6 gap-3 sm:gap-0">
+            <h2 className="text-2xl sm:text-3xl font-canela font-normal">
+              Customer Reviews
+            </h2>
             {!showReviewForm && (
               <Button
                 onClick={handleShowReviewForm}
-                className="bg-oma-plum hover:bg-oma-plum/90 text-white"
+                className="bg-oma-plum hover:bg-oma-plum/90 text-white w-full sm:w-auto min-h-[44px] text-sm sm:text-base"
               >
                 Write a Review
               </Button>

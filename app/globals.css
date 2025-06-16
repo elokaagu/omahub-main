@@ -259,6 +259,102 @@ html {
   scrollbar-width: none;
 }
 
+/* Mobile-specific utilities */
+@layer utilities {
+  /* Touch-friendly minimum sizes */
+  .min-touch {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Text truncation utilities */
+  .line-clamp-1 {
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Mobile-optimized spacing */
+  .mobile-padding {
+    @apply px-4 sm:px-6;
+  }
+
+  .mobile-margin {
+    @apply mx-4 sm:mx-6;
+  }
+
+  /* Safe area padding for mobile devices */
+  .safe-area-padding {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  /* Improved mobile scrolling */
+  .smooth-scroll {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+}
+
+/* Mobile-first responsive typography */
+@media (max-width: 640px) {
+  .heading-xl {
+    @apply text-4xl leading-tight;
+  }
+
+  .heading-lg {
+    @apply text-3xl leading-tight;
+  }
+
+  .heading-md {
+    @apply text-2xl leading-tight;
+  }
+
+  .heading-sm {
+    @apply text-xl leading-tight;
+  }
+
+  /* Ensure buttons are touch-friendly on mobile */
+  button,
+  .btn,
+  [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Improve form inputs on mobile */
+  input,
+  select,
+  textarea {
+    min-height: 44px;
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+}
+
+/* Improve focus states for accessibility */
+@media (prefers-reduced-motion: no-preference) {
+  *:focus-visible {
+    outline: 2px solid #8b5a3c;
+    outline-offset: 2px;
+    transition: outline-offset 0.2s ease;
+  }
+}
+
 /* Hero section specific styles */
 .hero-section {
   @apply relative w-full min-h-screen overflow-hidden;

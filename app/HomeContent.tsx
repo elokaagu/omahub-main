@@ -689,46 +689,52 @@ export default function HomeContent() {
                   />
                 </FadeIn>
 
-                <div className="mt-10 overflow-hidden">
+                <div className="mt-8 sm:mt-10 overflow-hidden">
                   {isLoading ? (
-                    <div className="flex justify-center items-center h-64">
-                      <div className="animate-spin h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full"></div>
+                    <div className="flex justify-center items-center h-48 sm:h-64">
+                      <div className="animate-spin h-6 w-6 sm:h-8 sm:w-8 border-4 border-oma-plum border-t-transparent rounded-full"></div>
                     </div>
                   ) : category.brands.length > 0 ? (
                     <div className="relative">
-                      <div className="flex space-x-6 overflow-x-auto pb-4 scrollbar-hide">
+                      <div className="flex space-x-3 sm:space-x-6 overflow-x-auto pb-4 scrollbar-hide px-4 sm:px-0">
                         {category.brands.map((brand) => (
                           <Link
                             key={brand.id}
                             href={`/brand/${brand.id}`}
-                            className="flex-none w-[280px] group block bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+                            className="flex-none w-[220px] sm:w-[280px] group block bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
                           >
                             <div className="aspect-[4/5] relative">
                               <Image
                                 src={brand.image}
                                 alt={brand.name}
                                 fill
-                                sizes="(max-width: 768px) 100vw, 280px"
+                                sizes="(max-width: 640px) 220px, 280px"
                                 className="object-cover transition-transform duration-300 group-hover:scale-105"
                               />
                             </div>
-                            <div className="p-4">
+                            <div className="p-3 sm:p-4">
                               <div className="flex items-center justify-between mb-2">
-                                <h3 className="font-semibold text-lg">
+                                <h3 className="font-semibold text-sm sm:text-lg line-clamp-1">
                                   {brand.name}
                                 </h3>
                                 {brand.isVerified && (
-                                  <CheckCircle className="h-5 w-5 text-oma-plum" />
+                                  <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-oma-plum flex-shrink-0" />
                                 )}
                               </div>
-                              <div className="flex flex-wrap items-center gap-2 text-sm text-oma-cocoa">
-                                <span className="px-2 py-1 bg-oma-beige/50 rounded">
+                              <div className="flex flex-wrap items-center gap-1 sm:gap-2 text-xs sm:text-sm text-oma-cocoa">
+                                <span className="px-2 py-1 bg-oma-beige/50 rounded text-xs">
                                   {category.title}
                                 </span>
-                                <span>•</span>
-                                <span>{brand.location}</span>
-                                <span>•</span>
-                                <span>★ {brand.rating}</span>
+                                <span className="hidden sm:inline">•</span>
+                                <span className="truncate">
+                                  {brand.location}
+                                </span>
+                                <span className="hidden sm:inline">•</span>
+                                <span className="flex items-center">
+                                  <span className="sm:hidden">★</span>
+                                  <span className="hidden sm:inline">★</span>
+                                  <span className="ml-1">{brand.rating}</span>
+                                </span>
                               </div>
                             </div>
                           </Link>
@@ -739,11 +745,11 @@ export default function HomeContent() {
                 </div>
 
                 <SlideUp delay={0.3}>
-                  <div className="mt-8 text-center">
+                  <div className="mt-6 sm:mt-8 text-center">
                     <Button
                       asChild
                       variant="outline"
-                      className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white"
+                      className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white min-h-[44px] text-sm sm:text-base"
                     >
                       <Link
                         href={`/directory?category=${encodeURIComponent(
@@ -773,25 +779,28 @@ export default function HomeContent() {
       )}
 
       {/* CTA Section */}
-      <section className="py-16 px-6">
+      <section className="py-12 sm:py-16 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto">
           <FadeIn delay={0.1}>
-            <div className="bg-gradient-to-r from-oma-plum/10 to-oma-gold/10 rounded-xl p-8 md:p-12 text-center">
-              <h2 className="font-canela text-3xl md:text-4xl mb-4">
+            <div className="bg-gradient-to-r from-oma-plum/10 to-oma-gold/10 rounded-xl p-6 sm:p-8 md:p-12 text-center">
+              <h2 className="font-canela text-2xl sm:text-3xl md:text-4xl mb-3 sm:mb-4">
                 Ready to Create Something Beautiful?
               </h2>
-              <p className="text-lg max-w-2xl mx-auto mb-8">
+              <p className="text-sm sm:text-lg max-w-2xl mx-auto mb-6 sm:mb-8 leading-relaxed">
                 Join our community of fashion enthusiasts and talented designers
                 bringing creativity to the world.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button asChild className="bg-oma-plum hover:bg-oma-plum/90">
+              <div className="flex flex-col gap-3 sm:flex-row sm:gap-4 justify-center">
+                <Button
+                  asChild
+                  className="bg-oma-plum hover:bg-oma-plum/90 min-h-[44px] text-sm sm:text-base"
+                >
                   <Link href="/directory">Browse Brand Directory</Link>
                 </Button>
                 <Button
                   asChild
                   variant="outline"
-                  className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white"
+                  className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white min-h-[44px] text-sm sm:text-base"
                 >
                   <Link href="/join">Become a Designer</Link>
                 </Button>

@@ -30,15 +30,17 @@ export function BrandCard({
     <NavigationLink
       href={`/brand/${id}`}
       className={cn(
-        "group block bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow relative h-full",
-        isPortrait ? "flex gap-6" : "",
+        "group block bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow relative h-full min-h-[44px]",
+        isPortrait ? "flex gap-3 sm:gap-6" : "",
         className
       )}
     >
       <div
         className={cn(
           "relative",
-          isPortrait ? "w-48 h-48 flex-shrink-0" : "aspect-[4/5]"
+          isPortrait
+            ? "w-32 h-32 sm:w-48 sm:h-48 flex-shrink-0"
+            : "aspect-[4/5]"
         )}
       >
         <AuthImage
@@ -54,21 +56,27 @@ export function BrandCard({
       </div>
       <div
         className={cn(
-          "p-6",
+          "p-3 sm:p-6",
           isPortrait ? "flex-1 flex flex-col justify-center" : ""
         )}
       >
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="font-semibold text-lg">{name}</h3>
-          {isVerified && <CheckCircle className="h-5 w-5 text-oma-plum" />}
+        <div className="flex items-start justify-between mb-2">
+          <h3 className="font-semibold text-sm sm:text-lg leading-tight line-clamp-2 pr-2">
+            {name}
+          </h3>
+          {isVerified && (
+            <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-oma-plum flex-shrink-0" />
+          )}
         </div>
-        <div className="flex flex-wrap items-center gap-2 text-sm text-oma-cocoa">
-          <span className="px-2 py-1 bg-oma-beige/50 rounded">{category}</span>
-          <span>•</span>
-          <span>{location}</span>
-          <span>•</span>
-          <div className="flex items-center">
-            <Star className="h-4 w-4 text-amber-500 mr-1" />
+        <div className="flex flex-wrap items-center gap-1 sm:gap-2 text-xs sm:text-sm text-oma-cocoa">
+          <span className="px-2 py-1 bg-oma-beige/50 rounded text-xs">
+            {category}
+          </span>
+          <span className="hidden sm:inline">•</span>
+          <span className="truncate">{location}</span>
+          <span className="hidden sm:inline">•</span>
+          <div className="flex items-center flex-shrink-0">
+            <Star className="h-3 w-3 sm:h-4 sm:w-4 text-amber-500 mr-1" />
             <span>{rating.toFixed(1)}</span>
           </div>
         </div>

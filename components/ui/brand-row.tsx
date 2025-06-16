@@ -39,28 +39,41 @@ export function BrandRow({ title, subtitle, brands }: BrandRowProps) {
   };
 
   return (
-    <div className="relative py-8">
-      <div className="mb-6">
-        <h2 className="text-2xl font-normal text-oma-black mb-1">{title}</h2>
-        {subtitle && <p className="text-sm text-oma-cocoa/70">{subtitle}</p>}
+    <div className="relative py-6 sm:py-8">
+      <div className="mb-4 sm:mb-6 px-4 sm:px-0">
+        <h2 className="text-xl sm:text-2xl font-normal text-oma-black mb-1">
+          {title}
+        </h2>
+        {subtitle && (
+          <p className="text-xs sm:text-sm text-oma-cocoa/70">{subtitle}</p>
+        )}
       </div>
 
       <div className="group relative">
         <div
           ref={rowRef}
-          className="flex space-x-6 overflow-x-scroll scrollbar-hide snap-x snap-mandatory transition-transform duration-500 ease-out"
+          className="flex space-x-3 sm:space-x-6 overflow-x-scroll scrollbar-hide snap-x snap-mandatory transition-transform duration-500 ease-out px-4 sm:px-0"
         >
           {brands.map((brand) => (
-            <div key={brand.id} className="w-[300px] flex-none snap-start">
-              <BrandCard {...brand} />
+            <div
+              key={brand.id}
+              className="w-[240px] sm:w-[300px] flex-none snap-start"
+            >
+              <BrandCard
+                {...brand}
+                location={brand.location || ""}
+                rating={brand.rating || 4.8}
+                isVerified={brand.isVerified || false}
+              />
             </div>
           ))}
         </div>
 
+        {/* Desktop navigation buttons - hidden on mobile */}
         <Button
           variant="outline"
           size="icon"
-          className="absolute -left-4 top-1/2 -translate-y-1/2 bg-white shadow-md hover:bg-oma-beige/90 hover:scale-105 transition-all duration-300 ease-out"
+          className="hidden sm:flex absolute -left-4 top-1/2 -translate-y-1/2 bg-white shadow-md hover:bg-oma-beige/90 hover:scale-105 transition-all duration-300 ease-out min-h-[44px] min-w-[44px]"
           onClick={() => scroll("left")}
         >
           <ArrowLeft className="h-4 w-4" />
@@ -69,7 +82,7 @@ export function BrandRow({ title, subtitle, brands }: BrandRowProps) {
         <Button
           variant="outline"
           size="icon"
-          className="absolute -right-4 top-1/2 -translate-y-1/2 bg-white shadow-md hover:bg-oma-beige/90 hover:scale-105 transition-all duration-300 ease-out"
+          className="hidden sm:flex absolute -right-4 top-1/2 -translate-y-1/2 bg-white shadow-md hover:bg-oma-beige/90 hover:scale-105 transition-all duration-300 ease-out min-h-[44px] min-w-[44px]"
           onClick={() => scroll("right")}
         >
           <ArrowRight className="h-4 w-4" />

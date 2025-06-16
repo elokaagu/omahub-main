@@ -272,80 +272,94 @@ export default function DirectoryClient() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-6 sm:py-8">
       {/* Header section - removed "Brand Directory" text */}
-      <div className="mb-8">
-        <p className="text-gray-600">
+      <div className="mb-6 sm:mb-8">
+        <p className="text-sm sm:text-base text-gray-600">
           Discover and connect with our curated selection of brands
         </p>
       </div>
 
       {/* Search and filters section */}
-      <div className="mb-8">
+      <div className="mb-6 sm:mb-8">
         <FadeIn>
-          <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-            <div className="relative flex-1 max-w-md">
+          <div className="flex flex-col gap-4">
+            {/* Search bar */}
+            <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-oma-cocoa" />
               <Input
                 type="search"
                 placeholder="Search designers..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 border-oma-cocoa/20 focus:border-oma-plum/50"
+                className="pl-10 border-oma-cocoa/20 focus:border-oma-plum/50 min-h-[44px] text-sm sm:text-base"
               />
             </div>
 
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setIsGridView(true)}
-                className={cn(
-                  "w-10 h-10",
-                  isGridView ? "bg-oma-beige text-oma-plum" : "text-oma-cocoa"
-                )}
-              >
-                <LayoutGrid className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setIsGridView(false)}
-                className={cn(
-                  "w-10 h-10",
-                  !isGridView ? "bg-oma-beige text-oma-plum" : "text-oma-cocoa"
-                )}
-              >
-                <LayoutList className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                className="md:w-auto w-full"
-                onClick={() => setShowFilters(!showFilters)}
-              >
-                <Filter className="h-4 w-4 mr-2" />
-                Filters
-              </Button>
-              <Button
-                variant="outline"
-                className="md:w-auto w-full border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white"
-                onClick={resetFilters}
-              >
-                Show All Designers
-              </Button>
+            {/* Controls row */}
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-2">
+              {/* View toggle buttons */}
+              <div className="flex gap-2 order-2 sm:order-1">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setIsGridView(true)}
+                  className={cn(
+                    "min-w-[44px] min-h-[44px]",
+                    isGridView ? "bg-oma-beige text-oma-plum" : "text-oma-cocoa"
+                  )}
+                >
+                  <LayoutGrid className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setIsGridView(false)}
+                  className={cn(
+                    "min-w-[44px] min-h-[44px]",
+                    !isGridView
+                      ? "bg-oma-beige text-oma-plum"
+                      : "text-oma-cocoa"
+                  )}
+                >
+                  <LayoutList className="h-4 w-4" />
+                </Button>
+              </div>
+
+              {/* Filter and reset buttons */}
+              <div className="flex gap-2 flex-1 order-1 sm:order-2">
+                <Button
+                  variant="outline"
+                  className="flex-1 sm:flex-none min-h-[44px] text-sm sm:text-base"
+                  onClick={() => setShowFilters(!showFilters)}
+                >
+                  <Filter className="h-4 w-4 mr-2" />
+                  Filters
+                </Button>
+                <Button
+                  variant="outline"
+                  className="flex-1 sm:flex-none border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white min-h-[44px] text-sm sm:text-base"
+                  onClick={resetFilters}
+                >
+                  <span className="hidden sm:inline">Show All Designers</span>
+                  <span className="sm:hidden">Show All</span>
+                </Button>
+              </div>
             </div>
           </div>
         </FadeIn>
 
         {showFilters && (
           <FadeIn>
-            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 p-6 rounded-lg bg-oma-beige/50 border border-oma-gold/10">
+            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 sm:p-6 rounded-lg bg-oma-beige/50 border border-oma-gold/10">
               <div>
-                <Label className="text-oma-cocoa">Category</Label>
+                <Label className="text-oma-cocoa text-sm sm:text-base">
+                  Category
+                </Label>
                 <select
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="w-full mt-1 p-2 border rounded-md border-oma-gold/20 focus:border-oma-plum"
+                  className="w-full mt-1 p-2 sm:p-3 border rounded-md border-oma-gold/20 focus:border-oma-plum min-h-[44px] text-sm sm:text-base"
                 >
                   {categories.map((category) => (
                     <option key={category} value={category}>
@@ -355,11 +369,13 @@ export default function DirectoryClient() {
                 </select>
               </div>
               <div>
-                <Label className="text-oma-cocoa">Location</Label>
+                <Label className="text-oma-cocoa text-sm sm:text-base">
+                  Location
+                </Label>
                 <select
                   value={selectedLocation}
                   onChange={(e) => setSelectedLocation(e.target.value)}
-                  className="w-full mt-1 p-2 border rounded-md border-oma-gold/20 focus:border-oma-plum"
+                  className="w-full mt-1 p-2 sm:p-3 border rounded-md border-oma-gold/20 focus:border-oma-plum min-h-[44px] text-sm sm:text-base"
                 >
                   {locations.map((location) => (
                     <option key={location} value={location}>
@@ -373,7 +389,7 @@ export default function DirectoryClient() {
         )}
       </div>
 
-      <Separator className="my-8 bg-oma-gold/10" />
+      <Separator className="my-6 sm:my-8 bg-oma-gold/10" />
 
       {/* Error display */}
       {error && <ErrorDisplay />}
@@ -385,7 +401,7 @@ export default function DirectoryClient() {
         <>
           {/* Results count */}
           <div className="mb-4">
-            <p className="text-gray-600">
+            <p className="text-sm sm:text-base text-gray-600">
               Showing {displayedBrands.length} brand
               {displayedBrands.length === 1 ? "" : "s"}
             </p>
@@ -394,9 +410,9 @@ export default function DirectoryClient() {
           {/* Brand grid/list */}
           <div
             className={cn(
-              "grid gap-6",
+              "grid gap-4 sm:gap-6",
               isGridView
-                ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+                ? "grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
                 : "grid-cols-1"
             )}
           >
@@ -407,13 +423,13 @@ export default function DirectoryClient() {
 
           {displayedBrands.length === 0 && !error && (
             <FadeIn>
-              <div className="text-center py-12 bg-oma-beige/30 rounded-lg p-8">
-                <p className="text-oma-cocoa text-lg">
+              <div className="text-center py-8 sm:py-12 bg-oma-beige/30 rounded-lg p-6 sm:p-8">
+                <p className="text-oma-cocoa text-base sm:text-lg">
                   No designers found matching your criteria.
                 </p>
                 <Button
                   onClick={resetFilters}
-                  className="mt-4 bg-oma-plum hover:bg-oma-plum/90"
+                  className="mt-4 bg-oma-plum hover:bg-oma-plum/90 min-h-[44px] text-sm sm:text-base"
                 >
                   Reset Filters
                 </Button>
