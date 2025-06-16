@@ -20,6 +20,7 @@ const rolePermissions: Record<Role, Permission[]> = {
     "studio.brands.manage",
     "studio.catalogues.manage",
     "studio.catalogues.create",
+    "studio.products.manage",
   ],
   admin: ["studio.access", "studio.brands.manage", "studio.catalogues.manage"],
   super_admin: [

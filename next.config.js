@@ -48,10 +48,6 @@ const nextConfig = {
   experimental: {
     optimizeCss: true,
     scrollRestoration: true,
-    // Enable modern image formats
-    images: {
-      allowFutureImage: true,
-    },
   },
   // Use standard output for Vercel - do not use 'export' which breaks middleware
   output: undefined,
