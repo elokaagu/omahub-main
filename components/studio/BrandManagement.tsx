@@ -79,19 +79,44 @@ export default function BrandManagement({ className }: BrandManagementProps) {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
+    let refreshTimeout: NodeJS.Timeout;
+    let lastRefreshTime = 0;
+    const REFRESH_DEBOUNCE_MS = 2000; // Only refresh if it's been 2+ seconds since last refresh
+
     const handleVisibilityChange = () => {
       if (!document.hidden && user && canManageBrands && !accessLoading) {
-        console.log("👁️ Tab became visible, refreshing brands...");
-        invalidateBrandsCache(); // Clear cache to ensure fresh data
-        fetchBrands();
+        const now = Date.now();
+
+        // Only refresh if enough time has passed since last refresh
+        if (now - lastRefreshTime > REFRESH_DEBOUNCE_MS) {
+          console.log("👁️ Tab became visible, refreshing brands...");
+          lastRefreshTime = now;
+          invalidateBrandsCache(); // Clear cache to ensure fresh data
+          fetchBrands();
+        } else {
+          console.log(
+            "👁️ Tab became visible, but skipping refresh (too recent)"
+          );
+        }
       }
     };
 
     const handleFocus = () => {
       if (user && canManageBrands && !accessLoading) {
-        console.log("🎯 Window focused, refreshing brands...");
-        invalidateBrandsCache(); // Clear cache to ensure fresh data
-        fetchBrands();
+        const now = Date.now();
+
+        // Debounce focus refreshes to prevent rapid-fire refreshes
+        clearTimeout(refreshTimeout);
+        refreshTimeout = setTimeout(() => {
+          if (now - lastRefreshTime > REFRESH_DEBOUNCE_MS) {
+            console.log("🎯 Window focused, refreshing brands...");
+            lastRefreshTime = now;
+            invalidateBrandsCache(); // Clear cache to ensure fresh data
+            fetchBrands();
+          } else {
+            console.log("🎯 Window focused, but skipping refresh (too recent)");
+          }
+        }, 500); // 500ms debounce for focus events
       }
     };
 
@@ -101,6 +126,7 @@ export default function BrandManagement({ className }: BrandManagementProps) {
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("focus", handleFocus);
+      clearTimeout(refreshTimeout);
     };
   }, [user, canManageBrands, accessLoading]);
 

@@ -232,36 +232,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!isClient || typeof window === "undefined" || !supabase) return;
 
+    let focusTimeout: NodeJS.Timeout;
+    let lastRefreshTime = 0;
+    const REFRESH_DEBOUNCE_MS = 3000; // Only refresh if it's been 3+ seconds since last refresh
+
     const handleVisibilityChange = async () => {
       if (!document.hidden && session) {
-        AuthDebug.log("👁️ Tab became visible, checking session validity...");
+        const now = Date.now();
 
-        try {
-          const {
-            data: { session: currentSession },
-            error,
-          } = await supabase.auth.getSession();
+        // Only check session if enough time has passed since last check
+        if (now - lastRefreshTime > REFRESH_DEBOUNCE_MS) {
+          AuthDebug.log("👁️ Tab became visible, checking session validity...");
+          lastRefreshTime = now;
 
-          if (error) {
-            AuthDebug.error("❌ Error checking session on tab focus:", error);
-            return;
+          try {
+            const {
+              data: { session: currentSession },
+              error,
+            } = await supabase.auth.getSession();
+
+            if (error) {
+              AuthDebug.error("❌ Error checking session on tab focus:", error);
+              return;
+            }
+
+            // If session has changed or expired, update it
+            if (!currentSession && session) {
+              AuthDebug.log("⚠️ Session expired while tab was hidden");
+              await handleAuthStateChange("SIGNED_OUT", null);
+            } else if (
+              currentSession &&
+              (!session || currentSession.access_token !== session.access_token)
+            ) {
+              AuthDebug.log("🔄 Session updated while tab was hidden");
+              await handleAuthStateChange("TOKEN_REFRESHED", currentSession);
+            }
+          } catch (error) {
+            AuthDebug.error(
+              "❌ Error during tab visibility session check:",
+              error
+            );
           }
-
-          // If session has changed or expired, update it
-          if (!currentSession && session) {
-            AuthDebug.log("⚠️ Session expired while tab was hidden");
-            await handleAuthStateChange("SIGNED_OUT", null);
-          } else if (
-            currentSession &&
-            (!session || currentSession.access_token !== session.access_token)
-          ) {
-            AuthDebug.log("🔄 Session updated while tab was hidden");
-            await handleAuthStateChange("TOKEN_REFRESHED", currentSession);
-          }
-        } catch (error) {
-          AuthDebug.error(
-            "❌ Error during tab visibility session check:",
-            error
+        } else {
+          AuthDebug.log(
+            "👁️ Tab became visible, but skipping session check (too recent)"
           );
         }
       }
@@ -269,8 +283,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const handleFocus = async () => {
       if (session) {
-        AuthDebug.log("🎯 Window focused, refreshing user profile...");
-        await refreshUserProfile();
+        const now = Date.now();
+
+        // Debounce focus refreshes to prevent rapid-fire refreshes
+        clearTimeout(focusTimeout);
+        focusTimeout = setTimeout(async () => {
+          if (now - lastRefreshTime > REFRESH_DEBOUNCE_MS) {
+            AuthDebug.log("🎯 Window focused, refreshing user profile...");
+            lastRefreshTime = now;
+            await refreshUserProfile();
+          } else {
+            AuthDebug.log(
+              "🎯 Window focused, but skipping profile refresh (too recent)"
+            );
+          }
+        }, 1000); // 1 second debounce for focus events
       }
     };
 
@@ -280,6 +307,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("focus", handleFocus);
+      clearTimeout(focusTimeout);
     };
   }, [isClient, session]);
 
