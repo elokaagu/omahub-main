@@ -318,325 +318,329 @@ export default function ReviewManagementPage() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-canela text-oma-plum">
-            Review Management
-          </h1>
-          <p className="text-oma-cocoa mt-1">
-            {user.role === "super_admin"
-              ? "Manage all reviews across the platform"
-              : "Manage reviews for your brands"}
-          </p>
-        </div>
-        <div className="text-sm text-oma-cocoa">
-          Total Reviews: {totalCount}
-        </div>
-      </div>
-
-      {/* Search and Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Search className="h-5 w-5" />
-            Search & Filter
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex gap-4">
-            <div className="flex-1">
-              <Input
-                placeholder="Search by author, comment, or brand..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full"
-              />
-            </div>
-            <div className="w-48">
-              <Input
-                placeholder="Filter by brand ID..."
-                value={selectedBrand}
-                onChange={(e) => setSelectedBrand(e.target.value)}
-              />
-            </div>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-canela text-oma-plum">
+              Review Management
+            </h1>
+            <p className="text-oma-cocoa mt-1">
+              {user.role === "super_admin"
+                ? "Manage all reviews across the platform"
+                : "Manage reviews for your brands"}
+            </p>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Reviews List */}
-      {loading ? (
-        <div className="text-center py-8">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-oma-plum"></div>
-          <p className="mt-2 text-oma-cocoa">Loading reviews...</p>
+          <div className="text-sm text-oma-cocoa">
+            Total Reviews: {totalCount}
+          </div>
         </div>
-      ) : reviews.length === 0 ? (
+
+        {/* Search and Filters */}
         <Card>
-          <CardContent className="text-center py-8">
-            <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-oma-cocoa">No reviews found</p>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Search className="h-5 w-5" />
+              Search & Filter
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <Input
+                  placeholder="Search by author, comment, or brand..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full"
+                />
+              </div>
+              <div className="w-48">
+                <Input
+                  placeholder="Filter by brand ID..."
+                  value={selectedBrand}
+                  onChange={(e) => setSelectedBrand(e.target.value)}
+                />
+              </div>
+            </div>
           </CardContent>
         </Card>
-      ) : (
-        <div className="space-y-4">
-          {reviews.map((review) => (
-            <Card key={review.id} className="overflow-hidden">
-              <CardHeader className="pb-4">
-                <div className="flex items-start justify-between">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="text-xs">
-                        {review.brand_name}
-                      </Badge>
-                      <Badge variant="secondary" className="text-xs">
-                        {review.brand_category}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <User className="h-4 w-4 text-oma-cocoa" />
-                      <span className="font-medium">{review.author}</span>
-                      <div className="flex items-center gap-1">
-                        {renderStars(review.rating)}
+
+        {/* Reviews List */}
+        {loading ? (
+          <div className="text-center py-8">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-oma-plum"></div>
+            <p className="mt-2 text-oma-cocoa">Loading reviews...</p>
+          </div>
+        ) : reviews.length === 0 ? (
+          <Card>
+            <CardContent className="text-center py-8">
+              <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-oma-cocoa">No reviews found</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-4">
+            {reviews.map((review) => (
+              <Card key={review.id} className="overflow-hidden">
+                <CardHeader className="pb-4">
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="text-xs">
+                          {review.brand_name}
+                        </Badge>
+                        <Badge variant="secondary" className="text-xs">
+                          {review.brand_category}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <User className="h-4 w-4 text-oma-cocoa" />
+                        <span className="font-medium">{review.author}</span>
+                        <div className="flex items-center gap-1">
+                          {renderStars(review.rating)}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-oma-cocoa">
+                        <Calendar className="h-4 w-4" />
+                        {formatDate(review.created_at)}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-oma-cocoa">
-                      <Calendar className="h-4 w-4" />
-                      {formatDate(review.created_at)}
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => openReplyDialog(review)}
-                      className="text-oma-plum border-oma-plum hover:bg-oma-plum hover:text-white"
-                    >
-                      <MessageSquare className="h-4 w-4 mr-1" />
-                      Reply
-                    </Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          disabled={isDeleting === review.id}
-                        >
-                          {isDeleting === review.id ? (
-                            <div className="h-4 w-4 animate-spin rounded-full border border-current border-t-transparent" />
-                          ) : (
-                            <Trash2 className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Delete Review</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Are you sure you want to delete this review by{" "}
-                            {review.author}? This action cannot be undone and
-                            will also delete all replies.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => handleDeleteReview(review.id)}
-                            className="bg-red-600 hover:bg-red-700"
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openReplyDialog(review)}
+                        className="text-oma-plum border-oma-plum hover:bg-oma-plum hover:text-white"
+                      >
+                        <MessageSquare className="h-4 w-4 mr-1" />
+                        Reply
+                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            disabled={isDeleting === review.id}
                           >
-                            Delete
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                            {isDeleting === review.id ? (
+                              <div className="h-4 w-4 animate-spin rounded-full border border-current border-t-transparent" />
+                            ) : (
+                              <Trash2 className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Review</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete this review by{" "}
+                              {review.author}? This action cannot be undone and
+                              will also delete all replies.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleDeleteReview(review.id)}
+                              className="bg-red-600 hover:bg-red-700"
+                            >
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
                   </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {/* Review Comment */}
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <p className="text-oma-black">{review.comment}</p>
-                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {/* Review Comment */}
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <p className="text-oma-black">{review.comment}</p>
+                    </div>
 
-                  {/* Replies */}
-                  {review.replies && review.replies.length > 0 && (
-                    <div className="space-y-3">
-                      <h4 className="font-medium text-oma-plum flex items-center gap-2">
-                        <MessageSquare className="h-4 w-4" />
-                        Admin Replies
-                      </h4>
-                      {review.replies.map((reply) => (
-                        <div
-                          key={reply.id}
-                          className="bg-oma-beige/30 p-4 rounded-lg border-l-4 border-oma-plum"
-                        >
-                          <div className="flex items-start justify-between mb-2">
-                            <div className="text-sm text-oma-cocoa">
-                              <span className="font-medium">
-                                {reply.admin_name}
-                              </span>
-                              <span className="mx-2">•</span>
-                              <span>{formatDate(reply.created_at)}</span>
-                              {reply.updated_at !== reply.created_at && (
-                                <span className="text-xs ml-2">(edited)</span>
-                              )}
-                            </div>
-                            <div className="flex gap-1">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => openReplyDialog(review, reply)}
-                                className="h-8 w-8 p-0"
-                              >
-                                <Edit className="h-3 w-3" />
-                              </Button>
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                                  >
-                                    <Trash2 className="h-3 w-3" />
-                                  </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>
-                                      Delete Reply
-                                    </AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      Are you sure you want to delete this
-                                      reply? This action cannot be undone.
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>
-                                      Cancel
-                                    </AlertDialogCancel>
-                                    <AlertDialogAction
-                                      onClick={() =>
-                                        handleDeleteReply(reply.id)
-                                      }
-                                      className="bg-red-600 hover:bg-red-700"
+                    {/* Replies */}
+                    {review.replies && review.replies.length > 0 && (
+                      <div className="space-y-3">
+                        <h4 className="font-medium text-oma-plum flex items-center gap-2">
+                          <MessageSquare className="h-4 w-4" />
+                          Admin Replies
+                        </h4>
+                        {review.replies.map((reply) => (
+                          <div
+                            key={reply.id}
+                            className="bg-oma-beige/30 p-4 rounded-lg border-l-4 border-oma-plum"
+                          >
+                            <div className="flex items-start justify-between mb-2">
+                              <div className="text-sm text-oma-cocoa">
+                                <span className="font-medium">
+                                  {reply.admin_name}
+                                </span>
+                                <span className="mx-2">•</span>
+                                <span>{formatDate(reply.created_at)}</span>
+                                {reply.updated_at !== reply.created_at && (
+                                  <span className="text-xs ml-2">(edited)</span>
+                                )}
+                              </div>
+                              <div className="flex gap-1">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => openReplyDialog(review, reply)}
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <Edit className="h-3 w-3" />
+                                </Button>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
                                     >
-                                      Delete
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
+                                      <Trash2 className="h-3 w-3" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>
+                                        Delete Reply
+                                      </AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Are you sure you want to delete this
+                                        reply? This action cannot be undone.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>
+                                        Cancel
+                                      </AlertDialogCancel>
+                                      <AlertDialogAction
+                                        onClick={() =>
+                                          handleDeleteReply(reply.id)
+                                        }
+                                        className="bg-red-600 hover:bg-red-700"
+                                      >
+                                        Delete
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </div>
                             </div>
+                            <p className="text-oma-black">{reply.reply_text}</p>
                           </div>
-                          <p className="text-oma-black">{reply.reply_text}</p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2 mt-6">
-          <Button
-            variant="outline"
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage <= 1}
-          >
-            <ChevronLeft className="h-4 w-4" />
-            Previous
-          </Button>
-
-          <div className="flex items-center gap-2">
-            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-              const page = i + 1;
-              return (
-                <Button
-                  key={page}
-                  variant={currentPage === page ? "default" : "outline"}
-                  onClick={() => handlePageChange(page)}
-                  className="w-10"
-                >
-                  {page}
-                </Button>
-              );
-            })}
-          </div>
-
-          <Button
-            variant="outline"
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage >= totalPages}
-          >
-            Next
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-      )}
-
-      {/* Reply Dialog */}
-      <Dialog open={replyDialogOpen} onOpenChange={setReplyDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>
-              {editingReply ? "Edit Reply" : "Reply to Review"}
-            </DialogTitle>
-            <DialogDescription>
-              {selectedReview && (
-                <div className="mt-2 p-3 bg-gray-50 rounded-lg">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="font-medium">{selectedReview.author}</span>
-                    <div className="flex items-center gap-1">
-                      {renderStars(selectedReview.rating)}
-                    </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  <p className="text-sm text-gray-600">
-                    {selectedReview.comment}
-                  </p>
-                </div>
-              )}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <Textarea
-              placeholder="Write your reply..."
-              value={replyText}
-              onChange={(e) => setReplyText(e.target.value)}
-              className="min-h-[120px]"
-            />
+                </CardContent>
+              </Card>
+            ))}
           </div>
-          <DialogFooter>
+        )}
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center gap-2 mt-6">
             <Button
               variant="outline"
-              onClick={() => {
-                setReplyDialogOpen(false);
-                setReplyText("");
-                setEditingReply(null);
-                setSelectedReview(null);
-              }}
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage <= 1}
             >
-              Cancel
+              <ChevronLeft className="h-4 w-4" />
+              Previous
             </Button>
+
+            <div className="flex items-center gap-2">
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                const page = i + 1;
+                return (
+                  <Button
+                    key={page}
+                    variant={currentPage === page ? "default" : "outline"}
+                    onClick={() => handlePageChange(page)}
+                    className="w-10"
+                  >
+                    {page}
+                  </Button>
+                );
+              })}
+            </div>
+
             <Button
-              onClick={handleSubmitReply}
-              disabled={!replyText.trim() || isSubmittingReply}
-              className="bg-oma-plum hover:bg-oma-plum/90"
+              variant="outline"
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage >= totalPages}
             >
-              {isSubmittingReply ? (
-                <div className="h-4 w-4 animate-spin rounded-full border border-current border-t-transparent mr-2" />
-              ) : (
-                <Send className="h-4 w-4 mr-2" />
-              )}
-              {editingReply ? "Update Reply" : "Send Reply"}
+              Next
+              <ChevronRight className="h-4 w-4" />
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </div>
+        )}
+
+        {/* Reply Dialog */}
+        <Dialog open={replyDialogOpen} onOpenChange={setReplyDialogOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>
+                {editingReply ? "Edit Reply" : "Reply to Review"}
+              </DialogTitle>
+              <DialogDescription>
+                {selectedReview && (
+                  <div className="mt-2 p-3 bg-gray-50 rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="font-medium">
+                        {selectedReview.author}
+                      </span>
+                      <div className="flex items-center gap-1">
+                        {renderStars(selectedReview.rating)}
+                      </div>
+                    </div>
+                    <p className="text-sm text-gray-600">
+                      {selectedReview.comment}
+                    </p>
+                  </div>
+                )}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <Textarea
+                placeholder="Write your reply..."
+                value={replyText}
+                onChange={(e) => setReplyText(e.target.value)}
+                className="min-h-[120px]"
+              />
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setReplyDialogOpen(false);
+                  setReplyText("");
+                  setEditingReply(null);
+                  setSelectedReview(null);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSubmitReply}
+                disabled={!replyText.trim() || isSubmittingReply}
+                className="bg-oma-plum hover:bg-oma-plum/90"
+              >
+                {isSubmittingReply ? (
+                  <div className="h-4 w-4 animate-spin rounded-full border border-current border-t-transparent mr-2" />
+                ) : (
+                  <Send className="h-4 w-4 mr-2" />
+                )}
+                {editingReply ? "Update Reply" : "Send Reply"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
     </div>
   );
 }
