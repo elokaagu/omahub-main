@@ -282,7 +282,7 @@ export default function HomeContent() {
   const [occasionImages, setOccasionImages] = useState({
     Wedding: "",
     Party: "",
-    Work: "",
+    "Ready to Wear": "",
     Vacation: "",
   });
   const [occasionLoading, setOccasionLoading] = useState(true);
@@ -422,7 +422,7 @@ export default function HomeContent() {
       const mapping = {
         Wedding: "Bridal",
         Party: "Ready to Wear",
-        Work: "Ready to Wear",
+        "Ready to Wear": "Ready to Wear",
         Vacation: "Accessories",
       };
       const usedBrandIds = new Set();
@@ -703,11 +703,11 @@ export default function HomeContent() {
                 href: "/directory?occasion=Party",
               },
               {
-                title: "Work",
+                title: "Ready to Wear",
                 image:
-                  occasionImages.Work ||
+                  occasionImages["Ready to Wear"] ||
                   "/lovable-uploads/99ca757a-bed8-422e-b155-0b9d365b58e0.png",
-                href: "/directory?occasion=Work",
+                href: "/directory?occasion=Ready+to+Wear",
               },
               {
                 title: "Vacation",
