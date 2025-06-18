@@ -128,6 +128,24 @@ export default function DirectoryClient() {
   // Use the useAllBrands hook WITHOUT filtering for brands that have products
   const { brands: allBrands, loading, error } = useAllBrands(false);
 
+  // Debug logging
+  useEffect(() => {
+    console.log("🔍 DirectoryClient Debug Info:");
+    console.log("- Loading:", loading);
+    console.log("- Error:", error);
+    console.log("- allBrands:", allBrands);
+    console.log("- allBrands length:", allBrands?.length || 0);
+    console.log("- displayedBrands length:", displayedBrands.length);
+
+    if (allBrands && allBrands.length > 0) {
+      console.log("- First brand:", allBrands[0]);
+      console.log(
+        "- All brand names:",
+        allBrands.map((b) => b.name)
+      );
+    }
+  }, [allBrands, loading, error, displayedBrands]);
+
   // Handle URL parameters on component mount
   useEffect(() => {
     const categoryParam = searchParams.get("category");
@@ -147,7 +165,7 @@ export default function DirectoryClient() {
 
   // Convert brands to display format when allBrands changes
   useEffect(() => {
-    if (!allBrands) {
+    if (!allBrands || allBrands.length === 0) {
       console.log(
         "⚠️ DirectoryClient: No brands data available, using fallback data"
       );
@@ -156,6 +174,7 @@ export default function DirectoryClient() {
     }
 
     console.log("🔄 DirectoryClient: Converting brands to display format...");
+    console.log("🔍 DirectoryClient: Raw brands data:", allBrands);
 
     // Convert to display format with fallbacks for all required fields
     const brandDisplayData: BrandDisplay[] = allBrands.map((brand) => ({
@@ -174,6 +193,7 @@ export default function DirectoryClient() {
       brandDisplayData.length,
       "brands"
     );
+    console.log("🔍 DirectoryClient: Processed brands:", brandDisplayData);
     setDisplayedBrands(brandDisplayData);
   }, [allBrands]);
 
@@ -186,7 +206,15 @@ export default function DirectoryClient() {
       allBrandsCount: allBrands?.length || 0,
     });
 
-    let filtered = [...(allBrands || [])].map((brand) => ({
+    if (!allBrands || allBrands.length === 0) {
+      console.log(
+        "⚠️ DirectoryClient: No brands to filter, using fallback data"
+      );
+      setDisplayedBrands(fallbackBrands);
+      return;
+    }
+
+    let filtered = [...allBrands].map((brand) => ({
       id: brand.id || `temp-id-${Math.random().toString(36).substring(2, 9)}`,
       name: brand.name || "Unnamed Brand",
       image: brand.image || "/placeholder.jpg",
@@ -197,16 +225,17 @@ export default function DirectoryClient() {
       isVerified: brand.is_verified || false,
     }));
 
-    // If there's an error or no brands, use fallback data
-    if (error || filtered.length === 0) {
-      console.log("⚠️ DirectoryClient: Using fallback data for filtering");
-      filtered = [...fallbackBrands];
-    }
+    console.log("🔍 DirectoryClient: Starting with", filtered.length, "brands");
 
     // Apply search filter
     if (searchTerm) {
       filtered = filtered.filter((brand) =>
         brand.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      console.log(
+        "🔍 DirectoryClient: After search filter:",
+        filtered.length,
+        "brands"
       );
     }
 
@@ -227,6 +256,11 @@ export default function DirectoryClient() {
           (brand) => brand.category === selectedCategory
         );
       }
+      console.log(
+        "🔍 DirectoryClient: After category filter:",
+        filtered.length,
+        "brands"
+      );
     }
 
     // Apply location filter
@@ -234,10 +268,16 @@ export default function DirectoryClient() {
       filtered = filtered.filter(
         (brand) => brand.location === selectedLocation
       );
+      console.log(
+        "🔍 DirectoryClient: After location filter:",
+        filtered.length,
+        "brands"
+      );
     }
 
+    console.log("✅ DirectoryClient: Final filtered brands:", filtered.length);
     setDisplayedBrands(filtered);
-  }, [searchTerm, selectedCategory, selectedLocation, allBrands, error]);
+  }, [searchTerm, selectedCategory, selectedLocation, allBrands]);
 
   // Reset filters
   const resetFilters = () => {
@@ -255,6 +295,11 @@ export default function DirectoryClient() {
         location: brand.location ? brand.location.split(",")[0] : "Unknown",
         isVerified: brand.is_verified || false,
       }));
+      console.log(
+        "🔄 DirectoryClient: Reset filters, showing",
+        brandDisplayData.length,
+        "brands"
+      );
       setDisplayedBrands(brandDisplayData);
     }
   };

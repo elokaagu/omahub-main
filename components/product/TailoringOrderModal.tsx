@@ -177,181 +177,289 @@ export function TailoringOrderModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>Custom Order: {product.title}</DialogTitle>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
+        <DialogHeader className="pb-4">
+          <DialogTitle className="text-xl font-semibold">
+            Custom Order: {product.title}
+          </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h3 className="font-semibold text-gray-900 mb-2">Order Summary</h3>
-            <p className="text-sm text-gray-600 mb-2">
-              {product.title} by {brand.name}
-            </p>
-            <p className="text-lg font-bold text-oma-plum">
-              ${product.sale_price || product.price}
-            </p>
-          </div>
+        <div className="overflow-y-auto max-h-[calc(90vh-120px)] pr-2">
+          <div className="space-y-6">
+            {/* Order Summary - Sticky at top */}
+            <div className="bg-gradient-to-r from-oma-beige/50 to-oma-gold/10 rounded-lg p-4 border border-oma-gold/20">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-1">
+                    Order Summary
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    {product.title} by {brand.name}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-bold text-oma-plum">
+                    ${product.sale_price || product.price}
+                  </p>
+                  <Badge variant="secondary" className="mt-1">
+                    Custom Order
+                  </Badge>
+                </div>
+              </div>
+            </div>
 
-          {/* Customer Information Form */}
-          <div className="space-y-4">
-            <h4 className="font-medium text-gray-900">Contact Information</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="full_name">Full Name *</Label>
-                <Input
-                  id="full_name"
-                  value={deliveryAddress.full_name}
-                  onChange={(e) =>
-                    handleAddressChange("full_name", e.target.value)
-                  }
-                  placeholder="Enter your full name"
-                  required
-                />
+            {/* Contact Information */}
+            <div className="bg-white rounded-lg border border-gray-200 p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="h-8 w-8 bg-oma-plum/10 rounded-full flex items-center justify-center">
+                  <span className="text-oma-plum font-semibold text-sm">1</span>
+                </div>
+                <h4 className="font-semibold text-gray-900">
+                  Contact Information
+                </h4>
               </div>
-              <div>
-                <Label htmlFor="phone">Phone Number *</Label>
-                <Input
-                  id="phone"
-                  value={deliveryAddress.phone}
-                  onChange={(e) => handleAddressChange("phone", e.target.value)}
-                  placeholder="Enter your phone number"
-                  required
-                />
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="full_name" className="text-sm font-medium">
+                    Full Name *
+                  </Label>
+                  <Input
+                    id="full_name"
+                    value={deliveryAddress.full_name}
+                    onChange={(e) =>
+                      handleAddressChange("full_name", e.target.value)
+                    }
+                    placeholder="Enter your full name"
+                    className="h-11"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="phone" className="text-sm font-medium">
+                    Phone Number *
+                  </Label>
+                  <Input
+                    id="phone"
+                    value={deliveryAddress.phone}
+                    onChange={(e) =>
+                      handleAddressChange("phone", e.target.value)
+                    }
+                    placeholder="Enter your phone number"
+                    className="h-11"
+                    required
+                  />
+                </div>
+                <div className="sm:col-span-2 space-y-2">
+                  <Label htmlFor="email" className="text-sm font-medium">
+                    Email Address *
+                  </Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={deliveryAddress.email}
+                    onChange={(e) =>
+                      handleAddressChange("email", e.target.value)
+                    }
+                    placeholder="Enter your email address"
+                    className="h-11"
+                    required
+                  />
+                </div>
               </div>
-              <div className="md:col-span-2">
-                <Label htmlFor="email">Email Address *</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={deliveryAddress.email}
-                  onChange={(e) => handleAddressChange("email", e.target.value)}
-                  placeholder="Enter your email address"
-                  required
+            </div>
+
+            {/* Delivery Address */}
+            <div className="bg-white rounded-lg border border-gray-200 p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="h-8 w-8 bg-oma-plum/10 rounded-full flex items-center justify-center">
+                  <span className="text-oma-plum font-semibold text-sm">2</span>
+                </div>
+                <h4 className="font-semibold text-gray-900">
+                  Delivery Address
+                </h4>
+              </div>
+
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="address_line_1"
+                    className="text-sm font-medium"
+                  >
+                    Street Address *
+                  </Label>
+                  <Input
+                    id="address_line_1"
+                    value={deliveryAddress.address_line_1}
+                    onChange={(e) =>
+                      handleAddressChange("address_line_1", e.target.value)
+                    }
+                    placeholder="Enter your street address"
+                    className="h-11"
+                    required
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="city" className="text-sm font-medium">
+                      City *
+                    </Label>
+                    <Input
+                      id="city"
+                      value={deliveryAddress.city}
+                      onChange={(e) =>
+                        handleAddressChange("city", e.target.value)
+                      }
+                      placeholder="City"
+                      className="h-11"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="state" className="text-sm font-medium">
+                      State *
+                    </Label>
+                    <Input
+                      id="state"
+                      value={deliveryAddress.state}
+                      onChange={(e) =>
+                        handleAddressChange("state", e.target.value)
+                      }
+                      placeholder="State"
+                      className="h-11"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="postal_code"
+                      className="text-sm font-medium"
+                    >
+                      Postal Code *
+                    </Label>
+                    <Input
+                      id="postal_code"
+                      value={deliveryAddress.postal_code}
+                      onChange={(e) =>
+                        handleAddressChange("postal_code", e.target.value)
+                      }
+                      placeholder="Postal Code"
+                      className="h-11"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="country" className="text-sm font-medium">
+                    Country
+                  </Label>
+                  <Select
+                    value={deliveryAddress.country}
+                    onValueChange={(value) =>
+                      handleAddressChange("country", value)
+                    }
+                  >
+                    <SelectTrigger className="h-11">
+                      <SelectValue placeholder="Select country" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Nigeria">Nigeria</SelectItem>
+                      <SelectItem value="Ghana">Ghana</SelectItem>
+                      <SelectItem value="Kenya">Kenya</SelectItem>
+                      <SelectItem value="South Africa">South Africa</SelectItem>
+                      <SelectItem value="United States">
+                        United States
+                      </SelectItem>
+                      <SelectItem value="United Kingdom">
+                        United Kingdom
+                      </SelectItem>
+                      <SelectItem value="Canada">Canada</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+
+            {/* Special Requests */}
+            <div className="bg-white rounded-lg border border-gray-200 p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="h-8 w-8 bg-oma-plum/10 rounded-full flex items-center justify-center">
+                  <span className="text-oma-plum font-semibold text-sm">3</span>
+                </div>
+                <h4 className="font-semibold text-gray-900">
+                  Special Requests
+                </h4>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="customer_notes" className="text-sm font-medium">
+                  Special Requests or Notes
+                </Label>
+                <Textarea
+                  id="customer_notes"
+                  value={customerNotes}
+                  onChange={(e) => setCustomerNotes(e.target.value)}
+                  placeholder="Any special requests, measurements, or notes for the designer..."
+                  rows={4}
+                  className="resize-none"
                 />
               </div>
             </div>
-          </div>
 
-          {/* Delivery Address */}
-          <div className="space-y-4">
-            <h4 className="font-medium text-gray-900">Delivery Address</h4>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="address_line_1">Street Address *</Label>
-                <Input
-                  id="address_line_1"
-                  value={deliveryAddress.address_line_1}
-                  onChange={(e) =>
-                    handleAddressChange("address_line_1", e.target.value)
-                  }
-                  placeholder="Enter your street address"
-                  required
-                />
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <Label htmlFor="city">City *</Label>
-                  <Input
-                    id="city"
-                    value={deliveryAddress.city}
-                    onChange={(e) =>
-                      handleAddressChange("city", e.target.value)
-                    }
-                    placeholder="City"
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="state">State *</Label>
-                  <Input
-                    id="state"
-                    value={deliveryAddress.state}
-                    onChange={(e) =>
-                      handleAddressChange("state", e.target.value)
-                    }
-                    placeholder="State"
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="postal_code">Postal Code *</Label>
-                  <Input
-                    id="postal_code"
-                    value={deliveryAddress.postal_code}
-                    onChange={(e) =>
-                      handleAddressChange("postal_code", e.target.value)
-                    }
-                    placeholder="Postal Code"
-                    required
-                  />
-                </div>
-              </div>
-              <div>
-                <Label htmlFor="country">Country</Label>
-                <Select
-                  value={deliveryAddress.country}
-                  onValueChange={(value) =>
-                    handleAddressChange("country", value)
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select country" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Nigeria">Nigeria</SelectItem>
-                    <SelectItem value="Ghana">Ghana</SelectItem>
-                    <SelectItem value="Kenya">Kenya</SelectItem>
-                    <SelectItem value="South Africa">South Africa</SelectItem>
-                    <SelectItem value="United States">United States</SelectItem>
-                    <SelectItem value="United Kingdom">
-                      United Kingdom
-                    </SelectItem>
-                    <SelectItem value="Canada">Canada</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            {/* What Happens Next */}
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 border border-blue-200">
+              <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                <CheckCircle className="h-5 w-5 text-blue-600" />
+                What happens next?
+              </h4>
+              <ul className="text-sm text-gray-700 space-y-2">
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-600 font-semibold">•</span>
+                  We'll send your order details to {brand.name}
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-600 font-semibold">•</span>
+                  They'll contact you within 24-48 hours to discuss measurements
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-600 font-semibold">•</span>
+                  Payment will be processed after order confirmation
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-600 font-semibold">•</span>
+                  Estimated completion: {product.lead_time || "2-3 weeks"}
+                </li>
+              </ul>
             </div>
           </div>
+        </div>
 
-          {/* Customer Notes */}
-          <div className="space-y-2">
-            <Label htmlFor="customer_notes">Special Requests or Notes</Label>
-            <Textarea
-              id="customer_notes"
-              value={customerNotes}
-              onChange={(e) => setCustomerNotes(e.target.value)}
-              placeholder="Any special requests, measurements, or notes for the designer..."
-              rows={3}
-            />
-          </div>
-
-          <div className="bg-oma-beige/30 rounded-lg p-4">
-            <h4 className="font-medium text-gray-900 mb-2">
-              What happens next?
-            </h4>
-            <ul className="text-sm text-gray-600 space-y-1">
-              <li>• We'll send your order details to {brand.name}</li>
-              <li>
-                • They'll contact you within 24-48 hours to discuss measurements
-              </li>
-              <li>• Payment will be processed after order confirmation</li>
-              <li>
-                • Estimated completion: {product.lead_time || "2-3 weeks"}
-              </li>
-            </ul>
-          </div>
-
-          <div className="flex gap-3">
-            <Button variant="outline" onClick={onClose} className="flex-1">
+        {/* Fixed bottom action buttons */}
+        <div className="border-t border-gray-200 pt-4 mt-6 bg-white">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button
+              variant="outline"
+              onClick={onClose}
+              className="flex-1 h-12"
+              disabled={loading}
+            >
               Cancel
             </Button>
             <Button
               onClick={handleSubmitOrder}
               disabled={loading || !isFormValid()}
-              className="flex-1 bg-oma-plum hover:bg-oma-plum/90"
+              className="flex-1 h-12 bg-oma-plum hover:bg-oma-plum/90"
             >
-              {loading ? "Submitting..." : "Submit Order Request"}
+              {loading ? (
+                <div className="flex items-center gap-2">
+                  <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Submitting...
+                </div>
+              ) : (
+                "Submit Order Request"
+              )}
             </Button>
           </div>
         </div>
