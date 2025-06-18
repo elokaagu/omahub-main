@@ -31,7 +31,10 @@ function highlightMatch(text: string, query: string) {
   const parts = text.split(regex);
   return parts.map((part, i) =>
     regex.test(part) ? (
-      <span key={i} className="bg-oma-gold/20">
+      <span
+        key={i}
+        className="bg-oma-gold/30 text-oma-plum font-medium px-1 rounded"
+      >
         {part}
       </span>
     ) : (
@@ -268,22 +271,22 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl overflow-hidden p-0">
+      <DialogContent className="max-w-2xl overflow-hidden p-0 bg-white border-oma-gold/20 shadow-xl">
         <Command className="rounded-lg border-0">
-          <div className="flex items-center border-b px-3">
-            <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+          <div className="flex items-center border-b border-oma-gold/20 px-4 py-3 bg-oma-cream/30">
+            <Search className="mr-3 h-5 w-5 shrink-0 text-oma-plum/60" />
             <input
               placeholder="Search designers, categories, locations..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyDown={handleKeyDown}
-              className="flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex h-8 w-full rounded-md bg-transparent py-2 text-sm text-oma-plum placeholder:text-oma-cocoa/60 border-none outline-none focus:outline-none focus:ring-0"
               autoFocus
             />
           </div>
-          <div className="max-h-[300px] overflow-y-auto">
+          <div className="max-h-[300px] overflow-y-auto bg-white">
             {loading ? (
-              <div className="py-6 text-center text-sm text-muted-foreground">
+              <div className="py-8 text-center text-sm text-oma-cocoa">
                 <div className="flex items-center justify-center gap-2">
                   <div className="animate-spin h-4 w-4 border-2 border-oma-plum border-t-transparent rounded-full"></div>
                   Searching...
@@ -295,10 +298,10 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
                   <button
                     key={`${result.type}-${result.id || index}`}
                     className={cn(
-                      "w-full text-left px-4 py-2 transition-colors",
+                      "w-full text-left px-4 py-3 transition-all duration-200 border-l-2 border-transparent",
                       index === selectedIndex
-                        ? "bg-oma-beige"
-                        : "hover:bg-oma-beige/50"
+                        ? "bg-oma-beige/80 border-l-oma-gold"
+                        : "hover:bg-oma-beige/40 hover:border-l-oma-gold/50"
                     )}
                     onClick={() => handleSelect(result.href)}
                     onMouseEnter={() => setSelectedIndex(index)}
@@ -307,14 +310,14 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
                       <div className="flex items-center justify-between">
                         <div>
                           <div className="flex items-center gap-2">
-                            <span className="font-medium">
+                            <span className="font-medium text-oma-plum">
                               {highlightMatch(result.name, searchTerm)}
                             </span>
                             {result.isVerified && (
                               <CheckCircle className="h-4 w-4 text-oma-gold" />
                             )}
                           </div>
-                          <div className="flex items-center text-sm text-muted-foreground">
+                          <div className="flex items-center text-sm text-oma-cocoa">
                             <MapPin className="h-3 w-3 mr-1" />
                             {highlightMatch(
                               result.location || "",
@@ -324,20 +327,20 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
                             {highlightMatch(result.category || "", searchTerm)}
                           </div>
                           {result.description && (
-                            <div className="text-sm text-muted-foreground mt-1">
+                            <div className="text-sm text-oma-cocoa/80 mt-1 line-clamp-2">
                               {highlightMatch(result.description, searchTerm)}
                             </div>
                           )}
                         </div>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-3">
                         {getIcon(result.type)}
                         <div>
-                          <div className="font-medium">
+                          <div className="font-medium text-oma-plum">
                             {highlightMatch(result.name, searchTerm)}
                           </div>
-                          <div className="text-sm text-muted-foreground">
+                          <div className="text-sm text-oma-cocoa/80">
                             {result.description &&
                               highlightMatch(result.description, searchTerm)}
                           </div>
@@ -348,12 +351,24 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
                 ))}
               </div>
             ) : searchTerm ? (
-              <div className="py-6 text-center text-sm text-muted-foreground">
-                No results found.
+              <div className="py-8 text-center text-sm text-oma-cocoa">
+                <div className="flex flex-col items-center gap-2">
+                  <Search className="h-8 w-8 text-oma-cocoa/40" />
+                  <span>No results found for "{searchTerm}"</span>
+                  <span className="text-xs text-oma-cocoa/60">
+                    Try searching for designers, categories, or locations
+                  </span>
+                </div>
               </div>
             ) : (
-              <div className="py-6 text-center text-sm text-muted-foreground">
-                Start typing to search...
+              <div className="py-8 text-center text-sm text-oma-cocoa">
+                <div className="flex flex-col items-center gap-2">
+                  <Search className="h-8 w-8 text-oma-cocoa/40" />
+                  <span>Start typing to search...</span>
+                  <span className="text-xs text-oma-cocoa/60">
+                    Find designers, categories, and locations
+                  </span>
+                </div>
               </div>
             )}
           </div>
