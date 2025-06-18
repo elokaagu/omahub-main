@@ -1,151 +1,393 @@
-import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import {
+  ArrowLeft,
+  FileText,
+  Users,
+  Shield,
+  AlertTriangle,
+  Mail,
+  Scale,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-async function getTermsOfService() {
-  try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-    const response = await fetch(
-      `${baseUrl}/api/legal-documents?type=terms_of_service&active=true`,
-      {
-        cache: "no-store", // Always fetch fresh data
-      }
-    );
-
-    if (!response.ok) {
-      console.error("Failed to fetch terms of service, using fallback");
-      // Return a basic fallback terms of service
-      return {
-        title: "Terms of Service",
-        content: `<h2>1. Acceptance of Terms</h2>
-<p>By accessing and using OmaHub, you accept and agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our platform.</p>
-
-<h2>2. User Accounts</h2>
-<p>When you create an account with us, you must provide accurate and complete information. You are responsible for maintaining the security of your account and password.</p>
-
-<h2>3. Platform Rules</h2>
-<p>Users must respect intellectual property rights, maintain professional conduct, and follow our community guidelines when using OmaHub.</p>
-
-<h2>4. Content Ownership</h2>
-<p>Users retain ownership of their content while granting OmaHub a license to display and promote the content on our platform.</p>
-
-<h2>5. Modifications to Service</h2>
-<p>We reserve the right to modify or discontinue our service at any time, with or without notice.</p>
-
-<h2>6. Contact Information</h2>
-<p>If you have any questions about these Terms of Service, please contact us at info@oma-hub.com</p>`,
-        version: "1.0",
-        effective_date: "2025-01-01",
-        updated_at: new Date().toISOString(),
-      };
-    }
-
-    const data = await response.json();
-    return (
-      data.documents?.[0] || {
-        title: "Terms of Service",
-        content: `<h2>1. Acceptance of Terms</h2>
-<p>By accessing and using OmaHub, you accept and agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our platform.</p>
-
-<h2>2. User Accounts</h2>
-<p>When you create an account with us, you must provide accurate and complete information. You are responsible for maintaining the security of your account and password.</p>
-
-<h2>3. Platform Rules</h2>
-<p>Users must respect intellectual property rights, maintain professional conduct, and follow our community guidelines when using OmaHub.</p>
-
-<h2>4. Content Ownership</h2>
-<p>Users retain ownership of their content while granting OmaHub a license to display and promote the content on our platform.</p>
-
-<h2>5. Modifications to Service</h2>
-<p>We reserve the right to modify or discontinue our service at any time, with or without notice.</p>
-
-<h2>6. Contact Information</h2>
-<p>If you have any questions about these Terms of Service, please contact us at info@oma-hub.com</p>`,
-        version: "1.0",
-        effective_date: "2025-01-01",
-        updated_at: new Date().toISOString(),
-      }
-    );
-  } catch (error) {
-    console.error("Error fetching terms of service:", error);
-    // Return fallback terms of service instead of null
-    return {
-      title: "Terms of Service",
-      content: `<h2>1. Acceptance of Terms</h2>
-<p>By accessing and using OmaHub, you accept and agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our platform.</p>
-
-<h2>2. User Accounts</h2>
-<p>When you create an account with us, you must provide accurate and complete information. You are responsible for maintaining the security of your account and password.</p>
-
-<h2>3. Platform Rules</h2>
-<p>Users must respect intellectual property rights, maintain professional conduct, and follow our community guidelines when using OmaHub.</p>
-
-<h2>4. Content Ownership</h2>
-<p>Users retain ownership of their content while granting OmaHub a license to display and promote the content on our platform.</p>
-
-<h2>5. Modifications to Service</h2>
-<p>We reserve the right to modify or discontinue our service at any time, with or without notice.</p>
-
-<h2>6. Contact Information</h2>
-<p>If you have any questions about these Terms of Service, please contact us at info@oma-hub.com</p>`,
-      version: "1.0",
-      effective_date: "2025-01-01",
-      updated_at: new Date().toISOString(),
-    };
-  }
-}
-
-export default async function TermsOfServicePage() {
-  const document = await getTermsOfService();
-
-  // Document should always exist now due to fallback
-  if (!document) {
-    notFound();
-  }
-
+export default function TermsOfServicePage() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-oma-cream via-white to-oma-beige">
       {/* Header */}
-      <div className="bg-white border-b">
-        <div className="max-w-4xl mx-auto px-6 py-8">
+      <div className="bg-white/80 backdrop-blur-sm border-b border-oma-gold/20 sticky top-0 z-10">
+        <div className="max-w-4xl mx-auto px-6 py-6">
           <Link href="/">
-            <Button variant="ghost" className="mb-4">
+            <Button
+              variant="ghost"
+              className="mb-4 hover:bg-oma-beige/50 text-oma-plum"
+            >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Home
             </Button>
           </Link>
-          <h1 className="text-3xl font-bold text-gray-900">{document.title}</h1>
-          <div className="mt-2 text-sm text-gray-600">
-            <span>Version {document.version}</span>
-            <span className="mx-2">•</span>
-            <span>
-              Effective {new Date(document.effective_date).toLocaleDateString()}
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-2 bg-oma-plum/10 rounded-lg">
+              <FileText className="h-6 w-6 text-oma-plum" />
+            </div>
+            <h1 className="heading-lg text-oma-plum">Terms of Service</h1>
+          </div>
+          <div className="flex items-center gap-4 text-sm text-oma-cocoa">
+            <span className="bg-oma-beige px-3 py-1 rounded-full">
+              Version 1.0
             </span>
+            <span>Effective January 1, 2025</span>
           </div>
         </div>
       </div>
 
       {/* Content */}
       <div className="max-w-4xl mx-auto px-6 py-12">
-        <div className="bg-white rounded-lg shadow-sm p-8">
-          <div
-            className="prose prose-lg max-w-none"
-            dangerouslySetInnerHTML={{ __html: document.content }}
-          />
+        <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-oma-gold/20 overflow-hidden">
+          <div className="p-8 lg:p-12">
+            {/* Introduction */}
+            <div className="mb-12 p-6 bg-gradient-to-r from-oma-beige/50 to-oma-cream/50 rounded-xl border-l-4 border-oma-gold">
+              <p className="body-lg text-oma-cocoa leading-relaxed">
+                Welcome to OmaHub! These Terms of Service govern your use of our
+                platform that connects fashion enthusiasts with talented
+                designers and brands worldwide. By accessing or using OmaHub,
+                you agree to be bound by these terms.
+              </p>
+            </div>
+
+            {/* Sections */}
+            <div className="space-y-10">
+              {/* Acceptance of Terms */}
+              <section>
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-2 bg-oma-plum/10 rounded-lg">
+                    <Scale className="h-5 w-5 text-oma-plum" />
+                  </div>
+                  <h2 className="heading-sm text-oma-plum">
+                    Acceptance of Terms
+                  </h2>
+                </div>
+                <div className="bg-gradient-to-r from-oma-cream/20 to-oma-beige/20 p-6 rounded-xl border border-oma-gold/30">
+                  <p className="body-md text-oma-cocoa mb-4">
+                    By accessing and using OmaHub, you accept and agree to be
+                    bound by these Terms of Service and our Privacy Policy. If
+                    you do not agree to these terms, please do not use our
+                    platform.
+                  </p>
+                  <div className="bg-white/60 p-4 rounded-lg">
+                    <p className="body-sm text-oma-cocoa">
+                      <strong className="text-oma-plum">Important:</strong>{" "}
+                      These terms may be updated from time to time. Continued
+                      use of the platform constitutes acceptance of any
+                      modifications.
+                    </p>
+                  </div>
+                </div>
+              </section>
+
+              {/* User Accounts */}
+              <section>
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-2 bg-oma-plum/10 rounded-lg">
+                    <Users className="h-5 w-5 text-oma-plum" />
+                  </div>
+                  <h2 className="heading-sm text-oma-plum">User Accounts</h2>
+                </div>
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div className="p-4 bg-oma-cream/30 rounded-lg">
+                      <h3 className="font-semibold text-oma-plum mb-2">
+                        Account Creation
+                      </h3>
+                      <p className="body-sm text-oma-cocoa">
+                        You must provide accurate and complete information when
+                        creating your account
+                      </p>
+                    </div>
+                    <div className="p-4 bg-oma-beige/30 rounded-lg">
+                      <h3 className="font-semibold text-oma-plum mb-2">
+                        Account Security
+                      </h3>
+                      <p className="body-sm text-oma-cocoa">
+                        You are responsible for maintaining the security of your
+                        account and password
+                      </p>
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="p-4 bg-oma-cream/30 rounded-lg">
+                      <h3 className="font-semibold text-oma-plum mb-2">
+                        Account Activity
+                      </h3>
+                      <p className="body-sm text-oma-cocoa">
+                        You are responsible for all activities that occur under
+                        your account
+                      </p>
+                    </div>
+                    <div className="p-4 bg-oma-beige/30 rounded-lg">
+                      <h3 className="font-semibold text-oma-plum mb-2">
+                        Account Termination
+                      </h3>
+                      <p className="body-sm text-oma-cocoa">
+                        Either party may terminate the account relationship at
+                        any time
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* Platform Rules */}
+              <section>
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-2 bg-oma-plum/10 rounded-lg">
+                    <Shield className="h-5 w-5 text-oma-plum" />
+                  </div>
+                  <h2 className="heading-sm text-oma-plum">
+                    Platform Rules & Conduct
+                  </h2>
+                </div>
+                <div className="space-y-6">
+                  <div className="bg-gradient-to-r from-oma-plum/5 to-oma-cocoa/5 p-6 rounded-xl">
+                    <h3 className="font-semibold text-oma-plum mb-4">
+                      You agree to:
+                    </h3>
+                    <ul className="space-y-3 text-oma-cocoa">
+                      <li className="flex items-start gap-3">
+                        <span className="text-green-600 mt-1">✓</span>
+                        <span>
+                          Respect intellectual property rights of all brands and
+                          designers
+                        </span>
+                      </li>
+                      <li className="flex items-start gap-3">
+                        <span className="text-green-600 mt-1">✓</span>
+                        <span>
+                          Maintain professional and respectful conduct in all
+                          interactions
+                        </span>
+                      </li>
+                      <li className="flex items-start gap-3">
+                        <span className="text-green-600 mt-1">✓</span>
+                        <span>
+                          Provide honest and accurate reviews and feedback
+                        </span>
+                      </li>
+                      <li className="flex items-start gap-3">
+                        <span className="text-green-600 mt-1">✓</span>
+                        <span>
+                          Follow our community guidelines and standards
+                        </span>
+                      </li>
+                    </ul>
+                  </div>
+                  <div className="bg-gradient-to-r from-red-50 to-orange-50 p-6 rounded-xl border border-red-200">
+                    <h3 className="font-semibold text-red-800 mb-4">
+                      Prohibited activities include:
+                    </h3>
+                    <ul className="space-y-3 text-red-700">
+                      <li className="flex items-start gap-3">
+                        <span className="text-red-600 mt-1">✗</span>
+                        <span>
+                          Harassment, discrimination, or abusive behavior
+                        </span>
+                      </li>
+                      <li className="flex items-start gap-3">
+                        <span className="text-red-600 mt-1">✗</span>
+                        <span>
+                          Posting false, misleading, or fraudulent content
+                        </span>
+                      </li>
+                      <li className="flex items-start gap-3">
+                        <span className="text-red-600 mt-1">✗</span>
+                        <span>
+                          Attempting to circumvent platform security measures
+                        </span>
+                      </li>
+                      <li className="flex items-start gap-3">
+                        <span className="text-red-600 mt-1">✗</span>
+                        <span>
+                          Using the platform for any illegal or unauthorized
+                          purpose
+                        </span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </section>
+
+              {/* Content Ownership */}
+              <section>
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-2 bg-oma-plum/10 rounded-lg">
+                    <FileText className="h-5 w-5 text-oma-plum" />
+                  </div>
+                  <h2 className="heading-sm text-oma-plum">
+                    Content Ownership & Licensing
+                  </h2>
+                </div>
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="bg-oma-cream/30 p-6 rounded-xl">
+                    <h3 className="font-semibold text-oma-plum mb-3">
+                      Your Content
+                    </h3>
+                    <p className="body-md text-oma-cocoa mb-3">
+                      You retain full ownership of all content you upload,
+                      including photos, descriptions, and reviews.
+                    </p>
+                    <p className="body-sm text-oma-cocoa">
+                      By uploading content, you grant OmaHub a non-exclusive
+                      license to display and promote your content on our
+                      platform.
+                    </p>
+                  </div>
+                  <div className="bg-oma-beige/30 p-6 rounded-xl">
+                    <h3 className="font-semibold text-oma-plum mb-3">
+                      Platform Content
+                    </h3>
+                    <p className="body-md text-oma-cocoa mb-3">
+                      OmaHub's design, features, and functionality are owned by
+                      us and protected by intellectual property laws.
+                    </p>
+                    <p className="body-sm text-oma-cocoa">
+                      You may not copy, modify, or distribute our platform
+                      content without permission.
+                    </p>
+                  </div>
+                </div>
+              </section>
+
+              {/* Service Modifications */}
+              <section>
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-2 bg-oma-plum/10 rounded-lg">
+                    <AlertTriangle className="h-5 w-5 text-oma-plum" />
+                  </div>
+                  <h2 className="heading-sm text-oma-plum">
+                    Service Modifications & Availability
+                  </h2>
+                </div>
+                <div className="bg-gradient-to-r from-oma-beige/20 to-oma-cream/20 p-6 rounded-xl border border-oma-gold/30">
+                  <div className="space-y-4">
+                    <div className="flex items-start gap-3">
+                      <div className="w-2 h-2 bg-oma-gold rounded-full mt-2"></div>
+                      <p className="body-md text-oma-cocoa">
+                        We reserve the right to modify, suspend, or discontinue
+                        any part of our service at any time, with or without
+                        notice.
+                      </p>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="w-2 h-2 bg-oma-gold rounded-full mt-2"></div>
+                      <p className="body-md text-oma-cocoa">
+                        We strive to provide reliable service but cannot
+                        guarantee uninterrupted access to the platform.
+                      </p>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="w-2 h-2 bg-oma-gold rounded-full mt-2"></div>
+                      <p className="body-md text-oma-cocoa">
+                        We will make reasonable efforts to notify users of
+                        significant changes to our services.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* Limitation of Liability */}
+              <section>
+                <h2 className="heading-sm text-oma-plum mb-6">
+                  Limitation of Liability
+                </h2>
+                <div className="bg-gradient-to-r from-oma-plum/5 to-oma-cocoa/5 p-6 rounded-xl border border-oma-plum/20">
+                  <p className="body-md text-oma-cocoa mb-4">
+                    OmaHub serves as a platform connecting users with fashion
+                    brands and designers. We are not responsible for:
+                  </p>
+                  <ul className="space-y-2 text-oma-cocoa">
+                    <li className="flex items-start gap-2">
+                      <span className="text-oma-gold mt-1">•</span>
+                      <span>
+                        The quality, safety, or legality of products or services
+                        offered by brands
+                      </span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-oma-gold mt-1">•</span>
+                      <span>
+                        Transactions between users and brands conducted outside
+                        our platform
+                      </span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-oma-gold mt-1">•</span>
+                      <span>
+                        Disputes arising from user interactions or business
+                        relationships
+                      </span>
+                    </li>
+                  </ul>
+                </div>
+              </section>
+
+              {/* Governing Law */}
+              <section>
+                <h2 className="heading-sm text-oma-plum mb-6">Governing Law</h2>
+                <div className="bg-oma-cream/40 p-6 rounded-xl">
+                  <p className="body-md text-oma-cocoa">
+                    These Terms of Service are governed by and construed in
+                    accordance with applicable laws. Any disputes will be
+                    resolved through appropriate legal channels in the
+                    jurisdiction where OmaHub operates.
+                  </p>
+                </div>
+              </section>
+            </div>
+          </div>
+        </div>
+
+        {/* Contact Section */}
+        <div className="mt-12 bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-oma-gold/20 p-8">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-2 bg-oma-plum/10 rounded-lg">
+              <Mail className="h-5 w-5 text-oma-plum" />
+            </div>
+            <h2 className="heading-sm text-oma-plum">
+              Questions About These Terms?
+            </h2>
+          </div>
+          <p className="body-md text-oma-cocoa mb-6">
+            If you have any questions about these Terms of Service or need
+            clarification on any policies, please don't hesitate to contact us:
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <Link href="/contact" className="flex-1">
+              <Button className="w-full bg-oma-plum hover:bg-oma-plum/90 text-white">
+                Contact Us
+              </Button>
+            </Link>
+            <a href="mailto:legal@oma-hub.com" className="flex-1">
+              <Button
+                variant="outline"
+                className="w-full border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white"
+              >
+                legal@oma-hub.com
+              </Button>
+            </a>
+          </div>
         </div>
 
         {/* Footer */}
-        <div className="mt-8 text-center text-sm text-gray-500">
+        <div className="mt-8 text-center text-sm text-oma-cocoa">
+          <p className="mb-2">Last updated: January 1, 2025</p>
           <p>
-            Last updated: {new Date(document.updated_at).toLocaleDateString()}
-          </p>
-          <p className="mt-2">
-            If you have any questions about these Terms of Service, please{" "}
-            <Link href="/contact" className="text-oma-plum hover:underline">
-              contact us
+            These Terms work together with our{" "}
+            <Link
+              href="/privacy-policy"
+              className="text-oma-plum hover:underline font-medium"
+            >
+              Privacy Policy
             </Link>
-            .
           </p>
         </div>
       </div>
@@ -154,10 +396,9 @@ export default async function TermsOfServicePage() {
 }
 
 export async function generateMetadata() {
-  const document = await getTermsOfService();
-
   return {
-    title: document?.title || "Terms of Service",
-    description: "Our terms of service and conditions of use.",
+    title: "Terms of Service - OmaHub",
+    description:
+      "Read OmaHub's terms of service and conditions for using our global fashion platform.",
   };
 }
