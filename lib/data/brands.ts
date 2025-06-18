@@ -24,6 +24,10 @@ export interface BrandData {
   isVerified: boolean;
   image: string;
   collections: Collection[];
+  // Contact information
+  website?: string;
+  instagram?: string;
+  whatsapp?: string;
 }
 
 export const brandsData: Record<string, BrandData> = {
@@ -40,6 +44,9 @@ export const brandsData: Record<string, BrandData> = {
     rating: 4.8,
     isVerified: true,
     image: "/lovable-uploads/023ba098-0109-4738-9baf-1321bc3d2fe1.png",
+    whatsapp: "+234 803 123 4567",
+    instagram: "@adiredesigns",
+    website: "https://adiredesigns.com",
     collections: [
       {
         id: 1,
@@ -164,6 +171,8 @@ export const brandsData: Record<string, BrandData> = {
     rating: 4.7,
     isVerified: true,
     image: "/lovable-uploads/ee92bbfa-4f54-4567-b4ef-8aebd0bca695.png",
+    whatsapp: "+234 901 234 5678",
+    instagram: "@lagosbridal",
     collections: [
       {
         id: 1,
@@ -381,6 +390,9 @@ export const brandsData: Record<string, BrandData> = {
     rating: 4.9,
     isVerified: true,
     image: "/lovable-uploads/b3fb585e-93cf-4aa7-9204-0a1b477fcb06.png",
+    whatsapp: "+234 812 345 6789",
+    instagram: "@beadsbynneka",
+    website: "https://beadsbynneka.com",
     collections: [
       {
         id: 1,

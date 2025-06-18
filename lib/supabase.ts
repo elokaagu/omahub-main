@@ -101,6 +101,7 @@ export type Brand = {
   image: string;
   website?: string;
   instagram?: string;
+  whatsapp?: string;
   founded_year?: string;
   created_at?: string;
   updated_at?: string;

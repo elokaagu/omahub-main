@@ -88,6 +88,7 @@ export default function CreateBrandPage() {
     is_verified: false,
     website: "",
     instagram: "",
+    whatsapp: "",
     founded_year: "",
   });
 
@@ -199,6 +200,7 @@ export default function CreateBrandPage() {
           is_verified: false,
           website: formData.website || undefined,
           instagram: formData.instagram || undefined,
+          whatsapp: formData.whatsapp || undefined,
           founded_year: formData.founded_year || undefined,
         }),
       });
@@ -435,6 +437,17 @@ export default function CreateBrandPage() {
                       />
                     </div>
                   </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="whatsapp">WhatsApp</Label>
+                  <Input
+                    id="whatsapp"
+                    name="whatsapp"
+                    value={formData.whatsapp}
+                    onChange={handleInputChange}
+                    placeholder="+234 123 456 7890"
+                  />
                 </div>
 
                 <div className="space-y-2">

@@ -66,6 +66,7 @@ export default function BrandManagement({ className }: BrandManagementProps) {
     location: "",
     website: "",
     instagram: "",
+    whatsapp: "",
     image: "",
   });
 
@@ -171,6 +172,7 @@ export default function BrandManagement({ className }: BrandManagementProps) {
       location: brand.location,
       website: brand.website || "",
       instagram: brand.instagram || "",
+      whatsapp: brand.whatsapp || "",
       image: brand.image || "",
     });
   };
@@ -626,6 +628,17 @@ export default function BrandManagement({ className }: BrandManagementProps) {
                     value={editForm.instagram}
                     onChange={handleFormChange}
                     placeholder="@username"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="whatsapp">WhatsApp</Label>
+                  <Input
+                    id="whatsapp"
+                    name="whatsapp"
+                    value={editForm.whatsapp}
+                    onChange={handleFormChange}
+                    placeholder="+1234567890"
                   />
                 </div>
 

@@ -253,6 +253,7 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
           price_range: priceRange,
           website: brand.website,
           instagram: brand.instagram,
+          whatsapp: brand.whatsapp,
           founded_year: brand.founded_year,
           is_verified: brand.is_verified,
           image: imageUrl,
@@ -491,6 +492,21 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
                       onChange={handleChange}
                       placeholder="@username"
                     />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="whatsapp">WhatsApp</Label>
+                    <Input
+                      id="whatsapp"
+                      name="whatsapp"
+                      value={brand.whatsapp || ""}
+                      onChange={handleChange}
+                      placeholder="+234XXXXXXXXXX"
+                      type="tel"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Include country code (e.g., +234 for Nigeria)
+                    </p>
                   </div>
 
                   <div className="space-y-2">

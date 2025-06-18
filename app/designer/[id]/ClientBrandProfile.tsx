@@ -5,6 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, MapPin, Star } from "@/components/ui/icons";
+import { Instagram, Globe, MessageCircle } from "lucide-react";
+import {
+  WhatsAppContact,
+  isValidWhatsAppNumber,
+  formatPhoneForDisplay,
+} from "@/components/ui/whatsapp-contact";
 import ContactDesignerModal from "@/components/ContactDesignerModal";
 import { ReviewForm } from "@/components/ui/review-form";
 import { ReviewDisplay } from "@/components/ui/review-display";
@@ -115,6 +121,19 @@ export default function ClientBrandProfile({
             >
               View Catalogues
             </Button>
+            {/* WhatsApp Button - Only show if WhatsApp is available */}
+            {brandData.whatsapp &&
+              isValidWhatsAppNumber(brandData.whatsapp) && (
+                <WhatsAppContact
+                  phoneNumber={brandData.whatsapp}
+                  brandName={brandData.name}
+                  variant="outline"
+                  className="border-green-500 text-green-600 hover:bg-green-500 hover:text-white"
+                >
+                  <MessageCircle size={16} className="mr-2" />
+                  WhatsApp
+                </WhatsAppContact>
+              )}
             <Button
               onClick={handleOpenContactModal}
               variant="outline"
@@ -200,6 +219,66 @@ export default function ClientBrandProfile({
             <div className="mb-6">
               <h4 className="text-sm font-semibold mb-1">Category</h4>
               <p>{brandData.category}</p>
+            </div>
+
+            {/* Contact Options */}
+            <div className="space-y-3 mb-6">
+              <h4 className="text-sm font-semibold">Connect with Designer</h4>
+
+              {/* WhatsApp Contact */}
+              {brandData.whatsapp &&
+                isValidWhatsAppNumber(brandData.whatsapp) && (
+                  <WhatsAppContact
+                    phoneNumber={brandData.whatsapp}
+                    brandName={brandData.name}
+                    variant="outline"
+                    className="w-full bg-green-50 border-green-200 text-green-700 hover:bg-green-100 hover:border-green-300 hover:text-green-800"
+                    size="sm"
+                  >
+                    <MessageCircle className="h-4 w-4 mr-2" />
+                    WhatsApp {formatPhoneForDisplay(brandData.whatsapp)}
+                  </WhatsAppContact>
+                )}
+
+              {/* Instagram Link */}
+              {brandData.instagram && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full bg-pink-50 border-pink-200 text-pink-700 hover:bg-pink-100 hover:border-pink-300 hover:text-pink-800"
+                  onClick={() =>
+                    window.open(
+                      brandData.instagram?.startsWith("http")
+                        ? brandData.instagram
+                        : `https://instagram.com/${brandData.instagram}`,
+                      "_blank"
+                    )
+                  }
+                >
+                  <Instagram className="h-4 w-4 mr-2" />
+                  Instagram
+                </Button>
+              )}
+
+              {/* Website Link */}
+              {brandData.website && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 hover:border-blue-300 hover:text-blue-800"
+                  onClick={() =>
+                    window.open(
+                      brandData.website?.startsWith("http")
+                        ? brandData.website
+                        : `https://${brandData.website}`,
+                      "_blank"
+                    )
+                  }
+                >
+                  <Globe className="h-4 w-4 mr-2" />
+                  Website
+                </Button>
+              )}
             </div>
 
             <Separator className="my-6 bg-oma-gold/20" />
