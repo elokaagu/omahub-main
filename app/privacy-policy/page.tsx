@@ -14,20 +14,83 @@ async function getPrivacyPolicy() {
     );
 
     if (!response.ok) {
-      throw new Error("Failed to fetch privacy policy");
+      console.error("Failed to fetch privacy policy, using fallback");
+      // Return a basic fallback privacy policy
+      return {
+        title: "Privacy Policy",
+        content: `<h2>1. Information We Collect</h2>
+<p>We collect information that you provide directly to us, including when you create an account, update your profile, or communicate with us. This may include your name, email address, phone number, and any other information you choose to provide.</p>
+
+<h2>2. How We Use Your Information</h2>
+<p>We use the information we collect to provide, maintain, and improve our services, to communicate with you, and to personalize your experience on OmaHub.</p>
+
+<h2>3. Information Sharing</h2>
+<p>We do not sell or rent your personal information to third parties. We may share your information with service providers who assist in our operations and with your consent.</p>
+
+<h2>4. Data Security</h2>
+<p>We implement appropriate technical and organizational measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction.</p>
+
+<h2>5. Contact Us</h2>
+<p>If you have any questions about this Privacy Policy, please contact us at info@oma-hub.com</p>`,
+        version: "1.0",
+        effective_date: "2025-01-01",
+        updated_at: new Date().toISOString(),
+      };
     }
 
     const data = await response.json();
-    return data.documents?.[0] || null;
+    return (
+      data.documents?.[0] || {
+        title: "Privacy Policy",
+        content: `<h2>1. Information We Collect</h2>
+<p>We collect information that you provide directly to us, including when you create an account, update your profile, or communicate with us. This may include your name, email address, phone number, and any other information you choose to provide.</p>
+
+<h2>2. How We Use Your Information</h2>
+<p>We use the information we collect to provide, maintain, and improve our services, to communicate with you, and to personalize your experience on OmaHub.</p>
+
+<h2>3. Information Sharing</h2>
+<p>We do not sell or rent your personal information to third parties. We may share your information with service providers who assist in our operations and with your consent.</p>
+
+<h2>4. Data Security</h2>
+<p>We implement appropriate technical and organizational measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction.</p>
+
+<h2>5. Contact Us</h2>
+<p>If you have any questions about this Privacy Policy, please contact us at info@oma-hub.com</p>`,
+        version: "1.0",
+        effective_date: "2025-01-01",
+        updated_at: new Date().toISOString(),
+      }
+    );
   } catch (error) {
     console.error("Error fetching privacy policy:", error);
-    return null;
+    // Return fallback privacy policy instead of null
+    return {
+      title: "Privacy Policy",
+      content: `<h2>1. Information We Collect</h2>
+<p>We collect information that you provide directly to us, including when you create an account, update your profile, or communicate with us. This may include your name, email address, phone number, and any other information you choose to provide.</p>
+
+<h2>2. How We Use Your Information</h2>
+<p>We use the information we collect to provide, maintain, and improve our services, to communicate with you, and to personalize your experience on OmaHub.</p>
+
+<h2>3. Information Sharing</h2>
+<p>We do not sell or rent your personal information to third parties. We may share your information with service providers who assist in our operations and with your consent.</p>
+
+<h2>4. Data Security</h2>
+<p>We implement appropriate technical and organizational measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction.</p>
+
+<h2>5. Contact Us</h2>
+<p>If you have any questions about this Privacy Policy, please contact us at info@oma-hub.com</p>`,
+      version: "1.0",
+      effective_date: "2025-01-01",
+      updated_at: new Date().toISOString(),
+    };
   }
 }
 
 export default async function PrivacyPolicyPage() {
   const document = await getPrivacyPolicy();
 
+  // Document should always exist now due to fallback
   if (!document) {
     notFound();
   }
