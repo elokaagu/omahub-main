@@ -14,10 +14,7 @@ CREATE TABLE IF NOT EXISTS public.legal_documents (
   is_active BOOLEAN NOT NULL DEFAULT true,
   created_by UUID REFERENCES auth.users(id),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  
-  -- Ensure only one active document per type
-  CONSTRAINT unique_active_document UNIQUE (document_type, is_active) DEFERRABLE INITIALLY DEFERRED
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- Step 2: Create index for better performance
@@ -25,10 +22,15 @@ CREATE INDEX IF NOT EXISTS idx_legal_documents_type_active
 ON public.legal_documents(document_type, is_active) 
 WHERE is_active = true;
 
--- Step 3: Enable RLS
+-- Step 3: Create unique index to ensure only one active document per type
+CREATE UNIQUE INDEX IF NOT EXISTS idx_legal_documents_unique_active
+ON public.legal_documents(document_type)
+WHERE is_active = true;
+
+-- Step 4: Enable RLS
 ALTER TABLE public.legal_documents ENABLE ROW LEVEL SECURITY;
 
--- Step 4: Create RLS policies
+-- Step 5: Create RLS policies
 -- Public read access to active documents
 CREATE POLICY "legal_documents_public_read"
 ON public.legal_documents FOR SELECT
@@ -54,7 +56,7 @@ WITH CHECK (
   )
 );
 
--- Step 5: Create function to handle document versioning
+-- Step 6: Create function to handle document versioning
 CREATE OR REPLACE FUNCTION handle_legal_document_update()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -74,20 +76,23 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Step 6: Create trigger for the function
+-- Step 7: Create trigger for the function
 DROP TRIGGER IF EXISTS legal_document_update_trigger ON public.legal_documents;
 CREATE TRIGGER legal_document_update_trigger
   BEFORE INSERT OR UPDATE ON public.legal_documents
   FOR EACH ROW
   EXECUTE FUNCTION handle_legal_document_update();
 
--- Step 7: Insert default documents
-INSERT INTO public.legal_documents (document_type, title, content, effective_date, version)
-VALUES 
-(
-  'terms_of_service',
-  'Terms of Service',
-  '<h2>1. Acceptance of Terms</h2>
+-- Step 8: Insert default documents (using INSERT with conflict handling)
+DO $$
+BEGIN
+  -- Insert Terms of Service if it doesn't exist
+  IF NOT EXISTS (SELECT 1 FROM public.legal_documents WHERE document_type = 'terms_of_service') THEN
+    INSERT INTO public.legal_documents (document_type, title, content, effective_date, version)
+    VALUES (
+      'terms_of_service',
+      'Terms of Service',
+      '<h2>1. Acceptance of Terms</h2>
 <p>By accessing and using OmaHub, you accept and agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our platform.</p>
 
 <h2>2. User Accounts</h2>
@@ -101,13 +106,18 @@ VALUES
 
 <h2>5. Modifications to Service</h2>
 <p>We reserve the right to modify or discontinue our service at any time, with or without notice.</p>',
-  '2025-07-01',
-  1
-),
-(
-  'privacy_policy',
-  'Privacy Policy',
-  '<h2>1. Information We Collect</h2>
+      '2025-01-01',
+      1
+    );
+  END IF;
+
+  -- Insert Privacy Policy if it doesn't exist
+  IF NOT EXISTS (SELECT 1 FROM public.legal_documents WHERE document_type = 'privacy_policy') THEN
+    INSERT INTO public.legal_documents (document_type, title, content, effective_date, version)
+    VALUES (
+      'privacy_policy',
+      'Privacy Policy',
+      '<h2>1. Information We Collect</h2>
 <p>We collect information that you provide directly to us, including when you create an account, update your profile, or communicate with us. This may include your name, email address, phone number, and any other information you choose to provide.</p>
 
 <h2>2. How We Use Your Information</h2>
@@ -121,12 +131,13 @@ VALUES
 
 <h2>5. Contact Us</h2>
 <p>If you have any questions about this Privacy Policy, please contact us at info@oma-hub.com</p>',
-  '2025-07-01',
-  1
-)
-ON CONFLICT DO NOTHING;
+      '2025-01-01',
+      1
+    );
+  END IF;
+END $$;
 
--- Step 8: Verify the setup
+-- Step 9: Verify the setup
 SELECT 'Legal Documents Table Created Successfully' as status;
 SELECT document_type, title, version, is_active, effective_date 
 FROM public.legal_documents 
