@@ -37,6 +37,8 @@ const categories = [
   "All Categories",
   ...collections,
   ...Object.values(subcategories).flat(),
+  // Add any additional categories found in database that aren't in subcategories
+  "Couture", // This will be mapped but also available as filter
 ];
 
 const locations = [
@@ -46,8 +48,27 @@ const locations = [
   "Nairobi",
   "Johannesburg",
   "Addis Ababa",
+  "London", // Add London since we have brands there
+  "Abuja", // Add Abuja since we have brands there
+  "Marrakech", // Add Marrakech since we have brands there
   "Other",
 ];
+
+// Map database categories to expected subcategories
+const mapDatabaseCategoryToSubcategory = (dbCategory: string): Subcategory => {
+  const categoryMap: { [key: string]: Subcategory } = {
+    "Ready to Wear": "Ready to Wear",
+    Bridal: "Bridal",
+    Accessories: "Accessories",
+    Jewelry: "Accessories", // Map Jewelry to Accessories
+    "Casual Wear": "Ready to Wear", // Map Casual Wear to Ready to Wear
+    "Formal Wear": "Couture", // Map Formal Wear to Couture
+    Couture: "Couture",
+    Vacation: "Vacation",
+  };
+
+  return categoryMap[dbCategory] || "Ready to Wear"; // Default to Ready to Wear
+};
 
 // Fallback brands with correct category types
 const fallbackBrands: BrandDisplay[] = [
@@ -71,7 +92,7 @@ const fallbackBrands: BrandDisplay[] = [
     id: "fallback-3",
     name: "Emmy Kasbit",
     image: "/lovable-uploads/99ca757a-bed8-422e-b155-0b9d365b58e0.png",
-    category: "Custom Design",
+    category: "Ready to Wear", // Changed from "Custom Design"
     location: "Accra",
     isVerified: true,
   },
@@ -104,8 +125,8 @@ export default function DirectoryClient() {
   const [displayedBrands, setDisplayedBrands] = useState<BrandDisplay[]>([]);
   const [isGridView, setIsGridView] = useState(true);
 
-  // Use the useAllBrands hook with filtering for brands that have products
-  const { brands: allBrands, loading, error } = useAllBrands(true);
+  // Use the useAllBrands hook WITHOUT filtering for brands that have products
+  const { brands: allBrands, loading, error } = useAllBrands(false);
 
   // Handle URL parameters on component mount
   useEffect(() => {
@@ -141,7 +162,9 @@ export default function DirectoryClient() {
       id: brand.id || `temp-id-${Math.random().toString(36).substring(2, 9)}`,
       name: brand.name || "Unnamed Brand",
       image: brand.image || "/placeholder.jpg",
-      category: (brand.category as Subcategory) || "Ready to Wear",
+      category: mapDatabaseCategoryToSubcategory(
+        brand.category || "Ready to Wear"
+      ), // Map category
       location: brand.location ? brand.location.split(",")[0] : "Unknown", // Take just the city name
       isVerified: brand.is_verified || false,
     }));
@@ -167,7 +190,9 @@ export default function DirectoryClient() {
       id: brand.id || `temp-id-${Math.random().toString(36).substring(2, 9)}`,
       name: brand.name || "Unnamed Brand",
       image: brand.image || "/placeholder.jpg",
-      category: (brand.category as Subcategory) || "Ready to Wear",
+      category: mapDatabaseCategoryToSubcategory(
+        brand.category || "Ready to Wear"
+      ), // Map category
       location: brand.location ? brand.location.split(",")[0] : "Unknown",
       isVerified: brand.is_verified || false,
     }));
@@ -224,7 +249,9 @@ export default function DirectoryClient() {
         id: brand.id || `temp-id-${Math.random().toString(36).substring(2, 9)}`,
         name: brand.name || "Unnamed Brand",
         image: brand.image || "/placeholder.jpg",
-        category: (brand.category as Subcategory) || "Ready to Wear",
+        category: mapDatabaseCategoryToSubcategory(
+          brand.category || "Ready to Wear"
+        ), // Map category
         location: brand.location ? brand.location.split(",")[0] : "Unknown",
         isVerified: brand.is_verified || false,
       }));

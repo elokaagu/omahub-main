@@ -165,6 +165,21 @@ const getCategoryImageFocalPoint = (category: string): string => {
   }
 };
 
+// Map database categories to homepage categories
+const mapDatabaseCategoryToHomepage = (dbCategory: string): string => {
+  const categoryMap: { [key: string]: string } = {
+    Bridal: "Bridal",
+    "Ready to Wear": "Ready to Wear",
+    "Casual Wear": "Ready to Wear",
+    "Formal Wear": "Ready to Wear",
+    Accessories: "Accessories",
+    Jewelry: "Accessories",
+    Couture: "Bridal", // Map Couture to Bridal for homepage display
+  };
+
+  return categoryMap[dbCategory] || "Ready to Wear"; // Default to Ready to Wear
+};
+
 // Define the categories
 const categoryDefinitions = [
   {
@@ -389,7 +404,10 @@ export default function HomeContent() {
         const updatedCategories = initialCategories.map((category) => ({
           ...category,
           brands: brandsData
-            .filter((brand) => brand.category === category.title)
+            .filter(
+              (brand) =>
+                mapDatabaseCategoryToHomepage(brand.category) === category.title
+            )
             .slice(0, 8) // Limit all categories to 8 brands for consistent display
             .map((brand) => ({
               id: brand.id,
@@ -743,9 +761,9 @@ export default function HomeContent() {
       {categories.length > 0 ? (
         categories
           .filter((category) => {
-            // Show all categories with 4+ brands as distinct rows
-            // This ensures we display all major categories
-            return category.brands.length >= 4;
+            // Show all categories with 1+ brands (reduced from 4+)
+            // This ensures we display all categories that have brands
+            return category.brands.length >= 1;
           })
           .map((category, index) => (
             <section
