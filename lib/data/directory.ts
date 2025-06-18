@@ -3,14 +3,8 @@ export const collections = ["Collections", "Tailored"] as const;
 
 // Subcategories mapping
 export const subcategories = {
-  Collections: ["Ready to Wear", "Accessories", "Holiday", "Occasion Wear"],
-  Tailored: [
-    "Bridal",
-    "Wedding Guest",
-    "Event Wear",
-    "Birthday",
-    "Custom Design",
-  ],
+  Collections: ["Ready to Wear", "Accessories", "Holiday"],
+  Tailored: ["Bridal", "Couture"],
 } as const;
 
 export type Category = (typeof collections)[number];
