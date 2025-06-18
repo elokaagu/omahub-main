@@ -3,7 +3,7 @@ export const collections = ["Collections", "Tailored"] as const;
 
 // Subcategories mapping
 export const subcategories = {
-  Collections: ["Ready to Wear", "Accessories", "Holiday"],
+  Collections: ["Ready to Wear", "Accessories", "Vacation"],
   Tailored: ["Bridal", "Couture"],
 } as const;
 
