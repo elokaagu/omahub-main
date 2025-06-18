@@ -131,9 +131,9 @@ export async function GET(request) {
       );
     }
 
-    // Get reviews for the brand, ordered by most recent
+    // Get reviews with replies for the brand, ordered by most recent
     const { data, error } = await supabase
-      .from("reviews")
+      .from("reviews_with_details")
       .select("*")
       .eq("brand_id", brandId)
       .order("created_at", { ascending: false });

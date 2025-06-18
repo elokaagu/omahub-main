@@ -1,6 +1,15 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 
+export interface ReviewReply {
+  id: string;
+  reply_text: string;
+  admin_id: string;
+  admin_name: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Review {
   id?: string;
   brand_id: string;
@@ -10,11 +19,14 @@ export interface Review {
   date: string;
   user_id?: string | null;
   created_at?: string;
+  brand_name?: string;
+  brand_category?: string;
+  replies?: ReviewReply[];
 }
 
 interface SubmitReviewResult {
   success: boolean;
-  message?: string;
+  message: string;
   review?: Review;
 }
 

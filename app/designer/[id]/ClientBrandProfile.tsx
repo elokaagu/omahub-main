@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { CheckCircle, MapPin, Star } from "@/components/ui/icons";
 import ContactDesignerModal from "@/components/ContactDesignerModal";
 import { ReviewForm } from "@/components/ui/review-form";
+import { ReviewDisplay } from "@/components/ui/review-display";
 import useReviews from "@/lib/hooks/useReviews";
 import type { BrandData } from "@/lib/data/brands";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -261,31 +262,17 @@ export default function ClientBrandProfile({
           ) : reviews.length > 0 ? (
             <div className="space-y-6">
               {reviews.map((review) => (
-                <div
+                <ReviewDisplay
                   key={review.id}
-                  className="border-b border-oma-gold/10 last:border-0 pb-4 last:pb-0"
-                >
-                  <div className="flex items-center mb-2">
-                    <div className="flex items-center">
-                      {[...Array(5)].map((_, i) => (
-                        <Star
-                          key={i}
-                          size={16}
-                          className={
-                            i < review.rating
-                              ? "text-oma-gold fill-oma-gold"
-                              : "text-oma-gold/20"
-                          }
-                        />
-                      ))}
-                    </div>
-                    <span className="ml-2 text-sm text-oma-cocoa">
-                      {review.date}
-                    </span>
-                  </div>
-                  <p className="text-oma-black mb-2">{review.comment}</p>
-                  <p className="text-sm text-oma-cocoa">- {review.author}</p>
-                </div>
+                  id={review.id}
+                  author={review.author}
+                  comment={review.comment}
+                  rating={review.rating}
+                  date={review.date}
+                  created_at={review.created_at}
+                  replies={review.replies}
+                  showReplies={true}
+                />
               ))}
             </div>
           ) : (

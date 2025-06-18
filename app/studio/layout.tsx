@@ -16,7 +16,7 @@ import {
   X,
   Settings,
 } from "@/components/ui/icons";
-import { Monitor, ShoppingBag, Users } from "lucide-react";
+import { Monitor, ShoppingBag, Users, MessageSquare } from "lucide-react";
 import { Toaster } from "sonner";
 import {
   Permission,
@@ -316,6 +316,18 @@ export default function StudioLayout({
               >
                 <Users className="h-5 w-5" />
                 <span>Users</span>
+              </NavigationLink>
+            )}
+            {(user?.role === "super_admin" || user?.role === "brand_admin") && (
+              <NavigationLink
+                href="/studio/reviews"
+                className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100"
+                onClick={() => setSidebarOpen(false)}
+              >
+                <MessageSquare className="h-5 w-5" />
+                <span>
+                  {user?.role === "brand_admin" ? "Your Reviews" : "Reviews"}
+                </span>
               </NavigationLink>
             )}
             <NavigationLink
