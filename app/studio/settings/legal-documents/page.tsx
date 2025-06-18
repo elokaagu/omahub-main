@@ -53,6 +53,7 @@ export default function LegalDocumentsPage() {
     useState<LegalDocument | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [setupRequired, setSetupRequired] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -74,12 +75,20 @@ export default function LegalDocumentsPage() {
 
       if (response.ok) {
         setDocuments(data.documents);
+        if (data.notice) {
+          setSetupRequired(true);
+          toast.info("Using default documents. Database setup required.");
+        }
       } else {
         toast.error(data.error || "Failed to fetch documents");
+        if (response.status === 500) {
+          setSetupRequired(true);
+        }
       }
     } catch (error) {
       console.error("Error fetching documents:", error);
       toast.error("Failed to fetch documents");
+      setSetupRequired(true);
     } finally {
       setLoading(false);
     }
@@ -305,11 +314,45 @@ export default function LegalDocumentsPage() {
             Manage your Terms of Service and Privacy Policy
           </p>
         </div>
-        <Button onClick={handleCreate}>
+        <Button onClick={handleCreate} disabled={setupRequired}>
           <Plus className="h-4 w-4 mr-2" />
           New Document
         </Button>
       </div>
+
+      {setupRequired && (
+        <Card className="mb-6 border-orange-200 bg-orange-50">
+          <CardHeader>
+            <CardTitle className="text-orange-800 flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Database Setup Required
+            </CardTitle>
+            <CardDescription className="text-orange-700">
+              The legal documents table needs to be created in your database to
+              enable full functionality.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-orange-700">
+            <p className="mb-4">To set up the legal documents system:</p>
+            <ol className="list-decimal list-inside space-y-2 mb-4">
+              <li>Go to your Supabase Dashboard</li>
+              <li>Navigate to SQL Editor</li>
+              <li>
+                Copy and paste the SQL from{" "}
+                <code className="bg-orange-100 px-2 py-1 rounded">
+                  scripts/create-legal-documents-table.sql
+                </code>
+              </li>
+              <li>Run the SQL script</li>
+              <li>Refresh this page</li>
+            </ol>
+            <p className="text-sm">
+              Until then, default documents will be displayed on your public
+              pages.
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid gap-6">
         {["terms_of_service", "privacy_policy"].map((type) => {
