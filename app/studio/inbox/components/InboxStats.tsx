@@ -7,8 +7,8 @@ import {
   CheckCircleIcon,
   ClockIcon,
   CalendarDaysIcon,
-  TrendingUpIcon,
 } from "@heroicons/react/24/outline";
+import { TrendingUp } from "lucide-react";
 
 interface InboxStatsData {
   totalInquiries: number;
@@ -181,7 +181,7 @@ export default function InboxStats() {
         {/* Inquiry Types */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center gap-2 mb-4">
-            <TrendingUpIcon className="h-5 w-5 text-gray-500" />
+            <TrendingUp className="h-5 w-5 text-gray-500" />
             <h3 className="text-lg font-semibold text-gray-900">
               Inquiry Types
             </h3>
