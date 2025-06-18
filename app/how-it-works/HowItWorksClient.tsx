@@ -38,7 +38,7 @@ export default function HowItWorksClient() {
         />
 
         <LazyImage
-          src="/lovable-uploads/how-it-works-hero.jpg"
+          src="/lovable-uploads/53ab4ec9-fd54-4aa8-a292-70669af33185.png"
           alt="How OmaHub Works"
           width={600}
           height={400}
@@ -46,6 +46,15 @@ export default function HowItWorksClient() {
           aspectRatio="3/2"
           sizes="600px"
           quality={85}
+          priority={true}
+          fallback={
+            <div className="w-full h-64 bg-gradient-to-r from-oma-beige to-oma-cream rounded-lg flex items-center justify-center">
+              <div className="text-center text-oma-cocoa">
+                <Search className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">How OmaHub Works</p>
+              </div>
+            </div>
+          }
         />
 
         {/* Three-step process */}
@@ -295,6 +304,14 @@ export default function HowItWorksClient() {
                     alt={category.name}
                     fill
                     className="object-cover transition-transform duration-300 group-hover:scale-105"
+                    fallback={
+                      <div className="absolute inset-0 bg-gradient-to-br from-oma-beige to-oma-cream flex items-center justify-center">
+                        <div className="text-center text-oma-cocoa">
+                          <ShoppingBag className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                          <p className="text-xs">{category.name}</p>
+                        </div>
+                      </div>
+                    }
                   />
                 </div>
                 <div className="p-6">
