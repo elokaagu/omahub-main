@@ -1,53 +1,91 @@
-import { SectionHeader } from "@/components/ui/section-header";
+import { notFound } from "next/navigation";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
-export default function PrivacyPolicy() {
+async function getPrivacyPolicy() {
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+    const response = await fetch(
+      `${baseUrl}/api/legal-documents?type=privacy_policy&active=true`,
+      {
+        cache: "no-store", // Always fetch fresh data
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch privacy policy");
+    }
+
+    const data = await response.json();
+    return data.documents?.[0] || null;
+  } catch (error) {
+    console.error("Error fetching privacy policy:", error);
+    return null;
+  }
+}
+
+export default async function PrivacyPolicyPage() {
+  const document = await getPrivacyPolicy();
+
+  if (!document) {
+    notFound();
+  }
+
   return (
-    <div className="max-w-4xl mx-auto px-6 py-16">
-      <SectionHeader
-        title="Privacy Policy"
-        titleClassName="font-canela text-3xl md:text-4xl"
-      />
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b">
+        <div className="max-w-4xl mx-auto px-6 py-8">
+          <Link href="/">
+            <Button variant="ghost" className="mb-4">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Home
+            </Button>
+          </Link>
+          <h1 className="text-3xl font-bold text-gray-900">{document.title}</h1>
+          <div className="mt-2 text-sm text-gray-600">
+            <span>Version {document.version}</span>
+            <span className="mx-2">•</span>
+            <span>
+              Effective {new Date(document.effective_date).toLocaleDateString()}
+            </span>
+          </div>
+        </div>
+      </div>
 
-      <p className="text-sm text-oma-cocoa mb-8">
-        Effective Date: <strong>1st July 2025</strong>
-      </p>
+      {/* Content */}
+      <div className="max-w-4xl mx-auto px-6 py-12">
+        <div className="bg-white rounded-lg shadow-sm p-8">
+          <div
+            className="prose prose-lg max-w-none"
+            dangerouslySetInnerHTML={{ __html: document.content }}
+          />
+        </div>
 
-      <div className="prose prose-oma max-w-none">
-        <h2 className="heading-sm mb-4">1. Information We Collect</h2>
-        <p className="mb-6 text-oma-cocoa">
-          We collect information that you provide directly to us, including when
-          you create an account, update your profile, or communicate with us.
-          This may include your name, email address, phone number, and any other
-          information you choose to provide.
-        </p>
-
-        <h2 className="heading-sm mb-4">2. How We Use Your Information</h2>
-        <p className="mb-6 text-oma-cocoa">
-          We use the information we collect to provide, maintain, and improve
-          our services, to communicate with you, and to personalize your
-          experience on OmaHub.
-        </p>
-
-        <h2 className="heading-sm mb-4">3. Information Sharing</h2>
-        <p className="mb-6 text-oma-cocoa">
-          We do not sell or rent your personal information to third parties. We
-          may share your information with service providers who assist in our
-          operations and with your consent.
-        </p>
-
-        <h2 className="heading-sm mb-4">4. Data Security</h2>
-        <p className="mb-6 text-oma-cocoa">
-          We implement appropriate technical and organizational measures to
-          protect your personal information against unauthorized access,
-          alteration, disclosure, or destruction.
-        </p>
-
-        <h2 className="heading-sm mb-4">5. Contact Us</h2>
-        <p className="mb-6 text-oma-cocoa">
-          If you have any questions about this Privacy Policy, please contact us
-          at info@oma-hub.com
-        </p>
+        {/* Footer */}
+        <div className="mt-8 text-center text-sm text-gray-500">
+          <p>
+            Last updated: {new Date(document.updated_at).toLocaleDateString()}
+          </p>
+          <p className="mt-2">
+            If you have any questions about this Privacy Policy, please{" "}
+            <Link href="/contact" className="text-oma-plum hover:underline">
+              contact us
+            </Link>
+            .
+          </p>
+        </div>
       </div>
     </div>
   );
+}
+
+export async function generateMetadata() {
+  const document = await getPrivacyPolicy();
+
+  return {
+    title: document?.title || "Privacy Policy",
+    description: "Our privacy policy and data protection practices.",
+  };
 }

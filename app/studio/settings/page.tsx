@@ -11,8 +11,16 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { RefreshCw, Database, Image, Wrench } from "lucide-react";
+import {
+  RefreshCw,
+  Database,
+  Image,
+  Wrench,
+  FileText,
+  Settings,
+} from "lucide-react";
 import { debugFetch, inspectJSON } from "@/lib/debug-utils";
+import Link from "next/link";
 
 export default function SettingsPage() {
   const [isStorageLoading, setIsStorageLoading] = useState(false);
@@ -29,7 +37,6 @@ export default function SettingsPage() {
   const handleStorageSetup = async () => {
     setIsStorageLoading(true);
     try {
-      
       toast.success("Storage setup completed successfully");
     } catch (error) {
       console.error("Error setting up storage:", error);
@@ -200,17 +207,57 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-canela text-oma-black mb-2">
-          System Settings
-        </h1>
-        <p className="text-oma-cocoa">
-          Manage system configurations and maintenance tasks
+    <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold">Settings</h1>
+        <p className="text-gray-600 mt-1">
+          Manage your system settings and configurations
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Legal Documents Management Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Legal Documents
+            </CardTitle>
+            <CardDescription>
+              Manage Terms of Service and Privacy Policy content
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-gray-500 mb-4">
+              Edit and update your legal documents that are displayed on your
+              website. Create new versions, manage effective dates, and control
+              which versions are active.
+            </p>
+            <div className="space-y-2 text-sm">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                <span>Rich text editor with formatting tools</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <span>Version control and history</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                <span>Effective date management</span>
+              </div>
+            </div>
+          </CardContent>
+          <CardFooter>
+            <Link href="/studio/settings/legal-documents">
+              <Button className="bg-oma-plum hover:bg-oma-plum/90 flex items-center gap-2">
+                <Settings className="h-4 w-4" />
+                Manage Legal Documents
+              </Button>
+            </Link>
+          </CardFooter>
+        </Card>
+
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
