@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Card,
   CardContent,
@@ -18,11 +19,13 @@ import {
   Wrench,
   FileText,
   Settings,
+  HelpCircle,
 } from "lucide-react";
 import { debugFetch, inspectJSON } from "@/lib/debug-utils";
 import Link from "next/link";
 
 export default function SettingsPage() {
+  const { user } = useAuth();
   const [isStorageLoading, setIsStorageLoading] = useState(false);
   const [isMigrationLoading, setIsMigrationLoading] = useState(false);
   const [isDiagnosticLoading, setIsDiagnosticLoading] = useState(false);
@@ -257,6 +260,54 @@ export default function SettingsPage() {
             </Link>
           </CardFooter>
         </Card>
+
+        {/* FAQ Management Card - Super Admin Only */}
+        {user?.role === "super_admin" && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <HelpCircle className="h-5 w-5" />
+                FAQ Management
+              </CardTitle>
+              <CardDescription>
+                Manage frequently asked questions across the platform
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-gray-500 mb-4">
+                Create, edit, and organize FAQ content for different pages and
+                categories. Control which questions are active and their display
+                order.
+              </p>
+              <div className="space-y-2 text-sm">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  <span>Category-based organization</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span>Page-specific FAQ placement</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                  <span>Display order control</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                  <span>Active/inactive status management</span>
+                </div>
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Link href="/studio/settings/faqs">
+                <Button className="bg-oma-plum hover:bg-oma-plum/90 flex items-center gap-2">
+                  <HelpCircle className="h-4 w-4" />
+                  Manage FAQs
+                </Button>
+              </Link>
+            </CardFooter>
+          </Card>
+        )}
 
         <Card>
           <CardHeader>
