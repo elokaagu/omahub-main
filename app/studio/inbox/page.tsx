@@ -11,7 +11,7 @@ export default async function InboxPage() {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect("/auth/login");
+    redirect("/login");
   }
 
   // Get user profile to check permissions
