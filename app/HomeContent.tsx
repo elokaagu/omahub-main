@@ -441,26 +441,82 @@ export default function HomeContent() {
       const mapping = occasionToCategoryMapping;
       const usedBrandIds = new Set();
       const newImages: any = {};
+
+      // Define better fallback images for each occasion
+      const occasionFallbacks = {
+        Wedding: "/lovable-uploads/57cc6a40-0f0d-4a7d-8786-41f15832ebfb.png",
+        Party: "/lovable-uploads/4a7c7e86-6cde-4d07-a246-a5aa4cb6fa51.png",
+        "Ready to Wear":
+          "/lovable-uploads/99ca757a-bed8-422e-b155-0b9d365b58e0.png",
+        Vacation: "/lovable-uploads/25c3fe26-3fc4-43ef-83ac-6931a74468c0.png",
+      };
+
       for (const [occasion, category] of Object.entries(mapping)) {
-        const brands = await getBrandsByCategory(category);
-        // Filter out brands already used for other occasions
-        const availableBrands = brands.filter((b) => !usedBrandIds.has(b.id));
-        if (availableBrands.length > 0) {
-          const randomBrand =
-            availableBrands[Math.floor(Math.random() * availableBrands.length)];
-          newImages[occasion] = randomBrand.image;
-          usedBrandIds.add(randomBrand.id);
-        } else if (brands.length > 0) {
-          // Fallback: if all brands are used, allow reuse
-          const randomBrand = brands[Math.floor(Math.random() * brands.length)];
-          newImages[occasion] = randomBrand.image;
-        } else {
+        try {
+          const brands = await getBrandsByCategory(category);
+          // Filter out brands already used for other occasions
+          const availableBrands = brands.filter((b) => !usedBrandIds.has(b.id));
+
+          if (availableBrands.length > 0) {
+            const randomBrand =
+              availableBrands[
+                Math.floor(Math.random() * availableBrands.length)
+              ];
+            if (randomBrand.image && randomBrand.image.trim()) {
+              newImages[occasion] = randomBrand.image;
+              usedBrandIds.add(randomBrand.id);
+              console.log(
+                `✅ Using dynamic image for ${occasion}:`,
+                randomBrand.image
+              );
+            } else {
+              newImages[occasion] =
+                occasionFallbacks[occasion as keyof typeof occasionFallbacks];
+              console.log(
+                `📌 Using fallback for ${occasion} (no brand image):`,
+                newImages[occasion]
+              );
+            }
+          } else if (brands.length > 0) {
+            // Fallback: if all brands are used, allow reuse
+            const randomBrand =
+              brands[Math.floor(Math.random() * brands.length)];
+            if (randomBrand.image && randomBrand.image.trim()) {
+              newImages[occasion] = randomBrand.image;
+              console.log(
+                `🔄 Reusing brand image for ${occasion}:`,
+                randomBrand.image
+              );
+            } else {
+              newImages[occasion] =
+                occasionFallbacks[occasion as keyof typeof occasionFallbacks];
+              console.log(
+                `📌 Using fallback for ${occasion} (no brand image):`,
+                newImages[occasion]
+              );
+            }
+          } else {
+            newImages[occasion] =
+              occasionFallbacks[occasion as keyof typeof occasionFallbacks];
+            console.log(
+              `📌 Using fallback for ${occasion} (no brands):`,
+              newImages[occasion]
+            );
+          }
+        } catch (error) {
+          console.error(`❌ Error fetching brands for ${occasion}:`, error);
           newImages[occasion] =
-            "/lovable-uploads/25c3fe26-3fc4-43ef-83ac-6931a74468c0.png";
+            occasionFallbacks[occasion as keyof typeof occasionFallbacks];
+          console.log(
+            `📌 Using fallback for ${occasion} (error):`,
+            newImages[occasion]
+          );
         }
       }
+
       setOccasionImages(newImages);
       setOccasionLoading(false);
+      console.log("🎯 Final occasion images:", newImages);
     }
     fetchOccasionImages();
   }, []);
