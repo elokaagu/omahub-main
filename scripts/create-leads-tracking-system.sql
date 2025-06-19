@@ -498,47 +498,47 @@ INSERT INTO public.commission_structure (booking_type, min_booking_value, commis
 ('rental', 0, 7.00, 'USD')
 ON CONFLICT DO NOTHING;
 
--- 13. Create sample data for testing (using real brand IDs)
-DO $$
-DECLARE
-    brand_ids TEXT[];
-    sample_brand_id TEXT;
-    sample_lead_id UUID;
-BEGIN
-    -- Get first 3 brand IDs from the database
-    SELECT ARRAY(SELECT id FROM public.brands LIMIT 3) INTO brand_ids;
+-- -- 13. Create sample data for testing (using real brand IDs)
+-- DO $$
+-- DECLARE
+--     brand_ids TEXT[];
+--     sample_brand_id TEXT;
+--     sample_lead_id UUID;
+-- BEGIN
+--     -- Get first 3 brand IDs from the database
+--     SELECT ARRAY(SELECT id FROM public.brands LIMIT 3) INTO brand_ids;
     
-    -- Only insert if we have brands
-    IF array_length(brand_ids, 1) >= 1 THEN
-        sample_brand_id := brand_ids[1];
+--     -- Only insert if we have brands
+--     IF array_length(brand_ids, 1) >= 1 THEN
+--         sample_brand_id := brand_ids[1];
         
-        -- Insert sample lead
-        INSERT INTO public.leads (brand_id, customer_name, customer_email, customer_phone, source, lead_type, status, estimated_value, notes)
-        VALUES (sample_brand_id, 'Sarah Williams', 'sarah.williams@email.com', '+1-555-0123', 'website', 'booking_intent', 'qualified', 2500.00, 'Interested in custom wedding dress for June 2024')
-        RETURNING id INTO sample_lead_id;
+--         -- Insert sample lead
+--         INSERT INTO public.leads (brand_id, customer_name, customer_email, customer_phone, source, lead_type, status, estimated_value, notes)
+--         VALUES (sample_brand_id, 'Sarah Williams', 'sarah.williams@email.com', '+1-555-0123', 'website', 'booking_intent', 'qualified', 2500.00, 'Interested in custom wedding dress for June 2024')
+--         RETURNING id INTO sample_lead_id;
         
-        -- Insert sample booking
-        INSERT INTO public.bookings (lead_id, brand_id, customer_name, customer_email, customer_phone, booking_type, booking_value, commission_rate, currency, notes)
-        VALUES (sample_lead_id, sample_brand_id, 'Sarah Williams', 'sarah.williams@email.com', '+1-555-0123', 'custom_order', 2800.00, 5.00, 'USD', 'Custom wedding dress with beadwork - deposit paid');
+--         -- Insert sample booking
+--         INSERT INTO public.bookings (lead_id, brand_id, customer_name, customer_email, customer_phone, booking_type, booking_value, commission_rate, currency, notes)
+--         VALUES (sample_lead_id, sample_brand_id, 'Sarah Williams', 'sarah.williams@email.com', '+1-555-0123', 'custom_order', 2800.00, 5.00, 'USD', 'Custom wedding dress with beadwork - deposit paid');
         
-        -- Update financial metrics for current month
-        PERFORM update_brand_financial_metrics(sample_brand_id, DATE_TRUNC('month', CURRENT_DATE));
-    END IF;
+--         -- Update financial metrics for current month
+--         PERFORM update_brand_financial_metrics(sample_brand_id, DATE_TRUNC('month', CURRENT_DATE));
+--     END IF;
     
-    IF array_length(brand_ids, 1) >= 2 THEN
-        sample_brand_id := brand_ids[2];
+--     IF array_length(brand_ids, 1) >= 2 THEN
+--         sample_brand_id := brand_ids[2];
         
-        -- Insert more sample data
-        INSERT INTO public.leads (brand_id, customer_name, customer_email, source, lead_type, status, estimated_value)
-        VALUES (sample_brand_id, 'Michael Chen', 'michael.chen@email.com', 'instagram', 'quote_request', 'new', 1200.00);
+--         -- Insert more sample data
+--         INSERT INTO public.leads (brand_id, customer_name, customer_email, source, lead_type, status, estimated_value)
+--         VALUES (sample_brand_id, 'Michael Chen', 'michael.chen@email.com', 'instagram', 'quote_request', 'new', 1200.00);
         
-        INSERT INTO public.leads (brand_id, customer_name, customer_email, source, lead_type, status, estimated_value)
-        VALUES (sample_brand_id, 'Aisha Okafor', 'aisha.okafor@email.com', 'referral', 'consultation', 'contacted', 800.00);
+--         INSERT INTO public.leads (brand_id, customer_name, customer_email, source, lead_type, status, estimated_value)
+--         VALUES (sample_brand_id, 'Aisha Okafor', 'aisha.okafor@email.com', 'referral', 'consultation', 'contacted', 800.00);
         
-        -- Update financial metrics
-        PERFORM update_brand_financial_metrics(sample_brand_id, DATE_TRUNC('month', CURRENT_DATE));
-    END IF;
-END $$;
+--         -- Update financial metrics
+--         PERFORM update_brand_financial_metrics(sample_brand_id, DATE_TRUNC('month', CURRENT_DATE));
+--     END IF;
+-- END $$;
 
 -- 14. Create view for easy access to leads with brand information
 CREATE OR REPLACE VIEW public.leads_with_brand_details AS
