@@ -42,30 +42,10 @@ import {
 } from "@/lib/utils/priceFormatter";
 import { getBrandCurrency } from "@/lib/utils/currencyUtils";
 import { Checkbox } from "@/components/ui/checkbox";
+import { standardCategories } from "@/lib/data/directory";
 
-// Brand categories
-const CATEGORIES = [
-  "Bridal",
-  "Jewelry",
-  "Accessories",
-  "Casual Wear",
-  "Formal Wear",
-  "Ready to Wear",
-  "Luxury",
-  "Dresses",
-  "Tops & Blouses",
-  "Bottoms",
-  "Outerwear",
-  "Shoes",
-  "Bags & Purses",
-  "Traditional Wear",
-  "Swimwear",
-  "Lingerie",
-  "Activewear",
-  "Maternity",
-  "Plus Size",
-  "Children's Wear",
-];
+// Brand categories - now using standardized categories
+const CATEGORIES = [...standardCategories];
 
 export default function EditProductPage() {
   const { user } = useAuth();

@@ -40,6 +40,8 @@ import {
   parseFormattedNumber,
 } from "@/lib/utils/priceFormatter";
 import { Checkbox } from "@/components/ui/checkbox";
+import { getBrandCurrency } from "@/lib/utils/currencyUtils";
+import { standardCategories } from "@/lib/data/directory";
 
 // Common currencies used across Africa
 const CURRENCIES = [
@@ -57,29 +59,8 @@ const CURRENCIES = [
   { code: "GBP", symbol: "£", name: "British Pound" },
 ];
 
-// Brand categories
-const CATEGORIES = [
-  "Bridal",
-  "Jewelry",
-  "Accessories",
-  "Casual Wear",
-  "Formal Wear",
-  "Ready to Wear",
-  "Luxury",
-  "Dresses",
-  "Tops & Blouses",
-  "Bottoms",
-  "Outerwear",
-  "Shoes",
-  "Bags & Purses",
-  "Traditional Wear",
-  "Swimwear",
-  "Lingerie",
-  "Activewear",
-  "Maternity",
-  "Plus Size",
-  "Children's Wear",
-];
+// Brand categories - now using standardized categories
+const CATEGORIES = [...standardCategories];
 
 export default function CreateProductPage() {
   const { user } = useAuth();

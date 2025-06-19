@@ -32,17 +32,10 @@ import {
   formatNumberWithCommas,
 } from "@/lib/utils/priceFormatter";
 import { LazyImage } from "@/components/ui/lazy-image";
+import { standardCategories } from "@/lib/data/directory";
 
-// Brand categories
-const CATEGORIES = [
-  "Bridal",
-  "Jewelry",
-  "Accessories",
-  "Casual Wear",
-  "Formal Wear",
-  "Ready to Wear",
-  "Luxury",
-];
+// Brand categories - now using standardized categories
+const CATEGORIES = [...standardCategories];
 
 // Common currencies used across Africa
 const CURRENCIES = [

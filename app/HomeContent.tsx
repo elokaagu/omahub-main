@@ -28,6 +28,7 @@ import { subcategories, type Subcategory } from "@/lib/data/directory";
 import { Carousel } from "@/components/ui/carousel-custom";
 import { Loading } from "@/components/ui/loading";
 import { InstantImage } from "@/components/ui/instant-image";
+import { occasions, occasionToCategoryMapping } from "@/lib/data/directory";
 
 interface Brand {
   id: string;
@@ -437,12 +438,7 @@ export default function HomeContent() {
   useEffect(() => {
     async function fetchOccasionImages() {
       setOccasionLoading(true);
-      const mapping = {
-        Wedding: "Bridal",
-        Party: "Ready to Wear",
-        "Ready to Wear": "Ready to Wear",
-        Vacation: "Accessories",
-      };
+      const mapping = occasionToCategoryMapping;
       const usedBrandIds = new Set();
       const newImages: any = {};
       for (const [occasion, category] of Object.entries(mapping)) {

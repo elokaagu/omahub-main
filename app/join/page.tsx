@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/accordion";
 import { useToast } from "@/components/ui/use-toast";
 import { fadeIn, staggerChildren, slideIn } from "@/app/utils/animations";
+import { standardCategories } from "@/lib/data/directory";
 
 export default function Join() {
   const [formData, setFormData] = useState({
@@ -233,8 +234,9 @@ export default function Join() {
                         <option value="">Select a category</option>
                         <option value="Bridal">Bridal</option>
                         <option value="Ready to Wear">Ready to Wear</option>
-                        <option value="Tailoring">Tailoring</option>
                         <option value="Accessories">Accessories</option>
+                        <option value="Vacation">Vacation</option>
+                        <option value="Couture">Couture</option>
                         <option value="Other">Other</option>
                       </select>
                     </div>

@@ -59,6 +59,9 @@ import {
   formatPriceRange,
   formatNumberWithCommas,
 } from "@/lib/utils/priceFormatter";
+import { supabase } from "@/lib/supabase";
+import { cn } from "@/lib/utils";
+import { standardCategories } from "@/lib/data/directory";
 
 // Character limits
 const SHORT_DESCRIPTION_LIMIT = 150;
@@ -98,15 +101,7 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
   const [currency, setCurrency] = useState("NGN");
 
   // Categories for the dropdown
-  const categories = [
-    "Bridal",
-    "Jewelry",
-    "Accessories",
-    "Casual Wear",
-    "Formal Wear",
-    "Ready to Wear",
-    "Luxury",
-  ];
+  const categories = [...standardCategories];
 
   useEffect(() => {
     const fetchBrand = async () => {

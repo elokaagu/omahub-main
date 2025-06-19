@@ -20,6 +20,10 @@ import {
   collections,
   subcategories,
   type Subcategory,
+  getAllFilterCategories,
+  mapOccasionToCategory,
+  mapDatabaseToDisplayCategory,
+  locations,
 } from "@/lib/data/directory";
 
 // Interface for brand display
@@ -32,42 +36,17 @@ interface BrandDisplay {
   isVerified: boolean;
 }
 
-// Define category and location options
-const categories = [
-  "All Categories",
-  ...collections,
-  ...Object.values(subcategories).flat(),
-  // Add any additional categories found in database that aren't in subcategories
-  "Couture", // This will be mapped but also available as filter
-];
+// Define category and location options using helper functions
+const categories = getAllFilterCategories();
 
-const locations = [
-  "All Locations",
-  "Lagos",
-  "Accra",
-  "Nairobi",
-  "Johannesburg",
-  "Addis Ababa",
-  "London", // Add London since we have brands there
-  "Abuja", // Add Abuja since we have brands there
-  "Marrakech", // Add Marrakech since we have brands there
-  "Other",
-];
-
-// Map database categories to expected subcategories
+// Map database categories to expected subcategories using the standardized mapping
 const mapDatabaseCategoryToSubcategory = (dbCategory: string): Subcategory => {
-  const categoryMap: { [key: string]: Subcategory } = {
-    "Ready to Wear": "Ready to Wear",
-    Bridal: "Bridal",
-    Accessories: "Accessories",
-    Jewelry: "Accessories", // Map Jewelry to Accessories
-    "Casual Wear": "Ready to Wear", // Map Casual Wear to Ready to Wear
-    "Formal Wear": "Couture", // Map Formal Wear to Couture
-    Couture: "Couture",
-    Vacation: "Vacation",
-  };
-
-  return categoryMap[dbCategory] || "Ready to Wear"; // Default to Ready to Wear
+  const mappedCategory = mapDatabaseToDisplayCategory(dbCategory);
+  // Ensure the mapped category is a valid subcategory, default to "Ready to Wear"
+  const allSubcategories = Object.values(subcategories).flat();
+  return allSubcategories.includes(mappedCategory as Subcategory)
+    ? (mappedCategory as Subcategory)
+    : "Ready to Wear";
 };
 
 // Fallback brands with correct category types
@@ -150,8 +129,13 @@ export default function DirectoryClient() {
   useEffect(() => {
     const categoryParam = searchParams.get("category");
     const subcategoryParam = searchParams.get("subcategory");
+    const occasionParam = searchParams.get("occasion");
 
-    if (categoryParam) {
+    if (occasionParam) {
+      // Handle occasion filtering from "What are you dressing for?" section
+      const mappedCategory = mapOccasionToCategory(occasionParam);
+      setSelectedCategory(mappedCategory);
+    } else if (categoryParam) {
       if (subcategoryParam) {
         // If there's a subcategory, use that for filtering
         const decodedSubcategory = subcategoryParam.replace(/\+/g, " ");
