@@ -6,6 +6,7 @@ import type { Database } from "@/lib/types/supabase";
 import { Brand } from "@/lib/supabase";
 import BrandManagement from "@/components/studio/BrandManagement";
 import AnalyticsDashboard from "@/components/studio/AnalyticsDashboard";
+import LeadsTrackingDashboard from "@/components/studio/LeadsTrackingDashboard";
 import RecentAccountsWidget from "./dashboard/RecentAccountsWidget";
 import {
   getUserPermissions,
@@ -258,6 +259,13 @@ export default function StudioPage() {
             ownedBrandIds={ownedBrandIds}
             brandNames={ownedBrandNames}
           />
+        </div>
+      )}
+
+      {/* Leads Tracking Dashboard - Only for Super Admins */}
+      {isSuperAdmin && (
+        <div className="mb-8">
+          <LeadsTrackingDashboard />
         </div>
       )}
 
