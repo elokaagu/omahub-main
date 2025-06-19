@@ -455,7 +455,8 @@ export default function HomeContent() {
           const randomBrand = brands[Math.floor(Math.random() * brands.length)];
           newImages[occasion] = randomBrand.image;
         } else {
-          newImages[occasion] = "/placeholder-image.jpg";
+          newImages[occasion] =
+            "/lovable-uploads/25c3fe26-3fc4-43ef-83ac-6931a74468c0.png";
         }
       }
       setOccasionImages(newImages);
