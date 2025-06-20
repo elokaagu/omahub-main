@@ -61,6 +61,41 @@ export default function InboxPage() {
         {/* Auth Test Component for debugging */}
         <AuthTest />
 
+        {/* Simple Auth Status Check */}
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+          <h3 className="text-lg font-semibold text-green-900 mb-2">
+            🔍 Direct Auth Status
+          </h3>
+          <div className="space-y-2 text-sm">
+            <div className="flex items-center gap-2">
+              <span className="font-medium">useAuth() user:</span>
+              <span className={user ? "text-green-600" : "text-red-600"}>
+                {user ? `✅ ${user.email} (${user.role})` : "❌ No user"}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="font-medium">Loading state:</span>
+              <span className="text-gray-700">
+                {loading ? "⏳ Loading..." : "✅ Loaded"}
+              </span>
+            </div>
+            {user && (
+              <div className="text-xs text-gray-600 mt-2">
+                <p>
+                  <strong>User ID:</strong> {user.id}
+                </p>
+                <p>
+                  <strong>Role:</strong> {user.role}
+                </p>
+                <p>
+                  <strong>Owned Brands:</strong>{" "}
+                  {JSON.stringify(user.owned_brands)}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Inbox content will be loaded here */}
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <div className="text-center py-12">

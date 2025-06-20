@@ -3,8 +3,10 @@
 import { useState, useEffect } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function AuthTest() {
+  const { user: contextUser, session: contextSession } = useAuth();
   const [status, setStatus] = useState<{
     session: boolean;
     user: string | null;
@@ -224,6 +226,37 @@ export default function AuthTest() {
           >
             {status.apiTest}
           </span>
+        </div>
+
+        {/* Context Comparison */}
+        <div className="mt-4 pt-4 border-t border-blue-200">
+          <h4 className="font-semibold text-blue-800 mb-2">
+            Context vs Direct Client:
+          </h4>
+          <div className="space-y-1 text-xs">
+            <div className="flex items-center gap-2">
+              <span className="font-medium">Context User:</span>
+              <span className={contextUser ? "text-green-600" : "text-red-600"}>
+                {contextUser ? `✅ ${contextUser.email}` : "❌ None"}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="font-medium">Context Session:</span>
+              <span
+                className={contextSession ? "text-green-600" : "text-red-600"}
+              >
+                {contextSession ? "✅ Present" : "❌ None"}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="font-medium">Direct Client:</span>
+              <span
+                className={status.session ? "text-green-600" : "text-red-600"}
+              >
+                {status.session ? "✅ Has Session" : "❌ No Session"}
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
