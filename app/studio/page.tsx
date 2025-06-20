@@ -3,8 +3,6 @@
 import { useEffect, useState } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import type { Database } from "@/lib/types/supabase";
-import { Brand } from "@/lib/supabase";
-import BrandManagement from "@/components/studio/BrandManagement";
 import AnalyticsDashboard from "@/components/studio/AnalyticsDashboard";
 import LeadsTrackingDashboard from "@/components/studio/LeadsTrackingDashboard";
 import RecentAccountsWidget from "./dashboard/RecentAccountsWidget";
@@ -22,10 +20,8 @@ type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
 export default function StudioPage() {
   const [loading, setLoading] = useState(true);
-  const [brands, setBrands] = useState<Brand[]>([]);
   const [userPermissions, setUserPermissions] = useState<Permission[]>([]);
   const [userProfile, setUserProfile] = useState<Profile | null>(null);
-  const [ownedBrands, setOwnedBrands] = useState<Brand[]>([]);
   const { user, refreshUserProfile } = useAuth();
   const supabase = createClientComponentClient<Database>();
 
@@ -81,79 +77,6 @@ export default function StudioPage() {
             ownedBrands: profile?.owned_brands,
           });
           setUserProfile(profile);
-        }
-
-        // Use profile data or fallback to user context
-        const effectiveProfile = profile || {
-          role: user.role,
-          owned_brands: user.owned_brands || [],
-        };
-
-        const isBrandOwner = effectiveProfile.role === "brand_admin";
-        const isAdmin =
-          effectiveProfile.role === "admin" ||
-          effectiveProfile.role === "super_admin";
-        const ownedBrandIds = effectiveProfile.owned_brands || [];
-
-        console.log("🎯 Studio Page: Effective user data:", {
-          isBrandOwner,
-          isAdmin,
-          ownedBrandIds,
-          hasManagePermission: permissions.includes("studio.brands.manage"),
-        });
-
-        // Get brands based on user role
-        if (permissions.includes("studio.brands.manage")) {
-          console.log(
-            "📦 Studio Page: User can manage brands, fetching brands..."
-          );
-
-          if (isAdmin) {
-            // Admins see all brands
-            const { data: fetchedBrands, error } = await supabase
-              .from("brands")
-              .select("*")
-              .order("name");
-
-            if (error) throw error;
-            console.log(
-              "📦 Studio Page: All brands fetched:",
-              fetchedBrands?.length || 0
-            );
-            setBrands(fetchedBrands || []);
-          } else if (isBrandOwner && ownedBrandIds.length > 0) {
-            // Brand owners see only their brands
-            console.log(
-              "📦 Studio Page: Fetching owned brands:",
-              ownedBrandIds
-            );
-            const { data: fetchedBrands, error } = await supabase
-              .from("brands")
-              .select("*")
-              .in("id", ownedBrandIds)
-              .order("name");
-
-            if (error) {
-              console.error(
-                "❌ Studio Page: Error fetching owned brands:",
-                error
-              );
-              throw error;
-            }
-            console.log(
-              "📦 Studio Page: Owned brands fetched:",
-              fetchedBrands?.length || 0,
-              fetchedBrands?.map((b) => `${b.name} (${b.id})`)
-            );
-            setBrands(fetchedBrands || []);
-            setOwnedBrands(fetchedBrands || []);
-          } else {
-            console.log("⚠️ Studio Page: Brand owner with no owned brands");
-            setBrands([]);
-            setOwnedBrands([]);
-          }
-        } else {
-          console.log("📦 Studio Page: User cannot manage brands");
         }
       } catch (error) {
         console.error("❌ Studio Page: Error in fetchData:", error);
@@ -222,7 +145,7 @@ export default function StudioPage() {
     effectiveProfile.role === "super_admin";
   const isBrandOwner = effectiveProfile.role === "brand_admin";
   const ownedBrandIds = effectiveProfile.owned_brands || [];
-  const ownedBrandNames = brands.map((brand) => brand.name);
+  const ownedBrandNames = ownedBrandIds; // Simplified since we don't fetch brands anymore
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8">
@@ -240,7 +163,6 @@ export default function StudioPage() {
             </p>
             <p>Owned Brands: {JSON.stringify(ownedBrandIds)}</p>
             <p>Permissions: {userPermissions.join(", ")}</p>
-            <p>Brands Loaded: {brands.length}</p>
           </div>
 
           {/* Authentication Diagnostic */}
@@ -281,28 +203,19 @@ export default function StudioPage() {
         </div>
       )}
 
-      {/* Brand Management Section */}
-      {userPermissions.includes("studio.brands.manage") && (
-        <div>
-          <BrandManagement className="mt-8" />
+      {/* Empty State for Users Without Permissions */}
+      {!isSuperAdmin && !isBrandOwner && !isAdmin && (
+        <div className="flex items-center justify-center min-h-[40vh]">
+          <div className="text-center">
+            <BarChart3 className="mx-auto h-12 w-12 text-gray-400" />
+            <h3 className="mt-4 text-lg font-semibold">Welcome to Studio</h3>
+            <p className="mt-2 text-gray-500">
+              Your dashboard will appear here once you have the necessary
+              permissions.
+            </p>
+          </div>
         </div>
       )}
-
-      {/* Empty State for Users Without Permissions */}
-      {!isSuperAdmin &&
-        !isBrandOwner &&
-        !userPermissions.includes("studio.brands.manage") && (
-          <div className="flex items-center justify-center min-h-[40vh]">
-            <div className="text-center">
-              <BarChart3 className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-4 text-lg font-semibold">Welcome to Studio</h3>
-              <p className="mt-2 text-gray-500">
-                Your dashboard will appear here once you have the necessary
-                permissions.
-              </p>
-            </div>
-          </div>
-        )}
     </div>
   );
 }
