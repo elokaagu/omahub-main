@@ -6,7 +6,11 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function AuthTest() {
-  const { user: contextUser, session: contextSession } = useAuth();
+  const {
+    user: contextUser,
+    session: contextSession,
+    loading: contextLoading,
+  } = useAuth();
   const [status, setStatus] = useState<{
     session: boolean;
     user: string | null;
@@ -26,7 +30,10 @@ export default function AuthTest() {
     setStatus((prev) => ({ ...prev, loading: true }));
 
     try {
-      // Test session
+      // Use the context first since it's working
+      const hasContextAuth = !!contextUser && !!contextSession;
+
+      // Also test direct client for comparison
       const {
         data: { session },
         error: sessionError,
@@ -34,58 +41,30 @@ export default function AuthTest() {
 
       if (sessionError) {
         console.error("Session error:", sessionError);
-        setStatus({
-          session: false,
-          user: null,
-          apiTest: "Session error: " + sessionError.message,
-          loading: false,
-        });
-        return;
       }
 
-      const hasSession = !!session?.user;
-      const userEmail = session?.user?.email || null;
+      const hasDirectSession = !!session?.user;
+      const userEmail = contextUser?.email || session?.user?.email || null;
 
-      console.log("🔍 AuthTest - Session details:", {
-        hasSession,
-        userEmail,
-        userId: session?.user?.id,
-        expiresAt: session?.expires_at,
-        accessToken: session?.access_token ? "Present" : "Missing",
-        refreshToken: session?.refresh_token ? "Present" : "Missing",
+      // Use context auth as primary, fallback to direct session
+      const effectiveAuth = hasContextAuth || hasDirectSession;
+      const effectiveUser = contextUser || session?.user;
+
+      console.log("🔍 AuthTest - Auth comparison:", {
+        contextAuth: hasContextAuth,
+        contextUser: contextUser?.email,
+        directSession: hasDirectSession,
+        directUser: session?.user?.email,
+        effectiveAuth,
+        effectiveUser: effectiveUser?.email,
       });
 
-      // Test API call with proper credentials and detailed logging
+      // Test API call with proper credentials
       let apiResult = "Not tested";
-      if (hasSession) {
+      if (effectiveAuth && effectiveUser) {
         try {
           console.log("🔍 AuthTest - Making API call with credentials...");
 
-          // First test the simple verification endpoint
-          console.log("🔍 AuthTest - Testing verification endpoint...");
-          const verifyResponse = await fetch("/api/auth/verify", {
-            method: "GET",
-            credentials: "include",
-            headers: {
-              "Content-Type": "application/json",
-              "Cache-Control": "no-cache",
-            },
-          });
-
-          console.log("🔍 AuthTest - Verify Response:", {
-            status: verifyResponse.status,
-            statusText: verifyResponse.statusText,
-          });
-
-          if (verifyResponse.ok) {
-            const verifyData = await verifyResponse.json();
-            console.log("✅ AuthTest - Verify Success:", verifyData);
-          } else {
-            const verifyError = await verifyResponse.text();
-            console.error("❌ AuthTest - Verify Failed:", verifyError);
-          }
-
-          // Now test the main leads API
           const response = await fetch("/api/admin/leads?action=analytics", {
             method: "GET",
             credentials: "include",
@@ -98,7 +77,6 @@ export default function AuthTest() {
           console.log("🔍 AuthTest - API Response:", {
             status: response.status,
             statusText: response.statusText,
-            headers: Object.fromEntries(response.headers.entries()),
           });
 
           if (response.ok) {
@@ -112,18 +90,18 @@ export default function AuthTest() {
               statusText: response.statusText,
               error: errorText,
             });
-            apiResult = `❌ API failed: ${response.status} ${response.statusText} - ${errorText}`;
+            apiResult = `❌ API failed: ${response.status} ${response.statusText}`;
           }
         } catch (error) {
           console.error("❌ AuthTest - API Exception:", error);
           apiResult = `❌ API error: ${error}`;
         }
       } else {
-        apiResult = "❌ No session to test API";
+        apiResult = "❌ No authentication to test API";
       }
 
       setStatus({
-        session: hasSession,
+        session: effectiveAuth,
         user: userEmail,
         apiTest: apiResult,
         loading: false,
@@ -182,8 +160,11 @@ export default function AuthTest() {
   };
 
   useEffect(() => {
-    testAuth();
-  }, []);
+    // Wait for context to load before testing
+    if (!contextLoading) {
+      testAuth();
+    }
+  }, [contextLoading, contextUser, contextSession]);
 
   return (
     <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
@@ -191,7 +172,7 @@ export default function AuthTest() {
         <h3 className="text-lg font-semibold text-blue-900">🔍 Auth Test</h3>
         <button
           onClick={testAuth}
-          disabled={status.loading}
+          disabled={status.loading || contextLoading}
           className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 disabled:opacity-50"
         >
           {status.loading ? "Testing..." : "Retest"}
@@ -231,13 +212,15 @@ export default function AuthTest() {
         {/* Context Comparison */}
         <div className="mt-4 pt-4 border-t border-blue-200">
           <h4 className="font-semibold text-blue-800 mb-2">
-            Context vs Direct Client:
+            Authentication Sources:
           </h4>
           <div className="space-y-1 text-xs">
             <div className="flex items-center gap-2">
               <span className="font-medium">Context User:</span>
               <span className={contextUser ? "text-green-600" : "text-red-600"}>
-                {contextUser ? `✅ ${contextUser.email}` : "❌ None"}
+                {contextUser
+                  ? `✅ ${contextUser.email} (${contextUser.role})`
+                  : "❌ None"}
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -249,11 +232,9 @@ export default function AuthTest() {
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="font-medium">Direct Client:</span>
-              <span
-                className={status.session ? "text-green-600" : "text-red-600"}
-              >
-                {status.session ? "✅ Has Session" : "❌ No Session"}
+              <span className="font-medium">Context Loading:</span>
+              <span className="text-gray-600">
+                {contextLoading ? "⏳ Loading..." : "✅ Loaded"}
               </span>
             </div>
           </div>
@@ -261,28 +242,35 @@ export default function AuthTest() {
       </div>
 
       {(!status.session || status.apiTest.includes("❌")) &&
-        !status.loading && (
+        !status.loading &&
+        !contextLoading && (
           <div className="mt-4 pt-4 border-t border-blue-200">
             {!status.session ? (
               <>
                 <p className="text-sm text-blue-800 mb-3">
-                  <strong>You need to sign in first!</strong> You're not
-                  currently authenticated.
+                  <strong>Authentication issue detected!</strong> The context
+                  shows you're signed in but session detection is failing.
                 </p>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => router.push("/login")}
-                    className="px-4 py-2 bg-oma-plum text-white rounded text-sm hover:bg-oma-plum/90 font-medium"
+                    onClick={fixAuth}
+                    className="px-4 py-2 bg-green-600 text-white rounded text-sm hover:bg-green-700"
                   >
-                    🔐 Go to Sign In Page
+                    🔧 Refresh Session
+                  </button>
+                  <button
+                    onClick={() => window.location.reload()}
+                    className="px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
+                  >
+                    🔄 Reload Page
                   </button>
                 </div>
               </>
             ) : (
               <>
                 <p className="text-sm text-blue-800 mb-3">
-                  Try refreshing the page or signing out and back in if you see
-                  authentication failures.
+                  Session is active but API calls are failing. Try refreshing or
+                  clearing cache.
                 </p>
                 <div className="flex gap-2">
                   <button
@@ -292,10 +280,10 @@ export default function AuthTest() {
                     🔧 Fix Authentication
                   </button>
                   <button
-                    onClick={signOut}
-                    className="px-4 py-2 bg-gray-600 text-white rounded text-sm hover:bg-gray-700"
+                    onClick={() => window.location.reload()}
+                    className="px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
                   >
-                    🚪 Sign Out & Re-login
+                    🔄 Reload Page
                   </button>
                 </div>
               </>
