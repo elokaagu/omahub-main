@@ -47,7 +47,7 @@ export default function InboxPage() {
         setLoadingInquiries(true);
         setError(null);
 
-        const response = await fetch("/api/admin/inquiries", {
+        const response = await fetch("/api/studio/inbox", {
           method: "GET",
           credentials: "include",
           headers: {
