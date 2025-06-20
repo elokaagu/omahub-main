@@ -16,6 +16,7 @@ import { Loading } from "@/components/ui/loading";
 import StudioDebug from "@/components/studio/StudioDebug";
 import AuthDiagnostic from "@/components/studio/AuthDiagnostic";
 import SessionFixer from "@/components/studio/SessionFixer";
+import AuthTest from "@/components/studio/AuthTest";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
@@ -165,6 +166,9 @@ export default function StudioPage() {
             <p>Owned Brands: {JSON.stringify(ownedBrandIds)}</p>
             <p>Permissions: {userPermissions.join(", ")}</p>
           </div>
+
+          {/* Auth Test Component */}
+          <AuthTest />
 
           {/* Authentication Diagnostic */}
           <AuthDiagnostic />

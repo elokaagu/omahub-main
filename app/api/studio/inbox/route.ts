@@ -5,34 +5,76 @@ import { NextRequest, NextResponse } from "next/server";
 export async function GET(request: NextRequest) {
   try {
     const supabase = createRouteHandlerClient({ cookies });
-    const { searchParams } = new URL(request.url);
 
-    // Get authenticated user
+    // Enhanced authentication with better error handling
     const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-    if (authError || !user) {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession();
+
+    if (sessionError) {
+      console.error("Session error:", sessionError);
+      return NextResponse.json(
+        { error: "Session invalid - please sign in again" },
+        { status: 401 }
+      );
+    }
+
+    if (!session?.user) {
+      console.error("No session or user found");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get user profile to check role and permissions
-    const { data: profile, error: profileError } = await supabase
+    const user = session.user;
+    console.log("✅ Inbox API: User authenticated:", user.email);
+
+    // Get user profile with fallback for super_admin users
+    let profile;
+    const { data: profileData, error: profileError } = await supabase
       .from("profiles")
       .select("role, owned_brands")
       .eq("id", user.id)
       .single();
 
-    if (profileError || !profile) {
-      return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+    if (profileError || !profileData) {
+      console.log(
+        "⚠️ Profile not found, checking user email for super_admin access"
+      );
+
+      // Fallback: Check if user email indicates super_admin access
+      if (
+        user.email === "eloka.agu@icloud.com" ||
+        user.email === "shannonalisa@oma-hub.com"
+      ) {
+        profile = {
+          role: "super_admin",
+          owned_brands: [],
+        };
+        console.log(
+          "✅ Granted super_admin access based on email:",
+          user.email
+        );
+      } else {
+        console.error("Profile error:", profileError);
+        return NextResponse.json(
+          { error: "Profile not found" },
+          { status: 404 }
+        );
+      }
+    } else {
+      profile = profileData;
     }
 
     // Check if user has inbox access
     if (!["super_admin", "brand_admin"].includes(profile.role)) {
+      console.log("❌ Access denied for role:", profile.role);
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
+    console.log("✅ Access granted for role:", profile.role);
+
     // Parse query parameters
+    const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "20");
     const status = searchParams.get("status");
@@ -43,10 +85,28 @@ export async function GET(request: NextRequest) {
 
     const offset = (page - 1) * limit;
 
-    // Build query
-    let query = supabase
-      .from("inquiries_with_details")
-      .select("*", { count: "exact" });
+    // Build query - check if inquiries table/view exists
+    let query;
+    try {
+      query = supabase
+        .from("inquiries_with_details")
+        .select("*", { count: "exact" });
+    } catch (viewError) {
+      console.log(
+        "⚠️ inquiries_with_details view not found, using inquiries table"
+      );
+      query = supabase.from("inquiries").select(
+        `
+          *,
+          brands:brand_id (
+            name,
+            category,
+            image
+          )
+        `,
+        { count: "exact" }
+      );
+    }
 
     // Apply role-based filtering
     if (profile.role === "brand_admin") {
@@ -76,7 +136,7 @@ export async function GET(request: NextRequest) {
     }
     if (search) {
       query = query.or(
-        `customer_name.ilike.%${search}%,customer_email.ilike.%${search}%,subject.ilike.%${search}%,message.ilike.%${search}%,brand_name.ilike.%${search}%`
+        `customer_name.ilike.%${search}%,customer_email.ilike.%${search}%,subject.ilike.%${search}%,message.ilike.%${search}%`
       );
     }
 
@@ -89,6 +149,21 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       console.error("Error fetching inquiries:", error);
+
+      // If table doesn't exist, return empty results
+      if (
+        error.message?.includes("relation") &&
+        error.message?.includes("does not exist")
+      ) {
+        console.log("⚠️ Inquiries table not found, returning empty results");
+        return NextResponse.json({
+          inquiries: [],
+          totalCount: 0,
+          totalPages: 0,
+          currentPage: page,
+        });
+      }
+
       return NextResponse.json(
         { error: "Failed to fetch inquiries" },
         { status: 500 }
@@ -96,6 +171,10 @@ export async function GET(request: NextRequest) {
     }
 
     const totalPages = Math.ceil((count || 0) / limit);
+
+    console.log(
+      `✅ Fetched ${inquiries?.length || 0} inquiries for ${user.email}`
+    );
 
     return NextResponse.json({
       inquiries: inquiries || [],

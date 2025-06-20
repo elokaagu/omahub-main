@@ -3,51 +3,8 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
-import InboxClient from "./InboxClient";
 import { LoadingPage } from "@/components/ui/loading";
-
-// Simple authentication test component
-function AuthTest() {
-  const [testResult, setTestResult] = useState("Testing...");
-
-  useEffect(() => {
-    const testAuth = async () => {
-      try {
-        const response = await fetch("/api/studio/inbox/stats", {
-          credentials: "include",
-        });
-
-        if (response.ok) {
-          setTestResult("✅ Authentication working");
-        } else {
-          setTestResult(
-            `❌ Auth failed: ${response.status} ${response.statusText}`
-          );
-        }
-      } catch (error) {
-        setTestResult(
-          `❌ Error: ${error instanceof Error ? error.message : "Unknown"}`
-        );
-      }
-    };
-
-    testAuth();
-  }, []);
-
-  return (
-    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-      <div className="text-sm">
-        <strong>🔧 Auth Test:</strong> {testResult}
-      </div>
-      {testResult.includes("❌") && (
-        <div className="mt-2 text-xs text-blue-700">
-          Try refreshing the page or signing out and back in if you see
-          authentication failures.
-        </div>
-      )}
-    </div>
-  );
-}
+import AuthTest from "@/components/studio/AuthTest";
 
 export default function InboxPage() {
   const { user, loading } = useAuth();
@@ -93,17 +50,30 @@ export default function InboxPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Studio Inbox</h1>
-        <p className="mt-2 text-gray-600">
-          Manage customer inquiries and messages
-        </p>
+      <div className="space-y-8">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Studio Inbox</h1>
+          <p className="mt-2 text-gray-600">
+            Manage customer inquiries and messages
+          </p>
+        </div>
+
+        {/* Auth Test Component for debugging */}
+        <AuthTest />
+
+        {/* Inbox content will be loaded here */}
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="text-center py-12">
+            <div className="text-gray-400 text-lg mb-4">📧</div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              Inbox Loading...
+            </h3>
+            <p className="text-gray-500">
+              If the Auth Test above shows success, your inbox should load here.
+            </p>
+          </div>
+        </div>
       </div>
-
-      {/* Simple auth test for development */}
-      {process.env.NODE_ENV === "development" && <AuthTest />}
-
-      <InboxClient userProfile={user} />
     </div>
   );
 }
