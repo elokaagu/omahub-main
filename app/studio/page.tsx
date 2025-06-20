@@ -17,6 +17,8 @@ import StudioDebug from "@/components/studio/StudioDebug";
 import AuthDiagnostic from "@/components/studio/AuthDiagnostic";
 import SessionFixer from "@/components/studio/SessionFixer";
 import AuthTest from "@/components/studio/AuthTest";
+import ProfileFixer from "@/components/studio/ProfileFixer";
+import { supabaseHelpers } from "@/lib/utils/supabase-helpers";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
@@ -46,7 +48,7 @@ export default function StudioPage() {
         // Get user permissions and profile directly without refreshing
         const [permissions, profileResult] = await Promise.all([
           getUserPermissions(user.id, user.email),
-          supabase.from("profiles").select("*").eq("id", user.id).single(),
+          supabaseHelpers.getProfileById(user.id),
         ]);
 
         console.log("✅ Studio Page: Permissions received:", permissions);
@@ -166,6 +168,9 @@ export default function StudioPage() {
             <p>Owned Brands: {JSON.stringify(ownedBrandIds)}</p>
             <p>Permissions: {userPermissions.join(", ")}</p>
           </div>
+
+          {/* Profile 406 Error Fixer */}
+          <ProfileFixer userId={user.id} />
 
           {/* Auth Test Component */}
           <AuthTest />
