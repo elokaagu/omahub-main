@@ -20,6 +20,7 @@ import AuthTest from "@/components/studio/AuthTest";
 import ProfileFixer from "@/components/studio/ProfileFixer";
 import EnvChecker from "@/components/studio/EnvChecker";
 import { supabaseHelpers } from "@/lib/utils/supabase-helpers";
+import AuthFixer from "@/components/studio/AuthFixer";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
@@ -158,7 +159,7 @@ export default function StudioPage() {
 
       {/* Debug info for troubleshooting */}
       {process.env.NODE_ENV === "development" && (
-        <div className="space-y-4">
+        <div className="space-y-6">
           <div className="bg-gray-100 p-4 rounded-lg text-xs">
             <p>
               <strong>Debug Info:</strong>
@@ -178,6 +179,9 @@ export default function StudioPage() {
 
           {/* Auth Test Component */}
           <AuthTest />
+
+          {/* Auth Fixer Component */}
+          <AuthFixer />
 
           {/* Authentication Diagnostic */}
           <AuthDiagnostic />

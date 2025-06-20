@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
+import { createServerSupabaseClient } from "@/lib/supabase-unified";
 
 // Types for the leads tracking system
 export interface Lead {
@@ -83,6 +81,7 @@ export interface LeadsAnalytics {
 
 // Helper function to check user permissions
 async function checkUserPermissions(userId: string) {
+  const supabase = createServerSupabaseClient();
   const { data: profile, error } = await supabase
     .from("profiles")
     .select("role, owned_brands")
@@ -99,7 +98,7 @@ async function checkUserPermissions(userId: string) {
 // GET /api/admin/leads - Fetch leads and analytics
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = createServerSupabaseClient();
 
     // Enhanced authentication with better error handling
     const {
@@ -264,7 +263,7 @@ export async function GET(request: NextRequest) {
 
     const offset = (page - 1) * limit;
 
-    // Build query
+    // Build query with count
     let query = supabase.from("leads").select(
       `
         *,
@@ -291,33 +290,25 @@ export async function GET(request: NextRequest) {
     }
 
     // Apply filters
-    if (status) {
-      query = query.eq("status", status);
-    }
-    if (source) {
-      query = query.eq("source", source);
-    }
-    if (priority) {
-      query = query.eq("priority", priority);
-    }
-    if (brandId) {
-      query = query.eq("brand_id", brandId);
-    }
+    if (status) query = query.eq("status", status);
+    if (source) query = query.eq("source", source);
+    if (priority) query = query.eq("priority", priority);
+    if (brandId) query = query.eq("brand_id", brandId);
     if (search) {
       query = query.or(
-        `customer_name.ilike.%${search}%,customer_email.ilike.%${search}%,customer_phone.ilike.%${search}%`
+        `customer_name.ilike.%${search}%,customer_email.ilike.%${search}%,notes.ilike.%${search}%`
       );
     }
 
-    // Apply pagination and ordering
+    // Apply pagination
     query = query
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1);
 
-    const { data: leads, error, count } = await query;
+    const { data: leads, error: fetchError, count } = await query;
 
-    if (error) {
-      console.error("Error fetching leads:", error);
+    if (fetchError) {
+      console.error("Error fetching leads:", fetchError);
       return NextResponse.json(
         { error: "Failed to fetch leads" },
         { status: 500 }
@@ -346,7 +337,7 @@ export async function GET(request: NextRequest) {
 // POST /api/admin/leads - Create new lead or booking
 export async function POST(request: NextRequest) {
   try {
-    const supabaseClient = createRouteHandlerClient({ cookies });
+    const supabaseClient = createServerSupabaseClient();
     const {
       data: { user },
       error: authError,
@@ -418,7 +409,7 @@ export async function POST(request: NextRequest) {
 
         // Get commission rate from commission structure if not provided
         if (!bookingData.commission_rate) {
-          const { data: commissionData } = await supabase
+          const { data: commissionData } = await supabaseClient
             .from("commission_structure")
             .select("commission_rate")
             .eq("booking_type", bookingData.booking_type)
@@ -431,7 +422,7 @@ export async function POST(request: NextRequest) {
             bookingData.commission_rate = commissionData.commission_rate;
           } else {
             // Fallback to default commission structure
-            const { data: defaultCommission } = await supabase
+            const { data: defaultCommission } = await supabaseClient
               .from("commission_structure")
               .select("commission_rate")
               .eq("booking_type", bookingData.booking_type)
@@ -461,7 +452,7 @@ export async function POST(request: NextRequest) {
 
         // Update financial metrics for the brand
         try {
-          await supabase.rpc("update_brand_financial_metrics", {
+          await supabaseClient.rpc("update_brand_financial_metrics", {
             target_brand_id: bookingData.brand_id,
             target_month_year: new Date().toISOString().slice(0, 7) + "-01",
           });
@@ -520,7 +511,7 @@ export async function POST(request: NextRequest) {
 // PUT /api/admin/leads - Update lead or booking
 export async function PUT(request: NextRequest) {
   try {
-    const supabaseClient = createRouteHandlerClient({ cookies });
+    const supabaseClient = createServerSupabaseClient();
     const {
       data: { user },
       error: authError,
@@ -585,7 +576,7 @@ export async function PUT(request: NextRequest) {
 
         // Update financial metrics if booking value or status changed
         if (data.booking_value || data.status) {
-          const { data: booking } = await supabase
+          const { data: booking } = await supabaseClient
             .from("bookings")
             .select("brand_id, booking_date")
             .eq("id", id)
@@ -596,7 +587,7 @@ export async function PUT(request: NextRequest) {
               const monthYear =
                 new Date(booking.booking_date).toISOString().slice(0, 7) +
                 "-01";
-              await supabase.rpc("update_brand_financial_metrics", {
+              await supabaseClient.rpc("update_brand_financial_metrics", {
                 target_brand_id: booking.brand_id,
                 target_month_year: monthYear,
               });
@@ -653,7 +644,7 @@ export async function PUT(request: NextRequest) {
 // DELETE /api/admin/leads - Delete lead or booking
 export async function DELETE(request: NextRequest) {
   try {
-    const supabaseClient = createRouteHandlerClient({ cookies });
+    const supabaseClient = createServerSupabaseClient();
     const {
       data: { user },
       error: authError,
