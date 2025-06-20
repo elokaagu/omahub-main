@@ -1,10 +1,53 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import InboxClient from "./InboxClient";
 import { LoadingPage } from "@/components/ui/loading";
+
+// Simple authentication test component
+function AuthTest() {
+  const [testResult, setTestResult] = useState("Testing...");
+
+  useEffect(() => {
+    const testAuth = async () => {
+      try {
+        const response = await fetch("/api/studio/inbox/stats", {
+          credentials: "include",
+        });
+
+        if (response.ok) {
+          setTestResult("✅ Authentication working");
+        } else {
+          setTestResult(
+            `❌ Auth failed: ${response.status} ${response.statusText}`
+          );
+        }
+      } catch (error) {
+        setTestResult(
+          `❌ Error: ${error instanceof Error ? error.message : "Unknown"}`
+        );
+      }
+    };
+
+    testAuth();
+  }, []);
+
+  return (
+    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+      <div className="text-sm">
+        <strong>🔧 Auth Test:</strong> {testResult}
+      </div>
+      {testResult.includes("❌") && (
+        <div className="mt-2 text-xs text-blue-700">
+          Try refreshing the page or signing out and back in if you see
+          authentication failures.
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function InboxPage() {
   const { user, loading } = useAuth();
@@ -56,6 +99,9 @@ export default function InboxPage() {
           Manage customer inquiries and messages
         </p>
       </div>
+
+      {/* Simple auth test for development */}
+      {process.env.NODE_ENV === "development" && <AuthTest />}
 
       <InboxClient userProfile={user} />
     </div>
