@@ -1,28 +1,93 @@
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
+"use client";
+
+import { useEffect, useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "next/navigation";
 import InboxClient from "./InboxClient";
+import { LoadingPage } from "@/components/ui/loading";
 
-export default async function InboxPage() {
-  const supabase = createServerComponentClient({ cookies });
+export default function InboxPage() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push("/login");
+      return;
+    }
 
-  if (!user) {
-    redirect("/login");
+    if (user) {
+      checkUserProfile();
+    }
+  }, [user, loading, router]);
+
+  const checkUserProfile = async () => {
+    try {
+      setProfileLoading(true);
+      const response = await fetch("/api/auth/profile", {
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch profile");
+      }
+
+      const profile = await response.json();
+
+      if (!profile || !["super_admin", "brand_admin"].includes(profile.role)) {
+        router.push("/studio");
+        return;
+      }
+
+      setUserProfile(profile);
+    } catch (error) {
+      console.error("Error fetching profile:", error);
+      setError("Failed to load user profile");
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
+  if (loading || profileLoading) {
+    return <LoadingPage />;
   }
 
-  // Get user profile to check permissions
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role, owned_brands")
-    .eq("id", user.id)
-    .single();
+  if (!user) {
+    return null; // Will redirect to login
+  }
 
-  if (!profile || !["super_admin", "brand_admin"].includes(profile.role)) {
-    redirect("/studio");
+  if (error) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <h3 className="text-red-800 font-semibold">Access Error</h3>
+          <p className="text-red-600 text-sm mt-1">{error}</p>
+          <button
+            onClick={checkUserProfile}
+            className="mt-2 text-sm text-red-700 hover:text-red-800 underline"
+          >
+            Try again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!userProfile) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <h3 className="text-yellow-800 font-semibold">Access Restricted</h3>
+          <p className="text-yellow-600 text-sm mt-1">
+            You don't have permission to access the inbox. Only super admins and
+            brand admins can view this page.
+          </p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -34,7 +99,7 @@ export default async function InboxPage() {
         </p>
       </div>
 
-      <InboxClient userProfile={profile} />
+      <InboxClient userProfile={userProfile} />
     </div>
   );
 }
