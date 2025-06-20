@@ -273,7 +273,8 @@ export function useLeadsAnalytics() {
       }
 
       const data = await response.json();
-      setAnalytics(data.analytics);
+      // The API returns analytics data directly, not nested in an analytics property
+      setAnalytics(data);
     } catch (err) {
       console.error("Error fetching analytics:", err);
       setError(

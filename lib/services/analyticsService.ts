@@ -94,16 +94,13 @@ async function getVercelPageViews(): Promise<number | null> {
 
 /**
  * Fetch real page views from multiple sources with fallback
- * Tries Google Analytics first, then Vercel Analytics, then estimated
+ * Tries Vercel Analytics first, skips Google Analytics for now
  */
 async function getRealPageViews(): Promise<number | null> {
-  // Try Google Analytics first
-  const googlePageViews = await getGoogleAnalyticsPageViews();
-  if (googlePageViews !== null) {
-    return googlePageViews;
-  }
+  // Skip Google Analytics and go straight to Vercel Analytics
+  console.log("ℹ️ Skipping Google Analytics, trying Vercel Analytics...");
 
-  // Fallback to Vercel Analytics
+  // Try Vercel Analytics first
   const vercelPageViews = await getVercelPageViews();
   if (vercelPageViews !== null) {
     return vercelPageViews;
