@@ -44,25 +44,76 @@ export default function AuthTest() {
       const hasSession = !!session?.user;
       const userEmail = session?.user?.email || null;
 
-      // Test API call with proper credentials
+      console.log("🔍 AuthTest - Session details:", {
+        hasSession,
+        userEmail,
+        userId: session?.user?.id,
+        expiresAt: session?.expires_at,
+        accessToken: session?.access_token ? "Present" : "Missing",
+        refreshToken: session?.refresh_token ? "Present" : "Missing",
+      });
+
+      // Test API call with proper credentials and detailed logging
       let apiResult = "Not tested";
       if (hasSession) {
         try {
+          console.log("🔍 AuthTest - Making API call with credentials...");
+
+          // First test the simple verification endpoint
+          console.log("🔍 AuthTest - Testing verification endpoint...");
+          const verifyResponse = await fetch("/api/auth/verify", {
+            method: "GET",
+            credentials: "include",
+            headers: {
+              "Content-Type": "application/json",
+              "Cache-Control": "no-cache",
+            },
+          });
+
+          console.log("🔍 AuthTest - Verify Response:", {
+            status: verifyResponse.status,
+            statusText: verifyResponse.statusText,
+          });
+
+          if (verifyResponse.ok) {
+            const verifyData = await verifyResponse.json();
+            console.log("✅ AuthTest - Verify Success:", verifyData);
+          } else {
+            const verifyError = await verifyResponse.text();
+            console.error("❌ AuthTest - Verify Failed:", verifyError);
+          }
+
+          // Now test the main leads API
           const response = await fetch("/api/admin/leads?action=analytics", {
             method: "GET",
             credentials: "include",
             headers: {
               "Content-Type": "application/json",
+              "Cache-Control": "no-cache",
             },
           });
 
+          console.log("🔍 AuthTest - API Response:", {
+            status: response.status,
+            statusText: response.statusText,
+            headers: Object.fromEntries(response.headers.entries()),
+          });
+
           if (response.ok) {
+            const data = await response.json();
+            console.log("✅ AuthTest - API Success:", data);
             apiResult = "✅ API call successful";
           } else {
             const errorText = await response.text();
+            console.error("❌ AuthTest - API Error:", {
+              status: response.status,
+              statusText: response.statusText,
+              error: errorText,
+            });
             apiResult = `❌ API failed: ${response.status} ${response.statusText} - ${errorText}`;
           }
         } catch (error) {
+          console.error("❌ AuthTest - API Exception:", error);
           apiResult = `❌ API error: ${error}`;
         }
       } else {
