@@ -18,6 +18,7 @@ import AuthDiagnostic from "@/components/studio/AuthDiagnostic";
 import SessionFixer from "@/components/studio/SessionFixer";
 import AuthTest from "@/components/studio/AuthTest";
 import ProfileFixer from "@/components/studio/ProfileFixer";
+import EnvChecker from "@/components/studio/EnvChecker";
 import { supabaseHelpers } from "@/lib/utils/supabase-helpers";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
@@ -168,6 +169,9 @@ export default function StudioPage() {
             <p>Owned Brands: {JSON.stringify(ownedBrandIds)}</p>
             <p>Permissions: {userPermissions.join(", ")}</p>
           </div>
+
+          {/* Environment Variable Checker */}
+          <EnvChecker />
 
           {/* Profile 406 Error Fixer */}
           <ProfileFixer userId={user.id} />

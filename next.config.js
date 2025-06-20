@@ -1,3 +1,12 @@
+// Load environment variables from production file if .env.local doesn't exist
+const fs = require("fs");
+const path = require("path");
+
+// Check if .env.local exists, if not, load from env.production
+if (!fs.existsSync(path.join(__dirname, ".env.local"))) {
+  require("dotenv").config({ path: path.join(__dirname, "env.production") });
+}
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   eslint: {
@@ -39,6 +48,9 @@ const nextConfig = {
     NEXT_PUBLIC_RUNTIME: "true",
     NEXT_IGNORE_TYPESCRIPT_ERRORS: "true",
     NEXT_IGNORE_ESM_VALIDATE: "true",
+    // Explicitly include Supabase environment variables
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
   },
   // Enable experimental features for better performance
   experimental: {
