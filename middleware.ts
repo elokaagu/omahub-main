@@ -1,60 +1,72 @@
-import { NextResponse, type NextRequest } from "next/server";
-import { createServerClient } from "@supabase/ssr";
+import { createMiddlewareClient } from "@supabase/auth-helpers-nextjs";
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
-export async function middleware(request: NextRequest) {
-  // Skip middleware for static files, API routes, and auth callback
-  if (
-    request.nextUrl.pathname.startsWith("/_next") ||
-    request.nextUrl.pathname.startsWith("/api") ||
-    request.nextUrl.pathname.startsWith("/auth/callback") ||
-    request.nextUrl.pathname.startsWith("/lovable-uploads") ||
-    request.nextUrl.pathname.startsWith("/public") ||
-    request.nextUrl.pathname.includes(".") ||
-    /\.(png|jpg|jpeg|gif|webp|svg|ico|css|js|woff|woff2|ttf|eot)$/i.test(
-      request.nextUrl.pathname
-    )
-  ) {
-    return NextResponse.next();
-  }
+export async function middleware(req: NextRequest) {
+  const res = NextResponse.next();
 
-  // Only protect /studio routes - let everything else pass through
-  if (!request.nextUrl.pathname.startsWith("/studio")) {
-    return NextResponse.next();
-  }
-
-  // Simple session check for protected routes only
   try {
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          get(name: string) {
-            return request.cookies.get(name)?.value;
-          },
-          set() {}, // No-op for middleware
-          remove() {}, // No-op for middleware
-        },
-      }
-    );
+    // Create a Supabase client configured to use cookies
+    const supabase = createMiddlewareClient({ req, res });
 
+    // Refresh session if expired - required for Server Components
     const {
       data: { session },
+      error,
     } = await supabase.auth.getSession();
 
-    // If no session on protected route, redirect to login
-    if (!session) {
-      const redirectUrl = new URL("/login", request.url);
-      redirectUrl.searchParams.set("redirect_to", request.nextUrl.pathname);
-      return NextResponse.redirect(redirectUrl);
+    // Handle corrupted or invalid sessions
+    if (error) {
+      console.log("🔧 Session error in middleware:", error.message);
+
+      // Clear corrupted cookies
+      res.cookies.delete("sb-access-token");
+      res.cookies.delete("sb-refresh-token");
+
+      // If accessing protected routes, redirect to login
+      if (req.nextUrl.pathname.startsWith("/studio")) {
+        return NextResponse.redirect(new URL("/login", req.url));
+      }
     }
 
-    return NextResponse.next();
+    // Protect studio routes
+    if (req.nextUrl.pathname.startsWith("/studio")) {
+      if (!session) {
+        return NextResponse.redirect(new URL("/login", req.url));
+      }
+
+      // Check user role for admin routes
+      if (req.nextUrl.pathname.startsWith("/studio/")) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", session.user.id)
+          .single();
+
+        if (
+          !profile ||
+          !["super_admin", "brand_admin"].includes(profile.role)
+        ) {
+          return NextResponse.redirect(new URL("/login", req.url));
+        }
+      }
+    }
+
+    return res;
   } catch (error) {
-    // On any error, redirect to login for protected routes
-    const redirectUrl = new URL("/login", request.url);
-    redirectUrl.searchParams.set("redirect_to", request.nextUrl.pathname);
-    return NextResponse.redirect(redirectUrl);
+    console.error("🚨 Middleware error:", error);
+
+    // Clear all Supabase cookies on error
+    const response = NextResponse.next();
+    response.cookies.delete("sb-access-token");
+    response.cookies.delete("sb-refresh-token");
+
+    // Redirect to login for studio routes
+    if (req.nextUrl.pathname.startsWith("/studio")) {
+      return NextResponse.redirect(new URL("/login", req.url));
+    }
+
+    return response;
   }
 }
 
@@ -62,12 +74,12 @@ export const config = {
   matcher: [
     /*
      * Match all request paths except for the ones starting with:
+     * - api (API routes)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * - lovable-uploads (image directory)
-     * - public assets
+     * - public folder
      */
-    "/((?!_next/static|_next/image|favicon.ico|lovable-uploads|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|woff|woff2|ttf|eot)$).*)",
+    "/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
