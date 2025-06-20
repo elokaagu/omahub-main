@@ -163,13 +163,15 @@ export function useLeads(filters?: {
       setError(null);
 
       const params = new URLSearchParams();
-      if (filters?.brand_id) params.set("brand_id", filters.brand_id);
-      if (filters?.status) params.set("status", filters.status);
-      if (filters?.source) params.set("source", filters.source);
-      if (filters?.limit) params.set("limit", filters.limit.toString());
-      if (filters?.offset) params.set("offset", filters.offset.toString());
+      if (filters?.brand_id) params.append("brand_id", filters.brand_id);
+      if (filters?.status) params.append("status", filters.status);
+      if (filters?.source) params.append("source", filters.source);
+      if (filters?.limit) params.append("limit", filters.limit.toString());
+      if (filters?.offset) params.append("offset", filters.offset.toString());
 
-      const response = await fetch(`/api/admin/leads?${params.toString()}`);
+      const response = await fetch(`/api/admin/leads?${params.toString()}`, {
+        credentials: "include",
+      });
 
       if (!response.ok) {
         throw new Error("Failed to fetch leads");
@@ -215,13 +217,14 @@ export function useBookings(filters?: {
       setLoading(true);
       setError(null);
 
-      const params = new URLSearchParams();
-      params.set("action", "bookings");
-      if (filters?.brand_id) params.set("brand_id", filters.brand_id);
-      if (filters?.limit) params.set("limit", filters.limit.toString());
-      if (filters?.offset) params.set("offset", filters.offset.toString());
+      const params = new URLSearchParams({ action: "bookings" });
+      if (filters?.brand_id) params.append("brand_id", filters.brand_id);
+      if (filters?.limit) params.append("limit", filters.limit.toString());
+      if (filters?.offset) params.append("offset", filters.offset.toString());
 
-      const response = await fetch(`/api/admin/leads?${params.toString()}`);
+      const response = await fetch(`/api/admin/leads?${params.toString()}`, {
+        credentials: "include",
+      });
 
       if (!response.ok) {
         throw new Error("Failed to fetch bookings");
@@ -261,7 +264,9 @@ export function useLeadsAnalytics() {
       setLoading(true);
       setError(null);
 
-      const response = await fetch("/api/admin/leads?action=analytics");
+      const response = await fetch("/api/admin/leads?action=analytics", {
+        credentials: "include",
+      });
 
       if (!response.ok) {
         throw new Error("Failed to fetch analytics");
@@ -306,7 +311,10 @@ export function useCommissionStructure() {
       setError(null);
 
       const response = await fetch(
-        "/api/admin/leads?action=commission_structure"
+        "/api/admin/leads?action=commission_structure",
+        {
+          credentials: "include",
+        }
       );
 
       if (!response.ok) {
@@ -355,6 +363,7 @@ export function useLeadMutations() {
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify({
           type: "lead",
           data: leadData,
@@ -387,6 +396,7 @@ export function useLeadMutations() {
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify({
           type: "lead",
           id,
@@ -417,6 +427,7 @@ export function useLeadMutations() {
 
       const response = await fetch(`/api/admin/leads?type=lead&id=${id}`, {
         method: "DELETE",
+        credentials: "include",
       });
 
       if (!response.ok) {
@@ -445,6 +456,7 @@ export function useLeadMutations() {
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify({
           type: "interaction",
           data: interactionData,
@@ -497,6 +509,7 @@ export function useBookingMutations() {
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify({
           type: "booking",
           data: bookingData,
@@ -531,6 +544,7 @@ export function useBookingMutations() {
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify({
           type: "booking",
           id,
@@ -563,6 +577,7 @@ export function useBookingMutations() {
 
       const response = await fetch(`/api/admin/leads?type=booking&id=${id}`, {
         method: "DELETE",
+        credentials: "include",
       });
 
       if (!response.ok) {
@@ -606,8 +621,9 @@ export function useCommissionMutations() {
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify({
-          type: "commission_structure",
+          type: "commission",
           id,
           data: updates,
         }),
@@ -622,7 +638,7 @@ export function useCommissionMutations() {
 
       const result = await response.json();
       toast.success("Commission structure updated successfully");
-      return result.commission_structure;
+      return result.commission;
     } catch (err) {
       console.error("Error updating commission structure:", err);
       toast.error(

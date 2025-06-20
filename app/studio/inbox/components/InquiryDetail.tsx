@@ -88,7 +88,9 @@ export default function InquiryDetail({
       setLoading(true);
       setError(null);
 
-      const response = await fetch(`/api/studio/inbox/${inquiryId}`);
+      const response = await fetch(`/api/studio/inbox/${inquiryId}`, {
+        credentials: "include",
+      });
 
       if (!response.ok) {
         throw new Error("Failed to fetch inquiry details");
@@ -120,6 +122,7 @@ export default function InquiryDetail({
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify({
           message: replyMessage.trim(),
           isInternalNote,
@@ -166,6 +169,7 @@ export default function InquiryDetail({
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify({ status: newStatus }),
       });
 

@@ -89,7 +89,9 @@ export default function InquiryList({
         }
       });
 
-      const response = await fetch(`/api/studio/inbox?${params}`);
+      const response = await fetch(`/api/studio/inbox?${params}`, {
+        credentials: "include",
+      });
 
       if (!response.ok) {
         throw new Error("Failed to fetch inquiries");
@@ -116,6 +118,7 @@ export default function InquiryList({
           headers: {
             "Content-Type": "application/json",
           },
+          credentials: "include",
           body: JSON.stringify({
             status: "read",
             readAt: true,

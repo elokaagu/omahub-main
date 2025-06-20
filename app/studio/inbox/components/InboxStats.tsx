@@ -34,7 +34,9 @@ export default function InboxStats() {
   const fetchStats = async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/studio/inbox/stats");
+      const response = await fetch("/api/studio/inbox/stats", {
+        credentials: "include",
+      });
 
       if (!response.ok) {
         throw new Error("Failed to fetch statistics");
