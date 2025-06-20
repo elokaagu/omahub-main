@@ -68,9 +68,30 @@ export default function InboxPage() {
             <h3 className="text-lg font-medium text-gray-900 mb-2">
               Inbox Loading...
             </h3>
-            <p className="text-gray-500">
-              If the Auth Test above shows success, your inbox should load here.
-            </p>
+            <div className="text-center space-y-4">
+              <p className="text-gray-600">
+                If the Auth Test above shows success, your inbox should load
+                here.
+              </p>
+
+              {!user && (
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                  <h3 className="text-amber-800 font-semibold mb-2">
+                    Authentication Required
+                  </h3>
+                  <p className="text-amber-700 text-sm mb-3">
+                    You need to sign in to access the studio inbox. The Auth
+                    Test above shows you're not currently authenticated.
+                  </p>
+                  <button
+                    onClick={() => router.push("/login")}
+                    className="px-4 py-2 bg-oma-plum text-white rounded text-sm hover:bg-oma-plum/90 font-medium"
+                  >
+                    🔐 Sign In Now
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

@@ -104,7 +104,7 @@ export default function AuthTest() {
         console.error("Refresh error:", error);
         // If refresh fails, try to sign out and redirect to login
         await supabase.auth.signOut();
-        router.push("/auth/signin");
+        router.push("/login");
         return;
       }
 
@@ -114,18 +114,18 @@ export default function AuthTest() {
         window.location.reload();
       } else {
         console.log("❌ No session after refresh, redirecting to login");
-        router.push("/auth/signin");
+        router.push("/login");
       }
     } catch (error) {
       console.error("Fix auth error:", error);
       // Fallback: redirect to login
-      router.push("/auth/signin");
+      router.push("/login");
     }
   };
 
   const signOut = async () => {
     await supabase.auth.signOut();
-    router.push("/auth/signin");
+    router.push("/login");
   };
 
   useEffect(() => {
@@ -179,24 +179,43 @@ export default function AuthTest() {
       {(!status.session || status.apiTest.includes("❌")) &&
         !status.loading && (
           <div className="mt-4 pt-4 border-t border-blue-200">
-            <p className="text-sm text-blue-800 mb-3">
-              Try refreshing the page or signing out and back in if you see
-              authentication failures.
-            </p>
-            <div className="flex gap-2">
-              <button
-                onClick={fixAuth}
-                className="px-4 py-2 bg-green-600 text-white rounded text-sm hover:bg-green-700"
-              >
-                🔧 Fix Authentication
-              </button>
-              <button
-                onClick={signOut}
-                className="px-4 py-2 bg-gray-600 text-white rounded text-sm hover:bg-gray-700"
-              >
-                🚪 Sign Out & Re-login
-              </button>
-            </div>
+            {!status.session ? (
+              <>
+                <p className="text-sm text-blue-800 mb-3">
+                  <strong>You need to sign in first!</strong> You're not
+                  currently authenticated.
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => router.push("/login")}
+                    className="px-4 py-2 bg-oma-plum text-white rounded text-sm hover:bg-oma-plum/90 font-medium"
+                  >
+                    🔐 Go to Sign In Page
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="text-sm text-blue-800 mb-3">
+                  Try refreshing the page or signing out and back in if you see
+                  authentication failures.
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={fixAuth}
+                    className="px-4 py-2 bg-green-600 text-white rounded text-sm hover:bg-green-700"
+                  >
+                    🔧 Fix Authentication
+                  </button>
+                  <button
+                    onClick={signOut}
+                    className="px-4 py-2 bg-gray-600 text-white rounded text-sm hover:bg-gray-700"
+                  >
+                    🚪 Sign Out & Re-login
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         )}
     </div>
