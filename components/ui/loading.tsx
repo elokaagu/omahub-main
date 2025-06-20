@@ -1,42 +1,169 @@
 import React from "react";
+import { cn } from "@/lib/utils";
 
 interface LoadingProps {
-  size?: "sm" | "md" | "lg" | "xl";
+  size?: "xs" | "sm" | "md" | "lg" | "xl";
+  variant?: "spinner" | "dots" | "pulse" | "skeleton";
   className?: string;
+  text?: string;
+  fullScreen?: boolean;
 }
 
-export function Loading({ size = "md", className = "" }: LoadingProps) {
-  const sizeClasses = {
-    sm: "h-4 w-4",
-    md: "h-8 w-8",
-    lg: "h-12 w-12",
-    xl: "h-16 w-16",
-  };
+const sizeClasses = {
+  xs: "h-3 w-3",
+  sm: "h-4 w-4",
+  md: "h-6 w-6",
+  lg: "h-8 w-8",
+  xl: "h-12 w-12",
+};
+
+const LoadingSpinner = ({
+  size = "md",
+  className = "",
+}: {
+  size: LoadingProps["size"];
+  className?: string;
+}) => (
+  <div
+    className={cn(
+      "animate-spin rounded-full border-2 border-gray-300 border-t-oma-plum",
+      sizeClasses[size!],
+      className
+    )}
+  />
+);
+
+const LoadingDotsComponent = ({
+  size = "md",
+  className = "",
+}: {
+  size: LoadingProps["size"];
+  className?: string;
+}) => {
+  const dotSize =
+    size === "xs"
+      ? "h-1 w-1"
+      : size === "sm"
+        ? "h-1.5 w-1.5"
+        : size === "md"
+          ? "h-2 w-2"
+          : size === "lg"
+            ? "h-2.5 w-2.5"
+            : "h-3 w-3";
 
   return (
-    <div className={`flex items-center justify-center ${className}`}>
+    <div className={cn("flex space-x-1", className)}>
       <div
-        className={`${sizeClasses[size]} border-4 border-gray-200 border-t-oma-plum rounded-full animate-spin`}
-        style={{
-          animation: "spin 1s linear infinite",
-        }}
+        className={cn("bg-oma-plum rounded-full animate-bounce", dotSize)}
+        style={{ animationDelay: "0ms" }}
+      />
+      <div
+        className={cn("bg-oma-plum rounded-full animate-bounce", dotSize)}
+        style={{ animationDelay: "150ms" }}
+      />
+      <div
+        className={cn("bg-oma-plum rounded-full animate-bounce", dotSize)}
+        style={{ animationDelay: "300ms" }}
       />
     </div>
   );
-}
+};
 
-export function LoadingSpinner({ size = "md", className = "" }: LoadingProps) {
-  return <Loading size={size} className={className} />;
-}
+const LoadingPulse = ({
+  size = "md",
+  className = "",
+}: {
+  size: LoadingProps["size"];
+  className?: string;
+}) => (
+  <div
+    className={cn(
+      "animate-pulse bg-oma-plum/20 rounded-full",
+      sizeClasses[size!],
+      className
+    )}
+  />
+);
 
-export function LoadingPage() {
-  return (
-    <div className="flex items-center justify-center min-h-[60vh]">
-      <Loading size="lg" />
+const LoadingSkeleton = ({ className = "" }: { className?: string }) => (
+  <div className={cn("animate-pulse bg-gray-200 rounded", className)} />
+);
+
+export function Loading({
+  size = "md",
+  variant = "spinner",
+  className = "",
+  text,
+  fullScreen = false,
+}: LoadingProps) {
+  const loadingElement = () => {
+    switch (variant) {
+      case "dots":
+        return <LoadingDotsComponent size={size} className={className} />;
+      case "pulse":
+        return <LoadingPulse size={size} className={className} />;
+      case "skeleton":
+        return <LoadingSkeleton className={className} />;
+      default:
+        return <LoadingSpinner size={size} className={className} />;
+    }
+  };
+
+  const content = (
+    <div
+      className={cn(
+        "flex flex-col items-center justify-center gap-2",
+        text && "space-y-2"
+      )}
+    >
+      {loadingElement()}
+      {text && (
+        <p className="text-sm text-oma-cocoa/70 animate-pulse">{text}</p>
+      )}
     </div>
   );
+
+  if (fullScreen) {
+    return (
+      <div className="fixed inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-50">
+        {content}
+      </div>
+    );
+  }
+
+  return content;
 }
 
-export function LoadingButton() {
-  return <Loading size="sm" className="mr-2" />;
-}
+// Convenience components for common use cases
+export const LoadingSpinnerComponent = ({
+  size = "md",
+  className = "",
+}: LoadingProps) => (
+  <Loading size={size} variant="spinner" className={className} />
+);
+
+export const LoadingButton = ({
+  size = "sm",
+  className = "",
+}: LoadingProps) => (
+  <Loading size={size} variant="spinner" className={cn("mr-2", className)} />
+);
+
+export const LoadingPage = ({ text = "Loading..." }: { text?: string }) => (
+  <Loading size="lg" variant="spinner" text={text} fullScreen />
+);
+
+export const LoadingCard = ({ className = "" }: { className?: string }) => (
+  <Loading variant="skeleton" className={cn("h-48 w-full", className)} />
+);
+
+export const LoadingText = ({ className = "" }: { className?: string }) => (
+  <Loading variant="skeleton" className={cn("h-4 w-3/4", className)} />
+);
+
+export const LoadingDots = LoadingDotsComponent;
+
+// Legacy exports for backward compatibility
+export { LoadingSpinnerComponent as LoadingSpinner };
+
+export default Loading;

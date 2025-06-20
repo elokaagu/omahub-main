@@ -1,13 +1,21 @@
 "use client";
 
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Instagram, Globe, MessageCircle, Mail } from "lucide-react";
 import {
-  WhatsAppContact,
+  Instagram,
+  Globe,
+  MessageCircle,
+  Mail,
+  MapPin,
+  Phone,
+} from "lucide-react";
+import WhatsAppContact from "./whatsapp-contact";
+import {
   isValidWhatsAppNumber,
   formatPhoneForDisplay,
-} from "@/components/ui/whatsapp-contact";
+} from "@/lib/utils/phoneUtils";
 import type { BrandData } from "@/lib/data/brands";
 
 interface BrandContactSectionProps {
@@ -62,10 +70,9 @@ export function BrandContactSection({
                   variant="outline"
                   className="w-full bg-green-50 border-green-200 text-green-700 hover:bg-green-100 hover:border-green-300 hover:text-green-800 transition-all duration-200"
                   size="sm"
-                >
-                  <MessageCircle className="h-4 w-4 mr-2" />
-                  WhatsApp {formatPhoneForDisplay(brandData.whatsapp)}
-                </WhatsAppContact>
+                  showIcon={true}
+                  showText={true}
+                />
               )}
 
             {/* Instagram Link */}

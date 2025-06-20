@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
+import { supabase } from "@/lib/supabase";
+import { formatCurrency } from "@/lib/utils";
 
 // Types
 export interface Lead {
@@ -43,6 +45,7 @@ export interface Lead {
   commission_amount?: number;
   booking_date?: string;
   booking_status?: string;
+  brand_location?: string;
 }
 
 export interface Booking {
@@ -640,13 +643,6 @@ export function useCommissionMutations() {
 }
 
 // Utility functions
-export const formatCurrency = (amount: number, currency: string = "USD") => {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: currency,
-  }).format(amount);
-};
-
 export const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString("en-US", {
     year: "numeric",

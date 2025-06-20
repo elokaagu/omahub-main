@@ -18,11 +18,11 @@ import { NavigationLink } from "@/components/ui/navigation-link";
 import { getProductsByBrand } from "@/lib/services/productService";
 import { Product } from "@/lib/supabase";
 import { LazyImage } from "@/components/ui/lazy-image";
+import WhatsAppContact from "@/components/ui/whatsapp-contact";
 import {
-  WhatsAppContact,
   isValidWhatsAppNumber,
   formatPhoneForDisplay,
-} from "@/components/ui/whatsapp-contact";
+} from "@/lib/utils/phoneUtils";
 
 interface ClientBrandProfileProps {
   brandData: BrandData;
@@ -188,10 +188,9 @@ export default function ClientBrandProfile({
                   brandName={brandData.name}
                   variant="outline"
                   className="border-green-500 text-green-600 hover:bg-green-500 hover:text-white w-full sm:w-auto min-h-[44px] text-sm sm:text-base"
-                >
-                  <MessageCircle size={16} className="mr-2 flex-shrink-0" />
-                  WhatsApp
-                </WhatsAppContact>
+                  showIcon={true}
+                  showText={false}
+                />
               )}
             <Button
               onClick={handleOpenContactModal}
@@ -391,10 +390,9 @@ export default function ClientBrandProfile({
                     variant="outline"
                     className="w-full bg-green-50 border-green-200 text-green-700 hover:bg-green-100 hover:border-green-300 hover:text-green-800"
                     size="sm"
-                  >
-                    <MessageCircle className="h-4 w-4 mr-2" />
-                    WhatsApp {formatPhoneForDisplay(brandData.whatsapp)}
-                  </WhatsAppContact>
+                    showIcon={true}
+                    showText={true}
+                  />
                 )}
 
               {/* Instagram Link */}

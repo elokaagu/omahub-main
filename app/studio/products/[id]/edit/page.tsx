@@ -252,10 +252,9 @@ export default function EditProductPage() {
     }
   };
 
-  // Format price for display
+  // Format price for display - use centralized utility
   const formatPriceForDisplay = (price: string): string => {
-    if (!price || price === "") return "";
-    const numericPrice = parseFloat(price);
+    const numericPrice = parseFloat(price.replace(/,/g, ""));
     if (isNaN(numericPrice)) return price;
     return formatNumberWithCommas(numericPrice);
   };

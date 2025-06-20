@@ -6,11 +6,11 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, MapPin, Star } from "@/components/ui/icons";
 import { Instagram, Globe, MessageCircle } from "lucide-react";
+import WhatsAppContact from "@/components/ui/whatsapp-contact";
 import {
-  WhatsAppContact,
   isValidWhatsAppNumber,
   formatPhoneForDisplay,
-} from "@/components/ui/whatsapp-contact";
+} from "@/lib/utils/phoneUtils";
 import ContactDesignerModal from "@/components/ContactDesignerModal";
 import { ReviewForm } from "@/components/ui/review-form";
 import { ReviewDisplay } from "@/components/ui/review-display";
@@ -129,10 +129,9 @@ export default function ClientBrandProfile({
                   brandName={brandData.name}
                   variant="outline"
                   className="border-green-500 text-green-600 hover:bg-green-500 hover:text-white"
-                >
-                  <MessageCircle size={16} className="mr-2" />
-                  WhatsApp
-                </WhatsAppContact>
+                  showIcon={true}
+                  showText={false}
+                />
               )}
             <Button
               onClick={handleOpenContactModal}
@@ -234,10 +233,9 @@ export default function ClientBrandProfile({
                     variant="outline"
                     className="w-full bg-green-50 border-green-200 text-green-700 hover:bg-green-100 hover:border-green-300 hover:text-green-800"
                     size="sm"
-                  >
-                    <MessageCircle className="h-4 w-4 mr-2" />
-                    WhatsApp {formatPhoneForDisplay(brandData.whatsapp)}
-                  </WhatsAppContact>
+                    showIcon={true}
+                    showText={true}
+                  />
                 )}
 
               {/* Instagram Link */}
