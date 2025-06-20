@@ -15,6 +15,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Loading } from "@/components/ui/loading";
 import StudioDebug from "@/components/studio/StudioDebug";
 import AuthDiagnostic from "@/components/studio/AuthDiagnostic";
+import SessionFixer from "@/components/studio/SessionFixer";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
@@ -170,6 +171,9 @@ export default function StudioPage() {
 
           {/* Detailed Debug Component */}
           <StudioDebug />
+
+          {/* Session Fixer */}
+          <SessionFixer />
         </div>
       )}
 
