@@ -230,6 +230,13 @@ export default function LeadsTrackingDashboard() {
           </p>
         </Card>
         <Card className="p-4">
+          <h3 className="text-sm font-medium text-gray-500">Qualified Leads</h3>
+          <p className="text-2xl font-semibold">
+            {analytics?.qualified_leads || 0}
+          </p>
+          <p className="text-sm text-gray-500">Ready for follow-up</p>
+        </Card>
+        <Card className="p-4">
           <h3 className="text-sm font-medium text-gray-500">Conversion Rate</h3>
           <p className="text-2xl font-semibold">
             {analytics?.conversion_rate || 0}%
@@ -239,23 +246,12 @@ export default function LeadsTrackingDashboard() {
           </p>
         </Card>
         <Card className="p-4">
-          <h3 className="text-sm font-medium text-gray-500">Total Revenue</h3>
+          <h3 className="text-sm font-medium text-gray-500">Total Bookings</h3>
           <p className="text-2xl font-semibold">
-            {formatCurrency(analytics?.total_booking_value || 0)}
+            {analytics?.total_bookings || 0}
           </p>
           <p className="text-sm text-gray-500">
-            This month: {formatCurrency(analytics?.this_month_revenue || 0)}
-          </p>
-        </Card>
-        <Card className="p-4">
-          <h3 className="text-sm font-medium text-gray-500">
-            Commission Earned
-          </h3>
-          <p className="text-2xl font-semibold">
-            {formatCurrency(analytics?.total_commission_earned || 0)}
-          </p>
-          <p className="text-sm text-gray-500">
-            This month: {formatCurrency(analytics?.this_month_commission || 0)}
+            This month: {analytics?.this_month_bookings || 0}
           </p>
         </Card>
       </div>
