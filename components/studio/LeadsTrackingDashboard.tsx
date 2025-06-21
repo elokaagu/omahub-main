@@ -67,17 +67,28 @@ const priorityColors = {
 function SessionDebugInfo() {
   const { user, session } = useAuth();
   const [supabaseSession, setSupabaseSession] = useState<any>(null);
+  const [lastCheck, setLastCheck] = useState(0);
 
   useEffect(() => {
+    const now = Date.now();
+    // Only check Supabase session every 10 seconds to prevent excessive calls
+    if (now - lastCheck < 10000) return;
+
     const checkSupabaseSession = async () => {
-      const supabase = createClient();
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      setSupabaseSession(session);
+      try {
+        const supabase = createClient();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        setSupabaseSession(session);
+        setLastCheck(now);
+      } catch (error) {
+        console.error("Error checking Supabase session:", error);
+      }
     };
+
     checkSupabaseSession();
-  }, []);
+  }, [user?.email, lastCheck]); // Only re-check when user email changes or after interval
 
   if (process.env.NODE_ENV !== "development") return null;
 
@@ -103,6 +114,9 @@ function SessionDebugInfo() {
           {supabaseSession?.expires_at
             ? new Date(supabaseSession.expires_at * 1000).toLocaleString()
             : "N/A"}
+        </p>
+        <p className="text-xs text-gray-500">
+          Last checked: {new Date(lastCheck).toLocaleTimeString()}
         </p>
       </div>
     </div>
@@ -142,33 +156,47 @@ export default function LeadsTrackingDashboard() {
   } = useLeadsAnalytics();
   const { updateLead } = useLeadMutations();
 
-  // Debug logging
+  // Debug logging - throttle to prevent spam
   useEffect(() => {
-    console.log("🔍 LeadsTrackingDashboard Debug:", {
-      hasUser: !!user,
-      hasSession: !!session,
-      userRole: user?.role,
-      userEmail: user?.email,
-      authLoading,
-      leadsLoading,
-      analyticsLoading,
-      leadsError,
-      analyticsError,
-      leadsCount: leads?.length || 0,
-      totalLeads: total,
-      analyticsData: analytics,
-    });
+    const timeoutId = setTimeout(() => {
+      console.log("🔍 LeadsTrackingDashboard Debug:", {
+        hasUser: !!user,
+        hasSession: !!session,
+        userRole: user?.role,
+        userEmail: user?.email,
+        authLoading,
+        leadsLoading,
+        analyticsLoading,
+        leadsError,
+        analyticsError,
+        leadsCount: leads?.length || 0,
+        totalLeads: total,
+        analyticsData: analytics
+          ? {
+              total_leads: analytics.total_leads,
+              qualified_leads: analytics.qualified_leads,
+              conversion_rate: analytics.conversion_rate,
+              total_bookings: analytics.total_bookings,
+            }
+          : null,
+      });
+    }, 1000); // Debounce debug logging
+
+    return () => clearTimeout(timeoutId);
   }, [
-    user,
-    session,
+    user?.email, // Only track email, not entire user object
+    user?.role, // Only track role, not entire user object
+    !!session, // Only track boolean presence
     authLoading,
-    leads,
-    analytics,
     leadsLoading,
     analyticsLoading,
     leadsError,
     analyticsError,
     total,
+    analytics?.total_leads, // Only track specific analytics values
+    analytics?.qualified_leads,
+    analytics?.conversion_rate,
+    analytics?.total_bookings,
   ]);
 
   const handleStatusChange = async (

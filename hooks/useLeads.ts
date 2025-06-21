@@ -157,11 +157,30 @@ export function useLeads(filters?: {
   const [error, setError] = useState<string | null>(null);
   const [total, setTotal] = useState(0);
 
-  // Add refs to prevent race conditions
+  // Add refs to prevent race conditions and implement request deduplication
   const isFetchingRef = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const lastFetchTimeRef = useRef(0);
+  const lastFiltersRef = useRef<string>("");
+
+  // Minimum time between requests: 2 seconds
+  const MIN_REQUEST_INTERVAL = 2000;
 
   const fetchLeads = useCallback(async () => {
+    const now = Date.now();
+    const filtersString = JSON.stringify(filters);
+
+    // Prevent too frequent requests with same filters
+    if (
+      now - lastFetchTimeRef.current < MIN_REQUEST_INTERVAL &&
+      lastFiltersRef.current === filtersString
+    ) {
+      console.log(
+        "🔄 useLeads: Request too recent with same filters, skipping..."
+      );
+      return;
+    }
+
     // Prevent concurrent fetches
     if (isFetchingRef.current) {
       console.log("🔄 useLeads: Fetch already in progress, skipping...");
@@ -178,6 +197,8 @@ export function useLeads(filters?: {
 
     try {
       isFetchingRef.current = true;
+      lastFetchTimeRef.current = now;
+      lastFiltersRef.current = filtersString;
       setLoading(true);
       setError(null);
 
@@ -191,6 +212,10 @@ export function useLeads(filters?: {
       const response = await fetch(`/api/admin/leads?${params.toString()}`, {
         credentials: "include",
         signal: abortController.signal,
+        headers: {
+          "Cache-Control": "no-cache",
+          Pragma: "no-cache",
+        },
       });
 
       if (!response.ok) {
@@ -212,8 +237,17 @@ export function useLeads(filters?: {
       }
 
       console.error("Error fetching leads:", err);
-      setError(err instanceof Error ? err.message : "Failed to fetch leads");
-      toast.error("Failed to fetch leads");
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to fetch leads";
+      setError(errorMessage);
+
+      // Only show toast for non-network errors to avoid spam
+      if (
+        !errorMessage.includes("Failed to fetch") &&
+        !errorMessage.includes("NetworkError")
+      ) {
+        toast.error("Failed to fetch leads");
+      }
     } finally {
       isFetchingRef.current = false;
       setLoading(false);
@@ -227,16 +261,26 @@ export function useLeads(filters?: {
     filters?.offset,
   ]); // Stable dependencies
 
+  // Use a more stable effect that doesn't recreate on every fetchLeads change
   useEffect(() => {
-    fetchLeads();
+    const timeoutId = setTimeout(() => {
+      fetchLeads();
+    }, 100); // Small delay to batch rapid filter changes
 
     // Cleanup function
     return () => {
+      clearTimeout(timeoutId);
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
     };
-  }, [fetchLeads]);
+  }, [
+    filters?.brand_id,
+    filters?.status,
+    filters?.source,
+    filters?.limit,
+    filters?.offset,
+  ]); // Direct dependencies instead of fetchLeads
 
   return {
     leads,
@@ -347,11 +391,45 @@ export function useLeadsAnalytics() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Add refs to prevent race conditions
+  // Add refs to prevent race conditions and implement request deduplication
   const isFetchingRef = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const lastFetchTimeRef = useRef(0);
+  const cacheRef = useRef<{
+    data: LeadsAnalytics | null;
+    timestamp: number;
+  } | null>(null);
 
-  const fetchAnalytics = useCallback(async () => {
+  // Cache duration: 30 seconds
+  const CACHE_DURATION = 30000;
+  // Minimum time between requests: 5 seconds
+  const MIN_REQUEST_INTERVAL = 5000;
+
+  const fetchAnalytics = useCallback(async (forceRefresh = false) => {
+    const now = Date.now();
+
+    // Check cache first (unless forcing refresh)
+    if (
+      !forceRefresh &&
+      cacheRef.current &&
+      now - cacheRef.current.timestamp < CACHE_DURATION
+    ) {
+      console.log("🔄 useLeadsAnalytics: Using cached data");
+      setAnalytics(cacheRef.current.data);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
+    // Prevent too frequent requests
+    if (
+      !forceRefresh &&
+      now - lastFetchTimeRef.current < MIN_REQUEST_INTERVAL
+    ) {
+      console.log("🔄 useLeadsAnalytics: Request too recent, skipping...");
+      return;
+    }
+
     // Prevent concurrent fetches
     if (isFetchingRef.current) {
       console.log(
@@ -370,23 +448,44 @@ export function useLeadsAnalytics() {
 
     try {
       isFetchingRef.current = true;
+      lastFetchTimeRef.current = now;
       setLoading(true);
       setError(null);
+
+      console.log("📊 useLeadsAnalytics: Fetching analytics data...");
 
       const response = await fetch("/api/admin/leads?action=analytics", {
         credentials: "include",
         signal: abortController.signal,
+        headers: {
+          "Cache-Control": "no-cache",
+          Pragma: "no-cache",
+        },
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch analytics: ${response.status}`);
+        throw new Error(
+          `Failed to fetch analytics: ${response.status} ${response.statusText}`
+        );
       }
 
       const data = await response.json();
 
       // Only update state if the request wasn't aborted
       if (!abortController.signal.aborted) {
-        setAnalytics(data.analytics || null);
+        const analyticsData = data.analytics || null;
+        setAnalytics(analyticsData);
+
+        // Update cache
+        cacheRef.current = {
+          data: analyticsData,
+          timestamp: now,
+        };
+
+        console.log(
+          "✅ useLeadsAnalytics: Analytics data fetched successfully",
+          analyticsData
+        );
       }
     } catch (err) {
       // Don't show errors for aborted requests
@@ -395,18 +494,26 @@ export function useLeadsAnalytics() {
         return;
       }
 
-      console.error("Error fetching analytics:", err);
-      setError(
-        err instanceof Error ? err.message : "Failed to fetch analytics"
-      );
-      toast.error("Failed to fetch analytics");
+      console.error("❌ useLeadsAnalytics: Error fetching analytics:", err);
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to fetch analytics";
+      setError(errorMessage);
+
+      // Only show toast for non-network errors to avoid spam
+      if (
+        !errorMessage.includes("Failed to fetch") &&
+        !errorMessage.includes("NetworkError")
+      ) {
+        toast.error("Failed to fetch analytics");
+      }
     } finally {
       isFetchingRef.current = false;
       setLoading(false);
       abortControllerRef.current = null;
     }
-  }, []); // No dependencies - analytics don't need filters
+  }, []); // No dependencies to prevent infinite loops
 
+  // Initial fetch on mount
   useEffect(() => {
     fetchAnalytics();
 
@@ -416,13 +523,13 @@ export function useLeadsAnalytics() {
         abortControllerRef.current.abort();
       }
     };
-  }, [fetchAnalytics]);
+  }, []); // Empty dependency array - only run on mount
 
   return {
     analytics,
     loading,
     error,
-    refetch: fetchAnalytics,
+    refetch: () => fetchAnalytics(true), // Force refresh when explicitly called
   };
 }
 

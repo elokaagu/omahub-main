@@ -172,11 +172,18 @@ export async function GET(request: NextRequest) {
 
     if (action === "analytics") {
       try {
-        console.log("📊 Fetching analytics data...");
+        console.log(
+          "📊 Fetching analytics data for user:",
+          user.email,
+          "role:",
+          profile.role
+        );
 
-        // Call the analytics function
+        // Call the analytics function with the user ID
         const { data: analyticsData, error: analyticsError } =
-          await supabase.rpc("get_leads_analytics");
+          await supabase.rpc("get_leads_analytics", {
+            admin_user_id: user.id,
+          });
 
         if (analyticsError) {
           console.error("Analytics function error:", analyticsError);
@@ -186,9 +193,39 @@ export async function GET(request: NextRequest) {
             "⚠️ Analytics function failed, using fallback calculation"
           );
 
-          const { data: leads, error: leadsError } = await supabase
-            .from("leads")
-            .select("*");
+          // Build the appropriate query based on user role
+          let leadsQuery = supabase.from("leads").select("*");
+
+          // Apply role-based filtering for fallback as well
+          if (profile.role === "brand_admin") {
+            if (!profile.owned_brands || profile.owned_brands.length === 0) {
+              const emptyAnalytics = {
+                total_leads: 0,
+                qualified_leads: 0,
+                converted_leads: 0,
+                total_bookings: 0,
+                total_booking_value: 0,
+                total_commission_earned: 0,
+                average_booking_value: 0,
+                conversion_rate: 0,
+                this_month_leads: 0,
+                this_month_bookings: 0,
+                this_month_revenue: 0,
+                this_month_commission: 0,
+                top_performing_brands: [],
+                leads_by_source: {},
+                bookings_by_type: {},
+                monthly_trends: [],
+              };
+              console.log(
+                "✅ Returning empty analytics for brand admin with no brands"
+              );
+              return NextResponse.json({ analytics: emptyAnalytics });
+            }
+            leadsQuery = leadsQuery.in("brand_id", profile.owned_brands);
+          }
+
+          const { data: leads, error: leadsError } = await leadsQuery;
 
           if (leadsError) {
             console.error("Fallback leads query error:", leadsError);
@@ -198,8 +235,13 @@ export async function GET(request: NextRequest) {
             );
           }
 
-          // Calculate basic analytics
+          // Calculate basic analytics from the filtered leads
           const totalLeads = leads?.length || 0;
+          const qualifiedLeads =
+            leads?.filter((lead) => lead.status === "qualified").length || 0;
+          const convertedLeads =
+            leads?.filter((lead) => lead.status === "converted").length || 0;
+
           const thisMonthLeads =
             leads?.filter((lead) => {
               const leadDate = new Date(lead.created_at);
@@ -210,39 +252,53 @@ export async function GET(request: NextRequest) {
               );
             }).length || 0;
 
+          // Calculate leads by source
+          const leadsBySource =
+            leads?.reduce(
+              (acc, lead) => {
+                acc[lead.source] = (acc[lead.source] || 0) + 1;
+                return acc;
+              },
+              {} as Record<string, number>
+            ) || {};
+
           const fallbackData = {
             total_leads: totalLeads,
+            qualified_leads: qualifiedLeads,
+            converted_leads: convertedLeads,
+            total_bookings: 0,
+            total_booking_value: 0,
+            total_commission_earned: 0,
+            average_booking_value: 0,
+            conversion_rate:
+              totalLeads > 0
+                ? Math.round((convertedLeads / totalLeads) * 100)
+                : 0,
             this_month_leads: thisMonthLeads,
             this_month_bookings: 0,
             this_month_revenue: 0,
             this_month_commission: 0,
-            total_commission_earned: 0,
-            average_booking_value: 0,
-            conversion_rate:
-              totalLeads > 0 ? ((0 / totalLeads) * 100).toFixed(1) : "0.0",
             top_performing_brands: [],
-            leads_by_source: {
-              website: 0,
-              instagram: 0,
-              referral: 0,
-              whatsapp: 0,
-              other: 0,
-            },
-            bookings_by_type: {
-              consultation: 0,
-              service: 0,
-              product: 0,
-              other: 0,
-            },
+            leads_by_source: leadsBySource,
+            bookings_by_type: {},
             monthly_trends: [],
           };
 
-          console.log("✅ Returning fallback analytics data");
+          console.log("✅ Returning fallback analytics data:", fallbackData);
           return NextResponse.json({ analytics: fallbackData });
         }
 
-        console.log("✅ Analytics data fetched successfully");
-        return NextResponse.json({ analytics: analyticsData });
+        console.log(
+          "✅ Analytics data fetched successfully from function:",
+          analyticsData
+        );
+
+        // The function returns an array, so we need to get the first item
+        const analytics = Array.isArray(analyticsData)
+          ? analyticsData[0]
+          : analyticsData;
+
+        return NextResponse.json({ analytics });
       } catch (error) {
         console.error("Analytics error:", error);
         return NextResponse.json(
