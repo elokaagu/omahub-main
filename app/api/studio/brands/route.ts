@@ -1,3 +1,4 @@
+import { randomUUID } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
@@ -60,7 +61,11 @@ export async function POST(request: NextRequest) {
     // Create the brand
     const { data: newBrand, error: brandError } = await supabaseAdmin
       .from("brands")
-      .insert(body)
+      .insert({
+        ...body,
+        id: randomUUID(),
+        rating: 5.0, // Default rating for new brands
+      })
       .select()
       .single();
 
