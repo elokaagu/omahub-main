@@ -18,104 +18,18 @@ import {
   CheckCircle,
   ChevronDown,
 } from "lucide-react";
-import { getBrandsByCategory } from "@/lib/services/brandService";
 
 export default function HowItWorksClient() {
   const [openFaq, setOpenFaq] = useState<string | null>(null);
-  const [categoryImages, setCategoryImages] = useState({
+
+  // Static category images that are confirmed to exist
+  const categoryImages = {
     Bridal: "/lovable-uploads/57cc6a40-0f0d-4a7d-8786-41f15832ebfb.png",
     "Ready to Wear":
       "/lovable-uploads/4a7c7e86-6cde-4d07-a246-a5aa4cb6fa51.png",
     Accessories: "/lovable-uploads/25c3fe26-3fc4-43ef-83ac-6931a74468c0.png",
     Tailoring: "/lovable-uploads/99ca757a-bed8-422e-b155-0b9d365b58e0.png",
-  });
-  const [imagesLoaded, setImagesLoaded] = useState(false);
-
-  // Load dynamic category images
-  useEffect(() => {
-    const loadCategoryImages = async () => {
-      try {
-        console.log(
-          "🖼️ Loading dynamic category images for How It Works page..."
-        );
-
-        // Define fallback images
-        const fallbackImages = {
-          Bridal: "/lovable-uploads/57cc6a40-0f0d-4a7d-8786-41f15832ebfb.png",
-          "Ready to Wear":
-            "/lovable-uploads/4a7c7e86-6cde-4d07-a246-a5aa4cb6fa51.png",
-          Accessories:
-            "/lovable-uploads/25c3fe26-3fc4-43ef-83ac-6931a74468c0.png",
-          Tailoring:
-            "/lovable-uploads/99ca757a-bed8-422e-b155-0b9d365b58e0.png",
-        };
-
-        // Set fallback images immediately
-        setCategoryImages(fallbackImages);
-        setImagesLoaded(true);
-
-        // Try to get dynamic images for each category
-        const categoryMappings = {
-          Bridal: "Bridal",
-          "Ready to Wear": "Ready to Wear",
-          Accessories: "Accessories",
-          Tailoring: "Bridal", // Map Tailoring to Bridal since we don't have a separate Tailoring category
-        };
-
-        const newImages = { ...fallbackImages };
-        const usedBrandIds = new Set();
-
-        for (const [displayCategory, dbCategory] of Object.entries(
-          categoryMappings
-        )) {
-          try {
-            const brands = await getBrandsByCategory(dbCategory);
-            // Filter out brands already used for other categories
-            const availableBrands = brands.filter(
-              (b) => !usedBrandIds.has(b.id)
-            );
-
-            if (availableBrands.length > 0) {
-              const randomBrand =
-                availableBrands[
-                  Math.floor(Math.random() * availableBrands.length)
-                ];
-              if (randomBrand.image && randomBrand.image.trim()) {
-                newImages[displayCategory as keyof typeof newImages] =
-                  randomBrand.image;
-                usedBrandIds.add(randomBrand.id);
-                console.log(
-                  `✅ Using dynamic image for ${displayCategory}:`,
-                  randomBrand.image
-                );
-              } else {
-                console.log(
-                  `📌 Using fallback for ${displayCategory} (no brand image)`
-                );
-              }
-            } else {
-              console.log(
-                `📌 Using fallback for ${displayCategory} (no available brands)`
-              );
-            }
-          } catch (error) {
-            console.error(
-              `❌ Error fetching brands for ${displayCategory}:`,
-              error
-            );
-          }
-        }
-
-        // Update with dynamic images if any were found
-        setCategoryImages(newImages);
-        console.log("🎯 Final category images for How It Works:", newImages);
-      } catch (error) {
-        console.error("❌ Error loading category images:", error);
-      }
-    };
-
-    loadCategoryImages();
-  }, []);
+  };
 
   const toggleFaq = (id: string) => {
     setOpenFaq(openFaq === id ? null : id);
@@ -338,27 +252,6 @@ export default function HowItWorksClient() {
           />
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
-            {/* Debug info */}
-            {process.env.NODE_ENV === "development" && (
-              <div className="col-span-full text-xs text-gray-500 text-center mb-4">
-                Debug: Bridal:{" "}
-                {categoryImages.Bridal.substring(
-                  categoryImages.Bridal.lastIndexOf("/") + 1
-                )}{" "}
-                | Ready to Wear:{" "}
-                {categoryImages["Ready to Wear"].substring(
-                  categoryImages["Ready to Wear"].lastIndexOf("/") + 1
-                )}{" "}
-                | Accessories:{" "}
-                {categoryImages.Accessories.substring(
-                  categoryImages.Accessories.lastIndexOf("/") + 1
-                )}{" "}
-                | Tailoring:{" "}
-                {categoryImages.Tailoring.substring(
-                  categoryImages.Tailoring.lastIndexOf("/") + 1
-                )}
-              </div>
-            )}
             {[
               {
                 name: "Bridal",
@@ -398,16 +291,6 @@ export default function HowItWorksClient() {
                     className="object-cover transition-transform duration-300 group-hover:scale-105"
                     sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 25vw"
                     quality={80}
-                    onLoad={() =>
-                      console.log(
-                        `✅ How It Works category image loaded: ${category.name} - ${category.image}`
-                      )
-                    }
-                    onError={() =>
-                      console.error(
-                        `❌ How It Works category image failed: ${category.name} - ${category.image}`
-                      )
-                    }
                     fallback={
                       <div className="absolute inset-0 bg-gradient-to-br from-oma-beige to-oma-cream flex items-center justify-center">
                         <div className="text-center text-oma-cocoa">
