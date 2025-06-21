@@ -238,11 +238,11 @@ export async function GET(request: NextRequest) {
           };
 
           console.log("✅ Returning fallback analytics data");
-          return NextResponse.json(fallbackData);
+          return NextResponse.json({ analytics: fallbackData });
         }
 
         console.log("✅ Analytics data fetched successfully");
-        return NextResponse.json(analyticsData);
+        return NextResponse.json({ analytics: analyticsData });
       } catch (error) {
         console.error("Analytics error:", error);
         return NextResponse.json(
