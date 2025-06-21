@@ -35,9 +35,9 @@ export {
 } from "./utils/rememberMe";
 
 export function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("en-NG", {
+  return new Intl.NumberFormat("en-GB", {
     style: "currency",
-    currency: "NGN",
+    currency: "GBP",
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(amount);
