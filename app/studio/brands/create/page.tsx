@@ -130,6 +130,20 @@ export default function CreateBrandPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Debug logging
+    console.log("🔍 Brand Creation Debug:", {
+      hasUser: !!user,
+      userRole: user?.role,
+      userEmail: user?.email,
+      formData: {
+        name: formData.name,
+        description: formData.description,
+        categories: formData.categories,
+        location: formData.location,
+        image: formData.image,
+      },
+    });
+
     // Check if user is authenticated
     if (!user) {
       toast.error("You must be logged in to create a brand");
@@ -174,6 +188,24 @@ export default function CreateBrandPage() {
       );
     }
 
+    const payload = {
+      name: formData.name,
+      description: formData.description,
+      long_description: formData.long_description || formData.description,
+      location: formData.location,
+      price_range: priceRange || "Contact for pricing",
+      category: formData.categories[0],
+      categories: formData.categories,
+      image: formData.image,
+      is_verified: false,
+      website: formData.website || undefined,
+      instagram: formData.instagram || undefined,
+      whatsapp: formData.whatsapp || undefined,
+      founded_year: formData.founded_year || undefined,
+    };
+
+    console.log("📤 Sending brand creation payload:", payload);
+
     setSubmitting(true);
     try {
       const response = await fetch("/api/studio/brands", {
@@ -181,24 +213,11 @@ export default function CreateBrandPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          name: formData.name,
-          description: formData.description,
-          long_description: formData.long_description || formData.description,
-          location: formData.location,
-          price_range: priceRange || "Contact for pricing",
-          category: formData.categories[0],
-          categories: formData.categories,
-          image: formData.image,
-          is_verified: false,
-          website: formData.website || undefined,
-          instagram: formData.instagram || undefined,
-          whatsapp: formData.whatsapp || undefined,
-          founded_year: formData.founded_year || undefined,
-        }),
+        body: JSON.stringify(payload),
       });
 
       const data = await response.json();
+      console.log("📥 API Response:", { status: response.status, data });
 
       if (!response.ok) {
         throw new Error(data.error || "Failed to create brand");
@@ -207,7 +226,7 @@ export default function CreateBrandPage() {
       toast.success("Brand created successfully!");
       router.push(`/studio/brands/${data.brand.id}`);
     } catch (error) {
-      console.error("Error creating brand:", error);
+      console.error("❌ Error creating brand:", error);
       toast.error(
         error instanceof Error ? error.message : "Failed to create brand"
       );
@@ -232,6 +251,47 @@ export default function CreateBrandPage() {
         </Button>
         <h1 className="text-3xl font-canela text-gray-900">Create New Brand</h1>
       </div>
+
+      {/* Debug Info in Development */}
+      {process.env.NODE_ENV === "development" && (
+        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm">
+          <p className="font-semibold text-blue-800 mb-2">
+            🔍 Debug Information:
+          </p>
+          <div className="space-y-1 text-blue-700">
+            <p>• User Authenticated: {user ? "✅ Yes" : "❌ No"}</p>
+            {user && (
+              <>
+                <p>• User Email: {user.email}</p>
+                <p>• User Role: {user.role}</p>
+                <p>• User ID: {user.id}</p>
+              </>
+            )}
+            <p>
+              • Form Valid:{" "}
+              {formData.name &&
+              formData.description &&
+              formData.categories.length > 0 &&
+              formData.location &&
+              formData.image
+                ? "✅ Yes"
+                : "❌ No"}
+            </p>
+            <p>
+              • Missing Fields:{" "}
+              {[
+                !formData.name && "Name",
+                !formData.description && "Description",
+                !formData.categories.length && "Categories",
+                !formData.location && "Location",
+                !formData.image && "Image",
+              ]
+                .filter(Boolean)
+                .join(", ") || "None"}
+            </p>
+          </div>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
