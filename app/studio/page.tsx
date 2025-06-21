@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase-unified";
 import type { Database } from "@/lib/types/supabase";
-import AnalyticsDashboard from "@/components/studio/AnalyticsDashboard";
 import LeadsTrackingDashboard from "@/components/studio/LeadsTrackingDashboard";
 import RecentAccountsWidget from "./dashboard/RecentAccountsWidget";
 import {
@@ -148,12 +147,6 @@ export default function StudioPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8">
       <h1 className="text-4xl font-canela mb-8 text-oma-plum">Studio</h1>
 
-      {/* Analytics Dashboard */}
-      {(isSuperAdmin || isAdmin) && (
-        <div className="grid grid-cols-1 gap-8">
-          <AnalyticsDashboard />
-        </div>
-      )}
 
       {/* Leads Tracking Dashboard */}
       {(isSuperAdmin || isAdmin || isBrandOwner) && (
