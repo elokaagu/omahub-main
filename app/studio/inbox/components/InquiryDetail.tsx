@@ -89,7 +89,11 @@ export default function InquiryDetail({
       setError(null);
 
       const response = await fetch(`/api/studio/inbox/${inquiryId}`, {
+        method: "GET",
         credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
       });
 
       if (!response.ok) {

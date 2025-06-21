@@ -21,6 +21,7 @@ import ProfileFixer from "@/components/studio/ProfileFixer";
 import EnvChecker from "@/components/studio/EnvChecker";
 import { supabaseHelpers } from "@/lib/utils/supabase-helpers";
 import AuthFixer from "@/components/studio/AuthFixer";
+import InboxTest from "@/components/studio/InboxTest";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
@@ -182,6 +183,9 @@ export default function StudioPage() {
 
           {/* Auth Fixer Component */}
           <AuthFixer />
+
+          {/* Inbox Test Component */}
+          <InboxTest />
 
           {/* Authentication Diagnostic */}
           <AuthDiagnostic />

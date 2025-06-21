@@ -90,7 +90,11 @@ export default function InquiryList({
       });
 
       const response = await fetch(`/api/studio/inbox?${params}`, {
+        method: "GET",
         credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
       });
 
       if (!response.ok) {

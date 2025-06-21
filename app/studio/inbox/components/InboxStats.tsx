@@ -35,7 +35,11 @@ export default function InboxStats() {
     try {
       setLoading(true);
       const response = await fetch("/api/studio/inbox/stats", {
+        method: "GET",
         credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
       });
 
       if (!response.ok) {
