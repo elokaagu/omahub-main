@@ -220,6 +220,19 @@ export default function CreateBrandPage() {
       console.log("📥 API Response:", { status: response.status, data });
 
       if (!response.ok) {
+        // Handle specific error cases
+        if (response.status === 401) {
+          toast.error(
+            "You must be logged in to create a brand. Please log in and try again."
+          );
+          return;
+        }
+        if (response.status === 403) {
+          toast.error(
+            "You don't have permission to create brands. Contact an administrator."
+          );
+          return;
+        }
         throw new Error(data.error || "Failed to create brand");
       }
 
@@ -227,9 +240,19 @@ export default function CreateBrandPage() {
       router.push(`/studio/brands/${data.brand.id}`);
     } catch (error) {
       console.error("❌ Error creating brand:", error);
-      toast.error(
-        error instanceof Error ? error.message : "Failed to create brand"
-      );
+
+      // Show more specific error messages
+      if (error instanceof Error) {
+        if (error.message.includes("fetch")) {
+          toast.error(
+            "Network error. Please check your connection and try again."
+          );
+        } else {
+          toast.error(error.message);
+        }
+      } else {
+        toast.error("Failed to create brand");
+      }
     } finally {
       setSubmitting(false);
     }
