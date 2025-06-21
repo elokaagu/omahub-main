@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createClient } from "@/lib/supabase-unified";
 import type { Database } from "@/lib/types/supabase";
 import AnalyticsDashboard from "@/components/studio/AnalyticsDashboard";
 import LeadsTrackingDashboard from "@/components/studio/LeadsTrackingDashboard";
@@ -22,6 +22,8 @@ import EnvChecker from "@/components/studio/EnvChecker";
 import { supabaseHelpers } from "@/lib/utils/supabase-helpers";
 import AuthFixer from "@/components/studio/AuthFixer";
 import InboxTest from "@/components/studio/InboxTest";
+import AuthenticationFixer from "@/components/studio/AuthenticationFixer";
+import AuthenticationTester from "@/components/studio/AuthenticationTester";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
@@ -30,7 +32,6 @@ export default function StudioPage() {
   const [userPermissions, setUserPermissions] = useState<Permission[]>([]);
   const [userProfile, setUserProfile] = useState<Profile | null>(null);
   const { user, refreshUserProfile } = useAuth();
-  const supabase = createClientComponentClient<Database>();
 
   useEffect(() => {
     async function fetchData() {
@@ -98,7 +99,7 @@ export default function StudioPage() {
     } else {
       setLoading(false);
     }
-  }, [user, supabase]); // Simplified dependency array - only user and supabase
+  }, [user]); // Simplified dependency array - only user
 
   if (loading) {
     return (
@@ -186,6 +187,12 @@ export default function StudioPage() {
 
           {/* Inbox Test Component */}
           <InboxTest />
+
+          {/* NEW: Comprehensive Authentication Fixer */}
+          <AuthenticationFixer />
+
+          {/* NEW: Authentication System Tester */}
+          <AuthenticationTester />
 
           {/* Authentication Diagnostic */}
           <AuthDiagnostic />

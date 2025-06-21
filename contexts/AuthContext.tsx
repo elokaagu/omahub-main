@@ -9,7 +9,7 @@ import React, {
   useRef,
 } from "react";
 import { Session } from "@supabase/supabase-js";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-unified";
 import { getProfile, User, UserRole } from "@/lib/services/authService";
 import { AuthDebug } from "@/lib/utils/debug";
 import { toast } from "sonner";
@@ -69,7 +69,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const urlParams = new URLSearchParams(window.location.search);
     const shouldRefreshSession = urlParams.get("session_refresh");
 
-    if (shouldRefreshSession === "true" && supabase) {
+    if (shouldRefreshSession === "true") {
       AuthDebug.log(
         "🔄 Session refresh signal detected, refreshing session..."
       );
@@ -82,6 +82,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       window.history.replaceState({}, "", newUrl);
 
       // Force refresh the session
+      const supabase = createClient();
       supabase.auth.refreshSession().then(({ data, error }) => {
         if (error) {
           AuthDebug.error("❌ Session refresh failed:", error);
@@ -223,8 +224,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Set up auth state listener
   useEffect(() => {
     if (!isClient) return;
+
+    AuthDebug.log("🔄 Setting up auth state listener...");
+
+    const supabase = createClient();
 
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -240,89 +246,54 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, [isClient]);
+  }, [isClient, handleAuthStateChange]);
 
-  // Separate useEffect for real-time profile updates
+  // Set up profile updates subscription
   useEffect(() => {
-    if (!isClient || !session?.user?.id) return;
+    if (!session?.user?.id || !isClient) return;
 
-    console.log(
-      "🔄 Setting up real-time profile updates for user:",
+    AuthDebug.log(
+      "🔄 Setting up profile updates subscription for:",
       session.user.id
     );
 
+    const supabase = createClient();
     const profileSubscription = supabase
       .channel(`profile_updates_${session.user.id}`)
-      .on("broadcast", { event: "profile_updated" }, async (payload) => {
-        console.log("📡 Received real-time profile update:", payload);
-
-        if (payload.payload?.user_id === session.user.id) {
-          console.log("🔄 Profile update is for current user, refreshing...");
-
-          // Refresh user profile with the updated data
-          try {
-            const updatedProfile = await getProfile(session.user.id);
-            if (updatedProfile) {
-              setUser(updatedProfile);
-              console.log(
-                "✅ Profile refreshed from real-time update:",
-                updatedProfile.email
-              );
-
-              // Show a toast notification to the user
-              if (
-                typeof window !== "undefined" &&
-                window.location.pathname.startsWith("/studio")
-              ) {
-                // Only show notification if user is in studio
-                console.log("📢 Showing profile update notification");
-                toast.success(
-                  "Your profile has been updated! Brand access may have changed.",
-                  {
-                    description:
-                      "Your studio access and brand permissions have been refreshed.",
-                    duration: 5000,
-                  }
-                );
-              }
-            }
-          } catch (error) {
-            console.error(
-              "❌ Error refreshing profile from real-time update:",
-              error
-            );
-          }
-        }
+      .on("broadcast", { event: "profile_updated" }, async (payload: any) => {
+        AuthDebug.log("🔄 Profile update received:", payload);
+        await refreshUserProfile();
       })
-      .subscribe((status) => {
-        console.log("📡 Profile updates subscription status:", status);
+      .subscribe((status: any) => {
+        AuthDebug.log("📡 Profile subscription status:", status);
       });
 
     return () => {
       profileSubscription.unsubscribe();
-      console.log("🔌 Unsubscribed from profile updates");
     };
-  }, [isClient, session?.user?.id]);
+  }, [session?.user?.id, isClient, refreshUserProfile]);
 
   const signOut = async () => {
     try {
-      AuthDebug.log("👋 Signing out...");
+      AuthDebug.log("🚪 Signing out...");
 
-      // Clear local state first
+      // Clear user state immediately
       setUser(null);
       setSession(null);
 
       // Then sign out from Supabase
-      if (supabase) {
-        const { error } = await supabase.auth.signOut();
-        if (error) {
-          AuthDebug.error("❌ Error signing out:", error);
-        } else {
-          AuthDebug.log("✅ Successfully signed out");
-        }
+      const supabase = createClient();
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        AuthDebug.error("❌ Error signing out:", error);
+        toast.error("Error signing out");
+      } else {
+        AuthDebug.log("✅ Successfully signed out");
+        toast.success("Signed out successfully");
       }
     } catch (error) {
-      AuthDebug.error("❌ Error during sign out:", error);
+      AuthDebug.error("❌ Unexpected error during sign out:", error);
+      toast.error("Unexpected error during sign out");
     }
   };
 

@@ -11,7 +11,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error("Missing required Supabase environment variables");
 }
 
-// Unified client configuration
+// Unified client configuration with consistent session handling
 const clientConfig = {
   auth: {
     persistSession: true,
@@ -19,8 +19,8 @@ const clientConfig = {
     detectSessionInUrl: true,
     flowType: "pkce" as const,
     debug: process.env.NODE_ENV === "development",
-    // Use consistent storage key across all clients
-    storageKey: "sb-auth-token",
+    // Use default storage key for consistency with SSR
+    storageKey: `sb-${new URL(supabaseUrl).hostname.split(".")[0]}-auth-token`,
   },
   global: {
     headers: {
@@ -44,7 +44,8 @@ export async function createServerSupabaseClient() {
     ...clientConfig,
     cookies: {
       get(name: string) {
-        return cookieStore.get(name)?.value;
+        const cookie = cookieStore.get(name);
+        return cookie?.value;
       },
       set(name: string, value: string, options: any) {
         try {
@@ -82,18 +83,22 @@ export function createAdminClient() {
   });
 }
 
-// Default export for backward compatibility
+// Single source of truth for browser client
 export const supabase = createClient();
 
 // Helper to clear corrupted auth data
 export function clearAuthData() {
   if (typeof window !== "undefined") {
-    // Clear all possible auth storage keys
+    // Clear all possible auth storage keys including the new consistent one
+    const baseKey = `sb-${new URL(supabaseUrl).hostname.split(".")[0]}-auth-token`;
     const keysToRemove = [
+      baseKey,
       "sb-auth-token",
       "omahub-auth-token",
       "supabase.auth.token",
       "sb-localhost-auth-token",
+      // Add other possible variations
+      `sb-${supabaseUrl.split("//")[1].split(".")[0]}-auth-token`,
     ];
 
     keysToRemove.forEach((key) => {
@@ -101,34 +106,88 @@ export function clearAuthData() {
       sessionStorage.removeItem(key);
     });
 
-    // Clear cookies
+    // Clear all supabase-related cookies
     document.cookie.split(";").forEach((cookie) => {
       const eqPos = cookie.indexOf("=");
-      const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
-      if (name.trim().includes("sb-") || name.trim().includes("auth")) {
-        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+      const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+      if (
+        name.includes("sb-") ||
+        name.includes("auth") ||
+        name.includes("supabase")
+      ) {
+        // Clear for multiple path and domain combinations
+        const clearOptions = [
+          "",
+          "; path=/",
+          "; path=/; domain=localhost",
+          "; path=/; domain=.localhost",
+          `; path=/; domain=${window.location.hostname}`,
+          `; path=/; domain=.${window.location.hostname}`,
+        ];
+
+        clearOptions.forEach((options) => {
+          document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT${options}`;
+        });
       }
     });
+
+    console.log("🧹 Cleared all authentication data");
   }
 }
 
-// Auth state checker
+// Enhanced auth state checker with session validation
 export async function checkAuthState() {
   const client = createClient();
 
   try {
+    // First, try to get the current session
     const {
       data: { session },
-      error,
+      error: sessionError,
     } = await client.auth.getSession();
 
-    if (error) {
-      console.error("Auth state check failed:", error);
+    if (sessionError) {
+      console.error("Auth state check failed:", sessionError);
       clearAuthData();
-      return { session: null, error };
+      return { session: null, error: sessionError };
     }
 
-    return { session, error: null };
+    // If no session, return early
+    if (!session) {
+      return { session: null, error: null };
+    }
+
+    // Validate session by making a test API call
+    try {
+      const response = await fetch("/api/auth/validate", {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (!response.ok) {
+        console.warn("Session validation failed, refreshing...");
+        const { data: refreshData, error: refreshError } =
+          await client.auth.refreshSession();
+
+        if (refreshError) {
+          console.error("Session refresh failed:", refreshError);
+          clearAuthData();
+          return { session: null, error: refreshError };
+        }
+
+        return { session: refreshData.session, error: null };
+      }
+
+      return { session, error: null };
+    } catch (validationError) {
+      console.warn("Session validation request failed:", validationError);
+      // Don't clear data on network errors, just return the session
+      return { session, error: null };
+    }
   } catch (error) {
     console.error("Auth state check error:", error);
     clearAuthData();
