@@ -13,17 +13,7 @@ import {
 import { Package, BarChart3 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loading } from "@/components/ui/loading";
-import StudioDebug from "@/components/studio/StudioDebug";
-import AuthDiagnostic from "@/components/studio/AuthDiagnostic";
-import SessionFixer from "@/components/studio/SessionFixer";
-import AuthTest from "@/components/studio/AuthTest";
-import ProfileFixer from "@/components/studio/ProfileFixer";
-import EnvChecker from "@/components/studio/EnvChecker";
 import { supabaseHelpers } from "@/lib/utils/supabase-helpers";
-import AuthFixer from "@/components/studio/AuthFixer";
-import InboxTest from "@/components/studio/InboxTest";
-import AuthenticationFixer from "@/components/studio/AuthenticationFixer";
-import AuthenticationTester from "@/components/studio/AuthenticationTester";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
@@ -31,7 +21,7 @@ export default function StudioPage() {
   const [loading, setLoading] = useState(true);
   const [userPermissions, setUserPermissions] = useState<Permission[]>([]);
   const [userProfile, setUserProfile] = useState<Profile | null>(null);
-  const { user, refreshUserProfile } = useAuth();
+  const { user } = useAuth();
 
   useEffect(() => {
     async function fetchData() {
@@ -93,7 +83,7 @@ export default function StudioPage() {
       }
     }
 
-    // Only fetch data when user changes - removed refreshUserProfile dependency
+    // Only fetch data when user changes
     if (user) {
       fetchData();
     } else {
@@ -153,99 +143,43 @@ export default function StudioPage() {
     effectiveProfile.role === "super_admin";
   const isBrandOwner = effectiveProfile.role === "brand_admin";
   const ownedBrandIds = effectiveProfile.owned_brands || [];
-  const ownedBrandNames = ownedBrandIds; // Simplified since we don't fetch brands anymore
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8">
       <h1 className="text-4xl font-canela mb-8 text-oma-plum">Studio</h1>
 
-      {/* Debug info for troubleshooting */}
-      {process.env.NODE_ENV === "development" && (
-        <div className="space-y-6">
-          <div className="bg-gray-100 p-4 rounded-lg text-xs">
-            <p>
-              <strong>Debug Info:</strong>
-            </p>
-            <p>
-              User: {user.email} | Role: {effectiveProfile.role}
-            </p>
-            <p>Owned Brands: {JSON.stringify(ownedBrandIds)}</p>
-            <p>Permissions: {userPermissions.join(", ")}</p>
-          </div>
-
-          {/* Environment Variable Checker */}
-          <EnvChecker />
-
-          {/* Profile 406 Error Fixer */}
-          <ProfileFixer userId={user.id} />
-
-          {/* Auth Test Component */}
-          <AuthTest />
-
-          {/* Auth Fixer Component */}
-          <AuthFixer />
-
-          {/* Inbox Test Component */}
-          <InboxTest />
-
-          {/* NEW: Comprehensive Authentication Fixer */}
-          <AuthenticationFixer />
-
-          {/* NEW: Authentication System Tester */}
-          <AuthenticationTester />
-
-          {/* Authentication Diagnostic */}
-          <AuthDiagnostic />
-
-          {/* Detailed Debug Component */}
-          <StudioDebug />
-
-          {/* Session Fixer */}
-          <SessionFixer />
-        </div>
-      )}
-
       {/* Analytics Dashboard */}
-      {(isSuperAdmin || isBrandOwner) && (
-        <div className="mb-8">
-          <AnalyticsDashboard
-            isBrandOwner={isBrandOwner}
-            ownedBrandIds={ownedBrandIds}
-            brandNames={ownedBrandNames}
-          />
+      {(isSuperAdmin || isAdmin) && (
+        <div className="grid grid-cols-1 gap-8">
+          <AnalyticsDashboard />
         </div>
       )}
 
-      {/* Leads Tracking Dashboard - Only for Super Admins */}
-      {isSuperAdmin && (
-        <div className="mb-8">
+      {/* Leads Tracking Dashboard */}
+      {(isSuperAdmin || isAdmin || isBrandOwner) && (
+        <div className="grid grid-cols-1 gap-8">
           <LeadsTrackingDashboard />
         </div>
       )}
 
-      {/* Recent Accounts Widget - Only for Admins and Super Admins */}
-      {(isAdmin || isSuperAdmin) && (
-        <div className="mb-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-1">
-              <RecentAccountsWidget />
-            </div>
-            {/* Future: Add more dashboard widgets here */}
-          </div>
+      {/* Recent Accounts Widget for Super Admins */}
+      {isSuperAdmin && (
+        <div className="grid grid-cols-1 gap-8">
+          <RecentAccountsWidget />
         </div>
       )}
 
-      {/* Empty State for Users Without Permissions */}
-      {!isSuperAdmin && !isBrandOwner && !isAdmin && (
-        <div className="flex items-center justify-center min-h-[40vh]">
-          <div className="text-center">
-            <BarChart3 className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-4 text-lg font-semibold">Welcome to Studio</h3>
-            <p className="mt-2 text-gray-500">
-              Your dashboard will appear here once you have the necessary
-              permissions.
-            </p>
-          </div>
+      {/* Welcome Message for users without dashboard access */}
+      {!isSuperAdmin && !isAdmin && !isBrandOwner && (
+        <div className="text-center py-12">
+          <BarChart3 className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            Welcome to OmaHub Studio
+          </h3>
+          <p className="text-gray-600">
+            Your studio dashboard will be available once your account is
+            configured.
+          </p>
         </div>
       )}
     </div>

@@ -295,16 +295,15 @@ export default function HomeContent() {
     tailoredImage: "/lovable-uploads/bb152c0b-6378-419b-a0e6-eafce44631b2.png",
   });
   const [categoryImagesLoaded, setCategoryImagesLoaded] = useState(false);
-  const [occasionImages, setOccasionImages] = useState({
-    Wedding: "",
-    Party: "",
-    "Ready to Wear": "",
-    Vacation: "",
-  });
+  const [occasionImages, setOccasionImages] = useState<{
+    [key: string]: string;
+  }>({});
   const [occasionLoading, setOccasionLoading] = useState(true);
 
-  // Load dynamic category images immediately and aggressively
+  // Load dynamic category images - run only once
   useEffect(() => {
+    let isMounted = true;
+
     const loadCategoryImages = async () => {
       try {
         console.log("🖼️ Loading category images...");
@@ -317,25 +316,28 @@ export default function HomeContent() {
             "/lovable-uploads/bb152c0b-6378-419b-a0e6-eafce44631b2.png",
         };
 
-        console.log("🔧 Setting fallback images:", fallbackImages);
-        setCategoryImages(fallbackImages);
-        setCategoryImagesLoaded(true);
-        console.log("✅ Fallback images set");
+        if (isMounted) {
+          console.log("🔧 Setting fallback images:", fallbackImages);
+          setCategoryImages(fallbackImages);
+          setCategoryImagesLoaded(true);
+          console.log("✅ Fallback images set");
+        }
 
         // Try to get dynamic images
         console.log("🔍 Attempting to load dynamic images...");
         const dynamicImages = await generateDynamicCategoryImages();
         console.log("🎯 Dynamic images loaded:", dynamicImages);
 
-        // Update with dynamic images if they're different
+        // Update with dynamic images if they're different and component is still mounted
         if (
-          dynamicImages.catalogueImage !== fallbackImages.catalogueImage ||
-          dynamicImages.tailoredImage !== fallbackImages.tailoredImage
+          isMounted &&
+          (dynamicImages.catalogueImage !== fallbackImages.catalogueImage ||
+            dynamicImages.tailoredImage !== fallbackImages.tailoredImage)
         ) {
           console.log("🔄 Updating to dynamic images:", dynamicImages);
           setCategoryImages(dynamicImages);
           console.log("🔄 Updated to dynamic images");
-        } else {
+        } else if (isMounted) {
           console.log("📌 Using fallback images (no dynamic images available)");
         }
       } catch (error) {
@@ -345,7 +347,11 @@ export default function HomeContent() {
     };
 
     loadCategoryImages();
-  }, []);
+
+    return () => {
+      isMounted = false;
+    };
+  }, []); // Empty dependency array - run only once
 
   // Transform hero slides to carousel items
   const carouselItems: CarouselItem[] =
@@ -435,8 +441,13 @@ export default function HomeContent() {
     fetchData();
   }, []);
 
+  // Load occasion images - run only once
   useEffect(() => {
+    let isMounted = true;
+
     async function fetchOccasionImages() {
+      if (!isMounted) return;
+
       setOccasionLoading(true);
       const mapping = occasionToCategoryMapping;
       const usedBrandIds = new Set();
@@ -452,50 +463,30 @@ export default function HomeContent() {
       };
 
       for (const [occasion, category] of Object.entries(mapping)) {
+        if (!isMounted) return;
+
         try {
           const brands = await getBrandsByCategory(category);
           // Filter out brands already used for other occasions
           const availableBrands = brands.filter((b) => !usedBrandIds.has(b.id));
 
           if (availableBrands.length > 0) {
+            // Select a random brand from available ones
             const randomBrand =
               availableBrands[
                 Math.floor(Math.random() * availableBrands.length)
               ];
-            if (randomBrand.image && randomBrand.image.trim()) {
-              newImages[occasion] = randomBrand.image;
-              usedBrandIds.add(randomBrand.id);
-              console.log(
-                `✅ Using dynamic image for ${occasion}:`,
-                randomBrand.image
-              );
-            } else {
-              newImages[occasion] =
-                occasionFallbacks[occasion as keyof typeof occasionFallbacks];
-              console.log(
-                `📌 Using fallback for ${occasion} (no brand image):`,
-                newImages[occasion]
-              );
-            }
-          } else if (brands.length > 0) {
-            // Fallback: if all brands are used, allow reuse
-            const randomBrand =
-              brands[Math.floor(Math.random() * brands.length)];
-            if (randomBrand.image && randomBrand.image.trim()) {
-              newImages[occasion] = randomBrand.image;
-              console.log(
-                `🔄 Reusing brand image for ${occasion}:`,
-                randomBrand.image
-              );
-            } else {
-              newImages[occasion] =
-                occasionFallbacks[occasion as keyof typeof occasionFallbacks];
-              console.log(
-                `📌 Using fallback for ${occasion} (no brand image):`,
-                newImages[occasion]
-              );
-            }
+            usedBrandIds.add(randomBrand.id);
+            newImages[occasion] =
+              randomBrand.image ||
+              occasionFallbacks[occasion as keyof typeof occasionFallbacks];
+            console.log(
+              `✅ Using brand image for ${occasion}:`,
+              randomBrand.name,
+              newImages[occasion]
+            );
           } else {
+            // Use fallback if no brands available
             newImages[occasion] =
               occasionFallbacks[occasion as keyof typeof occasionFallbacks];
             console.log(
@@ -514,12 +505,19 @@ export default function HomeContent() {
         }
       }
 
-      setOccasionImages(newImages);
-      setOccasionLoading(false);
-      console.log("🎯 Final occasion images:", newImages);
+      if (isMounted) {
+        setOccasionImages(newImages);
+        setOccasionLoading(false);
+        console.log("🎯 Final occasion images:", newImages);
+      }
     }
+
     fetchOccasionImages();
-  }, []);
+
+    return () => {
+      isMounted = false;
+    };
+  }, []); // Empty dependency array - run only once
 
   if (error) {
     return (

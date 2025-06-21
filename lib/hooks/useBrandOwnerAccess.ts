@@ -58,7 +58,7 @@ export function useBrandOwnerAccess(): BrandOwnerAccess {
   const FETCH_DEBOUNCE_MS = 1000; // Prevent fetches more frequent than 1 second
 
   const fetchUserData = useCallback(async () => {
-    if (!user) {
+    if (!user?.id) {
       setLoading(false);
       return;
     }
@@ -81,58 +81,26 @@ export function useBrandOwnerAccess(): BrandOwnerAccess {
     try {
       isFetchingRef.current = true;
       lastFetchTimeRef.current = now;
-      setLoading(true);
       setError(null);
 
-      console.log("🔍 useBrandOwnerAccess: Fetching data for user:", {
-        userId: user.id,
-        userEmail: user.email,
-        userRole: user.role,
-        userOwnedBrands: user.owned_brands,
-      });
+      console.log("📊 useBrandOwnerAccess: Fetching user data for:", user.id);
 
-      // Get user permissions and profile
-      const [permissions, profileResult] = await Promise.all([
-        getUserPermissions(user.id, user.email),
+      // Get profile and permissions in parallel
+      const [profileData, permissionsData] = await Promise.all([
         supabase.from("profiles").select("*").eq("id", user.id).single(),
+        getUserPermissions(user.id),
       ]);
 
-      console.log("✅ useBrandOwnerAccess: Permissions received:", permissions);
-      setUserPermissions(permissions);
-
-      if (profileResult.error) {
-        console.error(
-          "❌ useBrandOwnerAccess: Error fetching profile:",
-          profileResult.error
-        );
-        console.log("🔄 useBrandOwnerAccess: Using user context as fallback");
-
-        // Use user context as fallback
-        const fallbackProfile = {
-          id: user.id,
-          email: user.email,
-          role: user.role || "user",
-          owned_brands: user.owned_brands || [],
-          first_name: user.first_name || null,
-          last_name: user.last_name || null,
-          avatar_url: user.avatar_url || null,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        } as Profile;
-
-        console.log("🔄 useBrandOwnerAccess: Fallback profile:", {
-          role: fallbackProfile.role,
-          owned_brands: fallbackProfile.owned_brands,
-        });
-
-        setUserProfile(fallbackProfile);
+      if (profileData.error) {
+        console.error("❌ Profile fetch error:", profileData.error);
+        // Don't throw, just log and use fallback
+        setUserProfile(null);
       } else {
-        console.log("✅ useBrandOwnerAccess: Profile fetched successfully:", {
-          role: profileResult.data.role,
-          owned_brands: profileResult.data.owned_brands,
-        });
-        setUserProfile(profileResult.data);
+        setUserProfile(profileData.data);
       }
+
+      setUserPermissions(permissionsData);
+      console.log("✅ useBrandOwnerAccess: User data loaded successfully");
     } catch (err) {
       console.error("❌ useBrandOwnerAccess: Error fetching user data:", err);
       setError("Failed to load user data");
@@ -140,7 +108,7 @@ export function useBrandOwnerAccess(): BrandOwnerAccess {
       setLoading(false);
       isFetchingRef.current = false;
     }
-  }, [user, supabase]);
+  }, [user?.id]); // Only depend on user.id, not the entire user object
 
   // Force refresh function that bypasses debouncing
   const forceRefresh = useCallback(async () => {
@@ -150,11 +118,18 @@ export function useBrandOwnerAccess(): BrandOwnerAccess {
     await fetchUserData();
   }, [fetchUserData]);
 
+  // Initial fetch - only when user.id changes
   useEffect(() => {
-    fetchUserData();
-  }, [fetchUserData]);
+    if (user?.id) {
+      fetchUserData();
+    } else {
+      setLoading(false);
+      setUserProfile(null);
+      setUserPermissions([]);
+    }
+  }, [user?.id]); // Only depend on user.id
 
-  // Set up real-time subscription for profile updates
+  // Set up real-time subscription for profile updates - simplified
   useEffect(() => {
     if (!user?.id) return;
 
@@ -175,7 +150,10 @@ export function useBrandOwnerAccess(): BrandOwnerAccess {
           console.log(
             "🔄 useBrandOwnerAccess: Profile update for current user, refreshing access..."
           );
-          await forceRefresh();
+          // Use timeout to prevent immediate re-renders
+          setTimeout(() => {
+            forceRefresh();
+          }, 200);
         }
       })
       .subscribe((status) => {
@@ -186,7 +164,7 @@ export function useBrandOwnerAccess(): BrandOwnerAccess {
       subscription.unsubscribe();
       console.log("🔌 useBrandOwnerAccess: Unsubscribed from profile updates");
     };
-  }, [user?.id, forceRefresh]);
+  }, [user?.id]); // Only depend on user.id, not forceRefresh
 
   // Memoized derived values to prevent unnecessary recalculations
   const effectiveProfile = userProfile || {

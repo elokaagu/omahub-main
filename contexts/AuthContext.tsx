@@ -208,21 +208,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const handleAuthStateChange = async (
-    event: string,
-    newSession: Session | null
-  ) => {
-    AuthDebug.log("🔄 Auth state change:", event, { hasSession: !!newSession });
+  // Memoized handleAuthStateChange to prevent infinite loops
+  const handleAuthStateChange = useCallback(
+    async (event: string, newSession: Session | null) => {
+      AuthDebug.log("🔄 Auth state change:", event, {
+        hasSession: !!newSession,
+      });
 
-    setSession(newSession);
+      setSession(newSession);
 
-    if (event === "SIGNED_OUT" || !newSession) {
-      setUser(null);
-      AuthDebug.log("👋 User signed out");
-    } else if (newSession?.user) {
-      await loadUserProfile(newSession.user.id, newSession.user.email);
-    }
-  };
+      if (event === "SIGNED_OUT" || !newSession) {
+        setUser(null);
+        AuthDebug.log("👋 User signed out");
+      } else if (newSession?.user) {
+        await loadUserProfile(newSession.user.id, newSession.user.email);
+      }
+    },
+    []
+  ); // Empty dependency array since it doesn't depend on external values
 
   // Set up auth state listener
   useEffect(() => {
@@ -246,9 +249,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, [isClient, handleAuthStateChange]);
+  }, [isClient]); // Removed handleAuthStateChange from dependencies
 
-  // Set up profile updates subscription
+  // Set up profile updates subscription - simplified to prevent loops
   useEffect(() => {
     if (!session?.user?.id || !isClient) return;
 
@@ -262,7 +265,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .channel(`profile_updates_${session.user.id}`)
       .on("broadcast", { event: "profile_updated" }, async (payload: any) => {
         AuthDebug.log("🔄 Profile update received:", payload);
-        await refreshUserProfile();
+        // Use a timeout to prevent immediate re-renders
+        setTimeout(() => {
+          refreshUserProfile();
+        }, 100);
       })
       .subscribe((status: any) => {
         AuthDebug.log("📡 Profile subscription status:", status);
@@ -271,7 +277,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       profileSubscription.unsubscribe();
     };
-  }, [session?.user?.id, isClient, refreshUserProfile]);
+  }, [session?.user?.id, isClient]); // Removed refreshUserProfile from dependencies
 
   const signOut = async () => {
     try {

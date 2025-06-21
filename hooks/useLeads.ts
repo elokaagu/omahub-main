@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { formatCurrency } from "@/lib/utils";
@@ -157,8 +157,27 @@ export function useLeads(filters?: {
   const [error, setError] = useState<string | null>(null);
   const [total, setTotal] = useState(0);
 
+  // Add refs to prevent race conditions
+  const isFetchingRef = useRef(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
   const fetchLeads = useCallback(async () => {
+    // Prevent concurrent fetches
+    if (isFetchingRef.current) {
+      console.log("🔄 useLeads: Fetch already in progress, skipping...");
+      return;
+    }
+
+    // Cancel any ongoing request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+
     try {
+      isFetchingRef.current = true;
       setLoading(true);
       setError(null);
 
@@ -171,26 +190,52 @@ export function useLeads(filters?: {
 
       const response = await fetch(`/api/admin/leads?${params.toString()}`, {
         credentials: "include",
+        signal: abortController.signal,
       });
 
       if (!response.ok) {
-        throw new Error("Failed to fetch leads");
+        throw new Error(`Failed to fetch leads: ${response.status}`);
       }
 
       const data = await response.json();
-      setLeads(data.leads || []);
-      setTotal(data.total || 0);
+
+      // Only update state if the request wasn't aborted
+      if (!abortController.signal.aborted) {
+        setLeads(data.leads || []);
+        setTotal(data.total || 0);
+      }
     } catch (err) {
+      // Don't show errors for aborted requests
+      if (err instanceof Error && err.name === "AbortError") {
+        console.log("🔄 useLeads: Request aborted");
+        return;
+      }
+
       console.error("Error fetching leads:", err);
       setError(err instanceof Error ? err.message : "Failed to fetch leads");
       toast.error("Failed to fetch leads");
     } finally {
+      isFetchingRef.current = false;
       setLoading(false);
+      abortControllerRef.current = null;
     }
-  }, [filters]);
+  }, [
+    filters?.brand_id,
+    filters?.status,
+    filters?.source,
+    filters?.limit,
+    filters?.offset,
+  ]); // Stable dependencies
 
   useEffect(() => {
     fetchLeads();
+
+    // Cleanup function
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, [fetchLeads]);
 
   return {
@@ -211,44 +256,87 @@ export function useBookings(filters?: {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [total, setTotal] = useState(0);
+
+  // Add refs to prevent race conditions
+  const isFetchingRef = useRef(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const fetchBookings = useCallback(async () => {
+    // Prevent concurrent fetches
+    if (isFetchingRef.current) {
+      console.log("🔄 useBookings: Fetch already in progress, skipping...");
+      return;
+    }
+
+    // Cancel any ongoing request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+
     try {
+      isFetchingRef.current = true;
       setLoading(true);
       setError(null);
 
-      const params = new URLSearchParams({ action: "bookings" });
+      const params = new URLSearchParams();
+      params.append("action", "bookings");
       if (filters?.brand_id) params.append("brand_id", filters.brand_id);
       if (filters?.limit) params.append("limit", filters.limit.toString());
       if (filters?.offset) params.append("offset", filters.offset.toString());
 
       const response = await fetch(`/api/admin/leads?${params.toString()}`, {
         credentials: "include",
+        signal: abortController.signal,
       });
 
       if (!response.ok) {
-        throw new Error("Failed to fetch bookings");
+        throw new Error(`Failed to fetch bookings: ${response.status}`);
       }
 
       const data = await response.json();
-      setBookings(data.bookings || []);
+
+      // Only update state if the request wasn't aborted
+      if (!abortController.signal.aborted) {
+        setBookings(data.bookings || []);
+        setTotal(data.total || 0);
+      }
     } catch (err) {
+      // Don't show errors for aborted requests
+      if (err instanceof Error && err.name === "AbortError") {
+        console.log("🔄 useBookings: Request aborted");
+        return;
+      }
+
       console.error("Error fetching bookings:", err);
       setError(err instanceof Error ? err.message : "Failed to fetch bookings");
       toast.error("Failed to fetch bookings");
     } finally {
+      isFetchingRef.current = false;
       setLoading(false);
+      abortControllerRef.current = null;
     }
-  }, [filters]);
+  }, [filters?.brand_id, filters?.limit, filters?.offset]); // Stable dependencies
 
   useEffect(() => {
     fetchBookings();
+
+    // Cleanup function
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, [fetchBookings]);
 
   return {
     bookings,
     loading,
     error,
+    total,
     refetch: fetchBookings,
   };
 }
@@ -259,35 +347,75 @@ export function useLeadsAnalytics() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Add refs to prevent race conditions
+  const isFetchingRef = useRef(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
   const fetchAnalytics = useCallback(async () => {
+    // Prevent concurrent fetches
+    if (isFetchingRef.current) {
+      console.log(
+        "🔄 useLeadsAnalytics: Fetch already in progress, skipping..."
+      );
+      return;
+    }
+
+    // Cancel any ongoing request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+
     try {
+      isFetchingRef.current = true;
       setLoading(true);
       setError(null);
 
       const response = await fetch("/api/admin/leads?action=analytics", {
         credentials: "include",
+        signal: abortController.signal,
       });
 
       if (!response.ok) {
-        throw new Error("Failed to fetch analytics");
+        throw new Error(`Failed to fetch analytics: ${response.status}`);
       }
 
       const data = await response.json();
-      // The API returns analytics data directly, not nested in an analytics property
-      setAnalytics(data);
+
+      // Only update state if the request wasn't aborted
+      if (!abortController.signal.aborted) {
+        setAnalytics(data.analytics || null);
+      }
     } catch (err) {
+      // Don't show errors for aborted requests
+      if (err instanceof Error && err.name === "AbortError") {
+        console.log("🔄 useLeadsAnalytics: Request aborted");
+        return;
+      }
+
       console.error("Error fetching analytics:", err);
       setError(
         err instanceof Error ? err.message : "Failed to fetch analytics"
       );
       toast.error("Failed to fetch analytics");
     } finally {
+      isFetchingRef.current = false;
       setLoading(false);
+      abortControllerRef.current = null;
     }
-  }, []);
+  }, []); // No dependencies - analytics don't need filters
 
   useEffect(() => {
     fetchAnalytics();
+
+    // Cleanup function
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, [fetchAnalytics]);
 
   return {
@@ -306,25 +434,56 @@ export function useCommissionStructure() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Add refs to prevent race conditions
+  const isFetchingRef = useRef(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
   const fetchCommissionStructure = useCallback(async () => {
+    // Prevent concurrent fetches
+    if (isFetchingRef.current) {
+      console.log(
+        "🔄 useCommissionStructure: Fetch already in progress, skipping..."
+      );
+      return;
+    }
+
+    // Cancel any ongoing request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+
     try {
+      isFetchingRef.current = true;
       setLoading(true);
       setError(null);
 
-      const response = await fetch(
-        "/api/admin/leads?action=commission_structure",
-        {
-          credentials: "include",
-        }
-      );
+      const response = await fetch("/api/admin/leads?action=commission", {
+        credentials: "include",
+        signal: abortController.signal,
+      });
 
       if (!response.ok) {
-        throw new Error("Failed to fetch commission structure");
+        throw new Error(
+          `Failed to fetch commission structure: ${response.status}`
+        );
       }
 
       const data = await response.json();
-      setCommissionStructure(data.commission_structure || []);
+
+      // Only update state if the request wasn't aborted
+      if (!abortController.signal.aborted) {
+        setCommissionStructure(data.commission || []);
+      }
     } catch (err) {
+      // Don't show errors for aborted requests
+      if (err instanceof Error && err.name === "AbortError") {
+        console.log("🔄 useCommissionStructure: Request aborted");
+        return;
+      }
+
       console.error("Error fetching commission structure:", err);
       setError(
         err instanceof Error
@@ -333,12 +492,21 @@ export function useCommissionStructure() {
       );
       toast.error("Failed to fetch commission structure");
     } finally {
+      isFetchingRef.current = false;
       setLoading(false);
+      abortControllerRef.current = null;
     }
-  }, []);
+  }, []); // No dependencies
 
   useEffect(() => {
     fetchCommissionStructure();
+
+    // Cleanup function
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, [fetchCommissionStructure]);
 
   return {
