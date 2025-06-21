@@ -1,10 +1,9 @@
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
+import { createServerSupabaseClient } from "@/lib/supabase-unified";
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = await createServerSupabaseClient();
 
     // Get authenticated user
     const {
@@ -15,15 +14,41 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get user profile
-    const { data: profile, error: profileError } = await supabase
+    // Get user profile with fallback for super_admin users
+    let profile;
+    const { data: profileData, error: profileError } = await supabase
       .from("profiles")
       .select("role, owned_brands")
       .eq("id", user.id)
       .single();
 
-    if (profileError || !profile) {
-      return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+    if (profileError || !profileData) {
+      console.log(
+        "⚠️ Profile not found, checking user email for super_admin access"
+      );
+
+      // Fallback: Check if user email indicates super_admin access
+      if (
+        user.email === "eloka.agu@icloud.com" ||
+        user.email === "shannonalisa@oma-hub.com"
+      ) {
+        profile = {
+          role: "super_admin",
+          owned_brands: [],
+        };
+        console.log(
+          "✅ Granted super_admin access based on email:",
+          user.email
+        );
+      } else {
+        console.error("Profile error:", profileError);
+        return NextResponse.json(
+          { error: "Profile not found" },
+          { status: 404 }
+        );
+      }
+    } else {
+      profile = profileData;
     }
 
     // Check permissions
