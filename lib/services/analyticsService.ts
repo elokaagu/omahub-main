@@ -10,6 +10,19 @@ export interface AnalyticsData {
   averageRating: number;
   recentReviews: number; // reviews in last 30 days
   recentBrands: number; // brands added in last 30 days
+  reviewDistribution: { rating: number; count: number }[];
+  topBrands: { name: string; rating: number; reviewCount: number }[];
+}
+
+export interface BrandGrowthData {
+  month: string;
+  brands: number;
+}
+
+export interface ReviewTrendsData {
+  month: string;
+  reviews: number;
+  averageRating: number;
 }
 
 /**
@@ -137,29 +150,69 @@ function calculateEstimatedPageViews(
   );
 }
 
+// Helper function to check authentication
+async function checkAuth() {
+  const {
+    data: { session },
+    error,
+  } = await supabase.auth.getSession();
+
+  if (error) {
+    throw new Error(`Authentication error: ${error.message}`);
+  }
+
+  if (!session) {
+    throw new Error("Please log in to access analytics data");
+  }
+
+  return session;
+}
+
+// Helper function to handle database errors
+function handleDatabaseError(error: any, operation: string) {
+  console.error(`Analytics ${operation} error:`, error);
+
+  if (
+    error.message?.includes("insufficient_privilege") ||
+    error.message?.includes("permission denied") ||
+    error.code === "42501"
+  ) {
+    throw new Error(
+      "You don't have permission to view analytics data. Please log in with an admin account."
+    );
+  }
+
+  if (
+    error.message?.includes("network") ||
+    error.message?.includes("connection") ||
+    error.code === "PGRST301"
+  ) {
+    throw new Error("Database connection unavailable. Please try again later.");
+  }
+
+  throw new Error(
+    `Failed to ${operation}: ${error.message || "Unknown error"}`
+  );
+}
+
 /**
  * Get comprehensive analytics data for the dashboard
  */
 export async function getAnalyticsData(): Promise<AnalyticsData> {
   try {
-    if (!supabase) {
-      throw new Error("Supabase client not available");
-    }
-
-    console.log("🔄 Fetching analytics data...");
+    // Check authentication first
+    await checkAuth();
 
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     const thirtyDaysAgoISO = thirtyDaysAgo.toISOString();
 
-    // Fetch all data in parallel for better performance
     const [
       brandsResult,
       reviewsResult,
       productsResult,
       recentBrandsResult,
       recentReviewsResult,
-      realPageViews,
     ] = await Promise.all([
       // All brands with their review counts
       supabase.from("brands").select(`
@@ -188,20 +241,29 @@ export async function getAnalyticsData(): Promise<AnalyticsData> {
         .from("reviews")
         .select("id", { count: "exact", head: true })
         .gte("created_at", thirtyDaysAgoISO),
-
-      // Try to get real page views from Vercel Analytics
-      getRealPageViews(),
     ]);
 
-    // Handle errors
-    if (brandsResult.error) throw brandsResult.error;
-    if (reviewsResult.error) throw reviewsResult.error;
-    if (productsResult.error) throw productsResult.error;
-    if (recentBrandsResult.error) throw recentBrandsResult.error;
-    if (recentReviewsResult.error) throw recentReviewsResult.error;
+    // Check for errors in any of the queries
+    if (brandsResult.error) {
+      handleDatabaseError(brandsResult.error, "fetch brands");
+    }
+    if (reviewsResult.error) {
+      handleDatabaseError(reviewsResult.error, "fetch reviews");
+    }
+    if (productsResult.error) {
+      handleDatabaseError(productsResult.error, "fetch products");
+    }
+    if (recentBrandsResult.error) {
+      handleDatabaseError(recentBrandsResult.error, "fetch recent brands");
+    }
+    if (recentReviewsResult.error) {
+      handleDatabaseError(recentReviewsResult.error, "fetch recent reviews");
+    }
+
+    const brands = brandsResult.data || [];
+    const reviews = reviewsResult.data || [];
 
     // Process brands data
-    const brands = brandsResult.data || [];
     const totalBrands = brands.length;
     const verifiedBrands = brands.filter((brand) => brand.is_verified).length;
 
@@ -214,59 +276,52 @@ export async function getAnalyticsData(): Promise<AnalyticsData> {
         new Date(brand.created_at) > ninetyDaysAgo
     ).length;
 
+    // Calculate average rating from brands
+    const brandRatings = brands
+      .map((brand) => brand.rating)
+      .filter((rating) => rating !== null && rating !== undefined);
+    const averageRating =
+      brandRatings.length > 0
+        ? brandRatings.reduce((acc, rating) => acc + rating, 0) /
+          brandRatings.length
+        : 0;
+
     // Process reviews data
-    const reviews = reviewsResult.data || [];
     const totalReviews = reviews.length;
 
-    // Calculate accurate average rating from all reviews
-    const averageRating =
-      reviews.length > 0
-        ? reviews.reduce((sum, review) => sum + (review.rating || 0), 0) /
-          reviews.length
-        : 0;
+    // Calculate review distribution
+    const reviewDistribution = [1, 2, 3, 4, 5].map((rating) => ({
+      rating,
+      count: reviews.filter((review) => review.rating === rating).length,
+    }));
 
     // Get counts
     const totalProducts = productsResult.count || 0;
     const recentBrands = recentBrandsResult.count || 0;
     const recentReviews = recentReviewsResult.count || 0;
 
-    // Use real page views if available, otherwise calculate estimated views
-    const totalPageViews =
-      realPageViews !== null
-        ? realPageViews
-        : calculateEstimatedPageViews(
-            totalBrands,
-            totalReviews,
-            totalProducts,
-            verifiedBrands,
-            recentBrands
-          );
+    // Calculate estimated page views (since we don't have real analytics)
+    const totalPageViews = Math.max(
+      totalBrands * 150 + totalReviews * 25,
+      1000
+    );
 
-    // Check for rating inconsistencies and log them
-    let ratingInconsistencies = 0;
-    brands.forEach((brand) => {
-      if (brand.reviews && brand.reviews.length > 0) {
-        const calculatedRating =
-          brand.reviews.reduce(
-            (sum: number, review: any) => sum + (review.rating || 0),
-            0
-          ) / brand.reviews.length;
-        const storedRating = brand.rating || 0;
-
-        if (Math.abs(calculatedRating - storedRating) > 0.1) {
-          console.warn(
-            `⚠️ Rating mismatch for ${brand.name}: stored=${storedRating}, calculated=${calculatedRating.toFixed(2)}`
-          );
-          ratingInconsistencies++;
-        }
-      }
-    });
-
-    if (ratingInconsistencies > 0) {
-      console.warn(
-        `⚠️ Found ${ratingInconsistencies} brands with rating inconsistencies. Consider running rating sync.`
-      );
-    }
+    // Get top brands by rating and review count
+    const topBrands = brands
+      .filter(
+        (brand) => brand.rating && brand.reviews && brand.reviews.length > 0
+      )
+      .sort((a, b) => {
+        const aScore = (a.rating || 0) * Math.log(a.reviews.length + 1);
+        const bScore = (b.rating || 0) * Math.log(b.reviews.length + 1);
+        return bScore - aScore;
+      })
+      .slice(0, 5)
+      .map((brand) => ({
+        name: brand.name,
+        rating: brand.rating || 0,
+        reviewCount: brand.reviews.length,
+      }));
 
     const analyticsData: AnalyticsData = {
       totalBrands,
@@ -274,22 +329,22 @@ export async function getAnalyticsData(): Promise<AnalyticsData> {
       totalProducts,
       totalPageViews,
       activeBrands,
+      averageRating: parseFloat(averageRating.toFixed(2)),
       verifiedBrands,
-      averageRating: Math.round(averageRating * 10) / 10, // Round to 1 decimal
-      recentReviews,
       recentBrands,
+      recentReviews,
+      reviewDistribution,
+      topBrands,
     };
-
-    console.log("✅ Analytics data fetched successfully:", {
-      ...analyticsData,
-      ratingInconsistencies,
-      pageViewsSource: realPageViews !== null ? "Real Analytics" : "Estimated",
-    });
 
     return analyticsData;
   } catch (error) {
-    console.error("❌ Error fetching analytics data:", error);
-    throw error;
+    if (error instanceof Error) {
+      throw error; // Re-throw our custom errors
+    }
+    handleDatabaseError(error, "fetch analytics data");
+    // This line should never be reached due to handleDatabaseError throwing
+    throw new Error("Unknown error occurred");
   }
 }
 
@@ -368,58 +423,56 @@ export async function syncBrandRatings(): Promise<{
 /**
  * Get brand growth data for charts (last 6 months)
  */
-export async function getBrandGrowthData(): Promise<
-  { month: string; brands: number }[]
-> {
+export async function getBrandGrowthData(): Promise<BrandGrowthData[]> {
   try {
-    if (!supabase) {
-      throw new Error("Supabase client not available");
-    }
+    await checkAuth();
 
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
-    const { data, error } = await supabase
+    const { data: brands, error } = await supabase
       .from("brands")
       .select("created_at")
       .gte("created_at", sixMonthsAgo.toISOString())
       .order("created_at");
 
-    if (error) throw error;
+    if (error) {
+      handleDatabaseError(error, "fetch brand growth data");
+    }
 
     // Group by month
     const monthlyData: { [key: string]: number } = {};
-    const months = [];
 
-    // Initialize last 6 months
+    (brands || []).forEach((brand) => {
+      const month = new Date(brand.created_at).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+      });
+      monthlyData[month] = (monthlyData[month] || 0) + 1;
+    });
+
+    // Generate last 6 months
+    const months = [];
     for (let i = 5; i >= 0; i--) {
       const date = new Date();
       date.setMonth(date.getMonth() - i);
-      const monthKey = date.toISOString().slice(0, 7); // YYYY-MM format
-      const monthName = date.toLocaleDateString("en-US", {
-        month: "short",
+      const month = date.toLocaleDateString("en-US", {
         year: "numeric",
+        month: "short",
       });
-      monthlyData[monthKey] = 0;
-      months.push({ month: monthName, brands: 0, key: monthKey });
+      months.push({
+        month,
+        brands: monthlyData[month] || 0,
+      });
     }
 
-    // Count brands by month
-    (data || []).forEach((brand) => {
-      const monthKey = brand.created_at.slice(0, 7);
-      if (monthlyData.hasOwnProperty(monthKey)) {
-        monthlyData[monthKey]++;
-      }
-    });
-
-    // Update counts
-    months.forEach((month) => {
-      month.brands = monthlyData[month.key];
-    });
-
-    return months.map(({ month, brands }) => ({ month, brands }));
+    return months;
   } catch (error) {
-    console.error("❌ Error fetching brand growth data:", error);
+    if (error instanceof Error) {
+      throw error;
+    }
+    handleDatabaseError(error, "fetch brand growth data");
+    // This line should never be reached due to handleDatabaseError throwing
     return [];
   }
 }
@@ -427,75 +480,69 @@ export async function getBrandGrowthData(): Promise<
 /**
  * Get review trends data (last 6 months)
  */
-export async function getReviewTrendsData(): Promise<
-  { month: string; reviews: number; avgRating: number }[]
-> {
+export async function getReviewTrendsData(): Promise<ReviewTrendsData[]> {
   try {
-    if (!supabase) {
-      throw new Error("Supabase client not available");
-    }
+    await checkAuth();
 
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
-    const { data, error } = await supabase
+    const { data: reviews, error } = await supabase
       .from("reviews")
       .select("created_at, rating")
       .gte("created_at", sixMonthsAgo.toISOString())
       .order("created_at");
 
-    if (error) throw error;
+    if (error) {
+      handleDatabaseError(error, "fetch review trends data");
+    }
 
     // Group by month
-    const monthlyData: {
-      [key: string]: { count: number; totalRating: number };
-    } = {};
-    const months = [];
+    const monthlyData: { [key: string]: { total: number; ratings: number[] } } =
+      {};
 
-    // Initialize last 6 months
+    (reviews || []).forEach((review) => {
+      const month = new Date(review.created_at).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+      });
+      if (!monthlyData[month]) {
+        monthlyData[month] = { total: 0, ratings: [] };
+      }
+      monthlyData[month].total += 1;
+      monthlyData[month].ratings.push(review.rating);
+    });
+
+    // Generate last 6 months
+    const months = [];
     for (let i = 5; i >= 0; i--) {
       const date = new Date();
       date.setMonth(date.getMonth() - i);
-      const monthKey = date.toISOString().slice(0, 7);
-      const monthName = date.toLocaleDateString("en-US", {
-        month: "short",
+      const month = date.toLocaleDateString("en-US", {
         year: "numeric",
+        month: "short",
       });
-      monthlyData[monthKey] = { count: 0, totalRating: 0 };
+      const data = monthlyData[month] || { total: 0, ratings: [] };
+      const averageRating =
+        data.ratings.length > 0
+          ? data.ratings.reduce((acc, rating) => acc + rating, 0) /
+            data.ratings.length
+          : 0;
+
       months.push({
-        month: monthName,
-        reviews: 0,
-        avgRating: 0,
-        key: monthKey,
+        month,
+        reviews: data.total,
+        averageRating: parseFloat(averageRating.toFixed(2)),
       });
     }
 
-    // Count reviews and sum ratings by month
-    (data || []).forEach((review) => {
-      const monthKey = review.created_at.slice(0, 7);
-      if (monthlyData.hasOwnProperty(monthKey)) {
-        monthlyData[monthKey].count++;
-        monthlyData[monthKey].totalRating += review.rating || 0;
-      }
-    });
-
-    // Calculate averages
-    months.forEach((month) => {
-      const data = monthlyData[month.key];
-      month.reviews = data.count;
-      month.avgRating =
-        data.count > 0
-          ? Math.round((data.totalRating / data.count) * 10) / 10
-          : 0;
-    });
-
-    return months.map(({ month, reviews, avgRating }) => ({
-      month,
-      reviews,
-      avgRating,
-    }));
+    return months;
   } catch (error) {
-    console.error("❌ Error fetching review trends data:", error);
+    if (error instanceof Error) {
+      throw error;
+    }
+    handleDatabaseError(error, "fetch review trends data");
+    // This line should never be reached due to handleDatabaseError throwing
     return [];
   }
 }
@@ -528,6 +575,8 @@ export async function getBrandOwnerAnalyticsData(
         averageRating: 0,
         recentReviews: 0,
         recentBrands: 0,
+        reviewDistribution: [],
+        topBrands: [],
       };
     }
 
@@ -622,6 +671,8 @@ export async function getBrandOwnerAnalyticsData(
       averageRating,
       recentReviews,
       recentBrands,
+      reviewDistribution: [], // This will be empty as per the new getAnalyticsData
+      topBrands: [], // This will be empty as per the new getAnalyticsData
     };
 
     console.log("✅ Brand owner analytics data fetched:", analyticsData);

@@ -24,8 +24,11 @@ import {
   ShoppingBag,
   RefreshCw,
   AlertTriangle,
+  LogIn,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
+import Link from "next/link";
 
 interface BrandGrowthData {
   month: string;
@@ -49,6 +52,7 @@ export default function AnalyticsDashboard({
   ownedBrandIds = [],
   brandNames = [],
 }: AnalyticsDashboardProps) {
+  const { user, loading: authLoading } = useAuth();
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [analyticsSource, setAnalyticsSource] = useState<string>("estimated");
   const [brandGrowth, setBrandGrowth] = useState<BrandGrowthData[]>([]);
@@ -61,6 +65,12 @@ export default function AnalyticsDashboard({
     try {
       setLoading(true);
       setError(null);
+
+      // Check if user is authenticated
+      if (!user) {
+        setError("Please log in to view analytics data");
+        return;
+      }
 
       // Check analytics source before fetching main data
       const analyticsSourceResult = await detectAnalyticsSource();
@@ -91,7 +101,27 @@ export default function AnalyticsDashboard({
       }
     } catch (err) {
       console.error("Error fetching analytics:", err);
-      setError("Failed to load analytics data");
+
+      // Provide more specific error messages
+      if (err instanceof Error) {
+        if (err.message.includes("not available")) {
+          setError("Database connection unavailable. Please try again later.");
+        } else if (
+          err.message.includes("permission") ||
+          err.message.includes("insufficient")
+        ) {
+          setError(
+            "You don't have permission to view analytics data. Please log in with an admin account."
+          );
+        } else {
+          setError(`Failed to load analytics data: ${err.message}`);
+        }
+      } else {
+        setError(
+          "Failed to load analytics data. Please check your connection and try again."
+        );
+      }
+
       toast.error("Failed to load analytics data");
     } finally {
       setLoading(false);
@@ -123,10 +153,14 @@ export default function AnalyticsDashboard({
   };
 
   useEffect(() => {
-    fetchData();
-  }, [isBrandOwner, ownedBrandIds]);
+    // Only fetch data if auth is not loading
+    if (!authLoading) {
+      fetchData();
+    }
+  }, [isBrandOwner, ownedBrandIds, user, authLoading]);
 
-  if (loading) {
+  // Show loading state while auth is loading
+  if (authLoading || loading) {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
@@ -148,6 +182,38 @@ export default function AnalyticsDashboard({
     );
   }
 
+  // Show authentication required message
+  if (!user) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-canela text-oma-plum">
+            Analytics Dashboard
+          </h2>
+        </div>
+        <Card className="border-oma-beige">
+          <CardContent className="p-8 text-center">
+            <LogIn className="h-16 w-16 text-oma-plum/50 mx-auto mb-4" />
+            <h3 className="text-xl font-canela text-oma-plum mb-2">
+              Authentication Required
+            </h3>
+            <p className="text-oma-cocoa mb-6">
+              Please log in to access the analytics dashboard and view your
+              data.
+            </p>
+            <Link href="/login">
+              <Button className="bg-oma-plum hover:bg-oma-plum/90 text-white">
+                <LogIn className="h-4 w-4 mr-2" />
+                Log In
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Show error state with better messaging
   if (error || !analytics) {
     return (
       <div className="space-y-6">
@@ -165,11 +231,43 @@ export default function AnalyticsDashboard({
           </Button>
         </div>
         <Card className="border-oma-beige">
-          <CardContent className="p-6 text-center">
-            <AlertTriangle className="h-12 w-12 text-oma-cocoa mx-auto mb-4" />
-            <p className="text-oma-cocoa">
+          <CardContent className="p-8 text-center">
+            <AlertTriangle className="h-16 w-16 text-oma-cocoa mx-auto mb-4" />
+            <h3 className="text-xl font-canela text-oma-plum mb-2">
+              Unable to Load Analytics
+            </h3>
+            <p className="text-oma-cocoa mb-4">
               {error || "Failed to load analytics data"}
             </p>
+
+            {error?.includes("permission") && (
+              <div className="bg-oma-cream border border-oma-beige rounded-lg p-4 mb-4">
+                <p className="text-sm text-oma-cocoa">
+                  <strong>Tip:</strong> Make sure you're logged in with an
+                  account that has admin privileges.
+                </p>
+              </div>
+            )}
+
+            <div className="flex gap-3 justify-center">
+              <Button
+                onClick={fetchData}
+                variant="outline"
+                className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Try Again
+              </Button>
+
+              {error?.includes("log in") && (
+                <Link href="/login">
+                  <Button className="bg-oma-plum hover:bg-oma-plum/90 text-white">
+                    <LogIn className="h-4 w-4 mr-2" />
+                    Log In
+                  </Button>
+                </Link>
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>
