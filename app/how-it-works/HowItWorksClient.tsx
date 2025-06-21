@@ -22,15 +22,6 @@ import {
 export default function HowItWorksClient() {
   const [openFaq, setOpenFaq] = useState<string | null>(null);
 
-  // Static category images that are confirmed to exist
-  const categoryImages = {
-    Bridal: "/lovable-uploads/57cc6a40-0f0d-4a7d-8786-41f15832ebfb.png",
-    "Ready to Wear":
-      "/lovable-uploads/4a7c7e86-6cde-4d07-a246-a5aa4cb6fa51.png",
-    Accessories: "/lovable-uploads/25c3fe26-3fc4-43ef-83ac-6931a74468c0.png",
-    Tailoring: "/lovable-uploads/99ca757a-bed8-422e-b155-0b9d365b58e0.png",
-  };
-
   const toggleFaq = (id: string) => {
     setOpenFaq(openFaq === id ? null : id);
   };
@@ -241,78 +232,6 @@ export default function HowItWorksClient() {
               </div>
             </TabsContent>
           </Tabs>
-        </div>
-
-        {/* Featured categories */}
-        <div className="mt-24">
-          <SectionHeader
-            title="Discover By Category"
-            subtitle="Explore a wide range of fashion specialties from our talented designer community"
-            centered={true}
-          />
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
-            {[
-              {
-                name: "Bridal",
-                image: categoryImages.Bridal,
-                description: "Custom wedding gowns and bridal party attire",
-                link: "/directory?category=Bridal",
-              },
-              {
-                name: "Ready to Wear",
-                image: categoryImages["Ready to Wear"],
-                description: "Contemporary everyday fashion with global flair",
-                link: "/directory?category=Ready%20to%20Wear",
-              },
-              {
-                name: "Accessories",
-                image: categoryImages.Accessories,
-                description: "Handcrafted jewelry, bags, and statement pieces",
-                link: "/directory?category=Accessories",
-              },
-              {
-                name: "Tailoring",
-                image: categoryImages.Tailoring,
-                description: "Bespoke suits, formal wear, and custom fitting",
-                link: "/directory?category=Tailoring",
-              },
-            ].map((category, index) => (
-              <Link
-                key={index}
-                href={category.link}
-                className="group overflow-hidden rounded-lg bg-white shadow-sm hover:shadow-md transition-all"
-              >
-                <div className="aspect-[4/3] relative">
-                  <LazyImage
-                    src={category.image}
-                    alt={category.name}
-                    fill
-                    className="object-cover transition-transform duration-300 group-hover:scale-105"
-                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                    quality={80}
-                    fallback={
-                      <div className="absolute inset-0 bg-gradient-to-br from-oma-beige to-oma-cream flex items-center justify-center">
-                        <div className="text-center text-oma-cocoa">
-                          <ShoppingBag className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                          <p className="text-xs font-medium">{category.name}</p>
-                        </div>
-                      </div>
-                    }
-                  />
-                </div>
-                <div className="p-6">
-                  <h3 className="font-semibold text-lg group-hover:text-oma-plum transition-colors">
-                    {category.name}
-                  </h3>
-                  <p className="text-oma-cocoa/80 text-sm mt-2">
-                    {category.description}
-                  </p>
-                  <p className="text-oma-plum text-sm mt-4">View Designers →</p>
-                </div>
-              </Link>
-            ))}
-          </div>
         </div>
 
         {/* FAQ section */}

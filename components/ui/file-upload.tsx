@@ -55,6 +55,7 @@ export function FileUpload({
       await supabase.auth.refreshSession();
 
     if (sessionError) {
+      console.error("Session refresh failed:", sessionError);
       throw new Error(`Session refresh failed: ${sessionError.message}`);
     }
 
@@ -65,10 +66,20 @@ export function FileUpload({
     } = await supabase.auth.getUser();
 
     if (authError || !user) {
+      console.error("Authentication check failed:", {
+        authError,
+        hasUser: !!user,
+      });
       throw new Error(
-        `Authentication required: ${authError?.message || "No user session"}`
+        `Authentication required: Please log in to upload files. ${authError?.message || "No user session found"}`
       );
     }
+
+    console.log("Upload authentication successful:", {
+      userId: user.id,
+      email: user.email,
+      bucket: bucket,
+    });
 
     // Check user profile and permissions for product uploads
     if (bucket === "product-images") {
@@ -107,6 +118,13 @@ export function FileUpload({
     const fileExtension = file.name.split(".").pop() || "jpg";
     const uniqueFileName = `${user.id.substring(0, 8)}_${Date.now()}.${fileExtension}`;
 
+    console.log("Starting upload:", {
+      fileName: uniqueFileName,
+      fileSize: file.size,
+      fileType: file.type,
+      bucket: bucket,
+    });
+
     // Upload with timeout
     const uploadPromise = supabase.storage
       .from(bucket)
@@ -128,13 +146,15 @@ export function FileUpload({
     ])) as any;
 
     if (error) {
+      console.error("Upload error:", error);
+
       // Provide more specific error messages
       if (
         error.message.includes("403") ||
         error.message.includes("Unauthorized")
       ) {
         throw new Error(
-          `Upload unauthorized: You may not have permission to upload to the ${bucket} bucket. Please check your account permissions.`
+          `Upload unauthorized: You may not have permission to upload to the ${bucket} bucket. Please ensure you are logged in with the correct permissions.`
         );
       } else if (
         error.message.includes("404") ||
@@ -147,6 +167,13 @@ export function FileUpload({
         throw new Error(
           `Database security policy blocked the upload. Please ensure you have the correct permissions for ${bucket} bucket.`
         );
+      } else if (
+        error.message.includes("mime type") &&
+        error.message.includes("not supported")
+      ) {
+        throw new Error(
+          `File type not supported. Please upload a valid image file (JPEG, PNG, or WebP).`
+        );
       } else {
         throw new Error(`Upload failed: ${error.message}`);
       }
@@ -155,6 +182,8 @@ export function FileUpload({
     if (!data?.path) {
       throw new Error("Upload succeeded but no file path returned");
     }
+
+    console.log("Upload successful:", data);
 
     // Get the public URL
     const { data: urlData } = supabase.storage
@@ -165,6 +194,7 @@ export function FileUpload({
       throw new Error("Failed to get public URL for uploaded file");
     }
 
+    console.log("Public URL generated:", urlData.publicUrl);
     return urlData.publicUrl;
   };
 
