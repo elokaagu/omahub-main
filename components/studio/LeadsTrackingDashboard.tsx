@@ -57,7 +57,7 @@ import {
   detectAnalyticsSource,
 } from "@/lib/services/analyticsService";
 
-const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8"];
+const COLORS = ["#6B46C1", "#F59E0B", "#10B981", "#EF4444", "#8B5CF6"]; // OmaHub color palette: plum, amber, emerald, red, violet
 
 const statusColors = {
   new: "bg-blue-100 text-blue-800",
@@ -291,7 +291,7 @@ export default function LeadsTrackingDashboard() {
     try {
       await updateLead(leadId, { status: newStatus });
       toast.success("Lead status updated successfully");
-      refetchLeads();
+      fetchLeads();
       refetchAnalytics();
     } catch (error) {
       toast.error("Failed to update lead status");
@@ -507,53 +507,56 @@ export default function LeadsTrackingDashboard() {
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="p-4">
-            <h3 className="text-sm font-medium text-gray-500">Total Leads</h3>
-            <p className="text-2xl font-semibold">
+          <Card className="p-4 border-l-4 border-l-oma-plum border-oma-beige">
+            <h3 className="text-sm font-medium text-oma-cocoa">Total Leads</h3>
+            <p className="text-2xl font-canela text-oma-plum">
               {analytics?.total_leads || 0}
             </p>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-oma-cocoa">
               This month: {analytics?.this_month_leads || 0}
             </p>
           </Card>
-          <Card className="p-4">
-            <h3 className="text-sm font-medium text-gray-500">
+          <Card className="p-4 border-l-4 border-l-oma-beige border-oma-beige">
+            <h3 className="text-sm font-medium text-oma-cocoa">
               Qualified Leads
             </h3>
-            <p className="text-2xl font-semibold">
+            <p className="text-2xl font-canela text-oma-plum">
               {analytics?.qualified_leads || 0}
             </p>
-            <p className="text-sm text-gray-500">Ready for follow-up</p>
+            <p className="text-sm text-oma-cocoa">Ready for follow-up</p>
           </Card>
-          <Card className="p-4">
-            <h3 className="text-sm font-medium text-gray-500">
+          <Card className="p-4 border-l-4 border-l-emerald-500 border-oma-beige">
+            <h3 className="text-sm font-medium text-oma-cocoa">
               Conversion Rate
             </h3>
-            <p className="text-2xl font-semibold">
+            <p className="text-2xl font-canela text-oma-plum">
               {analytics?.conversion_rate || 0}%
             </p>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-oma-cocoa">
               Converted: {analytics?.converted_leads || 0}
             </p>
           </Card>
-          <Card className="p-4">
-            <h3 className="text-sm font-medium text-gray-500">
+          <Card className="p-4 border-l-4 border-l-amber-500 border-oma-beige">
+            <h3 className="text-sm font-medium text-oma-cocoa">
               Total Bookings
             </h3>
-            <p className="text-2xl font-semibold">
+            <p className="text-2xl font-canela text-oma-plum">
               {analytics?.total_bookings || 0}
             </p>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-oma-cocoa">
               This month: {analytics?.this_month_bookings || 0}
             </p>
           </Card>
         </div>
       </div>
 
+      {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Leads by Source Chart */}
-        <Card className="p-4">
-          <h3 className="text-lg font-semibold mb-4">Leads by Source</h3>
+        <Card className="p-6 border-oma-beige">
+          <h3 className="text-lg font-canela text-oma-plum mb-4">
+            Leads by Source
+          </h3>
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -568,7 +571,7 @@ export default function LeadsTrackingDashboard() {
                   cy="50%"
                   labelLine={false}
                   outerRadius={80}
-                  fill="#8884d8"
+                  fill="#6B46C1"
                   dataKey="value"
                   label={({ name, value }) => `${name}: ${value}`}
                 >
@@ -581,106 +584,54 @@ export default function LeadsTrackingDashboard() {
                     )
                   )}
                 </Pie>
-                <Tooltip />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "#FEF7ED",
+                    border: "1px solid #F3E8D7",
+                    borderRadius: "8px",
+                    color: "#7C2D12",
+                  }}
+                />
               </PieChart>
             </ResponsiveContainer>
           </div>
         </Card>
 
-        {/* Monthly Trends Chart */}
-        <Card className="p-4">
-          <h3 className="text-lg font-semibold mb-4">Monthly Trends</h3>
-          <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={analytics?.monthly_trends || []}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="leads" fill="#8884d8" name="Leads" />
-                <Bar dataKey="bookings" fill="#82ca9d" name="Bookings" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
-      </div>
-
-      {/* Additional Analytics Sections */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Bookings by Type */}
-        {analytics?.bookings_by_type &&
-          Object.keys(analytics.bookings_by_type).length > 0 && (
-            <Card className="p-4">
-              <h3 className="text-lg font-semibold mb-4">Bookings by Type</h3>
-              <div className="h-[250px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={Object.entries(analytics.bookings_by_type).map(
-                        ([name, value]) => ({
-                          name: name
-                            .replace("_", " ")
-                            .replace(/\b\w/g, (l) => l.toUpperCase()),
-                          value,
-                        })
-                      )}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      outerRadius={70}
-                      fill="#8884d8"
-                      dataKey="value"
-                      label={({ name, value }) => `${name}: ${value}`}
-                    >
-                      {Object.entries(analytics.bookings_by_type).map(
-                        (entry, index) => (
-                          <Cell
-                            key={`booking-cell-${index}`}
-                            fill={COLORS[index % COLORS.length]}
-                          />
-                        )
-                      )}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-            </Card>
-          )}
-
         {/* Revenue Metrics */}
-        <Card className="p-4">
-          <h3 className="text-lg font-semibold mb-4">Revenue Metrics</h3>
+        <Card className="p-6 border-oma-beige">
+          <h3 className="text-lg font-canela text-oma-plum mb-4">
+            Revenue Metrics
+          </h3>
           <div className="space-y-4">
-            <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
-              <span className="text-sm font-medium text-gray-600">
+            <div className="flex justify-between items-center p-3 bg-oma-cream/30 rounded border border-oma-beige">
+              <span className="text-sm font-medium text-oma-cocoa">
                 Total Booking Value
               </span>
-              <span className="text-lg font-semibold text-gray-900">
+              <span className="text-lg font-canela text-oma-plum">
                 {formatCurrency(analytics?.total_booking_value || 0)}
               </span>
             </div>
-            <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
-              <span className="text-sm font-medium text-gray-600">
+            <div className="flex justify-between items-center p-3 bg-oma-cream/30 rounded border border-oma-beige">
+              <span className="text-sm font-medium text-oma-cocoa">
                 Average Booking Value
               </span>
-              <span className="text-lg font-semibold text-gray-900">
+              <span className="text-lg font-canela text-oma-plum">
                 {formatCurrency(analytics?.average_booking_value || 0)}
               </span>
             </div>
-            <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
-              <span className="text-sm font-medium text-gray-600">
+            <div className="flex justify-between items-center p-3 bg-oma-cream/30 rounded border border-oma-beige">
+              <span className="text-sm font-medium text-oma-cocoa">
                 Total Commission Earned
               </span>
-              <span className="text-lg font-semibold text-green-600">
+              <span className="text-lg font-canela text-green-600">
                 {formatCurrency(analytics?.total_commission_earned || 0)}
               </span>
             </div>
-            <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
-              <span className="text-sm font-medium text-gray-600">
+            <div className="flex justify-between items-center p-3 bg-oma-cream/30 rounded border border-oma-beige">
+              <span className="text-sm font-medium text-oma-cocoa">
                 This Month Revenue
               </span>
-              <span className="text-lg font-semibold text-blue-600">
+              <span className="text-lg font-canela text-blue-600">
                 {formatCurrency(analytics?.this_month_revenue || 0)}
               </span>
             </div>
@@ -692,22 +643,31 @@ export default function LeadsTrackingDashboard() {
       {user?.role === "super_admin" &&
         analytics?.top_performing_brands &&
         analytics.top_performing_brands.length > 0 && (
-          <Card className="p-4">
-            <h3 className="text-lg font-semibold mb-4">
+          <Card className="p-6 border-oma-beige">
+            <h3 className="text-lg font-canela text-oma-plum mb-4">
               Top Performing Brands
             </h3>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-2">Brand</th>
-                    <th className="text-right py-2">Total Revenue</th>
-                    <th className="text-right py-2">Commission Earned</th>
+                  <tr className="border-b border-oma-beige">
+                    <th className="text-left py-2 font-medium text-oma-cocoa">
+                      Brand
+                    </th>
+                    <th className="text-right py-2 font-medium text-oma-cocoa">
+                      Total Revenue
+                    </th>
+                    <th className="text-right py-2 font-medium text-oma-cocoa">
+                      Commission Earned
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {analytics.top_performing_brands.map((brand, index) => (
-                    <tr key={brand.brand_id} className="border-b">
+                    <tr
+                      key={brand.brand_id}
+                      className="border-b border-oma-beige"
+                    >
                       <td className="py-2">
                         <div className="flex items-center gap-2">
                           <div
@@ -716,13 +676,15 @@ export default function LeadsTrackingDashboard() {
                               backgroundColor: COLORS[index % COLORS.length],
                             }}
                           ></div>
-                          {brand.brand_name}
+                          <span className="text-oma-cocoa">
+                            {brand.brand_name}
+                          </span>
                         </div>
                       </td>
-                      <td className="text-right py-2 font-medium">
+                      <td className="text-right py-2 font-canela text-oma-plum">
                         {formatCurrency(brand.total_revenue)}
                       </td>
-                      <td className="text-right py-2 font-medium text-green-600">
+                      <td className="text-right py-2 font-canela text-green-600">
                         {formatCurrency(brand.total_commission)}
                       </td>
                     </tr>
@@ -791,7 +753,7 @@ export default function LeadsTrackingDashboard() {
                     </td>
                     <td className="p-4">
                       <div className="text-sm text-oma-cocoa">
-                        {lead.brands?.name || "Unknown Brand"}
+                        {lead.brand_name || "Unknown Brand"}
                       </div>
                     </td>
                     <td className="p-4">
