@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   useLeads,
   useLeadsAnalytics,
@@ -8,7 +8,7 @@ import {
   type Lead,
   type LeadsAnalytics,
 } from "@/hooks/useLeads";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -44,6 +44,18 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { createClient } from "@/lib/supabase-unified";
 import Link from "next/link";
+import { RefreshCw, Star } from "lucide-react";
+import {
+  getAnalyticsData,
+  getBrandGrowthData,
+  getReviewTrendsData,
+  getBrandOwnerAnalyticsData,
+  getBrandOwnerGrowthData,
+  getBrandOwnerReviewTrends,
+  syncBrandRatings,
+  type AnalyticsData,
+  detectAnalyticsSource,
+} from "@/lib/services/analyticsService";
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8"];
 
@@ -124,7 +136,7 @@ function SessionDebugInfo() {
 }
 
 export default function LeadsTrackingDashboard() {
-  const { user, session, loading: authLoading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [filters, setFilters] = useState<{
     brand_id: string;
     status: Lead["status"] | "";
@@ -140,64 +152,137 @@ export default function LeadsTrackingDashboard() {
     limit: 10,
     offset: 0,
   });
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [analytics, setAnalytics] = useState<LeadsAnalytics | null>(null);
+  const [platformAnalytics, setPlatformAnalytics] =
+    useState<AnalyticsData | null>(null);
+  const [totalCount, setTotalCount] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [leadsLoading, setLeadsLoading] = useState(true);
+  const [analyticsLoading, setAnalyticsLoading] = useState(true);
+  const [platformLoading, setPlatformLoading] = useState(true);
+  const [leadsError, setLeadsError] = useState<string | null>(null);
+  const [analyticsError, setAnalyticsError] = useState<string | null>(null);
+  const [platformError, setPlatformError] = useState<string | null>(null);
 
-  const {
-    leads,
-    loading: leadsLoading,
-    error: leadsError,
-    total,
-    refetch: refetchLeads,
-  } = useLeads(filters);
-  const {
-    analytics,
-    loading: analyticsLoading,
-    error: analyticsError,
-    refetch: refetchAnalytics,
-  } = useLeadsAnalytics();
   const { updateLead } = useLeadMutations();
 
+  const fetchLeads = async () => {
+    try {
+      setLeadsLoading(true);
+      setLeadsError(null);
+
+      const response = await fetch("/api/admin/leads?action=list");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to fetch leads");
+      }
+
+      const data = await response.json();
+      setLeads(data.leads);
+      setTotalCount(data.total);
+      setTotalPages(Math.ceil(data.total / filters.limit));
+    } catch (error) {
+      console.error("Leads fetch error:", error);
+      setLeadsError(
+        error instanceof Error ? error.message : "Failed to fetch leads"
+      );
+    } finally {
+      setLeadsLoading(false);
+    }
+  };
+
+  const fetchAnalytics = async () => {
+    try {
+      setAnalyticsLoading(true);
+      setAnalyticsError(null);
+
+      const response = await fetch("/api/admin/leads?action=analytics");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to fetch analytics");
+      }
+
+      const data = await response.json();
+      setAnalytics(data.analytics);
+    } catch (error) {
+      console.error("Analytics fetch error:", error);
+      setAnalyticsError(
+        error instanceof Error ? error.message : "Failed to fetch analytics"
+      );
+    } finally {
+      setAnalyticsLoading(false);
+    }
+  };
+
+  const fetchPlatformAnalytics = async () => {
+    try {
+      setPlatformLoading(true);
+      setPlatformError(null);
+
+      const platformData = await getAnalyticsData();
+      setPlatformAnalytics(platformData);
+    } catch (error) {
+      console.error("Platform analytics fetch error:", error);
+      setPlatformError(
+        error instanceof Error
+          ? error.message
+          : "Failed to fetch platform analytics"
+      );
+    } finally {
+      setPlatformLoading(false);
+    }
+  };
+
+  const refetchAnalytics = () => {
+    fetchAnalytics();
+    fetchPlatformAnalytics();
+  };
+
   // Debug logging - throttle to prevent spam
+  const lastLogTime = useRef(0);
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
+    const now = Date.now();
+    if (now - lastLogTime.current > 5000) {
+      // Log every 5 seconds max
       console.log("🔍 LeadsTrackingDashboard Debug:", {
-        hasUser: !!user,
-        hasSession: !!session,
-        userRole: user?.role,
-        userEmail: user?.email,
+        user: user?.email,
         authLoading,
         leadsLoading,
         analyticsLoading,
-        leadsError,
-        analyticsError,
-        leadsCount: leads?.length || 0,
-        totalLeads: total,
+        leadsCount: leads?.length,
+        totalCount,
         analyticsData: analytics
           ? {
               total_leads: analytics.total_leads,
               qualified_leads: analytics.qualified_leads,
               conversion_rate: analytics.conversion_rate,
-              total_bookings: analytics.total_bookings,
             }
           : null,
       });
-    }, 1000); // Debounce debug logging
-
-    return () => clearTimeout(timeoutId);
+      lastLogTime.current = now;
+    }
   }, [
-    user?.email, // Only track email, not entire user object
-    user?.role, // Only track role, not entire user object
-    !!session, // Only track boolean presence
+    user,
     authLoading,
     leadsLoading,
     analyticsLoading,
-    leadsError,
-    analyticsError,
-    total,
-    analytics?.total_leads, // Only track specific analytics values
+    leads?.length,
+    totalCount,
+    analytics?.total_leads,
     analytics?.qualified_leads,
     analytics?.conversion_rate,
     analytics?.total_bookings,
   ]);
+
+  useEffect(() => {
+    if (user) {
+      fetchLeads();
+      fetchAnalytics();
+      fetchPlatformAnalytics();
+    }
+  }, [user, currentPage, filters]);
 
   const handleStatusChange = async (
     leadId: string,
@@ -217,25 +302,21 @@ export default function LeadsTrackingDashboard() {
     setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
-  // Show loading while authentication is being checked
+  // Show loading state while auth is loading
   if (authLoading) {
     return (
-      <div className="space-y-8">
-        <div className="text-center py-8">
-          <div className="animate-spin h-8 w-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-gray-600">Checking authentication...</p>
-        </div>
+      <div className="text-center py-8">
+        <div className="animate-spin h-8 w-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+        <p className="text-gray-600">Loading authentication...</p>
       </div>
     );
   }
 
-  // Show authentication required screen
-  if (!user || !session) {
+  // Show authentication required state
+  if (!user) {
     return (
-      <div className="space-y-4">
-        <SessionDebugInfo />
-
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
+      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+        <div className="text-center">
           <h3 className="text-yellow-800 font-semibold text-lg mb-2">
             Authentication Required
           </h3>
@@ -273,7 +354,7 @@ export default function LeadsTrackingDashboard() {
             </p>
           )}
           <div className="mt-3 space-x-2">
-            <Button onClick={refetchLeads} variant="outline" size="sm">
+            <Button onClick={fetchLeads} variant="outline" size="sm">
               Retry Leads
             </Button>
             <Button onClick={refetchAnalytics} variant="outline" size="sm">
@@ -317,41 +398,156 @@ export default function LeadsTrackingDashboard() {
       {/* Debug info in development */}
       {process.env.NODE_ENV === "development" && <SessionDebugInfo />}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="p-4">
-          <h3 className="text-sm font-medium text-gray-500">Total Leads</h3>
-          <p className="text-2xl font-semibold">
-            {analytics?.total_leads || 0}
-          </p>
-          <p className="text-sm text-gray-500">
-            This month: {analytics?.this_month_leads || 0}
-          </p>
-        </Card>
-        <Card className="p-4">
-          <h3 className="text-sm font-medium text-gray-500">Qualified Leads</h3>
-          <p className="text-2xl font-semibold">
-            {analytics?.qualified_leads || 0}
-          </p>
-          <p className="text-sm text-gray-500">Ready for follow-up</p>
-        </Card>
-        <Card className="p-4">
-          <h3 className="text-sm font-medium text-gray-500">Conversion Rate</h3>
-          <p className="text-2xl font-semibold">
-            {analytics?.conversion_rate || 0}%
-          </p>
-          <p className="text-sm text-gray-500">
-            Converted: {analytics?.converted_leads || 0}
-          </p>
-        </Card>
-        <Card className="p-4">
-          <h3 className="text-sm font-medium text-gray-500">Total Bookings</h3>
-          <p className="text-2xl font-semibold">
-            {analytics?.total_bookings || 0}
-          </p>
-          <p className="text-sm text-gray-500">
-            This month: {analytics?.this_month_bookings || 0}
-          </p>
-        </Card>
+      {/* Platform Overview Section */}
+      <div className="bg-gradient-to-r from-oma-plum/5 to-oma-beige/10 rounded-lg p-6 border border-oma-beige">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-2xl font-canela text-oma-plum">
+              Platform Overview
+            </h2>
+            <p className="text-oma-cocoa">
+              Key metrics across the entire OmaHub platform
+            </p>
+          </div>
+          <Button
+            onClick={refetchAnalytics}
+            variant="outline"
+            size="sm"
+            className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white"
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
+        </div>
+
+        {platformLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            {[...Array(5)].map((_, i) => (
+              <Card key={i} className="p-4">
+                <div className="animate-pulse">
+                  <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                  <div className="h-8 bg-gray-200 rounded mb-1"></div>
+                  <div className="h-3 bg-gray-200 rounded w-3/4"></div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        ) : platformError ? (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <p className="text-red-600 text-sm">
+              Platform Analytics Error: {platformError}
+            </p>
+            <Button
+              onClick={fetchPlatformAnalytics}
+              variant="outline"
+              size="sm"
+              className="mt-2"
+            >
+              Retry Platform Analytics
+            </Button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            <Card className="p-4 border-l-4 border-l-oma-plum">
+              <h3 className="text-sm font-medium text-oma-cocoa">
+                Total Brands
+              </h3>
+              <p className="text-2xl font-canela text-oma-plum">
+                {platformAnalytics?.totalBrands || 0}
+              </p>
+              <p className="text-sm text-oma-cocoa">
+                {platformAnalytics?.verifiedBrands || 0} verified
+              </p>
+            </Card>
+            <Card className="p-4 border-l-4 border-l-oma-beige">
+              <h3 className="text-sm font-medium text-oma-cocoa">
+                Total Products
+              </h3>
+              <p className="text-2xl font-canela text-oma-plum">
+                {platformAnalytics?.totalProducts || 0}
+              </p>
+              <p className="text-sm text-oma-cocoa">Across all brands</p>
+            </Card>
+            <Card className="p-4 border-l-4 border-l-green-500">
+              <h3 className="text-sm font-medium text-oma-cocoa">
+                Total Reviews
+              </h3>
+              <p className="text-2xl font-canela text-oma-plum">
+                {platformAnalytics?.totalReviews || 0}
+              </p>
+              <p className="text-sm text-oma-cocoa">
+                {platformAnalytics?.recentReviews || 0} this month
+              </p>
+            </Card>
+            <Card className="p-4 border-l-4 border-l-blue-500">
+              <h3 className="text-sm font-medium text-oma-cocoa">Page Views</h3>
+              <p className="text-2xl font-canela text-oma-plum">
+                {platformAnalytics?.totalPageViews
+                  ? platformAnalytics.totalPageViews.toLocaleString()
+                  : "0"}
+              </p>
+              <p className="text-sm text-oma-cocoa">Estimated monthly</p>
+            </Card>
+            <Card className="p-4 border-l-4 border-l-purple-500">
+              <h3 className="text-sm font-medium text-oma-cocoa">Avg Rating</h3>
+              <p className="text-2xl font-canela text-oma-plum flex items-center">
+                {platformAnalytics?.averageRating?.toFixed(1) || "0.0"}
+                <Star className="h-5 w-5 text-yellow-400 ml-1 fill-current" />
+              </p>
+              <p className="text-sm text-oma-cocoa">Platform average</p>
+            </Card>
+          </div>
+        )}
+      </div>
+
+      {/* Leads Analytics Section */}
+      <div>
+        <h2 className="text-2xl font-canela text-oma-plum mb-6">
+          Leads & Bookings Analytics
+        </h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="p-4">
+            <h3 className="text-sm font-medium text-gray-500">Total Leads</h3>
+            <p className="text-2xl font-semibold">
+              {analytics?.total_leads || 0}
+            </p>
+            <p className="text-sm text-gray-500">
+              This month: {analytics?.this_month_leads || 0}
+            </p>
+          </Card>
+          <Card className="p-4">
+            <h3 className="text-sm font-medium text-gray-500">
+              Qualified Leads
+            </h3>
+            <p className="text-2xl font-semibold">
+              {analytics?.qualified_leads || 0}
+            </p>
+            <p className="text-sm text-gray-500">Ready for follow-up</p>
+          </Card>
+          <Card className="p-4">
+            <h3 className="text-sm font-medium text-gray-500">
+              Conversion Rate
+            </h3>
+            <p className="text-2xl font-semibold">
+              {analytics?.conversion_rate || 0}%
+            </p>
+            <p className="text-sm text-gray-500">
+              Converted: {analytics?.converted_leads || 0}
+            </p>
+          </Card>
+          <Card className="p-4">
+            <h3 className="text-sm font-medium text-gray-500">
+              Total Bookings
+            </h3>
+            <p className="text-2xl font-semibold">
+              {analytics?.total_bookings || 0}
+            </p>
+            <p className="text-sm text-gray-500">
+              This month: {analytics?.this_month_bookings || 0}
+            </p>
+          </Card>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -538,206 +734,152 @@ export default function LeadsTrackingDashboard() {
         )}
 
       {/* Leads Table */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="p-4 border-b">
-          <h2 className="text-lg font-semibold">Leads Management</h2>
-          <div className="mt-4 flex gap-4">
-            <Select
-              value={filters.status}
-              onValueChange={(value) => handleFilterChange("status", value)}
-            >
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">All Statuses</SelectItem>
-                <SelectItem value="new">New</SelectItem>
-                <SelectItem value="contacted">Contacted</SelectItem>
-                <SelectItem value="qualified">Qualified</SelectItem>
-                <SelectItem value="converted">Converted</SelectItem>
-                <SelectItem value="lost">Lost</SelectItem>
-                <SelectItem value="closed">Closed</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select
-              value={filters.source}
-              onValueChange={(value) => handleFilterChange("source", value)}
-            >
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filter by source" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">All Sources</SelectItem>
-                <SelectItem value="website">Website</SelectItem>
-                <SelectItem value="whatsapp">WhatsApp</SelectItem>
-                <SelectItem value="instagram">Instagram</SelectItem>
-                <SelectItem value="email">Email</SelectItem>
-                <SelectItem value="phone">Phone</SelectItem>
-                <SelectItem value="referral">Referral</SelectItem>
-                <SelectItem value="direct">Direct</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Input
-              placeholder="Search by name or email"
-              className="max-w-sm"
-              onChange={(e) => handleFilterChange("search", e.target.value)}
-            />
-          </div>
-        </div>
-
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Customer</TableHead>
-              <TableHead>Brand</TableHead>
-              <TableHead>Source</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Priority</TableHead>
-              <TableHead>Created</TableHead>
-              <TableHead>Value</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {leads && leads.length > 0 ? (
-              leads.map((lead) => (
-                <TableRow key={lead.id}>
-                  <TableCell>
-                    <div>
-                      <div className="font-medium">{lead.customer_name}</div>
-                      <div className="text-sm text-gray-500">
-                        {lead.customer_email}
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      {lead.brand_image && (
-                        <img
-                          src={lead.brand_image}
-                          alt={lead.brand_name}
-                          className="w-6 h-6 rounded-full"
-                        />
-                      )}
-                      <span>{lead.brand_name}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="secondary">{lead.source}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Select
-                      value={lead.status}
-                      onValueChange={(value: Lead["status"]) =>
-                        handleStatusChange(lead.id!, value)
-                      }
-                    >
-                      <SelectTrigger className="w-[130px]">
-                        <SelectValue>
-                          <Badge
-                            className={
-                              statusColors[
-                                lead.status as keyof typeof statusColors
-                              ]
-                            }
-                          >
-                            {lead.status}
-                          </Badge>
-                        </SelectValue>
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="new">New</SelectItem>
-                        <SelectItem value="contacted">Contacted</SelectItem>
-                        <SelectItem value="qualified">Qualified</SelectItem>
-                        <SelectItem value="converted">Converted</SelectItem>
-                        <SelectItem value="lost">Lost</SelectItem>
-                        <SelectItem value="closed">Closed</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      className={
-                        priorityColors[
-                          lead.priority as keyof typeof priorityColors
-                        ] || priorityColors.normal
-                      }
-                    >
-                      {lead.priority || "normal"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{formatDate(lead.created_at!)}</TableCell>
-                  <TableCell>
-                    {formatCurrency(lead.estimated_value || 0)}
-                  </TableCell>
-                  <TableCell>
-                    <Button variant="ghost" size="sm">
-                      View Details
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={8} className="text-center py-8">
-                  <div className="text-gray-500">
-                    <p className="text-lg font-medium">No leads found</p>
-                    <p className="text-sm mt-1">
-                      {total === 0
-                        ? "No leads have been created yet."
-                        : "Try adjusting your filters to see more results."}
-                    </p>
-                    {process.env.NODE_ENV === "development" && (
-                      <div className="mt-4 text-xs bg-gray-100 p-3 rounded">
-                        <p>Debug: Total leads in system: {total}</p>
-                        <p>
-                          Current filters: {JSON.stringify(filters, null, 2)}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-
-        <div className="p-4 border-t">
-          <div className="flex items-center justify-between">
-            <div className="text-sm text-gray-500">
-              Showing {leads?.length || 0} of {total} leads
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                onClick={() =>
-                  setFilters((prev) => ({
-                    ...prev,
-                    offset: Math.max(0, prev.offset - prev.limit),
-                  }))
-                }
-                disabled={filters.offset === 0}
-              >
-                Previous
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() =>
-                  setFilters((prev) => ({
-                    ...prev,
-                    offset: prev.offset + prev.limit,
-                  }))
-                }
-                disabled={filters.offset + filters.limit >= total}
-              >
-                Next
-              </Button>
+      <Card className="border-oma-beige">
+        <CardHeader className="bg-oma-cream/30">
+          <div className="flex justify-between items-center">
+            <CardTitle className="font-canela text-oma-plum">
+              Recent Leads
+            </CardTitle>
+            <div className="text-sm text-oma-cocoa">
+              Showing {leads.length} of {totalCount} leads
             </div>
           </div>
-        </div>
-      </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-oma-cream/20 border-b border-oma-beige">
+                <tr>
+                  <th className="text-left p-4 font-medium text-oma-cocoa">
+                    Customer
+                  </th>
+                  <th className="text-left p-4 font-medium text-oma-cocoa">
+                    Brand
+                  </th>
+                  <th className="text-left p-4 font-medium text-oma-cocoa">
+                    Source
+                  </th>
+                  <th className="text-left p-4 font-medium text-oma-cocoa">
+                    Type
+                  </th>
+                  <th className="text-left p-4 font-medium text-oma-cocoa">
+                    Status
+                  </th>
+                  <th className="text-left p-4 font-medium text-oma-cocoa">
+                    Value
+                  </th>
+                  <th className="text-left p-4 font-medium text-oma-cocoa">
+                    Date
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {leads.map((lead) => (
+                  <tr
+                    key={lead.id}
+                    className="border-b border-oma-beige hover:bg-oma-cream/10"
+                  >
+                    <td className="p-4">
+                      <div>
+                        <div className="font-medium text-oma-plum">
+                          {lead.customer_name}
+                        </div>
+                        <div className="text-sm text-oma-cocoa">
+                          {lead.customer_email}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <div className="text-sm text-oma-cocoa">
+                        {lead.brands?.name || "Unknown Brand"}
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <Badge
+                        variant="outline"
+                        className="capitalize border-oma-beige text-oma-cocoa"
+                      >
+                        {lead.source}
+                      </Badge>
+                    </td>
+                    <td className="p-4">
+                      <Badge
+                        variant="outline"
+                        className="capitalize border-oma-beige text-oma-cocoa"
+                      >
+                        {lead.lead_type?.replace("_", " ")}
+                      </Badge>
+                    </td>
+                    <td className="p-4">
+                      <Select
+                        value={lead.status}
+                        onValueChange={(value) =>
+                          handleStatusChange(lead.id!, value as Lead["status"])
+                        }
+                      >
+                        <SelectTrigger className="w-32 border-oma-beige">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="new">New</SelectItem>
+                          <SelectItem value="contacted">Contacted</SelectItem>
+                          <SelectItem value="qualified">Qualified</SelectItem>
+                          <SelectItem value="converted">Converted</SelectItem>
+                          <SelectItem value="lost">Lost</SelectItem>
+                          <SelectItem value="closed">Closed</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </td>
+                    <td className="p-4">
+                      <div className="text-sm text-oma-cocoa">
+                        {lead.estimated_value
+                          ? `₦${lead.estimated_value.toLocaleString()}`
+                          : "-"}
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <div className="text-sm text-oma-cocoa">
+                        {new Date(lead.created_at!).toLocaleDateString()}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex justify-between items-center p-4 border-t border-oma-beige bg-oma-cream/10">
+              <div className="text-sm text-oma-cocoa">
+                Page {currentPage} of {totalPages}
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                  className="border-oma-beige text-oma-cocoa hover:bg-oma-plum hover:text-white"
+                >
+                  Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    setCurrentPage(Math.min(totalPages, currentPage + 1))
+                  }
+                  disabled={currentPage === totalPages}
+                  className="border-oma-beige text-oma-cocoa hover:bg-oma-plum hover:text-white"
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
