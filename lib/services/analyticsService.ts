@@ -20,6 +20,7 @@ async function getGoogleAnalyticsPageViews(): Promise<number | null> {
   try {
     const response = await fetch("/api/analytics/google", {
       method: "GET",
+      credentials: "include",
       headers: {
         "Content-Type": "application/json",
       },
@@ -60,6 +61,7 @@ async function getVercelPageViews(): Promise<number | null> {
   try {
     const response = await fetch("/api/analytics/pageviews", {
       method: "GET",
+      credentials: "include",
       headers: {
         "Content-Type": "application/json",
       },
@@ -778,6 +780,7 @@ export async function detectAnalyticsSource(): Promise<string> {
     // Try Google Analytics first
     const googleResponse = await fetch("/api/analytics/google", {
       method: "GET",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
     });
 
@@ -794,6 +797,7 @@ export async function detectAnalyticsSource(): Promise<string> {
     // Try Vercel Analytics
     const vercelResponse = await fetch("/api/analytics/pageviews", {
       method: "GET",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
     });
 
