@@ -1,7 +1,6 @@
 import { createBrowserClient } from "@supabase/ssr";
 import { createServerClient } from "@supabase/ssr";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
-import { cookies } from "next/headers";
 
 // Environment variables with validation
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -36,7 +35,9 @@ export function createClient() {
 }
 
 // Server client for server-side operations with cookies
-export function createServerSupabaseClient() {
+export async function createServerSupabaseClient() {
+  // Dynamically import cookies only when this function is called in a server context
+  const { cookies } = await import("next/headers");
   const cookieStore = cookies();
 
   return createServerClient(supabaseUrl, supabaseAnonKey, {

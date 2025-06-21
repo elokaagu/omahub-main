@@ -81,7 +81,7 @@ export interface LeadsAnalytics {
 
 // Helper function to check user permissions
 async function checkUserPermissions(userId: string) {
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
   const { data: profile, error } = await supabase
     .from("profiles")
     .select("role, owned_brands")
@@ -98,7 +98,7 @@ async function checkUserPermissions(userId: string) {
 // GET /api/admin/leads - Fetch leads and analytics
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createServerSupabaseClient();
+    const supabase = await createServerSupabaseClient();
 
     // Enhanced authentication with better error handling
     const {
@@ -337,7 +337,7 @@ export async function GET(request: NextRequest) {
 // POST /api/admin/leads - Create new lead or booking
 export async function POST(request: NextRequest) {
   try {
-    const supabaseClient = createServerSupabaseClient();
+    const supabaseClient = await createServerSupabaseClient();
     const {
       data: { user },
       error: authError,
@@ -511,7 +511,7 @@ export async function POST(request: NextRequest) {
 // PUT /api/admin/leads - Update lead or booking
 export async function PUT(request: NextRequest) {
   try {
-    const supabaseClient = createServerSupabaseClient();
+    const supabaseClient = await createServerSupabaseClient();
     const {
       data: { user },
       error: authError,
@@ -644,7 +644,7 @@ export async function PUT(request: NextRequest) {
 // DELETE /api/admin/leads - Delete lead or booking
 export async function DELETE(request: NextRequest) {
   try {
-    const supabaseClient = createServerSupabaseClient();
+    const supabaseClient = await createServerSupabaseClient();
     const {
       data: { user },
       error: authError,
