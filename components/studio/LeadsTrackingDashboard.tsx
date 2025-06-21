@@ -41,6 +41,9 @@ import {
   Pie,
   Cell,
 } from "recharts";
+import { useAuth } from "@/contexts/AuthContext";
+import { createClient } from "@/lib/supabase-unified";
+import Link from "next/link";
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8"];
 
@@ -60,7 +63,98 @@ const priorityColors = {
   urgent: "bg-red-100 text-red-800",
 };
 
+// Session Debug Component
+function SessionDebugInfo() {
+  const { user, session } = useAuth();
+  const [supabaseSession, setSupabaseSession] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const checkSupabaseSession = async () => {
+      try {
+        const supabase = createClient();
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.getSession();
+        setSupabaseSession(session);
+
+        if (error) {
+          console.error("Supabase session error:", error);
+        }
+      } catch (error) {
+        console.error("Error checking Supabase session:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkSupabaseSession();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm">
+        <p>🔄 Checking authentication status...</p>
+      </div>
+    );
+  }
+
+  const hasContextSession = !!session;
+  const hasSupabaseSession = !!supabaseSession;
+  const hasUser = !!user;
+
+  return (
+    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm space-y-2">
+      <p>
+        <strong>🔐 Authentication Status:</strong>
+      </p>
+      <p>
+        • Auth Context Session: {hasContextSession ? "✅ Active" : "❌ Missing"}
+      </p>
+      <p>
+        • Supabase Client Session:{" "}
+        {hasSupabaseSession ? "✅ Active" : "❌ Missing"}
+      </p>
+      <p>• User Profile: {hasUser ? "✅ Loaded" : "❌ Missing"}</p>
+
+      {hasUser && (
+        <p>
+          • User Role: {user.role} ({user.email})
+        </p>
+      )}
+
+      {!hasContextSession && !hasSupabaseSession && (
+        <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded">
+          <p className="text-red-800 font-medium">⚠️ No Active Session</p>
+          <p className="text-red-700 text-sm mt-1">
+            You need to be logged in to view analytics. Please sign in to
+            continue.
+          </p>
+          <Link href="/login" className="inline-block mt-2">
+            <Button size="sm" className="bg-red-600 hover:bg-red-700">
+              Sign In
+            </Button>
+          </Link>
+        </div>
+      )}
+
+      {(hasContextSession || hasSupabaseSession) && !hasUser && (
+        <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded">
+          <p className="text-yellow-800 font-medium">
+            ⚠️ Session Without User Profile
+          </p>
+          <p className="text-yellow-700 text-sm mt-1">
+            You're logged in but your user profile couldn't be loaded.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function LeadsTrackingDashboard() {
+  const { user, session } = useAuth();
   const [filters, setFilters] = useState<{
     brand_id: string;
     status: Lead["status"] | "";
@@ -95,6 +189,10 @@ export default function LeadsTrackingDashboard() {
   // Debug logging
   useEffect(() => {
     console.log("🔍 LeadsTrackingDashboard Debug:", {
+      hasUser: !!user,
+      hasSession: !!session,
+      userRole: user?.role,
+      userEmail: user?.email,
       leadsLoading,
       analyticsLoading,
       leadsError,
@@ -104,6 +202,8 @@ export default function LeadsTrackingDashboard() {
       analyticsData: analytics,
     });
   }, [
+    user,
+    session,
     leads,
     analytics,
     leadsLoading,
@@ -131,10 +231,50 @@ export default function LeadsTrackingDashboard() {
     setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
+  // Show authentication required state
+  if (!user || !session) {
+    return (
+      <div className="space-y-4">
+        <SessionDebugInfo />
+
+        <div className="text-center py-12">
+          <div className="mx-auto h-12 w-12 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+            <svg
+              className="h-6 w-6 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+              />
+            </svg>
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            Authentication Required
+          </h3>
+          <p className="text-gray-600 mb-4">
+            Please sign in to access the leads tracking dashboard.
+          </p>
+          <Link href="/login">
+            <Button className="bg-oma-plum hover:bg-oma-plum/90">
+              Sign In
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   // Show error states
   if (leadsError || analyticsError) {
     return (
       <div className="space-y-4">
+        <SessionDebugInfo />
+
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
           <h3 className="text-red-800 font-semibold">
             Error Loading Leads Dashboard
@@ -158,20 +298,6 @@ export default function LeadsTrackingDashboard() {
             </Button>
           </div>
         </div>
-
-        {/* Debug info in development */}
-        {process.env.NODE_ENV === "development" && (
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-xs">
-            <p>
-              <strong>Debug Info:</strong>
-            </p>
-            <p>Leads Loading: {leadsLoading ? "Yes" : "No"}</p>
-            <p>Analytics Loading: {analyticsLoading ? "Yes" : "No"}</p>
-            <p>Leads Count: {leads?.length || 0}</p>
-            <p>Total: {total}</p>
-            <p>Filters: {JSON.stringify(filters)}</p>
-          </div>
-        )}
       </div>
     );
   }
@@ -201,23 +327,7 @@ export default function LeadsTrackingDashboard() {
   return (
     <div className="space-y-8">
       {/* Debug info in development */}
-      {process.env.NODE_ENV === "development" && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm">
-          <p>
-            <strong>Dashboard Status:</strong>
-          </p>
-          <p>
-            ✅ Leads: {leads?.length || 0} found (Total: {total})
-          </p>
-          <p>✅ Analytics: {analytics ? "Loaded" : "Not loaded"}</p>
-          <p>📊 Total Leads in Analytics: {analytics?.total_leads || 0}</p>
-          {leads && leads.length === 0 && total === 0 && (
-            <p className="text-orange-600 mt-2">
-              ⚠️ No leads found - check database and permissions
-            </p>
-          )}
-        </div>
-      )}
+      {process.env.NODE_ENV === "development" && <SessionDebugInfo />}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="p-4">

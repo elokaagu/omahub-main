@@ -31,7 +31,7 @@ const createClient = () => {
       detectSessionInUrl: true,
       flowType: "pkce",
       debug: false, // Disable debug to reduce console noise
-      storageKey: "omahub-auth-token",
+      storageKey: `sb-${new URL(supabaseUrl).hostname.split(".")[0]}-auth-token`,
     },
     global: {
       fetch: fetch,
