@@ -262,26 +262,196 @@ export async function GET(request: NextRequest) {
               {} as Record<string, number>
             ) || {};
 
+          // Calculate monthly trends for the last 6 months
+          const monthlyTrends = [];
+          const now = new Date();
+
+          for (let i = 5; i >= 0; i--) {
+            const monthDate = new Date(
+              now.getFullYear(),
+              now.getMonth() - i,
+              1
+            );
+            const monthName = monthDate.toLocaleDateString("en-US", {
+              month: "short",
+              year: "numeric",
+            });
+
+            const monthLeads =
+              leads?.filter((lead) => {
+                const leadDate = new Date(lead.created_at);
+                return (
+                  leadDate.getMonth() === monthDate.getMonth() &&
+                  leadDate.getFullYear() === monthDate.getFullYear()
+                );
+              }).length || 0;
+
+            const monthBookings = 0; // We'll get this from bookings table if available
+
+            monthlyTrends.push({
+              month: monthName,
+              leads: monthLeads,
+              bookings: monthBookings,
+              revenue: 0,
+              commission: 0,
+            });
+          }
+
+          // Get bookings data for more complete analytics
+          let bookingsQuery = supabase.from("bookings").select("*");
+          if (profile.role === "brand_admin" && profile.owned_brands) {
+            bookingsQuery = bookingsQuery.in("brand_id", profile.owned_brands);
+          }
+
+          const { data: bookings } = await bookingsQuery;
+          const totalBookings = bookings?.length || 0;
+          const totalBookingValue =
+            bookings?.reduce(
+              (sum, booking) => sum + (booking.booking_value || 0),
+              0
+            ) || 0;
+          const totalCommissionEarned =
+            bookings?.reduce(
+              (sum, booking) => sum + (booking.commission_amount || 0),
+              0
+            ) || 0;
+          const averageBookingValue =
+            totalBookings > 0 ? totalBookingValue / totalBookings : 0;
+
+          const thisMonthBookings =
+            bookings?.filter((booking) => {
+              const bookingDate = new Date(
+                booking.booking_date || booking.created_at
+              );
+              const now = new Date();
+              return (
+                bookingDate.getMonth() === now.getMonth() &&
+                bookingDate.getFullYear() === now.getFullYear()
+              );
+            }).length || 0;
+
+          const thisMonthRevenue =
+            bookings
+              ?.filter((booking) => {
+                const bookingDate = new Date(
+                  booking.booking_date || booking.created_at
+                );
+                const now = new Date();
+                return (
+                  bookingDate.getMonth() === now.getMonth() &&
+                  bookingDate.getFullYear() === now.getFullYear()
+                );
+              })
+              .reduce(
+                (sum, booking) => sum + (booking.booking_value || 0),
+                0
+              ) || 0;
+
+          const thisMonthCommission =
+            bookings
+              ?.filter((booking) => {
+                const bookingDate = new Date(
+                  booking.booking_date || booking.created_at
+                );
+                const now = new Date();
+                return (
+                  bookingDate.getMonth() === now.getMonth() &&
+                  bookingDate.getFullYear() === now.getFullYear()
+                );
+              })
+              .reduce(
+                (sum, booking) => sum + (booking.commission_amount || 0),
+                0
+              ) || 0;
+
+          // Update monthly trends with booking data
+          monthlyTrends.forEach((trend) => {
+            const [monthName, year] = trend.month.split(" ");
+            const monthIndex = new Date(`${monthName} 1, ${year}`).getMonth();
+            const yearNum = parseInt(year);
+
+            const monthBookingsData =
+              bookings?.filter((booking) => {
+                const bookingDate = new Date(
+                  booking.booking_date || booking.created_at
+                );
+                return (
+                  bookingDate.getMonth() === monthIndex &&
+                  bookingDate.getFullYear() === yearNum
+                );
+              }) || [];
+
+            trend.bookings = monthBookingsData.length;
+            trend.revenue = monthBookingsData.reduce(
+              (sum, booking) => sum + (booking.booking_value || 0),
+              0
+            );
+            trend.commission = monthBookingsData.reduce(
+              (sum, booking) => sum + (booking.commission_amount || 0),
+              0
+            );
+          });
+
+          // Calculate bookings by type
+          const bookingsByType =
+            bookings?.reduce(
+              (acc, booking) => {
+                acc[booking.booking_type] =
+                  (acc[booking.booking_type] || 0) + 1;
+                return acc;
+              },
+              {} as Record<string, number>
+            ) || {};
+
+          // Calculate top performing brands (for super_admin)
+          const topPerformingBrands = [];
+          if (profile.role === "super_admin" && bookings) {
+            const brandPerformance = bookings.reduce(
+              (acc, booking) => {
+                if (!acc[booking.brand_id]) {
+                  acc[booking.brand_id] = {
+                    brand_id: booking.brand_id,
+                    brand_name: booking.brand_id, // We'll need to join with brands table for actual name
+                    total_revenue: 0,
+                    total_commission: 0,
+                  };
+                }
+                acc[booking.brand_id].total_revenue +=
+                  booking.booking_value || 0;
+                acc[booking.brand_id].total_commission +=
+                  booking.commission_amount || 0;
+                return acc;
+              },
+              {} as Record<string, any>
+            );
+
+            topPerformingBrands.push(
+              ...Object.values(brandPerformance)
+                .sort((a: any, b: any) => b.total_revenue - a.total_revenue)
+                .slice(0, 5)
+            );
+          }
+
           const fallbackData = {
             total_leads: totalLeads,
             qualified_leads: qualifiedLeads,
             converted_leads: convertedLeads,
-            total_bookings: 0,
-            total_booking_value: 0,
-            total_commission_earned: 0,
-            average_booking_value: 0,
+            total_bookings: totalBookings,
+            total_booking_value: totalBookingValue,
+            total_commission_earned: totalCommissionEarned,
+            average_booking_value: Math.round(averageBookingValue),
             conversion_rate:
               totalLeads > 0
                 ? Math.round((convertedLeads / totalLeads) * 100)
                 : 0,
             this_month_leads: thisMonthLeads,
-            this_month_bookings: 0,
-            this_month_revenue: 0,
-            this_month_commission: 0,
-            top_performing_brands: [],
+            this_month_bookings: thisMonthBookings,
+            this_month_revenue: thisMonthRevenue,
+            this_month_commission: thisMonthCommission,
+            top_performing_brands: topPerformingBrands,
             leads_by_source: leadsBySource,
-            bookings_by_type: {},
-            monthly_trends: [],
+            bookings_by_type: bookingsByType,
+            monthly_trends: monthlyTrends,
           };
 
           console.log("✅ Returning fallback analytics data:", fallbackData);

@@ -374,6 +374,7 @@ export default function LeadsTrackingDashboard() {
                   outerRadius={80}
                   fill="#8884d8"
                   dataKey="value"
+                  label={({ name, value }) => `${name}: ${value}`}
                 >
                   {Object.entries(analytics?.leads_by_source || {}).map(
                     (entry, index) => (
@@ -407,6 +408,134 @@ export default function LeadsTrackingDashboard() {
           </div>
         </Card>
       </div>
+
+      {/* Additional Analytics Sections */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Bookings by Type */}
+        {analytics?.bookings_by_type &&
+          Object.keys(analytics.bookings_by_type).length > 0 && (
+            <Card className="p-4">
+              <h3 className="text-lg font-semibold mb-4">Bookings by Type</h3>
+              <div className="h-[250px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={Object.entries(analytics.bookings_by_type).map(
+                        ([name, value]) => ({
+                          name: name
+                            .replace("_", " ")
+                            .replace(/\b\w/g, (l) => l.toUpperCase()),
+                          value,
+                        })
+                      )}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      outerRadius={70}
+                      fill="#8884d8"
+                      dataKey="value"
+                      label={({ name, value }) => `${name}: ${value}`}
+                    >
+                      {Object.entries(analytics.bookings_by_type).map(
+                        (entry, index) => (
+                          <Cell
+                            key={`booking-cell-${index}`}
+                            fill={COLORS[index % COLORS.length]}
+                          />
+                        )
+                      )}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </Card>
+          )}
+
+        {/* Revenue Metrics */}
+        <Card className="p-4">
+          <h3 className="text-lg font-semibold mb-4">Revenue Metrics</h3>
+          <div className="space-y-4">
+            <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
+              <span className="text-sm font-medium text-gray-600">
+                Total Booking Value
+              </span>
+              <span className="text-lg font-semibold text-gray-900">
+                {formatCurrency(analytics?.total_booking_value || 0)}
+              </span>
+            </div>
+            <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
+              <span className="text-sm font-medium text-gray-600">
+                Average Booking Value
+              </span>
+              <span className="text-lg font-semibold text-gray-900">
+                {formatCurrency(analytics?.average_booking_value || 0)}
+              </span>
+            </div>
+            <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
+              <span className="text-sm font-medium text-gray-600">
+                Total Commission Earned
+              </span>
+              <span className="text-lg font-semibold text-green-600">
+                {formatCurrency(analytics?.total_commission_earned || 0)}
+              </span>
+            </div>
+            <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
+              <span className="text-sm font-medium text-gray-600">
+                This Month Revenue
+              </span>
+              <span className="text-lg font-semibold text-blue-600">
+                {formatCurrency(analytics?.this_month_revenue || 0)}
+              </span>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      {/* Top Performing Brands (Super Admin Only) */}
+      {user?.role === "super_admin" &&
+        analytics?.top_performing_brands &&
+        analytics.top_performing_brands.length > 0 && (
+          <Card className="p-4">
+            <h3 className="text-lg font-semibold mb-4">
+              Top Performing Brands
+            </h3>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left py-2">Brand</th>
+                    <th className="text-right py-2">Total Revenue</th>
+                    <th className="text-right py-2">Commission Earned</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {analytics.top_performing_brands.map((brand, index) => (
+                    <tr key={brand.brand_id} className="border-b">
+                      <td className="py-2">
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="w-2 h-2 rounded-full"
+                            style={{
+                              backgroundColor: COLORS[index % COLORS.length],
+                            }}
+                          ></div>
+                          {brand.brand_name}
+                        </div>
+                      </td>
+                      <td className="text-right py-2 font-medium">
+                        {formatCurrency(brand.total_revenue)}
+                      </td>
+                      <td className="text-right py-2 font-medium text-green-600">
+                        {formatCurrency(brand.total_commission)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        )}
 
       {/* Leads Table */}
       <div className="bg-white rounded-lg shadow">
