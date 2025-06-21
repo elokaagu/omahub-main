@@ -12,28 +12,34 @@ export async function PUT(
     const supabase = createRouteHandlerClient({ cookies });
     const brandId = params.id;
 
-    // Get the current user
+    // Get the current user with enhanced error handling
     console.log("🔍 Checking user authentication...");
     const {
       data: { user },
       error: userError,
     } = await supabase.auth.getUser();
 
-    console.log("👤 User auth result:", {
+    console.log("👤 Authentication result:", {
       hasUser: !!user,
       userId: user?.id,
       userEmail: user?.email,
       error: userError?.message,
     });
 
-    console.log("🔍 Auth check:", {
-      hasUser: !!user,
-      userEmail: user?.email,
-      error: userError?.message,
-    });
-    if (userError || !user) {
-      console.log("❌ Authentication failed:", userError?.message || "No user");
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (userError) {
+      console.log("❌ Authentication error:", userError.message);
+      return NextResponse.json(
+        { error: "Authentication failed", details: userError.message },
+        { status: 401 }
+      );
+    }
+
+    if (!user) {
+      console.log("❌ No user session found");
+      return NextResponse.json(
+        { error: "No active session. Please log in first." },
+        { status: 401 }
+      );
     }
 
     // Check if user has permission to update this brand
@@ -51,10 +57,21 @@ export async function PUT(
       error: profileError?.message,
     });
 
-    if (profileError || !profile) {
-      console.log("❌ Profile not found:", profileError?.message);
+    if (profileError) {
+      console.log("❌ Profile fetch error:", profileError.message);
       return NextResponse.json(
-        { error: "User profile not found" },
+        {
+          error: "Failed to fetch user profile",
+          details: profileError.message,
+        },
+        { status: 500 }
+      );
+    }
+
+    if (!profile) {
+      console.log("❌ User profile not found");
+      return NextResponse.json(
+        { error: "User profile not found. Please contact support." },
         { status: 404 }
       );
     }
@@ -73,7 +90,11 @@ export async function PUT(
     if (!isAdmin && !isBrandOwner) {
       console.log("❌ Insufficient permissions");
       return NextResponse.json(
-        { error: "Insufficient permissions to update this brand" },
+        {
+          error: "Insufficient permissions to update this brand",
+          userRole: profile.role,
+          requiredRole: "admin, super_admin, or brand owner",
+        },
         { status: 403 }
       );
     }
