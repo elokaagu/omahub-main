@@ -9,6 +9,9 @@ import {
   ClockIcon,
   EyeIcon,
   ChatBubbleLeftRightIcon,
+  InboxIcon,
+  ArrowPathIcon,
+  ChatBubbleLeftIcon,
 } from "@heroicons/react/24/outline";
 import { formatDistanceToNow } from "date-fns";
 
@@ -28,23 +31,23 @@ interface InboxFilters {
 interface Inquiry {
   id: string;
   brand_id: string;
-  customer_name: string;
-  customer_email: string;
-  customer_phone?: string;
+  name: string;
+  email: string;
+  phone?: string;
   subject: string;
   message: string;
-  inquiry_type: string;
+  type: string;
   status: string;
   priority: string;
   source: string;
   created_at: string;
   updated_at: string;
-  read_at?: string;
+  read: boolean;
   replied_at?: string;
   brand_name: string;
   brand_category?: string;
   brand_image?: string;
-  reply_count: number;
+  replies_count: number;
   latest_reply_message?: string;
   latest_reply_at?: string;
   latest_reply_admin?: string;
@@ -115,7 +118,7 @@ export default function InquiryList({
 
   const handleInquiryClick = async (inquiry: Inquiry) => {
     // Mark as read if unread
-    if (inquiry.status === "unread") {
+    if (!inquiry.read) {
       try {
         await fetch(`/api/studio/inbox/${inquiry.id}`, {
           method: "PATCH",
@@ -132,9 +135,7 @@ export default function InquiryList({
         // Update local state
         setInquiries((prev) =>
           prev.map((inq) =>
-            inq.id === inquiry.id
-              ? { ...inq, status: "read", read_at: new Date().toISOString() }
-              : inq
+            inq.id === inquiry.id ? { ...inq, status: "read", read: true } : inq
           )
         );
       } catch (error) {
@@ -192,17 +193,28 @@ export default function InquiryList({
 
   if (loading) {
     return (
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+      <div className="bg-white rounded-lg shadow-sm border border-oma-beige">
+        <div className="px-6 py-4 border-b border-oma-beige">
+          <h3 className="text-lg font-canela text-oma-plum">
+            Loading Inquiries...
+          </h3>
+        </div>
         <div className="p-6">
-          <div className="animate-pulse space-y-4">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="border border-gray-200 rounded-lg p-4">
-                <div className="flex justify-between items-start mb-2">
-                  <div className="h-4 bg-gray-200 rounded w-1/3"></div>
-                  <div className="h-6 bg-gray-200 rounded w-16"></div>
+          <div className="space-y-4">
+            {[...Array(3)].map((_, i) => (
+              <div
+                key={i}
+                className="border border-oma-beige rounded-lg p-4 animate-pulse"
+              >
+                <div className="flex justify-between items-start mb-3">
+                  <div className="space-y-2">
+                    <div className="h-4 bg-oma-beige rounded w-32"></div>
+                    <div className="h-3 bg-oma-beige rounded w-48"></div>
+                  </div>
+                  <div className="h-6 bg-oma-beige rounded w-16"></div>
                 </div>
-                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                <div className="h-4 bg-oma-beige rounded w-full"></div>
+                <div className="h-4 bg-oma-beige rounded w-3/4 mt-2"></div>
               </div>
             ))}
           </div>
@@ -213,191 +225,199 @@ export default function InquiryList({
 
   if (error) {
     return (
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div className="text-center">
-          <p className="text-red-600 mb-4">Error loading inquiries: {error}</p>
-          <button
-            onClick={fetchInquiries}
-            className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
-          >
-            Try Again
-          </button>
+      <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+        <h3 className="text-red-800 font-semibold font-canela">
+          Error Loading Inquiries
+        </h3>
+        <p className="text-red-600 text-sm mt-2">{error}</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="mt-4 px-4 py-2 bg-oma-plum text-white rounded-lg hover:bg-oma-plum/90 transition-colors"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  if (inquiries.length === 0) {
+    return (
+      <div className="bg-white rounded-lg shadow-sm border border-oma-beige">
+        <div className="px-6 py-4 border-b border-oma-beige">
+          <h3 className="text-lg font-canela text-oma-plum">
+            Customer Inquiries
+          </h3>
+        </div>
+        <div className="text-center py-16 bg-oma-cream/30">
+          <div className="mx-auto h-16 w-16 text-oma-cocoa mb-4">
+            <InboxIcon className="h-full w-full" />
+          </div>
+          <h3 className="text-xl font-canela text-oma-plum mb-2">
+            No Inquiries Found
+          </h3>
+          <p className="text-oma-cocoa">
+            No inquiries match your current filters.
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-      {/* Header */}
-      <div className="px-6 py-4 border-b border-gray-200">
-        <div className="flex justify-between items-center">
-          <h2 className="text-lg font-semibold text-gray-900">
-            Inquiries ({totalCount})
-          </h2>
-          {Object.keys(filters).some(
-            (key) => filters[key as keyof InboxFilters]
-          ) && <span className="text-sm text-gray-500">Filtered results</span>}
+    <div className="bg-white rounded-lg shadow-sm border border-oma-beige overflow-hidden">
+      <div className="px-6 py-4 border-b border-oma-beige">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-canela text-oma-plum">
+            Customer Inquiries ({inquiries.length})
+          </h3>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => window.location.reload()}
+              className="p-2 text-oma-cocoa hover:text-oma-plum hover:bg-oma-cream rounded-lg transition-colors"
+              title="Refresh"
+            >
+              <ArrowPathIcon className="h-5 w-5" />
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Inquiry List */}
-      <div className="divide-y divide-gray-200">
-        {inquiries.length === 0 ? (
-          <div className="p-8 text-center">
-            <ChatBubbleLeftRightIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              No inquiries found
-            </h3>
-            <p className="text-gray-500">
-              {Object.keys(filters).some(
-                (key) => filters[key as keyof InboxFilters]
-              )
-                ? "Try adjusting your filters to see more results."
-                : "Customer inquiries will appear here when they contact your brand."}
-            </p>
-          </div>
-        ) : (
-          inquiries.map((inquiry) => {
-            const StatusIcon = getStatusIcon(inquiry.status);
-            const isUnread = inquiry.status === "unread";
-
-            return (
-              <div
-                key={inquiry.id}
-                onClick={() => handleInquiryClick(inquiry)}
-                className={`p-6 hover:bg-gray-50 cursor-pointer transition-colors ${
-                  isUnread ? "bg-blue-50/30" : ""
-                }`}
-              >
-                <div className="flex justify-between items-start mb-3">
-                  <div className="flex items-center gap-3">
-                    <div className="flex-shrink-0">
-                      <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-                        <UserIcon className="h-5 w-5 text-gray-500" />
-                      </div>
-                    </div>
-                    <div>
-                      <h3
-                        className={`font-medium ${isUnread ? "text-gray-900 font-semibold" : "text-gray-900"}`}
-                      >
-                        {inquiry.customer_name}
-                      </h3>
-                      <p className="text-sm text-gray-500">
-                        {inquiry.customer_email}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    {/* Priority Badge */}
+      <div className="divide-y divide-oma-beige">
+        {inquiries.map((inquiry) => (
+          <div
+            key={inquiry.id}
+            onClick={() => onInquirySelect(inquiry.id)}
+            className="p-6 hover:bg-oma-cream/50 cursor-pointer transition-colors"
+          >
+            <div className="flex items-start justify-between mb-3">
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-2">
+                  <h4 className="font-semibold text-oma-plum">
+                    {inquiry.name}
+                  </h4>
+                  {!inquiry.read && (
+                    <span className="inline-block w-2 h-2 bg-blue-500 rounded-full"></span>
+                  )}
+                </div>
+                <p className="text-sm text-oma-cocoa">{inquiry.email}</p>
+                {inquiry.phone && (
+                  <p className="text-sm text-oma-cocoa">{inquiry.phone}</p>
+                )}
+                {inquiry.brand_name && (
+                  <p className="text-xs text-oma-plum mt-1 bg-oma-beige px-2 py-1 rounded-full inline-block">
+                    Brand: {inquiry.brand_name}
+                  </p>
+                )}
+              </div>
+              <div className="text-right flex-shrink-0">
+                <div className="flex items-center gap-2 mb-2">
+                  <span
+                    className={`inline-block px-3 py-1 text-xs font-medium rounded-full ${getStatusColor(
+                      inquiry.status
+                    )}`}
+                  >
+                    {inquiry.status}
+                  </span>
+                  {inquiry.priority && inquiry.priority !== "normal" && (
                     <span
-                      className={`px-2 py-1 text-xs font-medium rounded-full border ${getPriorityColor(inquiry.priority)}`}
+                      className={`inline-block px-2 py-1 text-xs font-medium rounded-full ${getPriorityColor(
+                        inquiry.priority
+                      )}`}
                     >
                       {inquiry.priority}
                     </span>
-
-                    {/* Status Badge */}
-                    <span
-                      className={`flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full border ${getStatusColor(inquiry.status)}`}
-                    >
-                      <StatusIcon className="h-3 w-3" />
-                      {inquiry.status}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="mb-3">
-                  <h4
-                    className={`text-sm ${isUnread ? "font-semibold text-gray-900" : "font-medium text-gray-800"} mb-1`}
-                  >
-                    {inquiry.subject}
-                  </h4>
-                  <p className="text-sm text-gray-600 line-clamp-2">
-                    {inquiry.message}
-                  </p>
-                </div>
-
-                <div className="flex justify-between items-center text-xs text-gray-500">
-                  <div className="flex items-center gap-4">
-                    <span className="flex items-center gap-1">
-                      <CalendarIcon className="h-3 w-3" />
-                      {formatDistanceToNow(new Date(inquiry.created_at), {
-                        addSuffix: true,
-                      })}
-                    </span>
-                    <span className="capitalize">
-                      {inquiry.inquiry_type.replace("_", " ")}
-                    </span>
-                    <span className="capitalize">via {inquiry.source}</span>
-                    {userProfile.role === "super_admin" && (
-                      <span className="font-medium">{inquiry.brand_name}</span>
-                    )}
-                  </div>
-
-                  {inquiry.reply_count > 0 && (
-                    <div className="flex items-center gap-1">
-                      <ChatBubbleLeftRightIcon className="h-3 w-3" />
-                      <span>{inquiry.reply_count} replies</span>
-                    </div>
                   )}
                 </div>
+                <p className="text-xs text-oma-cocoa">
+                  {new Date(inquiry.created_at).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </p>
               </div>
-            );
-          })
-        )}
-      </div>
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="px-6 py-4 border-t border-gray-200">
-          <div className="flex justify-between items-center">
-            <div className="text-sm text-gray-500">
-              Showing {(currentPage - 1) * 20 + 1} to{" "}
-              {Math.min(currentPage * 20, totalCount)} of {totalCount} inquiries
             </div>
 
-            <div className="flex gap-2">
-              <button
-                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                disabled={currentPage === 1}
-                className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Previous
-              </button>
-
-              <div className="flex gap-1">
-                {[...Array(Math.min(5, totalPages))].map((_, i) => {
-                  const page = i + 1;
-                  return (
-                    <button
-                      key={page}
-                      onClick={() => setCurrentPage(page)}
-                      className={`px-3 py-2 text-sm rounded-lg ${
-                        currentPage === page
-                          ? "bg-emerald-600 text-white"
-                          : "border border-gray-300 hover:bg-gray-50"
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  );
-                })}
+            {/* Inquiry Type */}
+            {inquiry.type && (
+              <div className="mb-3">
+                <span className="text-xs text-oma-cocoa bg-oma-beige px-2 py-1 rounded-full">
+                  {inquiry.type.replace("_", " ").toUpperCase()}
+                </span>
               </div>
+            )}
 
-              <button
-                onClick={() =>
-                  setCurrentPage((prev) => Math.min(totalPages, prev + 1))
-                }
-                disabled={currentPage === totalPages}
-                className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Next
-              </button>
+            {/* Message Preview */}
+            <p className="text-oma-cocoa text-sm leading-relaxed line-clamp-2">
+              {inquiry.message}
+            </p>
+
+            {/* Action Buttons */}
+            <div className="flex items-center justify-between mt-4">
+              <div className="flex items-center gap-2">
+                {!inquiry.read && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // markAsRead function would need to be implemented
+                    }}
+                    className="text-xs text-oma-plum hover:text-oma-plum/80 underline"
+                  >
+                    Mark as read
+                  </button>
+                )}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onInquirySelect(inquiry.id);
+                  }}
+                  className="text-xs text-oma-plum hover:text-oma-plum/80 underline"
+                >
+                  View details
+                </button>
+              </div>
+              <div className="flex items-center gap-1">
+                <ChatBubbleLeftIcon className="h-4 w-4 text-oma-cocoa" />
+                <span className="text-xs text-oma-cocoa">
+                  {inquiry.replies_count || 0} replies
+                </span>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        ))}
+      </div>
     </div>
   );
+}
+
+// Helper functions for status and priority colors
+function getStatusColor(status: string): string {
+  switch (status) {
+    case "unread":
+    case "new":
+      return "bg-blue-100 text-blue-800 border border-blue-200";
+    case "read":
+    case "in_progress":
+      return "bg-yellow-100 text-yellow-800 border border-yellow-200";
+    case "replied":
+      return "bg-green-100 text-green-800 border border-green-200";
+    case "closed":
+      return "bg-gray-100 text-gray-800 border border-gray-200";
+    default:
+      return "bg-gray-100 text-gray-800 border border-gray-200";
+  }
+}
+
+function getPriorityColor(priority: string): string {
+  switch (priority) {
+    case "urgent":
+      return "bg-red-100 text-red-800 border border-red-200";
+    case "high":
+      return "bg-orange-100 text-orange-800 border border-orange-200";
+    case "low":
+      return "bg-gray-100 text-gray-800 border border-gray-200";
+    default:
+      return "bg-gray-100 text-gray-800 border border-gray-200";
+  }
 }

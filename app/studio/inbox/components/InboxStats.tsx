@@ -60,15 +60,15 @@ export default function InboxStats() {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[...Array(4)].map((_, i) => (
           <div
             key={i}
-            className="bg-white rounded-lg shadow-sm border border-gray-200 p-6"
+            className="bg-white rounded-lg shadow-sm border border-oma-beige p-6"
           >
             <div className="animate-pulse">
-              <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-              <div className="h-8 bg-gray-200 rounded w-1/2"></div>
+              <div className="h-4 bg-oma-beige rounded w-3/4 mb-2"></div>
+              <div className="h-8 bg-oma-beige rounded w-1/2"></div>
             </div>
           </div>
         ))}
@@ -78,11 +78,14 @@ export default function InboxStats() {
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-        <p className="text-red-600">Error loading statistics: {error}</p>
+      <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+        <h3 className="text-red-800 font-semibold font-canela">
+          Error Loading Statistics
+        </h3>
+        <p className="text-red-600 text-sm mt-2">{error}</p>
         <button
           onClick={fetchStats}
-          className="mt-2 text-sm text-red-700 hover:text-red-800 underline"
+          className="mt-4 text-sm text-oma-plum hover:text-oma-plum/80 underline"
         >
           Try again
         </button>
@@ -99,9 +102,9 @@ export default function InboxStats() {
       title: "Total Inquiries",
       value: stats.totalInquiries,
       icon: InboxIcon,
-      color: "text-blue-600",
-      bgColor: "bg-blue-50",
-      borderColor: "border-blue-200",
+      color: "text-oma-plum",
+      bgColor: "bg-oma-plum/10",
+      borderColor: "border-oma-plum/20",
     },
     {
       title: "Unread",
@@ -130,22 +133,22 @@ export default function InboxStats() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Main Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {statCards.map((stat) => {
           const Icon = stat.icon;
           return (
             <div
               key={stat.title}
-              className={`bg-white rounded-lg shadow-sm border ${stat.borderColor} p-6`}
+              className={`bg-white rounded-lg shadow-sm border border-oma-beige p-6 border-l-4 ${stat.borderColor}`}
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">
+                  <p className="text-sm font-medium text-oma-cocoa">
                     {stat.title}
                   </p>
-                  <p className="text-3xl font-bold text-gray-900">
+                  <p className="text-3xl font-canela text-oma-plum mt-1">
                     {stat.value}
                   </p>
                 </div>
@@ -161,23 +164,23 @@ export default function InboxStats() {
       {/* Additional Stats */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Activity */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-lg shadow-sm border border-oma-beige p-6">
           <div className="flex items-center gap-2 mb-4">
-            <CalendarDaysIcon className="h-5 w-5 text-gray-500" />
-            <h3 className="text-lg font-semibold text-gray-900">
+            <CalendarDaysIcon className="h-5 w-5 text-oma-cocoa" />
+            <h3 className="text-lg font-canela text-oma-plum">
               Recent Activity
             </h3>
           </div>
           <div className="space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Today</span>
-              <span className="text-sm font-medium text-gray-900">
+              <span className="text-sm text-oma-cocoa">Today</span>
+              <span className="text-sm font-medium text-oma-plum">
                 {stats.todayInquiries} inquiries
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">This Week</span>
-              <span className="text-sm font-medium text-gray-900">
+              <span className="text-sm text-oma-cocoa">This Week</span>
+              <span className="text-sm font-medium text-oma-plum">
                 {stats.thisWeekInquiries} inquiries
               </span>
             </div>
@@ -185,20 +188,18 @@ export default function InboxStats() {
         </div>
 
         {/* Inquiry Types */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-lg shadow-sm border border-oma-beige p-6">
           <div className="flex items-center gap-2 mb-4">
-            <TrendingUp className="h-5 w-5 text-gray-500" />
-            <h3 className="text-lg font-semibold text-gray-900">
-              Inquiry Types
-            </h3>
+            <TrendingUp className="h-5 w-5 text-oma-cocoa" />
+            <h3 className="text-lg font-canela text-oma-plum">Inquiry Types</h3>
           </div>
           <div className="space-y-3">
             {Object.entries(stats.inquiriesByType).map(([type, count]) => (
               <div key={type} className="flex justify-between items-center">
-                <span className="text-sm text-gray-600 capitalize">
+                <span className="text-sm text-oma-cocoa capitalize">
                   {type.replace("_", " ")}
                 </span>
-                <span className="text-sm font-medium text-gray-900">
+                <span className="text-sm font-medium text-oma-plum">
                   {count}
                 </span>
               </div>

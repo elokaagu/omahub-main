@@ -61,21 +61,21 @@ export default function InboxClient({ userProfile }: InboxClientProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Statistics */}
       <InboxStats />
 
       {/* Filters and Search */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+      <div className="bg-white rounded-lg shadow-sm border border-oma-beige p-6">
         <div className="flex flex-col sm:flex-row gap-4">
           {/* Search */}
           <div className="flex-1">
             <div className="relative">
-              <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-oma-cocoa" />
               <input
                 type="text"
                 placeholder="Search inquiries..."
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                className="w-full pl-10 pr-4 py-2 border border-oma-beige rounded-lg focus:ring-2 focus:ring-oma-plum focus:border-oma-plum"
                 value={filters.search || ""}
                 onChange={(e) =>
                   handleFilterChange({ ...filters, search: e.target.value })
@@ -87,7 +87,7 @@ export default function InboxClient({ userProfile }: InboxClientProps) {
           {/* Filter Toggle */}
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 border border-oma-beige rounded-lg hover:bg-oma-cream transition-colors"
           >
             <FunnelIcon className="h-5 w-5" />
             Filters
@@ -96,11 +96,11 @@ export default function InboxClient({ userProfile }: InboxClientProps) {
 
         {/* Filter Options */}
         {showFilters && (
-          <div className="mt-4 pt-4 border-t border-gray-200">
+          <div className="mt-6 pt-6 border-t border-oma-beige">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Status Filter */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-oma-cocoa mb-2">
                   Status
                 </label>
                 <select
@@ -111,7 +111,7 @@ export default function InboxClient({ userProfile }: InboxClientProps) {
                       status: e.target.value || undefined,
                     })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                  className="w-full px-3 py-2 border border-oma-beige rounded-lg focus:ring-2 focus:ring-oma-plum focus:border-oma-plum"
                 >
                   <option value="">All Status</option>
                   <option value="unread">Unread</option>
@@ -123,7 +123,7 @@ export default function InboxClient({ userProfile }: InboxClientProps) {
 
               {/* Priority Filter */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-oma-cocoa mb-2">
                   Priority
                 </label>
                 <select
@@ -134,7 +134,7 @@ export default function InboxClient({ userProfile }: InboxClientProps) {
                       priority: e.target.value || undefined,
                     })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                  className="w-full px-3 py-2 border border-oma-beige rounded-lg focus:ring-2 focus:ring-oma-plum focus:border-oma-plum"
                 >
                   <option value="">All Priorities</option>
                   <option value="urgent">Urgent</option>
@@ -146,7 +146,7 @@ export default function InboxClient({ userProfile }: InboxClientProps) {
 
               {/* Type Filter */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-oma-cocoa mb-2">
                   Type
                 </label>
                 <select
@@ -157,7 +157,7 @@ export default function InboxClient({ userProfile }: InboxClientProps) {
                       type: e.target.value || undefined,
                     })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                  className="w-full px-3 py-2 border border-oma-beige rounded-lg focus:ring-2 focus:ring-oma-plum focus:border-oma-plum"
                 >
                   <option value="">All Types</option>
                   <option value="general">General</option>
@@ -171,7 +171,7 @@ export default function InboxClient({ userProfile }: InboxClientProps) {
               {/* Brand Filter (for super admins) */}
               {userProfile.role === "super_admin" && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-oma-cocoa mb-2">
                     Brand
                   </label>
                   <select
@@ -182,7 +182,7 @@ export default function InboxClient({ userProfile }: InboxClientProps) {
                         brandId: e.target.value || undefined,
                       })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    className="w-full px-3 py-2 border border-oma-beige rounded-lg focus:ring-2 focus:ring-oma-plum focus:border-oma-plum"
                   >
                     <option value="">All Brands</option>
                     {/* Brand options would be populated from an API call */}
@@ -198,7 +198,7 @@ export default function InboxClient({ userProfile }: InboxClientProps) {
               <div className="mt-4">
                 <button
                   onClick={() => handleFilterChange({})}
-                  className="text-sm text-emerald-600 hover:text-emerald-700"
+                  className="text-sm text-oma-plum hover:text-oma-plum/80"
                 >
                   Clear all filters
                 </button>
@@ -209,13 +209,13 @@ export default function InboxClient({ userProfile }: InboxClientProps) {
       </div>
 
       {/* Quick Filter Buttons */}
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-3">
         <button
           onClick={() => handleFilterChange({ status: "unread" })}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
             filters.status === "unread"
-              ? "bg-blue-50 border-blue-200 text-blue-700"
-              : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
+              ? "bg-oma-plum/10 border-oma-plum text-oma-plum"
+              : "bg-white border-oma-beige text-oma-cocoa hover:bg-oma-cream"
           }`}
         >
           <InboxIcon className="h-4 w-4" />
@@ -227,7 +227,7 @@ export default function InboxClient({ userProfile }: InboxClientProps) {
           className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
             filters.priority === "urgent"
               ? "bg-red-50 border-red-200 text-red-700"
-              : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
+              : "bg-white border-oma-beige text-oma-cocoa hover:bg-oma-cream"
           }`}
         >
           <ExclamationTriangleIcon className="h-4 w-4" />
@@ -239,7 +239,7 @@ export default function InboxClient({ userProfile }: InboxClientProps) {
           className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
             filters.status === "replied"
               ? "bg-green-50 border-green-200 text-green-700"
-              : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
+              : "bg-white border-oma-beige text-oma-cocoa hover:bg-oma-cream"
           }`}
         >
           <CheckCircleIcon className="h-4 w-4" />
@@ -250,8 +250,8 @@ export default function InboxClient({ userProfile }: InboxClientProps) {
           onClick={() => handleFilterChange({ type: "custom_order" })}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
             filters.type === "custom_order"
-              ? "bg-purple-50 border-purple-200 text-purple-700"
-              : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
+              ? "bg-oma-cocoa/10 border-oma-cocoa text-oma-cocoa"
+              : "bg-white border-oma-beige text-oma-cocoa hover:bg-oma-cream"
           }`}
         >
           <ChatBubbleLeftRightIcon className="h-4 w-4" />
