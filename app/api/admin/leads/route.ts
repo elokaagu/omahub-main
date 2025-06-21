@@ -298,139 +298,36 @@ export async function GET(request: NextRequest) {
           }
 
           // Get bookings data for more complete analytics
+          // Temporarily disable bookings integration to fix infinite loop
+          const bookings: Booking[] = []; // TODO: Re-enable when bookings table is ready
+          /*
           let bookingsQuery = supabase.from("bookings").select("*");
           if (profile.role === "brand_admin" && profile.owned_brands) {
             bookingsQuery = bookingsQuery.in("brand_id", profile.owned_brands);
           }
 
           const { data: bookings } = await bookingsQuery;
-          const totalBookings = bookings?.length || 0;
-          const totalBookingValue =
-            bookings?.reduce(
-              (sum, booking) => sum + (booking.booking_value || 0),
-              0
-            ) || 0;
-          const totalCommissionEarned =
-            bookings?.reduce(
-              (sum, booking) => sum + (booking.commission_amount || 0),
-              0
-            ) || 0;
-          const averageBookingValue =
-            totalBookings > 0 ? totalBookingValue / totalBookings : 0;
+          */
+          const totalBookings = 0;
+          const totalBookingValue = 0;
+          const totalCommissionEarned = 0;
+          const averageBookingValue = 0;
+          const thisMonthBookings = 0;
+          const thisMonthRevenue = 0;
+          const thisMonthCommission = 0;
 
-          const thisMonthBookings =
-            bookings?.filter((booking) => {
-              const bookingDate = new Date(
-                booking.booking_date || booking.created_at
-              );
-              const now = new Date();
-              return (
-                bookingDate.getMonth() === now.getMonth() &&
-                bookingDate.getFullYear() === now.getFullYear()
-              );
-            }).length || 0;
-
-          const thisMonthRevenue =
-            bookings
-              ?.filter((booking) => {
-                const bookingDate = new Date(
-                  booking.booking_date || booking.created_at
-                );
-                const now = new Date();
-                return (
-                  bookingDate.getMonth() === now.getMonth() &&
-                  bookingDate.getFullYear() === now.getFullYear()
-                );
-              })
-              .reduce(
-                (sum, booking) => sum + (booking.booking_value || 0),
-                0
-              ) || 0;
-
-          const thisMonthCommission =
-            bookings
-              ?.filter((booking) => {
-                const bookingDate = new Date(
-                  booking.booking_date || booking.created_at
-                );
-                const now = new Date();
-                return (
-                  bookingDate.getMonth() === now.getMonth() &&
-                  bookingDate.getFullYear() === now.getFullYear()
-                );
-              })
-              .reduce(
-                (sum, booking) => sum + (booking.commission_amount || 0),
-                0
-              ) || 0;
-
-          // Update monthly trends with booking data
+          // Update monthly trends with booking data (simplified since bookings is empty)
           monthlyTrends.forEach((trend) => {
-            const [monthName, year] = trend.month.split(" ");
-            const monthIndex = new Date(`${monthName} 1, ${year}`).getMonth();
-            const yearNum = parseInt(year);
-
-            const monthBookingsData =
-              bookings?.filter((booking) => {
-                const bookingDate = new Date(
-                  booking.booking_date || booking.created_at
-                );
-                return (
-                  bookingDate.getMonth() === monthIndex &&
-                  bookingDate.getFullYear() === yearNum
-                );
-              }) || [];
-
-            trend.bookings = monthBookingsData.length;
-            trend.revenue = monthBookingsData.reduce(
-              (sum, booking) => sum + (booking.booking_value || 0),
-              0
-            );
-            trend.commission = monthBookingsData.reduce(
-              (sum, booking) => sum + (booking.commission_amount || 0),
-              0
-            );
+            trend.bookings = 0;
+            trend.revenue = 0;
+            trend.commission = 0;
           });
 
-          // Calculate bookings by type
-          const bookingsByType =
-            bookings?.reduce(
-              (acc, booking) => {
-                acc[booking.booking_type] =
-                  (acc[booking.booking_type] || 0) + 1;
-                return acc;
-              },
-              {} as Record<string, number>
-            ) || {};
+          // Calculate bookings by type (empty since no bookings)
+          const bookingsByType = {};
 
-          // Calculate top performing brands (for super_admin)
-          const topPerformingBrands = [];
-          if (profile.role === "super_admin" && bookings) {
-            const brandPerformance = bookings.reduce(
-              (acc, booking) => {
-                if (!acc[booking.brand_id]) {
-                  acc[booking.brand_id] = {
-                    brand_id: booking.brand_id,
-                    brand_name: booking.brand_id, // We'll need to join with brands table for actual name
-                    total_revenue: 0,
-                    total_commission: 0,
-                  };
-                }
-                acc[booking.brand_id].total_revenue +=
-                  booking.booking_value || 0;
-                acc[booking.brand_id].total_commission +=
-                  booking.commission_amount || 0;
-                return acc;
-              },
-              {} as Record<string, any>
-            );
-
-            topPerformingBrands.push(
-              ...Object.values(brandPerformance)
-                .sort((a: any, b: any) => b.total_revenue - a.total_revenue)
-                .slice(0, 5)
-            );
-          }
+          // Calculate top performing brands (empty for now)
+          const topPerformingBrands: any[] = [];
 
           const fallbackData = {
             total_leads: totalLeads,
