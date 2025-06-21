@@ -67,94 +67,50 @@ const priorityColors = {
 function SessionDebugInfo() {
   const { user, session } = useAuth();
   const [supabaseSession, setSupabaseSession] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const checkSupabaseSession = async () => {
-      try {
-        const supabase = createClient();
-        const {
-          data: { session },
-          error,
-        } = await supabase.auth.getSession();
-        setSupabaseSession(session);
-
-        if (error) {
-          console.error("Supabase session error:", error);
-        }
-      } catch (error) {
-        console.error("Error checking Supabase session:", error);
-      } finally {
-        setLoading(false);
-      }
+      const supabase = createClient();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      setSupabaseSession(session);
     };
-
     checkSupabaseSession();
   }, []);
 
-  if (loading) {
-    return (
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm">
-        <p>🔄 Checking authentication status...</p>
-      </div>
-    );
-  }
-
-  const hasContextSession = !!session;
-  const hasSupabaseSession = !!supabaseSession;
-  const hasUser = !!user;
+  if (process.env.NODE_ENV !== "development") return null;
 
   return (
-    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm space-y-2">
-      <p>
-        <strong>🔐 Authentication Status:</strong>
-      </p>
-      <p>
-        • Auth Context Session: {hasContextSession ? "✅ Active" : "❌ Missing"}
-      </p>
-      <p>
-        • Supabase Client Session:{" "}
-        {hasSupabaseSession ? "✅ Active" : "❌ Missing"}
-      </p>
-      <p>• User Profile: {hasUser ? "✅ Loaded" : "❌ Missing"}</p>
-
-      {hasUser && (
+    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+      <h4 className="font-semibold text-blue-800 mb-2">
+        Debug: Authentication Status
+      </h4>
+      <div className="text-sm space-y-1">
         <p>
-          • User Role: {user.role} ({user.email})
+          <strong>Auth Context User:</strong>{" "}
+          {user ? `${user.email} (${user.role})` : "None"}
         </p>
-      )}
-
-      {!hasContextSession && !hasSupabaseSession && (
-        <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded">
-          <p className="text-red-800 font-medium">⚠️ No Active Session</p>
-          <p className="text-red-700 text-sm mt-1">
-            You need to be logged in to view analytics. Please sign in to
-            continue.
-          </p>
-          <Link href="/login" className="inline-block mt-2">
-            <Button size="sm" className="bg-red-600 hover:bg-red-700">
-              Sign In
-            </Button>
-          </Link>
-        </div>
-      )}
-
-      {(hasContextSession || hasSupabaseSession) && !hasUser && (
-        <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded">
-          <p className="text-yellow-800 font-medium">
-            ⚠️ Session Without User Profile
-          </p>
-          <p className="text-yellow-700 text-sm mt-1">
-            You're logged in but your user profile couldn't be loaded.
-          </p>
-        </div>
-      )}
+        <p>
+          <strong>Auth Context Session:</strong> {session ? "Found" : "None"}
+        </p>
+        <p>
+          <strong>Supabase Session:</strong>{" "}
+          {supabaseSession ? `${supabaseSession.user?.email}` : "None"}
+        </p>
+        <p>
+          <strong>Session Expires:</strong>{" "}
+          {supabaseSession?.expires_at
+            ? new Date(supabaseSession.expires_at * 1000).toLocaleString()
+            : "N/A"}
+        </p>
+      </div>
     </div>
   );
 }
 
 export default function LeadsTrackingDashboard() {
-  const { user, session } = useAuth();
+  const { user, session, loading: authLoading } = useAuth();
   const [filters, setFilters] = useState<{
     brand_id: string;
     status: Lead["status"] | "";
@@ -193,6 +149,7 @@ export default function LeadsTrackingDashboard() {
       hasSession: !!session,
       userRole: user?.role,
       userEmail: user?.email,
+      authLoading,
       leadsLoading,
       analyticsLoading,
       leadsError,
@@ -204,6 +161,7 @@ export default function LeadsTrackingDashboard() {
   }, [
     user,
     session,
+    authLoading,
     leads,
     analytics,
     leadsLoading,
@@ -231,37 +189,34 @@ export default function LeadsTrackingDashboard() {
     setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
-  // Show authentication required state
+  // Show loading while authentication is being checked
+  if (authLoading) {
+    return (
+      <div className="space-y-8">
+        <div className="text-center py-8">
+          <div className="animate-spin h-8 w-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-gray-600">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show authentication required screen
   if (!user || !session) {
     return (
       <div className="space-y-4">
         <SessionDebugInfo />
 
-        <div className="text-center py-12">
-          <div className="mx-auto h-12 w-12 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-            <svg
-              className="h-6 w-6 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-              />
-            </svg>
-          </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
+          <h3 className="text-yellow-800 font-semibold text-lg mb-2">
             Authentication Required
           </h3>
-          <p className="text-gray-600 mb-4">
-            Please sign in to access the leads tracking dashboard.
+          <p className="text-yellow-700 mb-4">
+            You need to be logged in to view the leads dashboard.
           </p>
           <Link href="/login">
-            <Button className="bg-oma-plum hover:bg-oma-plum/90">
-              Sign In
+            <Button className="bg-yellow-600 hover:bg-yellow-700 text-white">
+              Go to Login
             </Button>
           </Link>
         </div>
@@ -296,6 +251,11 @@ export default function LeadsTrackingDashboard() {
             <Button onClick={refetchAnalytics} variant="outline" size="sm">
               Retry Analytics
             </Button>
+            <Link href="/login">
+              <Button variant="outline" size="sm">
+                Re-login
+              </Button>
+            </Link>
           </div>
         </div>
       </div>

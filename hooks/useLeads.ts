@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { toast } from "sonner";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-unified";
 import { formatCurrency } from "@/lib/utils";
 
 // Types
