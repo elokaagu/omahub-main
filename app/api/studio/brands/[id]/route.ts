@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
+import { createServerSupabaseClient } from "@/lib/supabase-unified";
 
 export async function PUT(
   request: NextRequest,
@@ -9,7 +8,7 @@ export async function PUT(
   try {
     console.log("🔄 Brand update request received for ID:", params.id);
 
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = await createServerSupabaseClient();
     const brandId = params.id;
 
     // Get the current user with enhanced error handling
