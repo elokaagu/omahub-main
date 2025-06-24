@@ -52,7 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Helper function to get owned brands based on email
   const getOwnedBrandsFromEmail = (email: string): string[] => {
     if (email === "eloka@culturin.com") {
-      return ["ehbs-couture"];
+      return ["ehbs-couture", "malit", "rendoll"];
     }
     return [];
   };
