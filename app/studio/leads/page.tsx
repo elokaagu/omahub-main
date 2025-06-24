@@ -37,7 +37,7 @@ interface Lead {
   lead_status: string;
   lead_score: number;
   priority: string;
-  estimated_budget?: number;
+  estimated_value?: number;
   estimated_project_value?: number;
   project_type?: string;
   project_timeline?: string;
@@ -220,7 +220,7 @@ export default function StudioLeadsPage() {
       ) {
         aValue = new Date(aValue || 0).getTime();
         bValue = new Date(bValue || 0).getTime();
-      } else if (sortBy === "estimated_budget" || sortBy === "lead_score") {
+      } else if (sortBy === "estimated_value" || sortBy === "lead_score") {
         aValue = Number(aValue) || 0;
         bValue = Number(bValue) || 0;
       }
@@ -530,7 +530,7 @@ export default function StudioLeadsPage() {
                 <SelectContent>
                   <SelectItem value="created_at">Created Date</SelectItem>
                   <SelectItem value="lead_score">Lead Score</SelectItem>
-                  <SelectItem value="estimated_budget">Budget</SelectItem>
+                  <SelectItem value="estimated_value">Budget</SelectItem>
                   <SelectItem value="last_contact_date">
                     Last Contact
                   </SelectItem>
@@ -598,7 +598,7 @@ export default function StudioLeadsPage() {
                 <div className="text-2xl font-bold text-oma-plum">
                   $
                   {filteredLeads
-                    .reduce((sum, l) => sum + (l.estimated_budget || 0), 0)
+                    .reduce((sum, l) => sum + (l.estimated_value || 0), 0)
                     .toLocaleString()}
                 </div>
                 <p className="text-sm text-oma-cocoa">Total Pipeline Value</p>
@@ -694,8 +694,8 @@ export default function StudioLeadsPage() {
                         Budget
                       </p>
                       <p className="text-sm text-oma-cocoa">
-                        {lead.estimated_budget
-                          ? `$${lead.estimated_budget.toLocaleString()}`
+                        {lead.estimated_value
+                          ? `$${lead.estimated_value.toLocaleString()}`
                           : "Not specified"}
                       </p>
                     </div>
@@ -820,8 +820,8 @@ export default function StudioLeadsPage() {
                         <div className="flex justify-between">
                           <span>Budget:</span>
                           <span>
-                            {selectedLead.estimated_budget
-                              ? `$${selectedLead.estimated_budget.toLocaleString()}`
+                            {selectedLead.estimated_value
+                              ? `$${selectedLead.estimated_value.toLocaleString()}`
                               : "Not specified"}
                           </span>
                         </div>

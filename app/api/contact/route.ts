@@ -168,8 +168,8 @@ export async function POST(request: NextRequest) {
             lead_source: "website",
             lead_status: "new",
             priority: analysis.priority,
-            project_type: analysis.leadType,
-            estimated_budget: analysis.estimatedValue,
+            lead_type: analysis.leadType,
+            estimated_value: analysis.estimatedValue,
             notes: `Original message: ${message}`,
             inquiry_id: inquiry.id,
           })
