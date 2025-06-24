@@ -7,6 +7,7 @@ import { Tailor, Brand } from "@/lib/supabase";
 import Link from "next/link";
 import { LazyImage } from "@/components/ui/lazy-image";
 import { Button } from "@/components/ui/button";
+import ContactDesignerModal from "@/components/ContactDesignerModal";
 import {
   ArrowLeft,
   Clock,
@@ -46,6 +47,7 @@ export default function TailorPage() {
   const [tailor, setTailor] = useState<TailorWithBrand | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isContactModalOpen, setIsContactModalOpen] = useState(false);
 
   useEffect(() => {
     async function fetchTailor() {
@@ -260,12 +262,23 @@ export default function TailorPage() {
               >
                 View Brand Profile
               </Link>
-              <button className="border border-oma-plum text-oma-plum px-6 py-3 rounded-lg hover:bg-oma-plum/10 transition-colors">
+              <button
+                onClick={() => setIsContactModalOpen(true)}
+                className="border border-oma-plum text-oma-plum px-6 py-3 rounded-lg hover:bg-oma-plum/10 transition-colors"
+              >
                 Contact Tailor
               </button>
             </div>
           </div>
         </div>
+
+        {/* Contact Modal */}
+        <ContactDesignerModal
+          isOpen={isContactModalOpen}
+          onClose={() => setIsContactModalOpen(false)}
+          brandName={tailor.brand.name}
+          brandId={tailor.brand.id}
+        />
       </div>
     </div>
   );
