@@ -158,23 +158,21 @@ export async function POST(request: NextRequest) {
 
         console.log("✅ Inquiry created:", inquiry.id);
 
-        // Create lead for Leads Management
-        console.log("🎯 Creating lead...");
-        const leadData = {
-          brand_id: brandId,
-          customer_name: name,
-          customer_email: email,
-          source: "website",
-          lead_type: analysis.leadType,
-          status: "new",
-          priority: analysis.priority,
-          estimated_value: analysis.estimatedValue,
-          notes: message,
-        };
-
+        // Create lead with intelligent analysis
         const { data: lead, error: leadError } = await supabase
           .from("leads")
-          .insert(leadData)
+          .insert({
+            brand_id: brandId,
+            customer_name: name,
+            customer_email: email,
+            lead_source: "website",
+            lead_status: "new",
+            priority: analysis.priority,
+            project_type: analysis.leadType,
+            estimated_budget: analysis.estimatedValue,
+            notes: `Original message: ${message}`,
+            inquiry_id: inquiry.id,
+          })
           .select()
           .single();
 
