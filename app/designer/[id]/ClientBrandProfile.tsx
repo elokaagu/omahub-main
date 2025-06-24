@@ -364,6 +364,7 @@ export default function ClientBrandProfile({
         isOpen={isContactModalOpen}
         onClose={() => setIsContactModalOpen(false)}
         brandName={brandData.name}
+        brandId={id as string}
       />
     </section>
   );
