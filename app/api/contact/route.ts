@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServerSupabaseClient } from "@/lib/supabase-unified";
+import { createAdminClient } from "@/lib/supabase-unified";
 
 // Helper function to extract project details from message
 function analyzeInquiryMessage(message: string, inquiryType: string) {
@@ -186,7 +186,7 @@ function analyzeInquiryMessage(message: string, inquiryType: string) {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient();
+    const supabase = createAdminClient();
 
     // Parse the request body
     const body = await request.json();
@@ -201,6 +201,12 @@ export async function POST(request: NextRequest) {
 
     // Validate required fields
     if (!name || !email || !message || !brandId) {
+      console.error("❌ Missing required fields:", {
+        name: !!name,
+        email: !!email,
+        message: !!message,
+        brandId: !!brandId,
+      });
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
@@ -210,6 +216,7 @@ export async function POST(request: NextRequest) {
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
+      console.error("❌ Invalid email format:", email);
       return NextResponse.json(
         { error: "Invalid email format" },
         { status: 400 }
@@ -217,16 +224,24 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify the brand exists
+    console.log("🔍 Checking if brand exists:", brandId);
     const { data: brand, error: brandError } = await supabase
       .from("brands")
       .select("id, name")
       .eq("id", brandId)
       .single();
 
-    if (brandError || !brand) {
-      console.error("Brand not found:", brandError);
+    if (brandError) {
+      console.error("❌ Brand lookup error:", brandError);
       return NextResponse.json({ error: "Brand not found" }, { status: 404 });
     }
+
+    if (!brand) {
+      console.error("❌ Brand not found:", brandId);
+      return NextResponse.json({ error: "Brand not found" }, { status: 404 });
+    }
+
+    console.log("✅ Brand found:", brand.name);
 
     // Determine inquiry type and priority based on message content
     const lowerMessage = message.toLowerCase();
