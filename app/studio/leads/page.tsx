@@ -33,13 +33,11 @@ interface Lead {
   customer_email: string;
   customer_phone?: string;
   company_name?: string;
-  lead_source: string;
-  lead_status: string;
-  lead_score: number;
+  source: string;
+  status: string;
   priority: string;
   estimated_value?: number;
-  estimated_project_value?: number;
-  project_type?: string;
+  lead_type?: string;
   project_timeline?: string;
   location?: string;
   notes?: string;
@@ -47,6 +45,10 @@ interface Lead {
   last_contact_date?: string;
   next_follow_up_date?: string;
   created_at: string;
+  updated_at?: string;
+  contacted_at?: string;
+  qualified_at?: string;
+  converted_at?: string;
   brand?: {
     name: string;
   };
@@ -187,7 +189,7 @@ export default function StudioLeadsPage() {
         (lead) =>
           lead.customer_name.toLowerCase().includes(term) ||
           lead.customer_email.toLowerCase().includes(term) ||
-          lead.project_type?.toLowerCase().includes(term) ||
+          lead.lead_type?.toLowerCase().includes(term) ||
           lead.company_name?.toLowerCase().includes(term) ||
           lead.location?.toLowerCase().includes(term)
       );
@@ -195,7 +197,7 @@ export default function StudioLeadsPage() {
 
     // Status filter
     if (statusFilter !== "all") {
-      filtered = filtered.filter((lead) => lead.lead_status === statusFilter);
+      filtered = filtered.filter((lead) => lead.status === statusFilter);
     }
 
     // Priority filter
@@ -205,7 +207,7 @@ export default function StudioLeadsPage() {
 
     // Source filter
     if (sourceFilter !== "all") {
-      filtered = filtered.filter((lead) => lead.lead_source === sourceFilter);
+      filtered = filtered.filter((lead) => lead.source === sourceFilter);
     }
 
     // Sort
@@ -220,7 +222,7 @@ export default function StudioLeadsPage() {
       ) {
         aValue = new Date(aValue || 0).getTime();
         bValue = new Date(bValue || 0).getTime();
-      } else if (sortBy === "estimated_value" || sortBy === "lead_score") {
+      } else if (sortBy === "estimated_value") {
         aValue = Number(aValue) || 0;
         bValue = Number(bValue) || 0;
       }
@@ -263,7 +265,7 @@ export default function StudioLeadsPage() {
       const { error } = await supabase
         .from("leads")
         .update({
-          lead_status: newStatus,
+          status: newStatus,
           updated_at: new Date().toISOString(),
         })
         .eq("id", leadId);
@@ -277,13 +279,13 @@ export default function StudioLeadsPage() {
       // Update local state
       setLeads((prev) =>
         prev.map((lead) =>
-          lead.id === leadId ? { ...lead, lead_status: newStatus } : lead
+          lead.id === leadId ? { ...lead, status: newStatus } : lead
         )
       );
 
       if (selectedLead?.id === leadId) {
         setSelectedLead((prev) =>
-          prev ? { ...prev, lead_status: newStatus } : null
+          prev ? { ...prev, status: newStatus } : null
         );
       }
 
@@ -529,7 +531,6 @@ export default function StudioLeadsPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="created_at">Created Date</SelectItem>
-                  <SelectItem value="lead_score">Lead Score</SelectItem>
                   <SelectItem value="estimated_value">Budget</SelectItem>
                   <SelectItem value="last_contact_date">
                     Last Contact
@@ -570,7 +571,7 @@ export default function StudioLeadsPage() {
             <CardContent className="pt-6">
               <div className="text-center">
                 <div className="text-2xl font-bold text-green-600">
-                  {filteredLeads.filter((l) => l.lead_status === "won").length}
+                  {filteredLeads.filter((l) => l.status === "won").length}
                 </div>
                 <p className="text-sm text-oma-cocoa">Won</p>
               </div>
@@ -583,7 +584,7 @@ export default function StudioLeadsPage() {
                 <div className="text-2xl font-bold text-blue-600">
                   {
                     filteredLeads.filter((l) =>
-                      ["new", "contacted", "qualified"].includes(l.lead_status)
+                      ["new", "contacted", "qualified"].includes(l.status)
                     ).length
                   }
                 </div>
@@ -659,11 +660,8 @@ export default function StudioLeadsPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Badge className={getScoreColor(lead.lead_score)}>
-                        Score: {lead.lead_score}
-                      </Badge>
-                      <Badge className={getStatusColor(lead.lead_status)}>
-                        {lead.lead_status.replace("_", " ")}
+                      <Badge className={getStatusColor(lead.status)}>
+                        {lead.status.replace("_", " ")}
                       </Badge>
                       <Badge className={getPriorityColor(lead.priority)}>
                         {lead.priority}
@@ -678,7 +676,7 @@ export default function StudioLeadsPage() {
                         Project
                       </p>
                       <p className="text-sm text-oma-cocoa">
-                        {lead.project_type || "Not specified"}
+                        {lead.lead_type || "Not specified"}
                       </p>
                     </div>
                     <div>
@@ -770,9 +768,9 @@ export default function StudioLeadsPage() {
                         <div className="flex justify-between">
                           <span>Status:</span>
                           <Badge
-                            className={getStatusColor(selectedLead.lead_status)}
+                            className={getStatusColor(selectedLead.status)}
                           >
-                            {selectedLead.lead_status.replace("_", " ")}
+                            {selectedLead.status.replace("_", " ")}
                           </Badge>
                         </div>
                         <div className="flex justify-between">
@@ -784,18 +782,8 @@ export default function StudioLeadsPage() {
                           </Badge>
                         </div>
                         <div className="flex justify-between">
-                          <span>Score:</span>
-                          <Badge
-                            className={getScoreColor(selectedLead.lead_score)}
-                          >
-                            {selectedLead.lead_score}/100
-                          </Badge>
-                        </div>
-                        <div className="flex justify-between">
                           <span>Source:</span>
-                          <span>
-                            {selectedLead.lead_source.replace("_", " ")}
-                          </span>
+                          <span>{selectedLead.source.replace("_", " ")}</span>
                         </div>
                       </div>
                     </div>
@@ -808,7 +796,7 @@ export default function StudioLeadsPage() {
                         <div className="flex justify-between">
                           <span>Type:</span>
                           <span>
-                            {selectedLead.project_type || "Not specified"}
+                            {selectedLead.lead_type || "Not specified"}
                           </span>
                         </div>
                         <div className="flex justify-between">
@@ -1060,7 +1048,7 @@ export default function StudioLeadsPage() {
                         <Button
                           key={status}
                           variant={
-                            selectedLead.lead_status === status
+                            selectedLead.status === status
                               ? "default"
                               : "outline"
                           }
@@ -1069,7 +1057,7 @@ export default function StudioLeadsPage() {
                             updateLeadStatus(selectedLead.id, status)
                           }
                           className={
-                            selectedLead.lead_status === status
+                            selectedLead.status === status
                               ? "bg-oma-plum hover:bg-oma-plum/90"
                               : ""
                           }

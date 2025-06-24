@@ -165,13 +165,12 @@ export async function POST(request: NextRequest) {
             brand_id: brandId,
             customer_name: name,
             customer_email: email,
-            lead_source: "website",
-            lead_status: "new",
+            source: "website",
+            status: "new",
             priority: analysis.priority,
             lead_type: analysis.leadType,
             estimated_value: analysis.estimatedValue,
             notes: `Original message: ${message}`,
-            inquiry_id: inquiry.id,
           })
           .select()
           .single();
