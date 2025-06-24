@@ -152,8 +152,32 @@ export default function CataloguesPage() {
         ownedBrandCount: ownedBrandIds.length,
       });
 
+      // Use profile role as primary source of truth, fallback to user context
+      const profileRole = profileResult.data?.role;
+      const effectiveRole = profileRole || user.role;
+      const effectiveIsBrandOwner = effectiveRole === "brand_admin";
+      const effectiveIsAdmin =
+        effectiveRole === "admin" || effectiveRole === "super_admin";
+
+      console.log("📚 Catalogues Page: Enhanced role analysis:", {
+        userContextRole: user.role,
+        profileRole,
+        effectiveRole,
+        originalIsBrandOwner: isBrandOwner,
+        effectiveIsBrandOwner,
+        originalIsAdmin: isAdmin,
+        effectiveIsAdmin,
+        ownedBrandIds,
+        ownedBrandCount: ownedBrandIds.length,
+        userPermissions: permissions,
+      });
+
+      // Use effective role for decision making
+      const finalIsBrandOwner = effectiveIsBrandOwner;
+      const finalIsAdmin = effectiveIsAdmin;
+
       // Fetch brands and catalogues based on user role
-      if (isAdmin) {
+      if (finalIsAdmin) {
         console.log("📚 Catalogues Page: Admin user - fetching all data");
         // Admins see all brands and catalogues
         const [brandsData, cataloguesData] = await Promise.all([
@@ -166,7 +190,7 @@ export default function CataloguesPage() {
         });
         setBrands(brandsData);
         setCatalogues(cataloguesData);
-      } else if (isBrandOwner && ownedBrandIds.length > 0) {
+      } else if (finalIsBrandOwner && ownedBrandIds.length > 0) {
         console.log(
           "📚 Catalogues Page: Brand owner with owned brands - fetching filtered data"
         );
@@ -274,9 +298,27 @@ export default function CataloguesPage() {
   const confirmDeleteCatalogue = (catalogueId: string) => {
     // Check if user can delete this catalogue
     const catalogue = catalogues.find((c) => c.id === catalogueId);
-    const isBrandOwner = user?.role === "brand_admin";
-    const isAdmin = user?.role === "admin" || user?.role === "super_admin";
+    // Use profile role as primary source of truth
+    const profileRole = userProfile?.role;
+    const effectiveRole = profileRole || user?.role;
+    const isBrandOwner = effectiveRole === "brand_admin";
+    const isAdmin =
+      effectiveRole === "admin" || effectiveRole === "super_admin";
     const ownedBrandIds = userProfile?.owned_brands || [];
+
+    console.log("🗑️ Catalogues Page: Delete permission check:", {
+      catalogueId,
+      catalogueBrandId: catalogue?.brand_id,
+      userRole: user?.role,
+      profileRole,
+      effectiveRole,
+      isBrandOwner,
+      isAdmin,
+      ownedBrandIds,
+      hasAccess:
+        !isBrandOwner ||
+        (catalogue && ownedBrandIds.includes(catalogue.brand_id)),
+    });
 
     if (
       isBrandOwner &&
@@ -364,8 +406,16 @@ export default function CataloguesPage() {
           <div>
             <h1 className="text-4xl font-canela text-black mb-2">Catalogues</h1>
             <p className="text-black/70">
-              Create and manage your brand catalogues
+              {user?.role === "brand_admin" && brands.length > 0
+                ? `Manage catalogues for your ${brands.length > 1 ? `${brands.length} brands` : "brand"}: ${brands.map((b) => b.name).join(", ")}`
+                : "Create and manage your brand catalogues"}
             </p>
+            {user?.role === "brand_admin" && catalogues.length > 0 && (
+              <p className="text-sm text-oma-plum/70 mt-1">
+                Showing {catalogues.length} catalogue
+                {catalogues.length !== 1 ? "s" : ""} from your owned brands
+              </p>
+            )}
           </div>
           {canCreateCatalogues && (
             <Link href="/studio/catalogues/create">
