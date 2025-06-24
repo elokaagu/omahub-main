@@ -728,9 +728,6 @@ export default function LeadsTrackingDashboard() {
                     Status
                   </th>
                   <th className="text-left p-4 font-medium text-oma-cocoa">
-                    Value
-                  </th>
-                  <th className="text-left p-4 font-medium text-oma-cocoa">
                     Date
                   </th>
                 </tr>
@@ -753,7 +750,7 @@ export default function LeadsTrackingDashboard() {
                     </td>
                     <td className="p-4">
                       <div className="text-sm text-oma-cocoa">
-                        {lead.brand_name || "Unknown Brand"}
+                        {lead.brands?.name || "Unknown Brand"}
                       </div>
                     </td>
                     <td className="p-4">
@@ -791,13 +788,6 @@ export default function LeadsTrackingDashboard() {
                           <SelectItem value="closed">Closed</SelectItem>
                         </SelectContent>
                       </Select>
-                    </td>
-                    <td className="p-4">
-                      <div className="text-sm text-oma-cocoa">
-                        {lead.estimated_value
-                          ? `₦${lead.estimated_value.toLocaleString()}`
-                          : "-"}
-                      </div>
                     </td>
                     <td className="p-4">
                       <div className="text-sm text-oma-cocoa">

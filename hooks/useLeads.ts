@@ -46,6 +46,12 @@ export interface Lead {
   booking_date?: string;
   booking_status?: string;
   brand_location?: string;
+  // From API joins
+  brands?: {
+    name: string;
+    category?: string;
+    image?: string;
+  };
 }
 
 export interface Booking {
