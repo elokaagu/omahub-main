@@ -49,8 +49,10 @@ interface Lead {
   contacted_at?: string;
   qualified_at?: string;
   converted_at?: string;
-  brand?: {
+  brands?: {
     name: string;
+    category?: string;
+    image?: string;
   };
   inquiry?: {
     id: string;
@@ -117,63 +119,45 @@ export default function StudioLeadsPage() {
 
   const loadLeads = async () => {
     try {
-      const supabase = createClient();
+      setLoading(true);
 
-      // Check if user is super admin
+      // Check user role first
+      const supabase = createClient();
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
-        .select("role, owned_brands")
+        .select("role")
         .eq("id", user?.id)
         .single();
 
-      if (profileError) {
-        console.error("Error fetching user profile:", profileError);
-        toast.error("Failed to load your profile");
-        return;
-      }
-
-      let leadsQuery = supabase
-        .from("leads")
-        .select(
-          `
-          *,
-          brand:brands(name),
-          inquiry:inquiries(id, subject)
-        `
-        )
-        .order("created_at", { ascending: false });
-
-      // If user is super admin, get all leads
-      if (profile?.role === "super_admin") {
-        console.log("🔑 Super admin access: Loading all leads");
+      if (!profileError && profile?.role === "super_admin") {
         setIsSuperAdmin(true);
-        // No additional filtering needed for super admin
       } else {
         setIsSuperAdmin(false);
-        // Regular user: filter by owned brands
-        if (!profile?.owned_brands || profile.owned_brands.length === 0) {
-          setLeads([]);
-          setLoading(false);
-          return;
-        }
-
-        const brandIds = profile.owned_brands;
-        leadsQuery = leadsQuery.in("brand_id", brandIds);
       }
 
-      const { data: leadsData, error: leadsError } = await leadsQuery;
+      // Use the same API endpoint as the dashboard for consistency
+      const response = await fetch("/api/admin/leads", {
+        credentials: "include",
+        headers: {
+          "Cache-Control": "no-cache",
+          Pragma: "no-cache",
+        },
+      });
 
-      if (leadsError) {
-        console.error("Error fetching leads:", leadsError);
-        toast.error("Failed to load leads");
-        return;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to fetch leads");
       }
 
-      console.log(`📊 Loaded ${leadsData?.length || 0} leads`);
-      setLeads(leadsData || []);
+      const data = await response.json();
+
+      console.log(`📊 Loaded ${data.leads?.length || 0} leads via API`);
+      setLeads(data.leads || []);
     } catch (error) {
       console.error("Error loading leads:", error);
-      toast.error("Failed to load leads");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to load leads"
+      );
     } finally {
       setLoading(false);
     }
@@ -652,9 +636,9 @@ export default function StudioLeadsPage() {
                             • {lead.customer_phone}
                           </span>
                         )}
-                        {lead.brand && (
+                        {lead.brands && (
                           <span className="text-sm text-oma-cocoa">
-                            • Brand: {lead.brand.name}
+                            • Brand: {lead.brands.name}
                           </span>
                         )}
                       </div>
