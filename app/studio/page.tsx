@@ -147,11 +147,13 @@ export default function StudioPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8">
       <h1 className="text-4xl font-canela mb-8 text-oma-plum">Studio</h1>
 
-
       {/* Leads Tracking Dashboard */}
       {(isSuperAdmin || isAdmin || isBrandOwner) && (
         <div className="grid grid-cols-1 gap-8">
-          <LeadsTrackingDashboard />
+          <LeadsTrackingDashboard
+            userRole={effectiveProfile.role}
+            ownedBrandIds={ownedBrandIds}
+          />
         </div>
       )}
 

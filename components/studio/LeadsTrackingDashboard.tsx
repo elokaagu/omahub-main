@@ -135,7 +135,15 @@ function SessionDebugInfo() {
   );
 }
 
-export default function LeadsTrackingDashboard() {
+interface LeadsTrackingDashboardProps {
+  userRole?: string;
+  ownedBrandIds?: string[];
+}
+
+export default function LeadsTrackingDashboard({
+  userRole,
+  ownedBrandIds = [],
+}: LeadsTrackingDashboardProps) {
   const { user, loading: authLoading } = useAuth();
   const [filters, setFilters] = useState<{
     brand_id: string;
@@ -168,6 +176,14 @@ export default function LeadsTrackingDashboard() {
 
   const { updateLead } = useLeadMutations();
 
+  // Determine user access level
+  const isSuperAdmin =
+    user?.role === "super_admin" || userRole === "super_admin";
+  const isBrandAdmin =
+    user?.role === "brand_admin" || userRole === "brand_admin";
+  const effectiveOwnedBrands =
+    ownedBrandIds.length > 0 ? ownedBrandIds : user?.owned_brands || [];
+
   const fetchLeads = async () => {
     try {
       setLeadsLoading(true);
@@ -180,7 +196,13 @@ export default function LeadsTrackingDashboard() {
       }
 
       const data = await response.json();
-      setLeads(data.leads);
+      let filteredLeads = data.leads || [];
+      if (isBrandAdmin && effectiveOwnedBrands.length > 0) {
+        filteredLeads = filteredLeads.filter((lead: Lead) =>
+          effectiveOwnedBrands.includes(lead.brand_id)
+        );
+      }
+      setLeads(filteredLeads);
       setTotalCount(data.total);
       setTotalPages(Math.ceil(data.total / filters.limit));
     } catch (error) {
@@ -640,7 +662,7 @@ export default function LeadsTrackingDashboard() {
       </div>
 
       {/* Top Performing Brands (Super Admin Only) */}
-      {user?.role === "super_admin" &&
+      {isSuperAdmin &&
         analytics?.top_performing_brands &&
         analytics.top_performing_brands.length > 0 && (
           <Card className="p-6 border-oma-beige">

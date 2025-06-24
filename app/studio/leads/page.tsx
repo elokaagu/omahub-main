@@ -135,11 +135,11 @@ export default function StudioLeadsPage() {
     try {
       setLoading(true);
 
-      // Check user role first
+      // Check user role and owned brands first
       const supabase = createClient();
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
-        .select("role")
+        .select("role, owned_brands")
         .eq("id", user?.id)
         .single();
 
@@ -147,6 +147,26 @@ export default function StudioLeadsPage() {
         setIsSuperAdmin(true);
       } else {
         setIsSuperAdmin(false);
+      }
+
+      // Build query parameters based on user role
+      let queryParams = "?";
+      const params = new URLSearchParams();
+
+      // Add role-based filtering for brand admins
+      if (profile?.role === "brand_admin") {
+        if (!profile.owned_brands || profile.owned_brands.length === 0) {
+          console.log("Brand admin has no owned brands, showing empty list");
+          setLeads([]);
+          setLoading(false);
+          return;
+        }
+
+        // The API should handle this filtering, but we can also pass brand IDs as a hint
+        console.log(
+          "Brand admin loading leads for brands:",
+          profile.owned_brands
+        );
       }
 
       // Use the same API endpoint as the dashboard for consistency
@@ -165,8 +185,22 @@ export default function StudioLeadsPage() {
 
       const data = await response.json();
 
-      console.log(`📊 Loaded ${data.leads?.length || 0} leads via API`);
-      setLeads(data.leads || []);
+      console.log(
+        `📊 Loaded ${data.leads?.length || 0} leads via API for user role: ${profile?.role}`
+      );
+
+      // Additional client-side filtering as a safety measure for brand admins
+      let filteredLeads = data.leads || [];
+      if (profile?.role === "brand_admin" && profile.owned_brands?.length > 0) {
+        filteredLeads = filteredLeads.filter((lead: Lead) =>
+          profile.owned_brands!.includes(lead.brand_id)
+        );
+        console.log(
+          `🔒 Filtered to ${filteredLeads.length} leads for brand admin`
+        );
+      }
+
+      setLeads(filteredLeads);
     } catch (error) {
       console.error("Error loading leads:", error);
       toast.error(
