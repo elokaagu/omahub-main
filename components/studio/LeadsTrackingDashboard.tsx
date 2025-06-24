@@ -164,6 +164,13 @@ export default function LeadsTrackingDashboard({
   const [analytics, setAnalytics] = useState<LeadsAnalytics | null>(null);
   const [platformAnalytics, setPlatformAnalytics] =
     useState<AnalyticsData | null>(null);
+  const [brandOwnerAnalytics, setBrandOwnerAnalytics] = useState<{
+    totalBrands: number;
+    totalProducts: number;
+    totalReviews: number;
+    averageRating: number;
+    recentReviews: number;
+  } | null>(null);
   const [totalCount, setTotalCount] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
@@ -243,8 +250,21 @@ export default function LeadsTrackingDashboard({
       setPlatformLoading(true);
       setPlatformError(null);
 
-      const platformData = await getAnalyticsData();
-      setPlatformAnalytics(platformData);
+      if (isSuperAdmin) {
+        // Super admins get platform-wide analytics
+        const platformData = await getAnalyticsData();
+        setPlatformAnalytics(platformData);
+      } else if (isBrandAdmin && effectiveOwnedBrands.length > 0) {
+        // Brand owners get their brand-specific analytics
+        const response = await fetch(
+          `/api/admin/brand-analytics?brand_ids=${effectiveOwnedBrands.join(",")}`
+        );
+        if (!response.ok) {
+          throw new Error("Failed to fetch brand analytics");
+        }
+        const brandData = await response.json();
+        setBrandOwnerAnalytics(brandData);
+      }
     } catch (error) {
       console.error("Platform analytics fetch error:", error);
       setPlatformError(
@@ -420,107 +440,220 @@ export default function LeadsTrackingDashboard({
       {/* Debug info in development */}
       {process.env.NODE_ENV === "development" && <SessionDebugInfo />}
 
-      {/* Platform Overview Section */}
-      <div className="bg-gradient-to-r from-oma-plum/5 to-oma-beige/10 rounded-lg p-6 border border-oma-beige">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className="text-2xl font-canela text-oma-plum">
-              Platform Overview
-            </h2>
-            <p className="text-oma-cocoa">
-              Key metrics across the entire OmaHub platform
-            </p>
-          </div>
-          <Button
-            onClick={refetchAnalytics}
-            variant="outline"
-            size="sm"
-            className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white"
-          >
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
-          </Button>
-        </div>
-
-        {platformLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-            {[...Array(5)].map((_, i) => (
-              <Card key={i} className="p-4">
-                <div className="animate-pulse">
-                  <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                  <div className="h-8 bg-gray-200 rounded mb-1"></div>
-                  <div className="h-3 bg-gray-200 rounded w-3/4"></div>
-                </div>
-              </Card>
-            ))}
-          </div>
-        ) : platformError ? (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <p className="text-red-600 text-sm">
-              Platform Analytics Error: {platformError}
-            </p>
+      {/* Platform Overview Section - Super Admin Only */}
+      {isSuperAdmin && (
+        <div className="bg-gradient-to-r from-oma-plum/5 to-oma-beige/10 rounded-lg p-6 border border-oma-beige">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-canela text-oma-plum">
+                Platform Overview
+              </h2>
+              <p className="text-oma-cocoa">
+                Key metrics across the entire OmaHub platform
+              </p>
+            </div>
             <Button
-              onClick={fetchPlatformAnalytics}
+              onClick={refetchAnalytics}
               variant="outline"
               size="sm"
-              className="mt-2"
+              className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white"
             >
-              Retry Platform Analytics
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
             </Button>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-            <Card className="p-4 border-l-4 border-l-oma-plum">
-              <h3 className="text-sm font-medium text-oma-cocoa">
-                Total Brands
-              </h3>
-              <p className="text-2xl font-canela text-oma-plum">
-                {platformAnalytics?.totalBrands || 0}
+
+          {platformLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+              {[...Array(5)].map((_, i) => (
+                <Card key={i} className="p-4">
+                  <div className="animate-pulse">
+                    <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                    <div className="h-8 bg-gray-200 rounded mb-1"></div>
+                    <div className="h-3 bg-gray-200 rounded w-3/4"></div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          ) : platformError ? (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <p className="text-red-600 text-sm">
+                Platform Analytics Error: {platformError}
               </p>
-              <p className="text-sm text-oma-cocoa">
-                {platformAnalytics?.verifiedBrands || 0} verified
+              <Button
+                onClick={fetchPlatformAnalytics}
+                variant="outline"
+                size="sm"
+                className="mt-2"
+              >
+                Retry Platform Analytics
+              </Button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+              <Card className="p-4 border-l-4 border-l-oma-plum">
+                <h3 className="text-sm font-medium text-oma-cocoa">
+                  Total Brands
+                </h3>
+                <p className="text-2xl font-canela text-oma-plum">
+                  {platformAnalytics?.totalBrands || 0}
+                </p>
+                <p className="text-sm text-oma-cocoa">
+                  {platformAnalytics?.verifiedBrands || 0} verified
+                </p>
+              </Card>
+              <Card className="p-4 border-l-4 border-l-oma-beige">
+                <h3 className="text-sm font-medium text-oma-cocoa">
+                  Total Products
+                </h3>
+                <p className="text-2xl font-canela text-oma-plum">
+                  {platformAnalytics?.totalProducts || 0}
+                </p>
+                <p className="text-sm text-oma-cocoa">Across all brands</p>
+              </Card>
+              <Card className="p-4 border-l-4 border-l-green-500">
+                <h3 className="text-sm font-medium text-oma-cocoa">
+                  Total Reviews
+                </h3>
+                <p className="text-2xl font-canela text-oma-plum">
+                  {platformAnalytics?.totalReviews || 0}
+                </p>
+                <p className="text-sm text-oma-cocoa">
+                  {platformAnalytics?.recentReviews || 0} this month
+                </p>
+              </Card>
+              <Card className="p-4 border-l-4 border-l-blue-500">
+                <h3 className="text-sm font-medium text-oma-cocoa">
+                  Page Views
+                </h3>
+                <p className="text-2xl font-canela text-oma-plum">
+                  {platformAnalytics?.totalPageViews
+                    ? platformAnalytics.totalPageViews.toLocaleString()
+                    : "0"}
+                </p>
+                <p className="text-sm text-oma-cocoa">Estimated monthly</p>
+              </Card>
+              <Card className="p-4 border-l-4 border-l-purple-500">
+                <h3 className="text-sm font-medium text-oma-cocoa">
+                  Avg Rating
+                </h3>
+                <p className="text-2xl font-canela text-oma-plum flex items-center">
+                  {platformAnalytics?.averageRating?.toFixed(1) || "0.0"}
+                  <Star className="h-5 w-5 text-yellow-400 ml-1 fill-current" />
+                </p>
+                <p className="text-sm text-oma-cocoa">Platform average</p>
+              </Card>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Brand Overview Section - Brand Admin Only */}
+      {isBrandAdmin && (
+        <div className="bg-gradient-to-r from-oma-plum/5 to-oma-beige/10 rounded-lg p-6 border border-oma-beige">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-canela text-oma-plum">
+                Your Brand Overview
+              </h2>
+              <p className="text-oma-cocoa">
+                Key metrics for your{" "}
+                {effectiveOwnedBrands.length > 1 ? "brands" : "brand"}
               </p>
-            </Card>
-            <Card className="p-4 border-l-4 border-l-oma-beige">
-              <h3 className="text-sm font-medium text-oma-cocoa">
-                Total Products
-              </h3>
-              <p className="text-2xl font-canela text-oma-plum">
-                {platformAnalytics?.totalProducts || 0}
-              </p>
-              <p className="text-sm text-oma-cocoa">Across all brands</p>
-            </Card>
-            <Card className="p-4 border-l-4 border-l-green-500">
-              <h3 className="text-sm font-medium text-oma-cocoa">
-                Total Reviews
-              </h3>
-              <p className="text-2xl font-canela text-oma-plum">
-                {platformAnalytics?.totalReviews || 0}
-              </p>
-              <p className="text-sm text-oma-cocoa">
-                {platformAnalytics?.recentReviews || 0} this month
-              </p>
-            </Card>
-            <Card className="p-4 border-l-4 border-l-blue-500">
-              <h3 className="text-sm font-medium text-oma-cocoa">Page Views</h3>
-              <p className="text-2xl font-canela text-oma-plum">
-                {platformAnalytics?.totalPageViews
-                  ? platformAnalytics.totalPageViews.toLocaleString()
-                  : "0"}
-              </p>
-              <p className="text-sm text-oma-cocoa">Estimated monthly</p>
-            </Card>
-            <Card className="p-4 border-l-4 border-l-purple-500">
-              <h3 className="text-sm font-medium text-oma-cocoa">Avg Rating</h3>
-              <p className="text-2xl font-canela text-oma-plum flex items-center">
-                {platformAnalytics?.averageRating?.toFixed(1) || "0.0"}
-                <Star className="h-5 w-5 text-yellow-400 ml-1 fill-current" />
-              </p>
-              <p className="text-sm text-oma-cocoa">Platform average</p>
-            </Card>
+            </div>
+            <Button
+              onClick={refetchAnalytics}
+              variant="outline"
+              size="sm"
+              className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
           </div>
-        )}
-      </div>
+
+          {platformLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {[...Array(4)].map((_, i) => (
+                <Card key={i} className="p-4">
+                  <div className="animate-pulse">
+                    <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                    <div className="h-8 bg-gray-200 rounded mb-1"></div>
+                    <div className="h-3 bg-gray-200 rounded w-3/4"></div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          ) : platformError ? (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <p className="text-red-600 text-sm">
+                Brand Analytics Error: {platformError}
+              </p>
+              <Button
+                onClick={fetchPlatformAnalytics}
+                variant="outline"
+                size="sm"
+                className="mt-2"
+              >
+                Retry Brand Analytics
+              </Button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <Card className="p-4 border-l-4 border-l-oma-plum">
+                <h3 className="text-sm font-medium text-oma-cocoa">
+                  Your Brands
+                </h3>
+                <p className="text-2xl font-canela text-oma-plum">
+                  {brandOwnerAnalytics?.totalBrands ||
+                    effectiveOwnedBrands.length}
+                </p>
+                <p className="text-sm text-oma-cocoa">
+                  {effectiveOwnedBrands.length > 1
+                    ? "Brands owned"
+                    : "Brand owned"}
+                </p>
+              </Card>
+              <Card className="p-4 border-l-4 border-l-oma-beige">
+                <h3 className="text-sm font-medium text-oma-cocoa">
+                  Total Products
+                </h3>
+                <p className="text-2xl font-canela text-oma-plum">
+                  {brandOwnerAnalytics?.totalProducts || 0}
+                </p>
+                <p className="text-sm text-oma-cocoa">
+                  Across your{" "}
+                  {effectiveOwnedBrands.length > 1 ? "brands" : "brand"}
+                </p>
+              </Card>
+              <Card className="p-4 border-l-4 border-l-green-500">
+                <h3 className="text-sm font-medium text-oma-cocoa">
+                  Total Reviews
+                </h3>
+                <p className="text-2xl font-canela text-oma-plum">
+                  {brandOwnerAnalytics?.totalReviews || 0}
+                </p>
+                <p className="text-sm text-oma-cocoa">
+                  {brandOwnerAnalytics?.recentReviews || 0} this month
+                </p>
+              </Card>
+              <Card className="p-4 border-l-4 border-l-purple-500">
+                <h3 className="text-sm font-medium text-oma-cocoa">
+                  Avg Rating
+                </h3>
+                <p className="text-2xl font-canela text-oma-plum flex items-center">
+                  {brandOwnerAnalytics?.averageRating?.toFixed(1) || "0.0"}
+                  <Star className="h-5 w-5 text-yellow-400 ml-1 fill-current" />
+                </p>
+                <p className="text-sm text-oma-cocoa">
+                  Your {effectiveOwnedBrands.length > 1 ? "brands" : "brand"}{" "}
+                  average
+                </p>
+              </Card>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Leads Analytics Section */}
       <div>
