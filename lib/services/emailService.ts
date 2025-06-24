@@ -19,7 +19,7 @@ export async function sendContactEmail(formData: {
     }
 
     const { data, error } = await resend.emails.send({
-      from: "OmaHub <onboarding@resend.dev>",
+      from: "OmaHub <info@oma-hub.com>",
       to: ["eloka@satellitelabs.xyz"],
       subject: `New Contact Form Submission: ${formData.subject}`,
       text: `
@@ -53,6 +53,7 @@ export async function sendInquiryReplyEmail(replyData: {
   replyMessage: string;
   brandName: string;
   adminName?: string;
+  isFromSuperAdmin?: boolean;
 }) {
   try {
     // Check if Resend is properly configured
@@ -69,10 +70,16 @@ export async function sendInquiryReplyEmail(replyData: {
       replyMessage,
       brandName,
       adminName = "OmaHub Team",
+      isFromSuperAdmin = false,
     } = replyData;
 
+    // Use info@oma-hub.com for super admin emails, noreply@omahub.com for others
+    const fromAddress = isFromSuperAdmin
+      ? `${brandName} via OmaHub <info@oma-hub.com>`
+      : `${brandName} via OmaHub <noreply@omahub.com>`;
+
     const { data, error } = await resend.emails.send({
-      from: `${brandName} via OmaHub <noreply@omahub.com>`,
+      from: fromAddress,
       to: [customerEmail],
       subject: `Re: ${originalSubject}`,
       html: `

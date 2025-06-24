@@ -85,7 +85,7 @@ async function sendNewAccountNotification(user: any) {
     for (const adminEmail of ADMIN_EMAILS) {
       try {
         await resend.emails.send({
-          from: "OmaHub <notifications@omahub.com>",
+          from: "OmaHub <info@oma-hub.com>",
           to: [adminEmail],
           subject: `🎉 New Account Created - ${user.email}`,
           html: `
