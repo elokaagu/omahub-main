@@ -157,13 +157,17 @@ export default function CataloguesPage() {
 
       const isBrandOwner = user.role === "brand_admin";
       const isAdmin = user.role === "admin" || user.role === "super_admin";
-      const ownedBrandIds = profileResult.data?.owned_brands || [];
+      const ownedBrandIds =
+        profileResult.data?.owned_brands || user.owned_brands || [];
 
       console.log("📚 Catalogues Page: Role analysis:", {
         isBrandOwner,
         isAdmin,
         ownedBrandIds,
         ownedBrandCount: ownedBrandIds.length,
+        profileOwnedBrands: profileResult.data?.owned_brands,
+        userContextOwnedBrands: user.owned_brands,
+        fallbackUsed: !profileResult.data?.owned_brands && user.owned_brands,
       });
 
       // Use profile role as primary source of truth, fallback to user context
@@ -318,7 +322,7 @@ export default function CataloguesPage() {
     const isBrandOwner = effectiveRole === "brand_admin";
     const isAdmin =
       effectiveRole === "admin" || effectiveRole === "super_admin";
-    const ownedBrandIds = userProfile?.owned_brands || [];
+    const ownedBrandIds = userProfile?.owned_brands || user?.owned_brands || [];
 
     console.log("🗑️ Catalogues Page: Delete permission check:", {
       catalogueId,
@@ -329,6 +333,9 @@ export default function CataloguesPage() {
       isBrandOwner,
       isAdmin,
       ownedBrandIds,
+      profileOwnedBrands: userProfile?.owned_brands,
+      userContextOwnedBrands: user?.owned_brands,
+      fallbackUsed: !userProfile?.owned_brands && user?.owned_brands,
       hasAccess:
         !isBrandOwner ||
         (catalogue && ownedBrandIds.includes(catalogue.brand_id)),
