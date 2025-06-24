@@ -3,6 +3,8 @@ import { createClient } from "@/lib/supabase-unified";
 
 export async function GET(request: NextRequest) {
   try {
+    console.log("🔍 BRAND ANALYTICS API: Starting request");
+
     const supabase = createClient();
 
     // Get user from session
@@ -11,7 +13,15 @@ export async function GET(request: NextRequest) {
       error: sessionError,
     } = await supabase.auth.getSession();
 
+    console.log("🔍 BRAND ANALYTICS API: Session check", {
+      hasSession: !!session,
+      sessionError: sessionError?.message,
+      userId: session?.user?.id,
+      userEmail: session?.user?.email,
+    });
+
     if (sessionError || !session?.user) {
+      console.log("❌ BRAND ANALYTICS API: Unauthorized - no session");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -19,7 +29,14 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const brandIdsParam = searchParams.get("brand_ids");
 
+    console.log("🔍 BRAND ANALYTICS API: Request params", {
+      brandIdsParam,
+      userId: user.id,
+      userEmail: user.email,
+    });
+
     if (!brandIdsParam) {
+      console.log("❌ BRAND ANALYTICS API: Missing brand_ids parameter");
       return NextResponse.json(
         { error: "Brand IDs required" },
         { status: 400 }
@@ -27,13 +44,29 @@ export async function GET(request: NextRequest) {
     }
 
     const brandIds = brandIdsParam.split(",");
+    console.log("🔍 BRAND ANALYTICS API: Parsed brand IDs", brandIds);
 
     // Verify user has access to these brands
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("role, owned_brands")
       .eq("id", user.id)
       .single();
+
+    console.log("🔍 BRAND ANALYTICS API: Profile check", {
+      profile: profile
+        ? {
+            role: profile.role,
+            owned_brands: profile.owned_brands,
+          }
+        : null,
+      profileError: profileError?.message,
+    });
+
+    if (profileError) {
+      console.log("❌ BRAND ANALYTICS API: Profile fetch error", profileError);
+      return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+    }
 
     if (profile?.role === "brand_admin") {
       const userOwnedBrands = profile.owned_brands || [];
@@ -41,15 +74,29 @@ export async function GET(request: NextRequest) {
         userOwnedBrands.includes(brandId)
       );
 
+      console.log("🔍 BRAND ANALYTICS API: Brand admin access check", {
+        requestedBrands: brandIds,
+        userOwnedBrands,
+        hasAccess,
+      });
+
       if (!hasAccess) {
+        console.log(
+          "❌ BRAND ANALYTICS API: Access denied - brand ownership mismatch"
+        );
         return NextResponse.json({ error: "Access denied" }, { status: 403 });
       }
     } else if (profile?.role !== "super_admin") {
+      console.log("❌ BRAND ANALYTICS API: Insufficient permissions", {
+        userRole: profile?.role,
+      });
       return NextResponse.json(
         { error: "Insufficient permissions" },
         { status: 403 }
       );
     }
+
+    console.log("✅ BRAND ANALYTICS API: Access granted, fetching data");
 
     // Get analytics data
     const [brandsResult, productsResult, reviewsResult, recentReviewsResult] =

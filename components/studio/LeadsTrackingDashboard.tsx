@@ -250,23 +250,56 @@ export default function LeadsTrackingDashboard({
       setPlatformLoading(true);
       setPlatformError(null);
 
+      console.log("🔍 BRAND ANALYTICS DEBUG: Starting fetchPlatformAnalytics", {
+        isSuperAdmin,
+        isBrandAdmin,
+        effectiveOwnedBrands,
+        effectiveOwnedBrandsCount: effectiveOwnedBrands.length,
+        userRole: user?.role,
+        userEmail: user?.email,
+      });
+
       if (isSuperAdmin) {
         // Super admins get platform-wide analytics
+        console.log("📊 Fetching platform analytics for super admin");
         const platformData = await getAnalyticsData();
         setPlatformAnalytics(platformData);
+        console.log("✅ Platform analytics fetched:", platformData);
       } else if (isBrandAdmin && effectiveOwnedBrands.length > 0) {
         // Brand owners get their brand-specific analytics
-        const response = await fetch(
-          `/api/admin/brand-analytics?brand_ids=${effectiveOwnedBrands.join(",")}`
-        );
+        const apiUrl = `/api/admin/brand-analytics?brand_ids=${effectiveOwnedBrands.join(",")}`;
+        console.log("📊 Fetching brand analytics for brand admin:", {
+          apiUrl,
+          brandIds: effectiveOwnedBrands,
+        });
+
+        const response = await fetch(apiUrl);
+        console.log("📊 Brand analytics response status:", response.status);
+
         if (!response.ok) {
-          throw new Error("Failed to fetch brand analytics");
+          const errorText = await response.text();
+          console.error("❌ Brand analytics API error:", {
+            status: response.status,
+            statusText: response.statusText,
+            errorText,
+          });
+          throw new Error(
+            `Failed to fetch brand analytics: ${response.status} ${response.statusText}`
+          );
         }
+
         const brandData = await response.json();
+        console.log("✅ Brand analytics data received:", brandData);
         setBrandOwnerAnalytics(brandData);
+      } else {
+        console.log("⚠️ No analytics to fetch:", {
+          isSuperAdmin,
+          isBrandAdmin,
+          effectiveOwnedBrandsLength: effectiveOwnedBrands.length,
+        });
       }
     } catch (error) {
-      console.error("Platform analytics fetch error:", error);
+      console.error("❌ Platform analytics fetch error:", error);
       setPlatformError(
         error instanceof Error
           ? error.message
