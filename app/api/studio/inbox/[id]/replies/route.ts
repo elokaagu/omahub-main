@@ -7,15 +7,27 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
+    console.log("🔍 GET Replies - Starting request for inquiry:", params.id);
+
     const supabase = await createServerSupabaseClient();
     const inquiryId = params.id;
+
+    console.log("✅ Supabase client created successfully");
 
     // Get authenticated user
     const {
       data: { user },
       error: authError,
     } = await supabase.auth.getUser();
+
+    console.log("🔐 Auth check result:", {
+      hasUser: !!user,
+      userEmail: user?.email,
+      authError: authError?.message,
+    });
+
     if (authError || !user) {
+      console.error("❌ Authentication failed:", authError);
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -26,6 +38,13 @@ export async function GET(
       .select("role, owned_brands")
       .eq("id", user.id)
       .single();
+
+    console.log("👤 Profile check result:", {
+      hasProfile: !!profileData,
+      role: profileData?.role,
+      ownedBrands: profileData?.owned_brands,
+      profileError: profileError?.message,
+    });
 
     if (profileError || !profileData) {
       console.log(
@@ -46,7 +65,7 @@ export async function GET(
           user.email
         );
       } else {
-        console.error("Profile error:", profileError);
+        console.error("❌ Profile error:", profileError);
         return NextResponse.json(
           { error: "Profile not found" },
           { status: 404 }
@@ -58,8 +77,11 @@ export async function GET(
 
     // Check permissions
     if (!["super_admin", "brand_admin"].includes(profile.role)) {
+      console.error("❌ Access denied for role:", profile.role);
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
+
+    console.log("✅ Permission check passed for role:", profile.role);
 
     // Verify inquiry exists and user has access
     let verifyQuery = supabase
@@ -78,17 +100,24 @@ export async function GET(
 
     if (profile.role === "brand_admin") {
       if (!profile.owned_brands || profile.owned_brands.length === 0) {
+        console.error("❌ Brand admin has no owned brands");
         return NextResponse.json(
           { error: "No accessible brands" },
           { status: 403 }
         );
       }
       verifyQuery = verifyQuery.in("brand_id", profile.owned_brands);
+      console.log(
+        "🔒 Applied brand filter for brand_admin:",
+        profile.owned_brands
+      );
     }
 
+    console.log("🔍 Verifying inquiry access...");
     const { data: inquiry, error: verifyError } = await verifyQuery.single();
 
     if (verifyError) {
+      console.error("❌ Inquiry verification failed:", verifyError);
       if (verifyError.code === "PGRST116") {
         return NextResponse.json(
           { error: "Inquiry not found" },
@@ -101,7 +130,13 @@ export async function GET(
       );
     }
 
+    console.log("✅ Inquiry verified:", {
+      brandId: inquiry.brand_id,
+      customerEmail: inquiry.customer_email,
+    });
+
     // Get replies
+    console.log("📨 Fetching replies...");
     const { data: replies, error: repliesError } = await supabase
       .from("inquiry_replies")
       .select(
@@ -114,16 +149,17 @@ export async function GET(
       .order("created_at", { ascending: true });
 
     if (repliesError) {
-      console.error("Error fetching replies:", repliesError);
+      console.error("❌ Error fetching replies:", repliesError);
       return NextResponse.json(
         { error: "Failed to fetch replies" },
         { status: 500 }
       );
     }
 
+    console.log("✅ Successfully fetched replies:", replies?.length || 0);
     return NextResponse.json({ replies: replies || [] });
   } catch (error) {
-    console.error("Get replies error:", error);
+    console.error("💥 Get replies critical error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
