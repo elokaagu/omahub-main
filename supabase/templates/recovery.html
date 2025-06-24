@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reset Your OmaHub Password</title>
+    <style>
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
+          Cantarell, sans-serif;
+        line-height: 1.6;
+        color: #3a1e2d;
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #fffdf8;
+      }
+
+      .email-container {
+        background: white;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 8px 32px rgba(58, 30, 45, 0.1);
+        border: 1px solid rgba(212, 178, 133, 0.2);
+      }
+
+      .header {
+        text-align: center;
+        padding: 48px 40px;
+        background: linear-gradient(135deg, #3a1e2d 0%, #a07f68 100%);
+        color: white;
+        position: relative;
+      }
+
+      .header::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/><circle cx="10" cy="60" r="0.5" fill="white" opacity="0.1"/><circle cx="90" cy="40" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>')
+          repeat;
+        pointer-events: none;
+      }
+
+      .logo {
+        font-size: 36px;
+        font-weight: 300;
+        letter-spacing: 3px;
+        margin-bottom: 12px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .tagline {
+        font-size: 16px;
+        opacity: 0.95;
+        font-weight: 300;
+        letter-spacing: 1px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .content {
+        padding: 48px 40px;
+        background: white;
+      }
+
+      .greeting {
+        font-size: 20px;
+        margin-bottom: 24px;
+        color: #3a1e2d;
+        font-weight: 400;
+      }
+
+      .message {
+        font-size: 16px;
+        margin-bottom: 32px;
+        line-height: 1.7;
+        color: #a07f68;
+      }
+
+      .button-container {
+        text-align: center;
+        margin: 32px 0;
+      }
+
+      .button {
+        display: inline-block;
+        background: linear-gradient(135deg, #3a1e2d 0%, #a07f68 100%);
+        color: white;
+        padding: 18px 36px;
+        text-decoration: none;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 16px;
+        letter-spacing: 0.5px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 16px rgba(58, 30, 45, 0.2);
+      }
+
+      .button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 24px rgba(58, 30, 45, 0.3);
+      }
+
+      .security-note {
+        background: linear-gradient(
+          135deg,
+          #f6f0e8 0%,
+          rgba(212, 178, 133, 0.1) 100%
+        );
+        border-left: 4px solid #d4b285;
+        padding: 20px;
+        margin: 32px 0;
+        border-radius: 8px;
+        position: relative;
+      }
+
+      .security-note::before {
+        content: "🔒";
+        position: absolute;
+        top: 20px;
+        left: -2px;
+        font-size: 18px;
+      }
+
+      .security-note strong {
+        color: #3a1e2d;
+        font-weight: 600;
+      }
+
+      .security-note p {
+        margin: 0;
+        color: #a07f68;
+        padding-left: 24px;
+      }
+
+      .footer {
+        text-align: center;
+        padding: 32px 40px;
+        background: #f6f0e8;
+        color: #a07f68;
+        font-size: 14px;
+        border-top: 1px solid rgba(212, 178, 133, 0.3);
+      }
+
+      .footer a {
+        color: #3a1e2d;
+        text-decoration: none;
+        font-weight: 500;
+      }
+
+      .footer a:hover {
+        text-decoration: underline;
+      }
+
+      .expiry-note {
+        color: #a07f68;
+        font-size: 14px;
+        margin-top: 24px;
+        padding: 16px;
+        background: rgba(212, 178, 133, 0.1);
+        border-radius: 8px;
+        text-align: center;
+      }
+
+      .link-fallback {
+        margin-top: 32px;
+        padding: 20px;
+        background: #fffdf8;
+        border-radius: 8px;
+        border: 1px solid rgba(212, 178, 133, 0.2);
+      }
+
+      .link-fallback a {
+        color: #3a1e2d;
+        word-break: break-all;
+        font-size: 14px;
+      }
+
+      /* Mobile responsiveness */
+      @media (max-width: 600px) {
+        body {
+          padding: 10px;
+        }
+
+        .header {
+          padding: 32px 24px;
+        }
+
+        .logo {
+          font-size: 28px;
+          letter-spacing: 2px;
+        }
+
+        .tagline {
+          font-size: 14px;
+        }
+
+        .content {
+          padding: 32px 24px;
+        }
+
+        .footer {
+          padding: 24px;
+        }
+
+        .button {
+          padding: 16px 28px;
+          font-size: 15px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="email-container">
+      <div class="header">
+        <div class="logo">OmaHub</div>
+        <div class="tagline">Discover Global Fashion</div>
+      </div>
+
+      <div class="content">
+        <div class="greeting">Hello there,</div>
+
+        <div class="message">
+          We received a request to reset your OmaHub password. If you made this
+          request, click the button below to create a new password and get back
+          to discovering amazing fashion brands.
+        </div>
+
+        <div class="button-container">
+          <a href="{{ .ConfirmationURL }}" class="button">Reset My Password</a>
+        </div>
+
+        <div class="expiry-note">
+          ⏰ This secure link will expire in 1 hour for your protection
+        </div>
+
+        <div class="security-note">
+          <p>
+            <strong>Security Note:</strong> If you didn't request this password
+            reset, you can safely ignore this email. Your account remains secure
+            and no changes have been made.
+          </p>
+        </div>
+
+        <div class="link-fallback">
+          <p style="margin: 0 0 12px 0; color: #a07f68; font-size: 14px">
+            If the button above doesn't work, copy and paste this link into your
+            browser:
+          </p>
+          <a href="{{ .ConfirmationURL }}">{{ .ConfirmationURL }}</a>
+        </div>
+      </div>
+
+      <div class="footer">
+        <p style="margin: 0 0 16px 0">
+          <strong style="color: #3a1e2d">OmaHub</strong><br />
+          Connecting you with the world's most talented fashion designers
+        </p>
+        <p style="margin: 0 0 16px 0">
+          <a href="https://omahub.com">Visit our website</a> •
+          <a href="https://omahub.com/contact">Contact Support</a> •
+          <a href="https://omahub.com/directory">Browse Designers</a>
+        </p>
+        <p style="margin: 0; font-size: 12px; color: #a07f68; opacity: 0.8">
+          © 2024 OmaHub. All rights reserved.
+        </p>
+      </div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,326 @@
+"use client";
+
+import React, { useState, useRef, useEffect } from "react";
+import { Button } from "./button";
+import { Upload, X, Image as ImageIcon } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
+import { AuthImage } from "./auth-image";
+
+interface FileUploadProps {
+  onUploadComplete: (url: string) => void;
+  defaultValue?: string;
+  bucket?: string;
+  path?: string;
+  accept?: string | Record<string, string[]>;
+  maxSize?: number;
+  className?: string;
+}
+
+export function FileUpload({
+  onUploadComplete,
+  defaultValue,
+  bucket = "brand-assets",
+  path = "",
+  accept = "image/jpeg, image/png, image/webp",
+  maxSize = 5,
+  className = "",
+}: FileUploadProps) {
+  const [uploading, setUploading] = useState(false);
+  const [preview, setPreview] = useState<string | null>(defaultValue || null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Update preview when defaultValue changes
+  useEffect(() => {
+    setPreview(defaultValue || null);
+  }, [defaultValue]);
+
+  // Process accept parameter to handle both string and object formats
+  const acceptString =
+    typeof accept === "string"
+      ? accept
+      : Object.entries(accept)
+          .map(([mimeType, extensions]) => extensions.join(", "))
+          .join(", ");
+
+  // Simplified upload to Supabase with timeout
+  const uploadToSupabase = async (file: File): Promise<string> => {
+    // Check if supabase client is available
+    if (!supabase) {
+      throw new Error("Supabase client not available");
+    }
+
+    // Force session refresh to ensure we have a valid token
+    const { data: sessionData, error: sessionError } =
+      await supabase.auth.refreshSession();
+
+    if (sessionError) {
+      console.error("Session refresh failed:", sessionError);
+      throw new Error(`Session refresh failed: ${sessionError.message}`);
+    }
+
+    // Check if user is authenticated after refresh
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      console.error("Authentication check failed:", {
+        authError,
+        hasUser: !!user,
+      });
+      throw new Error(
+        `Authentication required: Please log in to upload files. ${authError?.message || "No user session found"}`
+      );
+    }
+
+    console.log("Upload authentication successful:", {
+      userId: user.id,
+      email: user.email,
+      bucket: bucket,
+    });
+
+    // Check user profile and permissions for product uploads
+    if (bucket === "product-images") {
+      try {
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("role, owned_brands")
+          .eq("id", user.id)
+          .single();
+
+        if (profileError) {
+          throw new Error(`Profile check failed: ${profileError.message}`);
+        }
+
+        if (!profile) {
+          throw new Error("User profile not found");
+        }
+
+        // Check if user has permission to upload product images
+        const canUploadProducts =
+          profile.role === "super_admin" ||
+          profile.role === "admin" ||
+          profile.role === "brand_admin";
+
+        if (!canUploadProducts) {
+          throw new Error(
+            `Insufficient permissions: Only super admins, admins, and brand admins can upload product images. Your role: ${profile.role}`
+          );
+        }
+      } catch (permissionError) {
+        throw permissionError;
+      }
+    }
+
+    // Create unique filename with user ID prefix
+    const fileExtension = file.name.split(".").pop() || "jpg";
+    const uniqueFileName = `${user.id.substring(0, 8)}_${Date.now()}.${fileExtension}`;
+
+    console.log("Starting upload:", {
+      fileName: uniqueFileName,
+      fileSize: file.size,
+      fileType: file.type,
+      bucket: bucket,
+    });
+
+    // Upload with timeout
+    const uploadPromise = supabase.storage
+      .from(bucket)
+      .upload(uniqueFileName, file, {
+        cacheControl: "3600",
+        upsert: false,
+      });
+
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(
+        () => reject(new Error("Upload timeout after 30 seconds")),
+        30000
+      )
+    );
+
+    const { data, error } = (await Promise.race([
+      uploadPromise,
+      timeoutPromise,
+    ])) as any;
+
+    if (error) {
+      console.error("Upload error:", error);
+
+      // Provide more specific error messages
+      if (
+        error.message.includes("403") ||
+        error.message.includes("Unauthorized")
+      ) {
+        throw new Error(
+          `Upload unauthorized: You may not have permission to upload to the ${bucket} bucket. Please ensure you are logged in with the correct permissions.`
+        );
+      } else if (
+        error.message.includes("404") ||
+        error.message.includes("not found")
+      ) {
+        throw new Error(
+          `Storage bucket '${bucket}' not found. Please contact support to set up the storage bucket.`
+        );
+      } else if (error.message.includes("row-level security")) {
+        throw new Error(
+          `Database security policy blocked the upload. Please ensure you have the correct permissions for ${bucket} bucket.`
+        );
+      } else if (
+        error.message.includes("mime type") &&
+        error.message.includes("not supported")
+      ) {
+        throw new Error(
+          `File type not supported. Please upload a valid image file (JPEG, PNG, or WebP).`
+        );
+      } else {
+        throw new Error(`Upload failed: ${error.message}`);
+      }
+    }
+
+    if (!data?.path) {
+      throw new Error("Upload succeeded but no file path returned");
+    }
+
+    console.log("Upload successful:", data);
+
+    // Get the public URL
+    const { data: urlData } = supabase.storage
+      .from(bucket)
+      .getPublicUrl(data.path);
+
+    if (!urlData?.publicUrl) {
+      throw new Error("Failed to get public URL for uploaded file");
+    }
+
+    console.log("Public URL generated:", urlData.publicUrl);
+    return urlData.publicUrl;
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file size
+    const fileSizeMB = file.size / (1024 * 1024);
+    if (fileSizeMB > maxSize) {
+      toast.error(`File is too large. Maximum size is ${maxSize}MB.`);
+      return;
+    }
+
+    // Validate file type
+    const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+    if (!validTypes.includes(file.type)) {
+      toast.error("Please select a valid image file (JPEG, PNG, or WebP).");
+      return;
+    }
+
+    // Create preview
+    const objectUrl = URL.createObjectURL(file);
+    setPreview(objectUrl);
+
+    // Upload file
+    setUploading(true);
+    try {
+      const url = await uploadToSupabase(file);
+
+      // Update preview with the uploaded URL so it stays visible
+      setPreview(url);
+
+      onUploadComplete(url);
+      toast.success("Image uploaded successfully!");
+    } catch (error) {
+      // More specific error messages
+      let errorMessage = "Failed to upload image. Please try again.";
+      if (error instanceof Error) {
+        if (error.message.includes("timeout")) {
+          errorMessage =
+            "Upload timed out. Please check your connection and try again.";
+        } else if (error.message.includes("storage")) {
+          errorMessage = "Storage error. Please try again or contact support.";
+        } else {
+          errorMessage = `Upload error: ${error.message}`;
+        }
+      }
+
+      toast.error(errorMessage);
+      setPreview(defaultValue || null);
+    } finally {
+      setUploading(false);
+      // Clean up the temporary object URL
+      URL.revokeObjectURL(objectUrl);
+    }
+  };
+
+  const handleButtonClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleRemove = () => {
+    setPreview(null);
+    onUploadComplete("");
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  return (
+    <div className={`space-y-4 ${className}`}>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept={acceptString}
+        onChange={handleFileChange}
+        className="hidden"
+        disabled={uploading}
+      />
+
+      {preview ? (
+        <div className="relative">
+          <AuthImage
+            src={preview}
+            alt="Preview"
+            width={300}
+            height={200}
+            className="w-full h-48 object-cover rounded-md border border-gray-200"
+          />
+          <Button
+            type="button"
+            variant="destructive"
+            size="sm"
+            className="absolute top-2 right-2"
+            onClick={handleRemove}
+            disabled={uploading}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+      ) : (
+        <div
+          onClick={handleButtonClick}
+          className="border-2 border-dashed border-gray-300 rounded-md p-8 text-center cursor-pointer hover:bg-gray-50 transition-colors"
+        >
+          <div className="flex flex-col items-center justify-center gap-2">
+            <ImageIcon className="h-10 w-10 text-gray-400" />
+            <div className="mt-2">
+              <p className="text-sm font-medium text-gray-900">
+                Click to upload an image
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                PNG, JPG or WEBP (max. {maxSize}MB)
+              </p>
+            </div>
+            <Button
+              type="button"
+              className="mt-4 bg-oma-plum hover:bg-oma-plum/90"
+              disabled={uploading}
+            >
+              {uploading ? "Uploading..." : "Select Image"}
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
