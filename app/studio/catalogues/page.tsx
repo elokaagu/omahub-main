@@ -94,10 +94,12 @@ export default function CataloguesPage() {
       return;
     }
 
-    console.log("📚 Catalogues Page: Starting fetchData for user:", {
+    console.log("🔍 ENHANCED DEBUG: Starting fetchData for user:", {
       id: user.id,
       email: user.email,
       role: user.role,
+      owned_brands: user.owned_brands,
+      fullUserObject: user,
     });
 
     setLoading(true);
@@ -107,6 +109,18 @@ export default function CataloguesPage() {
         getUserPermissions(user.id, user.email),
         supabase.from("profiles").select("*").eq("id", user.id).single(),
       ]);
+
+      console.log("🔍 ENHANCED DEBUG: Auth data fetched:", {
+        permissions,
+        profileError: profileResult.error,
+        profileData: profileResult.data,
+        userFromContext: {
+          id: user.id,
+          email: user.email,
+          role: user.role,
+          owned_brands: user.owned_brands,
+        },
+      });
 
       console.log("📚 Catalogues Page: Permissions:", permissions);
       console.log("📚 Catalogues Page: Profile result:", {
