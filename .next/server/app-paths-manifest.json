@@ -1,4 +1,4 @@
 {
   "/api/contact/route": "app/api/contact/route.js",
-  "/not-found": "app/not-found.js"
+  "/api/studio/inbox/[id]/replies/route": "app/api/studio/inbox/[id]/replies/route.js"
 }

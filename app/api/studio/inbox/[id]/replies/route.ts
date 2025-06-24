@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase-unified";
+import { sendInquiryReplyEmail } from "@/lib/services/emailService";
 
 export async function GET(
   request: NextRequest,
@@ -63,7 +64,16 @@ export async function GET(
     // Verify inquiry exists and user has access
     let verifyQuery = supabase
       .from("inquiries")
-      .select("brand_id")
+      .select(
+        `
+        brand_id, 
+        customer_email, 
+        customer_name, 
+        subject,
+        message,
+        brand:brands(name)
+      `
+      )
       .eq("id", inquiryId);
 
     if (profile.role === "brand_admin") {
@@ -143,7 +153,7 @@ export async function POST(
     let profile;
     const { data: profileData, error: profileError } = await supabase
       .from("profiles")
-      .select("role, owned_brands")
+      .select("role, owned_brands, first_name, last_name, email")
       .eq("id", user.id)
       .single();
 
@@ -160,6 +170,9 @@ export async function POST(
         profile = {
           role: "super_admin",
           owned_brands: [],
+          first_name: null,
+          last_name: null,
+          email: user.email,
         };
         console.log(
           "✅ Granted super_admin access based on email:",
@@ -193,7 +206,16 @@ export async function POST(
     // Verify inquiry exists and user has access
     let verifyQuery = supabase
       .from("inquiries")
-      .select("brand_id, customer_email, customer_name, subject")
+      .select(
+        `
+        brand_id, 
+        customer_email, 
+        customer_name, 
+        subject,
+        message,
+        brand:brands(name)
+      `
+      )
       .eq("id", inquiryId);
 
     if (profile.role === "brand_admin") {
@@ -254,12 +276,37 @@ export async function POST(
       };
 
       await supabase.from("inquiries").update(updateData).eq("id", inquiryId);
-    }
 
-    // TODO: Send email notification to customer if not internal note
-    // This would be implemented with your email service
-    if (!isInternalNote) {
-      console.log("TODO: Send email to customer:", inquiry.customer_email);
+      // Send email notification to customer
+      try {
+        const adminName =
+          profile.first_name && profile.last_name
+            ? `${profile.first_name} ${profile.last_name}`
+            : profile.email || "OmaHub Team";
+
+        const emailResult = await sendInquiryReplyEmail({
+          customerName: inquiry.customer_name,
+          customerEmail: inquiry.customer_email,
+          originalSubject: inquiry.subject,
+          originalMessage: inquiry.message,
+          replyMessage: message.trim(),
+          brandName: (inquiry.brand as any)?.name || "OmaHub",
+          adminName: adminName,
+        });
+
+        if (emailResult.success) {
+          console.log(
+            "✅ Reply email sent successfully to:",
+            inquiry.customer_email
+          );
+        } else {
+          console.error("❌ Failed to send reply email:", emailResult.error);
+          // Don't fail the reply creation if email fails
+        }
+      } catch (emailError) {
+        console.error("❌ Error sending reply email:", emailError);
+        // Don't fail the reply creation if email fails
+      }
     }
 
     return NextResponse.json({

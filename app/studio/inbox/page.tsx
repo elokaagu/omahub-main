@@ -68,10 +68,12 @@ export default function StudioInboxPage() {
 
       let inquiriesQuery = supabase
         .from("inquiries")
-        .select(`
+        .select(
+          `
           *,
           brand:brands(name)
-        `)
+        `
+        )
         .order("created_at", { ascending: false });
 
       // If user is super admin, get all inquiries
@@ -92,7 +94,8 @@ export default function StudioInboxPage() {
         inquiriesQuery = inquiriesQuery.in("brand_id", brandIds);
       }
 
-      const { data: inquiriesData, error: inquiriesError } = await inquiriesQuery;
+      const { data: inquiriesData, error: inquiriesError } =
+        await inquiriesQuery;
 
       if (inquiriesError) {
         console.error("Error fetching inquiries:", inquiriesError);
@@ -113,7 +116,7 @@ export default function StudioInboxPage() {
   const markAsRead = async (inquiryId: string) => {
     try {
       const supabase = createClient();
-      
+
       const { error } = await supabase
         .from("inquiries")
         .update({ status: "read" })
@@ -146,20 +149,30 @@ export default function StudioInboxPage() {
     setIsReplying(true);
 
     try {
-      // TODO: Send email reply via your email service
-      // For now, we'll just mark as replied and show success
       const supabase = createClient();
-      
-      const { error } = await supabase
-        .from("inquiries")
-        .update({ status: "replied" })
-        .eq("id", selectedInquiry.id);
 
-      if (error) {
-        console.error("Error updating inquiry status:", error);
-        toast.error("Failed to send reply");
-        return;
+      // Create a reply using the inquiry replies API
+      const response = await fetch(
+        `/api/studio/inbox/${selectedInquiry.id}/replies`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            message: replyMessage.trim(),
+            isInternalNote: false,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to send reply");
       }
+
+      const result = await response.json();
 
       // Update local state
       setInquiries((prev) =>
@@ -170,7 +183,9 @@ export default function StudioInboxPage() {
         )
       );
 
-      toast.success(`Reply sent to ${selectedInquiry.customer_name}!`);
+      toast.success(
+        `Reply sent to ${selectedInquiry.customer_name}! An email has been sent to their inbox.`
+      );
       setSelectedInquiry(null);
       setReplyMessage("");
     } catch (error) {
@@ -254,12 +269,13 @@ export default function StudioInboxPage() {
       <div className="max-w-7xl mx-auto px-6 py-8">
         <StudioNav />
         <div className="mb-8">
-          <h1 className="text-3xl font-canela text-oma-plum mb-2">Studio Inbox</h1>
+          <h1 className="text-3xl font-canela text-oma-plum mb-2">
+            Studio Inbox
+          </h1>
           <p className="text-oma-cocoa">
-            {isSuperAdmin 
-              ? "Manage all customer inquiries and messages across the platform" 
-              : "Manage inquiries and messages from potential clients"
-            }
+            {isSuperAdmin
+              ? "Manage all customer inquiries and messages across the platform"
+              : "Manage inquiries and messages from potential clients"}
           </p>
           {isSuperAdmin && (
             <div className="mt-2">
@@ -275,13 +291,14 @@ export default function StudioInboxPage() {
             <CardContent className="pt-6">
               <div className="text-center py-8">
                 <h3 className="text-lg font-canela text-oma-plum mb-2">
-                  {isSuperAdmin ? "No inquiries on the platform yet" : "No messages yet"}
+                  {isSuperAdmin
+                    ? "No inquiries on the platform yet"
+                    : "No messages yet"}
                 </h3>
                 <p className="text-oma-cocoa">
-                  {isSuperAdmin 
+                  {isSuperAdmin
                     ? "When customers contact any brand on the platform, their messages will appear here."
-                    : "When customers contact you through your brand pages, their messages will appear here."
-                  }
+                    : "When customers contact you through your brand pages, their messages will appear here."}
                 </p>
               </div>
             </CardContent>
@@ -304,7 +321,8 @@ export default function StudioInboxPage() {
                       </CardTitle>
                       <div className="flex items-center gap-2 mt-1">
                         <span className="text-sm text-oma-cocoa">
-                          From: {inquiry.customer_name} ({inquiry.customer_email})
+                          From: {inquiry.customer_name} (
+                          {inquiry.customer_email})
                         </span>
                         {inquiry.brand && (
                           <span className="text-sm text-oma-cocoa">
@@ -324,7 +342,9 @@ export default function StudioInboxPage() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-oma-cocoa line-clamp-2">{inquiry.message}</p>
+                  <p className="text-oma-cocoa line-clamp-2">
+                    {inquiry.message}
+                  </p>
                   <p className="text-sm text-oma-cocoa/70 mt-2">
                     {new Date(inquiry.created_at).toLocaleDateString()} at{" "}
                     {new Date(inquiry.created_at).toLocaleTimeString()}
@@ -342,18 +362,19 @@ export default function StudioInboxPage() {
         >
           <DialogContent className="sm:max-w-[600px]">
             <DialogHeader>
-              <DialogTitle>
-                {selectedInquiry?.subject}
-              </DialogTitle>
+              <DialogTitle>{selectedInquiry?.subject}</DialogTitle>
               <DialogDescription>
-                From: {selectedInquiry?.customer_name} ({selectedInquiry?.customer_email})
+                From: {selectedInquiry?.customer_name} (
+                {selectedInquiry?.customer_email})
               </DialogDescription>
             </DialogHeader>
-            
+
             {selectedInquiry && (
               <div className="space-y-4">
                 <div>
-                  <h4 className="font-medium text-oma-plum mb-2">Original Message:</h4>
+                  <h4 className="font-medium text-oma-plum mb-2">
+                    Original Message:
+                  </h4>
                   <div className="bg-oma-beige/20 p-4 rounded-lg">
                     <p className="text-oma-cocoa whitespace-pre-wrap">
                       {selectedInquiry.message}
@@ -397,4 +418,4 @@ export default function StudioInboxPage() {
       </div>
     </div>
   );
-} 
+}
