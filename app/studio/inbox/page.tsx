@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { createClientSupabaseClient } from "@/lib/supabase-unified";
+import { createClient } from "@/lib/supabase-unified";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -51,7 +51,7 @@ export default function StudioInboxPage() {
 
   const loadInquiries = async () => {
     try {
-      const supabase = createClientSupabaseClient();
+      const supabase = createClient();
 
       // Check if user is super admin
       const { data: profile, error: profileError } = await supabase
@@ -112,7 +112,7 @@ export default function StudioInboxPage() {
 
   const markAsRead = async (inquiryId: string) => {
     try {
-      const supabase = createClientSupabaseClient();
+      const supabase = createClient();
       
       const { error } = await supabase
         .from("inquiries")
@@ -148,7 +148,7 @@ export default function StudioInboxPage() {
     try {
       // TODO: Send email reply via your email service
       // For now, we'll just mark as replied and show success
-      const supabase = createClientSupabaseClient();
+      const supabase = createClient();
       
       const { error } = await supabase
         .from("inquiries")
