@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase-unified";
+import { estimateLeadRevenue } from "@/lib/services/revenueEstimationService";
 
 // Helper function to extract project details from message
 function analyzeInquiryMessage(
@@ -365,12 +366,79 @@ export async function POST(request: NextRequest) {
 
       console.log("✅ Brand found:", brand);
 
-      // Analyze the message for intelligent lead scoring
-      const analysis = analyzeInquiryMessage(
-        message,
-        "general",
-        brand.category
-      );
+      // Use enhanced revenue estimation service with real product pricing data
+      let revenueAnalysis;
+      try {
+        console.log(
+          "🧠 Using enhanced revenue estimation with real product pricing..."
+        );
+        revenueAnalysis = await estimateLeadRevenue(
+          brandId,
+          message,
+          "general",
+          {
+            company_name:
+              name.includes("Company") || name.includes("Corp")
+                ? name
+                : undefined,
+          }
+        );
+        console.log("✅ Enhanced revenue analysis completed:", revenueAnalysis);
+      } catch (error) {
+        console.error(
+          "⚠️ Enhanced revenue estimation failed, using fallback:",
+          error
+        );
+        // Fallback to legacy analysis
+        const legacyAnalysis = analyzeInquiryMessage(
+          message,
+          "general",
+          brand.category
+        );
+        revenueAnalysis = {
+          estimated_value: legacyAnalysis.estimatedValue,
+          confidence_score: 50,
+          pricing_source: "industry_fallback" as const,
+          breakdown: {
+            base_value: legacyAnalysis.estimatedValue,
+            project_multiplier: 1,
+            quantity_multiplier: 1,
+            urgency_multiplier: 1,
+            luxury_multiplier: 1,
+            final_value: legacyAnalysis.estimatedValue,
+          },
+          recommended_follow_up: "Standard follow-up recommended",
+        };
+      }
+
+      // Determine priority based on estimated value and confidence
+      let priority = "normal";
+      if (revenueAnalysis.estimated_value > 10000) {
+        priority = "urgent";
+      } else if (
+        revenueAnalysis.estimated_value > 5000 ||
+        revenueAnalysis.confidence_score > 80
+      ) {
+        priority = "high";
+      } else if (
+        message.toLowerCase().includes("urgent") ||
+        message.toLowerCase().includes("asap")
+      ) {
+        priority = "urgent";
+      }
+
+      // Determine lead type based on message content and value
+      let leadType = "inquiry";
+      if (revenueAnalysis.estimated_value > 8000) {
+        leadType = "booking_intent";
+      } else if (
+        message.toLowerCase().includes("quote") ||
+        message.toLowerCase().includes("price")
+      ) {
+        leadType = "quote_request";
+      } else if (message.toLowerCase().includes("consultation")) {
+        leadType = "consultation";
+      }
 
       try {
         // Create inquiry for Studio Inbox
@@ -382,7 +450,7 @@ export async function POST(request: NextRequest) {
           subject: `New Contact from ${name}`,
           message: message,
           inquiry_type: "general",
-          priority: analysis.priority,
+          priority: priority,
           status: "unread",
           source: "website",
         };
@@ -400,20 +468,22 @@ export async function POST(request: NextRequest) {
 
         console.log("✅ Inquiry created:", inquiry.id);
 
-        // Create lead with intelligent analysis
+        // Create lead with enhanced intelligent analysis
+        const leadData = {
+          brand_id: brandId,
+          customer_name: name,
+          customer_email: email,
+          source: "website",
+          status: "new",
+          priority: priority,
+          lead_type: leadType,
+          estimated_value: revenueAnalysis.estimated_value,
+          notes: `Enhanced Analysis - Confidence: ${revenueAnalysis.confidence_score}%, Source: ${revenueAnalysis.pricing_source}, Follow-up: ${revenueAnalysis.recommended_follow_up}\n\nBreakdown:\n- Base Value: $${revenueAnalysis.breakdown.base_value}\n- Project Multiplier: ${revenueAnalysis.breakdown.project_multiplier}x\n- Quantity Multiplier: ${revenueAnalysis.breakdown.quantity_multiplier}x\n- Urgency Multiplier: ${revenueAnalysis.breakdown.urgency_multiplier}x\n- Luxury Multiplier: ${revenueAnalysis.breakdown.luxury_multiplier}x\n\nOriginal message: ${message}`,
+        };
+
         const { data: lead, error: leadError } = await supabase
           .from("leads")
-          .insert({
-            brand_id: brandId,
-            customer_name: name,
-            customer_email: email,
-            source: "website",
-            status: "new",
-            priority: analysis.priority,
-            lead_type: analysis.leadType,
-            estimated_value: analysis.estimatedValue,
-            notes: `Original message: ${message}`,
-          })
+          .insert(leadData)
           .select()
           .single();
 
@@ -422,13 +492,13 @@ export async function POST(request: NextRequest) {
           // Don't fail the whole request if lead creation fails
           console.log("⚠️ Continuing without lead creation");
         } else {
-          console.log("✅ Lead created:", lead.id);
+          console.log("✅ Lead created with enhanced analysis:", lead.id);
 
           // Create initial lead interaction
           const interactionData = {
             lead_id: lead.id,
             interaction_type: "email",
-            description: `Initial contact: ${message.substring(0, 100)}${message.length > 100 ? "..." : ""}`,
+            description: `Initial contact: ${message.substring(0, 100)}${message.length > 100 ? "..." : ""}\n\nRevenue Analysis: $${revenueAnalysis.estimated_value} (${revenueAnalysis.confidence_score}% confidence)\nRecommended Action: ${revenueAnalysis.recommended_follow_up}`,
             interaction_date: new Date().toISOString(),
           };
 
@@ -442,11 +512,13 @@ export async function POST(request: NextRequest) {
               interactionError
             );
           } else {
-            console.log("✅ Lead interaction created");
+            console.log("✅ Lead interaction created with enhanced analysis");
           }
         }
 
-        console.log("🎉 Brand contact processed successfully");
+        console.log(
+          "🎉 Brand contact processed successfully with enhanced revenue estimation"
+        );
         return NextResponse.json({
           success: true,
           message:
@@ -455,8 +527,11 @@ export async function POST(request: NextRequest) {
             inquiryId: inquiry.id,
             leadId: lead?.id,
             brand: brand.name,
-            estimatedValue: analysis.estimatedValue,
-            priority: analysis.priority,
+            estimatedValue: revenueAnalysis.estimated_value,
+            confidenceScore: revenueAnalysis.confidence_score,
+            pricingSource: revenueAnalysis.pricing_source,
+            priority: priority,
+            recommendedFollowUp: revenueAnalysis.recommended_follow_up,
           },
         });
       } catch (error) {

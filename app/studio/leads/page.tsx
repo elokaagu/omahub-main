@@ -23,8 +23,19 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StudioNav } from "@/components/ui/studio-nav";
+import { TrashIcon } from "@heroicons/react/24/outline";
 
 interface Lead {
   id: string;
@@ -80,6 +91,9 @@ export default function StudioLeadsPage() {
     []
   );
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [leadToDelete, setLeadToDelete] = useState<Lead | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Filters and search
   const [searchTerm, setSearchTerm] = useState("");
@@ -395,6 +409,45 @@ export default function StudioLeadsPage() {
     return "bg-red-100 text-red-800";
   };
 
+  const deleteLead = async (lead: Lead) => {
+    setIsDeleting(true);
+
+    try {
+      const response = await fetch(`/api/admin/leads?type=lead&id=${lead.id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to delete lead");
+      }
+
+      // Remove from local state
+      setLeads((prev) => prev.filter((l) => l.id !== lead.id));
+
+      toast.success(`Lead for ${lead.customer_name} deleted successfully`);
+      setDeleteDialogOpen(false);
+      setLeadToDelete(null);
+
+      // Close lead modal if it was open
+      if (selectedLead?.id === lead.id) {
+        setSelectedLead(null);
+      }
+    } catch (error) {
+      console.error("Error deleting lead:", error);
+      toast.error("Failed to delete lead");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleDeleteClick = (lead: Lead, event: React.MouseEvent) => {
+    event.stopPropagation();
+    setLeadToDelete(lead);
+    setDeleteDialogOpen(true);
+  };
+
   if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-oma-cream flex items-center justify-center">
@@ -650,6 +703,15 @@ export default function StudioLeadsPage() {
                       <Badge className={getPriorityColor(lead.priority)}>
                         {lead.priority}
                       </Badge>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => handleDeleteClick(lead, e)}
+                        className="text-red-600 hover:text-red-800 hover:bg-red-50 p-1"
+                        title="Delete lead"
+                      >
+                        <TrashIcon className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
                 </CardHeader>
@@ -1092,6 +1154,15 @@ export default function StudioLeadsPage() {
                           variant="outline"
                           size="sm"
                           className="w-full justify-start"
+                          onClick={(e) => handleDeleteClick(selectedLead, e)}
+                        >
+                          <TrashIcon className="mr-2 h-4 w-4" />
+                          Delete Lead
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full justify-start"
                           onClick={() =>
                             window.open(
                               `mailto:${selectedLead.customer_email}`,
@@ -1137,6 +1208,31 @@ export default function StudioLeadsPage() {
             )}
           </DialogContent>
         </Dialog>
+
+        {/* Delete Dialog */}
+        <AlertDialog
+          open={deleteDialogOpen}
+          onOpenChange={() => setDeleteDialogOpen(false)}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete this lead? This action cannot be
+                undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => deleteLead(leadToDelete!)}
+                disabled={isDeleting}
+              >
+                {isDeleting ? "Deleting..." : "Delete"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );
