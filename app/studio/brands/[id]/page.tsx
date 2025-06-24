@@ -62,7 +62,6 @@ import {
 import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 import { standardCategories } from "@/lib/data/directory";
-import AuthDebug from "@/components/studio/AuthDebug";
 
 // Character limits
 const SHORT_DESCRIPTION_LIMIT = 150;
@@ -335,8 +334,6 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
         </Button>
         <h1 className="text-3xl font-canela text-gray-900">Edit Brand</h1>
       </div>
-
-      <AuthDebug />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
