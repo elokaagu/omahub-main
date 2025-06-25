@@ -66,7 +66,7 @@ async function fixBrandAuthIssues() {
         console.log(`✅ ${user.email} - Role: ${profile.role}`);
 
         // Fix admin role if needed
-        if (user.email === "admin@omahub.com" && profile.role !== "admin") {
+        if (user.email === "info@oma-hub.com" && profile.role !== "admin") {
           const { error: updateError } = await supabase
             .from("profiles")
             .update({ role: "admin" })
@@ -75,7 +75,7 @@ async function fixBrandAuthIssues() {
           if (updateError) {
             console.error("❌ Error updating admin role:", updateError.message);
           } else {
-            console.log("✅ Fixed admin@omahub.com role to 'admin'");
+            console.log("✅ Fixed info@oma-hub.com role to 'admin'");
           }
         }
       }
@@ -100,7 +100,7 @@ async function fixBrandAuthIssues() {
     console.log("1. Open your browser to: http://localhost:3000/login");
     console.log("2. Login with one of these accounts:");
     console.log(
-      "   • admin@omahub.com / admin123456 (Admin - can update any brand)"
+      "   • info@oma-hub.com / admin123456 (Admin - can update any brand)"
     );
     console.log(
       "   • nnamdiohaka@gmail.com (Super Admin - can update any brand)"
