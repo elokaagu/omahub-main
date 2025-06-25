@@ -73,13 +73,13 @@ export async function sendInquiryReplyEmail(replyData: {
       isFromSuperAdmin = false,
     } = replyData;
 
-    // Use info@oma-hub.com for super admin emails, noreply@omahub.com for others
-    const fromAddress = isFromSuperAdmin
+    // Use info@oma-hub.com for super admin emails, info@oma-hub.com for others
+    const fromEmail = isFromSuperAdmin
       ? `${brandName} via OmaHub <info@oma-hub.com>`
-      : `${brandName} via OmaHub <noreply@omahub.com>`;
+      : `${brandName} via OmaHub <info@oma-hub.com>`;
 
     const { data, error } = await resend.emails.send({
-      from: fromAddress,
+      from: fromEmail,
       to: [customerEmail],
       subject: `Re: ${originalSubject}`,
       html: `
@@ -134,7 +134,7 @@ export async function sendInquiryReplyEmail(replyData: {
                 This email was sent by <strong>${brandName}</strong> via OmaHub
               </p>
               <p style="margin: 0; color: #999; font-size: 12px;">
-                Discover amazing fashion brands at <a href="https://omahub.com" style="color: #a07f68; text-decoration: none;">omahub.com</a>
+                Discover amazing fashion brands at <a href="https://oma-hub.com" style="color: #a07f68; text-decoration: none;">oma-hub.com</a>
               </p>
             </div>
           </div>

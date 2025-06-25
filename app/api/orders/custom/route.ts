@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
         const resend = new Resend(process.env.RESEND_API_KEY);
 
         await resend.emails.send({
-          from: "OmaHub <orders@omahub.com>",
+          from: "OmaHub <info@oma-hub.com>",
           to: [emailRecipient],
           subject: `New Custom Order Request - ${product.title}`,
           html: `

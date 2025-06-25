@@ -32,7 +32,7 @@ const advancedFAQItems: FAQItem[] = [
       <div className="space-y-2">
         <p>You can reach us through multiple channels:</p>
         <ul className="list-disc list-inside space-y-1 ml-4">
-          <li>Email: support@omahub.com</li>
+          <li>Email: info@oma-hub.com</li>
           <li>Phone: +1 (555) 123-4567</li>
           <li>Live chat: Available 9 AM - 6 PM EST</li>
         </ul>

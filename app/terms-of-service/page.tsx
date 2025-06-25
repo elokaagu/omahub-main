@@ -366,12 +366,10 @@ export default function TermsOfServicePage() {
                 Contact Us
               </Button>
             </Link>
-            <a href="mailto:legal@oma-hub.com" className="flex-1">
-              <Button
-                variant="outline"
-                className="w-full border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white"
-              >
-                legal@oma-hub.com
+            <a href="mailto:info@oma-hub.com" className="flex-1">
+              <Button className="w-full bg-oma-plum hover:bg-oma-plum/90 text-white">
+                <Mail className="h-4 w-4 mr-2" />
+                info@oma-hub.com
               </Button>
             </a>
           </div>
