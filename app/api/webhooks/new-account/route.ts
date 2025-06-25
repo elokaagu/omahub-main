@@ -126,7 +126,7 @@ async function sendNewAccountNotification(user: any) {
                 <div style="background: #e8f4f8; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
                   <h3 style="color: #3a1e2d; margin: 0 0 12px 0; font-size: 16px;">Quick Actions</h3>
                   <p style="margin: 0 0 16px 0; color: #666; font-size: 14px;">You can manage this user from the admin panel:</p>
-                  <a href="https://omahub.com/studio/users" 
+                  <a href="https://oma-hub.com/studio/users" 
                      style="display: inline-block; background: linear-gradient(135deg, #3a1e2d 0%, #a07f68 100%); color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 500;">
                     View in Admin Panel
                   </a>

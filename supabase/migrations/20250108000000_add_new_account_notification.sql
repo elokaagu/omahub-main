@@ -29,7 +29,7 @@ BEGIN
   BEGIN
     -- Get webhook configuration from environment or settings
     -- In production, you would set these in your Supabase project settings
-    webhook_url := 'https://omahub.com/api/webhooks/new-account';
+    webhook_url := 'https://oma-hub.com/api/webhooks/new-account';
     webhook_secret := 'your-webhook-secret'; -- This should be set in your environment
     
     -- Prepare the payload
