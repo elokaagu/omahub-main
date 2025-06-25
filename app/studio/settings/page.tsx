@@ -126,14 +126,14 @@ export default function SettingsPage() {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-oma-cocoa/80 mb-4">
-                Create and organize frequently asked questions that appear
-                throughout your site. Organize by category and control where
+                Create and organise frequently asked questions that appear
+                throughout your site. Organise by category and control where
                 they display to provide better user support.
               </p>
               <div className="space-y-2 text-xs text-oma-cocoa/70">
                 <div className="flex items-center gap-2">
                   <MessageSquare className="h-3 w-3 text-oma-plum" />
-                  <span>Categorized organization</span>
+                  <span>Categorised organisation</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <MessageSquare className="h-3 w-3 text-oma-plum" />
@@ -188,8 +188,8 @@ export default function SettingsPage() {
               <div className="flex items-start gap-2">
                 <MessageSquare className="h-4 w-4 text-oma-plum mt-0.5 flex-shrink-0" />
                 <p>
-                  <strong>FAQ Management:</strong> Organize helpful information
-                  for your users with categorized questions and rich text
+                  <strong>FAQ Management:</strong> Organise helpful information
+                  for your users with categorised questions and rich text
                   answers.
                 </p>
               </div>
