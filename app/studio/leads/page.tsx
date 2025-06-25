@@ -36,6 +36,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StudioNav } from "@/components/ui/studio-nav";
 import { TrashIcon } from "@heroicons/react/24/outline";
+import { Edit2, Check, X } from "lucide-react";
 
 interface Lead {
   id: string;
@@ -48,6 +49,7 @@ interface Lead {
   status: string;
   priority: string;
   estimated_value?: number;
+  estimated_budget?: number;
   lead_type?: string;
   project_timeline?: string;
   location?: string;
@@ -81,6 +83,163 @@ interface LeadInteraction {
   next_action?: string;
 }
 
+// Inline editing component for timeline
+const TimelineEditor = ({
+  value,
+  leadId,
+  onUpdate,
+  onCancel,
+}: {
+  value: string;
+  leadId: string;
+  onUpdate: (leadId: string, field: string, value: string) => void;
+  onCancel: () => void;
+}) => {
+  const [editValue, setEditValue] = useState(value || "");
+
+  const handleSave = () => {
+    onUpdate(leadId, "project_timeline", editValue);
+  };
+
+  return (
+    <div className="flex items-center gap-2 min-w-[200px]">
+      <Select value={editValue} onValueChange={setEditValue}>
+        <SelectTrigger className="h-8 text-xs">
+          <SelectValue placeholder="Select timeline" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="ASAP">ASAP</SelectItem>
+          <SelectItem value="1-2 weeks">1-2 weeks</SelectItem>
+          <SelectItem value="1 month">1 month</SelectItem>
+          <SelectItem value="2-3 months">2-3 months</SelectItem>
+          <SelectItem value="3-6 months">3-6 months</SelectItem>
+          <SelectItem value="6+ months">6+ months</SelectItem>
+          <SelectItem value="Flexible">Flexible</SelectItem>
+        </SelectContent>
+      </Select>
+      <Button
+        size="sm"
+        variant="ghost"
+        onClick={handleSave}
+        className="h-8 w-8 p-0"
+      >
+        <Check className="h-4 w-4 text-green-600" />
+      </Button>
+      <Button
+        size="sm"
+        variant="ghost"
+        onClick={onCancel}
+        className="h-8 w-8 p-0"
+      >
+        <X className="h-4 w-4 text-red-600" />
+      </Button>
+    </div>
+  );
+};
+
+// Inline editing component for budget
+const BudgetEditor = ({
+  value,
+  leadId,
+  onUpdate,
+  onCancel,
+}: {
+  value: number | null;
+  leadId: string;
+  onUpdate: (leadId: string, field: string, value: number) => void;
+  onCancel: () => void;
+}) => {
+  const [editValue, setEditValue] = useState(value?.toString() || "");
+
+  const handleSave = () => {
+    const numValue = parseFloat(editValue) || 0;
+    onUpdate(leadId, "estimated_budget", numValue);
+  };
+
+  return (
+    <div className="flex items-center gap-2 min-w-[150px]">
+      <Input
+        type="number"
+        value={editValue}
+        onChange={(e) => setEditValue(e.target.value)}
+        placeholder="Enter budget"
+        className="h-8 text-xs"
+        min="0"
+        step="100"
+      />
+      <Button
+        size="sm"
+        variant="ghost"
+        onClick={handleSave}
+        className="h-8 w-8 p-0"
+      >
+        <Check className="h-4 w-4 text-green-600" />
+      </Button>
+      <Button
+        size="sm"
+        variant="ghost"
+        onClick={onCancel}
+        className="h-8 w-8 p-0"
+      >
+        <X className="h-4 w-4 text-red-600" />
+      </Button>
+    </div>
+  );
+};
+
+// Inline editing component for status
+const StatusEditor = ({
+  value,
+  leadId,
+  onUpdate,
+  onCancel,
+}: {
+  value: string;
+  leadId: string;
+  onUpdate: (leadId: string, field: string, value: string) => void;
+  onCancel: () => void;
+}) => {
+  const [editValue, setEditValue] = useState(value || "");
+
+  const handleSave = () => {
+    onUpdate(leadId, "status", editValue);
+  };
+
+  return (
+    <div className="flex items-center gap-2 min-w-[200px]">
+      <Select value={editValue} onValueChange={setEditValue}>
+        <SelectTrigger className="h-8 text-xs">
+          <SelectValue placeholder="Select status" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="new">New</SelectItem>
+          <SelectItem value="contacted">Contacted</SelectItem>
+          <SelectItem value="qualified">Qualified</SelectItem>
+          <SelectItem value="converted">Converted</SelectItem>
+          <SelectItem value="lost">Lost</SelectItem>
+          <SelectItem value="closed">Closed</SelectItem>
+        </SelectContent>
+      </Select>
+      <Button
+        size="sm"
+        variant="ghost"
+        onClick={handleSave}
+        className="h-8 w-8 p-0"
+      >
+        <Check className="h-4 w-4 text-green-600" />
+      </Button>
+      <Button
+        size="sm"
+        variant="ghost"
+        onClick={onCancel}
+        className="h-8 w-8 p-0"
+      >
+        <X className="h-4 w-4 text-red-600" />
+      </Button>
+    </div>
+  );
+};
+
 export default function StudioLeadsPage() {
   const { user, loading: authLoading } = useAuth();
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -94,6 +253,13 @@ export default function StudioLeadsPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [leadToDelete, setLeadToDelete] = useState<Lead | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Inline editing states
+  const [editingField, setEditingField] = useState<{
+    leadId: string;
+    field: string;
+  } | null>(null);
+  const [updatingLead, setUpdatingLead] = useState<string | null>(null);
 
   // Filters and search
   const [searchTerm, setSearchTerm] = useState("");
@@ -326,6 +492,61 @@ export default function StudioLeadsPage() {
       console.error("Error updating lead status:", error);
       toast.error("Failed to update lead status");
     }
+  };
+
+  // Handle inline field updates
+  const handleFieldUpdate = async (
+    leadId: string,
+    field: string,
+    value: string | number
+  ) => {
+    setUpdatingLead(leadId);
+    try {
+      const response = await fetch("/api/admin/leads", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          type: "lead",
+          id: leadId,
+          data: { [field]: value },
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to update lead");
+      }
+
+      const { lead: updatedLead } = await response.json();
+
+      // Update local state
+      setLeads((prevLeads) =>
+        prevLeads.map((lead) =>
+          lead.id === leadId ? { ...lead, ...updatedLead } : lead
+        )
+      );
+
+      // Update selected lead if it's the one being edited
+      if (selectedLead?.id === leadId) {
+        setSelectedLead((prev) => (prev ? { ...prev, ...updatedLead } : null));
+      }
+
+      toast.success(`${field.replace("_", " ")} updated successfully`);
+      setEditingField(null);
+    } catch (error) {
+      console.error("Error updating lead:", error);
+      toast.error(`Failed to update ${field.replace("_", " ")}`);
+    } finally {
+      setUpdatingLead(null);
+    }
+  };
+
+  // Cancel editing
+  const handleCancelEdit = () => {
+    setEditingField(null);
   };
 
   const addInteraction = async () => {
@@ -759,23 +980,77 @@ export default function StudioLeadsPage() {
                         {lead.lead_type || "Not specified"}
                       </p>
                     </div>
-                    <div>
+                    <div className="group">
                       <p className="text-sm font-medium text-oma-plum">
                         Timeline
                       </p>
-                      <p className="text-sm text-oma-cocoa">
-                        {lead.project_timeline || "Not specified"}
-                      </p>
+                      {editingField?.leadId === lead.id &&
+                      editingField?.field === "timeline" ? (
+                        <TimelineEditor
+                          value={lead.project_timeline || ""}
+                          leadId={lead.id}
+                          onUpdate={handleFieldUpdate}
+                          onCancel={handleCancelEdit}
+                        />
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm text-oma-cocoa">
+                            {lead.project_timeline || "Not specified"}
+                          </p>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() =>
+                              setEditingField({
+                                leadId: lead.id,
+                                field: "timeline",
+                              })
+                            }
+                            className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 hover:bg-oma-plum/10"
+                            disabled={updatingLead === lead.id}
+                          >
+                            <Edit2 className="h-3 w-3 text-oma-plum" />
+                          </Button>
+                        </div>
+                      )}
                     </div>
-                    <div>
+                    <div className="group">
                       <p className="text-sm font-medium text-oma-plum">
                         Budget
                       </p>
-                      <p className="text-sm text-oma-cocoa">
-                        {lead.estimated_value
-                          ? `$${lead.estimated_value.toLocaleString()}`
-                          : "Not specified"}
-                      </p>
+                      {editingField?.leadId === lead.id &&
+                      editingField?.field === "budget" ? (
+                        <BudgetEditor
+                          value={lead.estimated_budget || null}
+                          leadId={lead.id}
+                          onUpdate={handleFieldUpdate}
+                          onCancel={handleCancelEdit}
+                        />
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm text-oma-cocoa">
+                            {lead.estimated_budget
+                              ? `$${lead.estimated_budget.toLocaleString()}`
+                              : lead.estimated_value
+                                ? `$${lead.estimated_value.toLocaleString()}`
+                                : "Not specified"}
+                          </p>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() =>
+                              setEditingField({
+                                leadId: lead.id,
+                                field: "budget",
+                              })
+                            }
+                            className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 hover:bg-oma-plum/10"
+                            disabled={updatingLead === lead.id}
+                          >
+                            <Edit2 className="h-3 w-3 text-oma-plum" />
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -845,13 +1120,39 @@ export default function StudioLeadsPage() {
                         Lead Information
                       </h4>
                       <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
+                        <div className="flex justify-between items-center group">
                           <span>Status:</span>
-                          <Badge
-                            className={getStatusColor(selectedLead.status)}
-                          >
-                            {selectedLead.status.replace("_", " ")}
-                          </Badge>
+                          {editingField?.leadId === selectedLead.id &&
+                          editingField?.field === "status" ? (
+                            <StatusEditor
+                              value={selectedLead.status}
+                              leadId={selectedLead.id}
+                              onUpdate={handleFieldUpdate}
+                              onCancel={handleCancelEdit}
+                            />
+                          ) : (
+                            <div className="flex items-center gap-2">
+                              <Badge
+                                className={getStatusColor(selectedLead.status)}
+                              >
+                                {selectedLead.status.replace("_", " ")}
+                              </Badge>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() =>
+                                  setEditingField({
+                                    leadId: selectedLead.id,
+                                    field: "status",
+                                  })
+                                }
+                                className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 hover:bg-oma-plum/10"
+                                disabled={updatingLead === selectedLead.id}
+                              >
+                                <Edit2 className="h-3 w-3 text-oma-plum" />
+                              </Button>
+                            </div>
+                          )}
                         </div>
                         <div className="flex justify-between">
                           <span>Priority:</span>
@@ -879,19 +1180,74 @@ export default function StudioLeadsPage() {
                             {selectedLead.lead_type || "Not specified"}
                           </span>
                         </div>
-                        <div className="flex justify-between">
+                        <div className="flex justify-between items-center group">
                           <span>Timeline:</span>
-                          <span>
-                            {selectedLead.project_timeline || "Not specified"}
-                          </span>
+                          {editingField?.leadId === selectedLead.id &&
+                          editingField?.field === "timeline" ? (
+                            <TimelineEditor
+                              value={selectedLead.project_timeline || ""}
+                              leadId={selectedLead.id}
+                              onUpdate={handleFieldUpdate}
+                              onCancel={handleCancelEdit}
+                            />
+                          ) : (
+                            <div className="flex items-center gap-2">
+                              <span>
+                                {selectedLead.project_timeline ||
+                                  "Not specified"}
+                              </span>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() =>
+                                  setEditingField({
+                                    leadId: selectedLead.id,
+                                    field: "timeline",
+                                  })
+                                }
+                                className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 hover:bg-oma-plum/10"
+                                disabled={updatingLead === selectedLead.id}
+                              >
+                                <Edit2 className="h-3 w-3 text-oma-plum" />
+                              </Button>
+                            </div>
+                          )}
                         </div>
-                        <div className="flex justify-between">
+                        <div className="flex justify-between items-center group">
                           <span>Budget:</span>
-                          <span>
-                            {selectedLead.estimated_value
-                              ? `$${selectedLead.estimated_value.toLocaleString()}`
-                              : "Not specified"}
-                          </span>
+                          {editingField?.leadId === selectedLead.id &&
+                          editingField?.field === "budget" ? (
+                            <BudgetEditor
+                              value={selectedLead.estimated_budget || null}
+                              leadId={selectedLead.id}
+                              onUpdate={handleFieldUpdate}
+                              onCancel={handleCancelEdit}
+                            />
+                          ) : (
+                            <div className="flex items-center gap-2">
+                              <span>
+                                {selectedLead.estimated_budget
+                                  ? `$${selectedLead.estimated_budget.toLocaleString()}`
+                                  : selectedLead.estimated_value
+                                    ? `$${selectedLead.estimated_value.toLocaleString()}`
+                                    : "Not specified"}
+                              </span>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() =>
+                                  setEditingField({
+                                    leadId: selectedLead.id,
+                                    field: "budget",
+                                  })
+                                }
+                                className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 hover:bg-oma-plum/10"
+                                disabled={updatingLead === selectedLead.id}
+                              >
+                                <Edit2 className="h-3 w-3 text-oma-plum" />
+                              </Button>
+                            </div>
+                          )}
                         </div>
                         <div className="flex justify-between">
                           <span>Location:</span>

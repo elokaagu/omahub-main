@@ -27,6 +27,8 @@ export interface Lead {
   status: "new" | "contacted" | "qualified" | "converted" | "lost" | "closed";
   priority?: "low" | "normal" | "high" | "urgent";
   estimated_value?: number;
+  estimated_budget?: number;
+  project_timeline?: string;
   notes?: string;
   created_at?: string;
   updated_at?: string;
