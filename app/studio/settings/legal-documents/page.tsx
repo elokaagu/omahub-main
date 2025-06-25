@@ -314,10 +314,6 @@ export default function LegalDocumentsPage() {
             Manage your Terms of Service and Privacy Policy
           </p>
         </div>
-        <Button onClick={handleCreate} disabled={setupRequired}>
-          <Plus className="h-4 w-4 mr-2" />
-          New Document
-        </Button>
       </div>
 
       {setupRequired && (
