@@ -701,7 +701,7 @@ export default function CreateProductPage() {
                 </div>
               </div>
 
-              {/* Colors */}
+              {/* Colours */}
               <div className="space-y-2">
                 <Label className="text-black">Available Colours</Label>
                 <div className="flex gap-2 mb-2">
