@@ -564,8 +564,18 @@ export async function GET(request: NextRequest) {
 
     console.log(`✅ Fetched ${leads?.length || 0} leads for ${user.email}`);
 
+    // Map database field names to frontend field names
+    const mappedLeads =
+      leads?.map((lead) => {
+        const mappedLead = { ...lead };
+        if (mappedLead.project_timeline) {
+          mappedLead.timeline = mappedLead.project_timeline;
+        }
+        return mappedLead;
+      }) || [];
+
     return NextResponse.json({
-      leads: leads || [],
+      leads: mappedLeads,
       totalCount: count || 0,
       totalPages,
       currentPage: page,
@@ -820,7 +830,13 @@ export async function PUT(request: NextRequest) {
 
         console.log("✅ Lead updated successfully:", updatedLead);
 
-        return NextResponse.json({ lead: updatedLead });
+        // Map database field names back to frontend field names
+        const responseData = { ...updatedLead };
+        if (responseData.project_timeline) {
+          responseData.timeline = responseData.project_timeline;
+        }
+
+        return NextResponse.json({ lead: responseData });
 
       case "booking":
         // Update booking
