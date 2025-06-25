@@ -98,7 +98,7 @@ const TimelineEditor = ({
   const [editValue, setEditValue] = useState(value || "");
 
   const handleSave = () => {
-    onUpdate(leadId, "project_timeline", editValue);
+    onUpdate(leadId, "timeline", editValue);
   };
 
   return (
@@ -117,56 +117,6 @@ const TimelineEditor = ({
           <SelectItem value="Flexible">Flexible</SelectItem>
         </SelectContent>
       </Select>
-      <Button
-        size="sm"
-        variant="ghost"
-        onClick={handleSave}
-        className="h-8 w-8 p-0"
-      >
-        <Check className="h-4 w-4 text-green-600" />
-      </Button>
-      <Button
-        size="sm"
-        variant="ghost"
-        onClick={onCancel}
-        className="h-8 w-8 p-0"
-      >
-        <X className="h-4 w-4 text-red-600" />
-      </Button>
-    </div>
-  );
-};
-
-// Inline editing component for budget
-const BudgetEditor = ({
-  value,
-  leadId,
-  onUpdate,
-  onCancel,
-}: {
-  value: number | null;
-  leadId: string;
-  onUpdate: (leadId: string, field: string, value: number) => void;
-  onCancel: () => void;
-}) => {
-  const [editValue, setEditValue] = useState(value?.toString() || "");
-
-  const handleSave = () => {
-    const numValue = parseFloat(editValue) || 0;
-    onUpdate(leadId, "estimated_budget", numValue);
-  };
-
-  return (
-    <div className="flex items-center gap-2 min-w-[150px]">
-      <Input
-        type="number"
-        value={editValue}
-        onChange={(e) => setEditValue(e.target.value)}
-        placeholder="Enter budget"
-        className="h-8 text-xs"
-        min="0"
-        step="100"
-      />
       <Button
         size="sm"
         variant="ghost"
@@ -1014,44 +964,6 @@ export default function StudioLeadsPage() {
                         </div>
                       )}
                     </div>
-                    <div className="group">
-                      <p className="text-sm font-medium text-oma-plum">
-                        Budget
-                      </p>
-                      {editingField?.leadId === lead.id &&
-                      editingField?.field === "budget" ? (
-                        <BudgetEditor
-                          value={lead.estimated_budget || null}
-                          leadId={lead.id}
-                          onUpdate={handleFieldUpdate}
-                          onCancel={handleCancelEdit}
-                        />
-                      ) : (
-                        <div className="flex items-center gap-2">
-                          <p className="text-sm text-oma-cocoa">
-                            {lead.estimated_budget
-                              ? `$${lead.estimated_budget.toLocaleString()}`
-                              : lead.estimated_value
-                                ? `$${lead.estimated_value.toLocaleString()}`
-                                : "Not specified"}
-                          </p>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() =>
-                              setEditingField({
-                                leadId: lead.id,
-                                field: "budget",
-                              })
-                            }
-                            className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 hover:bg-oma-plum/10"
-                            disabled={updatingLead === lead.id}
-                          >
-                            <Edit2 className="h-3 w-3 text-oma-plum" />
-                          </Button>
-                        </div>
-                      )}
-                    </div>
                   </div>
 
                   {lead.tags && lead.tags.length > 0 && (
@@ -1212,48 +1124,6 @@ export default function StudioLeadsPage() {
                               </Button>
                             </div>
                           )}
-                        </div>
-                        <div className="flex justify-between items-center group">
-                          <span>Budget:</span>
-                          {editingField?.leadId === selectedLead.id &&
-                          editingField?.field === "budget" ? (
-                            <BudgetEditor
-                              value={selectedLead.estimated_budget || null}
-                              leadId={selectedLead.id}
-                              onUpdate={handleFieldUpdate}
-                              onCancel={handleCancelEdit}
-                            />
-                          ) : (
-                            <div className="flex items-center gap-2">
-                              <span>
-                                {selectedLead.estimated_budget
-                                  ? `$${selectedLead.estimated_budget.toLocaleString()}`
-                                  : selectedLead.estimated_value
-                                    ? `$${selectedLead.estimated_value.toLocaleString()}`
-                                    : "Not specified"}
-                              </span>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() =>
-                                  setEditingField({
-                                    leadId: selectedLead.id,
-                                    field: "budget",
-                                  })
-                                }
-                                className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 hover:bg-oma-plum/10"
-                                disabled={updatingLead === selectedLead.id}
-                              >
-                                <Edit2 className="h-3 w-3 text-oma-plum" />
-                              </Button>
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Location:</span>
-                          <span>
-                            {selectedLead.location || "Not specified"}
-                          </span>
                         </div>
                       </div>
                     </div>

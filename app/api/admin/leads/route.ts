@@ -788,9 +788,18 @@ export async function PUT(request: NextRequest) {
         // Update lead
         console.log("📝 Updating lead with data:", data);
 
+        // Map frontend field names to database column names
+        const mappedData = { ...data };
+        if (mappedData.timeline) {
+          mappedData.project_timeline = mappedData.timeline;
+          delete mappedData.timeline;
+        }
+
+        console.log("📝 Mapped data for database:", mappedData);
+
         const { data: updatedLead, error: leadError } = await supabaseClient
           .from("leads")
-          .update(data)
+          .update(mappedData)
           .eq("id", id)
           .select()
           .single();

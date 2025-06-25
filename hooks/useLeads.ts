@@ -29,6 +29,7 @@ export interface Lead {
   estimated_value?: number;
   estimated_budget?: number;
   project_timeline?: string;
+  timeline?: string;
   notes?: string;
   created_at?: string;
   updated_at?: string;
