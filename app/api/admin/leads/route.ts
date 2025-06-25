@@ -560,12 +560,22 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Map database column names to frontend field names
+    const mappedLeads =
+      leads?.map((lead) => {
+        const mappedLead = { ...lead };
+        if ("lead_status" in mappedLead) {
+          mappedLead.status = mappedLead.lead_status;
+        }
+        return mappedLead;
+      }) || [];
+
     const totalPages = Math.ceil((count || 0) / limit);
 
-    console.log(`✅ Fetched ${leads?.length || 0} leads for ${user.email}`);
+    console.log(`✅ Fetched ${mappedLeads.length} leads for ${user.email}`);
 
     return NextResponse.json({
-      leads: leads || [],
+      leads: mappedLeads,
       totalCount: count || 0,
       totalPages,
       currentPage: page,
@@ -781,25 +791,52 @@ export async function PUT(request: NextRequest) {
     const body = await request.json();
     const { type, id, data } = body;
 
+    console.log("🔍 PUT Request Debug:", { type, id, data });
+
     switch (type) {
       case "lead":
         // Update lead
+        console.log("📝 Updating lead with data:", data);
+
+        // Map frontend field names to database column names
+        const mappedData = { ...data };
+        if ("status" in mappedData) {
+          mappedData.lead_status = mappedData.status;
+          delete mappedData.status;
+        }
+
+        console.log("📝 Mapped data for database:", mappedData);
+
         const { data: updatedLead, error: leadError } = await supabaseClient
           .from("leads")
-          .update(data)
+          .update(mappedData)
           .eq("id", id)
           .select()
           .single();
 
         if (leadError) {
-          console.error("Lead update error:", leadError);
+          console.error("❌ Lead update error:", leadError);
+          console.error("❌ Error details:", {
+            message: leadError.message,
+            details: leadError.details,
+            hint: leadError.hint,
+            code: leadError.code,
+          });
           return NextResponse.json(
-            { error: "Failed to update lead" },
+            { error: `Failed to update lead: ${leadError.message}` },
             { status: 500 }
           );
         }
 
-        return NextResponse.json({ lead: updatedLead });
+        console.log("✅ Lead updated successfully:", updatedLead);
+
+        // Map database column names back to frontend field names for response
+        const responseData = { ...updatedLead };
+        if ("lead_status" in responseData) {
+          responseData.status = responseData.lead_status;
+        }
+
+        return NextResponse.json({ lead: responseData });
 
       case "booking":
         // Update booking
@@ -878,7 +915,7 @@ export async function PUT(request: NextRequest) {
         );
     }
   } catch (error) {
-    console.error("Error in leads PUT:", error);
+    console.error("❌ Error in leads PUT:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

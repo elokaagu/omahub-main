@@ -520,7 +520,7 @@ export default function LeadsTrackingDashboard({
     leadId: string,
     newStatus: Lead["status"]
   ) => {
-    await handleFieldUpdate(leadId, "lead_status", newStatus);
+    await handleFieldUpdate(leadId, "status", newStatus);
   };
 
   // Cancel editing
