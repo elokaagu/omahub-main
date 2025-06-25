@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase-unified";
+import { createServerSupabaseClient } from "@/lib/supabase-unified";
 
 export async function GET(request: NextRequest) {
   try {
     console.log("🔍 BRAND ANALYTICS API: Starting request");
 
-    const supabase = createClient();
+    const supabase = await createServerSupabaseClient();
 
     // Get user from session
     const {
