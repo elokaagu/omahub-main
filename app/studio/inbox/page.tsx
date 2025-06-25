@@ -155,17 +155,19 @@ export default function StudioInboxPage() {
   };
 
   const handleReply = async () => {
-    if (!selectedInquiry || !replyMessage.trim()) {
+    if (!replyMessage.trim()) {
       toast.error("Please enter a reply message");
+      return;
+    }
+
+    if (!selectedInquiry) {
+      toast.error("No inquiry selected");
       return;
     }
 
     setIsReplying(true);
 
     try {
-      const supabase = createClient();
-
-      // Create a reply using the inquiry replies API
       const response = await fetch(
         `/api/studio/inbox/${selectedInquiry.id}/replies`,
         {
@@ -204,7 +206,28 @@ export default function StudioInboxPage() {
       setReplyMessage("");
     } catch (error) {
       console.error("Error sending reply:", error);
-      toast.error("Failed to send reply");
+
+      // Show more specific error messages
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to send reply";
+
+      if (errorMessage.includes("Email service not configured")) {
+        toast.error(
+          "Email service not configured. Reply saved but customer was not notified. Please contact administrator.",
+          {
+            duration: 8000, // Show longer for important message
+          }
+        );
+      } else if (errorMessage.includes("RESEND_API_KEY")) {
+        toast.error(
+          "Email service needs setup. Reply saved but email notification failed.",
+          {
+            duration: 6000,
+          }
+        );
+      } else {
+        toast.error(`Failed to send reply: ${errorMessage}`);
+      }
     } finally {
       setIsReplying(false);
     }

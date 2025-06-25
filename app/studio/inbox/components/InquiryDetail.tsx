@@ -137,7 +137,8 @@ export default function InquiryDetail({
       });
 
       if (!response.ok) {
-        throw new Error("Failed to send reply");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to send reply");
       }
 
       const data = await response.json();
@@ -161,9 +162,33 @@ export default function InquiryDetail({
       // Clear form
       setReplyMessage("");
       setIsInternalNote(false);
+
+      // Show success message
+      if (!isInternalNote) {
+        alert(
+          `Reply sent successfully! The customer has been notified via email.`
+        );
+      } else {
+        alert(`Internal note added successfully.`);
+      }
     } catch (err) {
       console.error("Error sending reply:", err);
-      alert("Failed to send reply. Please try again.");
+
+      // Show more specific error messages
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to send reply";
+
+      if (errorMessage.includes("Email service not configured")) {
+        alert(
+          "Reply saved successfully, but the customer was not notified via email because the email service is not configured. Please contact the administrator to set up the email service."
+        );
+      } else if (errorMessage.includes("RESEND_API_KEY")) {
+        alert(
+          "Reply saved successfully, but email notification failed due to missing email service configuration. The customer was not notified."
+        );
+      } else {
+        alert(`Failed to send reply: ${errorMessage}. Please try again.`);
+      }
     } finally {
       setSendingReply(false);
     }
