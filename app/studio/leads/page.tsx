@@ -463,7 +463,7 @@ export default function StudioLeadsPage() {
       const { error } = await supabase
         .from("leads")
         .update({
-          lead_status: newStatus,
+          status: newStatus,
           updated_at: new Date().toISOString(),
         })
         .eq("id", leadId);
