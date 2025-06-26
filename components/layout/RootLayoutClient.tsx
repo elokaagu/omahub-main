@@ -65,7 +65,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
         </AnimatePresence>
       </main>
       {!isStudioPage && <Footer />}
-      <Toaster />
+      <Toaster position="top-right" />
     </>
   );
 }

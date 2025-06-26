@@ -23,7 +23,6 @@ import {
   MessageSquare,
   Inbox,
 } from "lucide-react";
-import { Toaster } from "sonner";
 import {
   Permission,
   getUserPermissions,
@@ -405,7 +404,7 @@ export default function StudioLayout({
         />
       )}
 
-      <Toaster />
+      
     </div>
   );
 }
