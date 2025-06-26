@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import { FileUpload } from "@/components/ui/file-upload";
+import { SimpleFileUpload } from "@/components/ui/simple-file-upload";
 import {
   createSpotlightContent,
   type CreateSpotlightData,
@@ -262,17 +262,12 @@ export default function CreateSpotlightPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="main_image">Main Image *</Label>
-                <FileUpload
+                <SimpleFileUpload
                   onUploadComplete={handleMainImageUpload}
                   defaultValue={formData.main_image}
                   bucket="spotlight-images"
                   path="main"
-                  accept={{
-                    "image/png": [".png"],
-                    "image/jpeg": [".jpg", ".jpeg"],
-                    "image/webp": [".webp"],
-                  }}
-                  maxSize={10}
+                  accept="image/png,image/jpeg,image/webp"                  maxSize={10}
                 />
                 <p className="text-xs text-oma-cocoa/70 mt-1">
                   High-resolution main spotlight image
@@ -383,19 +378,14 @@ export default function CreateSpotlightPage() {
                         <Label htmlFor={`product_image_${index}`}>
                           Product Image
                         </Label>
-                        <FileUpload
+                        <SimpleFileUpload
                           onUploadComplete={(url) =>
                             handleProductImageUpload(index, url)
                           }
                           defaultValue={product.image}
                           bucket="spotlight-images"
                           path="products"
-                          accept={{
-                            "image/png": [".png"],
-                            "image/jpeg": [".jpg", ".jpeg"],
-                            "image/webp": [".webp"],
-                          }}
-                          maxSize={5}
+                  accept="image/png,image/jpeg,image/webp"                          maxSize={5}
                           className="h-32"
                         />
                       </div>
