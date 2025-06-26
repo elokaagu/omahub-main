@@ -73,14 +73,18 @@ export function LazyImage({
         setIsLoading(true);
         setHasError(false);
 
+        // Check if it's a Supabase storage URL that needs signing
         if (src.includes("/storage/v1/object/public/")) {
+          console.log("🔐 Converting Supabase URL to signed URL:", src);
           const signed = await convertToSignedUrl(src);
           setSignedUrl(signed);
         } else {
+          // For static URLs (like /lovable-uploads/) or external URLs, use as-is
+          console.log("📸 Using static/external URL directly:", src);
           setSignedUrl(src);
         }
       } catch (err) {
-        console.error("Error getting signed URL:", err);
+        console.error("❌ Error getting signed URL for:", src, err);
         setHasError(true);
         onError?.();
       }

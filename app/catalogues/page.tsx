@@ -96,6 +96,19 @@ export default function CataloguesPage() {
           getCataloguesWithBrands(),
           getAllProducts(),
         ]);
+
+        // Debug: Log catalogue data to see image URLs
+        console.log(
+          "📸 Catalogue data fetched:",
+          catalogueData.map((c) => ({
+            id: c.id,
+            title: c.title,
+            image: c.image,
+            imageType: typeof c.image,
+            imageLength: c.image?.length,
+          }))
+        );
+
         setCatalogues(catalogueData);
         setFilteredCatalogues(catalogueData);
         setProducts(productData);
@@ -409,7 +422,7 @@ export default function CataloguesPage() {
             {filteredCatalogues.map((catalogue) => (
               <div
                 key={catalogue.id}
-                className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow relative group"
+                className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group"
               >
                 <Link href={`/catalogue/${catalogue.id}`}>
                   <div className="relative aspect-[3/4] overflow-hidden">
@@ -420,9 +433,23 @@ export default function CataloguesPage() {
                       className="object-cover group-hover:scale-105 transition-transform duration-300"
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                       quality={80}
+                      onLoad={() =>
+                        console.log(
+                          "✅ Catalogue image loaded:",
+                          catalogue.title,
+                          catalogue.image
+                        )
+                      }
+                      onError={() =>
+                        console.error(
+                          "❌ Catalogue image failed:",
+                          catalogue.title,
+                          catalogue.image
+                        )
+                      }
                     />
                     {/* Text overlay at bottom */}
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-6">
+                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4">
                       <h3 className="font-medium text-lg mb-1 text-white">
                         {catalogue.title}
                       </h3>
@@ -434,7 +461,10 @@ export default function CataloguesPage() {
                           {catalogue.brand.location}
                         </span>
                         {catalogue.brand.is_verified && (
-                          <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
+                          <Badge
+                            variant="secondary"
+                            className="bg-white/20 text-white border-white/30 text-xs"
+                          >
                             Verified
                           </Badge>
                         )}
