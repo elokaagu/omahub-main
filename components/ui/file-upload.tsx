@@ -28,11 +28,13 @@ export function FileUpload({
 }: FileUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState<string | null>(defaultValue || null);
+  const [imageError, setImageError] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Update preview when defaultValue changes
   useEffect(() => {
     setPreview(defaultValue || null);
+    setImageError(false); // Reset error state when defaultValue changes
   }, [defaultValue]);
 
   // Process accept parameter to handle both string and object formats
@@ -259,10 +261,19 @@ export function FileUpload({
 
   const handleRemove = () => {
     setPreview(null);
+    setImageError(false);
     onUploadComplete("");
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
+  };
+
+  const handleImageError = () => {
+    setImageError(true);
+  };
+
+  const handleImageLoad = () => {
+    setImageError(false);
   };
 
   return (
@@ -276,7 +287,7 @@ export function FileUpload({
         disabled={uploading}
       />
 
-      {preview ? (
+      {preview && !imageError ? (
         <div className="relative">
           <AuthImage
             src={preview}
@@ -295,6 +306,14 @@ export function FileUpload({
           >
             <X className="h-4 w-4" />
           </Button>
+          {/* Hidden image to detect loading errors */}
+          <img
+            src={preview}
+            alt=""
+            className="hidden"
+            onError={handleImageError}
+            onLoad={handleImageLoad}
+          />
         </div>
       ) : (
         <div
@@ -310,6 +329,11 @@ export function FileUpload({
               <p className="text-xs text-gray-500 mt-1">
                 PNG, JPG or WEBP (max. {maxSize}MB)
               </p>
+              {imageError && preview && (
+                <p className="text-xs text-red-500 mt-1">
+                  Image failed to load. Please upload a new one.
+                </p>
+              )}
             </div>
             <Button
               type="button"
