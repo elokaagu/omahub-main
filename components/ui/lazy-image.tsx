@@ -91,7 +91,7 @@ export function LazyImage({
           }
         } else {
           // For static URLs (like /lovable-uploads/) or external URLs, use as-is
-          console.log("📸 Using static/external URL directly:", src);
+          console.log("📸 Using static/external URL directly:", src); console.log("🔍 Image loading for catalogue:", { src, alt });
           setSignedUrl(src);
         }
       } catch (err) {

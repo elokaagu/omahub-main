@@ -98,7 +98,7 @@ export default function CataloguesPage() {
         ]);
 
         setCatalogues(catalogueData);
-        setFilteredCatalogues(catalogueData);
+        console.log("🖼️ Catalogue images debug:", catalogueData.map(c => ({ title: c.title, image: c.image, hasImage: !!c.image })));        setFilteredCatalogues(catalogueData);
         setProducts(productData);
         setFilteredProducts(productData);
       } catch (err) {
@@ -415,7 +415,7 @@ export default function CataloguesPage() {
                 <Link href={`/catalogue/${catalogue.id}`}>
                   <div className="relative aspect-[3/4] overflow-hidden">
                     <LazyImage
-                      src={catalogue.image}
+                      src={catalogue.image || "/placeholder-image.jpg"}
                       alt={catalogue.title}
                       fill
                       className="object-cover group-hover:scale-105 transition-transform duration-300"
