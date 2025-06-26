@@ -75,9 +75,20 @@ export function LazyImage({
 
         // Check if it's a Supabase storage URL that needs signing
         if (src.includes("/storage/v1/object/public/")) {
-          console.log("🔐 Converting Supabase URL to signed URL:", src);
-          const signed = await convertToSignedUrl(src);
-          setSignedUrl(signed);
+          // Check if it's from a public bucket that doesn't need signing
+          const publicBuckets = ["spotlight-images", "product-images"];
+          const isPublicBucket = publicBuckets.some((bucket) =>
+            src.includes(`/storage/v1/object/public/${bucket}/`)
+          );
+
+          if (isPublicBucket) {
+            console.log("📸 Using public URL directly (public bucket):", src);
+            setSignedUrl(src);
+          } else {
+            console.log("🔐 Converting Supabase URL to signed URL:", src);
+            const signed = await convertToSignedUrl(src);
+            setSignedUrl(signed);
+          }
         } else {
           // For static URLs (like /lovable-uploads/) or external URLs, use as-is
           console.log("📸 Using static/external URL directly:", src);
