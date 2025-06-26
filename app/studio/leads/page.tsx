@@ -93,6 +93,7 @@ export default function StudioLeadsPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [leadToDelete, setLeadToDelete] = useState<Lead | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [updatingLeadId, setUpdatingLeadId] = useState<string | null>(null);
 
   // Filters and search
   const [searchTerm, setSearchTerm] = useState("");
@@ -265,42 +266,94 @@ export default function StudioLeadsPage() {
   };
 
   const updateLeadStatus = async (leadId: string, newStatus: string) => {
+    // Prevent multiple concurrent updates
+    if (updatingLeadId === leadId) {
+      return;
+    }
+
+    // Find the lead to update
+    const leadToUpdate = leads.find((lead) => lead.id === leadId);
+    if (!leadToUpdate) {
+      toast.error("Lead not found");
+      return;
+    }
+
+    // Store original status for rollback
+    const originalStatus = leadToUpdate.status;
+
+    // Set loading state
+    setUpdatingLeadId(leadId);
+
+    // Optimistic update - update UI immediately
+    setLeads((prev) =>
+      prev.map((lead) =>
+        lead.id === leadId ? { ...lead, status: newStatus } : lead
+      )
+    );
+
     try {
-      const supabase = createClient();
+      // Prepare the update data
+      const updateData = {
+        status: newStatus,
+        updated_at: new Date().toISOString(),
+        ...(newStatus === "contacted" && {
+          contacted_at: new Date().toISOString(),
+        }),
+        ...(newStatus === "qualified" && {
+          qualified_at: new Date().toISOString(),
+        }),
+        ...(newStatus === "converted" && {
+          converted_at: new Date().toISOString(),
+        }),
+      };
 
-      const { error } = await supabase
-        .from("leads")
-        .update({
-          status: newStatus,
-          updated_at: new Date().toISOString(),
-          ...(newStatus === "contacted" && {
-            contacted_at: new Date().toISOString(),
-          }),
-          ...(newStatus === "qualified" && {
-            qualified_at: new Date().toISOString(),
-          }),
-          ...(newStatus === "won" && {
-            converted_at: new Date().toISOString(),
-          }),
-        })
-        .eq("id", leadId);
+      // Use API endpoint for consistent handling
+      const response = await fetch("/api/admin/leads", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          type: "lead",
+          id: leadId,
+          data: updateData,
+        }),
+      });
 
-      if (error) {
-        console.error("Error updating lead status:", error);
-        toast.error("Failed to update lead status");
-        return;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to update lead status");
       }
 
-      setLeads((prev) =>
-        prev.map((lead) =>
-          lead.id === leadId ? { ...lead, status: newStatus } : lead
-        )
-      );
+      const result = await response.json();
+
+      // Update with the actual data returned from server
+      if (result.lead) {
+        setLeads((prev) =>
+          prev.map((lead) =>
+            lead.id === leadId ? { ...lead, ...result.lead } : lead
+          )
+        );
+      }
 
       toast.success("Lead status updated successfully");
     } catch (error) {
       console.error("Error updating lead status:", error);
-      toast.error("Failed to update lead status");
+
+      // Rollback optimistic update
+      setLeads((prev) =>
+        prev.map((lead) =>
+          lead.id === leadId ? { ...lead, status: originalStatus } : lead
+        )
+      );
+
+      toast.error(
+        error instanceof Error ? error.message : "Failed to update lead status"
+      );
+    } finally {
+      // Clear loading state
+      setUpdatingLeadId(null);
     }
   };
 
@@ -357,15 +410,11 @@ export default function StudioLeadsPage() {
         return "bg-yellow-100 text-yellow-800";
       case "qualified":
         return "bg-purple-100 text-purple-800";
-      case "proposal_sent":
-        return "bg-orange-100 text-orange-800";
-      case "negotiating":
-        return "bg-indigo-100 text-indigo-800";
-      case "won":
+      case "converted":
         return "bg-green-100 text-green-800";
       case "lost":
         return "bg-red-100 text-red-800";
-      case "nurturing":
+      case "closed":
         return "bg-gray-100 text-gray-800";
       default:
         return "bg-gray-100 text-gray-800";
@@ -516,11 +565,9 @@ export default function StudioLeadsPage() {
                   <SelectItem value="new">New</SelectItem>
                   <SelectItem value="contacted">Contacted</SelectItem>
                   <SelectItem value="qualified">Qualified</SelectItem>
-                  <SelectItem value="proposal_sent">Proposal Sent</SelectItem>
-                  <SelectItem value="negotiating">Negotiating</SelectItem>
-                  <SelectItem value="won">Won</SelectItem>
+                  <SelectItem value="converted">Converted</SelectItem>
                   <SelectItem value="lost">Lost</SelectItem>
-                  <SelectItem value="nurturing">Nurturing</SelectItem>
+                  <SelectItem value="closed">Closed</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -599,9 +646,9 @@ export default function StudioLeadsPage() {
             <CardContent className="pt-6">
               <div className="text-center">
                 <div className="text-2xl font-bold text-green-600">
-                  {filteredLeads.filter((l) => l.status === "won").length}
+                  {filteredLeads.filter((l) => l.status === "converted").length}
                 </div>
-                <p className="text-sm text-oma-cocoa">Won</p>
+                <p className="text-sm text-oma-cocoa">Converted</p>
               </div>
             </CardContent>
           </Card>
@@ -803,9 +850,13 @@ export default function StudioLeadsPage() {
                                     onValueChange={(value) =>
                                       updateLeadStatus(lead.id, value)
                                     }
+                                    disabled={updatingLeadId === lead.id}
                                   >
                                     <SelectTrigger className="mt-1">
                                       <SelectValue />
+                                      {updatingLeadId === lead.id && (
+                                        <div className="ml-2 h-4 w-4 animate-spin rounded-full border-2 border-oma-plum border-t-transparent"></div>
+                                      )}
                                     </SelectTrigger>
                                     <SelectContent>
                                       <SelectItem value="new">New</SelectItem>
@@ -815,16 +866,12 @@ export default function StudioLeadsPage() {
                                       <SelectItem value="qualified">
                                         Qualified
                                       </SelectItem>
-                                      <SelectItem value="proposal_sent">
-                                        Proposal Sent
+                                      <SelectItem value="converted">
+                                        Converted
                                       </SelectItem>
-                                      <SelectItem value="negotiating">
-                                        Negotiating
-                                      </SelectItem>
-                                      <SelectItem value="won">Won</SelectItem>
                                       <SelectItem value="lost">Lost</SelectItem>
-                                      <SelectItem value="nurturing">
-                                        Nurturing
+                                      <SelectItem value="closed">
+                                        Closed
                                       </SelectItem>
                                     </SelectContent>
                                   </Select>
