@@ -398,7 +398,7 @@ export default function CataloguesPage() {
             ))}
           </div>
         ) : (
-          // Brands Grid/List
+          // Brands Grid/List - Updated styling for full card image coverage
           <div
             className={`grid gap-6 ${
               viewMode === "grid"
@@ -409,42 +409,36 @@ export default function CataloguesPage() {
             {filteredCatalogues.map((catalogue) => (
               <div
                 key={catalogue.id}
-                className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+                className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow relative group"
               >
                 <Link href={`/catalogue/${catalogue.id}`}>
-                  <div className="aspect-[4/3] relative overflow-hidden rounded-lg">
+                  <div className="relative aspect-[3/4] overflow-hidden">
                     <LazyImage
                       src={catalogue.image}
                       alt={catalogue.title}
                       fill
                       className="object-cover group-hover:scale-105 transition-transform duration-300"
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                      aspectRatio="4/3"
                       quality={80}
                     />
-                  </div>
-                  <div className="p-4">
-                    <h3 className="font-medium text-lg mb-1">
-                      {catalogue.brand.name}
-                    </h3>
-                    <p className="text-oma-cocoa/70 text-sm mb-2">
-                      {catalogue.title}
-                    </p>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-oma-cocoa/70">
-                        {catalogue.brand.location}
-                      </span>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          setShowAllProducts(true);
-                          setSelectedBrand(catalogue.brand.name);
-                        }}
-                      >
-                        View Products
-                      </Button>
+                    {/* Text overlay at bottom */}
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-6">
+                      <h3 className="font-medium text-lg mb-1 text-white">
+                        {catalogue.title}
+                      </h3>
+                      <p className="text-white/90 text-sm mb-2">
+                        {catalogue.brand.name}
+                      </p>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-white/80">
+                          {catalogue.brand.location}
+                        </span>
+                        {catalogue.brand.is_verified && (
+                          <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
+                            Verified
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </Link>
