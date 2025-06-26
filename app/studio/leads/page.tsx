@@ -17,13 +17,6 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -35,8 +28,12 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StudioNav } from "@/components/ui/studio-nav";
-import { TrashIcon } from "@heroicons/react/24/outline";
-import { Edit2, Check, X } from "lucide-react";
+import {
+  TrashIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
+} from "@heroicons/react/24/outline";
+import { Mail, Phone, User, Building, MapPin } from "lucide-react";
 
 interface Lead {
   id: string;
@@ -83,119 +80,12 @@ interface LeadInteraction {
   next_action?: string;
 }
 
-// Inline editing component for timeline
-const TimelineEditor = ({
-  value,
-  leadId,
-  onUpdate,
-  onCancel,
-}: {
-  value: string;
-  leadId: string;
-  onUpdate: (leadId: string, field: string, value: string) => void;
-  onCancel: () => void;
-}) => {
-  const [editValue, setEditValue] = useState(value || "");
-
-  const handleSave = () => {
-    onUpdate(leadId, "timeline", editValue);
-  };
-
-  return (
-    <div className="flex items-center gap-2 min-w-[200px]">
-      <Select value={editValue} onValueChange={setEditValue}>
-        <SelectTrigger className="h-8 text-xs">
-          <SelectValue placeholder="Select timeline" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="ASAP">ASAP</SelectItem>
-          <SelectItem value="1-2 weeks">1-2 weeks</SelectItem>
-          <SelectItem value="1 month">1 month</SelectItem>
-          <SelectItem value="2-3 months">2-3 months</SelectItem>
-          <SelectItem value="3-6 months">3-6 months</SelectItem>
-          <SelectItem value="6+ months">6+ months</SelectItem>
-          <SelectItem value="Flexible">Flexible</SelectItem>
-        </SelectContent>
-      </Select>
-      <Button
-        size="sm"
-        variant="ghost"
-        onClick={handleSave}
-        className="h-8 w-8 p-0"
-      >
-        <Check className="h-4 w-4 text-green-600" />
-      </Button>
-      <Button
-        size="sm"
-        variant="ghost"
-        onClick={onCancel}
-        className="h-8 w-8 p-0"
-      >
-        <X className="h-4 w-4 text-red-600" />
-      </Button>
-    </div>
-  );
-};
-
-// Inline editing component for status
-const StatusEditor = ({
-  value,
-  leadId,
-  onUpdate,
-  onCancel,
-}: {
-  value: string;
-  leadId: string;
-  onUpdate: (leadId: string, field: string, value: string) => void;
-  onCancel: () => void;
-}) => {
-  const [editValue, setEditValue] = useState(value || "");
-
-  const handleSave = () => {
-    onUpdate(leadId, "status", editValue);
-  };
-
-  return (
-    <div className="flex items-center gap-2 min-w-[200px]">
-      <Select value={editValue} onValueChange={setEditValue}>
-        <SelectTrigger className="h-8 text-xs">
-          <SelectValue placeholder="Select status" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="new">New</SelectItem>
-          <SelectItem value="contacted">Contacted</SelectItem>
-          <SelectItem value="qualified">Qualified</SelectItem>
-          <SelectItem value="converted">Converted</SelectItem>
-          <SelectItem value="lost">Lost</SelectItem>
-          <SelectItem value="closed">Closed</SelectItem>
-        </SelectContent>
-      </Select>
-      <Button
-        size="sm"
-        variant="ghost"
-        onClick={handleSave}
-        className="h-8 w-8 p-0"
-      >
-        <Check className="h-4 w-4 text-green-600" />
-      </Button>
-      <Button
-        size="sm"
-        variant="ghost"
-        onClick={onCancel}
-        className="h-8 w-8 p-0"
-      >
-        <X className="h-4 w-4 text-red-600" />
-      </Button>
-    </div>
-  );
-};
-
 export default function StudioLeadsPage() {
   const { user, loading: authLoading } = useAuth();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [filteredLeads, setFilteredLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [expandedLead, setExpandedLead] = useState<string | null>(null);
   const [leadInteractions, setLeadInteractions] = useState<LeadInteraction[]>(
     []
   );
@@ -203,13 +93,6 @@ export default function StudioLeadsPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [leadToDelete, setLeadToDelete] = useState<Lead | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-
-  // Inline editing states
-  const [editingField, setEditingField] = useState<{
-    leadId: string;
-    field: string;
-  } | null>(null);
-  const [updatingLead, setUpdatingLead] = useState<string | null>(null);
 
   // Filters and search
   const [searchTerm, setSearchTerm] = useState("");
@@ -251,7 +134,6 @@ export default function StudioLeadsPage() {
     try {
       setLoading(true);
 
-      // Check user role and owned brands first
       const supabase = createClient();
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
@@ -265,27 +147,6 @@ export default function StudioLeadsPage() {
         setIsSuperAdmin(false);
       }
 
-      // Build query parameters based on user role
-      let queryParams = "?";
-      const params = new URLSearchParams();
-
-      // Add role-based filtering for brand admins
-      if (profile?.role === "brand_admin") {
-        if (!profile.owned_brands || profile.owned_brands.length === 0) {
-          console.log("Brand admin has no owned brands, showing empty list");
-          setLeads([]);
-          setLoading(false);
-          return;
-        }
-
-        // The API should handle this filtering, but we can also pass brand IDs as a hint
-        console.log(
-          "Brand admin loading leads for brands:",
-          profile.owned_brands
-        );
-      }
-
-      // Use the same API endpoint as the dashboard for consistency
       const response = await fetch("/api/admin/leads", {
         credentials: "include",
         headers: {
@@ -301,18 +162,10 @@ export default function StudioLeadsPage() {
 
       const data = await response.json();
 
-      console.log(
-        `📊 Loaded ${data.leads?.length || 0} leads via API for user role: ${profile?.role}`
-      );
-
-      // Additional client-side filtering as a safety measure for brand admins
       let filteredLeads = data.leads || [];
       if (profile?.role === "brand_admin" && profile.owned_brands?.length > 0) {
         filteredLeads = filteredLeads.filter((lead: Lead) =>
           profile.owned_brands!.includes(lead.brand_id)
-        );
-        console.log(
-          `🔒 Filtered to ${filteredLeads.length} leads for brand admin`
         );
       }
 
@@ -330,7 +183,6 @@ export default function StudioLeadsPage() {
   const filterAndSortLeads = () => {
     let filtered = [...leads];
 
-    // Search filter
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter(
@@ -343,22 +195,18 @@ export default function StudioLeadsPage() {
       );
     }
 
-    // Status filter
     if (statusFilter !== "all") {
       filtered = filtered.filter((lead) => lead.status === statusFilter);
     }
 
-    // Priority filter
     if (priorityFilter !== "all") {
       filtered = filtered.filter((lead) => lead.priority === priorityFilter);
     }
 
-    // Source filter
     if (sourceFilter !== "all") {
       filtered = filtered.filter((lead) => lead.source === sourceFilter);
     }
 
-    // Sort
     filtered.sort((a, b) => {
       let aValue: any = a[sortBy as keyof Lead];
       let bValue: any = b[sortBy as keyof Lead];
@@ -406,6 +254,16 @@ export default function StudioLeadsPage() {
     }
   };
 
+  const toggleLeadExpansion = (leadId: string) => {
+    if (expandedLead === leadId) {
+      setExpandedLead(null);
+      setLeadInteractions([]);
+    } else {
+      setExpandedLead(leadId);
+      loadLeadInteractions(leadId);
+    }
+  };
+
   const updateLeadStatus = async (leadId: string, newStatus: string) => {
     try {
       const supabase = createClient();
@@ -415,6 +273,15 @@ export default function StudioLeadsPage() {
         .update({
           status: newStatus,
           updated_at: new Date().toISOString(),
+          ...(newStatus === "contacted" && {
+            contacted_at: new Date().toISOString(),
+          }),
+          ...(newStatus === "qualified" && {
+            qualified_at: new Date().toISOString(),
+          }),
+          ...(newStatus === "won" && {
+            converted_at: new Date().toISOString(),
+          }),
         })
         .eq("id", leadId);
 
@@ -424,18 +291,11 @@ export default function StudioLeadsPage() {
         return;
       }
 
-      // Update local state
       setLeads((prev) =>
         prev.map((lead) =>
           lead.id === leadId ? { ...lead, status: newStatus } : lead
         )
       );
-
-      if (selectedLead?.id === leadId) {
-        setSelectedLead((prev) =>
-          prev ? { ...prev, status: newStatus } : null
-        );
-      }
 
       toast.success("Lead status updated successfully");
     } catch (error) {
@@ -444,64 +304,9 @@ export default function StudioLeadsPage() {
     }
   };
 
-  // Handle inline field updates
-  const handleFieldUpdate = async (
-    leadId: string,
-    field: string,
-    value: string | number
-  ) => {
-    setUpdatingLead(leadId);
-    try {
-      const response = await fetch("/api/admin/leads", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({
-          type: "lead",
-          id: leadId,
-          data: { [field]: value },
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to update lead");
-      }
-
-      const { lead: updatedLead } = await response.json();
-
-      // Update local state
-      setLeads((prevLeads) =>
-        prevLeads.map((lead) =>
-          lead.id === leadId ? { ...lead, ...updatedLead } : lead
-        )
-      );
-
-      // Update selected lead if it's the one being edited
-      if (selectedLead?.id === leadId) {
-        setSelectedLead((prev) => (prev ? { ...prev, ...updatedLead } : null));
-      }
-
-      toast.success(`${field.replace("_", " ")} updated successfully`);
-      setEditingField(null);
-    } catch (error) {
-      console.error("Error updating lead:", error);
-      toast.error(`Failed to update ${field.replace("_", " ")}`);
-    } finally {
-      setUpdatingLead(null);
-    }
-  };
-
-  // Cancel editing
-  const handleCancelEdit = () => {
-    setEditingField(null);
-  };
-
-  const addInteraction = async () => {
-    if (!selectedLead || !newInteraction.type || !newInteraction.description) {
-      toast.error("Please fill in required fields");
+  const addInteraction = async (leadId: string) => {
+    if (!newInteraction.description.trim()) {
+      toast.error("Please enter a description for the interaction");
       return;
     }
 
@@ -510,20 +315,15 @@ export default function StudioLeadsPage() {
     try {
       const supabase = createClient();
 
-      const interactionData = {
-        lead_id: selectedLead.id,
+      const { error } = await supabase.from("lead_interactions").insert({
+        lead_id: leadId,
         interaction_type: newInteraction.type,
-        subject: newInteraction.subject || null,
-        description: newInteraction.description,
-        outcome: newInteraction.outcome || null,
-        next_action: newInteraction.nextAction || null,
-        created_by: user?.id,
-        created_at: new Date().toISOString(),
-      };
-
-      const { error } = await supabase
-        .from("lead_interactions")
-        .insert(interactionData);
+        interaction_date: new Date().toISOString(),
+        subject: newInteraction.subject.trim() || null,
+        description: newInteraction.description.trim(),
+        outcome: newInteraction.outcome.trim() || null,
+        next_action: newInteraction.nextAction.trim() || null,
+      });
 
       if (error) {
         console.error("Error adding interaction:", error);
@@ -531,18 +331,6 @@ export default function StudioLeadsPage() {
         return;
       }
 
-      // Update lead's last contact date
-      await supabase
-        .from("leads")
-        .update({
-          last_contact_date: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", selectedLead.id);
-
-      toast.success("Interaction added successfully");
-
-      // Reset form
       setNewInteraction({
         type: "email",
         subject: "",
@@ -551,22 +339,14 @@ export default function StudioLeadsPage() {
         nextAction: "",
       });
 
-      // Reload interactions
-      loadLeadInteractions(selectedLead.id);
-
-      // Reload leads to update last contact date
-      loadLeads();
+      await loadLeadInteractions(leadId);
+      toast.success("Interaction added successfully");
     } catch (error) {
       console.error("Error adding interaction:", error);
       toast.error("Failed to add interaction");
     } finally {
       setIsAddingInteraction(false);
     }
-  };
-
-  const openLead = (lead: Lead) => {
-    setSelectedLead(lead);
-    loadLeadInteractions(lead.id);
   };
 
   const getStatusColor = (status: string) => {
@@ -576,11 +356,11 @@ export default function StudioLeadsPage() {
       case "contacted":
         return "bg-yellow-100 text-yellow-800";
       case "qualified":
-        return "bg-green-100 text-green-800";
-      case "proposal_sent":
         return "bg-purple-100 text-purple-800";
-      case "negotiating":
+      case "proposal_sent":
         return "bg-orange-100 text-orange-800";
+      case "negotiating":
+        return "bg-indigo-100 text-indigo-800";
       case "won":
         return "bg-green-100 text-green-800";
       case "lost":
@@ -607,38 +387,43 @@ export default function StudioLeadsPage() {
     }
   };
 
-  const getScoreColor = (score: number) => {
-    if (score >= 80) return "bg-green-100 text-green-800";
-    if (score >= 60) return "bg-yellow-100 text-yellow-800";
-    if (score >= 40) return "bg-orange-100 text-orange-800";
-    return "bg-red-100 text-red-800";
-  };
-
   const deleteLead = async (lead: Lead) => {
     setIsDeleting(true);
 
     try {
-      const response = await fetch(`/api/admin/leads?type=lead&id=${lead.id}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
+      const supabase = createClient();
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to delete lead");
+      const { error: interactionsError } = await supabase
+        .from("lead_interactions")
+        .delete()
+        .eq("lead_id", lead.id);
+
+      if (interactionsError) {
+        console.error("Error deleting lead interactions:", interactionsError);
+        toast.error("Failed to delete lead interactions");
+        return;
       }
 
-      // Remove from local state
-      setLeads((prev) => prev.filter((l) => l.id !== lead.id));
+      const { error: leadError } = await supabase
+        .from("leads")
+        .delete()
+        .eq("id", lead.id);
 
-      toast.success(`Lead for ${lead.customer_name} deleted successfully`);
+      if (leadError) {
+        console.error("Error deleting lead:", leadError);
+        toast.error("Failed to delete lead");
+        return;
+      }
+
+      setLeads((prev) => prev.filter((l) => l.id !== lead.id));
       setDeleteDialogOpen(false);
       setLeadToDelete(null);
 
-      // Close lead modal if it was open
-      if (selectedLead?.id === lead.id) {
-        setSelectedLead(null);
+      if (expandedLead === lead.id) {
+        setExpandedLead(null);
       }
+
+      toast.success("Lead deleted successfully");
     } catch (error) {
       console.error("Error deleting lead:", error);
       toast.error("Failed to delete lead");
@@ -690,6 +475,7 @@ export default function StudioLeadsPage() {
     <div className="min-h-screen bg-oma-cream">
       <div className="max-w-7xl mx-auto px-6 py-8">
         <StudioNav />
+
         <div className="mb-8">
           <h1 className="text-3xl font-canela text-oma-plum mb-2">
             Leads Dashboard
@@ -873,601 +659,461 @@ export default function StudioLeadsPage() {
         ) : (
           <div className="space-y-4">
             {filteredLeads.map((lead) => (
-              <Card
-                key={lead.id}
-                className="cursor-pointer transition-colors hover:bg-oma-beige/20"
-                onClick={() => openLead(lead)}
-              >
-                <CardHeader>
-                  <div className="flex items-start justify-between">
+              <Card key={lead.id} className="transition-all duration-200">
+                {/* Lead Summary Row */}
+                <CardHeader
+                  className="cursor-pointer hover:bg-oma-beige/20 transition-colors"
+                  onClick={() => toggleLeadExpansion(lead.id)}
+                >
+                  <div className="flex items-center justify-between">
                     <div className="flex-1">
-                      <CardTitle className="text-lg font-canela text-oma-plum">
-                        {lead.customer_name}
-                        {lead.company_name && ` (${lead.company_name})`}
-                      </CardTitle>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-sm text-oma-cocoa">
-                          {lead.customer_email}
-                        </span>
-                        {lead.customer_phone && (
-                          <span className="text-sm text-oma-cocoa">
-                            • {lead.customer_phone}
-                          </span>
-                        )}
-                        {lead.brands && (
-                          <span className="text-sm text-oma-cocoa">
-                            • Brand: {lead.brands.name}
-                          </span>
-                        )}
+                      <div className="flex items-center gap-3">
+                        <div className="flex-1">
+                          <CardTitle className="text-lg font-canela text-oma-plum flex items-center gap-2">
+                            <User className="h-5 w-5" />
+                            {lead.customer_name}
+                            {lead.company_name && (
+                              <span className="text-sm text-oma-cocoa font-normal">
+                                ({lead.company_name})
+                              </span>
+                            )}
+                          </CardTitle>
+                          <div className="flex items-center gap-4 mt-2 text-sm text-oma-cocoa">
+                            <div className="flex items-center gap-1">
+                              <Mail className="h-4 w-4" />
+                              {lead.customer_email}
+                            </div>
+                            {lead.customer_phone && (
+                              <div className="flex items-center gap-1">
+                                <Phone className="h-4 w-4" />
+                                {lead.customer_phone}
+                              </div>
+                            )}
+                            {lead.location && (
+                              <div className="flex items-center gap-1">
+                                <MapPin className="h-4 w-4" />
+                                {lead.location}
+                              </div>
+                            )}
+                            {lead.brands && (
+                              <div className="flex items-center gap-1">
+                                <Building className="h-4 w-4" />
+                                {lead.brands.name}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                          <Badge className={getStatusColor(lead.status)}>
+                            {lead.status.replace("_", " ")}
+                          </Badge>
+                          <Badge className={getPriorityColor(lead.priority)}>
+                            {lead.priority}
+                          </Badge>
+                          {lead.estimated_value && (
+                            <Badge variant="outline">
+                              ${lead.estimated_value.toLocaleString()}
+                            </Badge>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => handleDeleteClick(lead, e)}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <TrashIcon className="h-4 w-4" />
+                          </Button>
+                          {expandedLead === lead.id ? (
+                            <ChevronUpIcon className="h-5 w-5 text-oma-cocoa" />
+                          ) : (
+                            <ChevronDownIcon className="h-5 w-5 text-oma-cocoa" />
+                          )}
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge className={getStatusColor(lead.status)}>
-                        {lead.status.replace("_", " ")}
-                      </Badge>
-                      <Badge className={getPriorityColor(lead.priority)}>
-                        {lead.priority}
-                      </Badge>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => handleDeleteClick(lead, e)}
-                        className="text-red-600 hover:text-red-800 hover:bg-red-50 p-1"
-                        title="Delete lead"
-                      >
-                        <TrashIcon className="h-4 w-4" />
-                      </Button>
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <p className="text-sm font-medium text-oma-plum">
-                        Project
-                      </p>
-                      <p className="text-sm text-oma-cocoa">
-                        {lead.lead_type || "Not specified"}
-                      </p>
-                    </div>
-                    <div className="group">
-                      <p className="text-sm font-medium text-oma-plum">
-                        Timeline
-                      </p>
-                      {editingField?.leadId === lead.id &&
-                      editingField?.field === "timeline" ? (
-                        <TimelineEditor
-                          value={lead.project_timeline || ""}
-                          leadId={lead.id}
-                          onUpdate={handleFieldUpdate}
-                          onCancel={handleCancelEdit}
-                        />
-                      ) : (
-                        <div className="flex items-center gap-2">
-                          <p className="text-sm text-oma-cocoa">
-                            {lead.project_timeline || "Not specified"}
-                          </p>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() =>
-                              setEditingField({
-                                leadId: lead.id,
-                                field: "timeline",
-                              })
-                            }
-                            className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 hover:bg-oma-plum/10"
-                            disabled={updatingLead === lead.id}
-                          >
-                            <Edit2 className="h-3 w-3 text-oma-plum" />
-                          </Button>
+
+                {/* Expanded Lead Details */}
+                {expandedLead === lead.id && (
+                  <CardContent className="border-t bg-oma-beige/10">
+                    <Tabs defaultValue="details" className="w-full">
+                      <TabsList className="grid w-full grid-cols-3">
+                        <TabsTrigger value="details">Details</TabsTrigger>
+                        <TabsTrigger value="interactions">
+                          Interactions
+                        </TabsTrigger>
+                        <TabsTrigger value="actions">Actions</TabsTrigger>
+                      </TabsList>
+
+                      <TabsContent value="details" className="space-y-4 mt-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="space-y-4">
+                            <div>
+                              <h4 className="font-medium text-oma-plum mb-2">
+                                Lead Information
+                              </h4>
+                              <div className="space-y-2 text-sm">
+                                <div>
+                                  <span className="font-medium">Source:</span>{" "}
+                                  {lead.source}
+                                </div>
+                                <div>
+                                  <span className="font-medium">Type:</span>{" "}
+                                  {lead.lead_type || "Not specified"}
+                                </div>
+                                <div>
+                                  <span className="font-medium">Timeline:</span>{" "}
+                                  {lead.project_timeline || "Not specified"}
+                                </div>
+                                <div>
+                                  <span className="font-medium">Created:</span>{" "}
+                                  {new Date(
+                                    lead.created_at
+                                  ).toLocaleDateString()}
+                                </div>
+                              </div>
+                            </div>
+
+                            {lead.notes && (
+                              <div>
+                                <h4 className="font-medium text-oma-plum mb-2">
+                                  Notes
+                                </h4>
+                                <p className="text-sm text-oma-cocoa bg-white p-3 rounded border">
+                                  {lead.notes}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="space-y-4">
+                            <div>
+                              <h4 className="font-medium text-oma-plum mb-2">
+                                Status & Priority
+                              </h4>
+                              <div className="space-y-3">
+                                <div>
+                                  <label className="text-sm font-medium text-oma-cocoa">
+                                    Status
+                                  </label>
+                                  <Select
+                                    value={lead.status}
+                                    onValueChange={(value) =>
+                                      updateLeadStatus(lead.id, value)
+                                    }
+                                  >
+                                    <SelectTrigger className="mt-1">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="new">New</SelectItem>
+                                      <SelectItem value="contacted">
+                                        Contacted
+                                      </SelectItem>
+                                      <SelectItem value="qualified">
+                                        Qualified
+                                      </SelectItem>
+                                      <SelectItem value="proposal_sent">
+                                        Proposal Sent
+                                      </SelectItem>
+                                      <SelectItem value="negotiating">
+                                        Negotiating
+                                      </SelectItem>
+                                      <SelectItem value="won">Won</SelectItem>
+                                      <SelectItem value="lost">Lost</SelectItem>
+                                      <SelectItem value="nurturing">
+                                        Nurturing
+                                      </SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div>
+                              <h4 className="font-medium text-oma-plum mb-2">
+                                Quick Actions
+                              </h4>
+                              <div className="flex flex-wrap gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    window.open(
+                                      `mailto:${lead.customer_email}`,
+                                      "_blank"
+                                    )
+                                  }
+                                >
+                                  <Mail className="mr-2 h-4 w-4" />
+                                  Email
+                                </Button>
+                                {lead.customer_phone && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() =>
+                                      window.open(
+                                        `tel:${lead.customer_phone}`,
+                                        "_blank"
+                                      )
+                                    }
+                                  >
+                                    <Phone className="mr-2 h-4 w-4" />
+                                    Call
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                      )}
-                    </div>
-                  </div>
+                      </TabsContent>
 
-                  {lead.tags && lead.tags.length > 0 && (
-                    <div className="mt-3">
-                      <div className="flex flex-wrap gap-1">
-                        {lead.tags.map((tag, index) => (
-                          <Badge
-                            key={index}
-                            variant="outline"
-                            className="text-xs"
+                      <TabsContent
+                        value="interactions"
+                        className="space-y-4 mt-4"
+                      >
+                        {/* Add New Interaction */}
+                        {!isAddingInteraction ? (
+                          <Button
+                            onClick={() => setIsAddingInteraction(true)}
+                            className="bg-oma-plum hover:bg-oma-plum/90"
                           >
-                            {tag}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                            Add Interaction
+                          </Button>
+                        ) : (
+                          <Card>
+                            <CardHeader>
+                              <CardTitle className="text-lg">
+                                Add New Interaction
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                              <div className="grid grid-cols-2 gap-4">
+                                <Select
+                                  value={newInteraction.type}
+                                  onValueChange={(value) =>
+                                    setNewInteraction((prev) => ({
+                                      ...prev,
+                                      type: value,
+                                    }))
+                                  }
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Interaction Type" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="email">Email</SelectItem>
+                                    <SelectItem value="phone">
+                                      Phone Call
+                                    </SelectItem>
+                                    <SelectItem value="meeting">
+                                      Meeting
+                                    </SelectItem>
+                                    <SelectItem value="proposal">
+                                      Proposal
+                                    </SelectItem>
+                                    <SelectItem value="follow_up">
+                                      Follow Up
+                                    </SelectItem>
+                                  </SelectContent>
+                                </Select>
 
-                  <p className="text-sm text-oma-cocoa/70 mt-2">
-                    Created: {new Date(lead.created_at).toLocaleDateString()}
-                    {lead.last_contact_date && (
-                      <span>
-                        {" "}
-                        • Last Contact:{" "}
-                        {new Date(lead.last_contact_date).toLocaleDateString()}
-                      </span>
-                    )}
-                  </p>
-                </CardContent>
+                                <Input
+                                  placeholder="Subject (optional)"
+                                  value={newInteraction.subject}
+                                  onChange={(e) =>
+                                    setNewInteraction((prev) => ({
+                                      ...prev,
+                                      subject: e.target.value,
+                                    }))
+                                  }
+                                />
+                              </div>
+
+                              <Textarea
+                                placeholder="Description *"
+                                value={newInteraction.description}
+                                onChange={(e) =>
+                                  setNewInteraction((prev) => ({
+                                    ...prev,
+                                    description: e.target.value,
+                                  }))
+                                }
+                                rows={3}
+                              />
+
+                              <div className="grid grid-cols-2 gap-4">
+                                <Input
+                                  placeholder="Outcome (optional)"
+                                  value={newInteraction.outcome}
+                                  onChange={(e) =>
+                                    setNewInteraction((prev) => ({
+                                      ...prev,
+                                      outcome: e.target.value,
+                                    }))
+                                  }
+                                />
+
+                                <Input
+                                  placeholder="Next Action (optional)"
+                                  value={newInteraction.nextAction}
+                                  onChange={(e) =>
+                                    setNewInteraction((prev) => ({
+                                      ...prev,
+                                      nextAction: e.target.value,
+                                    }))
+                                  }
+                                />
+                              </div>
+
+                              <div className="flex justify-end gap-2">
+                                <Button
+                                  variant="outline"
+                                  onClick={() => setIsAddingInteraction(false)}
+                                >
+                                  Cancel
+                                </Button>
+                                <Button
+                                  onClick={() => addInteraction(lead.id)}
+                                  disabled={isAddingInteraction}
+                                  className="bg-oma-plum hover:bg-oma-plum/90"
+                                >
+                                  {isAddingInteraction
+                                    ? "Adding..."
+                                    : "Add Interaction"}
+                                </Button>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        )}
+
+                        {/* Interactions List */}
+                        <div className="space-y-3">
+                          {leadInteractions.length === 0 ? (
+                            <p className="text-center text-oma-cocoa py-4">
+                              No interactions recorded yet
+                            </p>
+                          ) : (
+                            leadInteractions.map((interaction) => (
+                              <Card key={interaction.id}>
+                                <CardContent className="pt-4">
+                                  <div className="flex justify-between items-start mb-2">
+                                    <div>
+                                      <Badge variant="outline" className="mb-1">
+                                        {interaction.interaction_type.replace(
+                                          "_",
+                                          " "
+                                        )}
+                                      </Badge>
+                                      {interaction.subject && (
+                                        <h5 className="font-medium text-oma-plum">
+                                          {interaction.subject}
+                                        </h5>
+                                      )}
+                                    </div>
+                                    <span className="text-xs text-oma-cocoa">
+                                      {new Date(
+                                        interaction.interaction_date
+                                      ).toLocaleDateString()}
+                                    </span>
+                                  </div>
+
+                                  {interaction.description && (
+                                    <p className="text-sm text-oma-cocoa mb-2">
+                                      {interaction.description}
+                                    </p>
+                                  )}
+
+                                  {(interaction.outcome ||
+                                    interaction.next_action) && (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+                                      {interaction.outcome && (
+                                        <div>
+                                          <span className="font-medium">
+                                            Outcome:
+                                          </span>{" "}
+                                          {interaction.outcome}
+                                        </div>
+                                      )}
+                                      {interaction.next_action && (
+                                        <div>
+                                          <span className="font-medium">
+                                            Next Action:
+                                          </span>{" "}
+                                          {interaction.next_action}
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+                                </CardContent>
+                              </Card>
+                            ))
+                          )}
+                        </div>
+                      </TabsContent>
+
+                      <TabsContent value="actions" className="space-y-4 mt-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div>
+                            <h4 className="font-medium text-oma-plum mb-2">
+                              Important Dates
+                            </h4>
+                            <div className="text-sm space-y-1">
+                              <div>
+                                <span className="font-medium">Created:</span>{" "}
+                                {new Date(lead.created_at).toLocaleDateString()}
+                              </div>
+                              {lead.last_contact_date && (
+                                <div>
+                                  <span className="font-medium">
+                                    Last Contact:
+                                  </span>{" "}
+                                  {new Date(
+                                    lead.last_contact_date
+                                  ).toLocaleDateString()}
+                                </div>
+                              )}
+                              {lead.next_follow_up_date && (
+                                <div>
+                                  <span className="font-medium">
+                                    Next Follow Up:
+                                  </span>{" "}
+                                  {new Date(
+                                    lead.next_follow_up_date
+                                  ).toLocaleDateString()}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          <div>
+                            <h4 className="font-medium text-oma-plum mb-2">
+                              Lead Management
+                            </h4>
+                            <div className="space-y-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
+                                onClick={(e) => handleDeleteClick(lead, e)}
+                              >
+                                <TrashIcon className="mr-2 h-4 w-4" />
+                                Delete Lead
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </TabsContent>
+                    </Tabs>
+                  </CardContent>
+                )}
               </Card>
             ))}
           </div>
         )}
-
-        {/* Lead Detail Modal */}
-        <Dialog
-          open={!!selectedLead}
-          onOpenChange={() => setSelectedLead(null)}
-        >
-          <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>
-                {selectedLead?.customer_name}
-                {selectedLead?.company_name &&
-                  ` (${selectedLead.company_name})`}
-              </DialogTitle>
-              <DialogDescription>
-                {selectedLead?.customer_email}
-                {selectedLead?.customer_phone &&
-                  ` • ${selectedLead.customer_phone}`}
-              </DialogDescription>
-            </DialogHeader>
-
-            {selectedLead && (
-              <Tabs defaultValue="details" className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="details">Details</TabsTrigger>
-                  <TabsTrigger value="interactions">Interactions</TabsTrigger>
-                  <TabsTrigger value="actions">Actions</TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="details" className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <h4 className="font-medium text-oma-plum mb-2">
-                        Lead Information
-                      </h4>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between items-center group">
-                          <span>Status:</span>
-                          {editingField?.leadId === selectedLead.id &&
-                          editingField?.field === "status" ? (
-                            <StatusEditor
-                              value={selectedLead.status}
-                              leadId={selectedLead.id}
-                              onUpdate={handleFieldUpdate}
-                              onCancel={handleCancelEdit}
-                            />
-                          ) : (
-                            <div className="flex items-center gap-2">
-                              <Badge
-                                className={getStatusColor(selectedLead.status)}
-                              >
-                                {selectedLead.status.replace("_", " ")}
-                              </Badge>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() =>
-                                  setEditingField({
-                                    leadId: selectedLead.id,
-                                    field: "status",
-                                  })
-                                }
-                                className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 hover:bg-oma-plum/10"
-                                disabled={updatingLead === selectedLead.id}
-                              >
-                                <Edit2 className="h-3 w-3 text-oma-plum" />
-                              </Button>
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Priority:</span>
-                          <Badge
-                            className={getPriorityColor(selectedLead.priority)}
-                          >
-                            {selectedLead.priority}
-                          </Badge>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Source:</span>
-                          <span>{selectedLead.source.replace("_", " ")}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div>
-                      <h4 className="font-medium text-oma-plum mb-2">
-                        Project Details
-                      </h4>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span>Type:</span>
-                          <span>
-                            {selectedLead.lead_type || "Not specified"}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center group">
-                          <span>Timeline:</span>
-                          {editingField?.leadId === selectedLead.id &&
-                          editingField?.field === "timeline" ? (
-                            <TimelineEditor
-                              value={selectedLead.project_timeline || ""}
-                              leadId={selectedLead.id}
-                              onUpdate={handleFieldUpdate}
-                              onCancel={handleCancelEdit}
-                            />
-                          ) : (
-                            <div className="flex items-center gap-2">
-                              <span>
-                                {selectedLead.project_timeline ||
-                                  "Not specified"}
-                              </span>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() =>
-                                  setEditingField({
-                                    leadId: selectedLead.id,
-                                    field: "timeline",
-                                  })
-                                }
-                                className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 hover:bg-oma-plum/10"
-                                disabled={updatingLead === selectedLead.id}
-                              >
-                                <Edit2 className="h-3 w-3 text-oma-plum" />
-                              </Button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {selectedLead.tags && selectedLead.tags.length > 0 && (
-                    <div>
-                      <h4 className="font-medium text-oma-plum mb-2">Tags</h4>
-                      <div className="flex flex-wrap gap-1">
-                        {selectedLead.tags.map((tag, index) => (
-                          <Badge key={index} variant="outline">
-                            {tag}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {selectedLead.notes && (
-                    <div>
-                      <h4 className="font-medium text-oma-plum mb-2">Notes</h4>
-                      <div className="bg-oma-beige/20 p-4 rounded-lg">
-                        <p className="text-sm text-oma-cocoa whitespace-pre-wrap">
-                          {selectedLead.notes}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </TabsContent>
-
-                <TabsContent value="interactions" className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <h4 className="font-medium text-oma-plum">
-                      Interaction History
-                    </h4>
-                    <Button
-                      size="sm"
-                      onClick={() => setIsAddingInteraction(true)}
-                      className="bg-oma-plum hover:bg-oma-plum/90"
-                    >
-                      Add Interaction
-                    </Button>
-                  </div>
-
-                  {isAddingInteraction && (
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="text-lg">
-                          Add New Interaction
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
-                          <Select
-                            value={newInteraction.type}
-                            onValueChange={(value) =>
-                              setNewInteraction((prev) => ({
-                                ...prev,
-                                type: value,
-                              }))
-                            }
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Interaction Type" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="email">Email</SelectItem>
-                              <SelectItem value="phone">Phone Call</SelectItem>
-                              <SelectItem value="meeting">Meeting</SelectItem>
-                              <SelectItem value="proposal">Proposal</SelectItem>
-                              <SelectItem value="contract">Contract</SelectItem>
-                              <SelectItem value="note">Note</SelectItem>
-                              <SelectItem value="follow_up">
-                                Follow Up
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-
-                          <Input
-                            placeholder="Subject (optional)"
-                            value={newInteraction.subject}
-                            onChange={(e) =>
-                              setNewInteraction((prev) => ({
-                                ...prev,
-                                subject: e.target.value,
-                              }))
-                            }
-                          />
-                        </div>
-
-                        <Textarea
-                          placeholder="Description *"
-                          value={newInteraction.description}
-                          onChange={(e) =>
-                            setNewInteraction((prev) => ({
-                              ...prev,
-                              description: e.target.value,
-                            }))
-                          }
-                          rows={3}
-                        />
-
-                        <div className="grid grid-cols-2 gap-4">
-                          <Input
-                            placeholder="Outcome (optional)"
-                            value={newInteraction.outcome}
-                            onChange={(e) =>
-                              setNewInteraction((prev) => ({
-                                ...prev,
-                                outcome: e.target.value,
-                              }))
-                            }
-                          />
-
-                          <Input
-                            placeholder="Next Action (optional)"
-                            value={newInteraction.nextAction}
-                            onChange={(e) =>
-                              setNewInteraction((prev) => ({
-                                ...prev,
-                                nextAction: e.target.value,
-                              }))
-                            }
-                          />
-                        </div>
-
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            variant="outline"
-                            onClick={() => setIsAddingInteraction(false)}
-                          >
-                            Cancel
-                          </Button>
-                          <Button
-                            onClick={addInteraction}
-                            disabled={isAddingInteraction}
-                            className="bg-oma-plum hover:bg-oma-plum/90"
-                          >
-                            {isAddingInteraction
-                              ? "Adding..."
-                              : "Add Interaction"}
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
-
-                  <div className="space-y-3">
-                    {leadInteractions.length === 0 ? (
-                      <p className="text-center text-oma-cocoa py-4">
-                        No interactions recorded yet
-                      </p>
-                    ) : (
-                      leadInteractions.map((interaction) => (
-                        <Card key={interaction.id}>
-                          <CardContent className="pt-4">
-                            <div className="flex justify-between items-start mb-2">
-                              <div>
-                                <Badge variant="outline" className="mb-1">
-                                  {interaction.interaction_type.replace(
-                                    "_",
-                                    " "
-                                  )}
-                                </Badge>
-                                {interaction.subject && (
-                                  <h5 className="font-medium text-oma-plum">
-                                    {interaction.subject}
-                                  </h5>
-                                )}
-                              </div>
-                              <span className="text-xs text-oma-cocoa">
-                                {new Date(
-                                  interaction.interaction_date
-                                ).toLocaleDateString()}
-                              </span>
-                            </div>
-
-                            {interaction.description && (
-                              <p className="text-sm text-oma-cocoa mb-2">
-                                {interaction.description}
-                              </p>
-                            )}
-
-                            {(interaction.outcome ||
-                              interaction.next_action) && (
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
-                                {interaction.outcome && (
-                                  <div>
-                                    <span className="font-medium">
-                                      Outcome:
-                                    </span>{" "}
-                                    {interaction.outcome}
-                                  </div>
-                                )}
-                                {interaction.next_action && (
-                                  <div>
-                                    <span className="font-medium">
-                                      Next Action:
-                                    </span>{" "}
-                                    {interaction.next_action}
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                          </CardContent>
-                        </Card>
-                      ))
-                    )}
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="actions" className="space-y-4">
-                  <div>
-                    <h4 className="font-medium text-oma-plum mb-4">
-                      Update Lead Status
-                    </h4>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                      {[
-                        "new",
-                        "contacted",
-                        "qualified",
-                        "proposal_sent",
-                        "negotiating",
-                        "won",
-                        "lost",
-                        "nurturing",
-                      ].map((status) => (
-                        <Button
-                          key={status}
-                          variant={
-                            selectedLead.status === status
-                              ? "default"
-                              : "outline"
-                          }
-                          size="sm"
-                          onClick={() =>
-                            updateLeadStatus(selectedLead.id, status)
-                          }
-                          className={
-                            selectedLead.status === status
-                              ? "bg-oma-plum hover:bg-oma-plum/90"
-                              : ""
-                          }
-                        >
-                          {status.replace("_", " ")}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
-                    <div>
-                      <h4 className="font-medium text-oma-plum mb-2">
-                        Important Dates
-                      </h4>
-                      <div className="text-sm space-y-1">
-                        <div>
-                          <span className="font-medium">Created:</span>{" "}
-                          {new Date(
-                            selectedLead.created_at
-                          ).toLocaleDateString()}
-                        </div>
-                        {selectedLead.last_contact_date && (
-                          <div>
-                            <span className="font-medium">Last Contact:</span>{" "}
-                            {new Date(
-                              selectedLead.last_contact_date
-                            ).toLocaleDateString()}
-                          </div>
-                        )}
-                        {selectedLead.next_follow_up_date && (
-                          <div>
-                            <span className="font-medium">Next Follow Up:</span>{" "}
-                            {new Date(
-                              selectedLead.next_follow_up_date
-                            ).toLocaleDateString()}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    <div>
-                      <h4 className="font-medium text-oma-plum mb-2">
-                        Quick Actions
-                      </h4>
-                      <div className="space-y-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full justify-start"
-                          onClick={(e) => handleDeleteClick(selectedLead, e)}
-                        >
-                          <TrashIcon className="mr-2 h-4 w-4" />
-                          Delete Lead
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full justify-start"
-                          onClick={() =>
-                            window.open(
-                              `mailto:${selectedLead.customer_email}`,
-                              "_blank"
-                            )
-                          }
-                        >
-                          Send Email
-                        </Button>
-                        {selectedLead.customer_phone && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="w-full justify-start"
-                            onClick={() =>
-                              window.open(
-                                `tel:${selectedLead.customer_phone}`,
-                                "_blank"
-                              )
-                            }
-                          >
-                            Call Customer
-                          </Button>
-                        )}
-                        {selectedLead.inquiry && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="w-full justify-start"
-                            onClick={() => {
-                              setSelectedLead(null);
-                              // Navigate to inbox would go here
-                            }}
-                          >
-                            View Original Inquiry
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </TabsContent>
-              </Tabs>
-            )}
-          </DialogContent>
-        </Dialog>
 
         {/* Delete Dialog */}
         <AlertDialog
@@ -1485,8 +1131,9 @@ export default function StudioLeadsPage() {
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
               <AlertDialogAction
-                onClick={() => deleteLead(leadToDelete!)}
+                onClick={() => leadToDelete && deleteLead(leadToDelete)}
                 disabled={isDeleting}
+                className="bg-red-600 hover:bg-red-700"
               >
                 {isDeleting ? "Deleting..." : "Delete"}
               </AlertDialogAction>

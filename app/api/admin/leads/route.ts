@@ -593,29 +593,78 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const supabaseClient = await createServerSupabaseClient();
+
+    // Enhanced authentication with better error handling (same as GET endpoint)
     const {
-      data: { user },
-      error: authError,
-    } = await supabaseClient.auth.getUser();
+      data: { session },
+      error: sessionError,
+    } = await supabaseClient.auth.getSession();
 
-    if (authError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const profile = await checkUserPermissions(user.id);
-
-    if (
-      !profile.role ||
-      !["super_admin", "brand_admin"].includes(profile.role)
-    ) {
+    if (sessionError) {
+      console.error("Session error:", sessionError);
       return NextResponse.json(
-        { error: "Insufficient permissions" },
-        { status: 403 }
+        { error: "Session invalid - please sign in again" },
+        { status: 401 }
       );
     }
 
+    if (!session?.user) {
+      console.error("No session or user found");
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const user = session.user;
+    console.log("✅ POST Leads API: User authenticated:", user.email);
+
+    // Get user profile with fallback for super_admin users (same as GET endpoint)
+    let profile;
+    const { data: profileData, error: profileError } = await supabaseClient
+      .from("profiles")
+      .select("role, owned_brands")
+      .eq("id", user.id)
+      .single();
+
+    if (profileError || !profileData) {
+      console.log(
+        "⚠️ Profile not found, checking user email for super_admin access"
+      );
+
+      // Fallback: Check if user email indicates super_admin access
+      if (
+        user.email === "eloka.agu@icloud.com" ||
+        user.email === "shannonalisa@oma-hub.com"
+      ) {
+        profile = {
+          role: "super_admin",
+          owned_brands: [],
+        };
+        console.log(
+          "✅ Granted super_admin access based on email:",
+          user.email
+        );
+      } else {
+        console.error("Profile error:", profileError);
+        return NextResponse.json(
+          { error: "Profile not found" },
+          { status: 404 }
+        );
+      }
+    } else {
+      profile = profileData;
+    }
+
+    // Check if user has admin access
+    if (!["super_admin", "brand_admin"].includes(profile.role)) {
+      console.log("❌ Access denied for role:", profile.role);
+      return NextResponse.json({ error: "Access denied" }, { status: 403 });
+    }
+
+    console.log("✅ Access granted for role:", profile.role);
+
     const body = await request.json();
     const { type, data } = body;
+
+    console.log("🔍 POST Request Debug:", { type, data });
 
     switch (type) {
       case "lead":
@@ -767,26 +816,73 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const supabaseClient = await createServerSupabaseClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabaseClient.auth.getUser();
 
-    if (authError || !user) {
+    // Enhanced authentication with better error handling (same as GET endpoint)
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabaseClient.auth.getSession();
+
+    if (sessionError) {
+      console.error("Session error:", sessionError);
+      return NextResponse.json(
+        { error: "Session invalid - please sign in again" },
+        { status: 401 }
+      );
+    }
+
+    if (!session?.user) {
+      console.error("No session or user found");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const profile = await checkUserPermissions(user.id);
+    const user = session.user;
+    console.log("✅ PUT Leads API: User authenticated:", user.email);
 
-    if (
-      !profile.role ||
-      !["super_admin", "brand_admin"].includes(profile.role)
-    ) {
-      return NextResponse.json(
-        { error: "Insufficient permissions" },
-        { status: 403 }
+    // Get user profile with fallback for super_admin users (same as GET endpoint)
+    let profile;
+    const { data: profileData, error: profileError } = await supabaseClient
+      .from("profiles")
+      .select("role, owned_brands")
+      .eq("id", user.id)
+      .single();
+
+    if (profileError || !profileData) {
+      console.log(
+        "⚠️ Profile not found, checking user email for super_admin access"
       );
+
+      // Fallback: Check if user email indicates super_admin access
+      if (
+        user.email === "eloka.agu@icloud.com" ||
+        user.email === "shannonalisa@oma-hub.com"
+      ) {
+        profile = {
+          role: "super_admin",
+          owned_brands: [],
+        };
+        console.log(
+          "✅ Granted super_admin access based on email:",
+          user.email
+        );
+      } else {
+        console.error("Profile error:", profileError);
+        return NextResponse.json(
+          { error: "Profile not found" },
+          { status: 404 }
+        );
+      }
+    } else {
+      profile = profileData;
     }
+
+    // Check if user has admin access
+    if (!["super_admin", "brand_admin"].includes(profile.role)) {
+      console.log("❌ Access denied for role:", profile.role);
+      return NextResponse.json({ error: "Access denied" }, { status: 403 });
+    }
+
+    console.log("✅ Access granted for role:", profile.role);
 
     const body = await request.json();
     const { type, id, data } = body;
