@@ -140,60 +140,6 @@ interface LeadsTrackingDashboardProps {
   ownedBrandIds?: string[];
 }
 
-// Inline editing component for timeline
-const TimelineEditor = ({
-  value,
-  leadId,
-  onUpdate,
-  onCancel,
-}: {
-  value: string;
-  leadId: string;
-  onUpdate: (leadId: string, field: string, value: string) => void;
-  onCancel: () => void;
-}) => {
-  const [editValue, setEditValue] = useState(value || "");
-
-  const handleSave = () => {
-    onUpdate(leadId, "timeline", editValue);
-  };
-
-  return (
-    <div className="flex items-center gap-2 min-w-[200px]">
-      <Select value={editValue} onValueChange={setEditValue}>
-        <SelectTrigger className="h-8 text-xs">
-          <SelectValue placeholder="Select timeline" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="ASAP">ASAP</SelectItem>
-          <SelectItem value="1-2 weeks">1-2 weeks</SelectItem>
-          <SelectItem value="1 month">1 month</SelectItem>
-          <SelectItem value="2-3 months">2-3 months</SelectItem>
-          <SelectItem value="3-6 months">3-6 months</SelectItem>
-          <SelectItem value="6+ months">6+ months</SelectItem>
-          <SelectItem value="Flexible">Flexible</SelectItem>
-        </SelectContent>
-      </Select>
-      <Button
-        size="sm"
-        variant="ghost"
-        onClick={handleSave}
-        className="h-8 w-8 p-0"
-      >
-        <Check className="h-4 w-4 text-green-600" />
-      </Button>
-      <Button
-        size="sm"
-        variant="ghost"
-        onClick={onCancel}
-        className="h-8 w-8 p-0"
-      >
-        <X className="h-4 w-4 text-red-600" />
-      </Button>
-    </div>
-  );
-};
-
 export default function LeadsTrackingDashboard({
   userRole,
   ownedBrandIds = [],
@@ -236,10 +182,6 @@ export default function LeadsTrackingDashboard({
   const [platformError, setPlatformError] = useState<string | null>(null);
 
   // Inline editing states
-  const [editingField, setEditingField] = useState<{
-    leadId: string;
-    field: string;
-  } | null>(null);
   const [updatingLead, setUpdatingLead] = useState<string | null>(null);
 
   const { updateLead } = useLeadMutations();
@@ -456,7 +398,6 @@ export default function LeadsTrackingDashboard({
       );
 
       toast.success(`${field.replace("_", " ")} updated successfully`);
-      setEditingField(null);
     } catch (error) {
       console.error("Error updating lead:", error);
       toast.error(`Failed to update ${field.replace("_", " ")}`);
@@ -471,11 +412,6 @@ export default function LeadsTrackingDashboard({
     newStatus: Lead["status"]
   ) => {
     await handleFieldUpdate(leadId, "status", newStatus);
-  };
-
-  // Cancel editing
-  const handleCancelEdit = () => {
-    setEditingField(null);
   };
 
   // Show loading state while auth is loading
@@ -1014,9 +950,6 @@ export default function LeadsTrackingDashboard({
                     Type
                   </th>
                   <th className="text-left p-4 font-medium text-oma-cocoa">
-                    Timeline
-                  </th>
-                  <th className="text-left p-4 font-medium text-oma-cocoa">
                     Status
                   </th>
                   <th className="text-left p-4 font-medium text-oma-cocoa">
@@ -1060,37 +993,6 @@ export default function LeadsTrackingDashboard({
                       >
                         {lead.lead_type?.replace("_", " ")}
                       </Badge>
-                    </td>
-                    <td className="p-4">
-                      {editingField?.leadId === lead.id &&
-                      editingField?.field === "timeline" ? (
-                        <TimelineEditor
-                          value={lead.project_timeline || ""}
-                          leadId={lead.id!}
-                          onUpdate={handleFieldUpdate}
-                          onCancel={handleCancelEdit}
-                        />
-                      ) : (
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm text-oma-cocoa">
-                            {lead.project_timeline || "Not specified"}
-                          </span>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() =>
-                              setEditingField({
-                                leadId: lead.id!,
-                                field: "timeline",
-                              })
-                            }
-                            className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 hover:bg-oma-plum/10"
-                            disabled={updatingLead === lead.id}
-                          >
-                            <Edit2 className="h-3 w-3 text-oma-plum" />
-                          </Button>
-                        </div>
-                      )}
                     </td>
                     <td className="p-4">
                       <Select

@@ -97,18 +97,6 @@ export default function CataloguesPage() {
           getAllProducts(),
         ]);
 
-        // Debug: Log catalogue data to see image URLs
-        console.log(
-          "📸 Catalogue data fetched:",
-          catalogueData.map((c) => ({
-            id: c.id,
-            title: c.title,
-            image: c.image,
-            imageType: typeof c.image,
-            imageLength: c.image?.length,
-          }))
-        );
-
         setCatalogues(catalogueData);
         setFilteredCatalogues(catalogueData);
         setProducts(productData);
