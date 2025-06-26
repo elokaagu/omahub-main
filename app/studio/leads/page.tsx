@@ -48,7 +48,6 @@ interface Lead {
   estimated_value?: number;
   estimated_budget?: number;
   lead_type?: string;
-  project_timeline?: string;
   location?: string;
   notes?: string;
   tags?: string[];
@@ -809,10 +808,6 @@ export default function StudioLeadsPage() {
                                 <div>
                                   <span className="font-medium">Type:</span>{" "}
                                   {lead.lead_type || "Not specified"}
-                                </div>
-                                <div>
-                                  <span className="font-medium">Timeline:</span>{" "}
-                                  {lead.project_timeline || "Not specified"}
                                 </div>
                                 <div>
                                   <span className="font-medium">Created:</span>{" "}
