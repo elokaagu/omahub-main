@@ -95,6 +95,10 @@ export default function BrandPage() {
     rating: brand.rating,
     isVerified: brand.is_verified,
     image: brand.image,
+    website: brand.website,
+    instagram: brand.instagram,
+    whatsapp: brand.whatsapp,
+    contact_email: brand.contact_email,
     collections: catalogues.map((catalogue) => ({
       id: catalogue.id,
       title: catalogue.title,

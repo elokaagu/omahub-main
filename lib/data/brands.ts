@@ -28,6 +28,7 @@ export interface BrandData {
   website?: string;
   instagram?: string;
   whatsapp?: string;
+  contact_email?: string;
 }
 
 export const brandsData: Record<string, BrandData> = {

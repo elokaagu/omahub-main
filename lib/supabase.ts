@@ -102,6 +102,7 @@ export type Brand = {
   website?: string;
   instagram?: string;
   whatsapp?: string;
+  contact_email?: string;
   founded_year?: string;
   created_at?: string;
   updated_at?: string;

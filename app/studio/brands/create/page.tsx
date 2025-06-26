@@ -82,6 +82,7 @@ export default function CreateBrandPage() {
     website: "",
     instagram: "",
     whatsapp: "",
+    contact_email: "",
     founded_year: "",
   });
 
@@ -176,6 +177,18 @@ export default function CreateBrandPage() {
       return;
     }
 
+    if (!formData.contact_email) {
+      toast.error("Contact email is required");
+      return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.contact_email)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+
     // Format price range if both min and max are provided
     let priceRange = "";
     if (formData.price_min && formData.price_max) {
@@ -201,6 +214,7 @@ export default function CreateBrandPage() {
       website: formData.website || undefined,
       instagram: formData.instagram || undefined,
       whatsapp: formData.whatsapp || undefined,
+      contact_email: formData.contact_email,
       founded_year: formData.founded_year || undefined,
     };
 
@@ -296,7 +310,8 @@ export default function CreateBrandPage() {
               formData.description &&
               formData.categories.length > 0 &&
               formData.location &&
-              formData.image
+              formData.image &&
+              formData.contact_email
                 ? "✅ Yes"
                 : "❌ No"}
             </p>
@@ -308,6 +323,7 @@ export default function CreateBrandPage() {
                 !formData.categories.length && "Categories",
                 !formData.location && "Location",
                 !formData.image && "Image",
+                !formData.contact_email && "Contact Email",
               ]
                 .filter(Boolean)
                 .join(", ") || "None"}
@@ -515,15 +531,30 @@ export default function CreateBrandPage() {
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="whatsapp">WhatsApp</Label>
-                  <Input
-                    id="whatsapp"
-                    name="whatsapp"
-                    value={formData.whatsapp}
-                    onChange={handleInputChange}
-                    placeholder="+234 123 456 7890"
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="whatsapp">WhatsApp</Label>
+                    <Input
+                      id="whatsapp"
+                      name="whatsapp"
+                      value={formData.whatsapp}
+                      onChange={handleInputChange}
+                      placeholder="+234 123 456 7890"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="contact_email">Contact Email *</Label>
+                    <Input
+                      id="contact_email"
+                      name="contact_email"
+                      type="email"
+                      value={formData.contact_email}
+                      onChange={handleInputChange}
+                      placeholder="hello@brand.com"
+                      required
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-2">
@@ -562,6 +593,7 @@ export default function CreateBrandPage() {
               <CardContent>
                 <FileUpload
                   onUploadComplete={handleImageUpload}
+                  defaultValue={formData.image}
                   bucket="brand-assets"
                   path="brands"
                   accept={{
@@ -570,23 +602,6 @@ export default function CreateBrandPage() {
                   }}
                   maxSize={5}
                 />
-                {formData.image && (
-                  <div className="mt-4">
-                    <p className="text-sm text-muted-foreground mb-2">
-                      Image Preview
-                    </p>
-                    <div className="relative aspect-square w-full overflow-hidden rounded-lg border border-border">
-                      <LazyImage
-                        src={formData.image}
-                        alt="Brand preview"
-                        aspectRatio="square"
-                        className="w-full h-full"
-                        sizes="400px"
-                        quality={80}
-                      />
-                    </div>
-                  </div>
-                )}
               </CardContent>
               <CardFooter>
                 <Button

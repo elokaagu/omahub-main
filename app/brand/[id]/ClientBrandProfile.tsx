@@ -4,7 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, MapPin, Star } from "@/components/ui/icons";
-import { ShoppingBag, Instagram, Globe, MessageCircle } from "lucide-react";
+import {
+  ShoppingBag,
+  Instagram,
+  Globe,
+  MessageCircle,
+  Mail,
+} from "lucide-react";
 import ContactDesignerModal from "@/components/ContactDesignerModal";
 import { ReviewForm } from "@/components/ui/review-form";
 import { ReviewDisplay } from "@/components/ui/review-display";
@@ -380,6 +386,21 @@ export default function ClientBrandProfile({
             {/* Contact Options */}
             <div className="space-y-3 mb-6">
               <h4 className="text-sm font-semibold">Connect with Designer</h4>
+
+              {/* Email Contact */}
+              {brandData.contact_email && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 hover:border-blue-300 hover:text-blue-800"
+                  onClick={() =>
+                    window.open(`mailto:${brandData.contact_email}`, "_blank")
+                  }
+                >
+                  <Mail className="h-4 w-4 mr-2" />
+                  Email Designer
+                </Button>
+              )}
 
               {/* WhatsApp Contact */}
               {brandData.whatsapp &&
