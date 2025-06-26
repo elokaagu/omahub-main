@@ -399,7 +399,7 @@ export default function CataloguesPage() {
             ))}
           </div>
         ) : (
-          // Brands Grid/List - Updated styling for full card image coverage
+          // Brands Grid/List - Full image coverage with text overlay
           <div
             className={`grid gap-6 ${
               viewMode === "grid"
@@ -421,20 +421,6 @@ export default function CataloguesPage() {
                       className="object-cover group-hover:scale-105 transition-transform duration-300"
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                       quality={80}
-                      onLoad={() =>
-                        console.log(
-                          "✅ Catalogue image loaded:",
-                          catalogue.title,
-                          catalogue.image
-                        )
-                      }
-                      onError={() =>
-                        console.error(
-                          "❌ Catalogue image failed:",
-                          catalogue.title,
-                          catalogue.image
-                        )
-                      }
                     />
                     {/* Text overlay at bottom */}
                     <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4">

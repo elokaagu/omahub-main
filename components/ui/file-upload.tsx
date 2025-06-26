@@ -53,6 +53,7 @@ export function FileUpload({
     }
 
     // Force session refresh to ensure we have a valid token
+    console.log("🔄 Refreshing session for upload...");
     const { data: sessionData, error: sessionError } =
       await supabase.auth.refreshSession();
 
@@ -82,6 +83,43 @@ export function FileUpload({
       email: user.email,
       bucket: bucket,
     });
+
+    // Special handling for spotlight-images bucket
+    if (bucket === "spotlight-images") {
+      console.log("🎯 Spotlight upload: Checking user permissions...");
+      try {
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("role, email")
+          .eq("id", user.id)
+          .single();
+
+        if (profileError) {
+          console.error("Profile check failed:", profileError);
+          throw new Error(`Profile check failed: ${profileError.message}`);
+        }
+
+        if (!profile) {
+          throw new Error("User profile not found");
+        }
+
+        console.log("User profile:", profile);
+
+        // Check if user has permission to upload spotlight images
+        const canUploadSpotlight = profile.role === "super_admin";
+
+        if (!canUploadSpotlight) {
+          throw new Error(
+            `Insufficient permissions: Only super admins can upload spotlight images. Your role: ${profile.role}`
+          );
+        }
+
+        console.log("✅ Spotlight upload permission verified");
+      } catch (permissionError) {
+        console.error("Permission check error:", permissionError);
+        throw permissionError;
+      }
+    }
 
     // Check user profile and permissions for product uploads
     if (bucket === "product-images") {
@@ -166,9 +204,16 @@ export function FileUpload({
           `Storage bucket '${bucket}' not found. Please contact support to set up the storage bucket.`
         );
       } else if (error.message.includes("row-level security")) {
-        throw new Error(
-          `Database security policy blocked the upload. Please ensure you have the correct permissions for ${bucket} bucket.`
-        );
+        // Special handling for RLS errors
+        if (bucket === "spotlight-images") {
+          throw new Error(
+            `Database security policy blocked the spotlight upload. This usually means you need to sign out and sign back in to refresh your session. Your current role should be 'super_admin'.`
+          );
+        } else {
+          throw new Error(
+            `Database security policy blocked the upload. Please ensure you have the correct permissions for ${bucket} bucket.`
+          );
+        }
       } else if (
         error.message.includes("mime type") &&
         error.message.includes("not supported")
