@@ -33,35 +33,8 @@ const getImageFocalPoint = (
   title: string,
   category?: string
 ) => {
-  // For fashion and catalogue images, we typically want to focus on the upper portion
+  // For fashion and catalogue images, we always want to focus on the upper portion
   // where faces, necklines, and key design elements are usually located
-  const lowerTitle = title.toLowerCase();
-  const lowerCategory = category?.toLowerCase() || "";
-
-  if (
-    lowerTitle.includes("bridal") ||
-    lowerTitle.includes("wedding") ||
-    lowerCategory.includes("bridal")
-  ) {
-    return "object-top"; // Focus on top for bridal shots to capture face/neckline
-  }
-
-  if (
-    lowerTitle.includes("evening") ||
-    lowerTitle.includes("gown") ||
-    lowerCategory.includes("evening")
-  ) {
-    return "object-center"; // Center for full gown shots
-  }
-
-  if (
-    lowerCategory.includes("accessories") ||
-    lowerTitle.includes("accessories")
-  ) {
-    return "object-center"; // Center for accessories to show the full item
-  }
-
-  // Default to top-center for most fashion photography to avoid cutting off faces
   return "object-top";
 };
 
