@@ -229,13 +229,13 @@ export default function Header() {
                       {category.title}
                     </NavigationMenuTrigger>
                     <NavigationMenuContent>
-                      <div className="w-screen max-w-lg">
+                      <div className="w-screen max-w-xl">
                         <div className="p-6">
                           <div className="mb-6">
                             <h3 className="text-base font-semibold text-gray-900 mb-2">
                               {category.title}
                             </h3>
-                            <p className="text-sm text-gray-600 leading-relaxed">
+                            <p className="text-sm text-gray-600 leading-relaxed max-w-md">
                               {category.description}
                             </p>
                           </div>
@@ -250,11 +250,12 @@ export default function Header() {
                                     <span className="font-medium text-gray-900 group-hover:text-oma-plum transition-colors">
                                       {item.title}
                                     </span>
-                                    {item.count && (
-                                      <span className="text-xs text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full font-medium">
-                                        {item.count}
-                                      </span>
-                                    )}
+                                    {item.count !== undefined &&
+                                      item.count > 0 && (
+                                        <span className="text-xs text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full font-medium ml-3 flex-shrink-0">
+                                          {item.count}
+                                        </span>
+                                      )}
                                   </div>
                                 </NavigationLink>
                               </NavigationMenuLink>
