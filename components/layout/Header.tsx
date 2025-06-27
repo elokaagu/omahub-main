@@ -235,11 +235,8 @@ export default function Header() {
                             <h3 className="text-sm font-medium text-gray-900">
                               {category.title}
                             </h3>
-                            <p className="text-sm text-gray-500">
-                              {category.description}
-                            </p>
                           </div>
-                          <div className="grid gap-2">
+                          <div className="grid grid-cols-2 gap-2">
                             {category.items.map((item) => (
                               <NavigationMenuLink key={item.title} asChild>
                                 <NavigationLink
