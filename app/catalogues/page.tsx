@@ -45,7 +45,8 @@ type ProductWithBrand = Product & {
 const getImageFocalPoint = (imageUrl: string, title: string) => {
   // For fashion and catalogue images, we always want to focus on the upper portion
   // where faces, necklines, and key design elements are usually located
-  return "object-top";
+  // Using center-top positioning to ensure faces are visible and centered
+  return "object-center object-top";
 };
 
 export default function CataloguesPage() {

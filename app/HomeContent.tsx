@@ -156,8 +156,8 @@ const generateDynamicFallbackItems = async (): Promise<CarouselItem[]> => {
 const getCategoryImageFocalPoint = (category: string): string => {
   switch (category.toLowerCase()) {
     case "catalogues":
-      // For catalogue images with people, use top positioning to show faces/upper body
-      return "object-top";
+      // For catalogue images with people, use center-top positioning to show faces/upper body centered
+      return "object-center object-top";
     case "tailored":
       // Tailoring images often show full garments, center positioning works well
       return "object-center";
@@ -573,7 +573,7 @@ export default function HomeContent() {
                   <img
                     src={categoryImages.catalogueImage}
                     alt="Catalogues"
-                    className="w-full h-full object-cover object-top transition-transform duration-300 group-hover:scale-105"
+                    className="w-full h-full object-cover object-center object-top transition-transform duration-300 group-hover:scale-105"
                     onLoad={() =>
                       console.log(
                         "✅ Catalogue image loaded:",
