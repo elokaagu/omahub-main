@@ -317,7 +317,6 @@ export default function Header() {
                               href="/profile"
                               className="flex items-center gap-3 w-full rounded-md px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-oma-plum transition-colors"
                             >
-                              <User className="h-4 w-4 flex-shrink-0" />
                               <span>Profile</span>
                             </NavigationLink>
                           </NavigationMenuLink>
@@ -328,7 +327,6 @@ export default function Header() {
                               href="/favourites"
                               className="flex items-center gap-3 w-full rounded-md px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-oma-plum transition-colors"
                             >
-                              <Heart className="h-4 w-4 flex-shrink-0" />
                               <span>Favourites</span>
                             </NavigationLink>
                           </NavigationMenuLink>
@@ -343,7 +341,6 @@ export default function Header() {
                                 disabled={isNavigatingToStudio}
                                 className="flex items-center gap-3 w-full rounded-md px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-oma-plum transition-colors disabled:opacity-50"
                               >
-                                <Palette className="h-4 w-4 flex-shrink-0" />
                                 <span>
                                   Studio {isNavigatingToStudio && "..."}
                                 </span>
@@ -357,7 +354,6 @@ export default function Header() {
                               onClick={handleSignOut}
                               className="flex items-center gap-3 w-full rounded-md px-3 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
                             >
-                              <LogOut className="h-4 w-4 flex-shrink-0" />
                               <span>Sign Out</span>
                             </button>
                           </NavigationMenuLink>
@@ -530,7 +526,6 @@ export default function Header() {
                         onClick={() => setMobileMenuOpen(false)}
                         className="-mx-3 flex items-center gap-3 rounded-lg px-3 py-3 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 transition-colors"
                       >
-                        <User className="h-5 w-5 text-gray-500 flex-shrink-0" />
                         <span>Profile</span>
                       </NavigationLink>
 
@@ -539,7 +534,6 @@ export default function Header() {
                         onClick={() => setMobileMenuOpen(false)}
                         className="-mx-3 flex items-center gap-3 rounded-lg px-3 py-3 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 transition-colors"
                       >
-                        <Heart className="h-5 w-5 text-gray-500 flex-shrink-0" />
                         <span>Favourites</span>
                       </NavigationLink>
 
@@ -555,7 +549,6 @@ export default function Header() {
                           disabled={isNavigatingToStudio}
                           className="-mx-3 flex items-center gap-3 rounded-lg px-3 py-3 text-base font-semibold leading-7 text-oma-plum hover:bg-oma-beige/50 transition-colors disabled:opacity-50 w-full text-left"
                         >
-                          <Palette className="h-5 w-5 flex-shrink-0" />
                           <span>Studio {isNavigatingToStudio && "..."}</span>
                         </button>
                       )}
@@ -568,7 +561,6 @@ export default function Header() {
                         }}
                         className="-mx-3 flex items-center gap-3 rounded-lg px-3 py-3 text-base font-semibold leading-7 text-red-600 hover:bg-red-50 transition-colors w-full text-left"
                       >
-                        <LogOut className="h-5 w-5 flex-shrink-0" />
                         <span>Sign Out</span>
                       </button>
                     </div>

@@ -113,14 +113,12 @@ export default function UserProfile() {
           onClick={handleProfileClick}
           className="cursor-pointer"
         >
-          <User className="mr-2 h-4 w-4 flex-shrink-0" />
           <span>Profile</span>
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={handleSettingsClick}
           className="cursor-pointer"
         >
-          <Settings className="mr-2 h-4 w-4 flex-shrink-0" />
           <span>Settings</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
@@ -129,7 +127,6 @@ export default function UserProfile() {
           disabled={isSigningOut}
           className="cursor-pointer"
         >
-          <LogOut className="mr-2 h-4 w-4 flex-shrink-0" />
           <span>{isSigningOut ? "Signing out..." : "Sign out"}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
