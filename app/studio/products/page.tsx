@@ -13,6 +13,7 @@ import { NavigationLink } from "@/components/ui/navigation-link";
 import {
   getAllProducts,
   getProductsWithDetails,
+  getProductsWithBrandCurrency,
   deleteProduct,
 } from "@/lib/services/productService";
 import { Product, Brand, Catalogue } from "@/lib/supabase";
@@ -47,10 +48,16 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
-import { formatPrice } from "@/lib/utils/priceFormatter";
+import { formatProductPrice } from "@/lib/utils/priceFormatter";
 
 type ProductWithDetails = Product & {
-  brand: { name: string; id: string; location: string; is_verified: boolean };
+  brand: {
+    name: string;
+    id: string;
+    location: string;
+    is_verified: boolean;
+    price_range?: string;
+  };
   collection?: { title: string; id: string };
 };
 
@@ -164,7 +171,7 @@ export default function ProductsPage() {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        const productsData = await getProductsWithDetails();
+        const productsData = await getProductsWithBrandCurrency();
 
         // Filter products based on user role
         if (user?.role === "super_admin") {
@@ -718,11 +725,14 @@ export default function ProductsPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-lg font-bold text-oma-plum">
-                      {formatPrice(product.sale_price || product.price)}
+                      {formatProductPrice(product, product.brand).displayPrice}
                     </span>
                     {product.sale_price && (
                       <span className="text-sm text-oma-cocoa/60 line-through">
-                        {formatPrice(product.price)}
+                        {
+                          formatProductPrice(product, product.brand)
+                            .originalPrice
+                        }
                       </span>
                     )}
                   </div>
@@ -797,11 +807,17 @@ export default function ProductsPage() {
                       <div className="text-right space-y-2">
                         <div className="flex items-center gap-2">
                           <span className="text-lg font-bold text-oma-plum">
-                            {formatPrice(product.sale_price || product.price)}
+                            {
+                              formatProductPrice(product, product.brand)
+                                .displayPrice
+                            }
                           </span>
                           {product.sale_price && (
                             <span className="text-sm text-oma-cocoa/60 line-through">
-                              {formatPrice(product.price)}
+                              {
+                                formatProductPrice(product, product.brand)
+                                  .originalPrice
+                              }
                             </span>
                           )}
                         </div>

@@ -131,8 +131,10 @@ export async function getProductsWithDetails(): Promise<
     }
 
     // Manually join catalogues data
-    const productsWithDetails = productsWithBrands.map((product) => {
-      const catalogue = catalogues?.find((c) => c.id === product.catalogue_id);
+    const productsWithDetails = productsWithBrands.map((product: any) => {
+      const catalogue = catalogues?.find(
+        (c: any) => c.id === product.catalogue_id
+      );
       return {
         ...product,
         catalogue: catalogue
@@ -144,6 +146,72 @@ export async function getProductsWithDetails(): Promise<
     return productsWithDetails;
   } catch (error) {
     console.error("Error in getProductsWithDetails:", error);
+    throw error;
+  }
+}
+
+/**
+ * Fetch products with complete brand information including currency data
+ */
+export async function getProductsWithBrandCurrency(): Promise<
+  (Product & {
+    brand: {
+      name: string;
+      id: string;
+      location: string;
+      is_verified: boolean;
+      price_range?: string;
+    };
+    catalogue?: { title: string; id: string };
+  })[]
+> {
+  if (!supabase) {
+    throw new Error("Supabase client not available");
+  }
+
+  try {
+    // Get products with complete brand information including price_range
+    const { data: productsWithBrands, error: productsError } =
+      await supabase.from("products").select(`
+        *,
+        brand:brands(id, name, location, is_verified, price_range)
+      `);
+
+    if (productsError) {
+      console.error("Error fetching products with brands:", productsError);
+      throw productsError;
+    }
+
+    if (!productsWithBrands || productsWithBrands.length === 0) {
+      return [];
+    }
+
+    // Get all catalogues to manually join
+    const { data: catalogues, error: cataloguesError } = await supabase
+      .from("catalogues")
+      .select("id, title");
+
+    if (cataloguesError) {
+      console.error("Error fetching catalogues:", cataloguesError);
+      // Continue without catalogues data
+    }
+
+    // Manually join catalogues data
+    const productsWithDetails = productsWithBrands.map((product: any) => {
+      const catalogue = catalogues?.find(
+        (c: any) => c.id === product.catalogue_id
+      );
+      return {
+        ...product,
+        catalogue: catalogue
+          ? { id: catalogue.id, title: catalogue.title }
+          : undefined,
+      };
+    });
+
+    return productsWithDetails;
+  } catch (error) {
+    console.error("Error in getProductsWithBrandCurrency:", error);
     throw error;
   }
 }
@@ -447,12 +515,12 @@ export async function getIntelligentRecommendations(
           .select("brand_id")
           .in(
             "id",
-            favourites.map((f) => f.product_id)
+            favourites.map((f: any) => f.product_id)
           );
 
         if (favouritedProducts && favouritedProducts.length > 0) {
           const favouriteBrandIds = [
-            ...new Set(favouritedProducts.map((p) => p.brand_id)),
+            ...new Set(favouritedProducts.map((p: any) => p.brand_id)),
           ];
 
           // Get products from favourite brands (up to half of the limit)

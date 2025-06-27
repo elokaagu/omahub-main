@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Search, Grid, List, Filter, X } from "lucide-react";
 import { getCataloguesWithBrands } from "@/lib/services/catalogueService";
-import { getAllProducts } from "@/lib/services/productService";
+import { getProductsWithBrandCurrency } from "@/lib/services/productService";
 import { Catalogue, Brand, Product } from "@/lib/supabase";
 import Link from "next/link";
 import { LazyImage } from "@/components/ui/lazy-image";
@@ -19,6 +19,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loading } from "@/components/ui/loading";
+import { formatProductPrice } from "@/lib/utils/priceFormatter";
 
 type CatalogueWithBrand = Catalogue & {
   brand: {
@@ -27,6 +28,16 @@ type CatalogueWithBrand = Catalogue & {
     location: string;
     is_verified: boolean;
     category: string;
+  };
+};
+
+type ProductWithBrand = Product & {
+  brand: {
+    name: string;
+    id: string;
+    location: string;
+    is_verified: boolean;
+    price_range?: string;
   };
 };
 
@@ -48,8 +59,10 @@ export default function CataloguesPage() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [showAllProducts, setShowAllProducts] = useState(false);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<ProductWithBrand[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<ProductWithBrand[]>(
+    []
+  );
   const [productSearch, setProductSearch] = useState("");
   const [selectedBrand, setSelectedBrand] = useState("all");
   const [selectedProductCategory, setSelectedProductCategory] = useState("all");
@@ -63,7 +76,7 @@ export default function CataloguesPage() {
         setLoading(true);
         const [catalogueData, productData] = await Promise.all([
           getCataloguesWithBrands(),
-          getAllProducts(),
+          getProductsWithBrandCurrency(),
         ]);
 
         setCatalogues(catalogueData);
@@ -371,7 +384,7 @@ export default function CataloguesPage() {
                       }
                     </p>
                     <p className="text-oma-plum font-medium">
-                      ${product.price.toFixed(2)}
+                      {formatProductPrice(product, product.brand).displayPrice}
                     </p>
                   </div>
                 </Link>
