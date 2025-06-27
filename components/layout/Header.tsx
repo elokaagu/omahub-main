@@ -176,8 +176,8 @@ export default function Header() {
               className="h-8 w-auto"
               src="/lovable-uploads/omahub-logo.png"
               alt="OmaHub"
-              width={32}
-              height={32}
+              width={90}
+              height={25}
               priority
             />
           </NavigationLink>
@@ -394,8 +394,8 @@ export default function Header() {
               className="h-8 w-auto"
               src="/lovable-uploads/omahub-logo.png"
               alt="OmaHub"
-              width={32}
-              height={32}
+              width={90}
+              height={25}
             />
           </NavigationLink>
           <button
