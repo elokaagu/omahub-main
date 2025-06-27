@@ -524,114 +524,109 @@ export default function StudioLeadsPage() {
       <div className="max-w-7xl mx-auto px-6 py-8">
         <StudioNav />
 
-        <div className="space-y-4 sm:space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="mobile-heading-responsive font-canela text-oma-plum">
-                Leads Management
-              </h1>
-              <p className="mobile-text-responsive text-oma-cocoa">
-                {filteredLeads.length} total leads
-              </p>
+        <div className="mb-8">
+          <h1 className="text-3xl font-canela text-oma-plum mb-2">
+            Leads Dashboard
+          </h1>
+          <p className="text-oma-cocoa">
+            {isSuperAdmin
+              ? "Manage all customer leads across the platform"
+              : "Track and manage your potential customers"}
+          </p>
+          {isSuperAdmin && (
+            <div className="mt-2">
+              <Badge className="bg-oma-plum text-white">
+                Super Admin View - All Leads
+              </Badge>
             </div>
+          )}
+        </div>
 
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+        {/* Filters and Search */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Filters</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
               <Input
                 placeholder="Search leads..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="mobile-interactive"
               />
-              <div className="mobile-form-grid">
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="mobile-interactive">
-                    <SelectValue placeholder="All Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="new">New</SelectItem>
-                    <SelectItem value="contacted">Contacted</SelectItem>
-                    <SelectItem value="qualified">Qualified</SelectItem>
-                    <SelectItem value="converted">Converted</SelectItem>
-                    <SelectItem value="lost">Lost</SelectItem>
-                    <SelectItem value="closed">Closed</SelectItem>
-                  </SelectContent>
-                </Select>
 
-                <Select
-                  value={priorityFilter}
-                  onValueChange={setPriorityFilter}
-                >
-                  <SelectTrigger className="mobile-interactive">
-                    <SelectValue placeholder="All Priority" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Priority</SelectItem>
-                    <SelectItem value="high">High</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="low">Low</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="new">New</SelectItem>
+                  <SelectItem value="contacted">Contacted</SelectItem>
+                  <SelectItem value="qualified">Qualified</SelectItem>
+                  <SelectItem value="converted">Converted</SelectItem>
+                  <SelectItem value="lost">Lost</SelectItem>
+                  <SelectItem value="closed">Closed</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Priority" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Priority</SelectItem>
+                  <SelectItem value="urgent">Urgent</SelectItem>
+                  <SelectItem value="high">High</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="low">Low</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={sourceFilter} onValueChange={setSourceFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Source" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Sources</SelectItem>
+                  <SelectItem value="contact_form">Contact Form</SelectItem>
+                  <SelectItem value="social_media">Social Media</SelectItem>
+                  <SelectItem value="referral">Referral</SelectItem>
+                  <SelectItem value="website">Website</SelectItem>
+                  <SelectItem value="phone">Phone</SelectItem>
+                  <SelectItem value="email">Email</SelectItem>
+                  <SelectItem value="event">Event</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="created_at">Created Date</SelectItem>
+                  <SelectItem value="estimated_value">Budget</SelectItem>
+                  <SelectItem value="last_contact_date">
+                    Last Contact
+                  </SelectItem>
+                  <SelectItem value="next_follow_up_date">
+                    Follow Up Date
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={sortOrder} onValueChange={setSortOrder}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Order" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="desc">Descending</SelectItem>
+                  <SelectItem value="asc">Ascending</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-          </div>
-
-          {/* Filters Row */}
-          <div className="mobile-form-grid lg:grid-cols-4">
-            <Select value={sourceFilter} onValueChange={setSourceFilter}>
-              <SelectTrigger className="mobile-interactive">
-                <SelectValue placeholder="All Sources" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Sources</SelectItem>
-                <SelectItem value="website">Website</SelectItem>
-                <SelectItem value="referral">Referral</SelectItem>
-                <SelectItem value="social_media">Social Media</SelectItem>
-                <SelectItem value="email">Email</SelectItem>
-                <SelectItem value="phone">Phone</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="mobile-interactive">
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="created_at">Created Date</SelectItem>
-                <SelectItem value="customer_name">Customer Name</SelectItem>
-                <SelectItem value="status">Status</SelectItem>
-                <SelectItem value="priority">Priority</SelectItem>
-                <SelectItem value="estimated_value">Value</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select value={sortOrder} onValueChange={setSortOrder}>
-              <SelectTrigger className="mobile-interactive">
-                <SelectValue placeholder="Order" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="desc">Newest First</SelectItem>
-                <SelectItem value="asc">Oldest First</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Button
-              variant="outline"
-              onClick={() => {
-                setSearchTerm("");
-                setStatusFilter("all");
-                setPriorityFilter("all");
-                setSourceFilter("all");
-                setSortBy("created_at");
-                setSortOrder("desc");
-              }}
-              className="mobile-interactive"
-            >
-              Clear Filters
-            </Button>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
         {/* Lead Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
@@ -713,63 +708,49 @@ export default function StudioLeadsPage() {
               <Card key={lead.id} className="transition-all duration-200">
                 {/* Lead Summary Row */}
                 <CardHeader
-                  className="cursor-pointer hover:bg-oma-beige/20 transition-colors mobile-interactive"
+                  className="cursor-pointer hover:bg-oma-beige/20 transition-colors"
                   onClick={() => toggleLeadExpansion(lead.id)}
                 >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex flex-col gap-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3">
                         <div className="flex-1">
-                          <CardTitle className="mobile-heading-responsive font-canela text-oma-plum flex items-center gap-2">
-                            <User className="h-5 w-5 flex-shrink-0" />
-                            <span className="truncate">
-                              {lead.customer_name}
-                            </span>
+                          <CardTitle className="text-lg font-canela text-oma-plum flex items-center gap-2">
+                            <User className="h-5 w-5" />
+                            {lead.customer_name}
                             {lead.company_name && (
-                              <span className="text-sm text-oma-cocoa font-normal hidden sm:inline">
+                              <span className="text-sm text-oma-cocoa font-normal">
                                 ({lead.company_name})
                               </span>
                             )}
                           </CardTitle>
-
-                          {/* Mobile: Company name on separate line */}
-                          {lead.company_name && (
-                            <div className="sm:hidden text-sm text-oma-cocoa mt-1">
-                              {lead.company_name}
-                            </div>
-                          )}
-
-                          {/* Contact information - responsive layout */}
-                          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mt-2 mobile-text-responsive text-oma-cocoa">
-                            <div className="flex items-center gap-1 min-w-0">
-                              <Mail className="h-4 w-4 flex-shrink-0" />
-                              <span className="truncate">
-                                {lead.customer_email}
-                              </span>
+                          <div className="flex items-center gap-4 mt-2 text-sm text-oma-cocoa">
+                            <div className="flex items-center gap-1">
+                              <Mail className="h-4 w-4" />
+                              {lead.customer_email}
                             </div>
                             {lead.customer_phone && (
                               <div className="flex items-center gap-1">
-                                <Phone className="h-4 w-4 flex-shrink-0" />
-                                <span>{lead.customer_phone}</span>
+                                <Phone className="h-4 w-4" />
+                                {lead.customer_phone}
                               </div>
                             )}
                             {lead.location && (
                               <div className="flex items-center gap-1">
-                                <MapPin className="h-4 w-4 flex-shrink-0" />
-                                <span>{lead.location}</span>
+                                <MapPin className="h-4 w-4" />
+                                {lead.location}
                               </div>
                             )}
                             {lead.brands && (
                               <div className="flex items-center gap-1">
-                                <Building className="h-4 w-4 flex-shrink-0" />
-                                <span>{lead.brands.name}</span>
+                                <Building className="h-4 w-4" />
+                                {lead.brands.name}
                               </div>
                             )}
                           </div>
                         </div>
 
-                        {/* Mobile: Badges on separate row */}
-                        <div className="flex flex-wrap items-center gap-2 sm:hidden">
+                        <div className="flex items-center gap-3">
                           <Badge className={getStatusColor(lead.status)}>
                             {lead.status.replace("_", " ")}
                           </Badge>
@@ -781,90 +762,45 @@ export default function StudioLeadsPage() {
                               ${lead.estimated_value.toLocaleString()}
                             </Badge>
                           )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => handleDeleteClick(lead, e)}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <TrashIcon className="h-4 w-4" />
+                          </Button>
+                          {expandedLead === lead.id ? (
+                            <ChevronUpIcon className="h-5 w-5 text-oma-cocoa" />
+                          ) : (
+                            <ChevronDownIcon className="h-5 w-5 text-oma-cocoa" />
+                          )}
                         </div>
                       </div>
-                    </div>
-
-                    {/* Desktop: Badges and actions in right column */}
-                    <div className="hidden sm:flex items-center gap-3 flex-shrink-0">
-                      <Badge className={getStatusColor(lead.status)}>
-                        {lead.status.replace("_", " ")}
-                      </Badge>
-                      <Badge className={getPriorityColor(lead.priority)}>
-                        {lead.priority}
-                      </Badge>
-                      {lead.estimated_value && (
-                        <Badge variant="outline">
-                          ${lead.estimated_value.toLocaleString()}
-                        </Badge>
-                      )}
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => handleDeleteClick(lead, e)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50 mobile-interactive"
-                      >
-                        <TrashIcon className="h-4 w-4" />
-                      </Button>
-                      {expandedLead === lead.id ? (
-                        <ChevronUpIcon className="h-5 w-5 text-oma-cocoa" />
-                      ) : (
-                        <ChevronDownIcon className="h-5 w-5 text-oma-cocoa" />
-                      )}
-                    </div>
-
-                    {/* Mobile: Action buttons row */}
-                    <div className="sm:hidden flex items-center gap-2 flex-shrink-0">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => handleDeleteClick(lead, e)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50 mobile-interactive"
-                      >
-                        <TrashIcon className="h-4 w-4" />
-                      </Button>
-                      {expandedLead === lead.id ? (
-                        <ChevronUpIcon className="h-5 w-5 text-oma-cocoa" />
-                      ) : (
-                        <ChevronDownIcon className="h-5 w-5 text-oma-cocoa" />
-                      )}
                     </div>
                   </div>
                 </CardHeader>
 
                 {/* Expanded Lead Details */}
                 {expandedLead === lead.id && (
-                  <CardContent className="border-t bg-oma-beige/10 mobile-padding">
+                  <CardContent className="border-t bg-oma-beige/10">
                     <Tabs defaultValue="details" className="w-full">
-                      <TabsList className="grid w-full grid-cols-3 mobile-interactive">
-                        <TabsTrigger
-                          value="details"
-                          className="mobile-interactive"
-                        >
-                          Details
-                        </TabsTrigger>
-                        <TabsTrigger
-                          value="interactions"
-                          className="mobile-interactive"
-                        >
+                      <TabsList className="grid w-full grid-cols-3">
+                        <TabsTrigger value="details">Details</TabsTrigger>
+                        <TabsTrigger value="interactions">
                           Interactions
                         </TabsTrigger>
-                        <TabsTrigger
-                          value="actions"
-                          className="mobile-interactive"
-                        >
-                          Actions
-                        </TabsTrigger>
+                        <TabsTrigger value="actions">Actions</TabsTrigger>
                       </TabsList>
 
                       <TabsContent value="details" className="space-y-4 mt-4">
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <div className="space-y-4">
                             <div>
-                              <h4 className="font-medium text-oma-plum mb-2 mobile-text-responsive">
+                              <h4 className="font-medium text-oma-plum mb-2">
                                 Lead Information
                               </h4>
-                              <div className="space-y-2 mobile-text-responsive">
+                              <div className="space-y-2 text-sm">
                                 <div>
                                   <span className="font-medium">Source:</span>{" "}
                                   {lead.source}
@@ -884,10 +820,10 @@ export default function StudioLeadsPage() {
 
                             {lead.notes && (
                               <div>
-                                <h4 className="font-medium text-oma-plum mb-2 mobile-text-responsive">
+                                <h4 className="font-medium text-oma-plum mb-2">
                                   Notes
                                 </h4>
-                                <p className="mobile-text-responsive text-oma-cocoa bg-white p-3 rounded border">
+                                <p className="text-sm text-oma-cocoa bg-white p-3 rounded border">
                                   {lead.notes}
                                 </p>
                               </div>
@@ -896,12 +832,12 @@ export default function StudioLeadsPage() {
 
                           <div className="space-y-4">
                             <div>
-                              <h4 className="font-medium text-oma-plum mb-2 mobile-text-responsive">
+                              <h4 className="font-medium text-oma-plum mb-2">
                                 Status & Priority
                               </h4>
                               <div className="space-y-3">
                                 <div>
-                                  <label className="mobile-text-responsive font-medium text-oma-cocoa">
+                                  <label className="text-sm font-medium text-oma-cocoa">
                                     Status
                                   </label>
                                   <Select
@@ -911,7 +847,7 @@ export default function StudioLeadsPage() {
                                     }
                                     disabled={updatingLeadId === lead.id}
                                   >
-                                    <SelectTrigger className="mt-1 mobile-interactive">
+                                    <SelectTrigger className="mt-1">
                                       <SelectValue />
                                       {updatingLeadId === lead.id && (
                                         <div className="ml-2 h-4 w-4 animate-spin rounded-full border-2 border-oma-plum border-t-transparent"></div>
@@ -939,10 +875,10 @@ export default function StudioLeadsPage() {
                             </div>
 
                             <div>
-                              <h4 className="font-medium text-oma-plum mb-2 mobile-text-responsive">
+                              <h4 className="font-medium text-oma-plum mb-2">
                                 Quick Actions
                               </h4>
-                              <div className="mobile-button-group">
+                              <div className="flex flex-wrap gap-2">
                                 <Button
                                   variant="outline"
                                   size="sm"
@@ -952,7 +888,6 @@ export default function StudioLeadsPage() {
                                       "_blank"
                                     )
                                   }
-                                  className="mobile-interactive"
                                 >
                                   <Mail className="mr-2 h-4 w-4" />
                                   Email
@@ -967,7 +902,6 @@ export default function StudioLeadsPage() {
                                         "_blank"
                                       )
                                     }
-                                    className="mobile-interactive"
                                   >
                                     <Phone className="mr-2 h-4 w-4" />
                                     Call

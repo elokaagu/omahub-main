@@ -309,53 +309,6 @@ html {
     -webkit-overflow-scrolling: touch;
     scroll-behavior: smooth;
   }
-
-  /* Mobile-optimized tables */
-  .mobile-table-wrapper {
-    @apply overflow-x-auto -mx-4 sm:mx-0;
-  }
-
-  .mobile-table {
-    @apply min-w-full;
-  }
-
-  /* Mobile-friendly form layouts */
-  .mobile-form-grid {
-    @apply grid grid-cols-1 sm:grid-cols-2 gap-4;
-  }
-
-  .mobile-button-group {
-    @apply flex flex-col sm:flex-row gap-3 sm:gap-4;
-  }
-
-  /* Mobile-optimized cards */
-  .mobile-card-grid {
-    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6;
-  }
-
-  /* Responsive text sizes */
-  .mobile-text-responsive {
-    @apply text-sm sm:text-base;
-  }
-
-  .mobile-heading-responsive {
-    @apply text-lg sm:text-xl md:text-2xl;
-  }
-
-  /* Mobile-friendly modals and dialogs */
-  .mobile-dialog {
-    @apply mx-4 sm:mx-auto max-w-md sm:max-w-lg;
-  }
-
-  /* Touch-friendly interactive elements */
-  .mobile-interactive {
-    @apply min-h-[44px] min-w-[44px] p-3 sm:p-2;
-  }
-
-  /* Mobile-optimized navigation */
-  .mobile-nav-item {
-    @apply block w-full text-left px-4 py-3 sm:inline-block sm:w-auto sm:px-3 sm:py-2;
-  }
 }
 
 /* Mobile-first responsive typography */
@@ -390,55 +343,6 @@ html {
   textarea {
     min-height: 44px;
     font-size: 16px; /* Prevents zoom on iOS */
-  }
-
-  /* Mobile-specific table styles */
-  table {
-    font-size: 14px;
-  }
-
-  th,
-  td {
-    padding: 8px 12px;
-  }
-
-  /* Adjust modal and dialog sizing */
-  [role="dialog"] {
-    margin: 16px;
-    max-height: calc(100vh - 32px);
-  }
-
-  /* Improve mobile navigation */
-  .mobile-menu {
-    max-height: calc(100vh - 64px);
-    overflow-y: auto;
-  }
-}
-
-/* Tablet-specific optimizations */
-@media (min-width: 641px) and (max-width: 1024px) {
-  .tablet-optimized {
-    @apply px-6 py-4;
-  }
-
-  /* Tablet-friendly grid layouts */
-  .tablet-grid {
-    @apply grid-cols-2 lg:grid-cols-3;
-  }
-}
-
-/* Enhanced mobile touch interactions */
-@media (hover: none) and (pointer: coarse) {
-  /* Touch device optimizations */
-  button,
-  [role="button"],
-  .clickable {
-    @apply active:scale-95 transition-transform duration-150;
-  }
-
-  /* Remove hover effects on touch devices */
-  .hover-only {
-    @apply hover:bg-transparent hover:text-current;
   }
 }
 

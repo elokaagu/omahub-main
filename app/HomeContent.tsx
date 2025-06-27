@@ -29,8 +29,6 @@ import { Carousel } from "@/components/ui/carousel-custom";
 import { Loading } from "@/components/ui/loading";
 import { InstantImage } from "@/components/ui/instant-image";
 import { occasions, occasionToCategoryMapping } from "@/lib/data/directory";
-import { useRouter } from "next/navigation";
-import { MapPin, Star } from "lucide-react";
 
 interface Brand {
   id: string;
@@ -301,7 +299,6 @@ export default function HomeContent() {
     [key: string]: string;
   }>({});
   const [occasionLoading, setOccasionLoading] = useState(true);
-  const router = useRouter();
 
   // Load dynamic category images - run only once
   useEffect(() => {
@@ -542,48 +539,17 @@ export default function HomeContent() {
   return (
     <main className="flex-1">
       {/* Hero Section */}
-      <section className="relative min-h-[60vh] sm:min-h-[70vh] md:min-h-[80vh] flex items-center justify-center overflow-hidden bg-gradient-to-br from-oma-beige via-white to-oma-beige">
-        <div className="absolute inset-0 bg-gradient-to-br from-oma-beige/30 via-transparent to-oma-beige/20" />
-
-        <div className="relative z-10 text-center mobile-padding max-w-4xl mx-auto">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-canela text-oma-black leading-tight mb-4 sm:mb-6">
-            Discover Amazing
-            <br />
-            <span className="text-oma-plum">Nigerian Brands</span>
-          </h1>
-          <p className="mobile-text-responsive md:text-lg text-oma-cocoa mb-6 sm:mb-8 max-w-2xl mx-auto leading-relaxed">
-            Connect with authentic Nigerian brands, discover unique products,
-            and support local businesses that celebrate our rich culture and
-            craftsmanship.
-          </p>
-          <div className="mobile-button-group justify-center max-w-md mx-auto">
-            <Button
-              size="lg"
-              className="bg-oma-plum hover:bg-oma-plum/90 text-white mobile-interactive"
-              onClick={() => {
-                const brandsSection = document.getElementById("brands-section");
-                brandsSection?.scrollIntoView({ behavior: "smooth" });
-              }}
-            >
-              Explore Brands
-            </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white mobile-interactive"
-              onClick={() => router.push("/brands")}
-            >
-              View All Brands
-            </Button>
-          </div>
-        </div>
-
-        {/* Floating elements for visual interest - hidden on mobile */}
-        <div className="absolute inset-0 pointer-events-none hidden sm:block">
-          <div className="absolute top-20 left-10 w-20 h-20 bg-oma-plum/10 rounded-full animate-pulse" />
-          <div className="absolute bottom-32 right-16 w-16 h-16 bg-oma-beige/20 rounded-full animate-pulse delay-1000" />
-          <div className="absolute top-1/3 right-20 w-12 h-12 bg-oma-cocoa/10 rounded-full animate-pulse delay-500" />
-        </div>
+      <section className="relative">
+        <Carousel
+          items={carouselItems}
+          autoplay={true}
+          interval={6000}
+          className="min-h-screen"
+          heroTitleClassName="font-canela text-7xl md:text-9xl mb-4 tracking-tight whitespace-pre-line"
+          showIndicators={true}
+          showControls={false}
+          overlay={false}
+        />
       </section>
 
       {/* Categories Section */}
@@ -843,103 +809,120 @@ export default function HomeContent() {
       </section>
 
       {/* Brand Categories */}
-      <div
-        className="mobile-padding py-8 sm:py-12 md:py-16"
-        id="brands-section"
-      >
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-8 sm:mb-12">
-            <h2 className="mobile-heading-responsive md:text-4xl font-canela text-oma-black mb-4">
-              Explore by Category
-            </h2>
-            <p className="mobile-text-responsive md:text-lg text-oma-cocoa max-w-2xl mx-auto">
-              Discover authentic Nigerian brands across various categories
-            </p>
-          </div>
+      {categories.length > 0 ? (
+        categories
+          .filter((category) => {
+            // Show all categories with 1+ brands (reduced from 4+)
+            // This ensures we display all categories that have brands
+            return category.brands.length >= 1;
+          })
+          .map((category, index) => (
+            <section
+              key={category.title}
+              className={`py-16 px-6 ${
+                index % 2 === 0 ? "bg-oma-cream" : "bg-oma-beige/30"
+              }`}
+            >
+              <div className="max-w-7xl mx-auto">
+                <FadeIn delay={0.1}>
+                  <SectionHeader
+                    title={category.title}
+                    subtitle={category.customCta}
+                    titleClassName="text-2xl md:text-3xl font-canela"
+                    subtitleClassName="text-base text-oma-cocoa/80"
+                  />
+                </FadeIn>
 
-          {isLoading ? (
-            <div className="flex justify-center items-center h-48 sm:h-64">
-              <div className="animate-spin h-6 w-6 sm:h-8 sm:w-8 border-4 border-oma-plum border-t-transparent rounded-full"></div>
-            </div>
-          ) : (
-            <div className="space-y-8 sm:space-y-12 md:space-y-16">
-              {categories.map((category, index) => (
-                <section
-                  key={category.title}
-                  className={`${
-                    index % 2 === 1 ? "bg-oma-beige/20" : ""
-                  } ${index % 2 === 1 ? "-mx-4 sm:-mx-6 px-4 sm:px-6" : ""} py-6 sm:py-8 rounded-lg`}
-                >
-                  <div className="mb-6 sm:mb-8">
-                    <h3 className="mobile-heading-responsive md:text-3xl font-canela text-oma-black mb-2">
-                      {category.title}
-                    </h3>
-                    <p className="mobile-text-responsive text-oma-cocoa">
-                      {category.customCta ||
-                        `Discover amazing ${category.title.toLowerCase()} brands`}
-                    </p>
-                  </div>
-
-                  <div className="mt-6 sm:mt-8 overflow-hidden">
-                    {isLoading ? (
-                      <div className="flex justify-center items-center h-48 sm:h-64">
-                        <div className="animate-spin h-6 w-6 sm:h-8 sm:w-8 border-4 border-oma-plum border-t-transparent rounded-full"></div>
-                      </div>
-                    ) : category.brands.length > 0 ? (
-                      <div className="relative">
-                        <div className="flex space-x-3 sm:space-x-6 overflow-x-auto pb-4 scrollbar-hide mobile-padding sm:px-0 -mx-4 sm:mx-0">
-                          {category.brands.map((brand) => (
-                            <Link
-                              key={brand.id}
-                              href={`/brand/${brand.id}`}
-                              className="flex-none w-[220px] sm:w-[280px] group block bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow mobile-interactive"
-                            >
-                              <div className="aspect-[4/5] relative">
-                                <LazyImage
-                                  src={brand.image}
-                                  alt={brand.name}
-                                  fill
-                                  sizes="(max-width: 640px) 220px, 280px"
-                                  className="object-cover transition-transform duration-300 group-hover:scale-105"
-                                  aspectRatio="4/5"
-                                  quality={80}
-                                />
-                              </div>
-                              <div className="p-3 sm:p-4">
-                                <h4 className="font-medium text-oma-black mb-1 line-clamp-1 mobile-text-responsive">
+                <div className="mt-8 sm:mt-10 overflow-hidden">
+                  {isLoading ? (
+                    <div className="flex justify-center items-center h-48 sm:h-64">
+                      <div className="animate-spin h-6 w-6 sm:h-8 sm:w-8 border-4 border-oma-plum border-t-transparent rounded-full"></div>
+                    </div>
+                  ) : category.brands.length > 0 ? (
+                    <div className="relative">
+                      <div className="flex space-x-3 sm:space-x-6 overflow-x-auto pb-4 scrollbar-hide px-4 sm:px-0">
+                        {category.brands.map((brand) => (
+                          <Link
+                            key={brand.id}
+                            href={`/brand/${brand.id}`}
+                            className="flex-none w-[220px] sm:w-[280px] group block bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+                          >
+                            <div className="aspect-[4/5] relative">
+                              <LazyImage
+                                src={brand.image}
+                                alt={brand.name}
+                                fill
+                                sizes="(max-width: 640px) 220px, 280px"
+                                className="object-cover transition-transform duration-300 group-hover:scale-105"
+                                aspectRatio="4/5"
+                                quality={80}
+                              />
+                            </div>
+                            <div className="p-3 sm:p-4">
+                              <div className="flex items-center justify-between mb-2">
+                                <h3 className="font-semibold text-sm sm:text-lg line-clamp-1">
                                   {brand.name}
-                                </h4>
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center text-xs sm:text-sm text-oma-cocoa">
-                                    <MapPin className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                                    <span className="truncate">
-                                      {brand.location}
-                                    </span>
-                                  </div>
-                                  <div className="flex items-center text-xs sm:text-sm">
-                                    <Star className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-400 mr-1" />
-                                    <span>{brand.rating.toFixed(1)}</span>
-                                  </div>
-                                </div>
+                                </h3>
+                                {brand.isVerified && (
+                                  <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-oma-plum flex-shrink-0" />
+                                )}
                               </div>
-                            </Link>
-                          ))}
-                        </div>
+                              <div className="flex flex-wrap items-center gap-1 sm:gap-2 text-xs sm:text-sm text-oma-cocoa">
+                                <span className="px-2 py-1 bg-oma-beige/50 rounded text-xs">
+                                  {category.title}
+                                </span>
+                                <span className="hidden sm:inline">•</span>
+                                <span className="truncate">
+                                  {brand.location}
+                                </span>
+                                <span className="hidden sm:inline">•</span>
+                                <span className="flex items-center">
+                                  <span className="sm:hidden">★</span>
+                                  <span className="hidden sm:inline">★</span>
+                                  <span className="ml-1">{brand.rating}</span>
+                                </span>
+                              </div>
+                            </div>
+                          </Link>
+                        ))}
                       </div>
-                    ) : (
-                      <div className="text-center py-8 sm:py-12">
-                        <p className="mobile-text-responsive text-oma-cocoa">
-                          No brands available in this category yet.
-                        </p>
-                      </div>
-                    )}
+                    </div>
+                  ) : null}
+                </div>
+
+                <SlideUp delay={0.3}>
+                  <div className="mt-6 sm:mt-8 text-center">
+                    <Button
+                      asChild
+                      variant="outline"
+                      className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white min-h-[44px] text-sm sm:text-base"
+                    >
+                      <Link
+                        href={`/directory?category=${encodeURIComponent(
+                          category.title
+                        )}`}
+                      >
+                        View All {category.title}
+                      </Link>
+                    </Button>
                   </div>
-                </section>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
+                </SlideUp>
+              </div>
+            </section>
+          ))
+      ) : (
+        <section className="py-16 px-6 bg-oma-cream">
+          <div className="max-w-7xl mx-auto">
+            <FadeIn>
+              <div className="flex justify-center items-center h-64 bg-white rounded-lg shadow-sm">
+                <p className="text-oma-cocoa text-lg">
+                  Loading brand categories...
+                </p>
+              </div>
+            </FadeIn>
+          </div>
+        </section>
+      )}
 
       {/* CTA Section */}
       <section className="py-12 sm:py-16 px-4 sm:px-6">
