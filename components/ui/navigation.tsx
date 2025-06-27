@@ -23,6 +23,9 @@ const fallbackNavigationItems: NavigationItem[] = [
     items: [
       { title: "Ready to Wear", href: "/directory?category=Ready+to+Wear" },
       { title: "Accessories", href: "/directory?category=Accessories" },
+      { title: "Jewelry", href: "/directory?category=Jewelry" },
+      { title: "Casual Wear", href: "/directory?category=Casual+Wear" },
+      { title: "Formal Wear", href: "/directory?category=Formal+Wear" },
       { title: "Vacation", href: "/directory?category=Vacation" },
     ],
   },
@@ -34,6 +37,7 @@ const fallbackNavigationItems: NavigationItem[] = [
       { title: "Bridal", href: "/directory?category=Bridal" },
       { title: "Custom Design", href: "/directory?category=Custom+Design" },
       { title: "Event Wear", href: "/directory?category=Event+Wear" },
+      { title: "Couture", href: "/directory?category=Couture" },
     ],
   },
 ];

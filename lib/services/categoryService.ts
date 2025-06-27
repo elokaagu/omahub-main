@@ -76,13 +76,14 @@ export function mapCategoriesToNavigation(
   categories: string[],
   counts: Record<string, number>
 ): NavigationCategory[] {
-  // Define category mappings
+  // Define category mappings - Updated to include ALL database categories
   const collectionsCategories = [
     "Ready to Wear",
     "Accessories",
-    "Vacation",
+    "Jewelry",
     "Casual Wear",
     "Formal Wear",
+    "Vacation", // Keep for future use
   ];
   const tailoringCategories = [
     "Bridal",
@@ -96,7 +97,7 @@ export function mapCategoriesToNavigation(
 
   const navigationCategories: NavigationCategory[] = [];
 
-  // Collections navigation
+  // Collections navigation - include all categories that fit collections
   const collectionsItems = categories
     .filter((cat) => collectionsCategories.includes(cat))
     .map((cat) => ({
@@ -104,7 +105,8 @@ export function mapCategoriesToNavigation(
       href: `/directory?category=${encodeURIComponent(cat)}`,
       count: counts[cat] || 0,
     }))
-    .filter((item) => item.count > 0); // Only show categories with brands
+    .filter((item) => item.count > 0) // Only show categories with brands
+    .sort((a, b) => b.count - a.count); // Sort by count descending
 
   if (collectionsItems.length > 0) {
     navigationCategories.push({
@@ -115,7 +117,7 @@ export function mapCategoriesToNavigation(
     });
   }
 
-  // Tailoring navigation
+  // Tailoring navigation - include all categories that fit tailoring
   const tailoringItems = categories
     .filter((cat) => tailoringCategories.includes(cat))
     .map((cat) => ({
@@ -123,7 +125,8 @@ export function mapCategoriesToNavigation(
       href: `/directory?category=${encodeURIComponent(cat)}`,
       count: counts[cat] || 0,
     }))
-    .filter((item) => item.count > 0); // Only show categories with brands
+    .filter((item) => item.count > 0) // Only show categories with brands
+    .sort((a, b) => b.count - a.count); // Sort by count descending
 
   if (tailoringItems.length > 0) {
     navigationCategories.push({
