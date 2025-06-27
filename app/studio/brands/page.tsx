@@ -40,7 +40,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { AuthImage } from "@/components/ui/auth-image";
 import { Loading } from "@/components/ui/loading";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Eye } from "lucide-react";
 import { toast } from "sonner";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
@@ -200,24 +200,24 @@ export default function BrandsPage() {
   const isAdmin = user.role === "admin" || user.role === "super_admin";
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-8 gap-4">
+    <div className="max-w-7xl mx-auto mobile-padding py-4 sm:py-8">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 sm:mb-8 gap-4">
         <div>
-          <h1 className="text-3xl font-canela text-gray-900">
+          <h1 className="mobile-heading-responsive font-canela text-gray-900">
             {isBrandOwner ? "Your Brands" : "Brands"}
           </h1>
           {isBrandOwner && (
-            <p className="text-sm text-gray-600 mt-1">
+            <p className="mobile-text-responsive text-gray-600 mt-1">
               Manage your brand information and settings
             </p>
           )}
         </div>
-        <div className="flex gap-2">
+        <div className="mobile-button-group">
           <Button
             onClick={fetchData}
             variant="outline"
             size="sm"
-            className="flex items-center gap-2"
+            className="mobile-interactive flex items-center gap-2"
           >
             <RefreshCw className="h-4 w-4" />
             Refresh
@@ -225,7 +225,7 @@ export default function BrandsPage() {
           {isAdmin && (
             <Button
               asChild
-              className="bg-oma-plum hover:bg-oma-plum/90 w-full sm:w-auto"
+              className="bg-oma-plum hover:bg-oma-plum/90 w-full sm:w-auto mobile-interactive"
             >
               <Link
                 href="/studio/brands/create"
@@ -239,12 +239,12 @@ export default function BrandsPage() {
         </div>
       </div>
 
-      <Card className="mb-8">
+      <Card className="mb-6 sm:mb-8">
         <CardHeader>
-          <CardTitle>
+          <CardTitle className="mobile-heading-responsive">
             {isBrandOwner ? "Your Brand Management" : "Brand Management"}
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="mobile-text-responsive">
             {isBrandOwner
               ? "Manage your brands in the directory"
               : "Manage all brands in the directory"}
@@ -255,7 +255,7 @@ export default function BrandsPage() {
             <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
             <Input
               placeholder="Search brands by name, category, or location..."
-              className="pl-10"
+              className="pl-10 mobile-interactive"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -264,9 +264,9 @@ export default function BrandsPage() {
       </Card>
 
       {filteredBrands.length === 0 ? (
-        <div className="bg-gray-50 border border-dashed border-gray-300 rounded-lg p-8 text-center">
+        <div className="bg-gray-50 border border-dashed border-gray-300 rounded-lg p-6 sm:p-8 text-center">
           <Package className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-          <p className="text-gray-600 mb-4">
+          <p className="text-gray-600 mb-4 mobile-text-responsive">
             {searchQuery
               ? "No brands match your search criteria"
               : isBrandOwner
@@ -274,7 +274,10 @@ export default function BrandsPage() {
                 : "No brands have been added yet"}
           </p>
           {!searchQuery && isAdmin && (
-            <Button asChild className="bg-oma-plum hover:bg-oma-plum/90">
+            <Button
+              asChild
+              className="bg-oma-plum hover:bg-oma-plum/90 mobile-interactive"
+            >
               <Link href="/studio/brands/create">Create Your First Brand</Link>
             </Button>
           )}
@@ -282,83 +285,108 @@ export default function BrandsPage() {
       ) : (
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
           <div className="p-4 border-b border-gray-200">
-            <p className="text-sm text-gray-500">
+            <p className="mobile-text-responsive text-gray-500">
               Showing {filteredBrands.length} brand
               {filteredBrands.length === 1 ? "" : "s"}
               {isBrandOwner && " assigned to your account"}
             </p>
           </div>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Brand</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Location</TableHead>
-                <TableHead>Rating</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredBrands.map((brand) => (
-                <TableRow
-                  key={brand.id}
-                  className="cursor-pointer hover:bg-gray-50"
-                  onClick={() => handleBrandClick(brand.id)}
-                >
-                  <TableCell className="font-medium">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-md overflow-hidden bg-gray-100 flex-shrink-0">
-                        {brand.image && (
-                          <AuthImage
-                            src={brand.image}
-                            alt={brand.name}
-                            aspectRatio="square"
-                            className="w-full h-full"
-                            sizes="40px"
-                            quality={60}
-                          />
-                        )}
-                      </div>
-                      <span>{brand.name}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>{brand.category}</TableCell>
-                  <TableCell>{brand.location}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center">
-                      <Star className="h-4 w-4 text-yellow-400 mr-1" />
-                      {brand.rating.toFixed(1)}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {brand.is_verified ? (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        <CheckCircle className="h-3 w-3 mr-1" />
-                        Verified
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                        Unverified
-                      </span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleBrandClick(brand.id);
-                      }}
-                    >
-                      View
-                    </Button>
-                  </TableCell>
+          <div className="mobile-table-wrapper">
+            <Table className="mobile-table">
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="min-w-[200px]">Brand</TableHead>
+                  <TableHead className="min-w-[120px] hidden sm:table-cell">
+                    Category
+                  </TableHead>
+                  <TableHead className="min-w-[150px] hidden md:table-cell">
+                    Location
+                  </TableHead>
+                  <TableHead className="min-w-[80px]">Rating</TableHead>
+                  <TableHead className="min-w-[100px]">Status</TableHead>
+                  <TableHead className="text-right min-w-[100px]">
+                    Actions
+                  </TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredBrands.map((brand) => (
+                  <TableRow
+                    key={brand.id}
+                    className="cursor-pointer hover:bg-gray-50"
+                    onClick={() => handleBrandClick(brand.id)}
+                  >
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-md overflow-hidden bg-gray-100 flex-shrink-0">
+                          {brand.image && (
+                            <AuthImage
+                              src={brand.image}
+                              alt={brand.name}
+                              aspectRatio="square"
+                              className="w-full h-full"
+                              sizes="40px"
+                              quality={60}
+                            />
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="font-medium truncate">
+                            {brand.name}
+                          </div>
+                          <div className="mobile-text-responsive text-gray-500 truncate sm:hidden">
+                            {brand.category}
+                          </div>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="hidden sm:table-cell">
+                      {brand.category}
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell">
+                      {brand.location}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center">
+                        <Star className="h-4 w-4 text-yellow-400 mr-1" />
+                        <span className="mobile-text-responsive">
+                          {brand.rating.toFixed(1)}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {brand.is_verified ? (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          <span className="hidden sm:inline">Verified</span>
+                          <span className="sm:hidden">✓</span>
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                          <span className="hidden sm:inline">Unverified</span>
+                          <span className="sm:hidden">—</span>
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleBrandClick(brand.id);
+                        }}
+                        className="mobile-interactive"
+                      >
+                        <Eye className="h-4 w-4 sm:mr-1" />
+                        <span className="hidden sm:inline">View</span>
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </div>
       )}
     </div>

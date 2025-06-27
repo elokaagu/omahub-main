@@ -165,15 +165,15 @@ export default function StudioLayout({
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Studio Header */}
-      <header className="w-full bg-white border-b border-gray-200 shadow-sm fixed top-0 left-0 right-0 z-50 h-16 flex items-center">
-        <div className="container mx-auto px-4 flex justify-between items-center">
+      <header className="w-full bg-white border-b border-gray-200 shadow-sm fixed top-0 left-0 right-0 z-50 h-16 flex items-center safe-area-padding">
+        <div className="container mx-auto mobile-padding flex justify-between items-center">
           {/* Mobile sidebar toggle */}
           <div className="lg:hidden flex items-center">
             <Button
               variant="outline"
               size="icon"
               onClick={toggleSidebar}
-              className="bg-white"
+              className="bg-white mobile-interactive"
             >
               {sidebarOpen ? (
                 <X className="h-5 w-5" />
@@ -187,7 +187,7 @@ export default function StudioLayout({
           <div className="hidden lg:flex items-center">
             <button
               onClick={handleBackToSite}
-              className="hover:opacity-80 transition-opacity"
+              className="hover:opacity-80 transition-opacity mobile-interactive"
             >
               <Image
                 src="/lovable-uploads/omahub-logo.png"
@@ -204,7 +204,7 @@ export default function StudioLayout({
           <div className="lg:hidden flex-1 flex justify-center">
             <button
               onClick={handleBackToSite}
-              className="hover:opacity-80 transition-opacity"
+              className="hover:opacity-80 transition-opacity mobile-interactive"
             >
               <Image
                 src="/lovable-uploads/omahub-logo.png"
@@ -220,7 +220,7 @@ export default function StudioLayout({
           <div className="hidden md:flex items-center space-x-4">
             <button
               onClick={handleBackToSite}
-              className="text-sm text-gray-600 hover:text-oma-plum transition-colors"
+              className="mobile-text-responsive text-gray-600 hover:text-oma-plum transition-colors mobile-interactive"
             >
               Back to Site
             </button>
@@ -238,30 +238,32 @@ export default function StudioLayout({
       <aside
         className={`bg-white w-64 border-r border-gray-200 fixed inset-y-0 left-0 z-40 transition-transform duration-300 ease-in-out lg:translate-x-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } mt-16`}
+        } mt-16 safe-area-padding`}
       >
-        <div className="p-6 h-full flex flex-col">
+        <div className="p-4 sm:p-6 h-full flex flex-col mobile-menu">
           {/* Studio title only */}
-          <div className="mb-8">
-            <h1 className="text-2xl font-canela text-oma-plum">Studio</h1>
+          <div className="mb-6 sm:mb-8">
+            <h1 className="text-xl sm:text-2xl font-canela text-oma-plum">
+              Studio
+            </h1>
           </div>
 
           <nav className="space-y-1 flex-1">
             <NavigationLink
               href="/studio"
-              className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100"
+              className="mobile-nav-item text-gray-700 rounded-md hover:bg-gray-100 transition-colors"
               onClick={() => setSidebarOpen(false)}
             >
-              <Home className="h-5 w-5" />
+              <Home className="h-5 w-5 mr-3 inline" />
               <span>Dashboard</span>
             </NavigationLink>
             {permissions.includes("studio.brands.manage") && (
               <NavigationLink
                 href="/studio/brands"
-                className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100"
+                className="mobile-nav-item text-gray-700 rounded-md hover:bg-gray-100 transition-colors"
                 onClick={() => setSidebarOpen(false)}
               >
-                <Package className="h-5 w-5" />
+                <Package className="h-5 w-5 mr-3 inline" />
                 <span>
                   {user?.role === "brand_admin" ? "Your Brands" : "Brands"}
                 </span>
@@ -270,10 +272,10 @@ export default function StudioLayout({
             {permissions.includes("studio.catalogues.manage") && (
               <NavigationLink
                 href="/studio/catalogues"
-                className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100"
+                className="mobile-nav-item text-gray-700 rounded-md hover:bg-gray-100 transition-colors"
                 onClick={() => setSidebarOpen(false)}
               >
-                <ImageIcon className="h-5 w-5" />
+                <ImageIcon className="h-5 w-5 mr-3 inline" />
                 <span>
                   {user?.role === "brand_admin"
                     ? "Your Catalogues"
@@ -284,10 +286,10 @@ export default function StudioLayout({
             {(user?.role === "super_admin" || user?.role === "brand_admin") && (
               <NavigationLink
                 href="/studio/products"
-                className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100"
+                className="mobile-nav-item text-gray-700 rounded-md hover:bg-gray-100 transition-colors"
                 onClick={() => setSidebarOpen(false)}
               >
-                <ShoppingBag className="h-5 w-5" />
+                <ShoppingBag className="h-5 w-5 mr-3 inline" />
                 <span>
                   {user?.role === "brand_admin" ? "Your Products" : "Products"}
                 </span>
@@ -296,40 +298,40 @@ export default function StudioLayout({
             {user?.role === "super_admin" && (
               <NavigationLink
                 href="/studio/hero"
-                className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100"
+                className="mobile-nav-item text-gray-700 rounded-md hover:bg-gray-100 transition-colors"
                 onClick={() => setSidebarOpen(false)}
               >
-                <Monitor className="h-5 w-5" />
+                <Monitor className="h-5 w-5 mr-3 inline" />
                 <span>Hero Carousel</span>
               </NavigationLink>
             )}
             {user?.role === "super_admin" && (
               <NavigationLink
                 href="/studio/spotlight"
-                className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100"
+                className="mobile-nav-item text-gray-700 rounded-md hover:bg-gray-100 transition-colors"
                 onClick={() => setSidebarOpen(false)}
               >
-                <ImageIcon className="h-5 w-5" />
+                <ImageIcon className="h-5 w-5 mr-3 inline" />
                 <span>Spotlight</span>
               </NavigationLink>
             )}
             {user?.role === "super_admin" && (
               <NavigationLink
                 href="/studio/users"
-                className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100"
+                className="mobile-nav-item text-gray-700 rounded-md hover:bg-gray-100 transition-colors"
                 onClick={() => setSidebarOpen(false)}
               >
-                <Users className="h-5 w-5" />
+                <Users className="h-5 w-5 mr-3 inline" />
                 <span>Users</span>
               </NavigationLink>
             )}
             {(user?.role === "super_admin" || user?.role === "brand_admin") && (
               <NavigationLink
                 href="/studio/reviews"
-                className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100"
+                className="mobile-nav-item text-gray-700 rounded-md hover:bg-gray-100 transition-colors"
                 onClick={() => setSidebarOpen(false)}
               >
-                <MessageSquare className="h-5 w-5" />
+                <MessageSquare className="h-5 w-5 mr-3 inline" />
                 <span>
                   {user?.role === "brand_admin" ? "Your Reviews" : "Reviews"}
                 </span>
@@ -338,10 +340,10 @@ export default function StudioLayout({
             {(user?.role === "super_admin" || user?.role === "brand_admin") && (
               <NavigationLink
                 href="/studio/inbox"
-                className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100"
+                className="mobile-nav-item text-gray-700 rounded-md hover:bg-gray-100 transition-colors"
                 onClick={() => setSidebarOpen(false)}
               >
-                <Inbox className="h-5 w-5" />
+                <Inbox className="h-5 w-5 mr-3 inline" />
                 <span>
                   {user?.role === "brand_admin" ? "Your Inbox" : "Inbox"}
                 </span>
@@ -349,19 +351,19 @@ export default function StudioLayout({
             )}
             <NavigationLink
               href="/studio/profile"
-              className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100"
+              className="mobile-nav-item text-gray-700 rounded-md hover:bg-gray-100 transition-colors"
               onClick={() => setSidebarOpen(false)}
             >
-              <User className="h-5 w-5" />
+              <User className="h-5 w-5 mr-3 inline" />
               <span>Profile</span>
             </NavigationLink>
             {permissions.includes("studio.settings.manage") && (
               <NavigationLink
                 href="/studio/settings"
-                className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100"
+                className="mobile-nav-item text-gray-700 rounded-md hover:bg-gray-100 transition-colors"
                 onClick={() => setSidebarOpen(false)}
               >
-                <Settings className="h-5 w-5" />
+                <Settings className="h-5 w-5 mr-3 inline" />
                 <span>Settings</span>
               </NavigationLink>
             )}
@@ -372,19 +374,19 @@ export default function StudioLayout({
                 setSidebarOpen(false);
                 handleBackToSite();
               }}
-              className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100 w-full lg:hidden border-t border-gray-200 mt-4 pt-4"
+              className="mobile-nav-item text-gray-700 rounded-md hover:bg-gray-100 w-full lg:hidden border-t border-gray-200 mt-4 pt-4 transition-colors"
             >
-              <Home className="h-5 w-5" />
+              <Home className="h-5 w-5 mr-3 inline" />
               <span>Back to Site</span>
             </button>
           </nav>
 
-          <div className="pt-6 border-t border-gray-200 mt-auto">
+          <div className="pt-4 sm:pt-6 border-t border-gray-200 mt-auto">
             <button
               onClick={handleSignOut}
-              className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100 w-full"
+              className="mobile-nav-item text-gray-700 rounded-md hover:bg-gray-100 w-full transition-colors"
             >
-              <LogOut className="h-5 w-5" />
+              <LogOut className="h-5 w-5 mr-3 inline" />
               <span>Sign Out</span>
             </button>
           </div>
@@ -393,7 +395,7 @@ export default function StudioLayout({
 
       {/* Main Content */}
       <main className="flex-1 lg:ml-64 mt-16 overflow-auto">
-        <div className="h-full">{children}</div>
+        <div className="h-full mobile-padding sm:p-6">{children}</div>
       </main>
 
       {/* Overlay for mobile */}
@@ -403,8 +405,6 @@ export default function StudioLayout({
           onClick={() => setSidebarOpen(false)}
         />
       )}
-
-      
     </div>
   );
 }
