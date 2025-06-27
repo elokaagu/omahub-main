@@ -172,14 +172,20 @@ export default function Header() {
         <div className="flex lg:flex-1">
           <NavigationLink href="/" className="-m-1.5 p-1.5">
             <span className="sr-only">OmaHub</span>
-            <Image
-              className="h-8 w-auto"
-              src="/lovable-uploads/omahub-logo.png"
-              alt="OmaHub"
-              width={90}
-              height={25}
-              priority
-            />
+            <div className="relative">
+              <Image
+                className="h-8 w-auto"
+                src={
+                  scrolled || !isHomePage
+                    ? "/omahub-logo-dark.png"
+                    : "/omahub-logo-light.png"
+                }
+                alt="OmaHub"
+                width={120}
+                height={32}
+                priority
+              />
+            </div>
           </NavigationLink>
         </div>
 
@@ -392,10 +398,10 @@ export default function Header() {
             <span className="sr-only">OmaHub</span>
             <Image
               className="h-8 w-auto"
-              src="/lovable-uploads/omahub-logo.png"
+              src="/omahub-logo-dark.png"
               alt="OmaHub"
-              width={90}
-              height={25}
+              width={120}
+              height={32}
             />
           </NavigationLink>
           <button
