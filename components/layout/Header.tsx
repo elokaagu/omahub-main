@@ -220,16 +220,18 @@ export default function Header() {
                   <NavigationMenuItem key={category.title}>
                     <NavigationMenuTrigger
                       className={cn(
-                        "text-sm font-semibold leading-6 gap-x-2 bg-transparent",
+                        "text-sm font-semibold leading-6 gap-x-2 bg-transparent border-none shadow-none",
+                        "data-[state=open]:bg-transparent data-[state=open]:text-current",
+                        "focus:bg-transparent focus:text-current focus:outline-none",
                         scrolled || !isHomePage
-                          ? "text-oma-black hover:text-oma-plum"
-                          : "text-white hover:text-white/80"
+                          ? "text-oma-black hover:text-oma-plum data-[state=open]:text-oma-plum"
+                          : "text-white hover:text-white/80 data-[state=open]:text-white"
                       )}
                     >
                       {category.title}
                     </NavigationMenuTrigger>
                     <NavigationMenuContent>
-                      <div className="w-screen max-w-md">
+                      <div className="w-screen max-w-md bg-white border border-gray-200 shadow-lg rounded-lg">
                         <div className="p-4">
                           <div className="mb-4">
                             <h3 className="text-sm font-medium text-gray-900">
@@ -299,9 +301,10 @@ export default function Header() {
                   <NavigationMenuItem>
                     <NavigationMenuTrigger
                       className={cn(
+                        "border-none shadow-none data-[state=open]:bg-transparent focus:bg-transparent focus:outline-none",
                         scrolled || !isHomePage
-                          ? "bg-oma-plum text-white hover:bg-oma-plum/90"
-                          : "bg-white text-oma-plum hover:bg-white/90"
+                          ? "bg-oma-plum text-white hover:bg-oma-plum/90 data-[state=open]:bg-oma-plum/90"
+                          : "bg-white text-oma-plum hover:bg-white/90 data-[state=open]:bg-white/90"
                       )}
                     >
                       {user.avatar_url ? (
@@ -349,7 +352,7 @@ export default function Header() {
                               <button
                                 onClick={handleStudioNavigation}
                                 disabled={isNavigatingToStudio}
-                                className="flex items-center gap-2 w-full rounded-md p-2 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-oma-plum transition-colors disabled:opacity-50"
+                                className="flex items-center gap-2 w-full rounded-md p-2 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-oma-plum transition-colors disabled:opacity-50 text-left"
                               >
                                 Studio {isNavigatingToStudio && "..."}
                               </button>
@@ -360,7 +363,7 @@ export default function Header() {
                           <NavigationMenuLink asChild>
                             <button
                               onClick={handleSignOut}
-                              className="flex items-center gap-2 w-full rounded-md p-2 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+                              className="flex items-center gap-2 w-full rounded-md p-2 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors text-left"
                             >
                               Sign Out
                             </button>
