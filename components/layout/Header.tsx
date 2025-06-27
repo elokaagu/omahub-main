@@ -175,11 +175,7 @@ export default function Header() {
             <div className="relative">
               <Image
                 className="h-8 w-auto"
-                src={
-                  scrolled || !isHomePage
-                    ? "/omahub-logo-dark.png"
-                    : "/omahub-logo-light.png"
-                }
+                src="/lovable-uploads/omahub-logo.png"
                 alt="OmaHub"
                 width={120}
                 height={32}
@@ -398,7 +394,7 @@ export default function Header() {
             <span className="sr-only">OmaHub</span>
             <Image
               className="h-8 w-auto"
-              src="/omahub-logo-dark.png"
+              src="/lovable-uploads/omahub-logo.png"
               alt="OmaHub"
               width={120}
               height={32}
