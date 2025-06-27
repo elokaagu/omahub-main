@@ -229,33 +229,32 @@ export default function Header() {
                       {category.title}
                     </NavigationMenuTrigger>
                     <NavigationMenuContent>
-                      <div className="w-screen max-w-xl">
-                        <div className="p-6">
-                          <div className="mb-6">
-                            <h3 className="text-base font-semibold text-gray-900 mb-2">
+                      <div className="w-screen max-w-md">
+                        <div className="p-4">
+                          <div className="mb-4">
+                            <h3 className="text-sm font-medium text-gray-900">
                               {category.title}
                             </h3>
-                            <p className="text-sm text-gray-600 leading-relaxed max-w-md">
+                            <p className="text-sm text-gray-500">
                               {category.description}
                             </p>
                           </div>
-                          <div className="grid gap-1">
+                          <div className="grid gap-2">
                             {category.items.map((item) => (
                               <NavigationMenuLink key={item.title} asChild>
                                 <NavigationLink
                                   href={item.href}
-                                  className="block rounded-lg px-4 py-3 text-sm hover:bg-gray-50 transition-colors group"
+                                  className="block rounded-md p-2 text-sm hover:bg-gray-50 transition-colors"
                                 >
                                   <div className="flex items-center justify-between">
-                                    <span className="font-medium text-gray-900 group-hover:text-oma-plum transition-colors">
+                                    <span className="font-medium text-gray-900">
                                       {item.title}
                                     </span>
-                                    {item.count !== undefined &&
-                                      item.count > 0 && (
-                                        <span className="text-xs text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full font-medium ml-3 flex-shrink-0">
-                                          {item.count}
-                                        </span>
-                                      )}
+                                    {item.count && (
+                                      <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                                        {item.count}
+                                      </span>
+                                    )}
                                   </div>
                                 </NavigationLink>
                               </NavigationMenuLink>
