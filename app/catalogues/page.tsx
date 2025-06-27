@@ -31,37 +31,17 @@ type CatalogueWithBrand = Catalogue & {
 };
 
 // Smart focal point detection for fashion/catalogue images
-const getImageFocalPoint = (
-  imageUrl: string,
-  title: string,
-  category?: string
-) => {
+const getImageFocalPoint = (imageUrl: string, title: string) => {
   // For fashion and catalogue images, we typically want to focus on the upper portion
   // where faces, necklines, and key design elements are usually located
   const lowerTitle = title.toLowerCase();
-  const lowerCategory = category?.toLowerCase() || "";
 
-  if (
-    lowerTitle.includes("bridal") ||
-    lowerTitle.includes("wedding") ||
-    lowerCategory.includes("bridal")
-  ) {
+  if (lowerTitle.includes("bridal") || lowerTitle.includes("wedding")) {
     return "object-top"; // Focus on top for bridal shots to capture face/neckline
   }
 
-  if (
-    lowerTitle.includes("evening") ||
-    lowerTitle.includes("gown") ||
-    lowerCategory.includes("evening")
-  ) {
+  if (lowerTitle.includes("evening") || lowerTitle.includes("gown")) {
     return "object-center"; // Center for full gown shots
-  }
-
-  if (
-    lowerCategory.includes("accessories") ||
-    lowerTitle.includes("accessories")
-  ) {
-    return "object-center"; // Center for accessories to show the full item
   }
 
   // Default to top-center for most fashion photography to avoid cutting off faces
@@ -98,7 +78,15 @@ export default function CataloguesPage() {
         ]);
 
         setCatalogues(catalogueData);
-        console.log("🖼️ Catalogue images debug:", catalogueData.map(c => ({ title: c.title, image: c.image, hasImage: !!c.image })));        setFilteredCatalogues(catalogueData);
+        console.log(
+          "🖼️ Catalogue images debug:",
+          catalogueData.map((c) => ({
+            title: c.title,
+            image: c.image,
+            hasImage: !!c.image,
+          }))
+        );
+        setFilteredCatalogues(catalogueData);
         setProducts(productData);
         setFilteredProducts(productData);
       } catch (err) {
@@ -378,6 +366,9 @@ export default function CataloguesPage() {
                       alt={product.title}
                       fill
                       className="object-cover"
+                      aspectRatio="square"
+                      quality={80}
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     />
                   </div>
                   <div className="p-4">
@@ -418,8 +409,10 @@ export default function CataloguesPage() {
                       src={catalogue.image || "/placeholder-image.jpg"}
                       alt={catalogue.title}
                       fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-300"
+                      className={`object-cover ${getImageFocalPoint(catalogue.image, catalogue.title)} group-hover:scale-105 transition-transform duration-300`}
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      priority={false}
+                      aspectRatio="3/4"
                       quality={80}
                     />
                     {/* Text overlay at bottom */}
