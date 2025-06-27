@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { refreshNavigationCache } from "@/lib/services/categoryService";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -86,40 +87,37 @@ export async function POST(request: NextRequest) {
       .eq("role", "super_admin");
 
     if (superAdminsError) {
-      console.error("❌ Error fetching super admins:", superAdminsError);
+      console.error("Error fetching super admins:", superAdminsError);
     } else if (superAdmins && superAdmins.length > 0) {
-      // Update each super admin to include the new brand
-      const updatePromises = superAdmins.map(async (admin) => {
+      // Update each super admin's owned_brands array
+      for (const admin of superAdmins) {
         const currentBrands = admin.owned_brands || [];
-        const updatedBrands = currentBrands.includes(newBrand.id)
-          ? currentBrands
-          : [...currentBrands, newBrand.id];
+        const updatedBrands = [...currentBrands, newBrand.id];
 
-        return supabaseAdmin
+        const { error: updateError } = await supabaseAdmin
           .from("profiles")
-          .update({
-            owned_brands: updatedBrands,
-            updated_at: new Date().toISOString(),
-          })
+          .update({ owned_brands: updatedBrands })
           .eq("id", admin.id);
-      });
 
-      const results = await Promise.allSettled(updatePromises);
-      const successCount = results.filter(
-        (r) => r.status === "fulfilled"
-      ).length;
-
-      console.log(
-        `✅ Auto-assigned new brand to ${successCount}/${superAdmins.length} super admins`
-      );
+        if (updateError) {
+          console.error(`Error updating admin ${admin.email}:`, updateError);
+        } else {
+          console.log(`✅ Added brand to admin: ${admin.email}`);
+        }
+      }
     }
 
-    return NextResponse.json({
-      brand: newBrand,
-      autoAssignedToSuperAdmins: superAdmins?.length || 0,
-    });
+    // Refresh navigation cache to update dropdowns
+    console.log(
+      "🔄 Refreshing navigation cache for new brand category:",
+      newBrand.category
+    );
+    await refreshNavigationCache();
+
+    console.log("✅ Brand created successfully:", newBrand.name);
+    return NextResponse.json({ brand: newBrand }, { status: 201 });
   } catch (error) {
-    console.error("Error in brand creation API:", error);
+    console.error("Error in brand creation:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
