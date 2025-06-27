@@ -106,7 +106,7 @@ export default function Header() {
         setCollectionsHasBrands(collectionsHasBrands);
         setTailoredHasBrands(tailoredHasBrands);
 
-        console.log("🔄 Header: Dynamic navigation loaded", {
+        console.log("Header: Dynamic navigation loaded", {
           itemsCount: dynamicItems.length,
           collectionsHasBrands,
           tailoredHasBrands,
@@ -131,7 +131,7 @@ export default function Header() {
   };
 
   const handleStudioNavigation = async () => {
-    console.log("🎨 Header: Studio navigation initiated");
+    console.log("Header: Studio navigation initiated");
 
     setIsNavigatingToStudio(true);
     setIsNavigating(true);
@@ -139,7 +139,7 @@ export default function Header() {
     try {
       // Add a timeout to prevent indefinite loading
       const navigationTimeout = setTimeout(() => {
-        console.warn("⚠️ Header: Studio navigation timeout, resetting state");
+        console.warn("Header: Studio navigation timeout, resetting state");
         setIsNavigatingToStudio(false);
         setIsNavigating(false);
       }, 5000);
@@ -150,9 +150,9 @@ export default function Header() {
       // Clear timeout if navigation succeeds
       clearTimeout(navigationTimeout);
 
-      console.log("✅ Header: Studio navigation completed");
+      console.log("Header: Studio navigation completed");
     } catch (error) {
-      console.error("❌ Header: Error navigating to studio:", error);
+      console.error("Header: Error navigating to studio:", error);
       setIsNavigatingToStudio(false);
       setIsNavigating(false);
     }
