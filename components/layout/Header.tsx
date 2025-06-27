@@ -174,7 +174,12 @@ export default function Header() {
             <span className="sr-only">OmaHub</span>
             <div className="relative">
               <Image
-                className="h-6 w-auto"
+                className={cn(
+                  "h-6 w-auto transition-all duration-300",
+                  scrolled || !isHomePage
+                    ? "brightness-0"
+                    : "brightness-0 invert"
+                )}
                 src="/lovable-uploads/omahub-logo.png"
                 alt="OmaHub"
                 width={120}
