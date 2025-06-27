@@ -174,7 +174,7 @@ export default function Header() {
             <span className="sr-only">OmaHub</span>
             <div className="relative">
               <Image
-                className="h-8 w-auto"
+                className="h-6 w-auto"
                 src="/lovable-uploads/omahub-logo.png"
                 alt="OmaHub"
                 width={120}
@@ -393,7 +393,7 @@ export default function Header() {
           <NavigationLink href="/" className="-m-1.5 p-1.5">
             <span className="sr-only">OmaHub</span>
             <Image
-              className="h-8 w-auto"
+              className="h-6 w-auto"
               src="/lovable-uploads/omahub-logo.png"
               alt="OmaHub"
               width={120}
