@@ -229,29 +229,29 @@ export default function Header() {
                       {category.title}
                     </NavigationMenuTrigger>
                     <NavigationMenuContent>
-                      <div className="w-screen max-w-md">
-                        <div className="p-4">
-                          <div className="mb-4">
-                            <h3 className="text-sm font-medium text-gray-900">
+                      <div className="w-screen max-w-lg">
+                        <div className="p-6">
+                          <div className="mb-6">
+                            <h3 className="text-base font-semibold text-gray-900 mb-2">
                               {category.title}
                             </h3>
-                            <p className="text-sm text-gray-500">
+                            <p className="text-sm text-gray-600 leading-relaxed">
                               {category.description}
                             </p>
                           </div>
-                          <div className="grid gap-2">
+                          <div className="grid gap-1">
                             {category.items.map((item) => (
                               <NavigationMenuLink key={item.title} asChild>
                                 <NavigationLink
                                   href={item.href}
-                                  className="block rounded-md p-2 text-sm hover:bg-gray-50 transition-colors"
+                                  className="block rounded-lg px-4 py-3 text-sm hover:bg-gray-50 transition-colors group"
                                 >
                                   <div className="flex items-center justify-between">
-                                    <span className="font-medium text-gray-900">
+                                    <span className="font-medium text-gray-900 group-hover:text-oma-plum transition-colors">
                                       {item.title}
                                     </span>
                                     {item.count && (
-                                      <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                                      <span className="text-xs text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full font-medium">
                                         {item.count}
                                       </span>
                                     )}
@@ -320,13 +320,14 @@ export default function Header() {
                       {user.first_name ? `${user.first_name}` : "My Account"}
                     </NavigationMenuTrigger>
                     <NavigationMenuContent>
-                      <ul className="grid w-[200px] gap-2 p-4 bg-white shadow-lg rounded-lg border border-gray-100">
+                      <ul className="grid w-[220px] gap-1 p-3 bg-white shadow-lg rounded-lg border border-gray-100">
                         <li>
                           <NavigationMenuLink asChild>
                             <NavigationLink
                               href="/profile"
-                              className="flex items-center gap-2 w-full rounded-md p-2 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-oma-plum transition-colors"
+                              className="flex items-center gap-3 w-full rounded-md px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-oma-plum transition-colors"
                             >
+                              <User className="h-4 w-4" />
                               Profile
                             </NavigationLink>
                           </NavigationMenuLink>
@@ -335,8 +336,9 @@ export default function Header() {
                           <NavigationMenuLink asChild>
                             <NavigationLink
                               href="/favourites"
-                              className="flex items-center gap-2 w-full rounded-md p-2 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-oma-plum transition-colors"
+                              className="flex items-center gap-3 w-full rounded-md px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-oma-plum transition-colors"
                             >
+                              <Heart className="h-4 w-4" />
                               Favourites
                             </NavigationLink>
                           </NavigationMenuLink>
@@ -349,19 +351,21 @@ export default function Header() {
                               <button
                                 onClick={handleStudioNavigation}
                                 disabled={isNavigatingToStudio}
-                                className="flex items-center gap-2 w-full rounded-md p-2 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-oma-plum transition-colors disabled:opacity-50"
+                                className="flex items-center gap-3 w-full rounded-md px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-oma-plum transition-colors disabled:opacity-50"
                               >
+                                <Palette className="h-4 w-4" />
                                 Studio {isNavigatingToStudio && "..."}
                               </button>
                             </NavigationMenuLink>
                           </li>
                         )}
-                        <li className="border-t border-gray-100 mt-1 pt-1">
+                        <li className="border-t border-gray-100 mt-2 pt-2">
                           <NavigationMenuLink asChild>
                             <button
                               onClick={handleSignOut}
-                              className="flex items-center gap-2 w-full rounded-md p-2 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+                              className="flex items-center gap-3 w-full rounded-md px-3 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
                             >
+                              <LogOut className="h-4 w-4" />
                               Sign Out
                             </button>
                           </NavigationMenuLink>
