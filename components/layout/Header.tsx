@@ -229,7 +229,7 @@ export default function Header() {
                       {category.title}
                     </NavigationMenuTrigger>
                     <NavigationMenuContent>
-                      <div className="w-screen max-w-md">
+                      <div className="w-screen max-w-lg">
                         <div className="p-4">
                           <div className="mb-4">
                             <h3 className="text-sm font-medium text-gray-900">
@@ -243,16 +243,9 @@ export default function Header() {
                                   href={item.href}
                                   className="block rounded-md p-2 text-sm hover:bg-gray-50 transition-colors"
                                 >
-                                  <div className="flex items-center justify-between">
-                                    <span className="font-medium text-gray-900">
-                                      {item.title}
-                                    </span>
-                                    {item.count && (
-                                      <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                                        {item.count}
-                                      </span>
-                                    )}
-                                  </div>
+                                  <span className="font-medium text-gray-900">
+                                    {item.title}
+                                  </span>
                                 </NavigationLink>
                               </NavigationMenuLink>
                             ))}
