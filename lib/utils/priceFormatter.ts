@@ -62,16 +62,30 @@ export function extractCurrencyFromPriceRange(priceRange: string): string {
     return "$"; // Default to USD
   }
 
-  // Parse price range to extract currency symbol (e.g., "₦15,000 - ₦120,000")
+  console.log("🔍 Extracting currency from price range:", priceRange);
+
+  // First try to match currency symbols at the beginning of the price range
+  // Pattern: currency symbol followed by digits and commas
+  const currencyMatch = priceRange.match(/^([^\d\s]+)/);
+
+  if (currencyMatch) {
+    const currency = currencyMatch[1].trim();
+    console.log("✅ Extracted currency:", currency);
+    return currency;
+  }
+
+  // Fallback: try to extract from more complex patterns
   const priceRangeMatch = priceRange.match(
-    /^(.+?)(\d+(?:,\d+)*)\s*-\s*(.+?)(\d+(?:,\d+)*)$/
+    /^([^\d]+)[\d,]+\s*-\s*([^\d]+)?[\d,]+/
   );
 
   if (priceRangeMatch) {
-    const [, symbol1] = priceRangeMatch;
-    return symbol1.trim();
+    const currency = priceRangeMatch[1].trim();
+    console.log("✅ Extracted currency (fallback):", currency);
+    return currency;
   }
 
+  console.log("❌ Could not extract currency, using default $");
   return "$"; // Default fallback
 }
 

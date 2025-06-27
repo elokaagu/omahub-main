@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Loading } from "@/components/ui/loading";
 import { NavigationLink } from "@/components/ui/navigation-link";
 import { TailoringOrderModal } from "@/components/product/TailoringOrderModal";
+import { formatProductPrice } from "@/lib/utils/priceFormatter";
 import {
   ShoppingBag,
   Ruler,
@@ -194,11 +195,11 @@ export default function ProductPage() {
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2">
                   <span className="text-2xl font-bold text-oma-plum">
-                    ${product.sale_price || product.price}
+                    {formatProductPrice(product, brand).displayPrice}
                   </span>
                   {product.sale_price && (
                     <span className="text-lg text-gray-500 line-through">
-                      ${product.price}
+                      {formatProductPrice(product, brand).originalPrice}
                     </span>
                   )}
                 </div>
