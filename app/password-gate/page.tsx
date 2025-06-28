@@ -43,11 +43,16 @@ export default function PasswordGatePage() {
         // Store access in localStorage as well for client-side checks
         localStorage.setItem("omahub-access", "granted");
 
-        toast.success("Access granted! Welcome to OmaHub.");
+        toast.success("Access granted! Redirecting to homepage...");
 
-        // Redirect to the intended page or home
+        // Get redirect URL, default to homepage
         const redirectTo = searchParams.get("redirect") || "/";
-        router.push(redirectTo);
+
+        // Add a small delay to ensure cookies are set properly
+        setTimeout(() => {
+          // Force a full page reload to ensure cookies are properly recognized
+          window.location.href = redirectTo;
+        }, 1000);
       } else {
         toast.error(data.error || "Incorrect password. Please try again.");
         setPassword("");
