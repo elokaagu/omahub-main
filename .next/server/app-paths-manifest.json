@@ -1,5 +1,1 @@
-{
-  "/api/auth/validate/route": "app/api/auth/validate/route.js",
-  "/not-found": "app/not-found.js",
-  "/api/studio/brands/route": "app/api/studio/brands/route.js"
-}
+{}

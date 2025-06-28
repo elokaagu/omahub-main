@@ -73,6 +73,13 @@ export function LazyImage({
         setIsLoading(true);
         setHasError(false);
 
+        // Handle object URLs (blob:) immediately without conversion
+        if (src.startsWith("blob:")) {
+          console.log("📸 Using object URL directly (temporary preview):", src);
+          setSignedUrl(src);
+          return;
+        }
+
         // Check if it's a Supabase storage URL that needs signing
         if (src.includes("/storage/v1/object/public/")) {
           // Check if it's from a public bucket that doesn't need signing

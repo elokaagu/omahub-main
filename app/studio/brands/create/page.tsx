@@ -122,10 +122,11 @@ export default function CreateBrandPage() {
   };
 
   const handleImageUpload = (url: string) => {
-    setFormData({
-      ...formData,
+    console.log("🖼️ Image upload completed, updating form state:", url);
+    setFormData((prev) => ({
+      ...prev,
       image: url,
-    });
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

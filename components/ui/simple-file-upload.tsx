@@ -29,7 +29,8 @@ export function SimpleFileUpload({
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState<string | null>(defaultValue || null);
   const [error, setError] = useState<string | null>(null);
-  const [isTemporaryPreview, setIsTemporaryPreview] = useState(false);  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isTemporaryPreview, setIsTemporaryPreview] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Update preview when defaultValue changes
   useEffect(() => {
@@ -157,7 +158,7 @@ export function SimpleFileUpload({
       size: `${fileSizeMB.toFixed(2)} MB`,
     });
 
-    // Create preview
+    // Create temporary preview immediately
     const objectUrl = URL.createObjectURL(file);
     setPreview(objectUrl);
     setIsTemporaryPreview(true);
@@ -167,18 +168,18 @@ export function SimpleFileUpload({
     try {
       const url = await uploadToSupabase(file);
 
-      // Clean up the temporary object URL before setting the new preview
-      if (isTemporaryPreview) {
-        URL.revokeObjectURL(objectUrl);
-      }
+      // Clean up the temporary object URL
+      URL.revokeObjectURL(objectUrl);
 
-      // Small delay to ensure the image URL is ready
-      await new Promise((resolve) => setTimeout(resolve, 100));
-      // Update preview with the uploaded URL
+      // Update preview with the uploaded URL immediately
       setPreview(url);
       setIsTemporaryPreview(false);
+
+      // Notify parent component
       onUploadComplete(url);
       toast.success("Image uploaded successfully!");
+
+      console.log("✅ Preview updated with final URL:", url);
     } catch (error) {
       console.error("Upload failed:", error);
 
@@ -190,16 +191,13 @@ export function SimpleFileUpload({
       toast.error(errorMessage);
 
       // Clean up the temporary object URL
-      if (isTemporaryPreview) {
-        URL.revokeObjectURL(objectUrl);
-      }
+      URL.revokeObjectURL(objectUrl);
+
       // Reset preview to default
       setPreview(defaultValue || null);
-    setIsTemporaryPreview(false);
+      setIsTemporaryPreview(false);
     } finally {
       setUploading(false);
-      // Clean up the temporary object URL
-      URL.revokeObjectURL(objectUrl);
     }
   };
 
