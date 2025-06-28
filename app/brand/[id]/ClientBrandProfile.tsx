@@ -375,7 +375,7 @@ export default function ClientBrandProfile({
                     onClick={() =>
                       window.open(`mailto:${brandData.contact_email}`, "_blank")
                     }
-                    className="p-2 rounded-full bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 hover:border-blue-300 hover:text-blue-800 transition-colors"
+                    className="p-2 rounded-full bg-oma-beige border border-oma-gold/30 text-oma-plum hover:bg-oma-gold hover:border-oma-gold hover:text-oma-plum transition-colors"
                     title="Email Designer"
                   >
                     <Mail className="h-4 w-4" />
@@ -392,7 +392,7 @@ export default function ClientBrandProfile({
                           "_blank"
                         )
                       }
-                      className="p-2 rounded-full bg-green-50 border border-green-200 text-green-700 hover:bg-green-100 hover:border-green-300 hover:text-green-800 transition-colors"
+                      className="p-2 rounded-full bg-oma-beige border border-oma-gold/30 text-oma-plum hover:bg-oma-gold hover:border-oma-gold hover:text-oma-plum transition-colors"
                       title="WhatsApp"
                     >
                       <MessageCircle className="h-4 w-4" />
@@ -410,7 +410,7 @@ export default function ClientBrandProfile({
                         "_blank"
                       )
                     }
-                    className="p-2 rounded-full bg-pink-50 border border-pink-200 text-pink-700 hover:bg-pink-100 hover:border-pink-300 hover:text-pink-800 transition-colors"
+                    className="p-2 rounded-full bg-oma-beige border border-oma-gold/30 text-oma-plum hover:bg-oma-gold hover:border-oma-gold hover:text-oma-plum transition-colors"
                     title="Instagram"
                   >
                     <Instagram className="h-4 w-4" />
@@ -428,7 +428,7 @@ export default function ClientBrandProfile({
                         "_blank"
                       )
                     }
-                    className="p-2 rounded-full bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 hover:border-blue-300 hover:text-blue-800 transition-colors"
+                    className="p-2 rounded-full bg-oma-beige border border-oma-gold/30 text-oma-plum hover:bg-oma-gold hover:border-oma-gold hover:text-oma-plum transition-colors"
                     title="Website"
                   >
                     <Globe className="h-4 w-4" />
