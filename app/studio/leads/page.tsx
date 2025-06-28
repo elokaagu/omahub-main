@@ -34,6 +34,8 @@ import {
   ChevronUpIcon,
 } from "@heroicons/react/24/outline";
 import { Mail, Phone, User, Building, MapPin } from "lucide-react";
+import { LEADS_CONFIG, type LeadStatus } from "@/lib/config/leads";
+import { PipelineService } from "@/lib/services/pipelineService";
 
 interface Lead {
   id: string;
@@ -79,6 +81,10 @@ interface LeadInteraction {
   next_action?: string;
 }
 
+// Remove the inline configuration constants and replace with config import
+// Configuration for pipeline value display - now imported from config
+const { SHOW_PIPELINE_VALUE, USE_INTELLIGENT_CALCULATION } = LEADS_CONFIG;
+
 export default function StudioLeadsPage() {
   const { user, loading: authLoading } = useAuth();
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -111,6 +117,24 @@ export default function StudioLeadsPage() {
     outcome: "",
     nextAction: "",
   });
+
+  // State for intelligent pipeline value
+  const [intelligentPipelineValue, setIntelligentPipelineValue] = useState(0);
+
+  // Calculate intelligent pipeline value when leads change
+  useEffect(() => {
+    if (SHOW_PIPELINE_VALUE) {
+      PipelineService.calculatePipelineValue(filteredLeads)
+        .then(setIntelligentPipelineValue)
+        .catch((error) => {
+          console.error("Error calculating pipeline value:", error);
+          // Fallback to simple calculation
+          setIntelligentPipelineValue(
+            PipelineService.calculateSimplePipelineValue(filteredLeads)
+          );
+        });
+    }
+  }, [filteredLeads]);
 
   useEffect(() => {
     if (!authLoading && user) {
@@ -667,19 +691,26 @@ export default function StudioLeadsPage() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-oma-plum">
-                  $
-                  {filteredLeads
-                    .reduce((sum, l) => sum + (l.estimated_value || 0), 0)
-                    .toLocaleString()}
+          {SHOW_PIPELINE_VALUE && (
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-oma-plum">
+                    ${intelligentPipelineValue.toLocaleString()}
+                  </div>
+                  <p className="text-sm text-oma-cocoa">
+                    {USE_INTELLIGENT_CALCULATION ? "Estimated" : "Total"}{" "}
+                    Pipeline Value
+                  </p>
+                  {USE_INTELLIGENT_CALCULATION && (
+                    <p className="text-xs text-oma-cocoa/60 mt-1">
+                      Based on brand product averages
+                    </p>
+                  )}
                 </div>
-                <p className="text-sm text-oma-cocoa">Total Pipeline Value</p>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Leads List */}
