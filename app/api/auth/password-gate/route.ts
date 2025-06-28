@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const PLATFORM_PASSWORD = "omahub2024"; // Same password as in the frontend
+const PLATFORM_PASSWORD = "omahub2025"; // Same password as in the frontend
 
 export async function POST(request: NextRequest) {
   try {
