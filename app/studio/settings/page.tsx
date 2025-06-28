@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   Card,
@@ -20,13 +20,107 @@ import {
   MessageSquare,
   Lock,
   Globe,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 
 export default function SettingsPage() {
   const { user } = useAuth();
-  const [isRemovingPasswordGate, setIsRemovingPasswordGate] = useState(false);
+  const [isChangingStatus, setIsChangingStatus] = useState(false);
+  const [platformStatus, setPlatformStatus] = useState<{
+    isPublic: boolean;
+    status: string;
+  } | null>(null);
+  const [isLoadingStatus, setIsLoadingStatus] = useState(true);
+
+  // Check if user has super admin permissions
+  const isSuperAdmin = user?.role === "super_admin";
+
+  // Fetch platform status on component mount
+  useEffect(() => {
+    if (isSuperAdmin) {
+      fetchPlatformStatus();
+    }
+  }, [isSuperAdmin]);
+
+  const fetchPlatformStatus = async () => {
+    try {
+      setIsLoadingStatus(true);
+      const response = await fetch("/api/auth/platform-status");
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setPlatformStatus({
+          isPublic: data.isPublic,
+          status: data.status,
+        });
+      } else {
+        console.error("Failed to fetch platform status:", data.error);
+      }
+    } catch (error) {
+      console.error("Error fetching platform status:", error);
+    } finally {
+      setIsLoadingStatus(false);
+    }
+  };
+
+  const handleMakePublic = async () => {
+    setIsChangingStatus(true);
+    try {
+      const response = await fetch("/api/auth/remove-password-gate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        toast.success(
+          "Platform is now public! Password gate has been removed."
+        );
+        setPlatformStatus({ isPublic: true, status: "public" });
+      } else {
+        toast.error(data.error || "Failed to make platform public");
+      }
+    } catch (error) {
+      console.error("Error making platform public:", error);
+      toast.error("Something went wrong. Please try again.");
+    } finally {
+      setIsChangingStatus(false);
+    }
+  };
+
+  const handleMakePrivate = async () => {
+    setIsChangingStatus(true);
+    try {
+      const response = await fetch("/api/auth/enable-password-gate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        toast.success(
+          "Platform is now private! Password gate has been enabled."
+        );
+        setPlatformStatus({ isPublic: false, status: "private" });
+      } else {
+        toast.error(data.error || "Failed to make platform private");
+      }
+    } catch (error) {
+      console.error("Error making platform private:", error);
+      toast.error("Something went wrong. Please try again.");
+    } finally {
+      setIsChangingStatus(false);
+    }
+  };
 
   if (!user) {
     return (
@@ -43,38 +137,6 @@ export default function SettingsPage() {
       </div>
     );
   }
-
-  // Check if user has super admin permissions
-  const isSuperAdmin = user.role === "super_admin";
-
-  const handleRemovePasswordGate = async () => {
-    setIsRemovingPasswordGate(true);
-    try {
-      const response = await fetch("/api/auth/remove-password-gate", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        toast.success(
-          "Platform is now public! Password gate has been removed."
-        );
-        // Refresh the page to reflect changes
-        window.location.reload();
-      } else {
-        toast.error(data.error || "Failed to remove password gate");
-      }
-    } catch (error) {
-      console.error("Error removing password gate:", error);
-      toast.error("Something went wrong. Please try again.");
-    } finally {
-      setIsRemovingPasswordGate(false);
-    }
-  };
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-8">
@@ -94,48 +156,128 @@ export default function SettingsPage() {
             <Card className="border-oma-beige">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-oma-plum font-canela">
-                  <Lock className="h-5 w-5" />
-                  Platform Access
+                  {isLoadingStatus ? (
+                    <div className="animate-spin h-5 w-5 border-2 border-oma-plum border-t-transparent rounded-full" />
+                  ) : platformStatus?.isPublic ? (
+                    <Globe className="h-5 w-5" />
+                  ) : (
+                    <Lock className="h-5 w-5" />
+                  )}
+                  Platform Visibility
                 </CardTitle>
                 <CardDescription className="text-oma-cocoa">
                   Control public access to the platform
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-oma-cocoa/80 mb-4">
-                  The platform is currently password-protected for internal
-                  testing. When you're ready to go public, you can remove the
-                  password gate to allow unrestricted access.
-                </p>
-                <div className="space-y-2 text-xs text-oma-cocoa/70">
-                  <div className="flex items-center gap-2">
-                    <Shield className="h-3 w-3 text-oma-plum" />
-                    <span>Currently password-protected</span>
+                {isLoadingStatus ? (
+                  <div className="text-center py-4">
+                    <div className="animate-spin h-6 w-6 border-2 border-oma-plum border-t-transparent rounded-full mx-auto mb-2" />
+                    <p className="text-sm text-oma-cocoa/70">
+                      Loading status...
+                    </p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Globe className="h-3 w-3 text-oma-plum" />
-                    <span>Make public when ready</span>
-                  </div>
-                </div>
+                ) : (
+                  <>
+                    <div className="mb-4">
+                      <div
+                        className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium ${
+                          platformStatus?.isPublic
+                            ? "bg-green-100 text-green-800 border border-green-200"
+                            : "bg-amber-100 text-amber-800 border border-amber-200"
+                        }`}
+                      >
+                        {platformStatus?.isPublic ? (
+                          <>
+                            <Eye className="h-3 w-3" />
+                            <span>Platform is Public</span>
+                          </>
+                        ) : (
+                          <>
+                            <EyeOff className="h-3 w-3" />
+                            <span>Platform is Private</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    <p className="text-sm text-oma-cocoa/80 mb-4">
+                      {platformStatus?.isPublic
+                        ? "The platform is currently accessible to all visitors without a password. Anyone can browse and explore your content."
+                        : "The platform is currently password-protected for internal testing. Visitors need the access password to view content."}
+                    </p>
+
+                    <div className="space-y-2 text-xs text-oma-cocoa/70">
+                      <div className="flex items-center gap-2">
+                        <Shield className="h-3 w-3 text-oma-plum" />
+                        <span>
+                          {platformStatus?.isPublic
+                            ? "Open access for all visitors"
+                            : "Password-protected access"}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Globe className="h-3 w-3 text-oma-plum" />
+                        <span>
+                          {platformStatus?.isPublic
+                            ? "SEO friendly and discoverable"
+                            : "Hidden from search engines"}
+                        </span>
+                      </div>
+                    </div>
+                  </>
+                )}
               </CardContent>
-              <CardFooter>
-                <Button
-                  onClick={handleRemovePasswordGate}
-                  disabled={isRemovingPasswordGate}
-                  className="bg-oma-plum hover:bg-oma-plum/90 text-white flex items-center gap-2 w-full"
-                >
-                  {isRemovingPasswordGate ? (
-                    <>
-                      <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
-                      <span>Making Public...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Globe className="h-4 w-4" />
-                      <span>Make Platform Public</span>
-                    </>
-                  )}
-                </Button>
+              <CardFooter className="flex gap-2">
+                {!isLoadingStatus && (
+                  <>
+                    <Button
+                      onClick={handleMakePublic}
+                      disabled={isChangingStatus || platformStatus?.isPublic}
+                      variant={
+                        platformStatus?.isPublic ? "secondary" : "default"
+                      }
+                      className={`flex items-center gap-2 flex-1 ${
+                        !platformStatus?.isPublic
+                          ? "bg-oma-plum hover:bg-oma-plum/90 text-white"
+                          : ""
+                      }`}
+                    >
+                      {isChangingStatus ? (
+                        <>
+                          <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                          <span>Updating...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Globe className="h-4 w-4" />
+                          <span>Make Public</span>
+                        </>
+                      )}
+                    </Button>
+
+                    <Button
+                      onClick={handleMakePrivate}
+                      disabled={isChangingStatus || !platformStatus?.isPublic}
+                      variant={
+                        !platformStatus?.isPublic ? "secondary" : "outline"
+                      }
+                      className="flex items-center gap-2 flex-1"
+                    >
+                      {isChangingStatus ? (
+                        <>
+                          <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full"></div>
+                          <span>Updating...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Lock className="h-4 w-4" />
+                          <span>Make Private</span>
+                        </>
+                      )}
+                    </Button>
+                  </>
+                )}
               </CardFooter>
             </Card>
           )}
