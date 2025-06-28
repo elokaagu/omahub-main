@@ -592,10 +592,7 @@ export default function CreateProductPage() {
           {/* Pricing */}
           <Card className="border border-oma-gold/10 bg-white">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-black">
-                <DollarSign className="h-5 w-5" />
-                Pricing
-              </CardTitle>
+              <CardTitle className="text-black">Pricing</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-2">

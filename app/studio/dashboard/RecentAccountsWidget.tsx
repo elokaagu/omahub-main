@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createClient } from "@supabase/supabase-js";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,11 +15,6 @@ interface RecentAccount {
   hours_since_creation?: number;
 }
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
-
 export default function RecentAccountsWidget() {
   const [recentAccounts, setRecentAccounts] = useState<RecentAccount[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,55 +25,34 @@ export default function RecentAccountsWidget() {
       setLoading(true);
       setError(null);
 
-      // First try the view, fallback to direct query
-      let data, fetchError;
+      console.log("🔍 Fetching recent accounts via API...");
 
-      // Try the view first
-      const viewResult = await supabase
-        .from("recent_account_creations")
-        .select("*")
-        .limit(10);
+      const response = await fetch("/api/admin/recent-accounts");
 
-      if (viewResult.error && viewResult.error.code === "42P01") {
-        // View doesn't exist, use direct query
-        console.log("Using fallback query for recent accounts");
-
-        const directResult = await supabase
-          .from("profiles")
-          .select("id, email, role, created_at")
-          .gte(
-            "created_at",
-            new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
-          )
-          .order("created_at", { ascending: false })
-          .limit(10);
-
-        data = directResult.data;
-        fetchError = directResult.error;
-
-        // Calculate hours_since_creation manually
-        if (data) {
-          data = data.map((account) => ({
-            ...account,
-            hours_since_creation:
-              (Date.now() - new Date(account.created_at).getTime()) /
-              (1000 * 60 * 60),
-          }));
+      if (!response.ok) {
+        if (response.status === 401) {
+          setError("Please log in to view recent accounts");
+        } else if (response.status === 403) {
+          setError("You don't have permission to view recent accounts");
+        } else {
+          setError("Failed to load recent accounts");
         }
-      } else {
-        data = viewResult.data;
-        fetchError = viewResult.error;
-      }
-
-      if (fetchError) {
-        console.error("Error fetching recent accounts:", fetchError);
-        setError("Failed to load recent accounts");
         return;
       }
 
-      setRecentAccounts(data || []);
+      const result = await response.json();
+
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
+
+      setRecentAccounts(result.data || []);
+      console.log(
+        `✅ Successfully loaded ${result.data?.length || 0} recent accounts`
+      );
     } catch (err) {
-      console.error("Error:", err);
+      console.error("❌ Unexpected error:", err);
       setError("An unexpected error occurred");
     } finally {
       setLoading(false);
