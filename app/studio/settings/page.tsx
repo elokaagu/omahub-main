@@ -18,11 +18,15 @@ import {
   ArrowRight,
   Shield,
   MessageSquare,
+  Lock,
+  Globe,
 } from "lucide-react";
 import Link from "next/link";
+import { toast } from "sonner";
 
 export default function SettingsPage() {
   const { user } = useAuth();
+  const [isRemovingPasswordGate, setIsRemovingPasswordGate] = useState(false);
 
   if (!user) {
     return (
@@ -43,6 +47,35 @@ export default function SettingsPage() {
   // Check if user has super admin permissions
   const isSuperAdmin = user.role === "super_admin";
 
+  const handleRemovePasswordGate = async () => {
+    setIsRemovingPasswordGate(true);
+    try {
+      const response = await fetch("/api/auth/remove-password-gate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        toast.success(
+          "Platform is now public! Password gate has been removed."
+        );
+        // Refresh the page to reflect changes
+        window.location.reload();
+      } else {
+        toast.error(data.error || "Failed to remove password gate");
+      }
+    } catch (error) {
+      console.error("Error removing password gate:", error);
+      toast.error("Something went wrong. Please try again.");
+    } finally {
+      setIsRemovingPasswordGate(false);
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-6 py-8">
       <div className="space-y-8">
@@ -56,6 +89,57 @@ export default function SettingsPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Platform Access Control - Only for Super Admins */}
+          {isSuperAdmin && (
+            <Card className="border-oma-beige">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-oma-plum font-canela">
+                  <Lock className="h-5 w-5" />
+                  Platform Access
+                </CardTitle>
+                <CardDescription className="text-oma-cocoa">
+                  Control public access to the platform
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-oma-cocoa/80 mb-4">
+                  The platform is currently password-protected for internal
+                  testing. When you're ready to go public, you can remove the
+                  password gate to allow unrestricted access.
+                </p>
+                <div className="space-y-2 text-xs text-oma-cocoa/70">
+                  <div className="flex items-center gap-2">
+                    <Shield className="h-3 w-3 text-oma-plum" />
+                    <span>Currently password-protected</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Globe className="h-3 w-3 text-oma-plum" />
+                    <span>Make public when ready</span>
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button
+                  onClick={handleRemovePasswordGate}
+                  disabled={isRemovingPasswordGate}
+                  className="bg-oma-plum hover:bg-oma-plum/90 text-white flex items-center gap-2 w-full"
+                >
+                  {isRemovingPasswordGate ? (
+                    <>
+                      <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                      <span>Making Public...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Globe className="h-4 w-4" />
+                      <span>Make Platform Public</span>
+                    </>
+                  )}
+                </Button>
+              </CardFooter>
+            </Card>
+          )}
+
           {/* Legal Documents Management */}
           <Card className="border-oma-beige">
             <CardHeader>
@@ -177,6 +261,16 @@ export default function SettingsPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3 text-sm text-oma-cocoa">
+              {isSuperAdmin && (
+                <div className="flex items-start gap-2">
+                  <Lock className="h-4 w-4 text-oma-plum mt-0.5 flex-shrink-0" />
+                  <p>
+                    <strong>Platform Access:</strong> Control whether the
+                    platform requires a password for access. Remove the password
+                    gate when you're ready to launch publicly.
+                  </p>
+                </div>
+              )}
               <div className="flex items-start gap-2">
                 <Shield className="h-4 w-4 text-oma-plum mt-0.5 flex-shrink-0" />
                 <p>
