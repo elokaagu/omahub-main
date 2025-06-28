@@ -42,6 +42,14 @@ export async function POST(request: NextRequest) {
     // Create authenticated client
     const supabase = createAuthenticatedClient();
 
+    // Debug: Log available cookies
+    const cookieStore = cookies();
+    const allCookies = cookieStore.getAll();
+    console.log(
+      "🍪 Available cookies:",
+      allCookies.map((c) => ({ name: c.name, hasValue: !!c.value }))
+    );
+
     // Get the current user
     const {
       data: { user },
