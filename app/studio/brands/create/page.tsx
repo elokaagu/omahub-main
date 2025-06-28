@@ -151,6 +151,26 @@ export default function CreateBrandPage() {
       return;
     }
 
+    // Validate session before proceeding
+    try {
+      const sessionCheck = await fetch("/api/auth/validate");
+      if (!sessionCheck.ok) {
+        toast.error(
+          "Your session has expired. Please refresh the page and sign in again."
+        );
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
+        return;
+      }
+    } catch (sessionError) {
+      console.error("Session validation failed:", sessionError);
+      toast.error(
+        "Unable to verify your session. Please refresh the page and try again."
+      );
+      return;
+    }
+
     // Validation
     if (!formData.name) {
       toast.error("Brand name is required");
@@ -237,8 +257,12 @@ export default function CreateBrandPage() {
         // Handle specific error cases
         if (response.status === 401) {
           toast.error(
-            "You must be logged in to create a brand. Please log in and try again."
+            "Your session has expired. Please refresh the page and sign in again."
           );
+          // Optionally redirect to login or refresh page
+          setTimeout(() => {
+            window.location.reload();
+          }, 2000);
           return;
         }
         if (response.status === 403) {

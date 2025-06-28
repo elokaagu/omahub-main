@@ -31,7 +31,6 @@ import { toast } from "sonner";
 import { Pencil, Trash2, Star, MapPin, Package, RefreshCw } from "lucide-react";
 import { AuthImage } from "@/components/ui/auth-image";
 import { FileUpload } from "@/components/ui/file-upload";
-import BrandManagementDebug from "./BrandManagementDebug";
 
 interface BrandManagementProps {
   className?: string;
@@ -353,9 +352,6 @@ export default function BrandManagement({ className }: BrandManagementProps) {
 
   return (
     <div className={className}>
-      {/* Debug component for development */}
-      <BrandManagementDebug />
-
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-canela text-oma-plum">
