@@ -317,18 +317,16 @@ export default function ClientBrandProfile({
                     className="aspect-[4/5] relative overflow-hidden rounded-xl sm:rounded-2xl animate-[fadeIn_500ms_ease-in-out_forwards] opacity-0 transition-transform duration-300 group-hover:scale-105"
                     style={{ animationDelay: `${index * 150}ms` }}
                   >
-                    <div className="aspect-square relative overflow-hidden rounded-lg">
-                      <LazyImage
-                        src={collection.image}
-                        alt={collection.title}
-                        fill
-                        className="object-cover rounded-xl sm:rounded-2xl"
-                        sizes="(max-width: 768px) 100vw, 400px"
-                        priority={true}
-                        aspectRatio="square"
-                        quality={85}
-                      />
-                    </div>
+                    <LazyImage
+                      src={collection.image}
+                      alt={collection.title}
+                      fill
+                      className="object-cover rounded-xl sm:rounded-2xl"
+                      sizes="(max-width: 768px) 100vw, 400px"
+                      priority={true}
+                      aspectRatio="4/5"
+                      quality={85}
+                    />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent group-hover:from-black/70 transition-colors duration-300" />
                     <div className="absolute bottom-0 left-0 p-4 sm:p-6">
                       <h3 className="text-white text-lg sm:text-xl font-source group-hover:text-oma-gold transition-colors duration-300">
