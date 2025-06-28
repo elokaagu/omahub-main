@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FavouriteButton } from "@/components/ui/favourite-button";
+import { formatProductPrice } from "@/lib/utils/priceFormatter";
 
 export default function ProductPage() {
   const params = useParams();
@@ -194,11 +195,11 @@ export default function ProductPage() {
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2">
                   <span className="text-2xl font-bold text-oma-plum">
-                    ${product.sale_price || product.price}
+                    {formatProductPrice(product, brand).displayPrice}
                   </span>
                   {product.sale_price && (
                     <span className="text-lg text-gray-500 line-through">
-                      ${product.price}
+                      {formatProductPrice(product, brand).originalPrice}
                     </span>
                   )}
                 </div>
