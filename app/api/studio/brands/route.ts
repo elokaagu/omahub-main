@@ -23,6 +23,14 @@ function createAuthenticatedClient() {
         get(name: string) {
           return cookieStore.get(name)?.value;
         },
+        set(name: string, value: string, options: any) {
+          // For API routes, we can't set cookies, so we'll just log this
+          console.log(`🍪 Attempted to set cookie: ${name}`);
+        },
+        remove(name: string, options: any) {
+          // For API routes, we can't remove cookies, so we'll just log this
+          console.log(`🍪 Attempted to remove cookie: ${name}`);
+        },
       },
     }
   );
@@ -39,16 +47,16 @@ export async function POST(request: NextRequest) {
       bodyKeys: Object.keys(body),
     });
 
-    // Create authenticated client
-    const supabase = createAuthenticatedClient();
-
-    // Debug: Log available cookies
+    // Debug: Log available cookies FIRST
     const cookieStore = cookies();
     const allCookies = cookieStore.getAll();
     console.log(
       "🍪 Available cookies:",
       allCookies.map((c) => ({ name: c.name, hasValue: !!c.value }))
     );
+
+    // Create authenticated client
+    const supabase = createAuthenticatedClient();
 
     // Get the current user
     const {
