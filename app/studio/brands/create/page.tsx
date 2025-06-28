@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { FileUpload } from "@/components/ui/file-upload";
+import { SimpleFileUpload } from "@/components/ui/simple-file-upload";
 import { Label } from "@/components/ui/label";
 import {
   Card,
@@ -591,15 +591,11 @@ export default function CreateBrandPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <FileUpload
+                <SimpleFileUpload
                   onUploadComplete={handleImageUpload}
                   defaultValue={formData.image}
                   bucket="brand-assets"
-                  path="brands"
-                  accept={{
-                    "image/png": [".png"],
-                    "image/jpeg": [".jpg", ".jpeg"],
-                  }}
+                  accept="image/png,image/jpeg,image/jpg,image/webp"
                   maxSize={5}
                 />
               </CardContent>

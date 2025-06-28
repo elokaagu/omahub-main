@@ -31,6 +31,13 @@ function createAuthenticatedClient() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    console.log("📤 Received brand creation request:", {
+      name: body.name,
+      contact_email: body.contact_email,
+      categories: body.categories,
+      image: body.image ? "✅ Present" : "❌ Missing",
+      bodyKeys: Object.keys(body),
+    });
 
     // Create authenticated client
     const supabase = createAuthenticatedClient();
@@ -42,8 +49,11 @@ export async function POST(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (authError || !user) {
+      console.error("Authentication failed:", authError);
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
+
+    console.log("🔐 User authenticated:", { id: user.id, email: user.email });
 
     // Get user profile to check permissions
     const { data: profile, error: profileError } = await supabaseAdmin
@@ -52,31 +62,71 @@ export async function POST(request: NextRequest) {
       .eq("id", user.id)
       .single();
 
-    if (profileError || !["admin", "super_admin"].includes(profile?.role)) {
+    if (profileError) {
+      console.error("Profile fetch error:", profileError);
+      return NextResponse.json(
+        { error: "Failed to fetch user profile" },
+        { status: 500 }
+      );
+    }
+
+    console.log("👤 User profile:", { role: profile?.role });
+
+    if (!["admin", "super_admin"].includes(profile?.role)) {
+      console.error("Insufficient permissions:", { userRole: profile?.role });
       return NextResponse.json(
         { error: "Insufficient permissions" },
         { status: 403 }
       );
     }
 
+    // Prepare brand data for insertion
+    const brandData = {
+      ...body,
+      id: randomUUID(),
+      rating: 5.0, // Default rating for new brands
+    };
+
+    console.log("💾 Inserting brand with data:", {
+      id: brandData.id,
+      name: brandData.name,
+      contact_email: brandData.contact_email,
+      location: brandData.location,
+      category: brandData.category,
+      categories: brandData.categories,
+      image: brandData.image ? "✅ Present" : "❌ Missing",
+    });
+
     // Create the brand
     const { data: newBrand, error: brandError } = await supabaseAdmin
       .from("brands")
-      .insert({
-        ...body,
-        id: randomUUID(),
-        rating: 5.0, // Default rating for new brands
-      })
+      .insert(brandData)
       .select()
       .single();
 
     if (brandError) {
-      console.error("Error creating brand:", brandError);
+      console.error("❌ Database error creating brand:", {
+        error: brandError,
+        code: brandError.code,
+        message: brandError.message,
+        details: brandError.details,
+        hint: brandError.hint,
+      });
       return NextResponse.json(
-        { error: "Failed to create brand" },
+        {
+          error: "Failed to create brand",
+          details: brandError.message,
+          code: brandError.code,
+        },
         { status: 500 }
       );
     }
+
+    console.log("✅ Brand created successfully in database:", {
+      id: newBrand.id,
+      name: newBrand.name,
+      contact_email: newBrand.contact_email,
+    });
 
     // Auto-assign the new brand to all super admins
     console.log("🔄 Auto-assigning new brand to all super admins...");
