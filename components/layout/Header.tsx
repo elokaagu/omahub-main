@@ -100,7 +100,7 @@ export default function Header() {
         // Check if categories have brands
         const [collectionsHasBrands, tailoredHasBrands] = await Promise.all([
           checkCategoryHasBrands("Collections"),
-          checkCategoryHasBrands("Tailoring"),
+          checkCategoryHasBrands("Tailored"),
         ]);
 
         setCollectionsHasBrands(collectionsHasBrands);
@@ -213,7 +213,7 @@ export default function Header() {
                 .filter((category) => {
                   if (category.title === "Collections")
                     return collectionsHasBrands;
-                  if (category.title === "Tailoring") return tailoredHasBrands;
+                  if (category.title === "Tailored") return tailoredHasBrands;
                   return true;
                 })
                 .map((category) => (
@@ -444,7 +444,7 @@ export default function Header() {
                     .filter((category) => {
                       if (category.title === "Collections")
                         return collectionsHasBrands;
-                      if (category.title === "Tailoring")
+                      if (category.title === "Tailored")
                         return tailoredHasBrands;
                       return true;
                     })

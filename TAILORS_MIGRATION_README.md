@@ -1,6 +1,6 @@
 # Tailors Directory Migration Guide
 
-This guide explains how to migrate existing brands with "Tailoring" category to the new Tailors Directory.
+This guide explains how to migrate existing brands with "Tailored" category to the new Tailors Directory.
 
 ## Overview
 
@@ -23,7 +23,7 @@ npm run migrate:tailors
 
 This script will:
 
-1. ✅ Check for existing brands with "Tailoring" category
+1. ✅ Check for existing brands with "Tailored" category
 2. ✅ Create the tailors table if it doesn't exist
 3. ✅ Migrate tailoring brands to the tailors table
 4. ✅ Avoid duplicates
@@ -39,14 +39,14 @@ If you prefer to run SQL directly, use the provided SQL files:
 
 Execute in your Supabase SQL editor or via command line.
 
-## Current Tailoring Brands
+## Current Tailored Brands
 
 The following brands will be migrated:
 
 ### 1. Tunis Master Tailors
 
 - **Location**: Tunis, Tunisia
-- **Specialties**: Bespoke Suits, Formal Wear, Shirts, Mediterranean Style, Traditional Tailoring
+- **Specialties**: Bespoke Suits, Formal Wear, Shirts, Mediterranean Style, Traditional Tailored
 - **Price Range**: TND 800 - TND 5,000
 - **Lead Time**: 3-4 weeks
 - **Consultation Fee**: $75

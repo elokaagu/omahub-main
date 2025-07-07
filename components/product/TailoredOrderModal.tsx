@@ -8,7 +8,7 @@ import {
   CustomerMeasurements,
   DeliveryAddress,
 } from "@/lib/supabase";
-import { calculateTailoringPrice } from "@/lib/services/tailoringOrderService";
+import { calculateTailoredPrice } from "@/lib/services/tailoredOrderService";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -38,19 +38,19 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-interface TailoringOrderModalProps {
+interface TailoredOrderModalProps {
   product: Product;
   brand: Brand;
   isOpen: boolean;
   onClose: () => void;
 }
 
-export function TailoringOrderModal({
+export function TailoredOrderModal({
   product,
   brand,
   isOpen,
   onClose,
-}: TailoringOrderModalProps) {
+}: TailoredOrderModalProps) {
   const { user } = useAuth();
   const [currentTab, setCurrentTab] = useState("measurements");
   const [loading, setLoading] = useState(false);
@@ -77,7 +77,7 @@ export function TailoringOrderModal({
   const [selectedColor, setSelectedColor] = useState("");
 
   // Calculate final price
-  const finalPrice = calculateTailoringPrice(
+  const finalPrice = calculateTailoredPrice(
     product.sale_price || product.price,
     product.is_custom,
     measurements

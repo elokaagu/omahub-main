@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
 
     // Create the order in the database
     const { data: order, error: orderError } = await supabase
-      .from("tailoring_orders")
+      .from("tailored_orders")
       .insert({
         user_id,
         product_id,

@@ -1,22 +1,22 @@
 import {
   supabase,
-  TailoringOrder,
+  TailoredOrder,
   CustomerMeasurements,
   DeliveryAddress,
 } from "../supabase";
 
 /**
- * Create a new tailoring order
+ * Create a new tailored order
  */
-export async function createTailoringOrder(
-  orderData: Omit<TailoringOrder, "id" | "created_at" | "updated_at">
-): Promise<TailoringOrder | null> {
+export async function createTailoredOrder(
+  orderData: Omit<TailoredOrder, "id" | "created_at" | "updated_at">
+): Promise<TailoredOrder | null> {
   if (!supabase) {
     throw new Error("Supabase client not available");
   }
 
   const { data, error } = await supabase
-    .from("tailoring_orders")
+    .from("tailored_orders")
     .insert({
       ...orderData,
       created_at: new Date().toISOString(),
@@ -26,7 +26,7 @@ export async function createTailoringOrder(
     .single();
 
   if (error) {
-    console.error("Error creating tailoring order:", error);
+    console.error("Error creating tailored order:", error);
     throw error;
   }
 
@@ -34,17 +34,17 @@ export async function createTailoringOrder(
 }
 
 /**
- * Get tailoring orders for a user
+ * Get tailored orders for a user
  */
-export async function getUserTailoringOrders(
+export async function getUserTailoredOrders(
   userId: string
-): Promise<TailoringOrder[]> {
+): Promise<TailoredOrder[]> {
   if (!supabase) {
     throw new Error("Supabase client not available");
   }
 
   const { data, error } = await supabase
-    .from("tailoring_orders")
+    .from("tailored_orders")
     .select(
       `
       *,
@@ -56,7 +56,7 @@ export async function getUserTailoringOrders(
     .order("created_at", { ascending: false });
 
   if (error) {
-    console.error("Error fetching user tailoring orders:", error);
+    console.error("Error fetching user tailored orders:", error);
     throw error;
   }
 
@@ -64,17 +64,17 @@ export async function getUserTailoringOrders(
 }
 
 /**
- * Get tailoring orders for a brand
+ * Get tailored orders for a brand
  */
-export async function getBrandTailoringOrders(
+export async function getBrandTailoredOrders(
   brandId: string
-): Promise<TailoringOrder[]> {
+): Promise<TailoredOrder[]> {
   if (!supabase) {
     throw new Error("Supabase client not available");
   }
 
   const { data, error } = await supabase
-    .from("tailoring_orders")
+    .from("tailored_orders")
     .select(
       `
       *,
@@ -86,7 +86,7 @@ export async function getBrandTailoringOrders(
     .order("created_at", { ascending: false });
 
   if (error) {
-    console.error("Error fetching brand tailoring orders:", error);
+    console.error("Error fetching brand tailored orders:", error);
     throw error;
   }
 
@@ -94,14 +94,14 @@ export async function getBrandTailoringOrders(
 }
 
 /**
- * Update tailoring order status
+ * Update tailored order status
  */
-export async function updateTailoringOrderStatus(
+export async function updateTailoredOrderStatus(
   orderId: string,
-  status: TailoringOrder["status"],
+  status: TailoredOrder["status"],
   brandNotes?: string,
   estimatedCompletion?: string
-): Promise<TailoringOrder | null> {
+): Promise<TailoredOrder | null> {
   if (!supabase) {
     throw new Error("Supabase client not available");
   }
@@ -116,14 +116,14 @@ export async function updateTailoringOrderStatus(
     updateData.estimated_completion = estimatedCompletion;
 
   const { data, error } = await supabase
-    .from("tailoring_orders")
+    .from("tailored_orders")
     .update(updateData)
     .eq("id", orderId)
     .select()
     .single();
 
   if (error) {
-    console.error("Error updating tailoring order status:", error);
+    console.error("Error updating tailored order status:", error);
     throw error;
   }
 
@@ -131,17 +131,17 @@ export async function updateTailoringOrderStatus(
 }
 
 /**
- * Get a single tailoring order by ID
+ * Get a single tailored order by ID
  */
-export async function getTailoringOrderById(
+export async function getTailoredOrderById(
   orderId: string
-): Promise<TailoringOrder | null> {
+): Promise<TailoredOrder | null> {
   if (!supabase) {
     throw new Error("Supabase client not available");
   }
 
   const { data, error } = await supabase
-    .from("tailoring_orders")
+    .from("tailored_orders")
     .select(
       `
       *,
@@ -154,7 +154,7 @@ export async function getTailoringOrderById(
     .single();
 
   if (error) {
-    console.error("Error fetching tailoring order:", error);
+    console.error("Error fetching tailored order:", error);
     return null;
   }
 
@@ -162,17 +162,17 @@ export async function getTailoringOrderById(
 }
 
 /**
- * Calculate estimated price for custom tailoring
+ * Calculate estimated price for custom tailored work
  * This is a basic implementation - you can make it more sophisticated
  */
-export function calculateTailoringPrice(
+export function calculateTailoredPrice(
   basePrice: number,
   isCustom: boolean = false,
   measurements?: CustomerMeasurements
 ): number {
   let finalPrice = basePrice;
 
-  // Add custom tailoring fee
+  // Add custom tailored fee
   if (isCustom) {
     finalPrice += basePrice * 0.3; // 30% markup for custom work
   }
@@ -189,7 +189,7 @@ export function calculateTailoringPrice(
  * Generate order invoice data
  */
 export function generateOrderInvoice(
-  order: TailoringOrder,
+  order: TailoredOrder,
   product: any,
   brand: any
 ) {
@@ -200,6 +200,13 @@ export function generateOrderInvoice(
       name: order.delivery_address.full_name,
       email: order.delivery_address.email,
       phone: order.delivery_address.phone,
+      address: {
+        line1: order.delivery_address.address_line_1,
+        city: order.delivery_address.city,
+        state: order.delivery_address.state,
+        postalCode: order.delivery_address.postal_code,
+        country: order.delivery_address.country,
+      },
     },
     brandInfo: {
       name: brand.name,
@@ -207,17 +214,41 @@ export function generateOrderInvoice(
     },
     productInfo: {
       title: product.title,
-      description: product.description,
       basePrice: product.price,
-      finalPrice: order.total_amount,
+      customizations: order.customer_notes || "None specified",
     },
-    deliveryAddress: order.delivery_address,
-    measurements: order.measurements,
-    status: order.status,
-    estimatedCompletion: order.estimated_completion,
-    notes: {
-      customer: order.customer_notes,
-      brand: order.brand_notes,
+    orderDetails: {
+      status: order.status,
+      totalAmount: order.total_amount,
+      specialRequests: order.customer_notes,
+      estimatedCompletion: order.estimated_completion,
+    },
+  };
+}
+
+/**
+ * Format order data for email notifications
+ */
+export function formatOrderDataForEmail(
+  order: TailoredOrder,
+  product: any,
+  brand: any
+) {
+  return {
+    orderNumber: `OMH-${order.id.slice(-8).toUpperCase()}`,
+    customerName: order.delivery_address.full_name,
+    customerEmail: order.delivery_address.email,
+    productTitle: product.title,
+    brandName: brand.name,
+    totalAmount: order.total_amount,
+    orderDate: new Date(order.created_at).toLocaleDateString(),
+    specialRequests: order.customer_notes || "None",
+    deliveryAddress: {
+      line1: order.delivery_address.address_line_1,
+      city: order.delivery_address.city,
+      state: order.delivery_address.state,
+      postalCode: order.delivery_address.postal_code,
+      country: order.delivery_address.country,
     },
   };
 }

@@ -160,7 +160,7 @@ const getCategoryImageFocalPoint = (category: string): string => {
       // For collection images with people, use center-top positioning to show faces/upper body centered
       return "object-center object-top";
     case "tailored":
-      // Tailoring images often show full garments, center positioning works well
+      // Tailored images often show full garments, center positioning works well
       return "object-center";
     default:
       return "object-center";

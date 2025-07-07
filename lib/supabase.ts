@@ -178,7 +178,7 @@ export type Profile = {
   owned_brands?: string[];
 };
 
-export type TailoringOrder = {
+export type TailoredOrder = {
   id: string;
   user_id: string;
   product_id: string;

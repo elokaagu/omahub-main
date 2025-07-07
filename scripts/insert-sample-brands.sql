@@ -40,11 +40,11 @@ SELECT * FROM (
     (
         'emmy-kasbit',
         'Emmy Kasbit',
-        'Contemporary tailoring',
-        'Contemporary tailoring with a focus on quality and detail.',
+            'Contemporary tailored',
+    'Contemporary tailored with a focus on quality and detail.',
         'Accra',
         '$$',
-        'Tailoring',
+        'Tailored',
         4.6,
         true,
         '/lovable-uploads/99ca757a-bed8-422e-b155-0b9d365b58e0.png'

@@ -253,12 +253,12 @@ function getSampleBrandsData(): Brand[] {
     {
       id: "sample-brand-3",
       name: "Emmy Kasbit",
-      description: "Contemporary tailoring",
+      description: "Contemporary tailored",
       long_description:
-        "Contemporary tailoring with a focus on quality and detail.",
+        "Contemporary tailored with a focus on quality and detail.",
       location: "Accra",
       price_range: "$$",
-      category: "Tailoring",
+      category: "Tailored",
       rating: 4.6,
       is_verified: true,
       image: "/lovable-uploads/99ca757a-bed8-422e-b155-0b9d365b58e0.png",

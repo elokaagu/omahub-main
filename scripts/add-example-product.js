@@ -90,7 +90,7 @@ async function addExampleProduct() {
     console.log(`   - Title: ${product.title}`);
     console.log(`   - Price: $${product.price} (Sale: $${product.sale_price})`);
     console.log(`   - Brand: ${brand.name}`);
-    console.log(`   - Custom Tailoring: ${product.is_custom ? "Yes" : "No"}`);
+    console.log(`   - Custom Tailored: ${product.is_custom ? "Yes" : "No"}`);
     console.log(`   - Lead Time: ${product.lead_time}`);
 
     if (collectionId) {

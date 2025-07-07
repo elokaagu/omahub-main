@@ -57,7 +57,7 @@ CREATE TRIGGER update_tailors_updated_at
 
 -- Insert some sample data (you'll need to replace brand_ids with actual brand IDs from your database)
 -- First, let's see what brands exist:
--- SELECT id, name, category FROM brands WHERE category IN ('Tailoring', 'Bridal') LIMIT 5;
+-- SELECT id, name, category FROM brands WHERE category IN ('Tailored', 'Bridal') LIMIT 5;
 
 -- Sample tailors data (uncomment and modify brand_ids as needed):
 /*
@@ -84,7 +84,7 @@ INSERT INTO tailors (brand_id, title, image, description, specialties, price_ran
 ),
 (
     'your-brand-id-3',
-    'Traditional & Contemporary Tailoring',
+    'Traditional & Contemporary Tailored',
     '/lovable-uploads/4a7c7e86-6cde-4d07-a246-a5aa4cb6fa51.png',
     'Blending traditional craftsmanship with contemporary design for unique, perfectly fitted garments.',
     ARRAY['Traditional Wear', 'Contemporary Fashion', 'Casual Wear', 'Business Attire'],

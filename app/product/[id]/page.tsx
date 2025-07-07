@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loading } from "@/components/ui/loading";
 import { NavigationLink } from "@/components/ui/navigation-link";
-import { TailoringOrderModal } from "@/components/product/TailoringOrderModal";
+import { TailoredOrderModal } from "@/components/product/TailoredOrderModal";
 import {
   ShoppingBag,
   Ruler,
@@ -295,13 +295,13 @@ export default function ProductPage() {
                 </div>
               </div>
 
-              {/* Custom Tailoring Info */}
+              {/* Custom Tailored Info */}
               {product.is_custom && (
                 <div className="bg-oma-beige/30 rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <Ruler className="h-5 w-5 text-oma-plum" />
                     <h4 className="font-semibold text-gray-900">
-                      Custom Tailoring Available
+                      Custom Tailored Available
                     </h4>
                   </div>
                   <p className="text-sm text-gray-600 mb-2">
@@ -363,9 +363,9 @@ export default function ProductPage() {
         </div>
       </div>
 
-      {/* Tailoring Order Modal */}
+      {/* Tailored Order Modal */}
       {showOrderModal && product && brand && (
-        <TailoringOrderModal
+        <TailoredOrderModal
           product={product}
           brand={brand}
           isOpen={showOrderModal}

@@ -89,12 +89,12 @@ export function mapCategoriesToNavigation(
     "Formal Wear", // Maps to Made to Measure
     "Vacation", // Maps to Ready to Wear
   ];
-  const tailoringCategories = [
+  const tailoredCategories = [
     "Bridal",
     "Custom Design",
     "Evening Gowns",
     "Alterations",
-    "Tailoring",
+    "Tailored",
     "Event Wear",
     "Wedding Guest",
     "Birthday",
@@ -151,9 +151,9 @@ export function mapCategoriesToNavigation(
     });
   }
 
-  // Tailoring navigation - include all categories that fit tailoring
-  const tailoringItems = categories
-    .filter((cat) => tailoringCategories.includes(cat))
+  // Tailored navigation - include all categories that fit tailored
+  const tailoredItems = categories
+    .filter((cat) => tailoredCategories.includes(cat))
     .map((cat) => ({
       title: cat,
       href: `/directory?category=${encodeURIComponent(cat)}`,
@@ -162,12 +162,12 @@ export function mapCategoriesToNavigation(
     .filter((item) => item.count > 0) // Only show categories with brands
     .sort((a, b) => b.count - a.count); // Sort by count descending
 
-  if (tailoringItems.length > 0) {
+  if (tailoredItems.length > 0) {
     navigationCategories.push({
-      title: "Tailoring",
-      href: "/directory?category=Tailoring",
+      title: "Tailored",
+      href: "/directory?category=Tailored",
       description: "Masters of craft creating perfectly fitted garments",
-      items: tailoringItems,
+      items: tailoredItems,
     });
   }
 
@@ -198,7 +198,7 @@ export async function getDynamicNavigationItems(): Promise<
  * Check if a navigation category has brands
  */
 export async function checkCategoryHasBrands(
-  categoryType: "Collections" | "Tailoring"
+  categoryType: "Collections" | "Tailored"
 ): Promise<boolean> {
   try {
     const counts = await getCategoryCounts();
@@ -213,16 +213,16 @@ export async function checkCategoryHasBrands(
       ];
       return collectionsCategories.some((cat) => (counts[cat] || 0) > 0);
     } else {
-      const tailoringCategories = [
+      const tailoredCategories = [
         "Bridal",
         "Couture",
         "Custom Design",
-        "Tailoring",
+        "Tailored",
         "Event Wear",
         "Wedding Guest",
         "Birthday",
       ];
-      return tailoringCategories.some((cat) => (counts[cat] || 0) > 0);
+      return tailoredCategories.some((cat) => (counts[cat] || 0) > 0);
     }
   } catch (error) {
     console.error(`Error checking if ${categoryType} has brands:`, error);

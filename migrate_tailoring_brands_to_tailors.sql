@@ -1,5 +1,5 @@
--- Migration script to add existing Tailoring brands to the Tailors Directory
--- This script will migrate brands with category "Tailoring" to the tailors table
+-- Migration script to add existing Tailored brands to the Tailors Directory
+-- This script will migrate brands with category "Tailored" to the tailors table
 
 -- First, ensure the tailors table exists
 CREATE TABLE IF NOT EXISTS tailors (
@@ -54,20 +54,20 @@ CREATE TRIGGER update_tailors_updated_at
     FOR EACH ROW
     EXECUTE FUNCTION update_tailors_updated_at();
 
--- Now migrate the tailoring brands to tailors table
+-- Now migrate the tailored brands to tailors table
 -- Note: Replace the brand_id values with actual IDs from your database
 
--- First, let's check what tailoring brands exist in the database
--- SELECT id, name, category, location FROM brands WHERE category = 'Tailoring';
+-- First, let's check what tailored brands exist in the database
+-- SELECT id, name, category, location FROM brands WHERE category = 'Tailored';
 
 -- Insert Tunis Master Tailors
 INSERT INTO tailors (brand_id, title, image, description, specialties, price_range, lead_time, consultation_fee)
 SELECT 
     id as brand_id,
-    'Bespoke Mediterranean Tailoring' as title,
+    'Bespoke Mediterranean Tailored' as title,
     image,
     'Master tailor specializing in bespoke menswear that blends Mediterranean elegance with North African craftsmanship. Over three decades of excellence in creating impeccably fitted suits, shirts, and formal wear.' as description,
-    ARRAY['Bespoke Suits', 'Formal Wear', 'Shirts', 'Mediterranean Style', 'Traditional Tailoring'] as specialties,
+    ARRAY['Bespoke Suits', 'Formal Wear', 'Shirts', 'Mediterranean Style', 'Traditional Tailored'] as specialties,
     'TND 800 - TND 5,000' as price_range,
     '3-4 weeks' as lead_time,
     75.00 as consultation_fee
@@ -79,9 +79,9 @@ ON CONFLICT (brand_id) DO NOTHING;
 INSERT INTO tailors (brand_id, title, image, description, specialties, price_range, lead_time, consultation_fee)
 SELECT 
     id as brand_id,
-    'Moroccan Bespoke Tailoring' as title,
+    'Moroccan Bespoke Tailored' as title,
     image,
-    'Contemporary bespoke tailoring house combining traditional Moroccan craftsmanship with modern techniques. Specializing in both traditional Moroccan garments and contemporary suits with distinctive North African flair.' as description,
+    'Contemporary bespoke tailored house combining traditional Moroccan craftsmanship with modern techniques. Specializing in both traditional Moroccan garments and contemporary suits with distinctive North African flair.' as description,
     ARRAY['Bespoke Suits', 'Traditional Moroccan Wear', 'Contemporary Menswear', 'Custom Design', 'Alterations'] as specialties,
     'MAD 5,000 - MAD 30,000' as price_range,
     '2-3 weeks' as lead_time,
@@ -101,7 +101,7 @@ SELECT
     t.lead_time
 FROM tailors t
 JOIN brands b ON t.brand_id = b.id
-WHERE b.category = 'Tailoring';
+WHERE b.category = 'Tailored';
 
 -- Optional: Add more sample tailors for demonstration
 -- You can uncomment these if you want additional sample data

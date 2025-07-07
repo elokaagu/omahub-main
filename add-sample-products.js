@@ -248,7 +248,7 @@ const sampleProducts = [
   },
   {
     brand_id: TEST_BRAND_ID,
-    title: "Suit Tailoring",
+    title: "Suit Tailored",
     description: "Expert suit tailoring and fitting services",
     price: 450,
     sale_price: null,
