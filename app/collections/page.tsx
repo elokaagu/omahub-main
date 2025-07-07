@@ -75,12 +75,25 @@ export default function CataloguesPage() {
     async function fetchData() {
       try {
         setLoading(true);
+        console.log("🔄 Starting to fetch collections data...");
+
         const [catalogueData, productData] = await Promise.all([
-          getCollectionsWithBrands(),
-          getProductsWithBrandCurrency(),
+          getCollectionsWithBrands().catch((err) => {
+            console.error("Error fetching collections:", err);
+            return [];
+          }),
+          getProductsWithBrandCurrency().catch((err) => {
+            console.error("Error fetching products:", err);
+            return [];
+          }),
         ]);
 
-        setCatalogues(catalogueData);
+        console.log("✅ Fetched data:", {
+          catalogues: catalogueData.length,
+          products: productData.length,
+        });
+
+        setCatalogues(catalogueData || []);
         console.log(
           "🖼️ Catalogue images debug:",
           catalogueData.map((c) => ({
@@ -89,9 +102,9 @@ export default function CataloguesPage() {
             hasImage: !!c.image,
           }))
         );
-        setFilteredCatalogues(catalogueData);
-        setProducts(productData);
-        setFilteredProducts(productData);
+        setFilteredCatalogues(catalogueData || []);
+        setProducts(productData || []);
+        setFilteredProducts(productData || []);
       } catch (err) {
         console.error("Error fetching data:", err);
         setError("Failed to load information");
@@ -379,13 +392,35 @@ export default function CataloguesPage() {
                       {product.title}
                     </h3>
                     <p className="text-oma-cocoa/70 text-sm mb-2">
-                      {
-                        catalogues.find((c) => c.brand_id === product.brand_id)
-                          ?.brand.name
-                      }
+                      {(() => {
+                        try {
+                          const catalogue = catalogues.find(
+                            (c) => c.brand_id === product.brand_id
+                          );
+                          return (
+                            catalogue?.brand?.name ||
+                            product.brand?.name ||
+                            "Unknown Brand"
+                          );
+                        } catch (error) {
+                          console.error("Error getting brand name:", error);
+                          return "Unknown Brand";
+                        }
+                      })()}
                     </p>
                     <p className="text-oma-plum font-medium">
-                      {formatProductPrice(product, product.brand).displayPrice}
+                      {(() => {
+                        try {
+                          return formatProductPrice(product, product.brand)
+                            .displayPrice;
+                        } catch (error) {
+                          console.error("Error formatting price:", error, {
+                            product,
+                            brand: product.brand,
+                          });
+                          return "Contact for pricing";
+                        }
+                      })()}
                     </p>
                   </div>
                 </Link>

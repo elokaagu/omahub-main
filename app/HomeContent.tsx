@@ -439,6 +439,10 @@ export default function HomeContent() {
         setCategories(updatedCategories);
         setHeroSlides(heroData);
         setSpotlightContent(spotlightData);
+
+        // Debug spotlight content
+        console.log("🎯 Spotlight data fetched:", spotlightData);
+        console.log("🎯 Spotlight content set:", !!spotlightData);
       } catch (err) {
         console.error("Error fetching data:", err);
         setError("Failed to load content. Please try again.");
@@ -661,19 +665,38 @@ export default function HomeContent() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center mt-8">
               <SlideUp delay={0.2}>
                 <div className="rounded-2xl overflow-hidden relative group">
-                  <VideoPlayer
-                    videoUrl={spotlightContent.video_url}
-                    thumbnailUrl={spotlightContent.video_thumbnail}
-                    fallbackImageUrl={spotlightContent.main_image}
-                    alt={`${spotlightContent.brand_name} collection`}
-                    className="w-full h-[500px] transition-transform duration-700 group-hover:scale-105"
-                    aspectRatio="3/4"
-                    sizes="(max-width: 768px) 100vw, 800px"
-                    quality={85}
-                    muted={true}
-                    controls={true}
-                    showPlayButton={true}
-                  />
+                  {/* Use LazyImage as fallback if video fails or doesn't exist */}
+                  {spotlightContent.video_url ? (
+                    <VideoPlayer
+                      videoUrl={spotlightContent.video_url}
+                      thumbnailUrl={spotlightContent.video_thumbnail}
+                      fallbackImageUrl={spotlightContent.main_image}
+                      alt={`${spotlightContent.brand_name} collection`}
+                      className="w-full h-[500px] transition-transform duration-700 group-hover:scale-105"
+                      aspectRatio="3/4"
+                      sizes="(max-width: 768px) 100vw, 800px"
+                      quality={85}
+                      muted={true}
+                      controls={true}
+                      showPlayButton={true}
+                      onVideoError={() => {
+                        console.warn(
+                          "Video failed to load for spotlight content"
+                        );
+                      }}
+                    />
+                  ) : (
+                    <LazyImage
+                      src={spotlightContent.main_image}
+                      alt={`${spotlightContent.brand_name} collection`}
+                      width={800}
+                      height={1000}
+                      className="w-full h-[500px] object-cover transition-transform duration-700 group-hover:scale-105"
+                      aspectRatio="3/4"
+                      sizes="(max-width: 768px) 100vw, 800px"
+                      quality={85}
+                    />
+                  )}
                   <div className="absolute inset-0 bg-gradient-to-t from-oma-black/70 via-oma-black/30 to-transparent pointer-events-none"></div>
                   <div className="absolute bottom-8 left-8 right-8 text-white pointer-events-none">
                     <p className="font-canela italic text-xl md:text-2xl">
