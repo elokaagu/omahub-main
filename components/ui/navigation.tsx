@@ -35,8 +35,8 @@ const fallbackNavigationItems: NavigationItem[] = [
     items: [
       { title: "Bridal", href: "/directory?category=Bridal" },
       { title: "Custom Design", href: "/directory?category=Custom+Design" },
-      { title: "Event Wear", href: "/directory?category=Event+Wear" },
-      { title: "Couture", href: "/directory?category=Couture" },
+      { title: "Evening Gowns", href: "/directory?category=Evening+Gowns" },
+      { title: "Alterations", href: "/directory?category=Alterations" },
     ],
   },
 ];

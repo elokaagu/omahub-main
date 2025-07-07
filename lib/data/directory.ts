@@ -4,7 +4,7 @@ export const collections = ["Collections", "Tailored"] as const;
 // Subcategories mapping - updated to include Vacation in Collections
 export const subcategories = {
   Collections: ["Ready to Wear", "Accessories", "Vacation"],
-  Tailored: ["Bridal", "Couture"],
+  Tailored: ["Bridal", "Custom Design", "Evening Gowns", "Alterations"],
 } as const;
 
 export type Category = (typeof collections)[number];
@@ -13,6 +13,9 @@ export type Subcategory = (typeof subcategories)[Category][number];
 // Standard categories used across the application
 export const standardCategories = [
   "Bridal",
+  "Custom Design",
+  "Evening Gowns",
+  "Alterations",
   "Ready to Wear",
   "Accessories",
   "Vacation",
@@ -43,6 +46,9 @@ export const occasionToCategoryMapping = {
 // Mapping from database categories to display categories
 export const categoryMapping = {
   Bridal: "Bridal",
+  "Custom Design": "Custom Design",
+  "Evening Gowns": "Evening Gowns",
+  Alterations: "Alterations",
   "Ready to Wear": "Ready to Wear",
   "Casual Wear": "Ready to Wear",
   "Formal Wear": "Couture",

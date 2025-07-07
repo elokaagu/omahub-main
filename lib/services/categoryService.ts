@@ -92,6 +92,8 @@ export function mapCategoriesToNavigation(
   const tailoringCategories = [
     "Bridal",
     "Custom Design",
+    "Evening Gowns",
+    "Alterations",
     "Tailoring",
     "Event Wear",
     "Wedding Guest",
