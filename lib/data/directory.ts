@@ -73,7 +73,6 @@ export const getAllFilterCategories = () => [
   "All Categories",
   ...collections,
   ...Object.values(subcategories).flat(),
-  "Couture", // Additional category not in subcategories
 ];
 
 // Helper function to map occasion to category for filtering
