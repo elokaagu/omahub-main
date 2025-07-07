@@ -310,7 +310,7 @@ export default function CollectionsPage() {
 
   const handleViewCatalogue = (catalogueId: string) => {
     // Open catalogue page in new tab
-    window.open(`/catalogue/${catalogueId}`, "_blank");
+    window.open(`/collection/${catalogueId}`, "_blank");
   };
 
   const confirmDeleteCatalogue = (catalogueId: string) => {
@@ -346,12 +346,12 @@ export default function CollectionsPage() {
       catalogue &&
       !ownedBrandIds.includes(catalogue.brand_id)
     ) {
-      toast.error("You can only delete catalogues from your own brands");
+      toast.error("You can only delete collections from your own brands");
       return;
     }
 
     if (!isAdmin && !isBrandOwner) {
-      toast.error("You don't have permission to delete catalogues");
+      toast.error("You don't have permission to delete collections");
       return;
     }
 
@@ -366,10 +366,10 @@ export default function CollectionsPage() {
     try {
       await deleteCatalogue(catalogueToDelete);
       setCatalogues(catalogues.filter((c) => c.id !== catalogueToDelete));
-      toast.success("Catalogue deleted successfully");
+      toast.success("Collection deleted successfully");
     } catch (error) {
       console.error("Error deleting catalogue:", error);
-      toast.error("Failed to delete catalogue");
+      toast.error("Failed to delete collection");
     } finally {
       setIsDeleting(false);
       setIsDeleteDialogOpen(false);
@@ -425,24 +425,26 @@ export default function CollectionsPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-4xl font-canela text-black mb-2">Catalogues</h1>
+            <h1 className="text-4xl font-canela text-black mb-2">
+              Collections
+            </h1>
             <p className="text-black/70">
               {user?.role === "brand_admin" && brands.length > 0
-                ? `Manage catalogues for your ${brands.length > 1 ? `${brands.length} brands` : "brand"}: ${brands.map((b) => b.name).join(", ")}`
-                : "Create and manage your brand catalogues"}
+                ? `Manage collections for your ${brands.length > 1 ? `${brands.length} brands` : "brand"}: ${brands.map((b) => b.name).join(", ")}`
+                : "Create and manage your brand collections"}
             </p>
             {user?.role === "brand_admin" && catalogues.length > 0 && (
               <p className="text-sm text-oma-plum/70 mt-1">
-                Showing {catalogues.length} catalogue
+                Showing {catalogues.length} collection
                 {catalogues.length !== 1 ? "s" : ""} from your owned brands
               </p>
             )}
           </div>
           {canCreateCatalogues && (
-            <Link href="/studio/catalogues/create">
+            <Link href="/studio/collections/create">
               <Button className="bg-oma-plum hover:bg-oma-plum/90 text-white">
                 <PlusCircle className="w-4 h-4 mr-2" />
-                Create Catalogue
+                Create Collection
               </Button>
             </Link>
           )}
@@ -526,18 +528,18 @@ export default function CollectionsPage() {
             <CardContent className="flex flex-col items-center justify-center py-16">
               <Package className="w-16 h-16 text-black/30 mb-4" />
               <h3 className="text-xl font-canela text-black mb-2">
-                No catalogues found
+                No collections found
               </h3>
               <p className="text-black/60 text-center mb-6">
                 {catalogues.length === 0
-                  ? "Get started by creating your first catalogue"
+                  ? "Get started by creating your first collection"
                   : "Try adjusting your search or filter criteria"}
               </p>
               {canCreateCatalogues && catalogues.length === 0 && (
-                <Link href="/studio/catalogues/create">
+                <Link href="/studio/collections/create">
                   <Button className="bg-oma-plum hover:bg-oma-plum/90 text-white">
                     <PlusCircle className="w-4 h-4 mr-2" />
-                    Create Your First Catalogue
+                    Create Your First Collection
                   </Button>
                 </Link>
               )}

@@ -35,7 +35,11 @@ const rolePermissions: Record<Role, Permission[]> = {
   ],
 };
 
-const SUPER_ADMIN_EMAILS = ["eloka.agu@icloud.com", "shannonalisa@oma-hub.com"];
+const SUPER_ADMIN_EMAILS = [
+  "eloka.agu@icloud.com",
+  "shannonalisa@oma-hub.com",
+  "nnamdiohaka@gmail.com",
+];
 const BRAND_ADMIN_EMAILS = ["eloka@culturin.com"];
 
 function isSuperAdminEmail(email: string): boolean {

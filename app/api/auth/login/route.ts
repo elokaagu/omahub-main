@@ -2,7 +2,11 @@ import { createServerClient } from "@supabase/ssr";
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
-const SUPER_ADMIN_EMAILS = ["eloka.agu@icloud.com", "shannonalisa@oma-hub.com"];
+const SUPER_ADMIN_EMAILS = [
+  "eloka.agu@icloud.com",
+  "shannonalisa@oma-hub.com",
+  "nnamdiohaka@gmail.com",
+];
 const BRAND_ADMIN_EMAILS = ["eloka@culturin.com"];
 
 function getUserRole(email: string): string {

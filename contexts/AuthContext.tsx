@@ -39,7 +39,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const getRoleFromEmail = (email: string): UserRole => {
     if (
       email === "eloka.agu@icloud.com" ||
-      email === "shannonalisa@oma-hub.com"
+      email === "shannonalisa@oma-hub.com" ||
+      email === "nnamdiohaka@gmail.com"
     ) {
       return "super_admin";
     }

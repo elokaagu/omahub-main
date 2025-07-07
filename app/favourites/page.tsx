@@ -14,7 +14,7 @@ export default function FavouritesPage() {
   const brands = favourites.filter(
     (item: any) => item.name && !item.brand_id && !item.price
   );
-  const catalogues = favourites.filter(
+  const collections = favourites.filter(
     (item: any) => item.title && item.brand_id && !item.price
   );
   const products = favourites.filter((item: any) => item.title && item.price);
@@ -113,7 +113,7 @@ export default function FavouritesPage() {
             No favourites yet
           </h3>
           <p className="text-black/60 mb-6 max-w-md mx-auto">
-            You haven't added any favourites yet. Browse catalogues, products,
+            You haven't added any favourites yet. Browse collections, products,
             or brands and click the heart icon to save your favourites.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -143,11 +143,11 @@ export default function FavouritesPage() {
           />
 
           <FavouriteSection
-            title="Favourite Catalogues"
-            items={catalogues}
+            title="Favourite Collections"
+            items={collections}
             icon={BookOpen}
-            emptyMessage="No favourite catalogues yet. Browse designer collections and save the ones you love!"
-            getHref={(item) => `/catalogue/${item.id}`}
+            emptyMessage="No favourite collections yet. Browse designer collections and save the ones you love!"
+            getHref={(item) => `/collection/${item.id}`}
           />
 
           <FavouriteSection

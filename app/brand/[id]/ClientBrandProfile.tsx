@@ -56,11 +56,11 @@ export default function ClientBrandProfile({
   const [products, setProducts] = useState<Product[]>([]);
   const [productsLoading, setProductsLoading] = useState(false);
 
-  // Scroll to catalogues function
-  const scrollToCatalogues = () => {
-    const cataloguesSection = document.getElementById("catalogues-section");
-    if (cataloguesSection) {
-      cataloguesSection.scrollIntoView({ behavior: "smooth" });
+  // Scroll to collections function
+  const scrollToCollections = () => {
+    const collectionsSection = document.getElementById("collections-section");
+    if (collectionsSection) {
+      collectionsSection.scrollIntoView({ behavior: "smooth" });
     }
   };
 
@@ -173,10 +173,10 @@ export default function ClientBrandProfile({
           {/* Mobile-optimized button layout */}
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
             <Button
-              onClick={scrollToCatalogues}
+              onClick={scrollToCollections}
               className="bg-oma-plum hover:bg-oma-plum/90 w-full sm:w-auto min-h-[44px] text-sm sm:text-base"
             >
-              View Catalogues
+              View Collections
             </Button>
             <Button
               onClick={handleToggleProducts}
@@ -290,19 +290,19 @@ export default function ClientBrandProfile({
           </div>
         )}
 
-        {/* Catalogue Grid */}
+        {/* Collections Grid */}
         <div
-          id="catalogues-section"
+          id="collections-section"
           className="my-8 sm:my-12 slide-up scroll-mt-20 sm:scroll-mt-24"
           style={{ animationDelay: "100ms" }}
         >
           <h2 className="text-2xl sm:text-3xl font-canela font-normal mb-4 sm:mb-6">
-            Catalogues
+            Collections
           </h2>
           {brandData.collections.length === 0 ? (
             <div className="text-center py-8 sm:py-12 text-gray-500">
               <p className="text-sm sm:text-base">
-                No catalogues available yet.
+                No collections available yet.
               </p>
             </div>
           ) : (
@@ -310,7 +310,7 @@ export default function ClientBrandProfile({
               {brandData.collections.map((collection, index) => (
                 <NavigationLink
                   key={collection.id}
-                  href={`/catalogue/${collection.id}`}
+                  href={`/collection/${collection.id}`}
                   className="block group"
                 >
                   <div

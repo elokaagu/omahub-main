@@ -180,7 +180,8 @@ export async function getProfile(userId: string): Promise<User | null> {
         const userEmail = user?.email || "";
         const role =
           userEmail === "eloka.agu@icloud.com" ||
-          userEmail === "shannonalisa@oma-hub.com"
+          userEmail === "shannonalisa@oma-hub.com" ||
+          userEmail === "nnamdiohaka@gmail.com"
             ? "super_admin"
             : userEmail === "eloka@culturin.com"
               ? "brand_admin"

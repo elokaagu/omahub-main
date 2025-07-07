@@ -55,15 +55,15 @@ export default function CataloguePage() {
       try {
         setLoading(true);
 
-        // Fetch catalogue with brand info
-        const catalogueData = await getCatalogueWithBrand(catalogueId);
-        if (!catalogueData) {
-          setError("Catalogue not found");
+        // Fetch collection with brand info
+        const collectionData = await getCollectionWithBrand(catalogueId);
+        if (!collectionData) {
+          setError("Collection not found");
           return;
         }
-        setCatalogue(catalogueData);
+        setCatalogue(collectionData);
 
-        // Fetch products in this catalogue
+        // Fetch products in this collection
         const productsData = await getProductsByCatalogue(catalogueId);
         setProducts(productsData);
 
@@ -71,7 +71,7 @@ export default function CataloguePage() {
         const recommendations = await getIntelligentRecommendations(
           user?.id,
           catalogueId,
-          catalogueData.brand_id,
+          collectionData.brand_id,
           4
         );
         // Shuffle recommendations for variety
@@ -119,11 +119,11 @@ export default function CataloguePage() {
               {error || "Catalogue not found"}
             </h1>
             <Link
-              href="/catalogues"
+              href="/collections"
               className="inline-flex items-center gap-2 text-oma-plum hover:text-oma-plum/80 transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
-              Back to Catalogues
+              Back to Collections
             </Link>
           </div>
         </div>
@@ -136,11 +136,11 @@ export default function CataloguePage() {
       <div className="max-w-7xl mx-auto px-6 py-24">
         {/* Back Button */}
         <Link
-          href="/catalogues"
+          href="/collections"
           className="inline-flex items-center gap-2 text-black/70 hover:text-black transition-colors mb-8"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back to Catalogues
+          Back to Collections
         </Link>
 
         {/* Catalogue Header */}

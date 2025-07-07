@@ -219,12 +219,12 @@ export default function CataloguesPage() {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-5xl font-canela text-black mb-6">
-            {showAllProducts ? "All Products" : "Our Catalogues"}
+            {showAllProducts ? "All Products" : "Our Collections"}
           </h1>
           <p className="text-xl text-oma-cocoa/80 max-w-3xl mx-auto">
             {showAllProducts
               ? "Browse our complete collection of products"
-              : "Explore curated catalogues from Africa's most talented designers"}
+              : "Explore curated collections from Africa's most talented designers"}
           </p>
         </div>
 
@@ -406,7 +406,7 @@ export default function CataloguesPage() {
                 key={catalogue.id}
                 className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group"
               >
-                <Link href={`/catalogue/${catalogue.id}`}>
+                <Link href={`/collection/${catalogue.id}`}>
                   <div className="relative aspect-[3/4] overflow-hidden">
                     <LazyImage
                       src={catalogue.image || "/placeholder-image.jpg"}

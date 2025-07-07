@@ -184,28 +184,37 @@ export async function POST(request: NextRequest) {
       // Trigger real-time profile refresh for the updated user
       console.log("🔄 Triggering profile refresh for updated user:", email);
 
-      // Send a real-time notification to trigger profile refresh
-      try {
-        await supabaseAdmin.channel(`profile_updates_${updatedUser.id}`).send({
-          type: "broadcast",
-          event: "profile_updated",
-          payload: {
-            user_id: updatedUser.id,
-            email: updatedUser.email,
-            role: updatedUser.role,
-            owned_brands: updatedUser.owned_brands,
-            updated_at: updatedUser.updated_at,
-            trigger: "admin_update",
-          },
-        });
+      // Only send real-time notification if the updated user is not the current admin
+      // This prevents the admin from logging themselves out when assigning roles
+      if (updatedUser.id !== user.id) {
+        try {
+          await supabaseAdmin
+            .channel(`profile_updates_${updatedUser.id}`)
+            .send({
+              type: "broadcast",
+              event: "profile_updated",
+              payload: {
+                user_id: updatedUser.id,
+                email: updatedUser.email,
+                role: updatedUser.role,
+                owned_brands: updatedUser.owned_brands,
+                updated_at: updatedUser.updated_at,
+                trigger: "admin_update",
+              },
+            });
 
-        console.log("✅ Real-time profile update notification sent");
-      } catch (realtimeError) {
-        console.warn(
-          "⚠️ Failed to send real-time profile update:",
-          realtimeError
+          console.log("✅ Real-time profile update notification sent");
+        } catch (realtimeError) {
+          console.warn(
+            "⚠️ Failed to send real-time profile update:",
+            realtimeError
+          );
+          // Don't fail the request if real-time notification fails
+        }
+      } else {
+        console.log(
+          "🔄 Skipping real-time notification for self-update to prevent logout"
         );
-        // Don't fail the request if real-time notification fails
       }
 
       return NextResponse.json({

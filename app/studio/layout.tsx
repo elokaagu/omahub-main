@@ -142,7 +142,14 @@ export default function StudioLayout({
 
   // Show loading state while checking authentication and access
   if (loading || isCheckingAccess) {
-    return <LoadingPage />;
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading studio...</p>
+        </div>
+      </div>
+    );
   }
 
   // If no access, show a message (this will be briefly visible before redirect)
@@ -163,7 +170,10 @@ export default function StudioLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div
+      className="min-h-screen bg-gray-50 flex flex-col"
+      style={{ scrollBehavior: "smooth" }}
+    >
       {/* Studio Header */}
       <header className="w-full bg-white border-b border-gray-200 shadow-sm fixed top-0 left-0 right-0 z-50 h-16 flex items-center">
         <div className="container mx-auto px-4 flex justify-between items-center">
@@ -393,7 +403,19 @@ export default function StudioLayout({
 
       {/* Main Content */}
       <main className="flex-1 lg:ml-64 mt-16 overflow-auto">
-        <div className="h-full">{children}</div>
+        <div className="h-full relative">
+          {/* Prevent layout shift during navigation */}
+          <div
+            className="min-h-screen"
+            style={{
+              willChange: "auto",
+              transform: "translateZ(0)",
+              backfaceVisibility: "hidden",
+            }}
+          >
+            {children}
+          </div>
+        </div>
       </main>
 
       {/* Overlay for mobile */}

@@ -54,11 +54,21 @@ export function NavigationLink({
       if (href.startsWith("/studio") && currentPath !== href) {
         e.preventDefault();
 
+        // Prevent scroll jumping by preserving current scroll position
+        const currentScrollY = window.scrollY;
+
         if (replace) {
           router.replace(href);
         } else {
           router.push(href);
         }
+
+        // Restore scroll position after navigation
+        setTimeout(() => {
+          window.scrollTo(0, currentScrollY);
+          setIsNavigating(false);
+        }, 100);
+
         return;
       }
 
