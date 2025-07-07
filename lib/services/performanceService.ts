@@ -81,7 +81,6 @@ export const performanceService = {
       let query = supabase
         .from("brands")
         .select(fields.join(", "))
-        .eq("status", "active")
         .limit(limit);
 
       if (category) {
