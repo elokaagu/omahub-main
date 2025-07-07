@@ -29,6 +29,7 @@ import { Carousel } from "@/components/ui/carousel-custom";
 import { Loading } from "@/components/ui/loading";
 import { InstantImage } from "@/components/ui/instant-image";
 import { occasions, occasionToCategoryMapping } from "@/lib/data/directory";
+import { FullWidthBrandRow } from "@/components/ui/full-width-brand-row";
 
 interface Brand {
   id: string;
@@ -808,7 +809,7 @@ export default function HomeContent() {
         </div>
       </section>
 
-      {/* Brand Categories */}
+      {/* Brand Categories - Full Width */}
       {categories.length > 0 ? (
         categories
           .filter((category) => {
@@ -819,102 +820,51 @@ export default function HomeContent() {
           .map((category, index) => (
             <section
               key={category.title}
-              className={`py-16 px-6 ${
-                index % 2 === 0 ? "bg-oma-cream" : "bg-oma-beige/30"
+              className={`py-12 sm:py-16 ${
+                index % 2 === 0 ? "bg-white" : "bg-oma-beige/20"
               }`}
             >
-              <div className="max-w-7xl mx-auto">
-                <FadeIn delay={0.1}>
-                  <SectionHeader
-                    title={category.title}
-                    subtitle={category.customCta}
-                    titleClassName="text-2xl md:text-3xl font-canela"
-                    subtitleClassName="text-base text-oma-cocoa/80"
-                  />
-                </FadeIn>
+              <FadeIn delay={0.1}>
+                <FullWidthBrandRow
+                  title={category.title}
+                  subtitle={category.customCta}
+                  brands={category.brands.map((brand) => ({
+                    id: brand.id,
+                    name: brand.name,
+                    image: brand.image,
+                    category: brand.category,
+                    location: brand.location,
+                    rating: brand.rating,
+                    isVerified: brand.isVerified,
+                  }))}
+                />
+              </FadeIn>
 
-                <div className="mt-8 sm:mt-10 overflow-hidden">
-                  {isLoading ? (
-                    <div className="flex justify-center items-center h-48 sm:h-64">
-                      <div className="animate-spin h-6 w-6 sm:h-8 sm:w-8 border-4 border-oma-plum border-t-transparent rounded-full"></div>
-                    </div>
-                  ) : category.brands.length > 0 ? (
-                    <div className="relative">
-                      <div className="flex space-x-3 sm:space-x-6 overflow-x-auto pb-4 scrollbar-hide px-4 sm:px-0">
-                        {category.brands.map((brand) => (
-                          <Link
-                            key={brand.id}
-                            href={`/brand/${brand.id}`}
-                            className="flex-none w-[220px] sm:w-[280px] group block bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
-                          >
-                            <div className="aspect-[4/5] relative">
-                              <LazyImage
-                                src={brand.image}
-                                alt={brand.name}
-                                fill
-                                sizes="(max-width: 640px) 220px, 280px"
-                                className="object-cover transition-transform duration-300 group-hover:scale-105"
-                                aspectRatio="4/5"
-                                quality={80}
-                              />
-                            </div>
-                            <div className="p-3 sm:p-4">
-                              <div className="flex items-center justify-between mb-2">
-                                <h3 className="font-semibold text-sm sm:text-lg line-clamp-1">
-                                  {brand.name}
-                                </h3>
-                                {brand.isVerified && (
-                                  <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-oma-plum flex-shrink-0" />
-                                )}
-                              </div>
-                              <div className="flex flex-wrap items-center gap-1 sm:gap-2 text-xs sm:text-sm text-oma-cocoa">
-                                <span className="px-2 py-1 bg-oma-beige/50 rounded text-xs">
-                                  {category.title}
-                                </span>
-                                <span className="hidden sm:inline">•</span>
-                                <span className="truncate">
-                                  {brand.location}
-                                </span>
-                                <span className="hidden sm:inline">•</span>
-                                <span className="flex items-center">
-                                  <span className="sm:hidden">★</span>
-                                  <span className="hidden sm:inline">★</span>
-                                  <span className="ml-1">{brand.rating}</span>
-                                </span>
-                              </div>
-                            </div>
-                          </Link>
-                        ))}
-                      </div>
-                    </div>
-                  ) : null}
-                </div>
-
-                <SlideUp delay={0.3}>
-                  <div className="mt-6 sm:mt-8 text-center">
-                    <Button
-                      asChild
-                      variant="outline"
-                      className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white min-h-[44px] text-sm sm:text-base"
+              {/* View All Button */}
+              <SlideUp delay={0.3}>
+                <div className="mt-8 text-center px-4 sm:px-6 lg:px-8">
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white min-h-[44px] text-sm sm:text-base"
+                  >
+                    <Link
+                      href={`/directory?category=${encodeURIComponent(
+                        category.title
+                      )}`}
                     >
-                      <Link
-                        href={`/directory?category=${encodeURIComponent(
-                          category.title
-                        )}`}
-                      >
-                        View All {category.title}
-                      </Link>
-                    </Button>
-                  </div>
-                </SlideUp>
-              </div>
+                      View All {category.title}
+                    </Link>
+                  </Button>
+                </div>
+              </SlideUp>
             </section>
           ))
       ) : (
-        <section className="py-16 px-6 bg-oma-cream">
-          <div className="max-w-7xl mx-auto">
+        <section className="py-16 bg-oma-cream">
+          <div className="px-4 sm:px-6 lg:px-8">
             <FadeIn>
-              <div className="flex justify-center items-center h-64 bg-white rounded-lg shadow-sm">
+              <div className="flex justify-center items-center h-64 bg-white rounded-lg shadow-sm max-w-7xl mx-auto">
                 <p className="text-oma-cocoa text-lg">
                   Loading brand categories...
                 </p>
