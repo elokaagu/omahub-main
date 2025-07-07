@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Instagram, Twitter, Linkedin } from "lucide-react";
+import { Instagram, MessageCircle } from "lucide-react";
 
 export default function Footer() {
   return (
@@ -118,20 +118,26 @@ export default function Footer() {
               </li>
               <li>
                 <a
-                  href="https://twitter.com"
+                  href="https://www.tiktok.com/@omahub"
                   className="text-sm text-oma-cocoa hover:text-oma-plum flex items-center gap-2 group"
                 >
-                  <Twitter className="h-4 w-4 transition group-hover:text-oma-plum" />
-                  <span className="expand-underline">Twitter</span>
+                  <svg
+                    className="h-4 w-4 transition group-hover:text-oma-plum"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M19.321 5.562a5.122 5.122 0 01-.443-.258 6.228 6.228 0 01-1.137-.966c-.849-.849-1.377-2.016-1.377-3.338h-3.159v13.8c0 2.748-2.241 4.986-4.986 4.986-2.748 0-4.986-2.241-4.986-4.986s2.241-4.986 4.986-4.986c.516 0 1.014.084 1.479.237v-3.286c-.465-.069-.942-.105-1.479-.105C4.037 6.66 0 10.697 0 15.78s4.037 9.12 9.12 9.12 9.12-4.037 9.12-9.12V9.042a9.158 9.158 0 005.16 1.563V7.446c-1.398 0-2.688-.564-3.616-1.471-.316-.316-.591-.669-.82-1.056-.229-.384-.409-.804-.523-1.257z" />
+                  </svg>
+                  <span className="expand-underline">TikTok</span>
                 </a>
               </li>
               <li>
                 <a
-                  href="https://linkedin.com"
+                  href="https://wa.me/message/YOUR_WHATSAPP_NUMBER"
                   className="text-sm text-oma-cocoa hover:text-oma-plum flex items-center gap-2 group"
                 >
-                  <Linkedin className="h-4 w-4 transition group-hover:text-oma-plum" />
-                  <span className="expand-underline">LinkedIn</span>
+                  <MessageCircle className="h-4 w-4 transition group-hover:text-oma-plum" />
+                  <span className="expand-underline">WhatsApp Community</span>
                 </a>
               </li>
             </ul>
