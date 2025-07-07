@@ -56,7 +56,13 @@ const nextConfig = {
   experimental: {
     optimizeCss: true,
     scrollRestoration: true,
+    optimizePackageImports: ["@/components", "@/lib"],
+    serverComponentsExternalPackages: ["@supabase/supabase-js"],
   },
+  // Performance optimizations
+  poweredByHeader: false,
+  compress: true,
+  generateEtags: true,
   // Use standard output for Vercel - do not use 'export' which breaks middleware
   output: undefined,
   // Power settings for Vercel

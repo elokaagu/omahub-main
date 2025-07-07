@@ -1,9 +1,15 @@
 // Main categories for the directory
 export const collections = ["Collections", "Tailored"] as const;
 
-// Subcategories mapping - updated to include Vacation in Collections
+// Subcategories mapping - updated dropdown options
 export const subcategories = {
-  Collections: ["Ready to Wear", "Accessories", "Vacation"],
+  Collections: [
+    "High-End Fashion Brands",
+    "Ready to Wear",
+    "Made to Measure",
+    "Streetwear & Urban",
+    "Accessories",
+  ],
   Tailored: ["Bridal", "Custom Design", "Evening Gowns", "Alterations"],
 } as const;
 

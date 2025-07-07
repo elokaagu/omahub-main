@@ -398,11 +398,16 @@ export default function HomeContent() {
         setIsLoading(true);
         setError(null);
 
-        // Fetch hero slides, spotlight content, and dynamic fallback items in parallel
-        // Remove category images from here since they're loaded separately above
+        // Use optimized API for better performance
         const [brandsData, heroData, spotlightData, dynamicItems] =
           await Promise.all([
-            getAllBrands(),
+            // Use optimized brands API with minimal fields
+            fetch(
+              "/api/brands/optimized?limit=50&fields=id,name,image,category,location,is_verified,rating"
+            )
+              .then((res) => res.json())
+              .then((data) => data.brands || [])
+              .catch(() => getAllBrands()), // Fallback to original method
             getActiveHeroSlides(),
             getActiveSpotlightContent(),
             generateDynamicFallbackItems(),
@@ -411,16 +416,16 @@ export default function HomeContent() {
         // Set dynamic fallback items
         setDynamicFallbackItems(dynamicItems);
 
-        // Process brands data
+        // Process brands data with performance optimization
         const updatedCategories = initialCategories.map((category) => ({
           ...category,
           brands: brandsData
             .filter(
-              (brand) =>
+              (brand: any) =>
                 mapDatabaseCategoryToHomepage(brand.category) === category.title
             )
             .slice(0, 8) // Limit all categories to 8 brands for consistent display
-            .map((brand) => ({
+            .map((brand: any) => ({
               id: brand.id,
               name: brand.name,
               image: brand.image || "/placeholder-image.jpg",

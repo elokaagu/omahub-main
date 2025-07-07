@@ -104,7 +104,7 @@ export function mapCategoriesToNavigation(
 
   // Collections navigation - map database categories to navigation labels
   const categoryMapping: Record<string, { title: string; category: string }> = {
-    Luxury: { title: "High End Fashion Brands", category: "Luxury" },
+    Luxury: { title: "High-End Fashion Brands", category: "Luxury" },
     "Ready to Wear": { title: "Ready to Wear", category: "Ready to Wear" },
     Couture: { title: "Made to Measure", category: "Couture" },
     Streetwear: { title: "Streetwear & Urban", category: "Streetwear" },
@@ -129,7 +129,7 @@ export function mapCategoriesToNavigation(
     });
 
   const collectionsItems = [
-    { title: "High End Fashion Brands", category: "Luxury" },
+    { title: "High-End Fashion Brands", category: "Luxury" },
     { title: "Ready to Wear", category: "Ready to Wear" },
     { title: "Made to Measure", category: "Couture" },
     { title: "Streetwear & Urban", category: "Streetwear" },

@@ -221,12 +221,60 @@ export default function EditSpotlightPage() {
 
     try {
       setIsSaving(true);
+
+      console.log("🔄 Updating spotlight content...", {
+        spotlightId,
+        userId: user.id,
+        formData: {
+          ...formData,
+          featured_products: formData.featured_products?.length || 0,
+        },
+      });
+
       await updateSpotlightContent(user.id, spotlightId, formData);
       toast.success("Spotlight content updated successfully");
       router.push("/studio/spotlight");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating spotlight content:", error);
-      toast.error("Failed to update spotlight content");
+
+      // Show more detailed error messages
+      let errorMessage = "Failed to update spotlight content";
+
+      if (error?.message) {
+        if (
+          error.message.includes("permission") ||
+          error.message.includes("unauthorized")
+        ) {
+          errorMessage =
+            "Permission denied. Please ensure you have super admin access.";
+        } else if (
+          error.message.includes("network") ||
+          error.message.includes("fetch")
+        ) {
+          errorMessage =
+            "Network error. Please check your connection and try again.";
+        } else if (
+          error.message.includes("validation") ||
+          error.message.includes("required")
+        ) {
+          errorMessage = "Validation error. Please check all required fields.";
+        } else if (
+          error.message.includes("storage") ||
+          error.message.includes("bucket")
+        ) {
+          errorMessage =
+            "File upload error. Please ensure your images and videos are uploaded properly.";
+        } else if (
+          error.message.includes("database") ||
+          error.message.includes("postgres")
+        ) {
+          errorMessage = "Database error. Please try again or contact support.";
+        } else {
+          errorMessage = `Error: ${error.message}`;
+        }
+      }
+
+      toast.error(errorMessage);
     } finally {
       setIsSaving(false);
     }

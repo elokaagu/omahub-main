@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import RootLayoutClient from "../components/layout/RootLayoutClient";
+import { Preloader } from "@/components/ui/preloader";
 import { suisseIntl, canela } from "./fonts";
 import { Toaster } from "sonner";
 import { Analytics } from "@vercel/analytics/react";
@@ -22,7 +23,9 @@ export default function RootLayout({
         <link rel="icon" type="image/png" href="/favicon.png" sizes="32x32" />
       </head>
       <body>
-        <RootLayoutClient>{children}</RootLayoutClient>
+        <Preloader>
+          <RootLayoutClient>{children}</RootLayoutClient>
+        </Preloader>
         <Toaster position="top-right" duration={2000} />
         <Analytics />
       </body>

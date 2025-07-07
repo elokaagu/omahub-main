@@ -13,7 +13,7 @@ import {
 import { getTailorsWithBrands } from "@/lib/services/tailorService";
 import { Tailor, Brand } from "@/lib/supabase";
 import Link from "next/link";
-import { LazyImage } from "@/components/ui/lazy-image";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -272,7 +272,7 @@ export default function TailorsPage() {
                 {viewMode === "grid" ? (
                   <div className="bg-white/80 rounded-xl overflow-hidden border border-oma-gold/10 hover:border-oma-gold/30 transition-all duration-300 hover:shadow-lg group-hover:-translate-y-1">
                     <div className="aspect-[4/3] relative overflow-hidden">
-                      <LazyImage
+                      <OptimizedImage
                         src={tailor.image}
                         alt={tailor.title}
                         fill
@@ -351,7 +351,7 @@ export default function TailorsPage() {
                   <div className="flex gap-6">
                     <div className="w-48 h-36 relative overflow-hidden rounded-lg flex-shrink-0">
                       <div className="aspect-[4/3] relative overflow-hidden rounded-lg">
-                        <LazyImage
+                        <OptimizedImage
                           src={tailor.image}
                           alt={tailor.title}
                           fill

@@ -187,11 +187,41 @@ export async function updateSpotlightContent(
       throw new Error("Supabase client not available");
     }
 
+    console.log("🔄 Updating spotlight content in service...", {
+      userId,
+      id,
+      updates: {
+        ...updates,
+        featured_products: updates.featured_products?.length || 0,
+      },
+    });
+
+    // Check if user has permission
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", userId)
+      .single();
+
+    if (profileError) {
+      console.error("❌ Error fetching user profile:", profileError);
+      throw new Error(`Permission check failed: ${profileError.message}`);
+    }
+
+    if (profile?.role !== "super_admin") {
+      console.error("❌ User is not super admin:", profile?.role);
+      throw new Error(
+        "Permission denied: Only super admins can update spotlight content"
+      );
+    }
+
     // If setting this as active, deactivate all others first
     if (updates.is_active === true) {
+      console.log("🔄 Deactivating other spotlight content...");
       await deactivateAllSpotlightContent();
     }
 
+    console.log("🔄 Performing database update...");
     const { data, error } = await supabase
       .from("spotlight_content")
       .update(updates)
@@ -199,11 +229,27 @@ export async function updateSpotlightContent(
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error("❌ Database update error:", error);
+      if (error.code === "42501") {
+        throw new Error(
+          "Database permission denied. Please check your user role and policies."
+        );
+      } else if (error.code === "23505") {
+        throw new Error("Duplicate entry. Please check your data.");
+      } else if (error.code === "23503") {
+        throw new Error(
+          "Referenced data not found. Please check your relationships."
+        );
+      } else {
+        throw new Error(`Database error: ${error.message}`);
+      }
+    }
 
+    console.log("✅ Spotlight content updated successfully");
     return data;
-  } catch (error) {
-    console.error("Error updating spotlight content:", error);
+  } catch (error: any) {
+    console.error("❌ Error updating spotlight content:", error);
     throw error;
   }
 }
