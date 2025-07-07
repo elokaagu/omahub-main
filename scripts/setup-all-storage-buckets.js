@@ -81,6 +81,42 @@ const bucketsConfig = [
       },
     ],
   },
+  {
+    name: "product-videos",
+    config: {
+      public: true,
+      fileSizeLimit: 52428800, // 50MB for product videos
+      allowedMimeTypes: ["video/mp4", "video/webm", "video/quicktime"],
+    },
+    policies: [
+      {
+        name: "product-videos_public_select",
+        sql: `CREATE POLICY "product-videos_public_select" ON storage.objects FOR SELECT USING (bucket_id = 'product-videos');`,
+      },
+      {
+        name: "product-videos_auth_insert",
+        sql: `CREATE POLICY "product-videos_auth_insert" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'product-videos' AND auth.role() = 'authenticated' AND EXISTS (SELECT 1 FROM profiles WHERE profiles.id = auth.uid() AND profiles.role::text IN ('super_admin', 'admin', 'brand_admin')));`,
+      },
+    ],
+  },
+  {
+    name: "spotlight-videos",
+    config: {
+      public: true,
+      fileSizeLimit: 104857600, // 100MB for brand campaign videos
+      allowedMimeTypes: ["video/mp4", "video/webm", "video/quicktime"],
+    },
+    policies: [
+      {
+        name: "spotlight-videos_public_select",
+        sql: `CREATE POLICY "spotlight-videos_public_select" ON storage.objects FOR SELECT USING (bucket_id = 'spotlight-videos');`,
+      },
+      {
+        name: "spotlight-videos_super_admin_insert",
+        sql: `CREATE POLICY "spotlight-videos_super_admin_insert" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'spotlight-videos' AND auth.role() = 'authenticated' AND EXISTS (SELECT 1 FROM profiles WHERE profiles.id = auth.uid() AND profiles.role::text = 'super_admin'));`,
+      },
+    ],
+  },
 ];
 
 async function createBucketWithPolicies(bucketConfig) {

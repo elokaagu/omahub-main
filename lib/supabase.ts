@@ -150,6 +150,10 @@ export type Product = {
   sale_price?: number;
   image: string;
   images?: string[]; // Multiple product images
+  video_url?: string;
+  video_thumbnail?: string;
+  video_type?: "product_demo" | "styling_guide" | "behind_scenes" | "campaign";
+  video_description?: string;
   brand_id: string;
   catalogue_id?: string;
   category: string;

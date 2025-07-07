@@ -9,6 +9,14 @@ export interface SpotlightContent {
   brand_quote: string;
   brand_quote_author: string;
   main_image: string;
+  video_url?: string;
+  video_thumbnail?: string;
+  video_type?:
+    | "brand_campaign"
+    | "behind_scenes"
+    | "interview"
+    | "product_demo";
+  video_description?: string;
   featured_products: FeaturedProduct[];
   brand_link: string;
   is_active: boolean;
@@ -30,6 +38,14 @@ export interface CreateSpotlightData {
   brand_quote: string;
   brand_quote_author: string;
   main_image: string;
+  video_url?: string;
+  video_thumbnail?: string;
+  video_type?:
+    | "brand_campaign"
+    | "behind_scenes"
+    | "interview"
+    | "product_demo";
+  video_description?: string;
   featured_products: FeaturedProduct[];
   brand_link: string;
   is_active?: boolean;

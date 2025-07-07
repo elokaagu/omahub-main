@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { LazyImage } from "@/components/ui/lazy-image";
+import { VideoPlayer } from "@/components/ui/video-player";
 import React, { useState, useEffect } from "react";
 import {
   FadeIn,
@@ -556,9 +557,9 @@ export default function HomeContent() {
       </section>
 
       {/* Categories Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white">
+      <section className="py-8 px-2 sm:px-4 lg:px-6 bg-white">
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl font-canela text-center mb-12">
+          <h2 className="text-3xl font-canela text-center mb-8">
             Browse by Category
           </h2>
           {/* Debug info */}
@@ -568,7 +569,7 @@ export default function HomeContent() {
               Tailored Image: {categoryImages.tailoredImage}
             </div>
           )}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Collections Card */}
             <div className="relative group overflow-hidden rounded-lg bg-gray-100 min-h-[400px]">
               <Link href="/collections">
@@ -640,9 +641,9 @@ export default function HomeContent() {
 
       {/* Spotlight Section */}
       {spotlightContent && (
-        <section className="py-20 bg-oma-beige relative overflow-hidden">
+        <section className="py-12 bg-oma-beige relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-oma-plum/10 via-transparent to-transparent opacity-50"></div>
-          <div className="max-w-7xl mx-auto px-6 relative z-10">
+          <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6 relative z-10">
             <FadeIn>
               <SectionHeader
                 title={spotlightContent.title}
@@ -652,21 +653,24 @@ export default function HomeContent() {
               />
             </FadeIn>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center mt-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center mt-8">
               <SlideUp delay={0.2}>
                 <div className="rounded-2xl overflow-hidden relative group">
-                  <LazyImage
-                    src={spotlightContent.main_image}
+                  <VideoPlayer
+                    videoUrl={spotlightContent.video_url}
+                    thumbnailUrl={spotlightContent.video_thumbnail}
+                    fallbackImageUrl={spotlightContent.main_image}
                     alt={`${spotlightContent.brand_name} collection`}
-                    width={800}
-                    height={1000}
-                    className="w-full h-[500px] object-cover transition-transform duration-700 group-hover:scale-105"
-                    aspectRatio="4/5"
+                    className="w-full h-[500px] transition-transform duration-700 group-hover:scale-105"
+                    aspectRatio="3/4"
                     sizes="(max-width: 768px) 100vw, 800px"
                     quality={85}
+                    muted={true}
+                    controls={true}
+                    showPlayButton={true}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-oma-black/70 via-oma-black/30 to-transparent"></div>
-                  <div className="absolute bottom-8 left-8 right-8 text-white">
+                  <div className="absolute inset-0 bg-gradient-to-t from-oma-black/70 via-oma-black/30 to-transparent pointer-events-none"></div>
+                  <div className="absolute bottom-8 left-8 right-8 text-white pointer-events-none">
                     <p className="font-canela italic text-xl md:text-2xl">
                       &ldquo;{spotlightContent.brand_quote}&rdquo;
                     </p>
@@ -709,13 +713,13 @@ export default function HomeContent() {
             {/* Featured Products */}
             {spotlightContent.featured_products &&
               spotlightContent.featured_products.length > 0 && (
-                <div className="mt-16">
+                <div className="mt-12">
                   <FadeIn delay={0.2}>
-                    <h4 className="font-canela text-xl mb-6 text-oma-cocoa/80">
+                    <h4 className="font-canela text-xl mb-4 text-oma-cocoa/80">
                       Featured Pieces from {spotlightContent.brand_name}
                     </h4>
                   </FadeIn>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     {spotlightContent.featured_products.map((product, i) => (
                       <Link
                         key={i}
@@ -753,12 +757,12 @@ export default function HomeContent() {
       )}
 
       {/* What are you dressing for section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-oma-beige/50">
+      <section className="py-8 px-2 sm:px-4 lg:px-6 bg-oma-beige/50">
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl font-canela text-center mb-12">
+          <h2 className="text-3xl font-canela text-center mb-8">
             What are you dressing for?
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {[
               {
                 title: "Wedding",
@@ -822,7 +826,7 @@ export default function HomeContent() {
           .map((category, index) => (
             <section
               key={category.title}
-              className={`py-12 sm:py-16 ${
+              className={`py-6 sm:py-8 ${
                 index % 2 === 0 ? "bg-white" : "bg-oma-beige/20"
               }`}
             >
@@ -844,7 +848,7 @@ export default function HomeContent() {
 
               {/* View All Button */}
               <SlideUp delay={0.3}>
-                <div className="mt-8 text-center px-4 sm:px-6 lg:px-8">
+                <div className="mt-4 text-center px-2 sm:px-4 lg:px-6">
                   <Button
                     asChild
                     variant="outline"
@@ -863,8 +867,8 @@ export default function HomeContent() {
             </section>
           ))
       ) : (
-        <section className="py-16 bg-oma-cream">
-          <div className="px-4 sm:px-6 lg:px-8">
+        <section className="py-8 bg-oma-cream">
+          <div className="px-2 sm:px-4 lg:px-6">
             <FadeIn>
               <div className="flex justify-center items-center h-64 bg-white rounded-lg shadow-sm max-w-7xl mx-auto">
                 <p className="text-oma-cocoa text-lg">
@@ -877,7 +881,7 @@ export default function HomeContent() {
       )}
 
       {/* CTA Section */}
-      <section className="py-12 sm:py-16 px-4 sm:px-6">
+      <section className="py-8 sm:py-10 px-2 sm:px-4 lg:px-6">
         <div className="max-w-7xl mx-auto">
           <FadeIn delay={0.1}>
             <div className="bg-gradient-to-r from-oma-plum/10 to-oma-gold/10 rounded-xl p-6 sm:p-8 md:p-12 text-center">

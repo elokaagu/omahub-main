@@ -13,6 +13,8 @@ import { Badge } from "@/components/ui/badge";
 import { Loading } from "@/components/ui/loading";
 import { NavigationLink } from "@/components/ui/navigation-link";
 import { FileUpload } from "@/components/ui/file-upload";
+import { VideoUpload } from "@/components/ui/video-upload";
+import { SimpleFileUpload } from "@/components/ui/simple-file-upload";
 import { createProduct } from "@/lib/services/productService";
 import { getAllCollections } from "@/lib/services/collectionService";
 import { getAllBrands } from "@/lib/services/brandService";
@@ -79,6 +81,15 @@ export default function CreateProductPage() {
     sale_price: "",
     image: "",
     images: [] as string[], // Array for multiple images
+    video_url: "",
+    video_thumbnail: "",
+    video_type: "" as
+      | "product_demo"
+      | "styling_guide"
+      | "behind_scenes"
+      | "campaign"
+      | "",
+    video_description: "",
     brand_id: "",
     catalogue_id: "",
     category: "",
@@ -281,6 +292,20 @@ export default function CreateProductPage() {
     }));
   };
 
+  const handleVideoUpload = (url: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      video_url: url,
+    }));
+  };
+
+  const handleVideoThumbnailUpload = (url: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      video_thumbnail: url,
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -343,6 +368,15 @@ export default function CreateProductPage() {
           is_custom: formData.is_custom,
         }),
         ...(formData.lead_time && { lead_time: formData.lead_time }),
+        // Video fields
+        ...(formData.video_url && { video_url: formData.video_url }),
+        ...(formData.video_thumbnail && {
+          video_thumbnail: formData.video_thumbnail,
+        }),
+        ...(formData.video_type && { video_type: formData.video_type }),
+        ...(formData.video_description && {
+          video_description: formData.video_description,
+        }),
       };
 
       console.log("Creating product with data:", productData);
@@ -518,6 +552,95 @@ export default function CreateProductPage() {
                   Upload up to 4 high-quality product images. The first image
                   will be used as the main product image.
                 </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Product Video */}
+          <Card className="border border-oma-gold/10 bg-white">
+            <CardHeader>
+              <CardTitle className="text-black">
+                Product Video (Optional)
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="video_url" className="text-black">
+                    Product Video
+                  </Label>
+                  <VideoUpload
+                    onUploadComplete={handleVideoUpload}
+                    defaultValue={formData.video_url}
+                    bucket="product-videos"
+                    path="demos"
+                    accept="video/mp4,video/webm,video/quicktime"
+                    maxSize={50}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Upload product demonstration or styling video (max 50MB)
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="video_thumbnail" className="text-black">
+                    Video Thumbnail (Optional)
+                  </Label>
+                  <SimpleFileUpload
+                    onUploadComplete={handleVideoThumbnailUpload}
+                    defaultValue={formData.video_thumbnail}
+                    bucket="product-images"
+                    path="thumbnails"
+                    accept="image/png,image/jpeg,image/webp"
+                    maxSize={5}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Custom thumbnail for video preview (falls back to main
+                    product image)
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="video_type" className="text-black">
+                    Video Type
+                  </Label>
+                  <Select
+                    value={formData.video_type}
+                    onValueChange={(value) =>
+                      handleInputChange("video_type", value)
+                    }
+                  >
+                    <SelectTrigger className="border-oma-cocoa/20 focus:border-oma-plum">
+                      <SelectValue placeholder="Select video type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Select video type</SelectItem>
+                      <SelectItem value="product_demo">Product Demo</SelectItem>
+                      <SelectItem value="styling_guide">
+                        Styling Guide
+                      </SelectItem>
+                      <SelectItem value="behind_scenes">
+                        Behind the Scenes
+                      </SelectItem>
+                      <SelectItem value="campaign">Campaign</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="video_description" className="text-black">
+                    Video Description
+                  </Label>
+                  <Input
+                    id="video_description"
+                    value={formData.video_description}
+                    onChange={(e) =>
+                      handleInputChange("video_description", e.target.value)
+                    }
+                    placeholder="Brief description of the video content"
+                    className="border-oma-cocoa/20 focus:border-oma-plum"
+                  />
+                </div>
               </div>
             </CardContent>
           </Card>

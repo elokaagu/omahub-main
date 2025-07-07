@@ -7,9 +7,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { SimpleFileUpload } from "@/components/ui/simple-file-upload";
+import { VideoUpload } from "@/components/ui/video-upload";
 import {
   createSpotlightContent,
   type CreateSpotlightData,
@@ -32,6 +39,10 @@ export default function CreateSpotlightPage() {
     brand_quote: "",
     brand_quote_author: "",
     main_image: "",
+    video_url: "",
+    video_thumbnail: "",
+    video_type: undefined,
+    video_description: "",
     featured_products: [],
     brand_link: "",
     is_active: true,
@@ -59,6 +70,20 @@ export default function CreateSpotlightPage() {
     setFormData((prev) => ({
       ...prev,
       main_image: url,
+    }));
+  };
+
+  const handleVideoUpload = (url: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      video_url: url,
+    }));
+  };
+
+  const handleVideoThumbnailUpload = (url: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      video_thumbnail: url,
     }));
   };
 
@@ -267,7 +292,8 @@ export default function CreateSpotlightPage() {
                   defaultValue={formData.main_image}
                   bucket="spotlight-images"
                   path="main"
-                  accept="image/png,image/jpeg,image/webp"                  maxSize={10}
+                  accept="image/png,image/jpeg,image/webp"
+                  maxSize={10}
                 />
                 <p className="text-xs text-oma-cocoa/70 mt-1">
                   High-resolution main spotlight image
@@ -298,6 +324,84 @@ export default function CreateSpotlightPage() {
               <Label htmlFor="is_active">
                 Set as active spotlight (will deactivate others)
               </Label>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Video Content */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Video Content (Optional)</CardTitle>
+            <CardDescription>
+              Add video content for brand campaigns, interviews, or
+              behind-the-scenes footage. If no video is provided, the main image
+              will be displayed.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="video_url">Brand Video</Label>
+                <VideoUpload
+                  onUploadComplete={handleVideoUpload}
+                  defaultValue={formData.video_url}
+                  bucket="spotlight-videos"
+                  path="campaigns"
+                  accept="video/mp4,video/webm,video/quicktime"
+                  maxSize={50}
+                />
+                <p className="text-xs text-oma-cocoa/70 mt-1">
+                  Upload brand campaign, interview, or behind-the-scenes video
+                  (max 50MB)
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="video_thumbnail">
+                  Video Thumbnail (Optional)
+                </Label>
+                <SimpleFileUpload
+                  onUploadComplete={handleVideoThumbnailUpload}
+                  defaultValue={formData.video_thumbnail}
+                  bucket="spotlight-images"
+                  path="thumbnails"
+                  accept="image/png,image/jpeg,image/webp"
+                  maxSize={5}
+                />
+                <p className="text-xs text-oma-cocoa/70 mt-1">
+                  Custom thumbnail for video preview (falls back to main image)
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="video_type">Video Type</Label>
+                <select
+                  id="video_type"
+                  value={formData.video_type || ""}
+                  onChange={(e) =>
+                    handleInputChange("video_type", e.target.value as any)
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-oma-plum"
+                >
+                  <option value="">Select video type</option>
+                  <option value="brand_campaign">Brand Campaign</option>
+                  <option value="behind_scenes">Behind the Scenes</option>
+                  <option value="interview">Interview</option>
+                  <option value="product_demo">Product Demo</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="video_description">Video Description</Label>
+                <Input
+                  id="video_description"
+                  value={formData.video_description}
+                  onChange={(e) =>
+                    handleInputChange("video_description", e.target.value)
+                  }
+                  placeholder="Brief description of the video content"
+                />
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -385,7 +489,8 @@ export default function CreateSpotlightPage() {
                           defaultValue={product.image}
                           bucket="spotlight-images"
                           path="products"
-                  accept="image/png,image/jpeg,image/webp"                          maxSize={5}
+                          accept="image/png,image/jpeg,image/webp"
+                          maxSize={5}
                           className="h-32"
                         />
                       </div>

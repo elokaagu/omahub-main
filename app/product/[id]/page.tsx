@@ -6,6 +6,7 @@ import { getProductById } from "@/lib/services/productService";
 import { getBrandById } from "@/lib/services/brandService";
 import { Product, Brand } from "@/lib/supabase";
 import { AuthImage } from "@/components/ui/auth-image";
+import { VideoPlayer } from "@/components/ui/video-player";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loading } from "@/components/ui/loading";
@@ -131,20 +132,58 @@ export default function ProductPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          {/* Product Images */}
+          {/* Product Images and Video */}
           <div className="space-y-4">
             <div className="aspect-square relative overflow-hidden rounded-lg bg-gray-100">
-              <AuthImage
-                src={productImages[selectedImage] || product.image}
-                alt={product.title}
-                width={600}
-                height={600}
-                className="w-full h-full object-cover"
-              />
+              {selectedImage === -1 && product.video_url ? (
+                <VideoPlayer
+                  videoUrl={product.video_url}
+                  thumbnailUrl={product.video_thumbnail}
+                  fallbackImageUrl={product.image}
+                  alt={product.title}
+                  className="w-full h-full"
+                  aspectRatio="square"
+                  controls={true}
+                  muted={true}
+                  showPlayButton={true}
+                />
+              ) : (
+                <AuthImage
+                  src={productImages[selectedImage] || product.image}
+                  alt={product.title}
+                  width={600}
+                  height={600}
+                  className="w-full h-full object-cover"
+                />
+              )}
             </div>
 
-            {productImages.length > 1 && (
+            {(productImages.length > 1 || product.video_url) && (
               <div className="flex gap-2 overflow-x-auto">
+                {product.video_url && (
+                  <button
+                    onClick={() => setSelectedImage(-1)}
+                    className={cn(
+                      "flex-shrink-0 w-20 h-20 rounded-md overflow-hidden border-2 relative",
+                      selectedImage === -1
+                        ? "border-oma-plum"
+                        : "border-gray-200 hover:border-gray-300"
+                    )}
+                  >
+                    <AuthImage
+                      src={product.video_thumbnail || product.image}
+                      alt={`${product.title} video`}
+                      width={80}
+                      height={80}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                      <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
+                        <div className="w-0 h-0 border-l-[6px] border-l-black border-t-[4px] border-t-transparent border-b-[4px] border-b-transparent ml-1" />
+                      </div>
+                    </div>
+                  </button>
+                )}
                 {productImages.map((image, index) => (
                   <button
                     key={index}
