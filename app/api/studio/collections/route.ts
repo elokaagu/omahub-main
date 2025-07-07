@@ -10,7 +10,7 @@ export async function GET() {
       );
     }
 
-    const { data: catalogues, error } = await supabase
+    const { data: collections, error } = await supabase
       .from("catalogues")
       .select(
         `
@@ -21,14 +21,14 @@ export async function GET() {
       .order("title");
 
     if (error) {
-      console.error("Error fetching catalogues:", error);
+      console.error("Error fetching collections:", error);
       return NextResponse.json(
-        { error: "Failed to fetch catalogues" },
+        { error: "Failed to fetch collections" },
         { status: 500 }
       );
     }
 
-    return NextResponse.json({ catalogues });
+    return NextResponse.json({ collections });
   } catch (error) {
     console.error("Unexpected error:", error);
     return NextResponse.json(
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    console.log("Received catalogue data:", body);
+    console.log("Received collection data:", body);
 
     const { title, description, brand_id, image } = body;
 
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
     if (!title?.trim()) {
       console.error("Validation failed: Missing title");
       return NextResponse.json(
-        { error: "Catalogue title is required" },
+        { error: "Collection title is required" },
         { status: 400 }
       );
     }
@@ -73,44 +73,44 @@ export async function POST(request: NextRequest) {
     if (!image) {
       console.error("Validation failed: Missing image");
       return NextResponse.json(
-        { error: "Catalogue image is required" },
+        { error: "Collection image is required" },
         { status: 400 }
       );
     }
 
-    // Generate catalogue ID from title
+    // Generate collection ID from title
     const id = title
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/(^-|-$)/g, "");
 
-    console.log("Generated catalogue ID:", id);
+    console.log("Generated collection ID:", id);
 
-    // Check if catalogue with this ID already exists
-    const { data: existingCatalogue, error: checkError } = await supabase
+    // Check if collection with this ID already exists
+    const { data: existingCollection, error: checkError } = await supabase
       .from("catalogues")
       .select("id")
       .eq("id", id)
       .single();
 
     if (checkError && checkError.code !== "PGRST116") {
-      console.error("Error checking existing catalogue:", checkError);
+      console.error("Error checking existing collection:", checkError);
       return NextResponse.json(
-        { error: "Failed to check existing catalogues" },
+        { error: "Failed to check existing collections" },
         { status: 500 }
       );
     }
 
-    if (existingCatalogue) {
-      console.error("Catalogue already exists with ID:", id);
+    if (existingCollection) {
+      console.error("Collection already exists with ID:", id);
       return NextResponse.json(
-        { error: "A catalogue with this title already exists" },
+        { error: "A collection with this title already exists" },
         { status: 409 }
       );
     }
 
-    // Create the catalogue
-    const catalogueData = {
+    // Create the collection
+    const collectionData = {
       id,
       title: title.trim(),
       description: description?.trim() || null,
@@ -118,26 +118,26 @@ export async function POST(request: NextRequest) {
       image,
     };
 
-    console.log("Creating catalogue with data:", catalogueData);
+    console.log("Creating collection with data:", collectionData);
 
-    const { data: catalogue, error } = await supabase
+    const { data: collection, error } = await supabase
       .from("catalogues")
-      .insert([catalogueData])
+      .insert([collectionData])
       .select()
       .single();
 
     if (error) {
-      console.error("Error creating catalogue:", error);
+      console.error("Error creating collection:", error);
       return NextResponse.json(
-        { error: `Failed to create catalogue: ${error.message}` },
+        { error: `Failed to create collection: ${error.message}` },
         { status: 500 }
       );
     }
 
-    console.log("Catalogue created successfully:", catalogue);
-    return NextResponse.json({ catalogue }, { status: 201 });
+    console.log("Collection created successfully:", collection);
+    return NextResponse.json({ collection }, { status: 201 });
   } catch (error) {
-    console.error("Unexpected error in POST /api/studio/catalogues:", error);
+    console.error("Unexpected error in POST /api/studio/collections:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

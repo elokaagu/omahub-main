@@ -10,7 +10,7 @@ import {
   StaggerItem,
 } from "@/app/components/ui/animations";
 import { getAllBrands, getBrandsByCategory } from "@/lib/services/brandService";
-import { getCataloguesWithBrands } from "@/lib/services/catalogueService";
+import { getCollectionsWithBrands } from "@/lib/services/collectionService";
 import { getTailorsWithBrands } from "@/lib/services/tailorService";
 import { SectionHeader } from "@/components/ui/section-header";
 import { CategoryCard } from "@/components/ui/category-card";
@@ -76,9 +76,9 @@ let fallbackCarouselItems: CarouselItem[] = [
   {
     id: 1,
     image: "/lovable-uploads/827fb8c0-e5da-4520-a979-6fc054eefc6e.png",
-    title: "Catalogues",
+    title: "Collections",
     subtitle: "Shop for an occasion, holiday, or ready to wear piece",
-    link: "/catalogues",
+    link: "/collections",
     heroTitle: "New Season",
     isEditorial: true,
     width: 1920,
@@ -101,7 +101,7 @@ let fallbackCarouselItems: CarouselItem[] = [
 const generateDynamicFallbackItems = async (): Promise<CarouselItem[]> => {
   try {
     const [catalogues, tailors] = await Promise.all([
-      getCataloguesWithBrands(),
+      getCollectionsWithBrands(),
       getTailorsWithBrands(),
     ]);
 
@@ -114,9 +114,9 @@ const generateDynamicFallbackItems = async (): Promise<CarouselItem[]> => {
       items.push({
         id: 1,
         image: randomCatalogue.image,
-        title: "Catalogues",
+        title: "Collections",
         subtitle: "Shop for an occasion, holiday, or ready to wear piece",
-        link: "/catalogues",
+        link: "/collections",
         heroTitle: "New Season",
         isEditorial: true,
         width: 1920,
@@ -156,8 +156,8 @@ const generateDynamicFallbackItems = async (): Promise<CarouselItem[]> => {
 // Smart focal point detection for category images
 const getCategoryImageFocalPoint = (category: string): string => {
   switch (category.toLowerCase()) {
-    case "catalogues":
-      // For catalogue images with people, use center-top positioning to show faces/upper body centered
+    case "collections":
+      // For collection images with people, use center-top positioning to show faces/upper body centered
       return "object-center object-top";
     case "tailored":
       // Tailoring images often show full garments, center positioning works well
@@ -217,11 +217,12 @@ const initialCategories: CategoryWithBrands[] = categoryDefinitions.map(
 
 // Generate dynamic category images for Browse by Category section - SIMPLIFIED
 const generateDynamicCategoryImages = async (): Promise<{
-  catalogueImage: string;
+  collectionImage: string;
   tailoredImage: string;
 }> => {
   const fallbackImages = {
-    catalogueImage: "/lovable-uploads/827fb8c0-e5da-4520-a979-6fc054eefc6e.png",
+    collectionImage:
+      "/lovable-uploads/827fb8c0-e5da-4520-a979-6fc054eefc6e.png",
     tailoredImage: "/lovable-uploads/bb152c0b-6378-419b-a0e6-eafce44631b2.png",
   };
 
@@ -234,27 +235,27 @@ const generateDynamicCategoryImages = async (): Promise<{
     });
 
     const results = (await Promise.race([
-      Promise.allSettled([getCataloguesWithBrands(), getTailorsWithBrands()]),
+      Promise.allSettled([getCollectionsWithBrands(), getTailorsWithBrands()]),
       timeoutPromise,
     ])) as PromiseSettledResult<any>[];
 
     const [cataloguesResult, tailorsResult] = results;
 
-    let catalogueImage = fallbackImages.catalogueImage;
+    let collectionImage = fallbackImages.collectionImage;
     let tailoredImage = fallbackImages.tailoredImage;
 
-    // Handle catalogues
+    // Handle collections
     if (
       cataloguesResult.status === "fulfilled" &&
       cataloguesResult.value.length > 0
     ) {
-      const randomCatalogue =
+      const randomCollection =
         cataloguesResult.value[
           Math.floor(Math.random() * cataloguesResult.value.length)
         ];
-      if (randomCatalogue.image) {
-        catalogueImage = randomCatalogue.image;
-        console.log("✅ Using dynamic catalogue image:", catalogueImage);
+      if (randomCollection.image) {
+        collectionImage = randomCollection.image;
+        console.log("✅ Using dynamic collection image:", collectionImage);
       }
     }
 
@@ -273,7 +274,7 @@ const generateDynamicCategoryImages = async (): Promise<{
       }
     }
 
-    return { catalogueImage, tailoredImage };
+    return { collectionImage, tailoredImage };
   } catch (error) {
     console.error("❌ Error generating dynamic images:", error);
     return fallbackImages;
@@ -292,7 +293,8 @@ export default function HomeContent() {
     CarouselItem[]
   >(fallbackCarouselItems);
   const [categoryImages, setCategoryImages] = useState({
-    catalogueImage: "/lovable-uploads/827fb8c0-e5da-4520-a979-6fc054eefc6e.png",
+    collectionImage:
+      "/lovable-uploads/827fb8c0-e5da-4520-a979-6fc054eefc6e.png",
     tailoredImage: "/lovable-uploads/bb152c0b-6378-419b-a0e6-eafce44631b2.png",
   });
   const [categoryImagesLoaded, setCategoryImagesLoaded] = useState(false);
@@ -311,7 +313,7 @@ export default function HomeContent() {
 
         // Set fallback images immediately
         const fallbackImages = {
-          catalogueImage:
+          collectionImage:
             "/lovable-uploads/827fb8c0-e5da-4520-a979-6fc054eefc6e.png",
           tailoredImage:
             "/lovable-uploads/bb152c0b-6378-419b-a0e6-eafce44631b2.png",
@@ -332,7 +334,7 @@ export default function HomeContent() {
         // Update with dynamic images if they're different and component is still mounted
         if (
           isMounted &&
-          (dynamicImages.catalogueImage !== fallbackImages.catalogueImage ||
+          (dynamicImages.collectionImage !== fallbackImages.collectionImage ||
             dynamicImages.tailoredImage !== fallbackImages.tailoredImage)
         ) {
           console.log("🔄 Updating to dynamic images:", dynamicImages);
@@ -562,36 +564,36 @@ export default function HomeContent() {
           {/* Debug info */}
           {process.env.NODE_ENV === "development" && (
             <div className="text-xs text-gray-500 text-center mb-4">
-              Debug: Catalogue Image: {categoryImages.catalogueImage} | Tailored
-              Image: {categoryImages.tailoredImage}
+              Debug: Collection Image: {categoryImages.collectionImage} |
+              Tailored Image: {categoryImages.tailoredImage}
             </div>
           )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Catalogues Card */}
+            {/* Collections Card */}
             <div className="relative group overflow-hidden rounded-lg bg-gray-100 min-h-[400px]">
-              <Link href="/catalogues">
+              <Link href="/collections">
                 <div className="relative aspect-[3/4]">
                   <img
-                    src={categoryImages.catalogueImage}
-                    alt="Catalogues"
+                    src={categoryImages.collectionImage}
+                    alt="Collections"
                     className="w-full h-full object-cover object-center object-top transition-transform duration-300 group-hover:scale-105"
                     onLoad={() =>
                       console.log(
-                        "✅ Catalogue image loaded:",
-                        categoryImages.catalogueImage
+                        "✅ Collection image loaded:",
+                        categoryImages.collectionImage
                       )
                     }
                     onError={(e) =>
                       console.error(
-                        "❌ Catalogue image failed:",
-                        categoryImages.catalogueImage,
+                        "❌ Collection image failed:",
+                        categoryImages.collectionImage,
                         e
                       )
                     }
                   />
                   <div className="absolute inset-0 bg-black/30 transition-opacity group-hover:bg-black/40" />
                   <div className="absolute bottom-6 left-6 text-white">
-                    <h3 className="text-2xl font-canela mb-2">Catalogues</h3>
+                    <h3 className="text-2xl font-canela mb-2">Collections</h3>
                     <p className="text-sm">
                       Shop for an occasion, holiday, or ready to wear piece
                     </p>

@@ -14,7 +14,7 @@ import { Loading } from "@/components/ui/loading";
 import { NavigationLink } from "@/components/ui/navigation-link";
 import { FileUpload } from "@/components/ui/file-upload";
 import { getProductById, updateProduct } from "@/lib/services/productService";
-import { getAllCatalogues } from "@/lib/services/catalogueService";
+import { getAllCollections } from "@/lib/services/collectionService";
 import { getAllBrands } from "@/lib/services/brandService";
 import { Product, Brand, Catalogue } from "@/lib/supabase";
 import {
@@ -96,7 +96,7 @@ export default function EditProductPage() {
         const [productData, brandsData, cataloguesData] = await Promise.all([
           getProductById(productId),
           getAllBrands(),
-          getAllCatalogues(),
+          getAllCollections(),
         ]);
 
         if (!productData) {

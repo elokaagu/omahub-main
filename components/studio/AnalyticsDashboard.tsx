@@ -436,7 +436,7 @@ export default function AnalyticsDashboard({
             </div>
             <p className="text-xs text-oma-cocoa mt-2">
               {isBrandOwner
-                ? "Your product catalogue"
+                ? "Your product collection"
                 : "Total products across all brands"}
             </p>
           </CardContent>

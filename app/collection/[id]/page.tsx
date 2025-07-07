@@ -10,7 +10,7 @@ import {
   Verified,
   ShoppingBag,
 } from "lucide-react";
-import { getCatalogueWithBrand } from "@/lib/services/catalogueService";
+import { getCollectionWithBrand } from "@/lib/services/collectionService";
 import {
   getProductsByCatalogue,
   getIntelligentRecommendations,

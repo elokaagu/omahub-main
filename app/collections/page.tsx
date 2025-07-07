@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Search, Grid, List, Filter, X } from "lucide-react";
-import { getCataloguesWithBrands } from "@/lib/services/catalogueService";
+import { getCollectionsWithBrands } from "@/lib/services/collectionService";
 import { getProductsWithBrandCurrency } from "@/lib/services/productService";
 import { Catalogue, Brand, Product } from "@/lib/supabase";
 import Link from "next/link";
@@ -76,7 +76,7 @@ export default function CataloguesPage() {
       try {
         setLoading(true);
         const [catalogueData, productData] = await Promise.all([
-          getCataloguesWithBrands(),
+          getCollectionsWithBrands(),
           getProductsWithBrandCurrency(),
         ]);
 

@@ -7,9 +7,9 @@ import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import type { Database } from "@/lib/types/supabase";
 import { getAllBrands } from "@/lib/services/brandService";
 import {
-  getCataloguesWithBrands,
-  deleteCatalogue,
-} from "@/lib/services/catalogueService";
+  getCollectionsWithBrands as getCataloguesWithBrands,
+  deleteCollection as deleteCatalogue,
+} from "@/lib/services/collectionService";
 import {
   getUserPermissions,
   Permission,
@@ -47,7 +47,7 @@ import { toast } from "sonner";
 import { AuthImage } from "@/components/ui/auth-image";
 import { Loading } from "@/components/ui/loading";
 
-type CatalogueWithBrand = Catalogue & {
+type CollectionWithBrand = Catalogue & {
   brand: {
     name: string;
     id: string;
@@ -58,15 +58,15 @@ type CatalogueWithBrand = Catalogue & {
 };
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
-export default function CataloguesPage() {
+export default function CollectionsPage() {
   const router = useRouter();
   const { user } = useAuth();
   const supabase = createClientComponentClient<Database>();
 
   const [brands, setBrands] = useState<Brand[]>([]);
-  const [catalogues, setCatalogues] = useState<CatalogueWithBrand[]>([]);
-  const [filteredCatalogues, setFilteredCatalogues] = useState<
-    CatalogueWithBrand[]
+  const [collections, setCollections] = useState<CollectionWithBrand[]>([]);
+  const [filteredCollections, setFilteredCollections] = useState<
+    CollectionWithBrand[]
   >([]);
   const [userPermissions, setUserPermissions] = useState<Permission[]>([]);
   const [userProfile, setUserProfile] = useState<Profile | null>(null);

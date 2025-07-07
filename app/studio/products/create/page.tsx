@@ -14,7 +14,7 @@ import { Loading } from "@/components/ui/loading";
 import { NavigationLink } from "@/components/ui/navigation-link";
 import { FileUpload } from "@/components/ui/file-upload";
 import { createProduct } from "@/lib/services/productService";
-import { getAllCatalogues } from "@/lib/services/catalogueService";
+import { getAllCollections } from "@/lib/services/collectionService";
 import { getAllBrands } from "@/lib/services/brandService";
 import { Product, Brand, Catalogue } from "@/lib/supabase";
 import {
@@ -108,7 +108,7 @@ export default function CreateProductPage() {
       try {
         const [brandsData, cataloguesData] = await Promise.all([
           getAllBrands(),
-          getAllCatalogues(),
+          getAllCollections(),
         ]);
 
         // Filter brands based on user role

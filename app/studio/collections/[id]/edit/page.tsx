@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getAllBrands } from "@/lib/services/brandService";
 import {
-  getCatalogueById,
-  updateCatalogue,
-} from "@/lib/services/catalogueService";
+  getCollectionById,
+  updateCollection,
+} from "@/lib/services/collectionService";
 import { Brand, Catalogue } from "@/lib/supabase";
 import {
   Card,
@@ -27,7 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { FileUpload } from "@/components/ui/file-upload";
-import { CatalogueImageManager } from "@/components/studio/CatalogueImageManager";
+import { CollectionImageManager } from "@/components/studio/CollectionImageManager";
 import { ArrowLeft, Save } from "lucide-react";
 import { toast } from "sonner";
 
@@ -55,10 +55,10 @@ export default function EditCataloguePage({
       setLoading(true);
       try {
         // Fetch the catalogue
-        const catalogueData = await getCatalogueById(id);
+        const catalogueData = await getCollectionById(id);
         if (!catalogueData) {
-          toast.error("Catalogue not found");
-          router.push("/studio/catalogues");
+          toast.error("Collection not found");
+          router.push("/studio/collections");
           return;
         }
         setCatalogue(catalogueData);
@@ -104,7 +104,7 @@ export default function EditCataloguePage({
 
     setSaving(true);
     try {
-      await updateCatalogue(id, {
+      await updateCollection(id, {
         title,
         description: description.trim() || undefined,
         brand_id: brandId,
@@ -232,9 +232,9 @@ export default function EditCataloguePage({
             </CardDescription>
           </CardHeader>
           <CardContent className="p-6">
-            <CatalogueImageManager
-              catalogueId={id}
-              catalogueTitle={title || "Catalogue"}
+            <CollectionImageManager
+              collectionId={id}
+              collectionTitle={title || "Collection"}
             />
           </CardContent>
         </Card>

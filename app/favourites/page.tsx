@@ -121,7 +121,7 @@ export default function FavouritesPage() {
               asChild
               className="bg-oma-plum text-white hover:bg-oma-plum/90"
             >
-              <Link href="/catalogues">Browse Catalogues</Link>
+              <Link href="/collections">Browse Collections</Link>
             </Button>
             <Button
               asChild

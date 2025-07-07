@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getAllBrands } from "@/lib/services/brandService";
-import { createCatalogue } from "@/lib/services/catalogueService";
+import { createCollection } from "@/lib/services/collectionService";
 import { Brand } from "@/lib/supabase";
 import {
   Card,
@@ -83,7 +83,7 @@ export default function CreateCataloguePage() {
 
     setSaving(true);
     try {
-      await createCatalogue({
+      await createCollection({
         title,
         description: description.trim() || undefined,
         brand_id: brandId,

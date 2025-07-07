@@ -1,9 +1,9 @@
 import { supabase, Catalogue, Brand } from "../supabase";
 
 /**
- * Fetch all catalogues from the database
+ * Fetch all collections from the database
  */
-export async function getAllCatalogues(): Promise<Catalogue[]> {
+export async function getAllCollections(): Promise<Catalogue[]> {
   if (!supabase) {
     throw new Error("Supabase client not available");
   }
@@ -11,7 +11,7 @@ export async function getAllCatalogues(): Promise<Catalogue[]> {
   const { data, error } = await supabase.from("catalogues").select("*");
 
   if (error) {
-    console.error("Error fetching catalogues:", error);
+    console.error("Error fetching collections:", error);
     throw error;
   }
 
@@ -19,12 +19,11 @@ export async function getAllCatalogues(): Promise<Catalogue[]> {
 }
 
 /**
- * Fetch a single catalogue by ID
+ * Fetch a single collection by ID
  */
-export async function getCatalogueById(id: string): Promise<Catalogue | null> {
+export async function getCollectionById(id: string): Promise<Catalogue | null> {
   if (!supabase) {
-    console.error("Supabase client not available");
-    return null;
+    throw new Error("Supabase client not available");
   }
 
   const { data, error } = await supabase
@@ -34,26 +33,30 @@ export async function getCatalogueById(id: string): Promise<Catalogue | null> {
     .single();
 
   if (error) {
-    console.error(`Error fetching catalogue ${id}:`, error);
-    return null;
+    console.error(`Error fetching collection ${id}:`, error);
+    throw error;
   }
 
   return data;
 }
 
 /**
- * Fetch a single catalogue with brand information by ID
+ * Fetch a single collection with brand information by ID
  */
-export async function getCatalogueWithBrand(id: string): Promise<
+export async function getCollectionWithBrand(id: string): Promise<
   | (Catalogue & {
-      brand: Brand;
-      created_at?: string;
+      brand: {
+        name: string;
+        id: string;
+        location: string;
+        is_verified: boolean;
+        category: string;
+      };
     })
   | null
 > {
   if (!supabase) {
-    console.error("Supabase client not available");
-    return null;
+    throw new Error("Supabase client not available");
   }
 
   const { data, error } = await supabase
@@ -61,24 +64,24 @@ export async function getCatalogueWithBrand(id: string): Promise<
     .select(
       `
       *,
-      brand:brands(*)
+      brand:brands(id, name, location, is_verified, category)
     `
     )
     .eq("id", id)
     .single();
 
   if (error) {
-    console.error(`Error fetching catalogue with brand ${id}:`, error);
-    return null;
+    console.error(`Error fetching collection with brand ${id}:`, error);
+    throw error;
   }
 
   return data;
 }
 
 /**
- * Fetch catalogues with brand information
+ * Fetch collections with brand information
  */
-export async function getCataloguesWithBrands(): Promise<
+export async function getCollectionsWithBrands(): Promise<
   (Catalogue & {
     brand: {
       name: string;
@@ -99,7 +102,7 @@ export async function getCataloguesWithBrands(): Promise<
     `);
 
   if (error) {
-    console.error("Error fetching catalogues with brands:", error);
+    console.error("Error fetching collections with brands:", error);
     throw error;
   }
 
@@ -107,39 +110,39 @@ export async function getCataloguesWithBrands(): Promise<
 }
 
 /**
- * Create a new catalogue
+ * Create a new collection
  */
-export async function createCatalogue(
-  catalogueData: Omit<Catalogue, "id">
+export async function createCollection(
+  collectionData: Omit<Catalogue, "id">
 ): Promise<Catalogue | null> {
   try {
-    const response = await fetch("/api/studio/catalogues", {
+    const response = await fetch("/api/studio/collections", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(catalogueData),
+      body: JSON.stringify(collectionData),
     });
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.error || "Failed to create catalogue");
+      throw new Error(errorData.error || "Failed to create collection");
     }
 
-    const { catalogue } = await response.json();
-    return catalogue;
+    const { collection } = await response.json();
+    return collection;
   } catch (error) {
-    console.error("Error creating catalogue:", error);
+    console.error("Error creating collection:", error);
     throw error;
   }
 }
 
 /**
- * Update a catalogue
+ * Update a collection
  */
-export async function updateCatalogue(
+export async function updateCollection(
   id: string,
-  catalogueData: Partial<Catalogue>
+  collectionData: Partial<Catalogue>
 ): Promise<Catalogue | null> {
   if (!supabase) {
     throw new Error("Supabase client not available");
@@ -147,13 +150,13 @@ export async function updateCatalogue(
 
   const { data, error } = await supabase
     .from("catalogues")
-    .update(catalogueData)
+    .update(collectionData)
     .eq("id", id)
     .select()
     .single();
 
   if (error) {
-    console.error(`Error updating catalogue ${id}:`, error);
+    console.error(`Error updating collection ${id}:`, error);
     throw error;
   }
 
@@ -161,9 +164,9 @@ export async function updateCatalogue(
 }
 
 /**
- * Delete a catalogue
+ * Delete a collection
  */
-export async function deleteCatalogue(id: string): Promise<void> {
+export async function deleteCollection(id: string): Promise<void> {
   if (!supabase) {
     throw new Error("Supabase client not available");
   }
@@ -171,7 +174,7 @@ export async function deleteCatalogue(id: string): Promise<void> {
   const { error } = await supabase.from("catalogues").delete().eq("id", id);
 
   if (error) {
-    console.error(`Error deleting catalogue ${id}:`, error);
+    console.error(`Error deleting collection ${id}:`, error);
     throw error;
   }
 }
