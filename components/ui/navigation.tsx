@@ -19,14 +19,13 @@ const fallbackNavigationItems: NavigationItem[] = [
   {
     title: "Collections",
     href: "/collections",
-    description: "Shop for an occasion, holiday, or ready to wear piece",
+    description: "Discover curated fashion collections and styles",
     items: [
+      { title: "High End Fashion Brands", href: "/directory?category=Luxury" },
       { title: "Ready to Wear", href: "/directory?category=Ready+to+Wear" },
+      { title: "Made to Measure", href: "/directory?category=Couture" },
+      { title: "Streetwear & Urban", href: "/directory?category=Streetwear" },
       { title: "Accessories", href: "/directory?category=Accessories" },
-      { title: "Jewelry", href: "/directory?category=Jewelry" },
-      { title: "Casual Wear", href: "/directory?category=Casual+Wear" },
-      { title: "Formal Wear", href: "/directory?category=Formal+Wear" },
-      { title: "Vacation", href: "/directory?category=Vacation" },
     ],
   },
   {

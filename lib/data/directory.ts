@@ -21,6 +21,7 @@ export const standardCategories = [
   "Casual Wear",
   "Formal Wear",
   "Luxury",
+  "Streetwear",
 ] as const;
 
 // Occasions used in "What are you dressing for?" section
@@ -49,7 +50,8 @@ export const categoryMapping = {
   Jewelry: "Accessories",
   Vacation: "Vacation",
   Couture: "Couture",
-  Luxury: "Ready to Wear", // Map luxury to ready to wear for filtering
+  Luxury: "Luxury", // Keep Luxury as its own category for navigation
+  Streetwear: "Streetwear", // New streetwear category
 } as const;
 
 export const locations = [

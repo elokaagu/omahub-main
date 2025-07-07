@@ -76,18 +76,21 @@ export function mapCategoriesToNavigation(
   categories: string[],
   counts: Record<string, number>
 ): NavigationCategory[] {
-  // Define category mappings - Updated to include ALL database categories
+  // Define category mappings for the new Collections structure
   const collectionsCategories = [
+    "Luxury", // Maps to "High End Fashion Brands"
     "Ready to Wear",
+    "Couture", // Maps to "Made to Measure"
+    "Streetwear", // Maps to "Streetwear & Urban"
     "Accessories",
-    "Jewelry",
-    "Casual Wear",
-    "Formal Wear",
-    "Vacation", // Keep for future use
+    // Legacy categories that should also map to collections
+    "Jewelry", // Maps to Accessories
+    "Casual Wear", // Maps to Ready to Wear
+    "Formal Wear", // Maps to Made to Measure
+    "Vacation", // Maps to Ready to Wear
   ];
   const tailoringCategories = [
     "Bridal",
-    "Couture",
     "Custom Design",
     "Tailoring",
     "Event Wear",
@@ -97,22 +100,51 @@ export function mapCategoriesToNavigation(
 
   const navigationCategories: NavigationCategory[] = [];
 
-  // Collections navigation - include all categories that fit collections
-  const collectionsItems = categories
+  // Collections navigation - map database categories to navigation labels
+  const categoryMapping: Record<string, { title: string; category: string }> = {
+    Luxury: { title: "High End Fashion Brands", category: "Luxury" },
+    "Ready to Wear": { title: "Ready to Wear", category: "Ready to Wear" },
+    Couture: { title: "Made to Measure", category: "Couture" },
+    Streetwear: { title: "Streetwear & Urban", category: "Streetwear" },
+    Accessories: { title: "Accessories", category: "Accessories" },
+    // Legacy mappings
+    Jewelry: { title: "Accessories", category: "Accessories" },
+    "Casual Wear": { title: "Ready to Wear", category: "Ready to Wear" },
+    "Formal Wear": { title: "Made to Measure", category: "Couture" },
+    Vacation: { title: "Ready to Wear", category: "Ready to Wear" },
+  };
+
+  // Create aggregated collections items
+  const aggregatedCounts: Record<string, number> = {};
+  categories
     .filter((cat) => collectionsCategories.includes(cat))
-    .map((cat) => ({
-      title: cat,
-      href: `/directory?category=${encodeURIComponent(cat)}`,
-      count: counts[cat] || 0,
+    .forEach((cat) => {
+      const mapping = categoryMapping[cat];
+      if (mapping) {
+        aggregatedCounts[mapping.category] =
+          (aggregatedCounts[mapping.category] || 0) + (counts[cat] || 0);
+      }
+    });
+
+  const collectionsItems = [
+    { title: "High End Fashion Brands", category: "Luxury" },
+    { title: "Ready to Wear", category: "Ready to Wear" },
+    { title: "Made to Measure", category: "Couture" },
+    { title: "Streetwear & Urban", category: "Streetwear" },
+    { title: "Accessories", category: "Accessories" },
+  ]
+    .map((item) => ({
+      title: item.title,
+      href: `/directory?category=${encodeURIComponent(item.category)}`,
+      count: aggregatedCounts[item.category] || 0,
     }))
-    .filter((item) => item.count > 0) // Only show categories with brands
-    .sort((a, b) => b.count - a.count); // Sort by count descending
+    .filter((item) => item.count > 0); // Only show categories with brands
 
   if (collectionsItems.length > 0) {
     navigationCategories.push({
       title: "Collections",
       href: "/collections",
-      description: "Shop for an occasion, holiday, or ready to wear piece",
+      description: "Discover curated fashion collections and styles",
       items: collectionsItems,
     });
   }
