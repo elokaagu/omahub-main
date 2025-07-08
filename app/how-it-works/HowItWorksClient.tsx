@@ -94,6 +94,17 @@ export default function HowItWorksClient() {
           transform: `translateY(${scrollY * 0.5}px)`,
         }}
       >
+        {/* Background Image */}
+        <div className="absolute inset-0 w-full h-full">
+          <img
+            src="/community.jpg"
+            alt="OmaHub Community"
+            className="w-full h-full object-cover object-center"
+          />
+          <div className="absolute inset-0 bg-black/40" />
+          <div className="absolute inset-0 bg-gradient-to-t from-oma-plum/30 via-transparent to-oma-gold/20" />
+        </div>
+
         {/* Floating Graphics */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute top-20 left-10 w-32 h-32 bg-gradient-to-br from-oma-plum/20 to-oma-gold/20 rounded-full blur-xl animate-pulse" />
@@ -106,8 +117,6 @@ export default function HowItWorksClient() {
             style={{ animationDelay: "2s" }}
           />
         </div>
-
-        <div className="absolute inset-0 bg-gradient-to-br from-oma-beige/20 to-transparent" />
         <div
           className="max-w-4xl mx-auto text-center relative z-10"
           style={getSectionTransform("hero")}
@@ -116,26 +125,26 @@ export default function HowItWorksClient() {
             <div className="w-24 h-24 bg-gradient-to-br from-oma-plum to-oma-gold rounded-full shadow-2xl" />
           </div>
 
-          <h1 className="text-5xl md:text-7xl font-canela text-black mb-6 leading-tight">
+          <h1 className="text-5xl md:text-7xl font-canela text-white mb-6 leading-tight">
             How OmaHub Works
           </h1>
-          <p className="text-xl md:text-2xl text-black/70 mb-8 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-xl md:text-2xl text-white/90 mb-8 max-w-2xl mx-auto leading-relaxed">
             Connecting fashion lovers with Africa's most talented designers
           </p>
 
           {/* Stats */}
           <div className="flex justify-center gap-8 mb-8">
             <div className="text-center">
-              <div className="text-2xl font-bold text-oma-plum">500+</div>
-              <div className="text-sm text-black/60">Designers</div>
+              <div className="text-2xl font-bold text-oma-gold">500+</div>
+              <div className="text-sm text-white/80">Designers</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-oma-gold">10k+</div>
-              <div className="text-sm text-black/60">Happy Clients</div>
+              <div className="text-sm text-white/80">Happy Clients</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-oma-plum">50+</div>
-              <div className="text-sm text-black/60">Countries</div>
+              <div className="text-2xl font-bold text-oma-gold">50+</div>
+              <div className="text-sm text-white/80">Countries</div>
             </div>
           </div>
 
