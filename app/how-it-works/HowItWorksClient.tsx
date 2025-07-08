@@ -128,10 +128,6 @@ export default function HowItWorksClient() {
           className="max-w-4xl mx-auto text-center relative z-10"
           style={getSectionTransform("hero")}
         >
-          <div className="flex justify-center mb-8">
-            <div className="w-24 h-24 bg-gradient-to-br from-oma-plum to-oma-gold rounded-full shadow-2xl" />
-          </div>
-
           <h1 className="text-5xl md:text-7xl font-canela text-white mb-6 leading-tight">
             How OmaHub Works
           </h1>
@@ -227,7 +223,6 @@ export default function HowItWorksClient() {
                   transition: `all 0.8s cubic-bezier(0.4, 0, 0.2, 1) ${index * 0.1}s`,
                 }}
               >
-                <div className="w-16 h-16 bg-gradient-to-br from-oma-plum/10 to-oma-plum/20 rounded-full mb-6 mx-auto" />
                 <h3 className="text-xl font-semibold text-black mb-4 text-center">
                   {step.title}
                 </h3>
@@ -237,6 +232,91 @@ export default function HowItWorksClient() {
                 <div className="w-full h-1 bg-gradient-to-r from-oma-plum to-oma-gold mt-6" />
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Curated Selection CTA Section */}
+      <section className="py-24 px-6 bg-black relative overflow-hidden">
+        {/* Corner Brackets */}
+        <div className="absolute top-8 left-8 w-12 h-12 border-l-4 border-t-4 border-white"></div>
+        <div className="absolute top-8 right-8 w-12 h-12 border-r-4 border-t-4 border-white"></div>
+        <div className="absolute bottom-8 left-8 w-12 h-12 border-l-4 border-b-4 border-white"></div>
+        <div className="absolute bottom-8 right-8 w-12 h-12 border-r-4 border-b-4 border-white"></div>
+
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
+          {/* Left Side - Animation */}
+          <div className="flex-1 relative">
+            <div className="relative w-80 h-80">
+              {/* Animated Design Cards */}
+              <div className="absolute inset-0 transform rotate-12 animate-pulse">
+                <div className="w-48 h-64 bg-gradient-to-br from-oma-plum/20 to-oma-gold/20 rounded-lg border-2 border-white/30 backdrop-blur-sm">
+                  <div className="p-4">
+                    <div className="w-full h-8 bg-white/20 rounded mb-4"></div>
+                    <div className="w-3/4 h-4 bg-white/15 rounded mb-2"></div>
+                    <div className="w-1/2 h-4 bg-white/15 rounded"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                className="absolute inset-0 transform -rotate-6 animate-pulse"
+                style={{ animationDelay: "0.5s" }}
+              >
+                <div className="w-48 h-64 bg-gradient-to-br from-oma-gold/20 to-oma-plum/20 rounded-lg border-2 border-white/30 backdrop-blur-sm">
+                  <div className="p-4">
+                    <div className="w-full h-8 bg-white/20 rounded mb-4"></div>
+                    <div className="w-2/3 h-4 bg-white/15 rounded mb-2"></div>
+                    <div className="w-3/4 h-4 bg-white/15 rounded"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                className="absolute inset-0 transform rotate-3 animate-pulse"
+                style={{ animationDelay: "1s" }}
+              >
+                <div className="w-48 h-64 bg-gradient-to-br from-oma-beige/20 to-oma-plum/20 rounded-lg border-2 border-white/30 backdrop-blur-sm">
+                  <div className="p-4">
+                    <div className="w-full h-8 bg-white/20 rounded mb-4"></div>
+                    <div className="w-4/5 h-4 bg-white/15 rounded mb-2"></div>
+                    <div className="w-1/3 h-4 bg-white/15 rounded"></div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Floating Elements */}
+              <div className="absolute top-4 right-4 w-6 h-6 bg-oma-gold rounded-full animate-bounce"></div>
+              <div
+                className="absolute bottom-8 left-8 w-4 h-4 bg-oma-plum rounded-full animate-bounce"
+                style={{ animationDelay: "0.3s" }}
+              ></div>
+              <div className="absolute top-1/2 left-0 w-3 h-3 bg-white rounded-full animate-ping"></div>
+            </div>
+          </div>
+
+          {/* Right Side - Content */}
+          <div className="flex-1 text-white pl-12">
+            <h2 className="text-4xl md:text-5xl font-canela mb-6 leading-tight">
+              Curated, and not sorry about it.
+            </h2>
+            <p className="text-xl text-white/80 mb-8 leading-relaxed max-w-xl">
+              We're by invitation only; which means you only discover designers
+              if our team of curators are convinced their work is exceptional
+              for you. This ensures you'll only find pieces alongside others at
+              the top of their craft.
+            </p>
+
+            <Button
+              asChild
+              size="lg"
+              className="bg-oma-plum hover:bg-oma-plum/90 text-white px-8 py-4 text-lg font-semibold group border-2 border-oma-plum hover:border-oma-gold transition-all duration-300"
+            >
+              <Link href="/directory" className="flex items-center gap-3">
+                Explore Curated Designers
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </Button>
           </div>
         </div>
       </section>
@@ -291,7 +371,6 @@ export default function HowItWorksClient() {
                   transition: `all 0.8s cubic-bezier(0.4, 0, 0.2, 1) ${index * 0.1}s`,
                 }}
               >
-                <div className="w-16 h-16 bg-gradient-to-br from-oma-gold/10 to-oma-gold/20 rounded-full mb-6 mx-auto" />
                 <h3 className="text-xl font-semibold text-black mb-4 text-center">
                   {step.title}
                 </h3>
@@ -356,7 +435,6 @@ export default function HowItWorksClient() {
                   transition: `all 0.6s cubic-bezier(0.4, 0, 0.2, 1) ${index * 0.1}s`,
                 }}
               >
-                <div className="w-12 h-12 bg-gradient-to-br from-oma-plum/10 to-oma-gold/10 rounded-full mb-4 mx-auto" />
                 <h3 className="text-lg font-semibold text-black mb-2">
                   {feature.title}
                 </h3>
@@ -434,7 +512,6 @@ export default function HowItWorksClient() {
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-gradient-to-br from-oma-plum/10 to-oma-plum/20 rounded-full" />
                       <h3 className="text-lg font-semibold text-black">
                         {faq.question}
                       </h3>
@@ -447,7 +524,7 @@ export default function HowItWorksClient() {
                   </div>
                 </CollapsibleTrigger>
                 <CollapsibleContent className="px-6 pb-6 text-black/70 leading-relaxed">
-                  <div className="ml-13 mt-2">{faq.answer}</div>
+                  <div className="mt-2">{faq.answer}</div>
                 </CollapsibleContent>
               </Collapsible>
             ))}
@@ -474,10 +551,6 @@ export default function HowItWorksClient() {
           className="max-w-4xl mx-auto text-center relative z-10"
           style={getSectionTransform("cta")}
         >
-          <div className="flex justify-center mb-8">
-            <div className="w-20 h-20 bg-gradient-to-br from-oma-plum to-oma-gold rounded-full shadow-2xl" />
-          </div>
-
           <h2 className="text-4xl md:text-5xl font-canela text-black mb-6">
             Ready to Get Started?
           </h2>
