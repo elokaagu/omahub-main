@@ -54,6 +54,7 @@ type CollectionWithBrand = Catalogue & {
     location: string;
     is_verified: boolean;
     category: string;
+    rating: number;
   };
 };
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
@@ -85,7 +86,7 @@ export default function CollectionsPage() {
 
   useEffect(() => {
     filterCatalogues();
-  }, [selectedBrand, searchQuery, catalogues]);
+  }, [selectedBrand, searchQuery, collections]);
 
   const fetchData = async () => {
     if (!user) {
@@ -274,7 +275,7 @@ export default function CollectionsPage() {
   };
 
   const filterCatalogues = () => {
-    let filtered = [...catalogues];
+    let filtered = [...collections];
 
     // Filter by brand
     if (selectedBrand !== "all") {
@@ -293,7 +294,7 @@ export default function CollectionsPage() {
       );
     }
 
-    setFilteredCatalogues(filtered);
+    setFilteredCollections(filtered);
   };
 
   const handleBrandChange = (value: string) => {
