@@ -237,12 +237,12 @@ export default function HowItWorksClient() {
       </section>
 
       {/* Curated Selection CTA Section */}
-      <section className="py-24 px-6 bg-black relative overflow-hidden">
+      <section className="py-24 px-6 bg-gradient-to-br from-oma-beige/80 via-white/90 to-oma-gold/10 relative overflow-hidden">
         {/* Corner Brackets */}
-        <div className="absolute top-8 left-8 w-12 h-12 border-l-4 border-t-4 border-white"></div>
-        <div className="absolute top-8 right-8 w-12 h-12 border-r-4 border-t-4 border-white"></div>
-        <div className="absolute bottom-8 left-8 w-12 h-12 border-l-4 border-b-4 border-white"></div>
-        <div className="absolute bottom-8 right-8 w-12 h-12 border-r-4 border-b-4 border-white"></div>
+        <div className="absolute top-8 left-8 w-12 h-12 border-l-4 border-t-4 border-oma-gold/80"></div>
+        <div className="absolute top-8 right-8 w-12 h-12 border-r-4 border-t-4 border-oma-gold/80"></div>
+        <div className="absolute bottom-8 left-8 w-12 h-12 border-l-4 border-b-4 border-oma-gold/80"></div>
+        <div className="absolute bottom-8 right-8 w-12 h-12 border-r-4 border-b-4 border-oma-gold/80"></div>
 
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           {/* Left Side - Animation */}
@@ -296,11 +296,11 @@ export default function HowItWorksClient() {
           </div>
 
           {/* Right Side - Content */}
-          <div className="flex-1 text-white pl-12">
+          <div className="flex-1 text-oma-cocoa pl-12">
             <h2 className="text-4xl md:text-5xl font-canela mb-6 leading-tight">
               Curated, and not sorry about it.
             </h2>
-            <p className="text-xl text-white/80 mb-8 leading-relaxed max-w-xl">
+            <p className="text-xl text-oma-cocoa/80 mb-8 leading-relaxed max-w-xl">
               We're by invitation only; which means you only discover designers
               if our team of curators are convinced their work is exceptional
               for you. This ensures you'll only find pieces alongside others at
