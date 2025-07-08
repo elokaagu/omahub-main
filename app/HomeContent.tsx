@@ -670,7 +670,7 @@ export default function HomeContent() {
                     <VideoPlayer
                       videoUrl={
                         spotlightContent.video_url ||
-                        "https://sample-videos.com/zip/10/mp4/720/mp4-720.mp4"
+                        "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
                       }
                       thumbnailUrl={spotlightContent.video_thumbnail}
                       fallbackImageUrl={spotlightContent.main_image}

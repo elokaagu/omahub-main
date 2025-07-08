@@ -61,6 +61,13 @@ export function VideoPlayer({
   const shouldShowImage = !videoUrl || hasError;
   const imageToShow = thumbnailUrl || fallbackImageUrl;
 
+  // Auto-show video if autoplay is enabled
+  useEffect(() => {
+    if (autoPlay && videoUrl && !hasError) {
+      setShowVideo(true);
+    }
+  }, [autoPlay, videoUrl, hasError]);
+
   // Aspect ratio classes
   const aspectRatioClasses = {
     "16/9": "aspect-video",
@@ -78,7 +85,9 @@ export function VideoPlayer({
         onVideoLoad?.();
       };
 
-      const handleError = () => {
+      const handleError = (e: Event) => {
+        console.error("Video loading error:", e);
+        console.error("Video URL:", videoUrl);
         setHasError(true);
         setIsLoading(false);
         onVideoError?.();
@@ -219,7 +228,9 @@ export function VideoPlayer({
         }}
         onLoadStart={() => setIsLoading(true)}
         onCanPlay={() => setIsLoading(false)}
-        onError={() => {
+        onError={(e) => {
+          console.error("Video element error:", e);
+          console.error("Video src:", videoUrl);
           setHasError(true);
           setIsLoading(false);
         }}
