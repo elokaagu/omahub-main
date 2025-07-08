@@ -22,6 +22,7 @@ import {
   Users,
   MessageSquare,
   Inbox,
+  Scissors,
 } from "lucide-react";
 import {
   Permission,
@@ -300,6 +301,18 @@ export default function StudioLayout({
                 <ShoppingBag className="h-5 w-5" />
                 <span>
                   {user?.role === "brand_admin" ? "Your Products" : "Products"}
+                </span>
+              </NavigationLink>
+            )}
+            {(user?.role === "super_admin" || user?.role === "brand_admin") && (
+              <NavigationLink
+                href="/studio/services"
+                className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100"
+                onClick={() => setSidebarOpen(false)}
+              >
+                <Scissors className="h-5 w-5" />
+                <span>
+                  {user?.role === "brand_admin" ? "Your Services" : "Services"}
                 </span>
               </NavigationLink>
             )}

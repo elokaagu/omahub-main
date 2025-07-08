@@ -164,6 +164,20 @@ export type Product = {
   care_instructions?: string;
   is_custom?: boolean; // For tailored/custom pieces
   lead_time?: string; // e.g., "2-3 weeks"
+  // Tailor-specific fields
+  service_type?: "product" | "service" | "consultation";
+  consultation_fee?: number;
+  hourly_rate?: number;
+  fixed_price?: number;
+  specialties?: string[];
+  fitting_sessions?: string;
+  measurement_guide?: string;
+  price_range?: string;
+  contact_for_pricing?: boolean;
+  sessions_included?: string;
+  requirements?: string;
+  delivery_method?: string;
+  includes?: string[];
   created_at?: string;
   updated_at?: string;
 };

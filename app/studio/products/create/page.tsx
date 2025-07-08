@@ -27,6 +27,7 @@ import {
   DollarSign,
   Package,
   Image as ImageIcon,
+  MessageCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -100,6 +101,14 @@ export default function CreateProductPage() {
     care_instructions: "",
     is_custom: false,
     lead_time: "",
+    // Tailor-specific fields
+    consultation_fee: "",
+    specialties: [] as string[],
+    fitting_sessions: "",
+    measurement_guide: "",
+    price_range: "",
+    contact_for_pricing: false,
+    service_type: "" as "product" | "service" | "consultation",
   });
 
   // Check if user is super admin or brand owner
@@ -197,6 +206,47 @@ export default function CreateProductPage() {
 
     return "$"; // Default fallback
   };
+
+  // Tailor-specific categories
+  const tailoredCategories = [
+    "Bridal",
+    "Custom Design",
+    "Evening Gowns",
+    "Alterations",
+    "Tailored",
+    "Event Wear",
+    "Wedding Guest",
+    "Birthday",
+  ];
+
+  // Check if selected brand is a tailor brand
+  const isTailorBrand = (): boolean => {
+    const selectedBrand = brands.find(
+      (brand) => brand.id === formData.brand_id
+    );
+    return selectedBrand
+      ? tailoredCategories.includes(selectedBrand.category)
+      : false;
+  };
+
+  // Common tailor specialties
+  const tailorSpecialties = [
+    "Bridal Wear",
+    "Wedding Dresses",
+    "Evening Gowns",
+    "Cocktail Dresses",
+    "Formal Wear",
+    "Business Attire",
+    "Casual Wear",
+    "Alterations",
+    "Custom Design",
+    "Bespoke Tailoring",
+    "Made-to-Measure",
+    "Fitting Services",
+    "Pattern Making",
+    "Embroidery",
+    "Beadwork",
+  ];
 
   const handleInputChange = (name: string, value: string | boolean) => {
     // Handle price formatting for price and sale_price fields
@@ -306,16 +356,47 @@ export default function CreateProductPage() {
     }));
   };
 
+  // Handle tailor specialties
+  const handleSpecialtyChange = (value: string) => {
+    if (!value.trim()) return;
+
+    setFormData((prev) => ({
+      ...prev,
+      specialties: [...prev.specialties, value.trim()],
+    }));
+  };
+
+  const removeSpecialty = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      specialties: prev.specialties.filter((_, i) => i !== index),
+    }));
+  };
+
+  // Handle service type change
+  const handleServiceTypeChange = (
+    serviceType: "product" | "service" | "consultation"
+  ) => {
+    setFormData((prev) => ({
+      ...prev,
+      service_type: serviceType,
+      // Reset pricing fields when changing service type
+      contact_for_pricing: serviceType === "consultation",
+      price: serviceType === "consultation" ? "" : prev.price,
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (
-      !formData.title ||
-      !formData.description ||
-      !formData.price ||
-      !formData.brand_id
-    ) {
+    if (!formData.title || !formData.description || !formData.brand_id) {
       toast.error("Please fill in all required fields");
+      return;
+    }
+
+    // Validate pricing based on service type
+    if (!formData.contact_for_pricing && !formData.price) {
+      toast.error("Please enter a price or enable 'Contact for Pricing'");
       return;
     }
 
@@ -338,7 +419,7 @@ export default function CreateProductPage() {
       const productData = {
         title: formData.title,
         description: formData.description,
-        price: parseFloat(formData.price),
+        price: formData.contact_for_pricing ? 0 : parseFloat(formData.price),
         sale_price: formData.sale_price
           ? parseFloat(formData.sale_price)
           : undefined,
@@ -376,6 +457,19 @@ export default function CreateProductPage() {
         ...(formData.video_type && { video_type: formData.video_type }),
         ...(formData.video_description && {
           video_description: formData.video_description,
+        }),
+        // Tailor-specific fields
+        ...(isTailorBrand() && {
+          consultation_fee: formData.consultation_fee
+            ? parseFloat(formData.consultation_fee)
+            : undefined,
+          specialties:
+            formData.specialties.length > 0 ? formData.specialties : [],
+          fitting_sessions: formData.fitting_sessions || undefined,
+          measurement_guide: formData.measurement_guide || undefined,
+          price_range: formData.price_range || undefined,
+          contact_for_pricing: formData.contact_for_pricing,
+          service_type: formData.service_type || "product",
         }),
       };
 
@@ -712,34 +806,157 @@ export default function CreateProductPage() {
             </CardContent>
           </Card>
 
+          {/* Service Type - Only for Tailor Brands */}
+          {isTailorBrand() && (
+            <Card className="border border-oma-gold/10 bg-white">
+              <CardHeader>
+                <CardTitle className="text-black">Service Type</CardTitle>
+                <p className="text-sm text-black/70">
+                  Choose what type of offering this is
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div
+                    className={`p-4 border rounded-lg cursor-pointer transition-all ${
+                      formData.service_type === "product"
+                        ? "border-oma-plum bg-oma-plum/10"
+                        : "border-gray-200 hover:border-oma-plum/50"
+                    }`}
+                    onClick={() => handleServiceTypeChange("product")}
+                  >
+                    <div className="flex flex-col items-center text-center">
+                      <Package className="h-8 w-8 mb-2 text-oma-plum" />
+                      <h3 className="font-medium text-black">Product</h3>
+                      <p className="text-xs text-black/70">
+                        Ready-made items with fixed pricing
+                      </p>
+                    </div>
+                  </div>
+                  <div
+                    className={`p-4 border rounded-lg cursor-pointer transition-all ${
+                      formData.service_type === "service"
+                        ? "border-oma-plum bg-oma-plum/10"
+                        : "border-gray-200 hover:border-oma-plum/50"
+                    }`}
+                    onClick={() => handleServiceTypeChange("service")}
+                  >
+                    <div className="flex flex-col items-center text-center">
+                      <DollarSign className="h-8 w-8 mb-2 text-oma-plum" />
+                      <h3 className="font-medium text-black">Service</h3>
+                      <p className="text-xs text-black/70">
+                        Custom tailoring with flexible pricing
+                      </p>
+                    </div>
+                  </div>
+                  <div
+                    className={`p-4 border rounded-lg cursor-pointer transition-all ${
+                      formData.service_type === "consultation"
+                        ? "border-oma-plum bg-oma-plum/10"
+                        : "border-gray-200 hover:border-oma-plum/50"
+                    }`}
+                    onClick={() => handleServiceTypeChange("consultation")}
+                  >
+                    <div className="flex flex-col items-center text-center">
+                      <MessageCircle className="h-8 w-8 mb-2 text-oma-plum" />
+                      <h3 className="font-medium text-black">Consultation</h3>
+                      <p className="text-xs text-black/70">
+                        Design consultation and planning
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Pricing */}
           <Card className="border border-oma-gold/10 bg-white">
             <CardHeader>
-              <CardTitle className="text-black">Pricing</CardTitle>
+              <CardTitle className="text-black">
+                {isTailorBrand() && formData.service_type === "consultation"
+                  ? "Consultation Pricing"
+                  : "Pricing"}
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="price" className="text-black">
-                  Regular Price *
-                </Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
-                    {selectedBrandCurrency}
-                  </span>
-                  <Input
-                    id="price"
-                    type="text"
-                    value={formatPriceForDisplay(formData.price)}
-                    onChange={(e) => handleInputChange("price", e.target.value)}
-                    placeholder="0"
-                    className="border-oma-cocoa/20 focus:border-oma-plum pl-8"
-                    required
+              {/* Contact for Pricing Option - For Tailors */}
+              {isTailorBrand() && (
+                <div className="flex items-center justify-between p-4 bg-oma-beige/30 rounded-lg">
+                  <div className="space-y-0.5">
+                    <Label
+                      htmlFor="contact_for_pricing"
+                      className="text-black font-medium"
+                    >
+                      Contact for Pricing
+                    </Label>
+                    <p className="text-sm text-black/70">
+                      Let customers contact you for custom pricing
+                    </p>
+                  </div>
+                  <Checkbox
+                    id="contact_for_pricing"
+                    checked={formData.contact_for_pricing}
+                    onCheckedChange={(checked) =>
+                      handleInputChange("contact_for_pricing", checked)
+                    }
                   />
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Enter the regular selling price (e.g., 15,000)
-                </p>
-              </div>
+              )}
+
+              {/* Price Range - For Tailors with Contact for Pricing */}
+              {isTailorBrand() && formData.contact_for_pricing ? (
+                <div className="space-y-2">
+                  <Label htmlFor="price_range" className="text-black">
+                    Price Range (Optional)
+                  </Label>
+                  <Input
+                    id="price_range"
+                    value={formData.price_range}
+                    onChange={(e) =>
+                      handleInputChange("price_range", e.target.value)
+                    }
+                    placeholder="e.g., $500 - $2,000"
+                    className="border-oma-cocoa/20 focus:border-oma-plum"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Give customers an idea of your pricing range
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="price" className="text-black">
+                      {isTailorBrand() &&
+                      formData.service_type === "consultation"
+                        ? "Consultation Fee *"
+                        : "Regular Price *"}
+                    </Label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                        {selectedBrandCurrency}
+                      </span>
+                      <Input
+                        id="price"
+                        type="text"
+                        value={formatPriceForDisplay(formData.price)}
+                        onChange={(e) =>
+                          handleInputChange("price", e.target.value)
+                        }
+                        placeholder="0"
+                        className="border-oma-cocoa/20 focus:border-oma-plum pl-8"
+                        required={!formData.contact_for_pricing}
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {isTailorBrand() &&
+                      formData.service_type === "consultation"
+                        ? "Enter your consultation fee (e.g., 100)"
+                        : "Enter the regular selling price (e.g., 15,000)"}
+                    </p>
+                  </div>
+                </>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="sale_price" className="text-black">
                   Sale Price (Optional)
@@ -951,6 +1168,122 @@ export default function CreateProductPage() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Tailor Specialties - Only for Tailor Brands */}
+          {isTailorBrand() && (
+            <Card className="border border-oma-gold/10 bg-white">
+              <CardHeader>
+                <CardTitle className="text-black">
+                  Specialties & Services
+                </CardTitle>
+                <p className="text-sm text-black/70">
+                  Add your areas of expertise and services offered
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Specialties */}
+                <div className="space-y-2">
+                  <Label className="text-black">Your Specialties</Label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-4">
+                    {tailorSpecialties.map((specialty) => (
+                      <div
+                        key={specialty}
+                        className={`p-3 border rounded-lg cursor-pointer transition-all text-sm ${
+                          formData.specialties.includes(specialty)
+                            ? "border-oma-plum bg-oma-plum/10 text-oma-plum"
+                            : "border-gray-200 hover:border-oma-plum/50"
+                        }`}
+                        onClick={() => {
+                          if (formData.specialties.includes(specialty)) {
+                            setFormData((prev) => ({
+                              ...prev,
+                              specialties: prev.specialties.filter(
+                                (s) => s !== specialty
+                              ),
+                            }));
+                          } else {
+                            setFormData((prev) => ({
+                              ...prev,
+                              specialties: [...prev.specialties, specialty],
+                            }));
+                          }
+                        }}
+                      >
+                        {specialty}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Custom Specialty Input */}
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Add custom specialty"
+                      className="border-oma-cocoa/20 focus:border-oma-plum"
+                      onKeyPress={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleSpecialtyChange(e.currentTarget.value);
+                          e.currentTarget.value = "";
+                        }
+                      }}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white"
+                      onClick={(e) => {
+                        const input = e.currentTarget
+                          .previousElementSibling as HTMLInputElement;
+                        handleSpecialtyChange(input.value);
+                        input.value = "";
+                      }}
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Fitting Sessions */}
+                <div className="space-y-2">
+                  <Label htmlFor="fitting_sessions" className="text-black">
+                    Fitting Sessions
+                  </Label>
+                  <Input
+                    id="fitting_sessions"
+                    value={formData.fitting_sessions}
+                    onChange={(e) =>
+                      handleInputChange("fitting_sessions", e.target.value)
+                    }
+                    placeholder="e.g., 2-3 fittings included"
+                    className="border-oma-cocoa/20 focus:border-oma-plum"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Describe your fitting process and number of sessions
+                  </p>
+                </div>
+
+                {/* Measurement Guide */}
+                <div className="space-y-2">
+                  <Label htmlFor="measurement_guide" className="text-black">
+                    Measurement Guide
+                  </Label>
+                  <Textarea
+                    id="measurement_guide"
+                    value={formData.measurement_guide}
+                    onChange={(e) =>
+                      handleInputChange("measurement_guide", e.target.value)
+                    }
+                    placeholder="Describe your measurement process, what measurements you need, or any special requirements..."
+                    rows={4}
+                    className="border-oma-cocoa/20 focus:border-oma-plum"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Help customers understand your measurement requirements
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Settings */}
           <Card className="border border-oma-gold/10 bg-white">
