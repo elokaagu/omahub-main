@@ -1,324 +1,490 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { LazyImage } from "@/components/ui/lazy-image";
-import { SectionHeader } from "@/components/ui/section-header";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 import {
   Search,
   ShoppingBag,
   MessageCircle,
   CheckCircle,
+  Users,
+  Palette,
+  Globe,
+  Sparkles,
+  ArrowRight,
+  Heart,
+  Star,
+  Zap,
+  Target,
+  Award,
+  Briefcase,
+  Camera,
+  TrendingUp,
+  Shield,
   ChevronDown,
 } from "lucide-react";
 
 export default function HowItWorksClient() {
-  const [openFaq, setOpenFaq] = useState<string | null>(null);
+  const [scrollY, setScrollY] = useState(0);
+  const heroRef = useRef<HTMLDivElement>(null);
+  const clientsRef = useRef<HTMLDivElement>(null);
+  const designersRef = useRef<HTMLDivElement>(null);
 
-  const toggleFaq = (id: string) => {
-    setOpenFaq(openFaq === id ? null : id);
+  useEffect(() => {
+    const handleScroll = () => setScrollY(window.scrollY);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const scrollToSection = (ref: React.RefObject<HTMLDivElement>) => {
+    ref.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   return (
-    <div className="w-full bg-gradient-to-b from-oma-beige/50 to-white pt-24 pb-16">
-      <div className="max-w-7xl mx-auto px-6">
-        <SectionHeader
-          title="How OmaHub Works"
-          subtitle="Your guide to discovering and connecting with the world's most innovative fashion designers"
-          centered={true}
-          titleClassName="font-canela text-3xl md:text-4xl"
-          subtitleClassName="text-oma-cocoa/80"
-        />
-
-        {/* Three-step process */}
-        <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8">
-          {[
-            {
-              icon: <Search className="h-10 w-10 mb-4 text-oma-plum" />,
-              title: "Discover",
-              description:
-                "Browse our curated brand directory of top fashion designers and filter by style, location, and specialty.",
-            },
-            {
-              icon: <MessageCircle className="h-10 w-10 mb-4 text-oma-plum" />,
-              title: "Connect",
-              description:
-                "Directly message designers to discuss your needs, schedule consultations, and bring your vision to life.",
-            },
-            {
-              icon: <ShoppingBag className="h-10 w-10 mb-4 text-oma-plum" />,
-              title: "Create",
-              description:
-                "From concept to creation, work with designers to create custom pieces or shop their existing collections.",
-            },
-          ].map((step, index) => (
-            <div
-              key={index}
-              className="flex flex-col items-center text-center p-8 bg-white rounded-lg shadow-sm animate-fade-in"
-              style={{ animationDelay: `${index * 0.2}s` }}
-            >
-              {step.icon}
-              <h3 className="text-xl font-semibold mb-3">{step.title}</h3>
-              <p className="text-oma-cocoa">{step.description}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* For clients and designers tabs */}
-        <div className="mt-24">
-          <Tabs defaultValue="clients" className="w-full">
-            <div className="flex justify-center mb-8">
-              <TabsList className="bg-oma-cream/50">
-                <TabsTrigger value="clients" className="px-8 py-3">
-                  For Clients
-                </TabsTrigger>
-                <TabsTrigger value="designers" className="px-8 py-3">
-                  For Designers
-                </TabsTrigger>
-              </TabsList>
-            </div>
-
-            <TabsContent value="clients" className="animate-fade-in">
-              <div className="max-w-4xl mx-auto">
-                <h3 className="font-canela text-3xl mb-6 text-center">
-                  Find Your Perfect Designer
-                </h3>
-                <p className="text-center text-lg text-oma-cocoa mb-8">
-                  connect with talented designers who bring your vision to life.
-                </p>
-
-                <div className="space-y-6">
-                  {[
-                    {
-                      title: "Create Your Account",
-                      description:
-                        "Sign up for free and complete your style profile to help designers understand your preferences.",
-                      icon: (
-                        <CheckCircle className="h-6 w-6 text-oma-gold flex-shrink-0" />
-                      ),
-                    },
-                    {
-                      title: "Browse the Brand Directory",
-                      description:
-                        "Explore our curated selection of designers filtered by specialty, location, and style.",
-                      icon: (
-                        <CheckCircle className="h-6 w-6 text-oma-gold flex-shrink-0" />
-                      ),
-                    },
-                    {
-                      title: "Connect Directly",
-                      description:
-                        "Message designers, share your inspiration, and discuss your project needs.",
-                      icon: (
-                        <CheckCircle className="h-6 w-6 text-oma-gold flex-shrink-0" />
-                      ),
-                    },
-                    {
-                      title: "Schedule Consultations",
-                      description:
-                        "Book virtual or in-person consultations to discuss details, measurements, and timelines.",
-                      icon: (
-                        <CheckCircle className="h-6 w-6 text-oma-gold flex-shrink-0" />
-                      ),
-                    },
-                    {
-                      title: "Bring Your Vision to Life",
-                      description:
-                        "Work directly with the designer to create your custom piece or purchase from their collections.",
-                      icon: (
-                        <CheckCircle className="h-6 w-6 text-oma-gold flex-shrink-0" />
-                      ),
-                    },
-                  ].map((step, index) => (
-                    <div key={index} className="flex gap-4 items-start">
-                      {step.icon}
-                      <div>
-                        <h4 className="font-semibold text-lg">{step.title}</h4>
-                        <p className="text-oma-cocoa">{step.description}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="mt-12 flex justify-center">
-                  <Button
-                    asChild
-                    className="bg-oma-plum hover:bg-oma-plum/90 px-8"
-                  >
-                    <Link href="/directory">Browse Brand Directory</Link>
-                  </Button>
-                </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="designers" className="animate-fade-in">
-              <div className="max-w-4xl mx-auto">
-                <h3 className="font-canela text-3xl mb-6 text-center">
-                  Showcase Your Collection
-                </h3>
-                <p className="text-center text-lg text-oma-cocoa mb-8">
-                  Join a community of top fashion talent and showcase your brand
-                  to a global audience.
-                </p>
-
-                <div className="space-y-6">
-                  {[
-                    {
-                      title: "Apply to Join",
-                      description:
-                        "Tell us about your brand and submit your portfolio for a quick review process.",
-                      icon: (
-                        <CheckCircle className="h-6 w-6 text-oma-gold flex-shrink-0" />
-                      ),
-                    },
-                    {
-                      title: "Create Your Profile",
-                      description:
-                        "Build your brand profile with photos, designer bio, specialties, and collection highlights.",
-                      icon: (
-                        <CheckCircle className="h-6 w-6 text-oma-gold flex-shrink-0" />
-                      ),
-                    },
-                    {
-                      title: "Showcase Your Work",
-                      description:
-                        "Upload photos of your designs, past collections, and create lookbooks for potential clients.",
-                      icon: (
-                        <CheckCircle className="h-6 w-6 text-oma-gold flex-shrink-0" />
-                      ),
-                    },
-                    {
-                      title: "Connect with Clients",
-                      description:
-                        "Receive inquiries directly from interested clients and manage conversations through our platform.",
-                      icon: (
-                        <CheckCircle className="h-6 w-6 text-oma-gold flex-shrink-0" />
-                      ),
-                    },
-                    {
-                      title: "Grow Your Business",
-                      description:
-                        "Schedule consultations, negotiate terms, and build your global client base.",
-                      icon: (
-                        <CheckCircle className="h-6 w-6 text-oma-gold flex-shrink-0" />
-                      ),
-                    },
-                  ].map((step, index) => (
-                    <div key={index} className="flex gap-4 items-start">
-                      {step.icon}
-                      <div>
-                        <h4 className="font-semibold text-lg">{step.title}</h4>
-                        <p className="text-oma-cocoa">{step.description}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="mt-12 flex justify-center">
-                  <Button
-                    asChild
-                    className="bg-oma-plum hover:bg-oma-plum/90 px-8"
-                  >
-                    <Link href="/join">Join as a Designer</Link>
-                  </Button>
-                </div>
-              </div>
-            </TabsContent>
-          </Tabs>
-        </div>
-
-        {/* FAQ section */}
-        <div className="mt-24">
-          <SectionHeader
-            title="Frequently Asked Questions"
-            subtitle="Everything you need to know about OmaHub"
-            centered={true}
+    <div className="w-full bg-black text-white overflow-hidden">
+      {/* Hero Section with Parallax */}
+      <section
+        ref={heroRef}
+        className="relative min-h-screen flex items-center justify-center"
+        style={{
+          transform: `translateY(${scrollY * 0.5}px)`,
+        }}
+      >
+        {/* Animated Background Graphics */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div
+            className="absolute top-20 left-10 w-32 h-32 border-2 border-white/20 rounded-full"
+            style={{
+              transform: `rotate(${scrollY * 0.1}deg) translateY(${scrollY * 0.2}px)`,
+            }}
+          />
+          <div
+            className="absolute top-40 right-20 w-20 h-20 bg-gradient-to-br from-oma-plum/30 to-oma-gold/30 rounded-lg"
+            style={{
+              transform: `rotate(${-scrollY * 0.15}deg) translateY(${scrollY * 0.3}px)`,
+            }}
+          />
+          <div
+            className="absolute bottom-40 left-1/4 w-16 h-16 border border-white/30"
+            style={{
+              transform: `rotate(${scrollY * 0.08}deg) translateX(${scrollY * 0.1}px)`,
+            }}
           />
 
-          <div className="max-w-3xl mx-auto mt-8 space-y-4">
-            {[
-              {
-                id: "faq1",
-                question: "How do I find a designer for my specific needs?",
-                answer:
-                  "You can browse our brand directory and filter by location, specialty, and style. Each designer profile includes their portfolio, reviews, and areas of expertise to help you find the perfect match.",
-              },
-              {
-                id: "faq2",
-                question: "What happens after I contact a designer?",
-                answer:
-                  "Once you reach out, you'll discuss your project directly with the designer. They'll guide you through their process, which typically includes consultation, design concept, measurements, creation, and delivery.",
-              },
-              {
-                id: "faq3",
-                question: "How are payments handled on OmaHub?",
-                answer:
-                  "Payments are arranged directly between you and the designer. Most designers require a deposit to begin work, with the remaining balance due at different stages or upon completion.",
-              },
-              {
-                id: "faq4",
-                question: "Do designers offer international shipping?",
-                answer:
-                  "Many designers on our platform offer international shipping. Shipping policies, costs, and timeframes vary by designer and should be discussed during your initial consultation.",
-              },
-              {
-                id: "faq5",
-                question: "How can I become a featured designer on OmaHub?",
-                answer:
-                  "We're always looking for talented designers to join our platform. Click on 'Join as a Designer' to apply, and our team will review your portfolio and brand information.",
-              },
-            ].map((faq) => (
-              <Collapsible
-                key={faq.id}
-                open={openFaq === faq.id}
-                onOpenChange={() => toggleFaq(faq.id)}
-                className="border border-oma-gold/20 rounded-lg overflow-hidden"
-              >
-                <CollapsibleTrigger className="flex justify-between items-center w-full p-6 text-left bg-white hover:bg-oma-cream/30 transition-colors">
-                  <h4 className="font-medium text-lg">{faq.question}</h4>
-                  <ChevronDown
-                    className={`h-5 w-5 text-oma-plum transition-transform ${
-                      openFaq === faq.id ? "rotate-180" : ""
-                    }`}
-                  />
-                </CollapsibleTrigger>
-                <CollapsibleContent className="p-6 pt-0 bg-white">
-                  <p className="text-oma-cocoa">{faq.answer}</p>
-                </CollapsibleContent>
-              </Collapsible>
-            ))}
+          {/* Corner Frames */}
+          <div className="absolute top-8 left-8 w-16 h-16">
+            <div className="absolute top-0 left-0 w-8 h-2 bg-white"></div>
+            <div className="absolute top-0 left-0 w-2 h-8 bg-white"></div>
+          </div>
+          <div className="absolute top-8 right-8 w-16 h-16">
+            <div className="absolute top-0 right-0 w-8 h-2 bg-white"></div>
+            <div className="absolute top-0 right-0 w-2 h-8 bg-white"></div>
+          </div>
+          <div className="absolute bottom-8 left-8 w-16 h-16">
+            <div className="absolute bottom-0 left-0 w-8 h-2 bg-white"></div>
+            <div className="absolute bottom-0 left-0 w-2 h-8 bg-white"></div>
+          </div>
+          <div className="absolute bottom-8 right-8 w-16 h-16">
+            <div className="absolute bottom-0 right-0 w-8 h-2 bg-white"></div>
+            <div className="absolute bottom-0 right-0 w-2 h-8 bg-white"></div>
           </div>
         </div>
 
-        {/* CTA section */}
-        <div className="mt-24 bg-gradient-to-r from-oma-plum/10 to-oma-gold/10 rounded-xl p-8 md:p-12 text-center">
-          <h2 className="text-2xl font-canela text-center mb-4">
-            Discover talented designers or showcase your own brand on OmaHub
-          </h2>
-          <p className="text-lg max-w-2xl mx-auto mb-8">
-            Ready to get started?
+        {/* Hero Content */}
+        <div className="relative z-10 text-center max-w-6xl mx-auto px-6">
+          <div className="mb-8">
+            <div
+              className="inline-block mb-6"
+              style={{
+                transform: `translateY(${scrollY * 0.1}px)`,
+              }}
+            >
+              <div className="relative">
+                <div className="w-32 h-32 mx-auto mb-6 relative">
+                  <div className="absolute inset-0 bg-gradient-to-br from-oma-plum to-oma-gold rounded-full opacity-20 animate-pulse"></div>
+                  <div className="absolute inset-4 bg-white rounded-full flex items-center justify-center">
+                    <Sparkles className="w-12 h-12 text-oma-plum" />
+                  </div>
+                </div>
+                <div className="absolute -top-2 -right-2 w-8 h-8 bg-oma-gold rounded-full animate-bounce"></div>
+              </div>
+            </div>
+          </div>
+
+          <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
+            Finally. A platform as{" "}
+            <span className="bg-gradient-to-r from-oma-plum to-oma-gold bg-clip-text text-transparent">
+              premium
+            </span>{" "}
+            as your brand.
+          </h1>
+
+          <p className="text-xl md:text-2xl text-gray-300 mb-12 max-w-4xl mx-auto leading-relaxed">
+            OmaHub listeners aren't casual consumers of anything, they're the
+            trend setters, the people who "discover it first". We've designed a
+            premium, immersive environment that creates an exclusively above the
+            fold home, fit for your brand.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button asChild className="bg-oma-plum hover:bg-oma-plum/90">
-              <Link href="/directory">Find a Designer</Link>
+
+          <div className="flex flex-col sm:flex-row gap-6 justify-center">
+            <Button
+              onClick={() => scrollToSection(clientsRef)}
+              className="bg-white text-black hover:bg-gray-100 px-8 py-4 text-lg font-semibold rounded-full transition-all duration-300 hover:scale-105"
+            >
+              For Clients
+              <ArrowRight className="ml-2 w-5 h-5" />
+            </Button>
+            <Button
+              onClick={() => scrollToSection(designersRef)}
+              variant="outline"
+              className="border-white text-white hover:bg-white hover:text-black px-8 py-4 text-lg font-semibold rounded-full transition-all duration-300 hover:scale-105"
+            >
+              For Designers
+              <ArrowRight className="ml-2 w-5 h-5" />
+            </Button>
+          </div>
+
+          {/* Scroll Indicator */}
+          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
+            <ChevronDown className="w-8 h-8 text-white/60" />
+          </div>
+        </div>
+      </section>
+
+      {/* For Clients Section */}
+      <section
+        ref={clientsRef}
+        className="relative min-h-screen bg-gradient-to-br from-gray-900 to-black py-20"
+      >
+        <div className="max-w-7xl mx-auto px-6">
+          {/* Section Header */}
+          <div className="text-center mb-20">
+            <div className="inline-flex items-center gap-3 mb-6">
+              <div className="w-12 h-12 bg-gradient-to-br from-oma-plum to-oma-gold rounded-full flex items-center justify-center">
+                <Users className="w-6 h-6 text-white" />
+              </div>
+              <h2 className="text-4xl md:text-6xl font-bold">For Clients</h2>
+            </div>
+            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+              Discover exceptional designers and bring your fashion vision to
+              life through our curated marketplace.
+            </p>
+          </div>
+
+          {/* Client Journey Steps */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-20">
+            {/* Left side - Steps */}
+            <div className="space-y-8">
+              {[
+                {
+                  icon: <Search className="w-8 h-8" />,
+                  title: "Discover Premium Designers",
+                  description:
+                    "Browse our curated directory of world-class fashion designers, filtered by specialty, location, and style.",
+                  color: "from-blue-500 to-purple-500",
+                },
+                {
+                  icon: <MessageCircle className="w-8 h-8" />,
+                  title: "Connect Directly",
+                  description:
+                    "Message designers directly, share your vision, and discuss your project needs in detail.",
+                  color: "from-purple-500 to-pink-500",
+                },
+                {
+                  icon: <Heart className="w-8 h-8" />,
+                  title: "Collaborate & Create",
+                  description:
+                    "Work closely with your chosen designer to bring your unique vision to life through custom pieces.",
+                  color: "from-pink-500 to-red-500",
+                },
+                {
+                  icon: <Star className="w-8 h-8" />,
+                  title: "Experience Excellence",
+                  description:
+                    "Receive your custom creation and enjoy the premium experience of owning truly unique fashion.",
+                  color: "from-yellow-500 to-orange-500",
+                },
+              ].map((step, index) => (
+                <div
+                  key={index}
+                  className="flex gap-6 p-6 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 hover:bg-white/10 transition-all duration-300"
+                  style={{
+                    transform: `translateX(${scrollY * 0.05 * (index + 1)}px)`,
+                  }}
+                >
+                  <div
+                    className={`w-16 h-16 rounded-full bg-gradient-to-br ${step.color} flex items-center justify-center flex-shrink-0`}
+                  >
+                    {step.icon}
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-semibold mb-2">{step.title}</h3>
+                    <p className="text-gray-300">{step.description}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Right side - Visual */}
+            <div className="relative">
+              <div
+                className="relative z-10"
+                style={{
+                  transform: `translateY(${scrollY * 0.1}px)`,
+                }}
+              >
+                <div className="w-80 h-80 mx-auto relative">
+                  <div className="absolute inset-0 bg-gradient-to-br from-oma-plum/20 to-oma-gold/20 rounded-full animate-pulse"></div>
+                  <div className="absolute inset-8 bg-gradient-to-br from-oma-plum to-oma-gold rounded-full flex items-center justify-center">
+                    <ShoppingBag className="w-24 h-24 text-white" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Floating Icons */}
+              <div className="absolute top-10 left-10 w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center animate-float">
+                <Globe className="w-8 h-8 text-blue-400" />
+              </div>
+              <div className="absolute top-20 right-10 w-12 h-12 bg-purple-500/20 rounded-full flex items-center justify-center animate-float-delayed">
+                <Sparkles className="w-6 h-6 text-purple-400" />
+              </div>
+              <div className="absolute bottom-20 left-20 w-14 h-14 bg-pink-500/20 rounded-full flex items-center justify-center animate-float">
+                <Target className="w-7 h-7 text-pink-400" />
+              </div>
+            </div>
+          </div>
+
+          {/* Client Benefits */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+            {[
+              {
+                icon: <Shield className="w-8 h-8 text-green-400" />,
+                title: "Verified Designers",
+                description:
+                  "All designers are carefully vetted for quality and professionalism.",
+              },
+              {
+                icon: <Globe className="w-8 h-8 text-blue-400" />,
+                title: "Global Reach",
+                description:
+                  "Connect with talented designers from around the world.",
+              },
+              {
+                icon: <Zap className="w-8 h-8 text-yellow-400" />,
+                title: "Direct Communication",
+                description:
+                  "No middleman - communicate directly with your designer.",
+              },
+            ].map((benefit, index) => (
+              <div
+                key={index}
+                className="text-center p-6 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10"
+              >
+                <div className="w-16 h-16 mx-auto mb-4 bg-white/10 rounded-full flex items-center justify-center">
+                  {benefit.icon}
+                </div>
+                <h3 className="text-lg font-semibold mb-2">{benefit.title}</h3>
+                <p className="text-gray-300">{benefit.description}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* CTA */}
+          <div className="text-center">
+            <Button
+              asChild
+              className="bg-gradient-to-r from-oma-plum to-oma-gold hover:from-oma-plum/90 hover:to-oma-gold/90 px-12 py-4 text-lg font-semibold rounded-full transition-all duration-300 hover:scale-105"
+            >
+              <Link href="/directory">
+                Browse Designer Directory
+                <ArrowRight className="ml-2 w-5 h-5" />
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* For Designers Section */}
+      <section
+        ref={designersRef}
+        className="relative min-h-screen bg-gradient-to-br from-black to-gray-900 py-20"
+      >
+        <div className="max-w-7xl mx-auto px-6">
+          {/* Section Header */}
+          <div className="text-center mb-20">
+            <div className="inline-flex items-center gap-3 mb-6">
+              <div className="w-12 h-12 bg-gradient-to-br from-oma-gold to-oma-plum rounded-full flex items-center justify-center">
+                <Palette className="w-6 h-6 text-white" />
+              </div>
+              <h2 className="text-4xl md:text-6xl font-bold">For Designers</h2>
+            </div>
+            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+              Showcase your talent to a global audience of discerning clients
+              who appreciate exceptional craftsmanship.
+            </p>
+          </div>
+
+          {/* Designer Journey Steps */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-20">
+            {/* Left side - Visual */}
+            <div className="relative order-2 lg:order-1">
+              <div
+                className="relative z-10"
+                style={{
+                  transform: `translateY(${-scrollY * 0.1}px)`,
+                }}
+              >
+                <div className="w-80 h-80 mx-auto relative">
+                  <div className="absolute inset-0 bg-gradient-to-br from-oma-gold/20 to-oma-plum/20 rounded-full animate-pulse"></div>
+                  <div className="absolute inset-8 bg-gradient-to-br from-oma-gold to-oma-plum rounded-full flex items-center justify-center">
+                    <Palette className="w-24 h-24 text-white" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Floating Icons */}
+              <div className="absolute top-10 right-10 w-16 h-16 bg-yellow-500/20 rounded-full flex items-center justify-center animate-float">
+                <Camera className="w-8 h-8 text-yellow-400" />
+              </div>
+              <div className="absolute top-20 left-10 w-12 h-12 bg-orange-500/20 rounded-full flex items-center justify-center animate-float-delayed">
+                <Award className="w-6 h-6 text-orange-400" />
+              </div>
+              <div className="absolute bottom-20 right-20 w-14 h-14 bg-red-500/20 rounded-full flex items-center justify-center animate-float">
+                <TrendingUp className="w-7 h-7 text-red-400" />
+              </div>
+            </div>
+
+            {/* Right side - Steps */}
+            <div className="space-y-8 order-1 lg:order-2">
+              {[
+                {
+                  icon: <Briefcase className="w-8 h-8" />,
+                  title: "Create Your Portfolio",
+                  description:
+                    "Showcase your best work with high-quality images and detailed descriptions of your design philosophy.",
+                  color: "from-orange-500 to-red-500",
+                },
+                {
+                  icon: <Users className="w-8 h-8" />,
+                  title: "Connect with Premium Clients",
+                  description:
+                    "Reach discerning clients who value exceptional craftsmanship and unique design perspectives.",
+                  color: "from-red-500 to-pink-500",
+                },
+                {
+                  icon: <TrendingUp className="w-8 h-8" />,
+                  title: "Grow Your Brand",
+                  description:
+                    "Build your reputation, expand your client base, and establish yourself in the global fashion market.",
+                  color: "from-pink-500 to-purple-500",
+                },
+                {
+                  icon: <Award className="w-8 h-8" />,
+                  title: "Achieve Recognition",
+                  description:
+                    "Gain exposure through our platform's premium positioning and curated designer community.",
+                  color: "from-purple-500 to-blue-500",
+                },
+              ].map((step, index) => (
+                <div
+                  key={index}
+                  className="flex gap-6 p-6 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 hover:bg-white/10 transition-all duration-300"
+                  style={{
+                    transform: `translateX(${-scrollY * 0.05 * (index + 1)}px)`,
+                  }}
+                >
+                  <div
+                    className={`w-16 h-16 rounded-full bg-gradient-to-br ${step.color} flex items-center justify-center flex-shrink-0`}
+                  >
+                    {step.icon}
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-semibold mb-2">{step.title}</h3>
+                    <p className="text-gray-300">{step.description}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Designer Benefits */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+            {[
+              {
+                icon: <Globe className="w-8 h-8 text-blue-400" />,
+                title: "Global Exposure",
+                description:
+                  "Reach clients worldwide through our premium platform.",
+              },
+              {
+                icon: <Users className="w-8 h-8 text-green-400" />,
+                title: "Quality Clients",
+                description:
+                  "Connect with clients who appreciate and pay for quality.",
+              },
+              {
+                icon: <TrendingUp className="w-8 h-8 text-purple-400" />,
+                title: "Business Growth",
+                description:
+                  "Tools and exposure to help scale your fashion business.",
+              },
+            ].map((benefit, index) => (
+              <div
+                key={index}
+                className="text-center p-6 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10"
+              >
+                <div className="w-16 h-16 mx-auto mb-4 bg-white/10 rounded-full flex items-center justify-center">
+                  {benefit.icon}
+                </div>
+                <h3 className="text-lg font-semibold mb-2">{benefit.title}</h3>
+                <p className="text-gray-300">{benefit.description}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* CTA */}
+          <div className="text-center">
+            <Button
+              asChild
+              className="bg-gradient-to-r from-oma-gold to-oma-plum hover:from-oma-gold/90 hover:to-oma-plum/90 px-12 py-4 text-lg font-semibold rounded-full transition-all duration-300 hover:scale-105"
+            >
+              <Link href="/join">
+                Join as a Designer
+                <ArrowRight className="ml-2 w-5 h-5" />
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Final CTA Section */}
+      <section className="relative py-20 bg-gradient-to-r from-oma-plum to-oma-gold">
+        <div className="max-w-4xl mx-auto text-center px-6">
+          <h2 className="text-3xl md:text-5xl font-bold mb-6">
+            Ready to Experience Premium Fashion?
+          </h2>
+          <p className="text-xl mb-8 text-white/90">
+            Join thousands of clients and designers who trust OmaHub for
+            exceptional fashion experiences.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-6 justify-center">
+            <Button
+              asChild
+              className="bg-white text-oma-plum hover:bg-gray-100 px-8 py-4 text-lg font-semibold rounded-full"
+            >
+              <Link href="/directory">Find Your Designer</Link>
             </Button>
             <Button
               asChild
               variant="outline"
-              className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white"
+              className="border-white text-white hover:bg-white hover:text-oma-plum px-8 py-4 text-lg font-semibold rounded-full"
             >
-              <Link href="/join">Join as a Designer</Link>
+              <Link href="/join">Showcase Your Talent</Link>
             </Button>
           </div>
         </div>
-      </div>
+      </section>
     </div>
   );
 }
