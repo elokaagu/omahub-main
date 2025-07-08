@@ -675,10 +675,13 @@ export default function HomeContent() {
                       className="w-full h-[500px] transition-transform duration-700 group-hover:scale-105"
                       aspectRatio="3/4"
                       sizes="(max-width: 768px) 100vw, 800px"
-                      quality={85}
+                      quality={95}
+                      priority={true}
+                      autoPlay={true}
                       muted={true}
+                      loop={true}
                       controls={true}
-                      showPlayButton={true}
+                      showPlayButton={false}
                       onVideoError={() => {
                         console.warn(
                           "Video failed to load for spotlight content"

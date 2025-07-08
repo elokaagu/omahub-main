@@ -209,7 +209,14 @@ export function VideoPlayer({
         loop={loop}
         controls={controls}
         className="w-full h-full object-cover"
-        preload="metadata"
+        preload="auto"
+        playsInline
+        webkit-playsinline="true"
+        crossOrigin="anonymous"
+        style={{
+          objectFit: "cover",
+          objectPosition: "center",
+        }}
         onLoadStart={() => setIsLoading(true)}
         onCanPlay={() => setIsLoading(false)}
         onError={() => {
