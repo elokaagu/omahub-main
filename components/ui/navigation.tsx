@@ -30,9 +30,10 @@ const fallbackNavigationItems: NavigationItem[] = [
   },
   {
     title: "Tailored",
-    href: "/directory?category=Tailored",
+    href: "/tailored",
     description: "Masters of craft creating perfectly fitted garments",
     items: [
+      { title: "Browse All Tailors", href: "/tailors" },
       { title: "Bridal", href: "/directory?category=Bridal" },
       { title: "Custom Design", href: "/directory?category=Custom+Design" },
       { title: "Evening Gowns", href: "/directory?category=Evening+Gowns" },

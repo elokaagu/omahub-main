@@ -163,11 +163,21 @@ export function mapCategoriesToNavigation(
     .sort((a, b) => b.count - a.count); // Sort by count descending
 
   if (tailoredItems.length > 0) {
+    // Add "Browse All Tailors" as the first item
+    const allTailoredItems = [
+      {
+        title: "Browse All Tailors",
+        href: "/tailors",
+        count: tailoredItems.reduce((sum, item) => sum + item.count, 0),
+      },
+      ...tailoredItems,
+    ];
+
     navigationCategories.push({
       title: "Tailored",
-      href: "/directory?category=Tailored",
+      href: "/tailored",
       description: "Masters of craft creating perfectly fitted garments",
-      items: tailoredItems,
+      items: allTailoredItems,
     });
   }
 

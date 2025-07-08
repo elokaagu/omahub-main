@@ -16,6 +16,39 @@ import {
   MessageCircle,
   CheckCircle,
   ChevronDown,
+  Users,
+  Palette,
+  Globe,
+  Sparkles,
+  ArrowRight,
+  Heart,
+  Star,
+  Zap,
+  Target,
+  Award,
+  Briefcase,
+  Camera,
+  TrendingUp,
+  Shield,
+  UserCheck,
+  Layers,
+  Compass,
+  Scissors,
+  Shirt,
+  Crown,
+  Gem,
+  Lightbulb,
+  Handshake,
+  Rocket,
+  Eye,
+  Filter,
+  Package,
+  Phone,
+  Mail,
+  Calendar,
+  Clock,
+  MapPin,
+  Verified,
 } from "lucide-react";
 
 export default function HowItWorksClient() {
@@ -28,6 +61,7 @@ export default function HowItWorksClient() {
   const heroRef = useRef<HTMLDivElement>(null);
   const clientsRef = useRef<HTMLDivElement>(null);
   const designersRef = useRef<HTMLDivElement>(null);
+  const featuresRef = useRef<HTMLDivElement>(null);
   const faqRef = useRef<HTMLDivElement>(null);
   const ctaRef = useRef<HTMLDivElement>(null);
 
@@ -56,7 +90,14 @@ export default function HowItWorksClient() {
       });
     }, observerOptions);
 
-    const sections = [heroRef, clientsRef, designersRef, faqRef, ctaRef];
+    const sections = [
+      heroRef,
+      clientsRef,
+      designersRef,
+      featuresRef,
+      faqRef,
+      ctaRef,
+    ];
     sections.forEach((ref) => {
       if (ref.current) {
         observer.observe(ref.current);
@@ -92,32 +133,80 @@ export default function HowItWorksClient() {
           transform: `translateY(${scrollY * 0.5}px)`,
         }}
       >
+        {/* Floating Graphics */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute top-20 left-10 w-32 h-32 bg-gradient-to-br from-oma-plum/20 to-oma-gold/20 rounded-full blur-xl animate-pulse" />
+          <div
+            className="absolute top-40 right-20 w-24 h-24 bg-gradient-to-br from-oma-gold/30 to-oma-plum/30 rounded-full blur-lg animate-pulse"
+            style={{ animationDelay: "1s" }}
+          />
+          <div
+            className="absolute bottom-40 left-20 w-20 h-20 bg-gradient-to-br from-oma-beige/40 to-oma-plum/40 rounded-full blur-md animate-pulse"
+            style={{ animationDelay: "2s" }}
+          />
+        </div>
+
         <div className="absolute inset-0 bg-gradient-to-br from-oma-beige/20 to-transparent" />
         <div
           className="max-w-4xl mx-auto text-center relative z-10"
           style={getSectionTransform("hero")}
         >
+          {/* Hero Icon */}
+          <div className="flex justify-center mb-8">
+            <div className="relative">
+              <div className="w-24 h-24 bg-gradient-to-br from-oma-plum to-oma-gold rounded-full flex items-center justify-center shadow-2xl">
+                <Sparkles className="w-12 h-12 text-white" />
+              </div>
+              <div className="absolute -top-2 -right-2 w-8 h-8 bg-oma-gold rounded-full flex items-center justify-center">
+                <Crown className="w-4 h-4 text-white" />
+              </div>
+            </div>
+          </div>
+
           <h1 className="text-5xl md:text-7xl font-canela text-black mb-6 leading-tight">
             How OmaHub Works
           </h1>
           <p className="text-xl md:text-2xl text-black/70 mb-8 max-w-2xl mx-auto leading-relaxed">
             Connecting fashion lovers with Africa's most talented designers
           </p>
+
+          {/* Stats */}
+          <div className="flex justify-center gap-8 mb-8">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-oma-plum">500+</div>
+              <div className="text-sm text-black/60">Designers</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-oma-gold">10k+</div>
+              <div className="text-sm text-black/60">Happy Clients</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-oma-plum">50+</div>
+              <div className="text-sm text-black/60">Countries</div>
+            </div>
+          </div>
+
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
               asChild
               size="lg"
-              className="bg-oma-plum hover:bg-oma-plum/90 text-white px-8 py-3 text-lg"
+              className="bg-oma-plum hover:bg-oma-plum/90 text-white px-8 py-3 text-lg group"
             >
-              <Link href="/directory">Explore Designers</Link>
+              <Link href="/directory">
+                Explore Designers
+                <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+              </Link>
             </Button>
             <Button
               asChild
               variant="outline"
               size="lg"
-              className="border-oma-plum text-oma-plum hover:bg-oma-plum/10 px-8 py-3 text-lg"
+              className="border-oma-plum text-oma-plum hover:bg-oma-plum/10 px-8 py-3 text-lg group"
             >
-              <Link href="/join">Join as Designer</Link>
+              <Link href="/join">
+                Join as Designer
+                <Rocket className="w-5 h-5 ml-2 group-hover:translate-y-[-2px] transition-transform" />
+              </Link>
             </Button>
           </div>
         </div>
@@ -137,6 +226,11 @@ export default function HowItWorksClient() {
           style={getSectionTransform("clients")}
         >
           <div className="text-center mb-16">
+            <div className="flex justify-center mb-6">
+              <div className="w-16 h-16 bg-gradient-to-br from-oma-plum/20 to-oma-plum/40 rounded-full flex items-center justify-center">
+                <Users className="w-8 h-8 text-oma-plum" />
+              </div>
+            </div>
             <h2 className="text-4xl md:text-5xl font-canela text-black mb-6">
               For Clients
             </h2>
@@ -148,34 +242,44 @@ export default function HowItWorksClient() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               {
-                icon: <Search className="w-8 h-8 text-oma-plum" />,
+                icon: <Compass className="w-8 h-8 text-oma-plum" />,
                 title: "Discover Designers",
                 description:
                   "Browse through our curated collection of African fashion designers and their unique styles.",
+                graphic: (
+                  <Filter className="w-12 h-12 text-oma-plum/30 absolute top-4 right-4" />
+                ),
               },
               {
-                icon: <ShoppingBag className="w-8 h-8 text-oma-plum" />,
+                icon: <Package className="w-8 h-8 text-oma-plum" />,
                 title: "Shop Collections",
                 description:
                   "Explore ready-to-wear pieces and custom designs from your favorite designers.",
+                graphic: (
+                  <Shirt className="w-12 h-12 text-oma-plum/30 absolute top-4 right-4" />
+                ),
               },
               {
-                icon: <MessageCircle className="w-8 h-8 text-oma-plum" />,
+                icon: <Handshake className="w-8 h-8 text-oma-plum" />,
                 title: "Connect Directly",
                 description:
                   "Message designers directly to discuss custom pieces, sizing, and special requests.",
+                graphic: (
+                  <Phone className="w-12 h-12 text-oma-plum/30 absolute top-4 right-4" />
+                ),
               },
             ].map((step, index) => (
               <div
                 key={index}
-                className="bg-white/80 backdrop-blur-sm rounded-xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2"
+                className="relative bg-white/80 backdrop-blur-sm rounded-xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2 group overflow-hidden"
                 style={{
                   transform: `translateY(${visibleSections.has("clients") ? 0 : 30}px)`,
                   opacity: visibleSections.has("clients") ? 1 : 0,
                   transition: `all 0.8s cubic-bezier(0.4, 0, 0.2, 1) ${index * 0.1}s`,
                 }}
               >
-                <div className="flex items-center justify-center w-16 h-16 bg-oma-plum/10 rounded-full mb-6 mx-auto">
+                {step.graphic}
+                <div className="flex items-center justify-center w-16 h-16 bg-gradient-to-br from-oma-plum/10 to-oma-plum/20 rounded-full mb-6 mx-auto group-hover:scale-110 transition-transform">
                   {step.icon}
                 </div>
                 <h3 className="text-xl font-semibold text-black mb-4 text-center">
@@ -184,6 +288,7 @@ export default function HowItWorksClient() {
                 <p className="text-black/70 text-center leading-relaxed">
                   {step.description}
                 </p>
+                <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-oma-plum to-oma-gold transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
               </div>
             ))}
           </div>
@@ -204,6 +309,11 @@ export default function HowItWorksClient() {
           style={getSectionTransform("designers")}
         >
           <div className="text-center mb-16">
+            <div className="flex justify-center mb-6">
+              <div className="w-16 h-16 bg-gradient-to-br from-oma-gold/20 to-oma-gold/40 rounded-full flex items-center justify-center">
+                <Palette className="w-8 h-8 text-oma-gold" />
+              </div>
+            </div>
             <h2 className="text-4xl md:text-5xl font-canela text-black mb-6">
               For Designers
             </h2>
@@ -216,34 +326,44 @@ export default function HowItWorksClient() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               {
-                icon: <CheckCircle className="w-8 h-8 text-oma-gold" />,
+                icon: <UserCheck className="w-8 h-8 text-oma-gold" />,
                 title: "Create Your Profile",
                 description:
                   "Build a stunning profile that showcases your unique style and design philosophy.",
+                graphic: (
+                  <Camera className="w-12 h-12 text-oma-gold/30 absolute top-4 right-4" />
+                ),
               },
               {
-                icon: <ShoppingBag className="w-8 h-8 text-oma-gold" />,
+                icon: <Layers className="w-8 h-8 text-oma-gold" />,
                 title: "Upload Collections",
                 description:
                   "Share your latest collections and individual pieces with our global community.",
+                graphic: (
+                  <Gem className="w-12 h-12 text-oma-gold/30 absolute top-4 right-4" />
+                ),
               },
               {
-                icon: <MessageCircle className="w-8 h-8 text-oma-gold" />,
+                icon: <Globe className="w-8 h-8 text-oma-gold" />,
                 title: "Connect with Clients",
                 description:
                   "Receive inquiries, manage orders, and build lasting relationships with your customers.",
+                graphic: (
+                  <TrendingUp className="w-12 h-12 text-oma-gold/30 absolute top-4 right-4" />
+                ),
               },
             ].map((step, index) => (
               <div
                 key={index}
-                className="bg-white/90 backdrop-blur-sm rounded-xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2"
+                className="relative bg-white/90 backdrop-blur-sm rounded-xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2 group overflow-hidden"
                 style={{
                   transform: `translateY(${visibleSections.has("designers") ? 0 : 30}px)`,
                   opacity: visibleSections.has("designers") ? 1 : 0,
                   transition: `all 0.8s cubic-bezier(0.4, 0, 0.2, 1) ${index * 0.1}s`,
                 }}
               >
-                <div className="flex items-center justify-center w-16 h-16 bg-oma-gold/10 rounded-full mb-6 mx-auto">
+                {step.graphic}
+                <div className="flex items-center justify-center w-16 h-16 bg-gradient-to-br from-oma-gold/10 to-oma-gold/20 rounded-full mb-6 mx-auto group-hover:scale-110 transition-transform">
                   {step.icon}
                 </div>
                 <h3 className="text-xl font-semibold text-black mb-4 text-center">
@@ -252,6 +372,80 @@ export default function HowItWorksClient() {
                 <p className="text-black/70 text-center leading-relaxed">
                   {step.description}
                 </p>
+                <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-oma-gold to-oma-plum transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Platform Features Section */}
+      <section
+        ref={featuresRef}
+        id="features"
+        className="py-24 px-6 relative bg-gradient-to-br from-oma-plum/5 to-oma-gold/5"
+        style={{
+          transform: `translateY(${scrollY * 0.12}px)`,
+        }}
+      >
+        <div
+          className="max-w-6xl mx-auto"
+          style={getSectionTransform("features")}
+        >
+          <div className="text-center mb-16">
+            <div className="flex justify-center mb-6">
+              <div className="w-16 h-16 bg-gradient-to-br from-oma-plum/20 to-oma-gold/20 rounded-full flex items-center justify-center">
+                <Shield className="w-8 h-8 text-oma-plum" />
+              </div>
+            </div>
+            <h2 className="text-4xl md:text-5xl font-canela text-black mb-6">
+              A Platform You Can Trust
+            </h2>
+            <p className="text-xl text-black/70 max-w-2xl mx-auto">
+              Built with both designers and clients in mind, ensuring quality
+              and transparency
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              {
+                icon: <Verified className="w-6 h-6 text-oma-plum" />,
+                title: "Verified Designers",
+                description: "All designers are carefully vetted and verified",
+              },
+              {
+                icon: <Eye className="w-6 h-6 text-oma-gold" />,
+                title: "Transparent Process",
+                description: "Clear communication and pricing throughout",
+              },
+              {
+                icon: <Award className="w-6 h-6 text-oma-plum" />,
+                title: "Quality Assured",
+                description: "High-quality craftsmanship guaranteed",
+              },
+              {
+                icon: <Clock className="w-6 h-6 text-oma-gold" />,
+                title: "Timely Delivery",
+                description: "Reliable timelines and delivery tracking",
+              },
+            ].map((feature, index) => (
+              <div
+                key={index}
+                className="bg-white/80 backdrop-blur-sm rounded-lg p-6 text-center hover:shadow-lg transition-all duration-300 group"
+                style={{
+                  transform: `translateY(${visibleSections.has("features") ? 0 : 20}px)`,
+                  opacity: visibleSections.has("features") ? 1 : 0,
+                  transition: `all 0.6s cubic-bezier(0.4, 0, 0.2, 1) ${index * 0.1}s`,
+                }}
+              >
+                <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-oma-plum/10 to-oma-gold/10 rounded-full mb-4 mx-auto group-hover:scale-110 transition-transform">
+                  {feature.icon}
+                </div>
+                <h3 className="text-lg font-semibold text-black mb-2">
+                  {feature.title}
+                </h3>
+                <p className="text-black/70 text-sm">{feature.description}</p>
               </div>
             ))}
           </div>
@@ -269,6 +463,11 @@ export default function HowItWorksClient() {
       >
         <div className="max-w-4xl mx-auto" style={getSectionTransform("faq")}>
           <div className="text-center mb-16">
+            <div className="flex justify-center mb-6">
+              <div className="w-16 h-16 bg-gradient-to-br from-oma-plum/20 to-oma-gold/20 rounded-full flex items-center justify-center">
+                <Lightbulb className="w-8 h-8 text-oma-plum" />
+              </div>
+            </div>
             <h2 className="text-4xl md:text-5xl font-canela text-black mb-6">
               Frequently Asked Questions
             </h2>
@@ -284,30 +483,35 @@ export default function HowItWorksClient() {
                 question: "What is OmaHub?",
                 answer:
                   "OmaHub is a platform that connects fashion enthusiasts with talented African designers. We showcase unique, high-quality pieces and facilitate direct connections between clients and designers.",
+                icon: <Sparkles className="w-5 h-5 text-oma-plum" />,
               },
               {
                 id: "how-to-order",
                 question: "How do I place an order?",
                 answer:
                   "Browse our designer profiles and collections, then contact designers directly through our platform. You can discuss custom pieces, sizing, pricing, and delivery details.",
+                icon: <ShoppingBag className="w-5 h-5 text-oma-plum" />,
               },
               {
                 id: "custom-pieces",
                 question: "Can I request custom pieces?",
                 answer:
                   "Yes! Many of our designers offer custom design services. You can discuss your vision directly with them and work together to create something unique.",
+                icon: <Scissors className="w-5 h-5 text-oma-plum" />,
               },
               {
                 id: "shipping",
                 question: "How does shipping work?",
                 answer:
                   "Shipping is handled directly by each designer. When you contact a designer, they'll provide you with shipping options and costs for your location.",
+                icon: <Package className="w-5 h-5 text-oma-plum" />,
               },
               {
                 id: "join-designer",
                 question: "How can I join as a designer?",
                 answer:
                   "Click 'Join as Designer' and fill out our application form. We'll review your portfolio and get back to you within 5-7 business days.",
+                icon: <UserCheck className="w-5 h-5 text-oma-plum" />,
               },
             ].map((faq, index) => (
               <Collapsible
@@ -316,7 +520,7 @@ export default function HowItWorksClient() {
                 onOpenChange={() => toggleFaq(faq.id)}
               >
                 <CollapsibleTrigger
-                  className="w-full bg-white/80 backdrop-blur-sm rounded-lg p-6 text-left hover:bg-white/90 transition-all duration-200 shadow-sm hover:shadow-md"
+                  className="w-full bg-white/80 backdrop-blur-sm rounded-lg p-6 text-left hover:bg-white/90 transition-all duration-200 shadow-sm hover:shadow-md group"
                   style={{
                     transform: `translateY(${visibleSections.has("faq") ? 0 : 20}px)`,
                     opacity: visibleSections.has("faq") ? 1 : 0,
@@ -324,9 +528,14 @@ export default function HowItWorksClient() {
                   }}
                 >
                   <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-black">
-                      {faq.question}
-                    </h3>
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-oma-plum/10 to-oma-plum/20 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                        {faq.icon}
+                      </div>
+                      <h3 className="text-lg font-semibold text-black">
+                        {faq.question}
+                      </h3>
+                    </div>
                     <ChevronDown
                       className={`w-5 h-5 text-oma-plum transition-transform duration-200 ${
                         openFaq === faq.id ? "rotate-180" : ""
@@ -335,7 +544,7 @@ export default function HowItWorksClient() {
                   </div>
                 </CollapsibleTrigger>
                 <CollapsibleContent className="px-6 pb-6 text-black/70 leading-relaxed">
-                  {faq.answer}
+                  <div className="ml-13 mt-2">{faq.answer}</div>
                 </CollapsibleContent>
               </Collapsible>
             ))}
@@ -347,15 +556,27 @@ export default function HowItWorksClient() {
       <section
         ref={ctaRef}
         id="cta"
-        className="py-24 px-6 bg-gradient-to-br from-oma-plum/10 to-oma-beige/20 relative"
+        className="py-24 px-6 bg-gradient-to-br from-oma-plum/10 to-oma-beige/20 relative overflow-hidden"
         style={{
           transform: `translateY(${scrollY * 0.05}px)`,
         }}
       >
+        {/* Background Graphics */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute top-10 left-10 w-40 h-40 bg-gradient-to-br from-oma-plum/10 to-oma-gold/10 rounded-full blur-2xl" />
+          <div className="absolute bottom-10 right-10 w-32 h-32 bg-gradient-to-br from-oma-gold/10 to-oma-plum/10 rounded-full blur-xl" />
+        </div>
+
         <div
-          className="max-w-4xl mx-auto text-center"
+          className="max-w-4xl mx-auto text-center relative z-10"
           style={getSectionTransform("cta")}
         >
+          <div className="flex justify-center mb-8">
+            <div className="w-20 h-20 bg-gradient-to-br from-oma-plum to-oma-gold rounded-full flex items-center justify-center shadow-2xl">
+              <Rocket className="w-10 h-10 text-white" />
+            </div>
+          </div>
+
           <h2 className="text-4xl md:text-5xl font-canela text-black mb-6">
             Ready to Get Started?
           </h2>
@@ -367,17 +588,23 @@ export default function HowItWorksClient() {
             <Button
               asChild
               size="lg"
-              className="bg-oma-plum hover:bg-oma-plum/90 text-white px-8 py-4 text-lg"
+              className="bg-oma-plum hover:bg-oma-plum/90 text-white px-8 py-4 text-lg group"
             >
-              <Link href="/directory">Start Shopping</Link>
+              <Link href="/directory">
+                <ShoppingBag className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" />
+                Start Shopping
+              </Link>
             </Button>
             <Button
               asChild
               variant="outline"
               size="lg"
-              className="border-oma-plum text-oma-plum hover:bg-oma-plum/10 px-8 py-4 text-lg"
+              className="border-oma-plum text-oma-plum hover:bg-oma-plum/10 px-8 py-4 text-lg group"
             >
-              <Link href="/join">Apply as Designer</Link>
+              <Link href="/join">
+                <Palette className="w-5 h-5 mr-2 group-hover:rotate-12 transition-transform" />
+                Apply as Designer
+              </Link>
             </Button>
           </div>
         </div>
