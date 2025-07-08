@@ -30,6 +30,11 @@ import { Carousel } from "@/components/ui/carousel-custom";
 import { Loading } from "@/components/ui/loading";
 import { InstantImage } from "@/components/ui/instant-image";
 import { occasions, occasionToCategoryMapping } from "@/lib/data/directory";
+import {
+  getCategoriesForHomepage,
+  mapLegacyToUnified,
+  getCategoryById,
+} from "@/lib/data/unified-categories";
 import { FullWidthBrandRow } from "@/components/ui/full-width-brand-row";
 
 interface Brand {
@@ -183,35 +188,21 @@ const mapDatabaseCategoryToHomepage = (dbCategory: string): string => {
   return categoryMap[dbCategory] || "Ready to Wear"; // Default to Ready to Wear
 };
 
-// Define the categories
-const categoryDefinitions = [
-  {
-    title: "Bridal",
-    image: "/lovable-uploads/57cc6a40-0f0d-4a7d-8786-41f15832ebfb.png",
-    href: "/directory?category=Bridal",
-    customCta: 'Tailored for "Yes."',
-  },
-  {
-    title: "Ready to Wear",
-    image: "/lovable-uploads/4a7c7e86-6cde-4d07-a246-a5aa4cb6fa51.png",
-    href: "/directory?category=Ready%20to%20Wear",
-    customCta: "Looks for the every day that isn't.",
-  },
-  {
-    title: "Accessories",
-    image: "/lovable-uploads/25c3fe26-3fc4-43ef-83ac-6931a74468c0.png",
-    href: "/directory?category=Accessories",
-    customCta: "The extras that make it extra.",
-  },
-];
+// Use unified categories for homepage
+const getHomepageCategories = (): CategoryWithBrands[] => {
+  const unifiedCategories = getCategoriesForHomepage();
+
+  return unifiedCategories.map((category) => ({
+    title: category.displayName,
+    image: category.homepageImage!,
+    href: `/directory?category=${encodeURIComponent(category.displayName)}`,
+    customCta: category.homepageCta!,
+    brands: [],
+  }));
+};
 
 // Initial categories
-const initialCategories: CategoryWithBrands[] = categoryDefinitions.map(
-  (category) => ({
-    ...category,
-    brands: [],
-  })
-);
+const initialCategories: CategoryWithBrands[] = getHomepageCategories();
 
 // Simple in-memory cache for dynamic images (session-based) - REMOVED
 // Caching removed for simplicity and reliability
@@ -693,8 +684,8 @@ export default function HomeContent() {
                     />
                   ) : (
                     <LazyImage
-                      src={spotlightContent.main_image}
-                      alt={`${spotlightContent.brand_name} collection`}
+                      src={spotlightContent?.main_image || "/placeholder.jpg"}
+                      alt={`${spotlightContent?.brand_name || "Brand"} collection`}
                       width={800}
                       height={1000}
                       className="w-full h-[500px] object-cover transition-transform duration-700 group-hover:scale-105"
@@ -706,7 +697,10 @@ export default function HomeContent() {
                   <div className="absolute inset-0 bg-gradient-to-t from-oma-black/70 via-oma-black/30 to-transparent pointer-events-none"></div>
                   <div className="absolute bottom-8 left-8 right-8 text-white pointer-events-none">
                     <p className="font-canela italic text-xl md:text-2xl">
-                      &ldquo;{spotlightContent.brand_quote}&rdquo;
+                      &ldquo;
+                      {spotlightContent?.brand_quote ||
+                        "Discover amazing fashion"}
+                      &rdquo;
                     </p>
                   </div>
                 </div>

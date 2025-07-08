@@ -20,6 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loading } from "@/components/ui/loading";
 import { formatProductPrice } from "@/lib/utils/priceFormatter";
+import { CategoryTag } from "@/components/ui/unified-tag";
 
 type CatalogueWithBrand = Catalogue & {
   brand: {

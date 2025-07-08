@@ -44,7 +44,10 @@ import {
 } from "@/lib/utils/priceFormatter";
 import { Checkbox } from "@/components/ui/checkbox";
 import { getBrandCurrency } from "@/lib/utils/currencyUtils";
-import { standardCategories } from "@/lib/data/directory";
+import {
+  getCategoriesForStudio,
+  getAllCategoryNames,
+} from "@/lib/data/unified-categories";
 
 // Common currencies used across Africa
 const CURRENCIES = [
@@ -62,8 +65,8 @@ const CURRENCIES = [
   { code: "GBP", symbol: "£", name: "British Pound" },
 ];
 
-// Brand categories - now using standardized categories
-const CATEGORIES = [...standardCategories];
+// Brand categories - now using unified standardized categories
+const CATEGORIES = getAllCategoryNames();
 
 export default function CreateProductPage() {
   const { user } = useAuth();

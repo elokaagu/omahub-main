@@ -49,6 +49,7 @@ import {
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
 import { formatProductPrice } from "@/lib/utils/priceFormatter";
+import { ActiveFilters } from "@/components/ui/unified-tag";
 
 type ProductWithDetails = Product & {
   brand: {
@@ -141,7 +142,7 @@ export default function ProductsPage() {
       Object.entries(productFavouritesMap).forEach(([productId, count]) => {
         if (count > maxCount) {
           maxCount = count;
-          mostPopular = { productId, count };
+          mostPopular = { productId, count } as ProductFavourites;
         }
       });
 
@@ -153,7 +154,7 @@ export default function ProductsPage() {
             productId: mostPopular.productId,
             count: mostPopular.count,
             productTitle: product.title,
-          };
+          } as ProductFavourites;
         }
       }
 
@@ -562,51 +563,63 @@ export default function ProductsPage() {
 
       {/* Active Filters Display */}
       {hasActiveFilters && (
-        <div className="mb-6 flex flex-wrap gap-2">
-          {searchQuery && (
-            <span className="inline-flex items-center gap-1 px-3 py-1 bg-oma-plum/10 text-oma-plum rounded-full text-sm">
-              Search: "{searchQuery}"
-              <button
-                onClick={() => setSearchQuery("")}
-                className="hover:bg-oma-plum/20 rounded-full p-0.5"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </span>
-          )}
-          {categoryFilter !== "all" && (
-            <span className="inline-flex items-center gap-1 px-3 py-1 bg-oma-plum/10 text-oma-plum rounded-full text-sm">
-              Category: {categoryFilter}
-              <button
-                onClick={() => setCategoryFilter("all")}
-                className="hover:bg-oma-plum/20 rounded-full p-0.5"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </span>
-          )}
-          {stockFilter !== "all" && (
-            <span className="inline-flex items-center gap-1 px-3 py-1 bg-oma-plum/10 text-oma-plum rounded-full text-sm">
-              Stock: {stockFilter === "in_stock" ? "In Stock" : "Out of Stock"}
-              <button
-                onClick={() => setStockFilter("all")}
-                className="hover:bg-oma-plum/20 rounded-full p-0.5"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </span>
-          )}
-          {brandFilter !== "all" && (
-            <span className="inline-flex items-center gap-1 px-3 py-1 bg-oma-plum/10 text-oma-plum rounded-full text-sm">
-              Brand: {brands.find((b) => b.id === brandFilter)?.name}
-              <button
-                onClick={() => setBrandFilter("all")}
-                className="hover:bg-oma-plum/20 rounded-full p-0.5"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </span>
-          )}
+        <div className="mb-6">
+          <ActiveFilters
+            filters={[
+              ...(searchQuery
+                ? [
+                    {
+                      type: "search" as const,
+                      value: searchQuery,
+                      label: `Search: "${searchQuery}"`,
+                    },
+                  ]
+                : []),
+              ...(categoryFilter !== "all"
+                ? [
+                    {
+                      type: "category" as const,
+                      value: categoryFilter,
+                      label: `Category: ${categoryFilter}`,
+                    },
+                  ]
+                : []),
+              ...(stockFilter !== "all"
+                ? [
+                    {
+                      type: "stock" as const,
+                      value: stockFilter,
+                      label: `Stock: ${stockFilter === "in_stock" ? "In Stock" : "Out of Stock"}`,
+                    },
+                  ]
+                : []),
+              ...(brandFilter !== "all"
+                ? [
+                    {
+                      type: "brand" as const,
+                      value: brandFilter,
+                      label: `Brand: ${brands.find((b) => b.id === brandFilter)?.name || brandFilter}`,
+                    },
+                  ]
+                : []),
+            ]}
+            onRemove={(type, value) => {
+              switch (type) {
+                case "search":
+                  setSearchQuery("");
+                  break;
+                case "category":
+                  setCategoryFilter("all");
+                  break;
+                case "stock":
+                  setStockFilter("all");
+                  break;
+                case "brand":
+                  setBrandFilter("all");
+                  break;
+              }
+            }}
+          />
         </div>
       )}
 

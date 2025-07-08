@@ -25,6 +25,8 @@ import {
   mapDatabaseToDisplayCategory,
   locations,
 } from "@/lib/data/directory";
+import { getCategoriesForDirectory } from "@/lib/data/unified-categories";
+import { UnifiedTag, CategoryTag } from "@/components/ui/unified-tag";
 
 // Interface for brand display
 interface BrandDisplay {
