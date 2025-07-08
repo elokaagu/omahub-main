@@ -1,14 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import {
-  Play,
-  Pause,
-  Volume2,
-  VolumeX,
-  Maximize,
-  AlertCircle,
-} from "lucide-react";
+import { Play, Pause, AlertCircle } from "lucide-react";
 import { Button } from "./button";
 import { LazyImage } from "./lazy-image";
 import { cn } from "@/lib/utils";
@@ -51,7 +44,6 @@ export function VideoPlayer({
   showPlayButton = true,
 }: VideoPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(muted);
   const [hasError, setHasError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showVideo, setShowVideo] = useState(false);
@@ -121,23 +113,6 @@ export function VideoPlayer({
         videoRef.current.pause();
       } else {
         videoRef.current.play();
-      }
-    }
-  };
-
-  const toggleMute = () => {
-    if (videoRef.current) {
-      videoRef.current.muted = !isMuted;
-      setIsMuted(!isMuted);
-    }
-  };
-
-  const toggleFullscreen = () => {
-    if (videoRef.current) {
-      if (document.fullscreenElement) {
-        document.exitFullscreen();
-      } else {
-        videoRef.current.requestFullscreen();
       }
     }
   };
@@ -214,7 +189,7 @@ export function VideoPlayer({
         src={videoUrl}
         poster={thumbnailUrl}
         autoPlay={autoPlay}
-        muted={isMuted}
+        muted={muted}
         loop={loop}
         controls={controls}
         className="w-full h-full object-cover"
@@ -248,42 +223,18 @@ export function VideoPlayer({
       {/* Custom controls overlay (only if controls are disabled) */}
       {!controls && (
         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity">
-          <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Button
-                onClick={togglePlay}
-                variant="secondary"
-                size="sm"
-                className="bg-white/90 hover:bg-white text-black rounded-full p-2"
-              >
-                {isPlaying ? (
-                  <Pause className="h-4 w-4" />
-                ) : (
-                  <Play className="h-4 w-4" />
-                )}
-              </Button>
-
-              <Button
-                onClick={toggleMute}
-                variant="secondary"
-                size="sm"
-                className="bg-white/90 hover:bg-white text-black rounded-full p-2"
-              >
-                {isMuted ? (
-                  <VolumeX className="h-4 w-4" />
-                ) : (
-                  <Volume2 className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
-
+          <div className="absolute bottom-4 left-4 right-4 flex items-center justify-center">
             <Button
-              onClick={toggleFullscreen}
+              onClick={togglePlay}
               variant="secondary"
               size="sm"
               className="bg-white/90 hover:bg-white text-black rounded-full p-2"
             >
-              <Maximize className="h-4 w-4" />
+              {isPlaying ? (
+                <Pause className="h-4 w-4" />
+              ) : (
+                <Play className="h-4 w-4" />
+              )}
             </Button>
           </div>
         </div>
