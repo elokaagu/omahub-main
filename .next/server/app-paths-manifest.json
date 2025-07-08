@@ -1,1 +1,3 @@
-{}
+{
+  "/api/studio/collections/route": "app/api/studio/collections/route.js"
+}

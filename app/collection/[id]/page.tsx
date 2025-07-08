@@ -23,7 +23,15 @@ import { Button } from "@/components/ui/button";
 import { FavouriteButton } from "@/components/ui/favourite-button";
 
 type CatalogueWithBrand = Catalogue & {
-  brand: Brand;
+  brand: {
+    name: string;
+    id: string;
+    location: string;
+    is_verified: boolean;
+    category: string;
+    rating: number;
+    long_description: string;
+  };
   created_at?: string;
 };
 
@@ -211,7 +219,7 @@ export default function CataloguePage() {
               <div className="prose text-oma-black max-w-none">
                 {catalogue.brand.long_description
                   .split("\n\n")
-                  .map((paragraph, i) => (
+                  .map((paragraph: string, i: number) => (
                     <p key={i} className="mb-4 text-black/70 leading-relaxed">
                       {paragraph}
                     </p>

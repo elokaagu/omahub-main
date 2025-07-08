@@ -52,6 +52,7 @@ export async function getCollectionWithBrand(id: string): Promise<
         is_verified: boolean;
         category: string;
         rating: number;
+        long_description: string;
       };
     })
   | null
@@ -65,7 +66,7 @@ export async function getCollectionWithBrand(id: string): Promise<
     .select(
       `
       *,
-      brand:brands(id, name, location, is_verified, category, rating)
+      brand:brands(id, name, location, is_verified, category, rating, long_description)
     `
     )
     .eq("id", id)
@@ -91,6 +92,7 @@ export async function getCollectionsWithBrands(): Promise<
       is_verified: boolean;
       category: string;
       rating: number;
+      long_description: string;
     };
   })[]
 > {
@@ -100,7 +102,7 @@ export async function getCollectionsWithBrands(): Promise<
 
   const { data, error } = await supabase.from("catalogues").select(`
       *,
-      brand:brands(id, name, location, is_verified, category, rating)
+      brand:brands(id, name, location, is_verified, category, rating, long_description)
     `);
 
   if (error) {

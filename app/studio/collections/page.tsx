@@ -55,6 +55,7 @@ type CollectionWithBrand = Catalogue & {
     is_verified: boolean;
     category: string;
     rating: number;
+    long_description: string;
   };
 };
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
