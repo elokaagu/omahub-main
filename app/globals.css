@@ -168,9 +168,14 @@
   }
 }
 
-/* Smooth scroll behavior */
+/* Smooth scroll behavior - disabled in studio to prevent navigation glitches */
 html {
   scroll-behavior: smooth;
+}
+
+/* Disable smooth scroll in studio to prevent navigation issues */
+html:has([data-studio-page]) {
+  scroll-behavior: auto;
 }
 
 /* Animation classes */

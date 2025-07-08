@@ -50,22 +50,21 @@ export function NavigationLink({
       );
       setIsNavigating(true);
 
-      // For studio navigation or complex routes, use programmatic navigation
+      // For studio navigation, use programmatic navigation without scroll interference
       if (href.startsWith("/studio") && currentPath !== href) {
         e.preventDefault();
 
-        // Prevent scroll jumping by preserving current scroll position
-        const currentScrollY = window.scrollY;
+        // Use requestAnimationFrame to ensure smooth navigation
+        requestAnimationFrame(() => {
+          if (replace) {
+            router.replace(href, { scroll: false });
+          } else {
+            router.push(href, { scroll: false });
+          }
+        });
 
-        if (replace) {
-          router.replace(href);
-        } else {
-          router.push(href);
-        }
-
-        // Restore scroll position after navigation
+        // Reset navigation state after navigation completes
         setTimeout(() => {
-          window.scrollTo(0, currentScrollY);
           setIsNavigating(false);
         }, 100);
 

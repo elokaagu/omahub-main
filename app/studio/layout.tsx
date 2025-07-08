@@ -173,7 +173,11 @@ export default function StudioLayout({
   return (
     <div
       className="min-h-screen bg-gray-50 flex flex-col"
-      style={{ scrollBehavior: "smooth" }}
+      data-studio-page
+      style={{
+        position: "relative",
+        overflow: "hidden auto",
+      }}
     >
       {/* Studio Header */}
       <header className="w-full bg-white border-b border-gray-200 shadow-sm fixed top-0 left-0 right-0 z-50 h-16 flex items-center">
@@ -415,20 +419,8 @@ export default function StudioLayout({
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 lg:ml-64 mt-16 overflow-auto">
-        <div className="h-full relative">
-          {/* Prevent layout shift during navigation */}
-          <div
-            className="min-h-screen"
-            style={{
-              willChange: "auto",
-              transform: "translateZ(0)",
-              backfaceVisibility: "hidden",
-            }}
-          >
-            {children}
-          </div>
-        </div>
+      <main className="flex-1 lg:ml-64 mt-16">
+        <div className="min-h-screen relative">{children}</div>
       </main>
 
       {/* Overlay for mobile */}
