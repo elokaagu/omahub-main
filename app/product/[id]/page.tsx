@@ -42,6 +42,13 @@ export default function ProductPage() {
     fetchProductData();
   }, [productId]);
 
+  // Auto-select video when product has video_url
+  useEffect(() => {
+    if (product?.video_url) {
+      setSelectedImage(-1);
+    }
+  }, [product?.video_url]);
+
   const fetchProductData = async () => {
     try {
       setLoading(true);
@@ -135,7 +142,8 @@ export default function ProductPage() {
           {/* Product Images and Video */}
           <div className="space-y-4">
             <div className="aspect-square relative overflow-hidden rounded-lg bg-gray-100">
-              {selectedImage === -1 && product.video_url ? (
+              {product.video_url &&
+              (selectedImage === -1 || selectedImage === 0) ? (
                 <VideoPlayer
                   videoUrl={product.video_url}
                   thumbnailUrl={product.video_thumbnail}
@@ -143,9 +151,19 @@ export default function ProductPage() {
                   alt={product.title}
                   className="w-full h-full"
                   aspectRatio="square"
-                  controls={true}
+                  autoPlay={true}
                   muted={true}
-                  showPlayButton={true}
+                  loop={true}
+                  controls={true}
+                  showPlayButton={false}
+                  priority={true}
+                  quality={95}
+                  onVideoError={() => {
+                    console.warn(
+                      "Video failed to load for product:",
+                      product.title
+                    );
+                  }}
                 />
               ) : (
                 <AuthImage
@@ -158,7 +176,7 @@ export default function ProductPage() {
               )}
             </div>
 
-            {(productImages.length > 1 || product.video_url) && (
+            {(productImages.length > 0 || product.video_url) && (
               <div className="flex gap-2 overflow-x-auto">
                 {product.video_url && (
                   <button
@@ -166,7 +184,7 @@ export default function ProductPage() {
                     className={cn(
                       "flex-shrink-0 w-20 h-20 rounded-md overflow-hidden border-2 relative",
                       selectedImage === -1
-                        ? "border-oma-plum"
+                        ? "border-oma-plum ring-2 ring-oma-plum/20"
                         : "border-gray-200 hover:border-gray-300"
                     )}
                   >
@@ -182,6 +200,9 @@ export default function ProductPage() {
                         <div className="w-0 h-0 border-l-[6px] border-l-black border-t-[4px] border-t-transparent border-b-[4px] border-b-transparent ml-1" />
                       </div>
                     </div>
+                    {selectedImage === -1 && (
+                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-oma-plum rounded-full"></div>
+                    )}
                   </button>
                 )}
                 {productImages.map((image, index) => (
@@ -191,7 +212,7 @@ export default function ProductPage() {
                     className={cn(
                       "flex-shrink-0 w-20 h-20 rounded-md overflow-hidden border-2",
                       selectedImage === index
-                        ? "border-oma-plum"
+                        ? "border-oma-plum ring-2 ring-oma-plum/20"
                         : "border-gray-200 hover:border-gray-300"
                     )}
                   >
@@ -202,6 +223,9 @@ export default function ProductPage() {
                       height={80}
                       className="w-full h-full object-cover"
                     />
+                    {selectedImage === index && (
+                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-oma-plum rounded-full"></div>
+                    )}
                   </button>
                 ))}
               </div>
