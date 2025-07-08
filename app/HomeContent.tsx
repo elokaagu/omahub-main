@@ -666,9 +666,12 @@ export default function HomeContent() {
               <SlideUp delay={0.2}>
                 <div className="rounded-2xl overflow-hidden relative group">
                   {/* Use LazyImage as fallback if video fails or doesn't exist */}
-                  {spotlightContent.video_url ? (
+                  {spotlightContent.video_url || true ? (
                     <VideoPlayer
-                      videoUrl={spotlightContent.video_url}
+                      videoUrl={
+                        spotlightContent.video_url ||
+                        "https://sample-videos.com/zip/10/mp4/720/mp4-720.mp4"
+                      }
                       thumbnailUrl={spotlightContent.video_thumbnail}
                       fallbackImageUrl={spotlightContent.main_image}
                       alt={`${spotlightContent.brand_name} collection`}
