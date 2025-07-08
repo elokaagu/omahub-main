@@ -74,13 +74,20 @@ export default function HowItWorksClient() {
 
   const getSectionTransform = (sectionId: string, baseOffset: number = 0) => {
     const isVisible = visibleSections.has(sectionId);
-    const parallaxOffset = scrollY * 0.1 + baseOffset;
 
     return {
       transform: `translateY(${isVisible ? 0 : 50}px)`,
       opacity: isVisible ? 1 : 0,
       transition: "all 0.8s cubic-bezier(0.4, 0, 0.2, 1)",
     };
+  };
+
+  // Calculate parallax effect with reduced intensity to prevent overlapping
+  const getParallaxTransform = (factor: number) => {
+    // Limit the parallax effect to prevent sections from overlapping
+    const maxOffset = 100; // Maximum parallax offset
+    const parallaxOffset = Math.min(scrollY * factor, maxOffset);
+    return `translateY(${parallaxOffset}px)`;
   };
 
   return (
@@ -91,7 +98,7 @@ export default function HowItWorksClient() {
         id="hero"
         className="relative min-h-screen flex items-center justify-center px-6 overflow-hidden"
         style={{
-          transform: `translateY(${scrollY * 0.5}px)`,
+          transform: getParallaxTransform(0.1), // Reduced from 0.5
         }}
       >
         {/* Background Image */}
@@ -175,9 +182,9 @@ export default function HowItWorksClient() {
       <section
         ref={clientsRef}
         id="clients"
-        className="py-24 px-6 relative"
+        className="py-24 px-6 relative bg-white"
         style={{
-          transform: `translateY(${scrollY * 0.2}px)`,
+          transform: getParallaxTransform(0.05), // Reduced from 0.2
         }}
       >
         <div
@@ -240,7 +247,7 @@ export default function HowItWorksClient() {
         id="designers"
         className="py-24 px-6 bg-gradient-to-br from-oma-beige/20 to-white/50 relative"
         style={{
-          transform: `translateY(${scrollY * 0.15}px)`,
+          transform: getParallaxTransform(0.03), // Reduced from 0.15
         }}
       >
         <div
@@ -304,7 +311,7 @@ export default function HowItWorksClient() {
         id="features"
         className="py-24 px-6 relative bg-gradient-to-br from-oma-plum/5 to-oma-gold/5"
         style={{
-          transform: `translateY(${scrollY * 0.12}px)`,
+          transform: getParallaxTransform(0.02), // Reduced from 0.12
         }}
       >
         <div
@@ -364,9 +371,9 @@ export default function HowItWorksClient() {
       <section
         ref={faqRef}
         id="faq"
-        className="py-24 px-6 relative"
+        className="py-24 px-6 relative bg-white"
         style={{
-          transform: `translateY(${scrollY * 0.1}px)`,
+          transform: getParallaxTransform(0.01), // Reduced from 0.1
         }}
       >
         <div className="max-w-4xl mx-auto" style={getSectionTransform("faq")}>
@@ -454,7 +461,7 @@ export default function HowItWorksClient() {
         id="cta"
         className="py-24 px-6 bg-gradient-to-br from-oma-plum/10 to-oma-beige/20 relative overflow-hidden"
         style={{
-          transform: `translateY(${scrollY * 0.05}px)`,
+          transform: getParallaxTransform(0.005), // Reduced from 0.05
         }}
       >
         {/* Background Graphics */}
