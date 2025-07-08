@@ -216,17 +216,17 @@ export default function HowItWorksClient() {
             ].map((step, index) => (
               <div
                 key={index}
-                className="bg-white/80 backdrop-blur-sm rounded-xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2"
+                className="bg-oma-beige/20 backdrop-blur-sm rounded-xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border border-oma-plum/20"
                 style={{
                   transform: `translateY(${visibleSections.has("clients") ? 0 : 30}px)`,
                   opacity: visibleSections.has("clients") ? 1 : 0,
                   transition: `all 0.8s cubic-bezier(0.4, 0, 0.2, 1) ${index * 0.1}s`,
                 }}
               >
-                <h3 className="text-xl font-semibold text-black mb-4 text-center">
+                <h3 className="text-xl font-semibold text-oma-cocoa mb-4 text-center">
                   {step.title}
                 </h3>
-                <p className="text-black/70 text-center leading-relaxed">
+                <p className="text-oma-cocoa/80 text-center leading-relaxed">
                   {step.description}
                 </p>
                 <div className="w-full h-1 bg-gradient-to-r from-oma-plum to-oma-gold mt-6" />
@@ -250,11 +250,11 @@ export default function HowItWorksClient() {
             <div className="relative w-80 h-80">
               {/* Animated Design Cards */}
               <div className="absolute inset-0 transform rotate-12 animate-pulse">
-                <div className="w-48 h-64 bg-gradient-to-br from-oma-plum/20 to-oma-gold/20 rounded-lg border-2 border-white/30 backdrop-blur-sm">
+                <div className="w-48 h-64 bg-gradient-to-br from-oma-plum/30 to-oma-gold/30 rounded-lg border-2 border-oma-gold/40 backdrop-blur-sm">
                   <div className="p-4">
-                    <div className="w-full h-8 bg-white/20 rounded mb-4"></div>
-                    <div className="w-3/4 h-4 bg-white/15 rounded mb-2"></div>
-                    <div className="w-1/2 h-4 bg-white/15 rounded"></div>
+                    <div className="w-full h-8 bg-oma-beige/30 rounded mb-4"></div>
+                    <div className="w-3/4 h-4 bg-oma-cocoa/20 rounded mb-2"></div>
+                    <div className="w-1/2 h-4 bg-oma-cocoa/20 rounded"></div>
                   </div>
                 </div>
               </div>
@@ -263,11 +263,11 @@ export default function HowItWorksClient() {
                 className="absolute inset-0 transform -rotate-6 animate-pulse"
                 style={{ animationDelay: "0.5s" }}
               >
-                <div className="w-48 h-64 bg-gradient-to-br from-oma-gold/20 to-oma-plum/20 rounded-lg border-2 border-white/30 backdrop-blur-sm">
+                <div className="w-48 h-64 bg-gradient-to-br from-oma-gold/30 to-oma-beige/30 rounded-lg border-2 border-oma-plum/40 backdrop-blur-sm">
                   <div className="p-4">
-                    <div className="w-full h-8 bg-white/20 rounded mb-4"></div>
-                    <div className="w-2/3 h-4 bg-white/15 rounded mb-2"></div>
-                    <div className="w-3/4 h-4 bg-white/15 rounded"></div>
+                    <div className="w-full h-8 bg-oma-beige/30 rounded mb-4"></div>
+                    <div className="w-2/3 h-4 bg-oma-cocoa/20 rounded mb-2"></div>
+                    <div className="w-3/4 h-4 bg-oma-cocoa/20 rounded"></div>
                   </div>
                 </div>
               </div>
@@ -276,22 +276,22 @@ export default function HowItWorksClient() {
                 className="absolute inset-0 transform rotate-3 animate-pulse"
                 style={{ animationDelay: "1s" }}
               >
-                <div className="w-48 h-64 bg-gradient-to-br from-oma-beige/20 to-oma-plum/20 rounded-lg border-2 border-white/30 backdrop-blur-sm">
+                <div className="w-48 h-64 bg-gradient-to-br from-oma-beige/30 to-oma-plum/30 rounded-lg border-2 border-oma-beige/40 backdrop-blur-sm">
                   <div className="p-4">
-                    <div className="w-full h-8 bg-white/20 rounded mb-4"></div>
-                    <div className="w-4/5 h-4 bg-white/15 rounded mb-2"></div>
-                    <div className="w-1/3 h-4 bg-white/15 rounded"></div>
+                    <div className="w-full h-8 bg-oma-gold/30 rounded mb-4"></div>
+                    <div className="w-4/5 h-4 bg-oma-cocoa/20 rounded mb-2"></div>
+                    <div className="w-1/3 h-4 bg-oma-cocoa/20 rounded"></div>
                   </div>
                 </div>
               </div>
 
               {/* Floating Elements */}
-              <div className="absolute top-4 right-4 w-6 h-6 bg-oma-gold rounded-full animate-bounce"></div>
+              <div className="absolute top-4 right-4 w-6 h-6 bg-oma-gold rounded-full animate-bounce shadow-lg"></div>
               <div
-                className="absolute bottom-8 left-8 w-4 h-4 bg-oma-plum rounded-full animate-bounce"
+                className="absolute bottom-8 left-8 w-4 h-4 bg-oma-plum rounded-full animate-bounce shadow-lg"
                 style={{ animationDelay: "0.3s" }}
               ></div>
-              <div className="absolute top-1/2 left-0 w-3 h-3 bg-white rounded-full animate-ping"></div>
+              <div className="absolute top-1/2 left-0 w-3 h-3 bg-oma-beige rounded-full animate-ping"></div>
             </div>
           </div>
 
@@ -364,17 +364,17 @@ export default function HowItWorksClient() {
             ].map((step, index) => (
               <div
                 key={index}
-                className="bg-white/90 backdrop-blur-sm rounded-xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2"
+                className="bg-oma-beige/20 backdrop-blur-sm rounded-xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border border-oma-gold/20"
                 style={{
                   transform: `translateY(${visibleSections.has("designers") ? 0 : 30}px)`,
                   opacity: visibleSections.has("designers") ? 1 : 0,
                   transition: `all 0.8s cubic-bezier(0.4, 0, 0.2, 1) ${index * 0.1}s`,
                 }}
               >
-                <h3 className="text-xl font-semibold text-black mb-4 text-center">
+                <h3 className="text-xl font-semibold text-oma-cocoa mb-4 text-center">
                   {step.title}
                 </h3>
-                <p className="text-black/70 text-center leading-relaxed">
+                <p className="text-oma-cocoa/80 text-center leading-relaxed">
                   {step.description}
                 </p>
                 <div className="w-full h-1 bg-gradient-to-r from-oma-gold to-oma-plum mt-6" />
@@ -428,17 +428,19 @@ export default function HowItWorksClient() {
             ].map((feature, index) => (
               <div
                 key={index}
-                className="bg-white/80 backdrop-blur-sm rounded-lg p-6 text-center hover:shadow-lg transition-all duration-300"
+                className="bg-oma-beige/20 backdrop-blur-sm rounded-lg p-6 text-center hover:shadow-lg transition-all duration-300 border border-oma-plum/20"
                 style={{
                   transform: `translateY(${visibleSections.has("features") ? 0 : 20}px)`,
                   opacity: visibleSections.has("features") ? 1 : 0,
                   transition: `all 0.6s cubic-bezier(0.4, 0, 0.2, 1) ${index * 0.1}s`,
                 }}
               >
-                <h3 className="text-lg font-semibold text-black mb-2">
+                <h3 className="text-lg font-semibold text-oma-cocoa mb-2">
                   {feature.title}
                 </h3>
-                <p className="text-black/70 text-sm">{feature.description}</p>
+                <p className="text-oma-cocoa/80 text-sm">
+                  {feature.description}
+                </p>
               </div>
             ))}
           </div>

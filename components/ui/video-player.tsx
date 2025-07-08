@@ -220,26 +220,6 @@ export function VideoPlayer({
         </div>
       )}
 
-      {/* Custom controls overlay (only if controls are disabled) */}
-      {!controls && (
-        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity">
-          <div className="absolute bottom-4 left-4 right-4 flex items-center justify-center">
-            <Button
-              onClick={togglePlay}
-              variant="secondary"
-              size="sm"
-              className="bg-white/90 hover:bg-white text-black rounded-full p-2"
-            >
-              {isPlaying ? (
-                <Pause className="h-4 w-4" />
-              ) : (
-                <Play className="h-4 w-4" />
-              )}
-            </Button>
-          </div>
-        </div>
-      )}
-
       {/* Error fallback */}
       {hasError && (
         <div className="absolute inset-0 bg-black/80 flex items-center justify-center text-white">
