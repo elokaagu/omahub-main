@@ -847,9 +847,8 @@ export default function HomeContent() {
       {categories.length > 0 ? (
         categories
           .filter((category) => {
-            // Show all categories with 1+ brands (reduced from 4+)
-            // This ensures we display all categories that have brands
-            return category.brands.length >= 1;
+            // Show categories with 4+ brands to ensure quality content
+            return category.brands.length >= 4;
           })
           .map((category, index) => (
             <section
