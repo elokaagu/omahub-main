@@ -99,13 +99,40 @@ export async function getAllBrandsWithProductCounts(): Promise<
  * Fetch all brands, optionally filtering out those with no products
  */
 export async function getAllBrands(
-  filterEmptyBrands: boolean = false
+  filterEmptyBrands: boolean = false,
+  noCache: boolean = false
 ): Promise<Brand[]> {
   try {
     if (filterEmptyBrands) {
       // Get brands with product counts and filter out empty ones
       const brandsWithCounts = await getAllBrandsWithProductCounts();
       return brandsWithCounts.filter((brand) => brand.product_count > 0);
+    }
+
+    // If noCache is true, always fetch fresh data
+    if (noCache) {
+      if (!supabase) {
+        throw new Error("Supabase client is not initialized");
+      }
+      const { data, error } = await supabase
+        .from("brands")
+        .select(ESSENTIAL_BRAND_FIELDS)
+        .order("name");
+      if (error) throw new Error(`Failed to fetch brands: ${error.message}`);
+      if (!data || data.length === 0)
+        throw new Error("No brands found in the database");
+      return data.map((item) => ({
+        id: item.id || `temp-id-${Math.random().toString(36).substring(2, 9)}`,
+        name: item.name || "Brand Name",
+        description: item.description || "Brand description",
+        long_description: item.long_description || "Long brand description",
+        location: item.location || "Unknown location",
+        price_range: item.price_range || "$$",
+        category: item.category || "Other",
+        rating: item.rating || 4.5,
+        is_verified: item.is_verified || false,
+        image: item.image || "/placeholder-image.jpg",
+      }));
     }
 
     // Check if we're already loading brands

@@ -392,13 +392,8 @@ export default function HomeContent() {
         // Use optimized API for better performance
         const [brandsData, heroData, spotlightData, dynamicItems] =
           await Promise.all([
-            // Use optimized brands API with minimal fields
-            fetch(
-              "/api/brands/optimized?limit=50&fields=id,name,image,category,location,is_verified,rating"
-            )
-              .then((res) => res.json())
-              .then((data) => data.brands || [])
-              .catch(() => getAllBrands()), // Fallback to original method
+            // Fetch all brands (always fresh, no cache)
+            getAllBrands(false, true),
             getActiveHeroSlides(),
             getActiveSpotlightContent(),
             generateDynamicFallbackItems(),
