@@ -89,12 +89,12 @@ export default function TailoredClient() {
   };
 
   return (
-    <div className="w-full bg-gradient-to-b from-oma-beige/30 to-white min-h-screen">
+    <div className="w-full bg-gradient-to-b from-oma-beige/30 to-white min-h-screen snap-y snap-mandatory">
       {/* Hero Section */}
       <section
         ref={heroRef}
         id="hero"
-        className="relative min-h-screen flex items-center justify-center px-6 overflow-hidden"
+        className="snap-start relative min-h-screen flex items-center justify-center px-6 overflow-hidden"
         style={{
           transform: `translateY(${scrollY * 0.5}px)`,
         }}
@@ -200,7 +200,7 @@ export default function TailoredClient() {
       <section
         ref={questionsRef}
         id="questions"
-        className="min-h-screen flex items-center py-24 px-6 relative bg-gradient-to-br from-oma-plum/5 to-oma-gold/5"
+        className="snap-start min-h-screen flex items-center py-24 px-6 relative bg-gradient-to-br from-oma-plum/5 to-oma-gold/5"
         style={{
           transform: `translateY(${scrollY * 0.2}px)`,
         }}
@@ -319,7 +319,7 @@ export default function TailoredClient() {
       <section
         ref={processRef}
         id="process"
-        className="min-h-screen flex items-center py-24 px-6 relative"
+        className="snap-start min-h-screen flex items-center py-24 px-6 relative"
         style={{
           transform: `translateY(${scrollY * 0.15}px)`,
         }}
@@ -414,7 +414,7 @@ export default function TailoredClient() {
       <section
         ref={benefitsRef}
         id="benefits"
-        className="min-h-screen flex items-center py-24 px-6 relative bg-gradient-to-br from-oma-beige/20 to-white/50"
+        className="snap-start min-h-screen flex items-center py-24 px-6 relative bg-gradient-to-br from-oma-beige/20 to-white/50"
         style={{
           transform: `translateY(${scrollY * 0.1}px)`,
         }}
@@ -510,7 +510,7 @@ export default function TailoredClient() {
       <section
         ref={ctaRef}
         id="cta"
-        className="min-h-screen flex items-center py-24 px-6 bg-gradient-to-br from-oma-plum/10 to-oma-gold/10 relative overflow-hidden"
+        className="snap-start min-h-screen flex items-center py-24 px-6 bg-gradient-to-br from-oma-plum/10 to-oma-gold/10 relative overflow-hidden"
         style={{
           transform: `translateY(${scrollY * 0.05}px)`,
         }}
