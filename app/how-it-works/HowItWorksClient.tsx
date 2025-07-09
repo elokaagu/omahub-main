@@ -124,7 +124,10 @@ export default function HowItWorksClient() {
   ];
 
   return (
-    <div className="w-full bg-gradient-to-b from-oma-beige/30 to-white min-h-screen">
+    <div
+      className="relative w-full overflow-x-hidden snap-y snap-mandatory h-screen"
+      style={{ scrollBehavior: "smooth" }}
+    >
       {/* Hero Section */}
       <section
         ref={heroRef}
@@ -211,7 +214,7 @@ export default function HowItWorksClient() {
       <section
         ref={clientsRef}
         id="clients"
-        className="py-24 px-6 bg-gradient-to-br from-oma-beige/80 via-white/90 to-oma-gold/10 relative"
+        className="min-h-screen snap-start py-24 px-6 bg-gradient-to-br from-oma-beige/80 via-white/90 to-oma-gold/10 relative"
         style={{
           transform: getParallaxTransform(0.04),
         }}
@@ -275,7 +278,7 @@ export default function HowItWorksClient() {
       </section>
 
       {/* Curated Selection CTA Section */}
-      <section className="py-24 px-6 bg-gradient-to-br from-oma-beige/80 via-white/90 to-oma-gold/10 relative overflow-hidden">
+      <section className="min-h-screen snap-start py-24 px-6 bg-gradient-to-br from-oma-beige/80 via-white/90 to-oma-gold/10 relative overflow-hidden">
         {/* Corner Brackets */}
         <div className="absolute top-8 left-8 w-12 h-12 border-l-4 border-t-4 border-oma-gold/80"></div>
         <div className="absolute top-8 right-8 w-12 h-12 border-r-4 border-t-4 border-oma-gold/80"></div>
@@ -363,7 +366,7 @@ export default function HowItWorksClient() {
       <section
         ref={designersRef}
         id="designers"
-        className="py-24 px-6 bg-gradient-to-br from-oma-beige/80 via-white/90 to-oma-gold/10 relative"
+        className="min-h-screen snap-start py-24 px-6 bg-gradient-to-br from-oma-beige/80 via-white/90 to-oma-gold/10 relative"
         style={{
           transform: getParallaxTransform(0.03),
         }}
@@ -431,7 +434,7 @@ export default function HowItWorksClient() {
       <section
         ref={featuresRef}
         id="features"
-        className="py-24 px-6 bg-gradient-to-br from-oma-beige/80 via-white/90 to-oma-gold/10 relative"
+        className="min-h-screen snap-start py-24 px-6 bg-gradient-to-br from-oma-beige/80 via-white/90 to-oma-gold/10 relative"
         style={{
           transform: getParallaxTransform(0.02),
         }}
@@ -499,7 +502,7 @@ export default function HowItWorksClient() {
       <section
         ref={faqRef}
         id="faq"
-        className="py-24 px-6 bg-gradient-to-br from-oma-beige/80 via-white/90 to-oma-gold/10 relative"
+        className="min-h-screen snap-start py-24 px-6 bg-gradient-to-br from-oma-beige/80 via-white/90 to-oma-gold/10 relative"
         style={{
           transform: getParallaxTransform(0.01),
         }}
@@ -555,7 +558,7 @@ export default function HowItWorksClient() {
       <section
         ref={ctaRef}
         id="cta"
-        className="py-24 px-6 bg-gradient-to-br from-oma-beige/80 via-white/90 to-oma-gold/10 relative overflow-hidden"
+        className="min-h-screen snap-start py-24 px-6 bg-gradient-to-br from-oma-beige/80 via-white/90 to-oma-gold/10 relative overflow-hidden"
         style={{
           transform: getParallaxTransform(0.005),
         }}
