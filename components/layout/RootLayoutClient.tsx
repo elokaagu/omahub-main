@@ -14,6 +14,7 @@ import { AnimatePresence } from "framer-motion";
 import { Toaster } from "sonner";
 import { LoadingPage } from "@/components/ui/loading";
 import { AuthDebug } from "@/lib/utils/debug";
+import { SearchModal } from "@/components/ui/search-modal";
 
 interface RootLayoutClientProps {
   children: React.ReactNode;
@@ -66,6 +67,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
       </main>
       {!isStudioPage && <Footer />}
       <Toaster position="top-right" />
+      <SearchModal />
     </>
   );
 }

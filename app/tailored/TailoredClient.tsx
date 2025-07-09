@@ -61,8 +61,8 @@ export default function TailoredClient() {
         {/* Background Image */}
         <div className="absolute inset-0 w-full h-full">
           <img
-            src="/community.jpg"
-            alt="OmaHub Community"
+            src="/omahub-perspective.PNG"
+            alt="OmaHub Perspective"
             className="w-full h-full object-cover object-center"
           />
           <div className="absolute inset-0 bg-black/40" />
@@ -140,21 +140,6 @@ export default function TailoredClient() {
                   "Struggling to find the perfect fit in ready-to-wear?",
                 description:
                   "Get garments tailored exactly to your measurements and preferences",
-              },
-              {
-                question: "Have a unique design idea in mind?",
-                description:
-                  "Work with skilled artisans to bring your creative vision to reality",
-              },
-              {
-                question: "Want something truly one-of-a-kind?",
-                description:
-                  "Create bespoke pieces that reflect your personal style and story",
-              },
-              {
-                question: "Need alterations or adjustments?",
-                description:
-                  "Perfect the fit of existing garments with expert tailoring",
               },
             ].map((item, index) => (
               <div
@@ -331,21 +316,6 @@ export default function TailoredClient() {
                 title: "Premium Quality",
                 description:
                   "Expert craftsmanship using high-quality materials and techniques",
-              },
-              {
-                title: "Personal Service",
-                description:
-                  "Direct collaboration with skilled artisans throughout the process",
-              },
-              {
-                title: "Timeless Value",
-                description:
-                  "Investment pieces designed to last and remain stylish for years",
-              },
-              {
-                title: "African Heritage",
-                description:
-                  "Support traditional craftsmanship and contemporary African design",
               },
             ].map((benefit, index) => (
               <div

@@ -1,378 +1,190 @@
-import { useState, useEffect, KeyboardEvent } from "react";
-import { Command } from "@/components/ui/command";
+"use client";
+
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Search, MapPin, CheckCircle, Tag, Clock } from "@/components/ui/icons";
-import { useRouter } from "next/navigation";
-import { cn } from "@/lib/utils";
-import { collections, subcategories } from "@/lib/data/directory";
-import { getAllBrands, searchBrands } from "@/lib/services/brandService";
-import { Brand } from "@/lib/supabase";
-import { useNavigation } from "@/contexts/NavigationContext";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Search, X, Command } from "lucide-react";
+import Link from "next/link";
 
 interface SearchResult {
-  id?: string;
-  name: string;
-  category?: string;
-  location?: string;
-  isVerified?: boolean;
-  type: "designer" | "category" | "location" | "collection" | "occasion";
-  href: string;
-  description?: string;
+  id: string;
+  title: string;
+  description: string;
+  url: string;
+  type: "product" | "designer" | "brand" | "collection" | "page";
 }
 
-interface SearchModalProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}
-
-function highlightMatch(text: string, query: string) {
-  if (!query) return text;
-  const regex = new RegExp(`(${query})`, "gi");
-  const parts = text.split(regex);
-  return parts.map((part, i) =>
-    regex.test(part) ? (
-      <span
-        key={i}
-        className="bg-oma-gold/30 text-oma-plum font-medium px-1 rounded"
-      >
-        {part}
-      </span>
-    ) : (
-      part
-    )
-  );
-}
-
-export function SearchModal({ open, onOpenChange }: SearchModalProps) {
-  const [searchTerm, setSearchTerm] = useState("");
+export function SearchModal() {
+  const [isOpen, setIsOpen] = useState(false);
+  const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
-  const [selectedIndex, setSelectedIndex] = useState(-1);
-  const [brands, setBrands] = useState<Brand[]>([]);
-  const [locations, setLocations] = useState<string[]>([]);
-  const [loading, setLoading] = useState(false);
-  const router = useRouter();
-  const { setIsNavigating } = useNavigation();
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Load all brands and extract unique locations when component mounts
+  // Handle Cmd+K hotkey
   useEffect(() => {
-    const loadBrands = async () => {
-      try {
-        const allBrands = await getAllBrands();
-        setBrands(allBrands);
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setIsOpen(true);
+      }
 
-        // Extract unique locations from brands
-        const uniqueLocations = Array.from(
-          new Set(allBrands.map((brand) => brand.location).filter(Boolean))
-        ).sort();
-        setLocations(uniqueLocations);
-      } catch (error) {
-        console.error("Error loading brands:", error);
+      // Close on Escape
+      if (e.key === "Escape" && isOpen) {
+        setIsOpen(false);
       }
     };
 
-    loadBrands();
-  }, []);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen]);
 
-  // Refresh brands when modal opens (to catch new brands)
-  useEffect(() => {
-    if (open) {
-      const refreshBrands = async () => {
-        try {
-          const allBrands = await getAllBrands();
-          setBrands(allBrands);
-
-          // Update locations as well
-          const uniqueLocations = Array.from(
-            new Set(allBrands.map((brand) => brand.location).filter(Boolean))
-          ).sort();
-          setLocations(uniqueLocations);
-        } catch (error) {
-          console.error("Error refreshing brands:", error);
-        }
-      };
-
-      refreshBrands();
-    }
-  }, [open]);
-
-  useEffect(() => {
-    if (!searchTerm) {
+  // Mock search function - replace with actual search logic
+  const performSearch = async (searchQuery: string) => {
+    if (!searchQuery.trim()) {
       setResults([]);
-      setSelectedIndex(-1);
       return;
     }
 
-    const performSearch = async () => {
-      setLoading(true);
-      try {
-        const searchLower = searchTerm.toLowerCase();
+    setIsLoading(true);
 
-        // Search through brands using database search for better performance
-        let designerResults: SearchResult[] = [];
-        if (searchTerm.length >= 2) {
-          try {
-            const searchedBrands = await searchBrands(searchTerm);
-            designerResults = searchedBrands.map(
-              (brand): SearchResult => ({
-                id: brand.id,
-                name: brand.name,
-                category: brand.category,
-                location: brand.location,
-                isVerified: brand.is_verified || false,
-                type: "designer" as const,
-                href: `/brand/${brand.id}`,
-                description: brand.description || undefined,
-              })
-            );
-          } catch (error) {
-            console.error("Error searching brands:", error);
-            // Fallback to local search if database search fails
-            designerResults = brands
-              .filter(
-                (brand) =>
-                  brand.name.toLowerCase().includes(searchLower) ||
-                  brand.category.toLowerCase().includes(searchLower) ||
-                  brand.location.toLowerCase().includes(searchLower) ||
-                  brand.description?.toLowerCase().includes(searchLower)
-              )
-              .map(
-                (brand): SearchResult => ({
-                  id: brand.id,
-                  name: brand.name,
-                  category: brand.category,
-                  location: brand.location,
-                  isVerified: brand.is_verified || false,
-                  type: "designer" as const,
-                  href: `/brand/${brand.id}`,
-                  description: brand.description || undefined,
-                })
-              );
-          }
-        } else {
-          // For short queries, use local search
-          designerResults = brands
-            .filter(
-              (brand) =>
-                brand.name.toLowerCase().includes(searchLower) ||
-                brand.category.toLowerCase().includes(searchLower) ||
-                brand.location.toLowerCase().includes(searchLower) ||
-                brand.description?.toLowerCase().includes(searchLower)
-            )
-            .map(
-              (brand): SearchResult => ({
-                id: brand.id,
-                name: brand.name,
-                category: brand.category,
-                location: brand.location,
-                isVerified: brand.is_verified || false,
-                type: "designer" as const,
-                href: `/brand/${brand.id}`,
-                description: brand.description || undefined,
-              })
-            );
-        }
+    // Simulate API call
+    await new Promise((resolve) => setTimeout(resolve, 300));
 
-        // Search through main categories
-        const categoryResults = collections
-          .filter((category) => category.toLowerCase().includes(searchLower))
-          .map(
-            (category): SearchResult => ({
-              name: category,
-              type: "category" as const,
-              href: `/directory?category=${category}`,
-              description:
-                category === "Collections"
-                  ? "Shop for an occasion, holiday, or ready to wear piece"
-                  : "Masters of craft creating perfectly fitted garments",
-            })
-          );
+    // Mock results - replace with actual search implementation
+    const mockResults: SearchResult[] = [
+      {
+        id: "1",
+        title: "Wedding Dress Collection",
+        description: "Beautiful wedding dresses by African designers",
+        url: "/collection/wedding-dresses",
+        type: "collection",
+      },
+      {
+        id: "2",
+        title: "Traditional Attire",
+        description: "Authentic African traditional clothing",
+        url: "/collection/traditional",
+        type: "collection",
+      },
+      {
+        id: "3",
+        title: "Custom Tailoring",
+        description: "Get your perfect fit with our tailors",
+        url: "/tailored",
+        type: "page",
+      },
+    ];
 
-        // Search through subcategories
-        const subcategoryResults = Object.entries(subcategories).flatMap(
-          ([mainCategory, subcats]) =>
-            subcats
-              .filter((subcat) => subcat.toLowerCase().includes(searchLower))
-              .map(
-                (subcat): SearchResult => ({
-                  name: subcat,
-                  type: "category" as const,
-                  href: `/directory?category=${mainCategory}&subcategory=${subcat.replace(/ /g, "+")}`,
-                  description: `Browse ${subcat.toLowerCase()} designs`,
-                })
-              )
-        );
+    setResults(
+      mockResults.filter(
+        (result) =>
+          result.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          result.description.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    );
+    setIsLoading(false);
+  };
 
-        // Search through locations (now dynamic from actual brand data)
-        const locationResults = locations
-          .filter((location) => location.toLowerCase().includes(searchLower))
-          .map(
-            (location): SearchResult => ({
-              name: location,
-              type: "location" as const,
-              href: `/directory?location=${location}`,
-              description: `Discover designers in ${location}`,
-            })
-          );
-
-        setResults([
-          ...designerResults,
-          ...categoryResults,
-          ...subcategoryResults,
-          ...locationResults,
-        ]);
-        setSelectedIndex(-1);
-      } catch (error) {
-        console.error("Error performing search:", error);
-        setResults([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    // Debounce search
-    const timeoutId = setTimeout(() => {
-      performSearch();
+  useEffect(() => {
+    const debounceTimer = setTimeout(() => {
+      performSearch(query);
     }, 300);
 
-    return () => clearTimeout(timeoutId);
-  }, [searchTerm, brands, locations]);
+    return () => clearTimeout(debounceTimer);
+  }, [query]);
 
-  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      setSelectedIndex((prev) => (prev < results.length - 1 ? prev + 1 : prev));
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      setSelectedIndex((prev) => (prev > 0 ? prev - 1 : -1));
-    } else if (e.key === "Enter" && selectedIndex >= 0) {
-      handleSelect(results[selectedIndex].href);
-    }
-  };
-
-  const handleSelect = (href: string) => {
-    setIsNavigating(true);
-    router.push(href);
-    onOpenChange(false);
-    setSearchTerm("");
-  };
-
-  const getIcon = (type: SearchResult["type"]) => {
-    switch (type) {
-      case "designer":
-        return null;
-      case "category":
-        return <Tag className="h-4 w-4 text-oma-plum/70" />;
-      case "location":
-        return <MapPin className="h-4 w-4 text-oma-plum/70" />;
-      default:
-        return null;
-    }
+  const handleResultClick = (result: SearchResult) => {
+    setIsOpen(false);
+    setQuery("");
+    // Navigate to result URL
+    window.location.href = result.url;
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl overflow-hidden p-0 bg-white border-oma-gold/20 shadow-xl">
-        <Command className="rounded-lg border-0">
-          <div className="flex items-center border-b border-oma-gold/20 px-4 py-3 bg-oma-cream/30">
-            <Search className="mr-3 h-5 w-5 shrink-0 text-oma-plum/60" />
-            <input
-              placeholder="Search designers, categories, locations..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              onKeyDown={handleKeyDown}
-              className="flex h-8 w-full rounded-md bg-transparent py-2 text-sm text-oma-plum placeholder:text-oma-cocoa/60 border-none outline-none focus:outline-none focus:ring-0"
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogContent className="sm:max-w-[600px] p-0">
+        <div className="p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Search className="w-5 h-5 text-oma-cocoa/60" />
+            <Input
+              placeholder="Search for designers, collections, products..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="border-0 shadow-none text-lg focus:ring-0 focus:outline-none"
               autoFocus
             />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsOpen(false)}
+              className="text-oma-cocoa/60 hover:text-oma-cocoa"
+            >
+              <X className="w-4 h-4" />
+            </Button>
           </div>
-          <div className="max-h-[300px] overflow-y-auto bg-white">
-            {loading ? (
-              <div className="py-8 text-center text-sm text-oma-cocoa">
-                <div className="flex items-center justify-center gap-2">
-                  <div className="animate-spin h-4 w-4 border-2 border-oma-plum border-t-transparent rounded-full"></div>
-                  Searching...
-                </div>
-              </div>
-            ) : results.length > 0 ? (
-              <div className="py-2">
-                {results.map((result, index) => (
-                  <button
-                    key={`${result.type}-${result.id || index}`}
-                    className={cn(
-                      "w-full text-left px-4 py-3 transition-all duration-200 border-l-2 border-transparent",
-                      index === selectedIndex
-                        ? "bg-oma-beige/80 border-l-oma-gold"
-                        : "hover:bg-oma-beige/40 hover:border-l-oma-gold/50"
-                    )}
-                    onClick={() => handleSelect(result.href)}
-                    onMouseEnter={() => setSelectedIndex(index)}
-                  >
-                    {result.type === "designer" ? (
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium text-oma-plum">
-                              {highlightMatch(result.name, searchTerm)}
-                            </span>
-                            {result.isVerified && (
-                              <CheckCircle className="h-4 w-4 text-oma-gold" />
-                            )}
-                          </div>
-                          <div className="flex items-center text-sm text-oma-cocoa">
-                            <MapPin className="h-3 w-3 mr-1" />
-                            {highlightMatch(
-                              result.location || "",
-                              searchTerm
-                            )}{" "}
-                            •{" "}
-                            {highlightMatch(result.category || "", searchTerm)}
-                          </div>
-                          {result.description && (
-                            <div className="text-sm text-oma-cocoa/80 mt-1 line-clamp-2">
-                              {highlightMatch(result.description, searchTerm)}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-3">
-                        {getIcon(result.type)}
-                        <div>
-                          <div className="font-medium text-oma-plum">
-                            {highlightMatch(result.name, searchTerm)}
-                          </div>
-                          <div className="text-sm text-oma-cocoa/80">
-                            {result.description &&
-                              highlightMatch(result.description, searchTerm)}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </button>
-                ))}
-              </div>
-            ) : searchTerm ? (
-              <div className="py-8 text-center text-sm text-oma-cocoa">
-                <div className="flex flex-col items-center gap-2">
-                  <Search className="h-8 w-8 text-oma-cocoa/40" />
-                  <span>No results found for "{searchTerm}"</span>
-                  <span className="text-xs text-oma-cocoa/60">
-                    Try searching for designers, categories, or locations
-                  </span>
-                </div>
-              </div>
-            ) : (
-              <div className="py-8 text-center text-sm text-oma-cocoa">
-                <div className="flex flex-col items-center gap-2">
-                  <Search className="h-8 w-8 text-oma-cocoa/40" />
-                  <span>Start typing to search...</span>
-                  <span className="text-xs text-oma-cocoa/60">
-                    Find designers, categories, and locations
-                  </span>
-                </div>
-              </div>
-            )}
+
+          <div className="text-xs text-oma-cocoa/40 mb-4 flex items-center gap-2">
+            <div className="flex items-center gap-1">
+              <Command className="w-3 h-3" />
+              <span>K</span>
+            </div>
+            <span>to search</span>
+            <span>•</span>
+            <span>Esc to close</span>
           </div>
-        </Command>
+
+          {isLoading && (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin h-6 w-6 border-2 border-oma-plum border-t-transparent rounded-full"></div>
+            </div>
+          )}
+
+          {!isLoading && results.length > 0 && (
+            <div className="space-y-2 max-h-96 overflow-y-auto">
+              {results.map((result) => (
+                <button
+                  key={result.id}
+                  onClick={() => handleResultClick(result)}
+                  className="w-full text-left p-3 rounded-lg hover:bg-oma-beige/20 transition-colors group"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 bg-gradient-to-br from-oma-plum/10 to-oma-gold/10 rounded-full flex items-center justify-center mt-1">
+                      <Search className="w-4 h-4 text-oma-plum" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-oma-cocoa group-hover:text-oma-plum transition-colors">
+                        {result.title}
+                      </h3>
+                      <p className="text-sm text-oma-cocoa/60 mt-1">
+                        {result.description}
+                      </p>
+                      <div className="text-xs text-oma-cocoa/40 mt-2 capitalize">
+                        {result.type}
+                      </div>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {!isLoading && query && results.length === 0 && (
+            <div className="text-center py-8 text-oma-cocoa/60">
+              <Search className="w-8 h-8 mx-auto mb-2 opacity-40" />
+              <p>No results found for "{query}"</p>
+              <p className="text-sm mt-1">Try different keywords</p>
+            </div>
+          )}
+
+          {!isLoading && !query && (
+            <div className="text-center py-8 text-oma-cocoa/60">
+              <Search className="w-8 h-8 mx-auto mb-2 opacity-40" />
+              <p>Search for designers, collections, and products</p>
+              <p className="text-sm mt-1">Start typing to see results</p>
+            </div>
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );
