@@ -137,11 +137,7 @@ export default function HowItWorksClient() {
           transform: getParallaxTransform(0.08),
         }}
       >
-        {/* Corner Brackets */}
-        <div className="absolute top-24 left-8 w-12 h-12 border-l-4 border-t-4 border-oma-gold/80"></div>
-        <div className="absolute top-24 right-8 w-12 h-12 border-r-4 border-t-4 border-oma-gold/80"></div>
-        <div className="absolute bottom-8 left-8 w-12 h-12 border-l-4 border-b-4 border-oma-gold/80"></div>
-        <div className="absolute bottom-8 right-8 w-12 h-12 border-r-4 border-b-4 border-oma-gold/80"></div>
+        {/* No corner brackets here */}
 
         {/* Background Image */}
         <div className="absolute inset-0 w-full h-full">
@@ -236,30 +232,32 @@ export default function HowItWorksClient() {
         <div className="absolute top-1/2 right-0 w-4 h-4 bg-oma-plum rounded-full animate-ping" />
         <div className="absolute bottom-1/3 left-0 w-3 h-3 bg-oma-beige rounded-full animate-pulse" />
         <div className="max-w-6xl mx-auto w-full flex flex-col md:flex-row items-center justify-between gap-12 relative z-10">
-          {/* Left - Animated Graphics */}
+          {/* Left - Animated Graphics: stylized card stack with O shape */}
           <div className="flex-1 flex items-center justify-center">
             <div className="relative w-72 h-72">
+              {/* OmaHub O shape */}
+              <div className="absolute top-8 left-8 w-32 h-32 rounded-full border-8 border-oma-plum/40 animate-float-slow"></div>
+              {/* Card stack */}
               <div className="absolute inset-0 transform rotate-6 animate-pulse">
-                <div className="w-40 h-56 bg-gradient-to-br from-oma-plum/20 to-oma-gold/20 rounded-lg border-2 border-oma-gold/30 backdrop-blur-sm"></div>
+                <div className="w-40 h-56 bg-gradient-to-br from-oma-beige/60 to-oma-gold/30 rounded-lg border-2 border-oma-gold/30 backdrop-blur-sm"></div>
               </div>
               <div
                 className="absolute inset-0 transform -rotate-3 animate-pulse"
                 style={{ animationDelay: "0.5s" }}
               >
-                <div className="w-40 h-56 bg-gradient-to-br from-oma-gold/20 to-oma-beige/20 rounded-lg border-2 border-oma-plum/30 backdrop-blur-sm"></div>
+                <div className="w-40 h-56 bg-gradient-to-br from-oma-gold/30 to-oma-plum/10 rounded-lg border-2 border-oma-plum/30 backdrop-blur-sm"></div>
               </div>
               <div
                 className="absolute inset-0 transform rotate-2 animate-pulse"
                 style={{ animationDelay: "1s" }}
               >
-                <div className="w-40 h-56 bg-gradient-to-br from-oma-beige/20 to-oma-plum/20 rounded-lg border-2 border-oma-beige/30 backdrop-blur-sm"></div>
+                <div className="w-40 h-56 bg-gradient-to-br from-oma-beige/30 to-oma-plum/20 rounded-lg border-2 border-oma-beige/30 backdrop-blur-sm"></div>
               </div>
-              <div className="absolute top-4 right-4 w-5 h-5 bg-oma-gold rounded-full animate-bounce shadow-lg"></div>
+              {/* Small accent dot */}
               <div
-                className="absolute bottom-8 left-8 w-3 h-3 bg-oma-plum rounded-full animate-bounce shadow-lg"
+                className="absolute bottom-8 left-8 w-4 h-4 bg-oma-plum rounded-full animate-bounce shadow-lg"
                 style={{ animationDelay: "0.3s" }}
               ></div>
-              <div className="absolute top-1/2 left-0 w-2 h-2 bg-oma-beige rounded-full animate-ping"></div>
             </div>
           </div>
           {/* Right - Copy and CTA */}
@@ -393,6 +391,9 @@ export default function HowItWorksClient() {
           {/* Left - Animated Graphics */}
           <div className="flex-1 flex items-center justify-center">
             <div className="relative w-72 h-72">
+              {/* Fabric swatch shape */}
+              <div className="absolute top-10 left-10 w-32 h-20 bg-gradient-to-br from-oma-gold/30 to-oma-beige/40 rounded-xl border-4 border-oma-plum/30 rotate-12 animate-float-slow"></div>
+              {/* Card stack */}
               <div className="absolute inset-0 transform rotate-6 animate-pulse">
                 <div className="w-40 h-56 bg-gradient-to-br from-oma-plum/20 to-oma-gold/20 rounded-lg border-2 border-oma-gold/30 backdrop-blur-sm"></div>
               </div>
@@ -402,18 +403,8 @@ export default function HowItWorksClient() {
               >
                 <div className="w-40 h-56 bg-gradient-to-br from-oma-gold/20 to-oma-beige/20 rounded-lg border-2 border-oma-plum/30 backdrop-blur-sm"></div>
               </div>
-              <div
-                className="absolute inset-0 transform rotate-2 animate-pulse"
-                style={{ animationDelay: "1s" }}
-              >
-                <div className="w-40 h-56 bg-gradient-to-br from-oma-beige/20 to-oma-plum/20 rounded-lg border-2 border-oma-beige/30 backdrop-blur-sm"></div>
-              </div>
-              <div className="absolute top-4 right-4 w-5 h-5 bg-oma-gold rounded-full animate-bounce shadow-lg"></div>
-              <div
-                className="absolute bottom-8 left-8 w-3 h-3 bg-oma-plum rounded-full animate-bounce shadow-lg"
-                style={{ animationDelay: "0.3s" }}
-              ></div>
-              <div className="absolute top-1/2 left-0 w-2 h-2 bg-oma-beige rounded-full animate-ping"></div>
+              {/* Accent O shape */}
+              <div className="absolute bottom-8 right-8 w-16 h-16 rounded-full border-4 border-oma-gold/40 animate-bounce"></div>
             </div>
           </div>
           {/* Right - Copy and CTA */}
@@ -463,18 +454,14 @@ export default function HowItWorksClient() {
           {/* Right - Animated Graphics (now on right) */}
           <div className="flex-1 flex items-center justify-center">
             <div className="relative w-72 h-72">
+              {/* Abstract O shape */}
+              <div className="absolute top-8 right-8 w-28 h-28 rounded-full border-8 border-oma-gold/40 animate-float-slow"></div>
+              {/* Card stack */}
               <div className="absolute inset-0 transform rotate-12 animate-pulse">
                 <div className="w-48 h-48 bg-gradient-to-br from-oma-gold/30 to-oma-beige/30 rounded-full border-2 border-oma-plum/30 backdrop-blur-sm"></div>
               </div>
-              <div
-                className="absolute top-10 left-10 w-24 h-24 bg-oma-plum/20 rounded-full blur-xl animate-float-slow"
-                style={{ animationDelay: "0.7s" }}
-              ></div>
-              <div
-                className="absolute bottom-0 right-0 w-16 h-16 bg-oma-gold/30 rounded-full blur-md animate-bounce"
-                style={{ animationDelay: "1.2s" }}
-              ></div>
-              <div className="absolute top-1/2 left-1/2 w-4 h-4 bg-oma-plum rounded-full animate-ping"></div>
+              {/* Accent dot */}
+              <div className="absolute bottom-0 left-0 w-6 h-6 bg-oma-plum rounded-full animate-bounce shadow-lg"></div>
             </div>
           </div>
           {/* Left - Copy and CTA */}
@@ -500,7 +487,7 @@ export default function HowItWorksClient() {
         </div>
       </section>
 
-      {/* FAQ SECTION (animation right, copy left, new shapes) */}
+      {/* FAQ SECTION (OmaHub-related animation) */}
       <section
         ref={faqRef}
         id="faq"
@@ -523,18 +510,14 @@ export default function HowItWorksClient() {
           {/* Right - Animated Graphics (now on right) */}
           <div className="flex-1 flex items-center justify-center">
             <div className="relative w-72 h-72">
+              {/* O shape */}
+              <div className="absolute top-8 right-8 w-24 h-24 rounded-full border-8 border-oma-plum/30 animate-float-slow"></div>
+              {/* Card stack */}
               <div className="absolute inset-0 transform rotate-12 animate-pulse">
                 <div className="w-48 h-48 bg-gradient-to-br from-oma-plum/20 to-oma-gold/20 rounded-2xl border-2 border-oma-gold/30 backdrop-blur-sm"></div>
               </div>
-              <div
-                className="absolute top-10 left-10 w-24 h-24 bg-oma-gold/20 rounded-full blur-xl animate-float-slow"
-                style={{ animationDelay: "0.7s" }}
-              ></div>
-              <div
-                className="absolute bottom-0 right-0 w-16 h-16 bg-oma-plum/30 rounded-full blur-md animate-bounce"
-                style={{ animationDelay: "1.2s" }}
-              ></div>
-              <div className="absolute top-1/2 left-1/2 w-4 h-4 bg-oma-gold rounded-full animate-ping"></div>
+              {/* Accent dot */}
+              <div className="absolute bottom-0 right-0 w-6 h-6 bg-oma-gold rounded-full animate-bounce shadow-lg"></div>
             </div>
           </div>
           {/* Left - Copy and CTA */}
@@ -560,7 +543,7 @@ export default function HowItWorksClient() {
         </div>
       </section>
 
-      {/* CTA SECTION (animation left, copy right, new shapes) */}
+      {/* CTA SECTION (OmaHub-related animation) */}
       <section
         ref={ctaRef}
         id="cta"
@@ -583,18 +566,14 @@ export default function HowItWorksClient() {
           {/* Left - Animated Graphics (keep on left for CTA) */}
           <div className="flex-1 flex items-center justify-center">
             <div className="relative w-72 h-72">
+              {/* O shape */}
+              <div className="absolute top-8 left-8 w-24 h-24 rounded-full border-8 border-oma-gold/40 animate-float-slow"></div>
+              {/* Card stack */}
               <div className="absolute inset-0 transform rotate-12 animate-pulse">
                 <div className="w-48 h-48 bg-gradient-to-br from-oma-gold/30 to-oma-plum/20 rounded-2xl border-2 border-oma-gold/30 backdrop-blur-sm"></div>
               </div>
-              <div
-                className="absolute top-10 left-10 w-24 h-24 bg-oma-plum/20 rounded-full blur-xl animate-float-slow"
-                style={{ animationDelay: "0.7s" }}
-              ></div>
-              <div
-                className="absolute bottom-0 right-0 w-16 h-16 bg-oma-gold/30 rounded-full blur-md animate-bounce"
-                style={{ animationDelay: "1.2s" }}
-              ></div>
-              <div className="absolute top-1/2 left-1/2 w-4 h-4 bg-oma-plum rounded-full animate-ping"></div>
+              {/* Accent dot */}
+              <div className="absolute bottom-0 left-0 w-6 h-6 bg-oma-plum rounded-full animate-bounce shadow-lg"></div>
             </div>
           </div>
           {/* Right - Copy and CTA */}
