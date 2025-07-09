@@ -443,9 +443,9 @@ export default function HowItWorksClient() {
         <div className="absolute top-1/3 left-0 w-4 h-4 bg-oma-gold rounded-full animate-ping" />
         <div className="absolute bottom-1/2 right-0 w-3 h-3 bg-oma-beige rounded-full animate-pulse" />
         <div className="max-w-6xl mx-auto w-full flex flex-col md:flex-row items-center justify-between gap-12 relative z-10">
-          {/* Left - Animated Graphics with designer-themed cards */}
-          <div className="flex-1 flex items-center justify-center">
-            <div className="relative w-80 h-80">
+          {/* Left - Animated Graphics with designer-themed cards and image */}
+          <div className="flex-1 flex flex-col items-center justify-center relative">
+            <div className="relative w-80 h-80 mb-8 md:mb-0">
               {/* Designer-themed animated cards */}
               <div className="absolute inset-0 transform rotate-12 animate-pulse">
                 <div className="w-48 h-64 bg-gradient-to-br from-oma-plum/30 to-oma-gold/30 rounded-lg border-2 border-oma-gold/40 backdrop-blur-sm">
@@ -456,7 +456,6 @@ export default function HowItWorksClient() {
                   </div>
                 </div>
               </div>
-
               <div
                 className="absolute inset-0 transform -rotate-6 animate-pulse"
                 style={{ animationDelay: "0.5s" }}
@@ -469,7 +468,6 @@ export default function HowItWorksClient() {
                   </div>
                 </div>
               </div>
-
               <div
                 className="absolute inset-0 transform rotate-3 animate-pulse"
                 style={{ animationDelay: "1s" }}
@@ -482,7 +480,6 @@ export default function HowItWorksClient() {
                   </div>
                 </div>
               </div>
-
               {/* Designer-themed floating elements */}
               <div className="absolute top-4 right-4 w-6 h-6 bg-oma-gold rounded-full animate-bounce shadow-lg"></div>
               <div
@@ -491,6 +488,13 @@ export default function HowItWorksClient() {
               ></div>
               <div className="absolute top-1/2 left-0 w-3 h-3 bg-oma-beige rounded-full animate-ping"></div>
             </div>
+            {/* OmaHub Perspective Image */}
+            <img
+              src="/omahub-perspective.PNG"
+              alt="OmaHub Perspective Mockup"
+              className="mt-8 md:mt-12 w-64 md:w-80 rounded-2xl shadow-2xl border-4 border-oma-beige/60 bg-white/80 object-cover"
+              style={{ maxWidth: "100%", height: "auto" }}
+            />
           </div>
           {/* Right - Copy and CTA */}
           <div className="flex-1 pl-0 md:pl-12 text-oma-cocoa">
