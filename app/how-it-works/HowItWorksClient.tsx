@@ -336,7 +336,18 @@ export default function HowItWorksClient() {
 
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           {/* Left Side - Animation with design-themed cards */}
-          <div className="flex-1 relative">
+          <div className="flex-1 relative flex flex-col items-center justify-center gap-6">
+            {/* Meet Me Mockup */}
+            <img
+              src="/meet-me.PNG"
+              alt="Meet Me Collection Mobile Mockup"
+              className="w-64 max-w-full rounded-2xl shadow-2xl border border-oma-beige/40 mb-4"
+              style={{ background: "#fff" }}
+            />
+            <div className="text-center text-oma-cocoa/80 text-sm mb-4">
+              Discover the latest collections on mobile.
+            </div>
+            {/* Existing animated cards */}
             <div className="relative w-80 h-80">
               {/* Design-themed animated cards */}
               <div className="absolute inset-0 transform rotate-12 animate-pulse">
