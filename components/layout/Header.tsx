@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { SearchModal } from "@/components/ui/search-modal";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -57,8 +56,6 @@ export default function Header() {
   const pathname = usePathname();
   const isHomePage = pathname === "/";
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [isCollectionsOpen, setIsCollectionsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [isNavigatingToStudio, setIsNavigatingToStudio] = useState(false);
   const [dynamicNavigationItems, setDynamicNavigationItems] = useState<
@@ -260,7 +257,16 @@ export default function Header() {
 
           <div className="hidden lg:flex lg:flex-1 lg:justify-end lg:gap-x-6">
             <button
-              onClick={() => setIsSearchOpen(true)}
+              onClick={() => {
+                // Trigger global search modal
+                document.dispatchEvent(
+                  new KeyboardEvent("keydown", {
+                    key: "k",
+                    metaKey: true,
+                    bubbles: true,
+                  })
+                );
+              }}
               className={cn(
                 "text-sm font-semibold leading-6",
                 scrolled || !isHomePage
@@ -597,7 +603,14 @@ export default function Header() {
                   <button
                     onClick={() => {
                       setMobileMenuOpen(false);
-                      setIsSearchOpen(true);
+                      // Trigger global search modal
+                      document.dispatchEvent(
+                        new KeyboardEvent("keydown", {
+                          key: "k",
+                          metaKey: true,
+                          bubbles: true,
+                        })
+                      );
                     }}
                     className="-mx-3 flex items-center gap-3 rounded-lg px-3 py-3 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 transition-colors w-full text-left"
                   >
@@ -610,9 +623,6 @@ export default function Header() {
           </div>
         </div>
       </div>
-
-      {/* Search Modal */}
-      <SearchModal open={isSearchOpen} onOpenChange={setIsSearchOpen} />
     </header>
   );
 }

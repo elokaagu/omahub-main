@@ -61,8 +61,8 @@ export default function TailoredClient() {
         {/* Background Image */}
         <div className="absolute inset-0 w-full h-full">
           <img
-            src="/omahub-perspective.PNG"
-            alt="OmaHub Perspective"
+            src="/bridal.jpg"
+            alt="Bridal Collection"
             className="w-full h-full object-cover object-center"
           />
           <div className="absolute inset-0 bg-black/40" />
