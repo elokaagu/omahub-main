@@ -216,8 +216,13 @@ export default function HowItWorksClient() {
           transform: getParallaxTransform(0.04),
         }}
       >
+        {/* Floating Graphics */}
+        <div className="absolute top-8 left-1/4 w-24 h-24 bg-gradient-to-br from-oma-plum/20 to-oma-gold/20 rounded-full blur-2xl animate-float-slow" />
+        <div className="absolute bottom-12 right-12 w-8 h-8 bg-oma-gold rounded-full animate-bounce shadow-lg" />
+        <div className="absolute top-1/2 right-0 w-4 h-4 bg-oma-plum rounded-full animate-ping" />
+        <div className="absolute bottom-1/3 left-0 w-3 h-3 bg-oma-beige rounded-full animate-pulse" />
         <div
-          className="max-w-6xl mx-auto"
+          className="max-w-6xl mx-auto relative z-10"
           style={getSectionTransform("clients")}
         >
           <div className="text-center mb-16">
@@ -363,8 +368,13 @@ export default function HowItWorksClient() {
           transform: getParallaxTransform(0.03),
         }}
       >
+        {/* Floating Graphics */}
+        <div className="absolute top-10 right-1/4 w-20 h-20 bg-gradient-to-br from-oma-gold/20 to-oma-plum/20 rounded-full blur-2xl animate-float-slow" />
+        <div className="absolute bottom-16 left-16 w-7 h-7 bg-oma-plum rounded-full animate-bounce shadow-lg" />
+        <div className="absolute top-1/3 left-0 w-4 h-4 bg-oma-gold rounded-full animate-ping" />
+        <div className="absolute bottom-1/2 right-0 w-3 h-3 bg-oma-beige rounded-full animate-pulse" />
         <div
-          className="max-w-6xl mx-auto"
+          className="max-w-6xl mx-auto relative z-10"
           style={getSectionTransform("designers")}
         >
           <div className="text-center mb-16">
@@ -426,8 +436,13 @@ export default function HowItWorksClient() {
           transform: getParallaxTransform(0.02),
         }}
       >
+        {/* Floating Graphics */}
+        <div className="absolute top-6 left-1/3 w-16 h-16 bg-gradient-to-br from-oma-plum/20 to-oma-gold/20 rounded-full blur-2xl animate-float-slow" />
+        <div className="absolute bottom-10 right-20 w-6 h-6 bg-oma-gold rounded-full animate-bounce shadow-lg" />
+        <div className="absolute top-2/3 right-0 w-3 h-3 bg-oma-plum rounded-full animate-ping" />
+        <div className="absolute bottom-1/4 left-0 w-2 h-2 bg-oma-beige rounded-full animate-pulse" />
         <div
-          className="max-w-6xl mx-auto"
+          className="max-w-6xl mx-auto relative z-10"
           style={getSectionTransform("features")}
         >
           <div className="text-center mb-16">

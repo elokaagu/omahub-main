@@ -236,6 +236,19 @@ html:has([data-studio-page]) {
   animation: shimmer 1.5s infinite;
 }
 
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+.animate-float-slow {
+  animation: float 6s ease-in-out infinite;
+}
+
 /* Custom scrollbar for webkit browsers */
 ::-webkit-scrollbar {
   width: 6px;
