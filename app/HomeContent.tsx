@@ -193,6 +193,12 @@ const mapDatabaseCategoryToHomepage = (dbCategory: string): string => {
 const getHomepageCategories = (): CategoryWithBrands[] => {
   const unifiedCategories = getCategoriesForHomepage();
 
+  // Debug: Log the categories being returned
+  console.log(
+    "🔍 Unified categories for homepage:",
+    unifiedCategories.map((c) => c.displayName)
+  );
+
   return unifiedCategories.map((category) => ({
     title: category.displayName,
     image: category.homepageImage!,
