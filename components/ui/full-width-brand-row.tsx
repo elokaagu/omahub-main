@@ -33,6 +33,8 @@ export function FullWidthBrandRow({
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
   const [isHovered, setIsHovered] = useState(false);
+  const [isAutoScrolling, setIsAutoScrolling] = useState(false);
+  const autoScrollRef = useRef<NodeJS.Timeout | null>(null);
 
   // Update scroll indicators
   const updateScrollIndicators = () => {
@@ -42,12 +44,51 @@ export function FullWidthBrandRow({
     setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 1);
   };
 
+  // Auto-scroll functionality
+  const startAutoScroll = () => {
+    if (!scrollRef.current || isHovered) return;
+
+    setIsAutoScrolling(true);
+    autoScrollRef.current = setInterval(() => {
+      if (!scrollRef.current || isHovered) return;
+
+      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+
+      // If we've reached the end, scroll back to the beginning
+      if (scrollLeft + clientWidth >= scrollWidth - 1) {
+        scrollRef.current.scrollTo({ left: 0, behavior: "smooth" });
+      } else {
+        // Scroll by one card width
+        const cardWidth = window.innerWidth < 768 ? 280 : 320;
+        scrollRef.current.scrollBy({ left: cardWidth, behavior: "smooth" });
+      }
+    }, 3000); // Scroll every 3 seconds
+  };
+
+  const stopAutoScroll = () => {
+    if (autoScrollRef.current) {
+      clearInterval(autoScrollRef.current);
+      autoScrollRef.current = null;
+    }
+    setIsAutoScrolling(false);
+  };
+
   useEffect(() => {
     updateScrollIndicators();
     const handleResize = () => updateScrollIndicators();
     window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, [brands]);
+
+    // Start auto-scroll after a delay
+    const startDelay = setTimeout(() => {
+      startAutoScroll();
+    }, 2000);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      clearTimeout(startDelay);
+      stopAutoScroll();
+    };
+  }, [brands, isHovered]);
 
   const scroll = (direction: "left" | "right") => {
     if (!scrollRef.current) return;
@@ -108,6 +149,14 @@ export function FullWidthBrandRow({
             >
               <ChevronRight className="h-5 w-5" />
             </Button>
+
+            {/* Auto-scroll indicator */}
+            {isAutoScrolling && (
+              <div className="flex items-center gap-1 text-xs text-oma-cocoa/60 animate-fade-in">
+                <div className="w-2 h-2 bg-oma-plum rounded-full animate-pulse"></div>
+                <span>Auto-scroll</span>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -115,8 +164,14 @@ export function FullWidthBrandRow({
       {/* Scrollable Brand Row */}
       <div
         className="relative group"
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
+        onMouseEnter={() => {
+          setIsHovered(true);
+          stopAutoScroll();
+        }}
+        onMouseLeave={() => {
+          setIsHovered(false);
+          startAutoScroll();
+        }}
       >
         <div
           ref={scrollRef}
@@ -133,13 +188,17 @@ export function FullWidthBrandRow({
           {brands.map((brand, index) => (
             <div
               key={brand.id}
-              className="flex-none w-[280px] md:w-[300px] lg:w-[320px] snap-start"
+              className="flex-none w-[280px] md:w-[300px] lg:w-[320px] snap-start animate-fade-in"
+              style={{
+                animationDelay: `${index * 100}ms`,
+                animationFillMode: "both",
+              }}
             >
               <NavigationLink
                 href={`/brand/${brand.id}`}
                 className="block group/card"
               >
-                <div className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                <div className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 hover:scale-[1.02]">
                   {/* Image */}
                   <div className="aspect-[4/5] relative overflow-hidden">
                     <LazyImage
