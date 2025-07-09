@@ -466,6 +466,19 @@ export default function HomeContent() {
             brandCount: c.brands.length,
           }))
         );
+
+        // Debug Streetwear specifically
+        const streetwearCategory = updatedCategories.find(
+          (c) => c.title === "Streetwear"
+        );
+        if (streetwearCategory) {
+          console.log(
+            "✅ Streetwear category found with brands:",
+            streetwearCategory.brands.map((b) => b.name)
+          );
+        } else {
+          console.log("❌ Streetwear category NOT found in updated categories");
+        }
       } catch (err) {
         console.error("Error fetching data:", err);
         setError("Failed to load content. Please try again.");
