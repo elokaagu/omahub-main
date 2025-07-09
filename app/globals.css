@@ -230,17 +230,17 @@ html:has([data-studio-page]) {
   }
 }
 
-/* Text animation classes - slower and more cinematic */
+/* Text animation classes - slightly faster */
 .animate-typewriter {
-  animation: typewriter 2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  animation: typewriter 1.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
 }
 
 .animate-text-slide-up {
-  animation: textSlideUp 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  animation: textSlideUp 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
 }
 
 .animate-text-fade-in {
-  animation: textFadeIn 1.5s ease-in-out forwards;
+  animation: textFadeIn 1.2s ease-in-out forwards;
 }
 
 @keyframes slideUp {
