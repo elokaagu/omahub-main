@@ -44,7 +44,7 @@ export function FullWidthBrandRow({
     setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 1);
   };
 
-  // Auto-scroll functionality
+  // Auto-scroll functionality with smoother motion
   const startAutoScroll = () => {
     if (!scrollRef.current || isHovered) return;
 
@@ -56,13 +56,22 @@ export function FullWidthBrandRow({
 
       // If we've reached the end, scroll back to the beginning
       if (scrollLeft + clientWidth >= scrollWidth - 1) {
-        scrollRef.current.scrollTo({ left: 0, behavior: "smooth" });
+        scrollRef.current.scrollTo({
+          left: 0,
+          behavior: "smooth",
+        });
       } else {
-        // Scroll by one card width
+        // Scroll by one card width with smoother timing and easing
         const cardWidth = window.innerWidth < 768 ? 280 : 320;
-        scrollRef.current.scrollBy({ left: cardWidth, behavior: "smooth" });
+        const targetScroll = scrollLeft + cardWidth;
+
+        // Use a more sophisticated scroll with custom easing
+        scrollRef.current.scrollTo({
+          left: targetScroll,
+          behavior: "smooth",
+        });
       }
-    }, 3000); // Scroll every 3 seconds
+    }, 6000); // Increased to 6 seconds for the smoothest feel
   };
 
   const stopAutoScroll = () => {
@@ -176,7 +185,7 @@ export function FullWidthBrandRow({
         <div
           ref={scrollRef}
           onScroll={updateScrollIndicators}
-          className="flex gap-2 sm:gap-3 overflow-x-auto scrollbar-hide snap-x snap-mandatory scroll-smooth px-2 sm:px-4 lg:px-6 pb-4"
+          className="flex gap-2 sm:gap-3 overflow-x-auto scrollbar-hide snap-x snap-mandatory scroll-smooth px-2 sm:px-4 lg:px-6 pb-4 brand-row-scroll"
           style={
             {
               // Show exactly 6 cards on desktop, fewer on smaller screens

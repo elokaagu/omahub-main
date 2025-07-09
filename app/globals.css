@@ -173,6 +173,17 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Custom smooth scrolling for brand rows */
+.brand-row-scroll {
+  scroll-behavior: smooth;
+  transition: scroll-left 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Enhanced smooth scrolling with better easing */
+.brand-row-scroll * {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 /* Disable smooth scroll in studio to prevent navigation issues */
 html:has([data-studio-page]) {
   scroll-behavior: auto;
