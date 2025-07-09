@@ -285,13 +285,10 @@ export default function HowItWorksClient() {
         <div className="absolute top-1/2 right-0 w-4 h-4 bg-oma-plum rounded-full animate-ping" />
         <div className="absolute bottom-1/3 left-0 w-3 h-3 bg-oma-beige rounded-full animate-pulse" />
         <div className="max-w-6xl mx-auto w-full flex flex-col md:flex-row items-center justify-between gap-12 relative z-10">
-          {/* Left - Animated Graphics: fashion/jewelry icons */}
+          {/* Left - Animated Graphics: big shopping basket */}
           <div className="flex-1 flex items-center justify-center">
             <div className="relative w-72 h-72 flex items-center justify-center">
-              <ShoppingBag className="absolute left-8 top-8 w-16 h-16 text-oma-plum/70 animate-float-slow" />
-              <Crown className="absolute right-8 top-16 w-14 h-14 text-oma-gold/70 animate-bounce" />
-              <Tag className="absolute left-20 bottom-8 w-12 h-12 text-oma-cocoa/60 animate-pulse" />
-              <Star className="absolute right-12 bottom-12 w-10 h-10 text-oma-plum/40 animate-float-slow" />
+              <ShoppingBag className="w-32 h-32 text-oma-plum/80 animate-float-slow" />
             </div>
           </div>
           {/* Right - Copy and CTA */}
