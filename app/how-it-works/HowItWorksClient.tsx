@@ -446,40 +446,13 @@ export default function HowItWorksClient() {
           {/* Left - Animated Graphics with designer-themed cards and image */}
           <div className="flex-1 flex flex-col items-center justify-center relative">
             <div className="relative w-80 h-80 mb-8 md:mb-0">
-              {/* Designer-themed animated cards */}
-              <div className="absolute inset-0 transform rotate-12 animate-pulse">
-                <div className="w-48 h-64 bg-gradient-to-br from-oma-plum/30 to-oma-gold/30 rounded-lg border-2 border-oma-gold/40 backdrop-blur-sm">
-                  <div className="p-4">
-                    <div className="w-full h-8 bg-oma-beige/30 rounded mb-4"></div>
-                    <div className="w-3/4 h-4 bg-oma-cocoa/20 rounded mb-2"></div>
-                    <div className="w-1/2 h-4 bg-oma-cocoa/20 rounded"></div>
-                  </div>
-                </div>
-              </div>
-              <div
-                className="absolute inset-0 transform -rotate-6 animate-pulse"
-                style={{ animationDelay: "0.5s" }}
-              >
-                <div className="w-48 h-64 bg-gradient-to-br from-oma-gold/30 to-oma-beige/30 rounded-lg border-2 border-oma-plum/40 backdrop-blur-sm">
-                  <div className="p-4">
-                    <div className="w-full h-8 bg-oma-beige/30 rounded mb-4"></div>
-                    <div className="w-2/3 h-4 bg-oma-cocoa/20 rounded mb-2"></div>
-                    <div className="w-3/4 h-4 bg-oma-cocoa/20 rounded"></div>
-                  </div>
-                </div>
-              </div>
-              <div
-                className="absolute inset-0 transform rotate-3 animate-pulse"
-                style={{ animationDelay: "1s" }}
-              >
-                <div className="w-48 h-64 bg-gradient-to-br from-oma-beige/30 to-oma-plum/30 rounded-lg border-2 border-oma-beige/40 backdrop-blur-sm">
-                  <div className="p-4">
-                    <div className="w-full h-8 bg-oma-gold/30 rounded mb-4"></div>
-                    <div className="w-4/5 h-4 bg-oma-cocoa/20 rounded mb-2"></div>
-                    <div className="w-1/3 h-4 bg-oma-cocoa/20 rounded"></div>
-                  </div>
-                </div>
-              </div>
+              {/* OmaHub Perspective Image */}
+              <img
+                src="/omahub-perspective.PNG"
+                alt="OmaHub Perspective Mockup"
+                className="w-full h-full rounded-2xl shadow-2xl border-4 border-oma-beige/60 bg-white/80 object-cover"
+                style={{ maxWidth: "100%", height: "auto" }}
+              />
               {/* Designer-themed floating elements */}
               <div className="absolute top-4 right-4 w-6 h-6 bg-oma-gold rounded-full animate-bounce shadow-lg"></div>
               <div
@@ -488,13 +461,6 @@ export default function HowItWorksClient() {
               ></div>
               <div className="absolute top-1/2 left-0 w-3 h-3 bg-oma-beige rounded-full animate-ping"></div>
             </div>
-            {/* OmaHub Perspective Image */}
-            <img
-              src="/omahub-perspective.PNG"
-              alt="OmaHub Perspective Mockup"
-              className="mt-8 md:mt-12 w-64 md:w-80 rounded-2xl shadow-2xl border-4 border-oma-beige/60 bg-white/80 object-cover"
-              style={{ maxWidth: "100%", height: "auto" }}
-            />
           </div>
           {/* Right - Copy and CTA */}
           <div className="flex-1 pl-0 md:pl-12 text-oma-cocoa">
@@ -651,50 +617,28 @@ export default function HowItWorksClient() {
           {/* Right - Animated Graphics with FAQ-themed cards */}
           <div className="flex-1 flex items-center justify-center">
             <div className="relative w-80 h-80">
-              {/* FAQ-themed animated cards */}
-              <div className="absolute inset-0 transform rotate-12 animate-pulse">
-                <div className="w-48 h-64 bg-gradient-to-br from-oma-plum/30 to-oma-gold/30 rounded-lg border-2 border-oma-gold/40 backdrop-blur-sm">
-                  <div className="p-4">
-                    <div className="w-full h-8 bg-oma-beige/30 rounded mb-4"></div>
-                    <div className="w-3/4 h-4 bg-oma-cocoa/20 rounded mb-2"></div>
-                    <div className="w-1/2 h-4 bg-oma-cocoa/20 rounded"></div>
+              {/* FAQ-themed question mark graphic */}
+              <div className="w-full h-full flex items-center justify-center">
+                <div className="relative">
+                  {/* Large question mark */}
+                  <div className="w-48 h-64 bg-gradient-to-br from-oma-plum/20 to-oma-gold/20 rounded-2xl border-2 border-oma-gold/40 backdrop-blur-sm flex items-center justify-center">
+                    <svg
+                      className="w-24 h-24 text-oma-plum"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z" />
+                    </svg>
                   </div>
+                  {/* Decorative elements */}
+                  <div className="absolute -top-2 -right-2 w-8 h-8 bg-oma-gold rounded-full animate-bounce shadow-lg"></div>
+                  <div
+                    className="absolute -bottom-2 -left-2 w-6 h-6 bg-oma-plum rounded-full animate-bounce shadow-lg"
+                    style={{ animationDelay: "0.3s" }}
+                  ></div>
+                  <div className="absolute top-1/2 -left-4 w-4 h-4 bg-oma-beige rounded-full animate-ping"></div>
                 </div>
               </div>
-
-              <div
-                className="absolute inset-0 transform -rotate-6 animate-pulse"
-                style={{ animationDelay: "0.5s" }}
-              >
-                <div className="w-48 h-64 bg-gradient-to-br from-oma-gold/30 to-oma-beige/30 rounded-lg border-2 border-oma-plum/40 backdrop-blur-sm">
-                  <div className="p-4">
-                    <div className="w-full h-8 bg-oma-beige/30 rounded mb-4"></div>
-                    <div className="w-2/3 h-4 bg-oma-cocoa/20 rounded mb-2"></div>
-                    <div className="w-3/4 h-4 bg-oma-cocoa/20 rounded"></div>
-                  </div>
-                </div>
-              </div>
-
-              <div
-                className="absolute inset-0 transform rotate-3 animate-pulse"
-                style={{ animationDelay: "1s" }}
-              >
-                <div className="w-48 h-64 bg-gradient-to-br from-oma-beige/30 to-oma-plum/30 rounded-lg border-2 border-oma-beige/40 backdrop-blur-sm">
-                  <div className="p-4">
-                    <div className="w-full h-8 bg-oma-gold/30 rounded mb-4"></div>
-                    <div className="w-4/5 h-4 bg-oma-cocoa/20 rounded mb-2"></div>
-                    <div className="w-1/3 h-4 bg-oma-cocoa/20 rounded"></div>
-                  </div>
-                </div>
-              </div>
-
-              {/* FAQ-themed floating elements */}
-              <div className="absolute top-4 right-4 w-6 h-6 bg-oma-gold rounded-full animate-bounce shadow-lg"></div>
-              <div
-                className="absolute bottom-8 left-8 w-4 h-4 bg-oma-plum rounded-full animate-bounce shadow-lg"
-                style={{ animationDelay: "0.3s" }}
-              ></div>
-              <div className="absolute top-1/2 left-0 w-3 h-3 bg-oma-beige rounded-full animate-ping"></div>
             </div>
           </div>
           {/* Left - Copy and CTA */}
@@ -751,50 +695,30 @@ export default function HowItWorksClient() {
           {/* Left - Animated Graphics with CTA-themed cards */}
           <div className="flex-1 flex items-center justify-center">
             <div className="relative w-80 h-80">
-              {/* CTA-themed animated cards */}
-              <div className="absolute inset-0 transform rotate-12 animate-pulse">
-                <div className="w-48 h-64 bg-gradient-to-br from-oma-gold/30 to-oma-plum/30 rounded-lg border-2 border-oma-plum/40 backdrop-blur-sm">
-                  <div className="p-4">
-                    <div className="w-full h-8 bg-oma-beige/30 rounded mb-4"></div>
-                    <div className="w-3/4 h-4 bg-oma-cocoa/20 rounded mb-2"></div>
-                    <div className="w-1/2 h-4 bg-oma-cocoa/20 rounded"></div>
+              {/* Ready to Get Started graphic */}
+              <div className="w-full h-full flex items-center justify-center">
+                <div className="relative">
+                  {/* Rocket/launch graphic */}
+                  <div className="w-48 h-64 bg-gradient-to-br from-oma-gold/20 to-oma-plum/20 rounded-2xl border-2 border-oma-plum/40 backdrop-blur-sm flex items-center justify-center">
+                    <svg
+                      className="w-24 h-24 text-oma-plum"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M12 2L2 7v10c0 5.55 3.84 9.74 9 11 5.16-1.26 9-5.45 9-11V7l-10-5zM12 22c-4.75-1.1-8-4.86-8-9V8.3l8-3.2 8 3.2V13c0 4.14-3.25 7.9-8 9z" />
+                      <path d="M12 6l-6 2.4V13c0 3.64 2.43 6.97 6 8.4 3.57-1.43 6-4.76 6-8.4V8.4L12 6z" />
+                      <path d="M12 10l-3 1.2V15c0 2.14 1.43 4.1 3 4.8 1.57-.7 3-2.66 3-4.8v-3.8L12 10z" />
+                    </svg>
                   </div>
+                  {/* Decorative elements */}
+                  <div className="absolute -top-2 -right-2 w-8 h-8 bg-oma-plum rounded-full animate-bounce shadow-lg"></div>
+                  <div
+                    className="absolute -bottom-2 -left-2 w-6 h-6 bg-oma-gold rounded-full animate-bounce shadow-lg"
+                    style={{ animationDelay: "0.3s" }}
+                  ></div>
+                  <div className="absolute top-1/2 -left-4 w-4 h-4 bg-oma-beige rounded-full animate-ping"></div>
                 </div>
               </div>
-
-              <div
-                className="absolute inset-0 transform -rotate-6 animate-pulse"
-                style={{ animationDelay: "0.5s" }}
-              >
-                <div className="w-48 h-64 bg-gradient-to-br from-oma-plum/30 to-oma-beige/30 rounded-lg border-2 border-oma-gold/40 backdrop-blur-sm">
-                  <div className="p-4">
-                    <div className="w-full h-8 bg-oma-beige/30 rounded mb-4"></div>
-                    <div className="w-2/3 h-4 bg-oma-cocoa/20 rounded mb-2"></div>
-                    <div className="w-3/4 h-4 bg-oma-cocoa/20 rounded"></div>
-                  </div>
-                </div>
-              </div>
-
-              <div
-                className="absolute inset-0 transform rotate-3 animate-pulse"
-                style={{ animationDelay: "1s" }}
-              >
-                <div className="w-48 h-64 bg-gradient-to-br from-oma-beige/30 to-oma-gold/30 rounded-lg border-2 border-oma-beige/40 backdrop-blur-sm">
-                  <div className="p-4">
-                    <div className="w-full h-8 bg-oma-gold/30 rounded mb-4"></div>
-                    <div className="w-4/5 h-4 bg-oma-cocoa/20 rounded mb-2"></div>
-                    <div className="w-1/3 h-4 bg-oma-cocoa/20 rounded"></div>
-                  </div>
-                </div>
-              </div>
-
-              {/* CTA-themed floating elements */}
-              <div className="absolute top-4 right-4 w-6 h-6 bg-oma-plum rounded-full animate-bounce shadow-lg"></div>
-              <div
-                className="absolute bottom-8 left-8 w-4 h-4 bg-oma-gold rounded-full animate-bounce shadow-lg"
-                style={{ animationDelay: "0.3s" }}
-              ></div>
-              <div className="absolute top-1/2 left-0 w-3 h-3 bg-oma-beige rounded-full animate-ping"></div>
             </div>
           </div>
           {/* Right - Copy and CTA */}
