@@ -90,6 +90,39 @@ export default function HowItWorksClient() {
     return `translateY(${parallaxOffset}px)`;
   };
 
+  const faqList = [
+    {
+      id: "what-is-omahub",
+      question: "What is OmaHub?",
+      answer:
+        "OmaHub is a platform that connects fashion enthusiasts with talented African designers. We showcase unique, high-quality pieces and facilitate direct connections between clients and designers.",
+    },
+    {
+      id: "how-to-order",
+      question: "How do I place an order?",
+      answer:
+        "Browse our designer profiles and collections, then contact designers directly through our platform. You can discuss custom pieces, sizing, pricing, and delivery details.",
+    },
+    {
+      id: "custom-pieces",
+      question: "Can I request custom pieces?",
+      answer:
+        "Yes! Many of our designers offer custom design services. You can discuss your vision directly with them and work together to create something unique.",
+    },
+    {
+      id: "shipping",
+      question: "How does shipping work?",
+      answer:
+        "Shipping is handled directly by each designer. When you contact a designer, they'll provide you with shipping options and costs for your location.",
+    },
+    {
+      id: "join-designer",
+      question: "How can I join as a designer?",
+      answer:
+        "Click 'Join as Designer' and fill out our application form. We'll review your portfolio and get back to you within 5-7 business days.",
+    },
+  ];
+
   return (
     <div className="w-full bg-gradient-to-b from-oma-beige/30 to-white min-h-screen">
       {/* Hero Section */}
@@ -178,9 +211,9 @@ export default function HowItWorksClient() {
       <section
         ref={clientsRef}
         id="clients"
-        className="py-24 px-6 relative bg-white"
+        className="py-24 px-6 bg-gradient-to-br from-oma-beige/80 via-white/90 to-oma-gold/10 relative"
         style={{
-          transform: getParallaxTransform(0.05), // Reduced from 0.2
+          transform: getParallaxTransform(0.04),
         }}
       >
         <div
@@ -188,35 +221,35 @@ export default function HowItWorksClient() {
           style={getSectionTransform("clients")}
         >
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-canela text-black mb-6">
+            <h2 className="text-4xl md:text-5xl font-canela text-oma-cocoa mb-6">
               For Clients
             </h2>
-            <p className="text-xl text-black/70 max-w-2xl mx-auto">
-              Discover and connect with Africa's most talented fashion designers
+            <p className="text-xl text-oma-cocoa/80 max-w-2xl mx-auto">
+              Discover, connect, and create with Africa's best designers
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               {
-                title: "Discover Designers",
+                title: "Browse Designers",
                 description:
-                  "Browse through our curated collection of African fashion designers and their unique styles.",
-              },
-              {
-                title: "Shop Collections",
-                description:
-                  "Explore ready-to-wear pieces and custom designs from your favorite designers.",
+                  "Explore a curated selection of top African designers and their collections.",
               },
               {
                 title: "Connect Directly",
                 description:
-                  "Message designers directly to discuss custom pieces, sizing, and special requests.",
+                  "Message designers, discuss your vision, and get personalized recommendations.",
+              },
+              {
+                title: "Order with Confidence",
+                description:
+                  "Enjoy secure payments, transparent pricing, and reliable delivery.",
               },
             ].map((step, index) => (
               <div
                 key={index}
-                className="bg-oma-beige/20 backdrop-blur-sm rounded-xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border border-oma-plum/20"
+                className="bg-white/70 backdrop-blur-sm rounded-xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border border-oma-gold/20"
                 style={{
                   transform: `translateY(${visibleSections.has("clients") ? 0 : 30}px)`,
                   opacity: visibleSections.has("clients") ? 1 : 0,
@@ -229,7 +262,7 @@ export default function HowItWorksClient() {
                 <p className="text-oma-cocoa/80 text-center leading-relaxed">
                   {step.description}
                 </p>
-                <div className="w-full h-1 bg-gradient-to-r from-oma-plum to-oma-gold mt-6" />
+                <div className="w-full h-1 bg-gradient-to-r from-oma-gold to-oma-plum mt-6" />
               </div>
             ))}
           </div>
@@ -325,9 +358,9 @@ export default function HowItWorksClient() {
       <section
         ref={designersRef}
         id="designers"
-        className="py-24 px-6 bg-gradient-to-br from-oma-beige/20 to-white/50 relative"
+        className="py-24 px-6 bg-gradient-to-br from-oma-beige/80 via-white/90 to-oma-gold/10 relative"
         style={{
-          transform: getParallaxTransform(0.03), // Reduced from 0.15
+          transform: getParallaxTransform(0.03),
         }}
       >
         <div
@@ -335,10 +368,10 @@ export default function HowItWorksClient() {
           style={getSectionTransform("designers")}
         >
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-canela text-black mb-6">
+            <h2 className="text-4xl md:text-5xl font-canela text-oma-cocoa mb-6">
               For Designers
             </h2>
-            <p className="text-xl text-black/70 max-w-2xl mx-auto">
+            <p className="text-xl text-oma-cocoa/80 max-w-2xl mx-auto">
               Showcase your talent and connect with fashion enthusiasts
               worldwide
             </p>
@@ -364,7 +397,7 @@ export default function HowItWorksClient() {
             ].map((step, index) => (
               <div
                 key={index}
-                className="bg-oma-beige/20 backdrop-blur-sm rounded-xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border border-oma-gold/20"
+                className="bg-white/70 backdrop-blur-sm rounded-xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border border-oma-gold/20"
                 style={{
                   transform: `translateY(${visibleSections.has("designers") ? 0 : 30}px)`,
                   opacity: visibleSections.has("designers") ? 1 : 0,
@@ -388,9 +421,9 @@ export default function HowItWorksClient() {
       <section
         ref={featuresRef}
         id="features"
-        className="py-24 px-6 relative bg-gradient-to-br from-oma-plum/5 to-oma-gold/5"
+        className="py-24 px-6 bg-gradient-to-br from-oma-beige/80 via-white/90 to-oma-gold/10 relative"
         style={{
-          transform: getParallaxTransform(0.02), // Reduced from 0.12
+          transform: getParallaxTransform(0.02),
         }}
       >
         <div
@@ -398,10 +431,10 @@ export default function HowItWorksClient() {
           style={getSectionTransform("features")}
         >
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-canela text-black mb-6">
+            <h2 className="text-4xl md:text-5xl font-canela text-oma-cocoa mb-6">
               A Platform You Can Trust
             </h2>
-            <p className="text-xl text-black/70 max-w-2xl mx-auto">
+            <p className="text-xl text-oma-cocoa/80 max-w-2xl mx-auto">
               Built with both designers and clients in mind, ensuring quality
               and transparency
             </p>
@@ -428,7 +461,7 @@ export default function HowItWorksClient() {
             ].map((feature, index) => (
               <div
                 key={index}
-                className="bg-oma-beige/20 backdrop-blur-sm rounded-lg p-6 text-center hover:shadow-lg transition-all duration-300 border border-oma-plum/20"
+                className="bg-white/70 backdrop-blur-sm rounded-lg p-6 text-center hover:shadow-lg transition-all duration-300 border border-oma-plum/20"
                 style={{
                   transform: `translateY(${visibleSections.has("features") ? 0 : 20}px)`,
                   opacity: visibleSections.has("features") ? 1 : 0,
@@ -451,61 +484,30 @@ export default function HowItWorksClient() {
       <section
         ref={faqRef}
         id="faq"
-        className="py-24 px-6 relative bg-white"
+        className="py-24 px-6 bg-gradient-to-br from-oma-beige/80 via-white/90 to-oma-gold/10 relative"
         style={{
-          transform: getParallaxTransform(0.01), // Reduced from 0.1
+          transform: getParallaxTransform(0.01),
         }}
       >
         <div className="max-w-4xl mx-auto" style={getSectionTransform("faq")}>
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-canela text-black mb-6">
+            <h2 className="text-4xl md:text-5xl font-canela text-oma-cocoa mb-6">
               Frequently Asked Questions
             </h2>
-            <p className="text-xl text-black/70">
+            <p className="text-xl text-oma-cocoa/80">
               Everything you need to know about OmaHub
             </p>
           </div>
 
           <div className="space-y-4">
-            {[
-              {
-                id: "what-is-omahub",
-                question: "What is OmaHub?",
-                answer:
-                  "OmaHub is a platform that connects fashion enthusiasts with talented African designers. We showcase unique, high-quality pieces and facilitate direct connections between clients and designers.",
-              },
-              {
-                id: "how-to-order",
-                question: "How do I place an order?",
-                answer:
-                  "Browse our designer profiles and collections, then contact designers directly through our platform. You can discuss custom pieces, sizing, pricing, and delivery details.",
-              },
-              {
-                id: "custom-pieces",
-                question: "Can I request custom pieces?",
-                answer:
-                  "Yes! Many of our designers offer custom design services. You can discuss your vision directly with them and work together to create something unique.",
-              },
-              {
-                id: "shipping",
-                question: "How does shipping work?",
-                answer:
-                  "Shipping is handled directly by each designer. When you contact a designer, they'll provide you with shipping options and costs for your location.",
-              },
-              {
-                id: "join-designer",
-                question: "How can I join as a designer?",
-                answer:
-                  "Click 'Join as Designer' and fill out our application form. We'll review your portfolio and get back to you within 5-7 business days.",
-              },
-            ].map((faq, index) => (
+            {faqList.map((faq, index) => (
               <Collapsible
                 key={faq.id}
                 open={openFaq === faq.id}
                 onOpenChange={() => toggleFaq(faq.id)}
               >
                 <CollapsibleTrigger
-                  className="w-full bg-white/80 backdrop-blur-sm rounded-lg p-6 text-left hover:bg-white/90 transition-all duration-200 shadow-sm hover:shadow-md"
+                  className="w-full bg-white/80 backdrop-blur-sm rounded-lg p-6 text-left hover:bg-white/90 transition-all duration-200 shadow-sm hover:shadow-md border border-oma-gold/20"
                   style={{
                     transform: `translateY(${visibleSections.has("faq") ? 0 : 20}px)`,
                     opacity: visibleSections.has("faq") ? 1 : 0,
@@ -514,7 +516,7 @@ export default function HowItWorksClient() {
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <h3 className="text-lg font-semibold text-black">
+                      <h3 className="text-lg font-semibold text-oma-cocoa">
                         {faq.question}
                       </h3>
                     </div>
@@ -525,7 +527,7 @@ export default function HowItWorksClient() {
                     />
                   </div>
                 </CollapsibleTrigger>
-                <CollapsibleContent className="px-6 pb-6 text-black/70 leading-relaxed">
+                <CollapsibleContent className="px-6 pb-6 text-oma-cocoa/80 leading-relaxed">
                   <div className="mt-2">{faq.answer}</div>
                 </CollapsibleContent>
               </Collapsible>
@@ -538,9 +540,9 @@ export default function HowItWorksClient() {
       <section
         ref={ctaRef}
         id="cta"
-        className="py-24 px-6 bg-gradient-to-br from-oma-plum/10 to-oma-beige/20 relative overflow-hidden"
+        className="py-24 px-6 bg-gradient-to-br from-oma-beige/80 via-white/90 to-oma-gold/10 relative overflow-hidden"
         style={{
-          transform: getParallaxTransform(0.005), // Reduced from 0.05
+          transform: getParallaxTransform(0.005),
         }}
       >
         {/* Background Graphics */}
@@ -553,10 +555,10 @@ export default function HowItWorksClient() {
           className="max-w-4xl mx-auto text-center relative z-10"
           style={getSectionTransform("cta")}
         >
-          <h2 className="text-4xl md:text-5xl font-canela text-black mb-6">
+          <h2 className="text-4xl md:text-5xl font-canela text-oma-cocoa mb-6">
             Ready to Get Started?
           </h2>
-          <p className="text-xl text-black/70 mb-8 max-w-2xl mx-auto">
+          <p className="text-xl text-oma-cocoa/80 mb-8 max-w-2xl mx-auto">
             Join thousands of fashion lovers discovering Africa's most talented
             designers
           </p>
