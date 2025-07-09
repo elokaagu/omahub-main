@@ -710,7 +710,7 @@ export default function HowItWorksClient() {
                 size="lg"
                 className="bg-oma-plum hover:bg-oma-plum/90 text-white px-8 py-4 text-lg font-semibold group border-2 border-oma-plum hover:border-oma-gold transition-all duration-300"
               >
-                <Link href="#faq-list" className="flex items-center gap-3">
+                <Link href="/faq" className="flex items-center gap-3">
                   Read All FAQs
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </Link>
