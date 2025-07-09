@@ -235,55 +235,52 @@ export default function HowItWorksClient() {
         <div className="absolute bottom-12 right-12 w-8 h-8 bg-oma-gold rounded-full animate-bounce shadow-lg" />
         <div className="absolute top-1/2 right-0 w-4 h-4 bg-oma-plum rounded-full animate-ping" />
         <div className="absolute bottom-1/3 left-0 w-3 h-3 bg-oma-beige rounded-full animate-pulse" />
-        <div
-          className="max-w-6xl mx-auto relative z-10"
-          style={getSectionTransform("clients")}
-        >
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-canela text-oma-cocoa mb-6">
+        <div className="max-w-6xl mx-auto w-full flex flex-col md:flex-row items-center justify-between gap-12 relative z-10">
+          {/* Left - Animated Graphics */}
+          <div className="flex-1 flex items-center justify-center">
+            <div className="relative w-72 h-72">
+              <div className="absolute inset-0 transform rotate-6 animate-pulse">
+                <div className="w-40 h-56 bg-gradient-to-br from-oma-plum/20 to-oma-gold/20 rounded-lg border-2 border-oma-gold/30 backdrop-blur-sm"></div>
+              </div>
+              <div
+                className="absolute inset-0 transform -rotate-3 animate-pulse"
+                style={{ animationDelay: "0.5s" }}
+              >
+                <div className="w-40 h-56 bg-gradient-to-br from-oma-gold/20 to-oma-beige/20 rounded-lg border-2 border-oma-plum/30 backdrop-blur-sm"></div>
+              </div>
+              <div
+                className="absolute inset-0 transform rotate-2 animate-pulse"
+                style={{ animationDelay: "1s" }}
+              >
+                <div className="w-40 h-56 bg-gradient-to-br from-oma-beige/20 to-oma-plum/20 rounded-lg border-2 border-oma-beige/30 backdrop-blur-sm"></div>
+              </div>
+              <div className="absolute top-4 right-4 w-5 h-5 bg-oma-gold rounded-full animate-bounce shadow-lg"></div>
+              <div
+                className="absolute bottom-8 left-8 w-3 h-3 bg-oma-plum rounded-full animate-bounce shadow-lg"
+                style={{ animationDelay: "0.3s" }}
+              ></div>
+              <div className="absolute top-1/2 left-0 w-2 h-2 bg-oma-beige rounded-full animate-ping"></div>
+            </div>
+          </div>
+          {/* Right - Copy and CTA */}
+          <div className="flex-1 pl-0 md:pl-12 text-oma-cocoa">
+            <h2 className="text-4xl md:text-5xl font-canela mb-6 leading-tight">
               For Clients
             </h2>
-            <p className="text-xl text-oma-cocoa/80 max-w-2xl mx-auto">
-              Discover, connect, and create with Africa's best designers
+            <p className="text-xl text-oma-cocoa/80 mb-8 leading-relaxed max-w-xl">
+              Discover and connect with Africa’s most talented designers. Enjoy
+              a seamless, curated experience from inspiration to delivery.
             </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              {
-                title: "Browse Designers",
-                description:
-                  "Explore a curated selection of top African designers and their collections.",
-              },
-              {
-                title: "Connect Directly",
-                description:
-                  "Message designers, discuss your vision, and get personalized recommendations.",
-              },
-              {
-                title: "Order with Confidence",
-                description:
-                  "Enjoy secure payments, transparent pricing, and reliable delivery.",
-              },
-            ].map((step, index) => (
-              <div
-                key={index}
-                className="bg-white/70 backdrop-blur-sm rounded-xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border border-oma-gold/20"
-                style={{
-                  transform: `translateY(${visibleSections.has("clients") ? 0 : 30}px)`,
-                  opacity: visibleSections.has("clients") ? 1 : 0,
-                  transition: `all 0.8s cubic-bezier(0.4, 0, 0.2, 1) ${index * 0.1}s`,
-                }}
-              >
-                <h3 className="text-xl font-semibold text-oma-cocoa mb-4 text-center">
-                  {step.title}
-                </h3>
-                <p className="text-oma-cocoa/80 text-center leading-relaxed">
-                  {step.description}
-                </p>
-                <div className="w-full h-1 bg-gradient-to-r from-oma-gold to-oma-plum mt-6" />
-              </div>
-            ))}
+            <Button
+              asChild
+              size="lg"
+              className="bg-oma-plum hover:bg-oma-plum/90 text-white px-8 py-4 text-lg font-semibold group border-2 border-oma-plum hover:border-oma-gold transition-all duration-300"
+            >
+              <Link href="/directory" className="flex items-center gap-3">
+                Explore Designers
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </Button>
           </div>
         </div>
       </section>
@@ -392,56 +389,53 @@ export default function HowItWorksClient() {
         <div className="absolute bottom-16 left-16 w-7 h-7 bg-oma-plum rounded-full animate-bounce shadow-lg" />
         <div className="absolute top-1/3 left-0 w-4 h-4 bg-oma-gold rounded-full animate-ping" />
         <div className="absolute bottom-1/2 right-0 w-3 h-3 bg-oma-beige rounded-full animate-pulse" />
-        <div
-          className="max-w-6xl mx-auto relative z-10"
-          style={getSectionTransform("designers")}
-        >
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-canela text-oma-cocoa mb-6">
+        <div className="max-w-6xl mx-auto w-full flex flex-col md:flex-row items-center justify-between gap-12 relative z-10">
+          {/* Left - Animated Graphics */}
+          <div className="flex-1 flex items-center justify-center">
+            <div className="relative w-72 h-72">
+              <div className="absolute inset-0 transform rotate-6 animate-pulse">
+                <div className="w-40 h-56 bg-gradient-to-br from-oma-plum/20 to-oma-gold/20 rounded-lg border-2 border-oma-gold/30 backdrop-blur-sm"></div>
+              </div>
+              <div
+                className="absolute inset-0 transform -rotate-3 animate-pulse"
+                style={{ animationDelay: "0.5s" }}
+              >
+                <div className="w-40 h-56 bg-gradient-to-br from-oma-gold/20 to-oma-beige/20 rounded-lg border-2 border-oma-plum/30 backdrop-blur-sm"></div>
+              </div>
+              <div
+                className="absolute inset-0 transform rotate-2 animate-pulse"
+                style={{ animationDelay: "1s" }}
+              >
+                <div className="w-40 h-56 bg-gradient-to-br from-oma-beige/20 to-oma-plum/20 rounded-lg border-2 border-oma-beige/30 backdrop-blur-sm"></div>
+              </div>
+              <div className="absolute top-4 right-4 w-5 h-5 bg-oma-gold rounded-full animate-bounce shadow-lg"></div>
+              <div
+                className="absolute bottom-8 left-8 w-3 h-3 bg-oma-plum rounded-full animate-bounce shadow-lg"
+                style={{ animationDelay: "0.3s" }}
+              ></div>
+              <div className="absolute top-1/2 left-0 w-2 h-2 bg-oma-beige rounded-full animate-ping"></div>
+            </div>
+          </div>
+          {/* Right - Copy and CTA */}
+          <div className="flex-1 pl-0 md:pl-12 text-oma-cocoa">
+            <h2 className="text-4xl md:text-5xl font-canela mb-6 leading-tight">
               For Designers
             </h2>
-            <p className="text-xl text-oma-cocoa/80 max-w-2xl mx-auto">
-              Showcase your talent and connect with fashion enthusiasts
-              worldwide
+            <p className="text-xl text-oma-cocoa/80 mb-8 leading-relaxed max-w-xl">
+              Share your vision and collections with a global audience. Build
+              your brand, connect with clients, and grow your creative business
+              on OmaHub.
             </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              {
-                title: "Create Your Profile",
-                description:
-                  "Build a stunning profile that showcases your unique style and design philosophy.",
-              },
-              {
-                title: "Upload Collections",
-                description:
-                  "Share your latest collections and individual pieces with our global community.",
-              },
-              {
-                title: "Connect with Clients",
-                description:
-                  "Receive inquiries, manage orders, and build lasting relationships with your customers.",
-              },
-            ].map((step, index) => (
-              <div
-                key={index}
-                className="bg-white/70 backdrop-blur-sm rounded-xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border border-oma-gold/20"
-                style={{
-                  transform: `translateY(${visibleSections.has("designers") ? 0 : 30}px)`,
-                  opacity: visibleSections.has("designers") ? 1 : 0,
-                  transition: `all 0.8s cubic-bezier(0.4, 0, 0.2, 1) ${index * 0.1}s`,
-                }}
-              >
-                <h3 className="text-xl font-semibold text-oma-cocoa mb-4 text-center">
-                  {step.title}
-                </h3>
-                <p className="text-oma-cocoa/80 text-center leading-relaxed">
-                  {step.description}
-                </p>
-                <div className="w-full h-1 bg-gradient-to-r from-oma-gold to-oma-plum mt-6" />
-              </div>
-            ))}
+            <Button
+              asChild
+              size="lg"
+              className="bg-oma-plum hover:bg-oma-plum/90 text-white px-8 py-4 text-lg font-semibold group border-2 border-oma-plum hover:border-oma-gold transition-all duration-300"
+            >
+              <Link href="/join" className="flex items-center gap-3">
+                Apply as Designer
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </Button>
           </div>
         </div>
       </section>
@@ -465,56 +459,52 @@ export default function HowItWorksClient() {
         <div className="absolute bottom-10 right-20 w-6 h-6 bg-oma-gold rounded-full animate-bounce shadow-lg" />
         <div className="absolute top-2/3 right-0 w-3 h-3 bg-oma-plum rounded-full animate-ping" />
         <div className="absolute bottom-1/4 left-0 w-2 h-2 bg-oma-beige rounded-full animate-pulse" />
-        <div
-          className="max-w-6xl mx-auto relative z-10"
-          style={getSectionTransform("features")}
-        >
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-canela text-oma-cocoa mb-6">
+        <div className="max-w-6xl mx-auto w-full flex flex-col md:flex-row items-center justify-between gap-12 relative z-10">
+          {/* Left - Animated Graphics */}
+          <div className="flex-1 flex items-center justify-center">
+            <div className="relative w-72 h-72">
+              <div className="absolute inset-0 transform rotate-6 animate-pulse">
+                <div className="w-40 h-56 bg-gradient-to-br from-oma-plum/20 to-oma-gold/20 rounded-lg border-2 border-oma-gold/30 backdrop-blur-sm"></div>
+              </div>
+              <div
+                className="absolute inset-0 transform -rotate-3 animate-pulse"
+                style={{ animationDelay: "0.5s" }}
+              >
+                <div className="w-40 h-56 bg-gradient-to-br from-oma-gold/20 to-oma-beige/20 rounded-lg border-2 border-oma-plum/30 backdrop-blur-sm"></div>
+              </div>
+              <div
+                className="absolute inset-0 transform rotate-2 animate-pulse"
+                style={{ animationDelay: "1s" }}
+              >
+                <div className="w-40 h-56 bg-gradient-to-br from-oma-beige/20 to-oma-plum/20 rounded-lg border-2 border-oma-beige/30 backdrop-blur-sm"></div>
+              </div>
+              <div className="absolute top-4 right-4 w-5 h-5 bg-oma-gold rounded-full animate-bounce shadow-lg"></div>
+              <div
+                className="absolute bottom-8 left-8 w-3 h-3 bg-oma-plum rounded-full animate-bounce shadow-lg"
+                style={{ animationDelay: "0.3s" }}
+              ></div>
+              <div className="absolute top-1/2 left-0 w-2 h-2 bg-oma-beige rounded-full animate-ping"></div>
+            </div>
+          </div>
+          {/* Right - Copy and CTA */}
+          <div className="flex-1 pl-0 md:pl-12 text-oma-cocoa">
+            <h2 className="text-4xl md:text-5xl font-canela mb-6 leading-tight">
               A Platform You Can Trust
             </h2>
-            <p className="text-xl text-oma-cocoa/80 max-w-2xl mx-auto">
-              Built with both designers and clients in mind, ensuring quality
-              and transparency
+            <p className="text-xl text-oma-cocoa/80 mb-8 leading-relaxed max-w-xl">
+              Built for both designers and clients, OmaHub ensures quality,
+              transparency, and a seamless experience from start to finish.
             </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              {
-                title: "Verified Designers",
-                description: "All designers are carefully vetted and verified",
-              },
-              {
-                title: "Transparent Process",
-                description: "Clear communication and pricing throughout",
-              },
-              {
-                title: "Quality Assured",
-                description: "High-quality craftsmanship guaranteed",
-              },
-              {
-                title: "Timely Delivery",
-                description: "Reliable timelines and delivery tracking",
-              },
-            ].map((feature, index) => (
-              <div
-                key={index}
-                className="bg-white/70 backdrop-blur-sm rounded-lg p-6 text-center hover:shadow-lg transition-all duration-300 border border-oma-plum/20"
-                style={{
-                  transform: `translateY(${visibleSections.has("features") ? 0 : 20}px)`,
-                  opacity: visibleSections.has("features") ? 1 : 0,
-                  transition: `all 0.6s cubic-bezier(0.4, 0, 0.2, 1) ${index * 0.1}s`,
-                }}
-              >
-                <h3 className="text-lg font-semibold text-oma-cocoa mb-2">
-                  {feature.title}
-                </h3>
-                <p className="text-oma-cocoa/80 text-sm">
-                  {feature.description}
-                </p>
-              </div>
-            ))}
+            <Button
+              asChild
+              size="lg"
+              className="bg-oma-plum hover:bg-oma-plum/90 text-white px-8 py-4 text-lg font-semibold group border-2 border-oma-plum hover:border-oma-gold transition-all duration-300"
+            >
+              <Link href="/about" className="flex items-center gap-3">
+                Why OmaHub?
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </Button>
           </div>
         </div>
       </section>
@@ -533,49 +523,57 @@ export default function HowItWorksClient() {
         <div className="absolute top-24 right-8 w-12 h-12 border-r-4 border-t-4 border-oma-gold/80"></div>
         <div className="absolute bottom-8 left-8 w-12 h-12 border-l-4 border-b-4 border-oma-gold/80"></div>
         <div className="absolute bottom-8 right-8 w-12 h-12 border-r-4 border-b-4 border-oma-gold/80"></div>
-        <div className="max-w-4xl mx-auto" style={getSectionTransform("faq")}>
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-canela text-oma-cocoa mb-6">
+        {/* Floating Graphics */}
+        <div className="absolute top-10 left-1/4 w-20 h-20 bg-gradient-to-br from-oma-gold/20 to-oma-plum/20 rounded-full blur-2xl animate-float-slow" />
+        <div className="absolute bottom-16 right-16 w-7 h-7 bg-oma-plum rounded-full animate-bounce shadow-lg" />
+        <div className="absolute top-1/3 right-0 w-4 h-4 bg-oma-gold rounded-full animate-ping" />
+        <div className="absolute bottom-1/2 left-0 w-3 h-3 bg-oma-beige rounded-full animate-pulse" />
+        <div className="max-w-6xl mx-auto w-full flex flex-col md:flex-row items-center justify-between gap-12 relative z-10">
+          {/* Left - Animated Graphics */}
+          <div className="flex-1 flex items-center justify-center">
+            <div className="relative w-72 h-72">
+              <div className="absolute inset-0 transform rotate-6 animate-pulse">
+                <div className="w-40 h-56 bg-gradient-to-br from-oma-plum/20 to-oma-gold/20 rounded-lg border-2 border-oma-gold/30 backdrop-blur-sm"></div>
+              </div>
+              <div
+                className="absolute inset-0 transform -rotate-3 animate-pulse"
+                style={{ animationDelay: "0.5s" }}
+              >
+                <div className="w-40 h-56 bg-gradient-to-br from-oma-gold/20 to-oma-beige/20 rounded-lg border-2 border-oma-plum/30 backdrop-blur-sm"></div>
+              </div>
+              <div
+                className="absolute inset-0 transform rotate-2 animate-pulse"
+                style={{ animationDelay: "1s" }}
+              >
+                <div className="w-40 h-56 bg-gradient-to-br from-oma-beige/20 to-oma-plum/20 rounded-lg border-2 border-oma-beige/30 backdrop-blur-sm"></div>
+              </div>
+              <div className="absolute top-4 right-4 w-5 h-5 bg-oma-gold rounded-full animate-bounce shadow-lg"></div>
+              <div
+                className="absolute bottom-8 left-8 w-3 h-3 bg-oma-plum rounded-full animate-bounce shadow-lg"
+                style={{ animationDelay: "0.3s" }}
+              ></div>
+              <div className="absolute top-1/2 left-0 w-2 h-2 bg-oma-beige rounded-full animate-ping"></div>
+            </div>
+          </div>
+          {/* Right - Copy and CTA */}
+          <div className="flex-1 pl-0 md:pl-12 text-oma-cocoa">
+            <h2 className="text-4xl md:text-5xl font-canela mb-6 leading-tight">
               Frequently Asked Questions
             </h2>
-            <p className="text-xl text-oma-cocoa/80">
-              Everything you need to know about OmaHub
+            <p className="text-xl text-oma-cocoa/80 mb-8 leading-relaxed max-w-xl">
+              Everything you need to know about OmaHub, from how to order to
+              joining as a designer. Still have questions? We’re here to help.
             </p>
-          </div>
-
-          <div className="space-y-4">
-            {faqList.map((faq, index) => (
-              <Collapsible
-                key={faq.id}
-                open={openFaq === faq.id}
-                onOpenChange={() => toggleFaq(faq.id)}
-              >
-                <CollapsibleTrigger
-                  className="w-full bg-white/80 backdrop-blur-sm rounded-lg p-6 text-left hover:bg-white/90 transition-all duration-200 shadow-sm hover:shadow-md border border-oma-gold/20"
-                  style={{
-                    transform: `translateY(${visibleSections.has("faq") ? 0 : 20}px)`,
-                    opacity: visibleSections.has("faq") ? 1 : 0,
-                    transition: `all 0.6s cubic-bezier(0.4, 0, 0.2, 1) ${index * 0.1}s`,
-                  }}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <h3 className="text-lg font-semibold text-oma-cocoa">
-                        {faq.question}
-                      </h3>
-                    </div>
-                    <ChevronDown
-                      className={`w-5 h-5 text-oma-plum transition-transform duration-200 ${
-                        openFaq === faq.id ? "rotate-180" : ""
-                      }`}
-                    />
-                  </div>
-                </CollapsibleTrigger>
-                <CollapsibleContent className="px-6 pb-6 text-oma-cocoa/80 leading-relaxed">
-                  <div className="mt-2">{faq.answer}</div>
-                </CollapsibleContent>
-              </Collapsible>
-            ))}
+            <Button
+              asChild
+              size="lg"
+              className="bg-oma-plum hover:bg-oma-plum/90 text-white px-8 py-4 text-lg font-semibold group border-2 border-oma-plum hover:border-oma-gold transition-all duration-300"
+            >
+              <Link href="#faq-list" className="flex items-center gap-3">
+                Read All FAQs
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </Button>
           </div>
         </div>
       </section>
@@ -599,34 +597,59 @@ export default function HowItWorksClient() {
           <div className="absolute top-10 left-10 w-40 h-40 bg-gradient-to-br from-oma-plum/10 to-oma-gold/10 rounded-full blur-2xl" />
           <div className="absolute bottom-10 right-10 w-32 h-32 bg-gradient-to-br from-oma-gold/10 to-oma-plum/10 rounded-full blur-xl" />
         </div>
-
-        <div
-          className="max-w-4xl mx-auto text-center relative z-10"
-          style={getSectionTransform("cta")}
-        >
-          <h2 className="text-4xl md:text-5xl font-canela text-oma-cocoa mb-6">
-            Ready to Get Started?
-          </h2>
-          <p className="text-xl text-oma-cocoa/80 mb-8 max-w-2xl mx-auto">
-            Join thousands of fashion lovers discovering Africa's most talented
-            designers
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button
-              asChild
-              size="lg"
-              className="bg-oma-plum hover:bg-oma-plum/90 text-white px-8 py-4 text-lg"
-            >
-              <Link href="/directory">Start Shopping</Link>
-            </Button>
-            <Button
-              asChild
-              variant="outline"
-              size="lg"
-              className="border-oma-plum text-oma-plum hover:bg-oma-plum/10 px-8 py-4 text-lg"
-            >
-              <Link href="/join">Apply as Designer</Link>
-            </Button>
+        <div className="max-w-6xl mx-auto w-full flex flex-col md:flex-row items-center justify-between gap-12 relative z-10">
+          {/* Left - Animated Graphics */}
+          <div className="flex-1 flex items-center justify-center">
+            <div className="relative w-72 h-72">
+              <div className="absolute inset-0 transform rotate-6 animate-pulse">
+                <div className="w-40 h-56 bg-gradient-to-br from-oma-plum/20 to-oma-gold/20 rounded-lg border-2 border-oma-gold/30 backdrop-blur-sm"></div>
+              </div>
+              <div
+                className="absolute inset-0 transform -rotate-3 animate-pulse"
+                style={{ animationDelay: "0.5s" }}
+              >
+                <div className="w-40 h-56 bg-gradient-to-br from-oma-gold/20 to-oma-beige/20 rounded-lg border-2 border-oma-plum/30 backdrop-blur-sm"></div>
+              </div>
+              <div
+                className="absolute inset-0 transform rotate-2 animate-pulse"
+                style={{ animationDelay: "1s" }}
+              >
+                <div className="w-40 h-56 bg-gradient-to-br from-oma-beige/20 to-oma-plum/20 rounded-lg border-2 border-oma-beige/30 backdrop-blur-sm"></div>
+              </div>
+              <div className="absolute top-4 right-4 w-5 h-5 bg-oma-gold rounded-full animate-bounce shadow-lg"></div>
+              <div
+                className="absolute bottom-8 left-8 w-3 h-3 bg-oma-plum rounded-full animate-bounce shadow-lg"
+                style={{ animationDelay: "0.3s" }}
+              ></div>
+              <div className="absolute top-1/2 left-0 w-2 h-2 bg-oma-beige rounded-full animate-ping"></div>
+            </div>
+          </div>
+          {/* Right - Copy and CTA */}
+          <div className="flex-1 pl-0 md:pl-12 text-oma-cocoa text-center md:text-left">
+            <h2 className="text-4xl md:text-5xl font-canela mb-6 leading-tight">
+              Ready to Get Started?
+            </h2>
+            <p className="text-xl text-oma-cocoa/80 mb-8 leading-relaxed max-w-xl mx-auto md:mx-0">
+              Join thousands of fashion lovers discovering Africa’s most
+              talented designers, or apply to join our curated community.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
+              <Button
+                asChild
+                size="lg"
+                className="bg-oma-plum hover:bg-oma-plum/90 text-white px-8 py-4 text-lg"
+              >
+                <Link href="/directory">Start Shopping</Link>
+              </Button>
+              <Button
+                asChild
+                variant="outline"
+                size="lg"
+                className="border-oma-plum text-oma-plum hover:bg-oma-plum/10 px-8 py-4 text-lg"
+              >
+                <Link href="/join">Apply as Designer</Link>
+              </Button>
+            </div>
           </div>
         </div>
       </section>
