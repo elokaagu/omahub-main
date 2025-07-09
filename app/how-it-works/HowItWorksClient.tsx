@@ -132,7 +132,7 @@ export default function HowItWorksClient() {
       <section
         ref={heroRef}
         id="hero"
-        className="min-h-screen snap-start flex items-center justify-center relative flex-col text-center px-4 bg-gradient-to-b from-oma-beige/30 to-white"
+        className="min-h-screen snap-start flex items-center justify-center relative flex-col text-center px-4 pt-28 bg-gradient-to-b from-oma-beige/30 to-white"
         style={{
           transform: getParallaxTransform(0.08),
         }}
@@ -220,7 +220,7 @@ export default function HowItWorksClient() {
       <section
         ref={clientsRef}
         id="clients"
-        className="min-h-screen snap-start flex items-center justify-center py-24 px-6 bg-gradient-to-br from-oma-beige/80 via-white/90 to-oma-gold/10 relative"
+        className="min-h-screen snap-start flex items-center justify-center pt-28 pb-24 px-6 bg-gradient-to-br from-oma-beige/80 via-white/90 to-oma-gold/10 relative"
         style={{
           transform: getParallaxTransform(0.04),
         }}
@@ -289,7 +289,7 @@ export default function HowItWorksClient() {
       </section>
 
       {/* Curated Selection CTA Section */}
-      <section className="min-h-screen snap-start flex items-center justify-center py-24 px-6 bg-gradient-to-br from-oma-beige/80 via-white/90 to-oma-gold/10 relative overflow-hidden">
+      <section className="min-h-screen snap-start flex items-center justify-center pt-28 pb-24 px-6 bg-gradient-to-br from-oma-beige/80 via-white/90 to-oma-gold/10 relative overflow-hidden">
         {/* Corner Brackets */}
         <div className="absolute top-8 left-8 w-12 h-12 border-l-4 border-t-4 border-oma-gold/80"></div>
         <div className="absolute top-8 right-8 w-12 h-12 border-r-4 border-t-4 border-oma-gold/80"></div>
@@ -377,7 +377,7 @@ export default function HowItWorksClient() {
       <section
         ref={designersRef}
         id="designers"
-        className="min-h-screen snap-start flex items-center justify-center py-24 px-6 bg-gradient-to-br from-oma-beige/80 via-white/90 to-oma-gold/10 relative"
+        className="min-h-screen snap-start flex items-center justify-center pt-28 pb-24 px-6 bg-gradient-to-br from-oma-beige/80 via-white/90 to-oma-gold/10 relative"
         style={{
           transform: getParallaxTransform(0.03),
         }}
@@ -450,7 +450,7 @@ export default function HowItWorksClient() {
       <section
         ref={featuresRef}
         id="features"
-        className="min-h-screen snap-start flex items-center justify-center py-24 px-6 bg-gradient-to-br from-oma-beige/80 via-white/90 to-oma-gold/10 relative"
+        className="min-h-screen snap-start flex items-center justify-center pt-28 pb-24 px-6 bg-gradient-to-br from-oma-beige/80 via-white/90 to-oma-gold/10 relative"
         style={{
           transform: getParallaxTransform(0.02),
         }}
@@ -523,7 +523,7 @@ export default function HowItWorksClient() {
       <section
         ref={faqRef}
         id="faq"
-        className="min-h-screen snap-start flex items-center justify-center py-24 px-6 bg-gradient-to-br from-oma-beige/80 via-white/90 to-oma-gold/10 relative"
+        className="min-h-screen snap-start flex items-center justify-center pt-28 pb-24 px-6 bg-gradient-to-br from-oma-beige/80 via-white/90 to-oma-gold/10 relative"
         style={{
           transform: getParallaxTransform(0.01),
         }}
@@ -584,7 +584,7 @@ export default function HowItWorksClient() {
       <section
         ref={ctaRef}
         id="cta"
-        className="min-h-screen snap-start flex items-center justify-center py-24 px-6 bg-gradient-to-br from-oma-beige/80 via-white/90 to-oma-gold/10 relative overflow-hidden"
+        className="min-h-screen snap-start flex items-center justify-center pt-28 pb-24 px-6 bg-gradient-to-br from-oma-beige/80 via-white/90 to-oma-gold/10 relative overflow-hidden"
         style={{
           transform: getParallaxTransform(0.005),
         }}
