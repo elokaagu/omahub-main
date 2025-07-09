@@ -605,7 +605,7 @@ export default function HomeContent() {
 
             {/* Tailored Card */}
             <div className="relative group overflow-hidden rounded-lg bg-gray-100 min-h-[400px]">
-              <Link href="/tailors">
+              <Link href="/tailored">
                 <div className="relative aspect-[3/4]">
                   <img
                     src={categoryImages.tailoredImage}
