@@ -80,48 +80,53 @@ export default function TailoredClient() {
   });
 
   return (
-    <div className="w-full bg-gradient-to-b from-oma-beige/30 to-white min-h-screen snap-y snap-mandatory">
+    <div className="w-full bg-oma-plum min-h-screen snap-y snap-mandatory">
       {/* Hero Section */}
       <section
         ref={heroRef}
         id="hero"
         className="snap-start min-h-screen flex items-center justify-center px-6 overflow-hidden relative"
       >
-        {/* Floating Graphics with parallax */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div
-            className="absolute top-20 left-10 w-32 h-32 bg-gradient-to-br from-oma-plum/20 to-oma-gold/20 rounded-full blur-xl animate-pulse"
-            style={getParallaxStyle(0.2)}
+        {/* Keakie-inspired SVG Graphics */}
+        <svg
+          className="absolute top-0 left-0 w-1/2 h-1/2 opacity-30"
+          viewBox="0 0 400 400"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <ellipse cx="200" cy="200" rx="180" ry="80" fill="#E8B4CB" />
+        </svg>
+        <svg
+          className="absolute bottom-0 right-0 w-1/3 h-1/3 opacity-20"
+          viewBox="0 0 200 200"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path d="M0,100 Q100,200 200,100 Q100,0 0,100 Z" fill="#D4A574" />
+        </svg>
+        {/* Subtle animated blob */}
+        <svg
+          className="absolute top-1/2 left-1/4 w-40 h-40 animate-pulse opacity-10"
+          viewBox="0 0 100 100"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <circle cx="50" cy="50" r="40" fill="#fff" />
+        </svg>
+        {/* Fashion Icons (subtle, not dominant) */}
+        <div className="absolute top-32 right-32 opacity-10">
+          <Scissors
+            className="w-16 h-16 text-white animate-bounce"
+            style={{ animationDelay: "0.5s" }}
           />
-          <div
-            className="absolute top-40 right-20 w-24 h-24 bg-gradient-to-br from-oma-gold/30 to-oma-plum/30 rounded-full blur-lg animate-pulse"
-            style={{ ...getParallaxStyle(0.1), animationDelay: "1s" }}
-          />
-          <div
-            className="absolute bottom-40 left-20 w-20 h-20 bg-gradient-to-br from-oma-beige/40 to-oma-plum/40 rounded-full blur-md animate-pulse"
-            style={{ ...getParallaxStyle(-0.15), animationDelay: "2s" }}
-          />
-          {/* Fashion Icons */}
-          <div
-            className="absolute top-32 right-32 opacity-10"
-            style={getParallaxStyle(0.12)}
-          >
-            <Scissors
-              className="w-16 h-16 text-oma-plum animate-bounce"
-              style={{ animationDelay: "0.5s" }}
-            />
-          </div>
-          <div
-            className="absolute bottom-32 left-32 opacity-10"
-            style={getParallaxStyle(-0.12)}
-          >
-            <ShoppingBag
-              className="w-12 h-12 text-oma-gold animate-bounce"
-              style={{ animationDelay: "1.5s" }}
-            />
-          </div>
         </div>
-        <div className="absolute inset-0 bg-gradient-to-br from-oma-beige/20 to-transparent" />
+        <div className="absolute bottom-32 left-32 opacity-10">
+          <ShoppingBag
+            className="w-12 h-12 text-oma-gold animate-bounce"
+            style={{ animationDelay: "1.5s" }}
+          />
+        </div>
+        <div className="absolute inset-0 bg-gradient-to-br from-oma-plum/40 to-transparent" />
         <div
           className="max-w-4xl mx-auto text-center relative z-10"
           style={getSectionTransform("hero")}
