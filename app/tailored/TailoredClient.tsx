@@ -3,33 +3,6 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import {
-  Scissors,
-  Sparkles,
-  Heart,
-  ArrowRight,
-  Users,
-  Crown,
-  Palette,
-  Zap,
-  Star,
-  Gem,
-  Shirt,
-  Ruler,
-  Clock,
-  CheckCircle,
-  Camera,
-  MessageCircle,
-  MapPin,
-  Award,
-  Lightbulb,
-  Rocket,
-  ShoppingBag,
-  Tag,
-  Diamond,
-  Glasses,
-  Watch,
-} from "lucide-react";
 
 export default function TailoredClient() {
   const [visibleSections, setVisibleSections] = useState<Set<string>>(
@@ -74,11 +47,6 @@ export default function TailoredClient() {
     };
   };
 
-  // Parallax for floating graphics only
-  const getParallaxStyle = (factor: number) => ({
-    transform: `translateY(${window.scrollY * factor}px)`,
-  });
-
   return (
     <div
       className="relative w-full overflow-x-hidden snap-y snap-mandatory h-screen"
@@ -100,26 +68,7 @@ export default function TailoredClient() {
           <div className="absolute inset-0 bg-black/40" />
           <div className="absolute inset-0 bg-gradient-to-t from-oma-plum/30 via-transparent to-oma-gold/20" />
         </div>
-        {/* Floating Graphics */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-20 left-10 w-32 h-32 bg-gradient-to-br from-oma-plum/20 to-oma-gold/20 rounded-full blur-xl animate-pulse" />
-          <div
-            className="absolute top-40 right-20 w-24 h-24 bg-gradient-to-br from-oma-gold/30 to-oma-plum/30 rounded-full blur-lg animate-pulse"
-            style={{ animationDelay: "1s" }}
-          />
-        </div>
         <div className="max-w-4xl mx-auto text-center relative z-10">
-          {/* Hero Icon */}
-          <div className="flex justify-center mb-8">
-            <div className="relative">
-              <div className="w-24 h-24 bg-gradient-to-br from-oma-plum to-oma-gold rounded-full flex items-center justify-center shadow-2xl animate-pulse">
-                <Scissors className="w-12 h-12 text-white" />
-              </div>
-              <div className="absolute -top-2 -right-2 w-8 h-8 bg-oma-gold rounded-full flex items-center justify-center">
-                <Sparkles className="w-4 h-4 text-white" />
-              </div>
-            </div>
-          </div>
           <h1 className="text-5xl md:text-7xl font-canela text-white mb-6 leading-tight overflow-hidden">
             Want to make a dress
             <br />
@@ -135,10 +84,7 @@ export default function TailoredClient() {
               size="lg"
               className="bg-oma-plum hover:bg-oma-plum/90 text-white px-8 py-4 text-lg group"
             >
-              <Link href="#questions">
-                Yes, Let's Create!
-                <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-              </Link>
+              <Link href="#questions">Yes, Let's Create!</Link>
             </Button>
             <Button
               asChild
@@ -146,26 +92,13 @@ export default function TailoredClient() {
               size="lg"
               className="border-oma-plum text-oma-plum hover:bg-oma-plum/10 px-8 py-4 text-lg group"
             >
-              <Link href="/tailors">
-                Browse Tailors
-                <Users className="w-5 h-5 ml-2 group-hover:scale-110 transition-transform" />
-              </Link>
+              <Link href="/tailors">Browse Tailors</Link>
             </Button>
           </div>
-          {/* Trust Indicators */}
           <div className="flex justify-center gap-8 text-sm text-white/80">
-            <div className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-oma-gold" />
-              <span>Verified Tailors</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Star className="w-4 h-4 text-oma-gold" />
-              <span>Quality Guaranteed</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4 text-oma-gold" />
-              <span>Timely Delivery</span>
-            </div>
+            <div>Verified Tailors</div>
+            <div>Quality Guaranteed</div>
+            <div>Timely Delivery</div>
           </div>
         </div>
       </section>
@@ -180,11 +113,6 @@ export default function TailoredClient() {
           style={getSectionTransform("questions")}
         >
           <div className="text-center mb-16">
-            <div className="flex justify-center mb-6">
-              <div className="w-16 h-16 bg-gradient-to-br from-oma-plum/20 to-oma-gold/20 rounded-full flex items-center justify-center">
-                <Lightbulb className="w-8 h-8 text-oma-plum" />
-              </div>
-            </div>
             <h2 className="text-4xl md:text-5xl font-canela text-black mb-6">
               Does This Sound Like You?
             </h2>
@@ -197,60 +125,36 @@ export default function TailoredClient() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
               {
-                icon: <Camera className="w-8 h-8 text-oma-plum" />,
                 question:
                   "Found your wedding fit, suit or dress on Pinterest and want to recreate it?",
                 description:
                   "Our tailors can recreate any design you've fallen in love with",
-                graphic: (
-                  <Heart className="w-12 h-12 text-oma-plum/20 absolute top-4 right-4" />
-                ),
               },
               {
-                icon: <Crown className="w-8 h-8 text-oma-gold" />,
                 question: "Need a custom piece for a special occasion?",
                 description:
                   "From red carpet events to traditional ceremonies, we've got you covered",
-                graphic: (
-                  <Star className="w-12 h-12 text-oma-gold/20 absolute top-4 right-4" />
-                ),
               },
               {
-                icon: <Ruler className="w-8 h-8 text-oma-plum" />,
                 question:
                   "Struggling to find the perfect fit in ready-to-wear?",
                 description:
                   "Get garments tailored exactly to your measurements and preferences",
-                graphic: (
-                  <Scissors className="w-12 h-12 text-oma-plum/20 absolute top-4 right-4" />
-                ),
               },
               {
-                icon: <Palette className="w-8 h-8 text-oma-gold" />,
                 question: "Have a unique design idea in mind?",
                 description:
                   "Work with skilled artisans to bring your creative vision to reality",
-                graphic: (
-                  <Sparkles className="w-12 h-12 text-oma-gold/20 absolute top-4 right-4" />
-                ),
               },
               {
-                icon: <Gem className="w-8 h-8 text-oma-plum" />,
                 question: "Want something truly one-of-a-kind?",
                 description:
                   "Create bespoke pieces that reflect your personal style and story",
-                graphic: (
-                  <Crown className="w-12 h-12 text-oma-plum/20 absolute top-4 right-4" />
-                ),
               },
               {
-                icon: <Shirt className="w-8 h-8 text-oma-gold" />,
                 question: "Need alterations or adjustments?",
                 description:
                   "Perfect the fit of existing garments with expert tailoring",
-                graphic: (
-                  <CheckCircle className="w-12 h-12 text-oma-gold/20 absolute top-4 right-4" />
-                ),
               },
             ].map((item, index) => (
               <div
@@ -268,9 +172,25 @@ export default function TailoredClient() {
                 <div className="absolute bottom-0 left-0 w-8 h-8 border-l-2 border-b-2 border-oma-gold opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 <div className="absolute bottom-0 right-0 w-8 h-8 border-r-2 border-b-2 border-oma-gold opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-                {item.graphic}
                 <div className="flex items-center justify-center w-16 h-16 bg-gradient-to-br from-oma-plum/10 to-oma-gold/10 rounded-full mb-6 mx-auto group-hover:scale-110 transition-transform">
-                  {item.icon}
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="w-8 h-8 text-oma-plum"
+                  >
+                    <path d="M15.5 6v12" />
+                    <path d="M19 16v6" />
+                    <path d="M5 16v6" />
+                    <path d="M1 2v3" />
+                    <path d="M23 2v3" />
+                  </svg>
                 </div>
                 <h3 className="text-lg font-semibold text-black mb-4 text-center leading-relaxed">
                   {item.question}
@@ -295,11 +215,6 @@ export default function TailoredClient() {
           style={getSectionTransform("process")}
         >
           <div className="text-center mb-16">
-            <div className="flex justify-center mb-6">
-              <div className="w-16 h-16 bg-gradient-to-br from-oma-plum/20 to-oma-gold/20 rounded-full flex items-center justify-center">
-                <Zap className="w-8 h-8 text-oma-plum" />
-              </div>
-            </div>
             <h2 className="text-4xl md:text-5xl font-canela text-black mb-6">
               How It Works
             </h2>
@@ -312,35 +227,27 @@ export default function TailoredClient() {
             {[
               {
                 step: "01",
-                icon: <Users className="w-8 h-8 text-white" />,
                 title: "Choose Your Tailor",
                 description:
                   "Browse our curated list of verified tailors and find one whose style resonates with you",
-                color: "from-oma-plum to-oma-plum/80",
               },
               {
                 step: "02",
-                icon: <MessageCircle className="w-8 h-8 text-white" />,
                 title: "Share Your Vision",
                 description:
                   "Discuss your ideas, share inspiration photos, and collaborate on the design",
-                color: "from-oma-gold to-oma-gold/80",
               },
               {
                 step: "03",
-                icon: <Ruler className="w-8 h-8 text-white" />,
                 title: "Get Measured",
                 description:
                   "Provide measurements or schedule a fitting session for the perfect fit",
-                color: "from-oma-plum to-oma-plum/80",
               },
               {
                 step: "04",
-                icon: <Sparkles className="w-8 h-8 text-white" />,
                 title: "Receive Your Creation",
                 description:
                   "Watch your vision come to life with expert craftsmanship and attention to detail",
-                color: "from-oma-gold to-oma-gold/80",
               },
             ].map((step, index) => (
               <div
@@ -354,9 +261,23 @@ export default function TailoredClient() {
               >
                 <div className="relative mb-6">
                   <div
-                    className={`w-20 h-20 bg-gradient-to-br ${step.color} rounded-full flex items-center justify-center mx-auto shadow-lg group-hover:scale-110 transition-transform`}
+                    className={`w-20 h-20 bg-gradient-to-br from-oma-plum/10 to-oma-gold/10 rounded-full flex items-center justify-center mx-auto shadow-lg group-hover:scale-110 transition-transform`}
                   >
-                    {step.icon}
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="w-10 h-10 text-oma-plum"
+                    >
+                      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                      <path d="M22 3H2v16a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3V3z" />
+                    </svg>
                   </div>
                   <div className="absolute -top-2 -right-2 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md">
                     <span className="text-xs font-bold text-oma-plum">
@@ -386,11 +307,6 @@ export default function TailoredClient() {
           style={getSectionTransform("benefits")}
         >
           <div className="text-center mb-16">
-            <div className="flex justify-center mb-6">
-              <div className="w-16 h-16 bg-gradient-to-br from-oma-gold/20 to-oma-plum/20 rounded-full flex items-center justify-center">
-                <Award className="w-8 h-8 text-oma-gold" />
-              </div>
-            </div>
             <h2 className="text-4xl md:text-5xl font-canela text-black mb-6">
               Why Choose Tailored?
             </h2>
@@ -402,37 +318,31 @@ export default function TailoredClient() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
               {
-                icon: <Crown className="w-8 h-8 text-oma-gold" />,
                 title: "Perfect Fit",
                 description:
                   "Garments tailored exactly to your body measurements and preferences",
               },
               {
-                icon: <Gem className="w-8 h-8 text-oma-plum" />,
                 title: "Unique Design",
                 description:
                   "One-of-a-kind pieces that reflect your personal style and vision",
               },
               {
-                icon: <Award className="w-8 h-8 text-oma-gold" />,
                 title: "Premium Quality",
                 description:
                   "Expert craftsmanship using high-quality materials and techniques",
               },
               {
-                icon: <Users className="w-8 h-8 text-oma-plum" />,
                 title: "Personal Service",
                 description:
                   "Direct collaboration with skilled artisans throughout the process",
               },
               {
-                icon: <Clock className="w-8 h-8 text-oma-gold" />,
                 title: "Timeless Value",
                 description:
                   "Investment pieces designed to last and remain stylish for years",
               },
               {
-                icon: <MapPin className="w-8 h-8 text-oma-plum" />,
                 title: "African Heritage",
                 description:
                   "Support traditional craftsmanship and contemporary African design",
@@ -454,7 +364,21 @@ export default function TailoredClient() {
                 <div className="absolute bottom-0 right-0 w-8 h-8 border-r-2 border-b-2 border-oma-gold opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
                 <div className="flex items-center justify-center w-16 h-16 bg-gradient-to-br from-oma-plum/10 to-oma-gold/10 rounded-full mb-6 mx-auto group-hover:scale-110 transition-transform">
-                  {benefit.icon}
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="w-10 h-10 text-oma-gold"
+                  >
+                    <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                    <path d="M22 17H2v-2a3 3 0 0 1 3-3h14a3 3 0 0 1 3 3v2z" />
+                  </svg>
                 </div>
                 <h3 className="text-xl font-semibold text-black mb-4">
                   {benefit.title}
@@ -477,23 +401,17 @@ export default function TailoredClient() {
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div
             className="absolute top-10 left-10 w-40 h-40 bg-gradient-to-br from-oma-plum/10 to-oma-gold/10 rounded-full blur-2xl"
-            style={getParallaxStyle(0.1)}
+            style={{ transform: `translateY(${window.scrollY * 0.1}px)` }}
           />
           <div
             className="absolute bottom-10 right-10 w-32 h-32 bg-gradient-to-br from-oma-gold/10 to-oma-plum/10 rounded-full blur-xl"
-            style={getParallaxStyle(-0.1)}
+            style={{ transform: `translateY(${window.scrollY * -0.1}px)` }}
           />
         </div>
         <div
           className="max-w-4xl mx-auto text-center relative z-10 w-full"
           style={getSectionTransform("cta")}
         >
-          <div className="flex justify-center mb-8">
-            <div className="w-20 h-20 bg-gradient-to-br from-oma-plum to-oma-gold rounded-full flex items-center justify-center shadow-2xl">
-              <Rocket className="w-10 h-10 text-white" />
-            </div>
-          </div>
-
           <h2 className="text-4xl md:text-5xl font-canela text-black mb-6">
             Ready to Create Something Amazing?
           </h2>
@@ -509,7 +427,22 @@ export default function TailoredClient() {
               className="bg-oma-plum hover:bg-oma-plum/90 text-white px-8 py-4 text-lg group"
             >
               <Link href="/tailors">
-                <Users className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform"
+                >
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                  <path d="M15 3h6v6" />
+                  <path d="M10 14L21 3" />
+                </svg>
                 Explore Our Tailors
               </Link>
             </Button>
@@ -520,7 +453,21 @@ export default function TailoredClient() {
               className="border-oma-plum text-oma-plum hover:bg-oma-plum/10 px-8 py-4 text-lg group"
             >
               <Link href="/how-it-works">
-                <Lightbulb className="w-5 h-5 mr-2 group-hover:rotate-12 transition-transform" />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="w-5 h-5 mr-2 group-hover:rotate-12 transition-transform"
+                >
+                  <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                  <path d="M22 17H2v-2a3 3 0 0 1 3-3h14a3 3 0 0 1 3 3v2z" />
+                </svg>
                 Learn More
               </Link>
             </Button>
@@ -528,18 +475,9 @@ export default function TailoredClient() {
 
           {/* Final Trust Indicators */}
           <div className="mt-12 flex justify-center gap-8 text-sm text-black/60">
-            <div className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-oma-gold" />
-              <span>50+ Verified Tailors</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Star className="w-4 h-4 text-oma-gold" />
-              <span>1000+ Happy Clients</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Award className="w-4 h-4 text-oma-gold" />
-              <span>Expert Craftsmanship</span>
-            </div>
+            <div>50+ Verified Tailors</div>
+            <div>1000+ Happy Clients</div>
+            <div>Expert Craftsmanship</div>
           </div>
         </div>
       </section>
