@@ -200,6 +200,49 @@ html:has([data-studio-page]) {
   }
 }
 
+/* Text animation keyframes */
+@keyframes typewriter {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+@keyframes textSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes textFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Text animation classes */
+.animate-typewriter {
+  animation: typewriter 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.animate-text-slide-up {
+  animation: textSlideUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.animate-text-fade-in {
+  animation: textFadeIn 0.8s ease-in-out forwards;
+}
+
 @keyframes slideUp {
   from {
     transform: translateY(1rem);

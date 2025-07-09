@@ -154,7 +154,7 @@ export default function ProductPage() {
                   autoPlay={true}
                   muted={true}
                   loop={true}
-                  controls={true}
+                  controls={false}
                   showPlayButton={false}
                   priority={true}
                   quality={95}

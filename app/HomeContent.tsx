@@ -674,7 +674,7 @@ export default function HomeContent() {
                       autoPlay={true}
                       muted={true}
                       loop={true}
-                      controls={true}
+                      controls={false}
                       showPlayButton={false}
                       onVideoError={() => {
                         console.warn(

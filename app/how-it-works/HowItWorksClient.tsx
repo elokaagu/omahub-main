@@ -10,7 +10,21 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { ChevronDown, ArrowRight } from "lucide-react";
+import {
+  ChevronDown,
+  ArrowRight,
+  ShoppingBag,
+  Gem,
+  Diamond,
+  Glasses,
+  Watch,
+  Crown,
+  Scissors,
+  Palette,
+  Tag,
+  Star,
+  Heart,
+} from "lucide-react";
 
 export default function HowItWorksClient() {
   const [openFaq, setOpenFaq] = useState<string | null>(null);
@@ -21,6 +35,7 @@ export default function HowItWorksClient() {
 
   const heroRef = useRef<HTMLDivElement>(null);
   const clientsRef = useRef<HTMLDivElement>(null);
+  const curatedRef = useRef<HTMLDivElement>(null);
   const designersRef = useRef<HTMLDivElement>(null);
   const featuresRef = useRef<HTMLDivElement>(null);
   const faqRef = useRef<HTMLDivElement>(null);
@@ -54,6 +69,7 @@ export default function HowItWorksClient() {
     const sections = [
       heroRef,
       clientsRef,
+      curatedRef,
       designersRef,
       featuresRef,
       faqRef,
@@ -79,6 +95,31 @@ export default function HowItWorksClient() {
       transform: `translateY(${isVisible ? 0 : 50}px)`,
       opacity: isVisible ? 1 : 0,
       transition: "all 0.8s cubic-bezier(0.4, 0, 0.2, 1)",
+    };
+  };
+
+  // Enhanced text animation states
+  const getTextAnimationState = (sectionId: string, delay: number = 0) => {
+    const isVisible = visibleSections.has(sectionId);
+
+    return {
+      transform: `translateY(${isVisible ? 0 : 30}px)`,
+      opacity: isVisible ? 1 : 0,
+      transition: `all 0.6s cubic-bezier(0.4, 0, 0.2, 1) ${delay}s`,
+    };
+  };
+
+  // Typewriter effect for headings
+  const getTypewriterState = (sectionId: string) => {
+    const isVisible = visibleSections.has(sectionId);
+
+    return {
+      width: isVisible ? "100%" : "0%",
+      opacity: isVisible ? 1 : 0,
+      transition:
+        "width 1.2s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.8s ease-in-out",
+      overflow: "hidden",
+      whiteSpace: "nowrap",
     };
   };
 
@@ -166,15 +207,24 @@ export default function HowItWorksClient() {
           className="max-w-4xl mx-auto text-center relative z-10"
           style={getSectionTransform("hero")}
         >
-          <h1 className="text-5xl md:text-7xl font-canela text-white mb-6 leading-tight">
+          <h1
+            className="text-5xl md:text-7xl font-canela text-white mb-6 leading-tight overflow-hidden"
+            style={getTypewriterState("hero")}
+          >
             How OmaHub Works
           </h1>
-          <p className="text-xl md:text-2xl text-white/90 mb-8 max-w-2xl mx-auto leading-relaxed">
+          <p
+            className="text-xl md:text-2xl text-white/90 mb-8 max-w-2xl mx-auto leading-relaxed"
+            style={getTextAnimationState("hero", 0.3)}
+          >
             Connecting fashion lovers with Africa's most talented designers
           </p>
 
           {/* Stats */}
-          <div className="flex justify-center gap-8 mb-8">
+          <div
+            className="flex justify-center gap-8 mb-8"
+            style={getTextAnimationState("hero", 0.6)}
+          >
             <div className="text-center">
               <div className="text-2xl font-bold text-oma-gold">500+</div>
               <div className="text-sm text-white/80">Designers</div>
@@ -189,7 +239,10 @@ export default function HowItWorksClient() {
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div
+            className="flex flex-col sm:flex-row gap-4 justify-center"
+            style={getTextAnimationState("hero", 0.9)}
+          >
             <Button
               asChild
               size="lg"
@@ -262,29 +315,41 @@ export default function HowItWorksClient() {
           </div>
           {/* Right - Copy and CTA */}
           <div className="flex-1 pl-0 md:pl-12 text-oma-cocoa">
-            <h2 className="text-4xl md:text-5xl font-canela mb-6 leading-tight">
+            <h2
+              className="text-4xl md:text-5xl font-canela mb-6 leading-tight overflow-hidden"
+              style={getTypewriterState("clients")}
+            >
               For Clients
             </h2>
-            <p className="text-xl text-oma-cocoa/80 mb-8 leading-relaxed max-w-xl">
+            <p
+              className="text-xl text-oma-cocoa/80 mb-8 leading-relaxed max-w-xl"
+              style={getTextAnimationState("clients", 0.3)}
+            >
               Discover and connect with Africa’s most talented designers. Enjoy
               a seamless, curated experience from inspiration to delivery.
             </p>
-            <Button
-              asChild
-              size="lg"
-              className="bg-oma-plum hover:bg-oma-plum/90 text-white px-8 py-4 text-lg font-semibold group border-2 border-oma-plum hover:border-oma-gold transition-all duration-300"
-            >
-              <Link href="/directory" className="flex items-center gap-3">
-                Explore Designers
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </Link>
-            </Button>
+            <div style={getTextAnimationState("clients", 0.6)}>
+              <Button
+                asChild
+                size="lg"
+                className="bg-oma-plum hover:bg-oma-plum/90 text-white px-8 py-4 text-lg font-semibold group border-2 border-oma-plum hover:border-oma-gold transition-all duration-300"
+              >
+                <Link href="/directory" className="flex items-center gap-3">
+                  Explore Designers
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </Link>
+              </Button>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Curated Selection CTA Section */}
-      <section className="min-h-screen snap-start flex items-center justify-center pt-28 pb-24 px-6 bg-gradient-to-br from-oma-beige/80 via-white/90 to-oma-gold/10 relative overflow-hidden">
+      <section
+        ref={curatedRef}
+        id="curated"
+        className="min-h-screen snap-start flex items-center justify-center pt-28 pb-24 px-6 bg-gradient-to-br from-oma-beige/80 via-white/90 to-oma-gold/10 relative overflow-hidden"
+      >
         {/* Corner Brackets */}
         <div className="absolute top-24 left-8 w-12 h-12 border-l-4 border-t-4 border-oma-gold/80"></div>
         <div className="absolute top-24 right-8 w-12 h-12 border-r-4 border-t-4 border-oma-gold/80"></div>
@@ -344,26 +409,34 @@ export default function HowItWorksClient() {
 
           {/* Right Side - Content */}
           <div className="flex-1 text-oma-cocoa pl-12">
-            <h2 className="text-4xl md:text-5xl font-canela mb-6 leading-tight">
+            <h2
+              className="text-4xl md:text-5xl font-canela mb-6 leading-tight overflow-hidden"
+              style={getTypewriterState("curated")}
+            >
               Curated, and not sorry about it.
             </h2>
-            <p className="text-xl text-oma-cocoa/80 mb-8 leading-relaxed max-w-xl">
+            <p
+              className="text-xl text-oma-cocoa/80 mb-8 leading-relaxed max-w-xl"
+              style={getTextAnimationState("curated", 0.3)}
+            >
               We're by invitation only; which means you only discover designers
               if our team of curators are convinced their work is exceptional
               for you. This ensures you'll only find pieces alongside others at
               the top of their craft.
             </p>
 
-            <Button
-              asChild
-              size="lg"
-              className="bg-oma-plum hover:bg-oma-plum/90 text-white px-8 py-4 text-lg font-semibold group border-2 border-oma-plum hover:border-oma-gold transition-all duration-300"
-            >
-              <Link href="/directory" className="flex items-center gap-3">
-                Explore Curated Designers
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </Link>
-            </Button>
+            <div style={getTextAnimationState("curated", 0.6)}>
+              <Button
+                asChild
+                size="lg"
+                className="bg-oma-plum hover:bg-oma-plum/90 text-white px-8 py-4 text-lg font-semibold group border-2 border-oma-plum hover:border-oma-gold transition-all duration-300"
+              >
+                <Link href="/directory" className="flex items-center gap-3">
+                  Explore Curated Designers
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </Link>
+              </Button>
+            </div>
           </div>
         </div>
       </section>
@@ -409,24 +482,32 @@ export default function HowItWorksClient() {
           </div>
           {/* Right - Copy and CTA */}
           <div className="flex-1 pl-0 md:pl-12 text-oma-cocoa">
-            <h2 className="text-4xl md:text-5xl font-canela mb-6 leading-tight">
+            <h2
+              className="text-4xl md:text-5xl font-canela mb-6 leading-tight overflow-hidden"
+              style={getTypewriterState("designers")}
+            >
               For Designers
             </h2>
-            <p className="text-xl text-oma-cocoa/80 mb-8 leading-relaxed max-w-xl">
+            <p
+              className="text-xl text-oma-cocoa/80 mb-8 leading-relaxed max-w-xl"
+              style={getTextAnimationState("designers", 0.3)}
+            >
               Share your vision and collections with a global audience. Build
               your brand, connect with clients, and grow your creative business
               on OmaHub.
             </p>
-            <Button
-              asChild
-              size="lg"
-              className="bg-oma-plum hover:bg-oma-plum/90 text-white px-8 py-4 text-lg font-semibold group border-2 border-oma-plum hover:border-oma-gold transition-all duration-300"
-            >
-              <Link href="/join" className="flex items-center gap-3">
-                Apply as Designer
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </Link>
-            </Button>
+            <div style={getTextAnimationState("designers", 0.6)}>
+              <Button
+                asChild
+                size="lg"
+                className="bg-oma-plum hover:bg-oma-plum/90 text-white px-8 py-4 text-lg font-semibold group border-2 border-oma-plum hover:border-oma-gold transition-all duration-300"
+              >
+                <Link href="/join" className="flex items-center gap-3">
+                  Apply as Designer
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </Link>
+              </Button>
+            </div>
           </div>
         </div>
       </section>
@@ -466,23 +547,31 @@ export default function HowItWorksClient() {
           </div>
           {/* Left - Copy and CTA */}
           <div className="flex-1 pr-0 md:pr-12 text-oma-cocoa">
-            <h2 className="text-4xl md:text-5xl font-canela mb-6 leading-tight">
+            <h2
+              className="text-4xl md:text-5xl font-canela mb-6 leading-tight overflow-hidden"
+              style={getTypewriterState("features")}
+            >
               A Platform You Can Trust
             </h2>
-            <p className="text-xl text-oma-cocoa/80 mb-8 leading-relaxed max-w-xl">
+            <p
+              className="text-xl text-oma-cocoa/80 mb-8 leading-relaxed max-w-xl"
+              style={getTextAnimationState("features", 0.3)}
+            >
               Built for both designers and clients, OmaHub ensures quality,
               transparency, and a seamless experience from start to finish.
             </p>
-            <Button
-              asChild
-              size="lg"
-              className="bg-oma-plum hover:bg-oma-plum/90 text-white px-8 py-4 text-lg font-semibold group border-2 border-oma-plum hover:border-oma-gold transition-all duration-300"
-            >
-              <Link href="/about" className="flex items-center gap-3">
-                Why OmaHub?
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </Link>
-            </Button>
+            <div style={getTextAnimationState("features", 0.6)}>
+              <Button
+                asChild
+                size="lg"
+                className="bg-oma-plum hover:bg-oma-plum/90 text-white px-8 py-4 text-lg font-semibold group border-2 border-oma-plum hover:border-oma-gold transition-all duration-300"
+              >
+                <Link href="/about" className="flex items-center gap-3">
+                  Why OmaHub?
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </Link>
+              </Button>
+            </div>
           </div>
         </div>
       </section>
@@ -522,23 +611,31 @@ export default function HowItWorksClient() {
           </div>
           {/* Left - Copy and CTA */}
           <div className="flex-1 pr-0 md:pr-12 text-oma-cocoa">
-            <h2 className="text-4xl md:text-5xl font-canela mb-6 leading-tight">
+            <h2
+              className="text-4xl md:text-5xl font-canela mb-6 leading-tight overflow-hidden"
+              style={getTypewriterState("faq")}
+            >
               Frequently Asked Questions
             </h2>
-            <p className="text-xl text-oma-cocoa/80 mb-8 leading-relaxed max-w-xl">
-              Everything you need to know about OmaHub, from how to order to
-              joining as a designer. Still have questions? We’re here to help.
-            </p>
-            <Button
-              asChild
-              size="lg"
-              className="bg-oma-plum hover:bg-oma-plum/90 text-white px-8 py-4 text-lg font-semibold group border-2 border-oma-plum hover:border-oma-gold transition-all duration-300"
+            <p
+              className="text-xl text-oma-cocoa/80 mb-8 leading-relaxed max-w-xl"
+              style={getTextAnimationState("faq", 0.3)}
             >
-              <Link href="#faq-list" className="flex items-center gap-3">
-                Read All FAQs
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </Link>
-            </Button>
+              Everything you need to know about OmaHub, from how to order to
+              joining as a designer. Still have questions? We're here to help.
+            </p>
+            <div style={getTextAnimationState("faq", 0.6)}>
+              <Button
+                asChild
+                size="lg"
+                className="bg-oma-plum hover:bg-oma-plum/90 text-white px-8 py-4 text-lg font-semibold group border-2 border-oma-plum hover:border-oma-gold transition-all duration-300"
+              >
+                <Link href="#faq-list" className="flex items-center gap-3">
+                  Read All FAQs
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </Link>
+              </Button>
+            </div>
           </div>
         </div>
       </section>
@@ -578,14 +675,23 @@ export default function HowItWorksClient() {
           </div>
           {/* Right - Copy and CTA */}
           <div className="flex-1 pl-0 md:pl-12 text-oma-cocoa text-center md:text-left">
-            <h2 className="text-4xl md:text-5xl font-canela mb-6 leading-tight">
+            <h2
+              className="text-4xl md:text-5xl font-canela mb-6 leading-tight overflow-hidden"
+              style={getTypewriterState("cta")}
+            >
               Ready to Get Started?
             </h2>
-            <p className="text-xl text-oma-cocoa/80 mb-8 leading-relaxed max-w-xl mx-auto md:mx-0">
-              Join thousands of fashion lovers discovering Africa’s most
+            <p
+              className="text-xl text-oma-cocoa/80 mb-8 leading-relaxed max-w-xl mx-auto md:mx-0"
+              style={getTextAnimationState("cta", 0.3)}
+            >
+              Join thousands of fashion lovers discovering Africa's most
               talented designers, or apply to join our curated community.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
+            <div
+              className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start"
+              style={getTextAnimationState("cta", 0.6)}
+            >
               <Button
                 asChild
                 size="lg"
