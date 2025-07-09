@@ -158,14 +158,6 @@ export function SearchModal() {
               className="border-0 shadow-none text-lg focus:ring-0 focus:outline-none"
               autoFocus
             />
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsOpen(false)}
-              className="text-oma-cocoa/60 hover:text-oma-cocoa"
-            >
-              <X className="w-4 h-4" />
-            </Button>
           </div>
 
           <div className="text-xs text-oma-cocoa/40 mb-4 flex items-center gap-2">
