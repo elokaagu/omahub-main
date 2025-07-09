@@ -119,7 +119,7 @@ export function FullWidthBrandRow({
   return (
     <div className={cn("w-full overflow-hidden", className)}>
       {/* Header */}
-      <div className="px-6 lg:px-8 mb-4">
+      <div className="px-2 sm:px-4 lg:px-6 mb-4">
         <div className="flex items-end justify-between">
           <div>
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-canela text-oma-black mb-2">
@@ -185,7 +185,7 @@ export function FullWidthBrandRow({
         <div
           ref={scrollRef}
           onScroll={updateScrollIndicators}
-          className="flex gap-2 sm:gap-3 overflow-x-auto scrollbar-hide snap-x snap-mandatory scroll-smooth px-6 lg:px-8 pb-4 brand-row-scroll"
+          className="flex gap-2 sm:gap-3 overflow-x-auto scrollbar-hide snap-x snap-mandatory scroll-smooth px-2 sm:px-4 lg:px-6 pb-4 brand-row-scroll"
           style={
             {
               // Show exactly 6 cards on desktop, fewer on smaller screens
