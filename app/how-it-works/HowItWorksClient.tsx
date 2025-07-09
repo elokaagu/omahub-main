@@ -138,8 +138,8 @@ export default function HowItWorksClient() {
         }}
       >
         {/* Corner Brackets */}
-        <div className="absolute top-8 left-8 w-12 h-12 border-l-4 border-t-4 border-oma-gold/80"></div>
-        <div className="absolute top-8 right-8 w-12 h-12 border-r-4 border-t-4 border-oma-gold/80"></div>
+        <div className="absolute top-24 left-8 w-12 h-12 border-l-4 border-t-4 border-oma-gold/80"></div>
+        <div className="absolute top-24 right-8 w-12 h-12 border-r-4 border-t-4 border-oma-gold/80"></div>
         <div className="absolute bottom-8 left-8 w-12 h-12 border-l-4 border-b-4 border-oma-gold/80"></div>
         <div className="absolute bottom-8 right-8 w-12 h-12 border-r-4 border-b-4 border-oma-gold/80"></div>
 
@@ -226,8 +226,8 @@ export default function HowItWorksClient() {
         }}
       >
         {/* Corner Brackets */}
-        <div className="absolute top-8 left-8 w-12 h-12 border-l-4 border-t-4 border-oma-gold/80"></div>
-        <div className="absolute top-8 right-8 w-12 h-12 border-r-4 border-t-4 border-oma-gold/80"></div>
+        <div className="absolute top-24 left-8 w-12 h-12 border-l-4 border-t-4 border-oma-gold/80"></div>
+        <div className="absolute top-24 right-8 w-12 h-12 border-r-4 border-t-4 border-oma-gold/80"></div>
         <div className="absolute bottom-8 left-8 w-12 h-12 border-l-4 border-b-4 border-oma-gold/80"></div>
         <div className="absolute bottom-8 right-8 w-12 h-12 border-r-4 border-b-4 border-oma-gold/80"></div>
         {/* Floating Graphics */}
@@ -291,8 +291,8 @@ export default function HowItWorksClient() {
       {/* Curated Selection CTA Section */}
       <section className="min-h-screen snap-start flex items-center justify-center pt-28 pb-24 px-6 bg-gradient-to-br from-oma-beige/80 via-white/90 to-oma-gold/10 relative overflow-hidden">
         {/* Corner Brackets */}
-        <div className="absolute top-8 left-8 w-12 h-12 border-l-4 border-t-4 border-oma-gold/80"></div>
-        <div className="absolute top-8 right-8 w-12 h-12 border-r-4 border-t-4 border-oma-gold/80"></div>
+        <div className="absolute top-24 left-8 w-12 h-12 border-l-4 border-t-4 border-oma-gold/80"></div>
+        <div className="absolute top-24 right-8 w-12 h-12 border-r-4 border-t-4 border-oma-gold/80"></div>
         <div className="absolute bottom-8 left-8 w-12 h-12 border-l-4 border-b-4 border-oma-gold/80"></div>
         <div className="absolute bottom-8 right-8 w-12 h-12 border-r-4 border-b-4 border-oma-gold/80"></div>
 
@@ -383,8 +383,8 @@ export default function HowItWorksClient() {
         }}
       >
         {/* Corner Brackets */}
-        <div className="absolute top-8 left-8 w-12 h-12 border-l-4 border-t-4 border-oma-gold/80"></div>
-        <div className="absolute top-8 right-8 w-12 h-12 border-r-4 border-t-4 border-oma-gold/80"></div>
+        <div className="absolute top-24 left-8 w-12 h-12 border-l-4 border-t-4 border-oma-gold/80"></div>
+        <div className="absolute top-24 right-8 w-12 h-12 border-r-4 border-t-4 border-oma-gold/80"></div>
         <div className="absolute bottom-8 left-8 w-12 h-12 border-l-4 border-b-4 border-oma-gold/80"></div>
         <div className="absolute bottom-8 right-8 w-12 h-12 border-r-4 border-b-4 border-oma-gold/80"></div>
         {/* Floating Graphics */}
@@ -456,8 +456,8 @@ export default function HowItWorksClient() {
         }}
       >
         {/* Corner Brackets */}
-        <div className="absolute top-8 left-8 w-12 h-12 border-l-4 border-t-4 border-oma-gold/80"></div>
-        <div className="absolute top-8 right-8 w-12 h-12 border-r-4 border-t-4 border-oma-gold/80"></div>
+        <div className="absolute top-24 left-8 w-12 h-12 border-l-4 border-t-4 border-oma-gold/80"></div>
+        <div className="absolute top-24 right-8 w-12 h-12 border-r-4 border-t-4 border-oma-gold/80"></div>
         <div className="absolute bottom-8 left-8 w-12 h-12 border-l-4 border-b-4 border-oma-gold/80"></div>
         <div className="absolute bottom-8 right-8 w-12 h-12 border-r-4 border-b-4 border-oma-gold/80"></div>
         {/* Floating Graphics */}
@@ -529,8 +529,8 @@ export default function HowItWorksClient() {
         }}
       >
         {/* Corner Brackets */}
-        <div className="absolute top-8 left-8 w-12 h-12 border-l-4 border-t-4 border-oma-gold/80"></div>
-        <div className="absolute top-8 right-8 w-12 h-12 border-r-4 border-t-4 border-oma-gold/80"></div>
+        <div className="absolute top-24 left-8 w-12 h-12 border-l-4 border-t-4 border-oma-gold/80"></div>
+        <div className="absolute top-24 right-8 w-12 h-12 border-r-4 border-t-4 border-oma-gold/80"></div>
         <div className="absolute bottom-8 left-8 w-12 h-12 border-l-4 border-b-4 border-oma-gold/80"></div>
         <div className="absolute bottom-8 right-8 w-12 h-12 border-r-4 border-b-4 border-oma-gold/80"></div>
         <div className="max-w-4xl mx-auto" style={getSectionTransform("faq")}>
@@ -590,8 +590,8 @@ export default function HowItWorksClient() {
         }}
       >
         {/* Corner Brackets */}
-        <div className="absolute top-8 left-8 w-12 h-12 border-l-4 border-t-4 border-oma-gold/80"></div>
-        <div className="absolute top-8 right-8 w-12 h-12 border-r-4 border-t-4 border-oma-gold/80"></div>
+        <div className="absolute top-24 left-8 w-12 h-12 border-l-4 border-t-4 border-oma-gold/80"></div>
+        <div className="absolute top-24 right-8 w-12 h-12 border-r-4 border-t-4 border-oma-gold/80"></div>
         <div className="absolute bottom-8 left-8 w-12 h-12 border-l-4 border-b-4 border-oma-gold/80"></div>
         <div className="absolute bottom-8 right-8 w-12 h-12 border-r-4 border-b-4 border-oma-gold/80"></div>
         {/* Background Graphics */}
