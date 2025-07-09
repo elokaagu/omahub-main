@@ -80,52 +80,35 @@ export default function TailoredClient() {
   });
 
   return (
-    <div className="w-full bg-gradient-to-b from-oma-beige/30 to-white min-h-screen snap-y snap-mandatory">
+    <div
+      className="relative w-full overflow-x-hidden snap-y snap-mandatory h-screen"
+      style={{ scrollBehavior: "smooth" }}
+    >
       {/* Hero Section */}
       <section
         ref={heroRef}
         id="hero"
-        className="snap-start min-h-screen flex items-center justify-center px-6 overflow-hidden relative"
+        className="min-h-screen snap-start flex items-center justify-center relative flex-col text-center px-4 pt-28 bg-gradient-to-b from-oma-beige/30 to-white"
       >
-        {/* Floating Graphics with parallax */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div
-            className="absolute top-20 left-10 w-32 h-32 bg-gradient-to-br from-oma-plum/20 to-oma-gold/20 rounded-full blur-xl animate-pulse"
-            style={getParallaxStyle(0.2)}
+        {/* Background Image */}
+        <div className="absolute inset-0 w-full h-full">
+          <img
+            src="/community.jpg"
+            alt="OmaHub Community"
+            className="w-full h-full object-cover object-center"
           />
+          <div className="absolute inset-0 bg-black/40" />
+          <div className="absolute inset-0 bg-gradient-to-t from-oma-plum/30 via-transparent to-oma-gold/20" />
+        </div>
+        {/* Floating Graphics */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute top-20 left-10 w-32 h-32 bg-gradient-to-br from-oma-plum/20 to-oma-gold/20 rounded-full blur-xl animate-pulse" />
           <div
             className="absolute top-40 right-20 w-24 h-24 bg-gradient-to-br from-oma-gold/30 to-oma-plum/30 rounded-full blur-lg animate-pulse"
-            style={{ ...getParallaxStyle(0.1), animationDelay: "1s" }}
+            style={{ animationDelay: "1s" }}
           />
-          <div
-            className="absolute bottom-40 left-20 w-20 h-20 bg-gradient-to-br from-oma-beige/40 to-oma-plum/40 rounded-full blur-md animate-pulse"
-            style={{ ...getParallaxStyle(-0.15), animationDelay: "2s" }}
-          />
-          {/* Fashion Icons */}
-          <div
-            className="absolute top-32 right-32 opacity-10"
-            style={getParallaxStyle(0.12)}
-          >
-            <Scissors
-              className="w-16 h-16 text-oma-plum animate-bounce"
-              style={{ animationDelay: "0.5s" }}
-            />
-          </div>
-          <div
-            className="absolute bottom-32 left-32 opacity-10"
-            style={getParallaxStyle(-0.12)}
-          >
-            <ShoppingBag
-              className="w-12 h-12 text-oma-gold animate-bounce"
-              style={{ animationDelay: "1.5s" }}
-            />
-          </div>
         </div>
-        <div className="absolute inset-0 bg-gradient-to-br from-oma-beige/20 to-transparent" />
-        <div
-          className="max-w-4xl mx-auto text-center relative z-10"
-          style={getSectionTransform("hero")}
-        >
+        <div className="max-w-4xl mx-auto text-center relative z-10">
           {/* Hero Icon */}
           <div className="flex justify-center mb-8">
             <div className="relative">
@@ -137,18 +120,15 @@ export default function TailoredClient() {
               </div>
             </div>
           </div>
-
-          <h1 className="text-5xl md:text-7xl font-canela text-black mb-8 leading-tight">
+          <h1 className="text-5xl md:text-7xl font-canela text-white mb-6 leading-tight overflow-hidden">
             Want to make a dress
             <br />
             <span className="text-oma-plum">from scratch?</span>
           </h1>
-
-          <p className="text-xl md:text-2xl text-black/70 mb-8 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-xl md:text-2xl text-white/90 mb-8 max-w-3xl mx-auto leading-relaxed">
             Transform your vision into reality with Africa's most skilled
             tailors
           </p>
-
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
             <Button
               asChild
@@ -172,9 +152,8 @@ export default function TailoredClient() {
               </Link>
             </Button>
           </div>
-
           {/* Trust Indicators */}
-          <div className="flex justify-center gap-8 text-sm text-black/60">
+          <div className="flex justify-center gap-8 text-sm text-white/80">
             <div className="flex items-center gap-2">
               <CheckCircle className="w-4 h-4 text-oma-gold" />
               <span>Verified Tailors</span>
@@ -194,7 +173,7 @@ export default function TailoredClient() {
       <section
         ref={questionsRef}
         id="questions"
-        className="snap-start min-h-screen flex items-center justify-center py-24 px-6 relative bg-gradient-to-br from-oma-plum/5 to-oma-gold/5"
+        className="min-h-screen snap-start flex items-center justify-center py-24 px-6 relative bg-gradient-to-br from-oma-plum/5 to-oma-gold/5"
       >
         <div
           className="max-w-6xl mx-auto w-full"
@@ -309,7 +288,7 @@ export default function TailoredClient() {
       <section
         ref={processRef}
         id="process"
-        className="snap-start min-h-screen flex items-center justify-center py-24 px-6 relative"
+        className="min-h-screen snap-start flex items-center justify-center py-24 px-6 relative"
       >
         <div
           className="max-w-6xl mx-auto w-full"
@@ -400,7 +379,7 @@ export default function TailoredClient() {
       <section
         ref={benefitsRef}
         id="benefits"
-        className="snap-start min-h-screen flex items-center justify-center py-24 px-6 relative bg-gradient-to-br from-oma-beige/20 to-white/50"
+        className="min-h-screen snap-start flex items-center justify-center py-24 px-6 relative bg-gradient-to-br from-oma-beige/20 to-white/50"
       >
         <div
           className="max-w-6xl mx-auto w-full"
@@ -492,7 +471,7 @@ export default function TailoredClient() {
       <section
         ref={ctaRef}
         id="cta"
-        className="snap-start min-h-screen flex items-center justify-center py-24 px-6 bg-gradient-to-br from-oma-plum/10 to-oma-gold/10 relative overflow-hidden"
+        className="min-h-screen snap-start flex items-center justify-center py-24 px-6 bg-gradient-to-br from-oma-plum/10 to-oma-gold/10 relative overflow-hidden"
       >
         {/* Background Graphics with parallax */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
