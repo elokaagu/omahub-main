@@ -118,56 +118,16 @@ export function FullWidthBrandRow({
 
   return (
     <div className={cn("w-full overflow-hidden", className)}>
-      {/* Header */}
-      <div className="px-2 sm:px-4 lg:pl-0 lg:pr-8 mb-4">
-        <div className="flex items-end justify-between">
-          <div>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-canela text-oma-black mb-2">
-              {title}
-            </h2>
-            {subtitle && (
-              <p className="text-sm sm:text-base text-oma-cocoa/80 max-w-2xl">
-                {subtitle}
-              </p>
-            )}
-          </div>
-
-          {/* Desktop Navigation Arrows */}
-          <div className="hidden lg:flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => scroll("left")}
-              disabled={!canScrollLeft}
-              className={cn(
-                "h-10 w-10 rounded-full border-oma-cocoa/20 hover:border-oma-plum transition-all duration-200",
-                !canScrollLeft && "opacity-50 cursor-not-allowed"
-              )}
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => scroll("right")}
-              disabled={!canScrollRight}
-              className={cn(
-                "h-10 w-10 rounded-full border-oma-cocoa/20 hover:border-oma-plum transition-all duration-200",
-                !canScrollRight && "opacity-50 cursor-not-allowed"
-              )}
-            >
-              <ChevronRight className="h-5 w-5" />
-            </Button>
-
-            {/* Auto-scroll indicator */}
-            {isAutoScrolling && (
-              <div className="flex items-center gap-1 text-xs text-oma-cocoa/60 animate-fade-in">
-                <div className="w-2 h-2 bg-oma-plum rounded-full animate-pulse"></div>
-                <span>Auto-scroll</span>
-              </div>
-            )}
-          </div>
-        </div>
+      {/* Section Header aligned with logo */}
+      <div className="max-w-7xl mx-auto px-6 lg:px-8 mb-4">
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-canela text-oma-black mb-2">
+          {title}
+        </h2>
+        {subtitle && (
+          <p className="text-sm sm:text-base text-oma-cocoa/80 max-w-2xl">
+            {subtitle}
+          </p>
+        )}
       </div>
 
       {/* Scrollable Brand Row */}
