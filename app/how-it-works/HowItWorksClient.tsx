@@ -285,11 +285,14 @@ export default function HowItWorksClient() {
         <div className="absolute top-1/2 right-0 w-4 h-4 bg-oma-plum rounded-full animate-ping" />
         <div className="absolute bottom-1/3 left-0 w-3 h-3 bg-oma-beige rounded-full animate-pulse" />
         <div className="max-w-6xl mx-auto w-full flex flex-col md:flex-row items-center justify-between gap-12 relative z-10">
-          {/* Left - Animated Graphics: big shopping basket */}
+          {/* Left - Meet Me Mockup */}
           <div className="flex-1 flex items-center justify-center">
-            <div className="relative w-72 h-72 flex items-center justify-center">
-              <ShoppingBag className="w-32 h-32 text-oma-plum/80 animate-float-slow" />
-            </div>
+            <img
+              src="/meet-me.PNG"
+              alt="Meet Me Collection Mobile Mockup"
+              className="w-64 max-w-full rounded-2xl shadow-2xl border border-oma-beige/40"
+              style={{ background: "transparent" }}
+            />
           </div>
           {/* Right - Copy and CTA */}
           <div className="flex-1 pl-0 md:pl-12 text-oma-cocoa">
@@ -337,16 +340,6 @@ export default function HowItWorksClient() {
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           {/* Left Side - Animation with design-themed cards */}
           <div className="flex-1 relative flex flex-col items-center justify-center gap-6">
-            {/* Meet Me Mockup */}
-            <img
-              src="/meet-me.PNG"
-              alt="Meet Me Collection Mobile Mockup"
-              className="w-64 max-w-full rounded-2xl shadow-2xl border border-oma-beige/40 mb-4"
-              style={{ background: "#fff" }}
-            />
-            <div className="text-center text-oma-cocoa/80 text-sm mb-4">
-              Discover the latest collections on mobile.
-            </div>
             {/* Existing animated cards */}
             <div className="relative w-80 h-80">
               {/* Design-themed animated cards */}
