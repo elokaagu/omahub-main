@@ -119,53 +119,55 @@ export function FullWidthBrandRow({
   return (
     <div className={cn("w-full overflow-hidden", className)}>
       {/* Header */}
-      <div className="px-2 sm:px-4 lg:pl-0 lg:pr-8 mb-4">
-        <div className="flex items-end justify-between">
-          <div>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-canela text-oma-black mb-2">
-              {title}
-            </h2>
-            {subtitle && (
-              <p className="text-sm sm:text-base text-oma-cocoa/80 max-w-2xl">
-                {subtitle}
-              </p>
-            )}
-          </div>
-
-          {/* Desktop Navigation Arrows */}
-          <div className="hidden lg:flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => scroll("left")}
-              disabled={!canScrollLeft}
-              className={cn(
-                "h-10 w-10 rounded-full border-oma-cocoa/20 hover:border-oma-plum transition-all duration-200",
-                !canScrollLeft && "opacity-50 cursor-not-allowed"
+      <div className="max-w-7xl mx-auto">
+        <div className="px-2 sm:px-4 mb-4">
+          <div className="flex items-end justify-between">
+            <div>
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-canela text-oma-black mb-2">
+                {title}
+              </h2>
+              {subtitle && (
+                <p className="text-sm sm:text-base text-oma-cocoa/80 max-w-2xl">
+                  {subtitle}
+                </p>
               )}
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => scroll("right")}
-              disabled={!canScrollRight}
-              className={cn(
-                "h-10 w-10 rounded-full border-oma-cocoa/20 hover:border-oma-plum transition-all duration-200",
-                !canScrollRight && "opacity-50 cursor-not-allowed"
-              )}
-            >
-              <ChevronRight className="h-5 w-5" />
-            </Button>
+            </div>
 
-            {/* Auto-scroll indicator */}
-            {isAutoScrolling && (
-              <div className="flex items-center gap-1 text-xs text-oma-cocoa/60 animate-fade-in">
-                <div className="w-2 h-2 bg-oma-plum rounded-full animate-pulse"></div>
-                <span>Auto-scroll</span>
-              </div>
-            )}
+            {/* Desktop Navigation Arrows */}
+            <div className="hidden lg:flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => scroll("left")}
+                disabled={!canScrollLeft}
+                className={cn(
+                  "h-10 w-10 rounded-full border-oma-cocoa/20 hover:border-oma-plum transition-all duration-200",
+                  !canScrollLeft && "opacity-50 cursor-not-allowed"
+                )}
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => scroll("right")}
+                disabled={!canScrollRight}
+                className={cn(
+                  "h-10 w-10 rounded-full border-oma-cocoa/20 hover:border-oma-plum transition-all duration-200",
+                  !canScrollRight && "opacity-50 cursor-not-allowed"
+                )}
+              >
+                <ChevronRight className="h-5 w-5" />
+              </Button>
+
+              {/* Auto-scroll indicator */}
+              {isAutoScrolling && (
+                <div className="flex items-center gap-1 text-xs text-oma-cocoa/60 animate-fade-in">
+                  <div className="w-2 h-2 bg-oma-plum rounded-full animate-pulse"></div>
+                  <span>Auto-scroll</span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -185,7 +187,7 @@ export function FullWidthBrandRow({
         <div
           ref={scrollRef}
           onScroll={updateScrollIndicators}
-          className="flex gap-2 sm:gap-3 overflow-x-auto scrollbar-hide snap-x snap-mandatory scroll-smooth px-2 sm:px-4 lg:pl-0 lg:pr-8 pb-4 brand-row-scroll"
+          className="flex gap-2 sm:gap-3 overflow-x-auto scrollbar-hide snap-x snap-mandatory scroll-smooth px-2 sm:px-4 lg:px-0 pb-4 brand-row-scroll"
           style={
             {
               // Show exactly 6 cards on desktop, fewer on smaller screens
