@@ -32,7 +32,6 @@ import {
 } from "lucide-react";
 
 export default function TailoredClient() {
-  const [scrollY, setScrollY] = useState(0);
   const [visibleSections, setVisibleSections] = useState<Set<string>>(
     new Set()
   );
@@ -44,21 +43,11 @@ export default function TailoredClient() {
   const ctaRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setScrollY(window.scrollY);
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  useEffect(() => {
     const observerOptions = {
       root: null,
       rootMargin: "-20% 0px -20% 0px",
       threshold: 0.1,
     };
-
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
         const sectionId = entry.target.id;
@@ -67,20 +56,17 @@ export default function TailoredClient() {
         }
       });
     }, observerOptions);
-
     const sections = [heroRef, questionsRef, processRef, benefitsRef, ctaRef];
     sections.forEach((ref) => {
       if (ref.current) {
         observer.observe(ref.current);
       }
     });
-
     return () => observer.disconnect();
   }, []);
 
   const getSectionTransform = (sectionId: string) => {
     const isVisible = visibleSections.has(sectionId);
-
     return {
       transform: `translateY(${isVisible ? 0 : 50}px)`,
       opacity: isVisible ? 1 : 0,
@@ -88,44 +74,53 @@ export default function TailoredClient() {
     };
   };
 
+  // Parallax for floating graphics only
+  const getParallaxStyle = (factor: number) => ({
+    transform: `translateY(${window.scrollY * factor}px)`,
+  });
+
   return (
     <div className="w-full bg-gradient-to-b from-oma-beige/30 to-white min-h-screen snap-y snap-mandatory">
       {/* Hero Section */}
       <section
         ref={heroRef}
         id="hero"
-        className="snap-start relative min-h-screen flex items-center justify-center px-6 overflow-hidden"
-        style={{
-          transform: `translateY(${scrollY * 0.5}px)`,
-        }}
+        className="snap-start min-h-screen flex items-center justify-center px-6 overflow-hidden relative"
       >
-        {/* Floating Graphics */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-20 left-10 w-32 h-32 bg-gradient-to-br from-oma-plum/20 to-oma-gold/20 rounded-full blur-xl animate-pulse" />
+        {/* Floating Graphics with parallax */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div
+            className="absolute top-20 left-10 w-32 h-32 bg-gradient-to-br from-oma-plum/20 to-oma-gold/20 rounded-full blur-xl animate-pulse"
+            style={getParallaxStyle(0.2)}
+          />
           <div
             className="absolute top-40 right-20 w-24 h-24 bg-gradient-to-br from-oma-gold/30 to-oma-plum/30 rounded-full blur-lg animate-pulse"
-            style={{ animationDelay: "1s" }}
+            style={{ ...getParallaxStyle(0.1), animationDelay: "1s" }}
           />
           <div
             className="absolute bottom-40 left-20 w-20 h-20 bg-gradient-to-br from-oma-beige/40 to-oma-plum/40 rounded-full blur-md animate-pulse"
-            style={{ animationDelay: "2s" }}
+            style={{ ...getParallaxStyle(-0.15), animationDelay: "2s" }}
           />
-
           {/* Fashion Icons */}
-          <div className="absolute top-32 right-32 opacity-10">
+          <div
+            className="absolute top-32 right-32 opacity-10"
+            style={getParallaxStyle(0.12)}
+          >
             <Scissors
               className="w-16 h-16 text-oma-plum animate-bounce"
               style={{ animationDelay: "0.5s" }}
             />
           </div>
-          <div className="absolute bottom-32 left-32 opacity-10">
+          <div
+            className="absolute bottom-32 left-32 opacity-10"
+            style={getParallaxStyle(-0.12)}
+          >
             <ShoppingBag
               className="w-12 h-12 text-oma-gold animate-bounce"
               style={{ animationDelay: "1.5s" }}
             />
           </div>
         </div>
-
         <div className="absolute inset-0 bg-gradient-to-br from-oma-beige/20 to-transparent" />
         <div
           className="max-w-4xl mx-auto text-center relative z-10"
@@ -195,15 +190,11 @@ export default function TailoredClient() {
           </div>
         </div>
       </section>
-
       {/* Questions Section */}
       <section
         ref={questionsRef}
         id="questions"
-        className="snap-start min-h-screen flex items-center py-24 px-6 relative bg-gradient-to-br from-oma-plum/5 to-oma-gold/5"
-        style={{
-          transform: `translateY(${scrollY * 0.2}px)`,
-        }}
+        className="snap-start min-h-screen flex items-center justify-center py-24 px-6 relative bg-gradient-to-br from-oma-plum/5 to-oma-gold/5"
       >
         <div
           className="max-w-6xl mx-auto w-full"
@@ -314,15 +305,11 @@ export default function TailoredClient() {
           </div>
         </div>
       </section>
-
       {/* Process Section */}
       <section
         ref={processRef}
         id="process"
-        className="snap-start min-h-screen flex items-center py-24 px-6 relative"
-        style={{
-          transform: `translateY(${scrollY * 0.15}px)`,
-        }}
+        className="snap-start min-h-screen flex items-center justify-center py-24 px-6 relative"
       >
         <div
           className="max-w-6xl mx-auto w-full"
@@ -409,15 +396,11 @@ export default function TailoredClient() {
           </div>
         </div>
       </section>
-
       {/* Benefits Section */}
       <section
         ref={benefitsRef}
         id="benefits"
-        className="snap-start min-h-screen flex items-center py-24 px-6 relative bg-gradient-to-br from-oma-beige/20 to-white/50"
-        style={{
-          transform: `translateY(${scrollY * 0.1}px)`,
-        }}
+        className="snap-start min-h-screen flex items-center justify-center py-24 px-6 relative bg-gradient-to-br from-oma-beige/20 to-white/50"
       >
         <div
           className="max-w-6xl mx-auto w-full"
@@ -505,22 +488,23 @@ export default function TailoredClient() {
           </div>
         </div>
       </section>
-
       {/* CTA Section */}
       <section
         ref={ctaRef}
         id="cta"
-        className="snap-start min-h-screen flex items-center py-24 px-6 bg-gradient-to-br from-oma-plum/10 to-oma-gold/10 relative overflow-hidden"
-        style={{
-          transform: `translateY(${scrollY * 0.05}px)`,
-        }}
+        className="snap-start min-h-screen flex items-center justify-center py-24 px-6 bg-gradient-to-br from-oma-plum/10 to-oma-gold/10 relative overflow-hidden"
       >
-        {/* Background Graphics */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-10 left-10 w-40 h-40 bg-gradient-to-br from-oma-plum/10 to-oma-gold/10 rounded-full blur-2xl" />
-          <div className="absolute bottom-10 right-10 w-32 h-32 bg-gradient-to-br from-oma-gold/10 to-oma-plum/10 rounded-full blur-xl" />
+        {/* Background Graphics with parallax */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div
+            className="absolute top-10 left-10 w-40 h-40 bg-gradient-to-br from-oma-plum/10 to-oma-gold/10 rounded-full blur-2xl"
+            style={getParallaxStyle(0.1)}
+          />
+          <div
+            className="absolute bottom-10 right-10 w-32 h-32 bg-gradient-to-br from-oma-gold/10 to-oma-plum/10 rounded-full blur-xl"
+            style={getParallaxStyle(-0.1)}
+          />
         </div>
-
         <div
           className="max-w-4xl mx-auto text-center relative z-10 w-full"
           style={getSectionTransform("cta")}
