@@ -34,7 +34,7 @@ export function VideoPlayer({
   autoPlay = false,
   muted = true,
   loop = false,
-  controls = true,
+  controls = false,
   aspectRatio = "16/9",
   sizes = "100vw",
   quality = 80,
