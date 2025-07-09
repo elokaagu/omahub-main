@@ -98,18 +98,18 @@ export default function HowItWorksClient() {
     };
   };
 
-  // Enhanced text animation states
+  // Enhanced text animation states - slower and more cinematic
   const getTextAnimationState = (sectionId: string, delay: number = 0) => {
     const isVisible = visibleSections.has(sectionId);
 
     return {
-      transform: `translateY(${isVisible ? 0 : 30}px)`,
+      transform: `translateY(${isVisible ? 0 : 40}px)`,
       opacity: isVisible ? 1 : 0,
-      transition: `all 0.6s cubic-bezier(0.4, 0, 0.2, 1) ${delay}s`,
+      transition: `all 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) ${delay}s`,
     };
   };
 
-  // Typewriter effect for headings
+  // Typewriter effect for headings - slower and more cinematic
   const getTypewriterState = (sectionId: string) => {
     const isVisible = visibleSections.has(sectionId);
 
@@ -117,7 +117,7 @@ export default function HowItWorksClient() {
       width: isVisible ? "100%" : "0%",
       opacity: isVisible ? 1 : 0,
       transition:
-        "width 1.2s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.8s ease-in-out",
+        "width 2s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 1.5s ease-in-out",
       overflow: "hidden",
       whiteSpace: "nowrap",
     };
@@ -215,7 +215,7 @@ export default function HowItWorksClient() {
           </h1>
           <p
             className="text-xl md:text-2xl text-white/90 mb-8 max-w-2xl mx-auto leading-relaxed"
-            style={getTextAnimationState("hero", 0.3)}
+            style={getTextAnimationState("hero", 0.8)}
           >
             Connecting fashion lovers with Africa's most talented designers
           </p>
@@ -223,7 +223,7 @@ export default function HowItWorksClient() {
           {/* Stats */}
           <div
             className="flex justify-center gap-8 mb-8"
-            style={getTextAnimationState("hero", 0.6)}
+            style={getTextAnimationState("hero", 1.2)}
           >
             <div className="text-center">
               <div className="text-2xl font-bold text-oma-gold">500+</div>
@@ -241,7 +241,7 @@ export default function HowItWorksClient() {
 
           <div
             className="flex flex-col sm:flex-row gap-4 justify-center"
-            style={getTextAnimationState("hero", 0.9)}
+            style={getTextAnimationState("hero", 1.6)}
           >
             <Button
               asChild
@@ -285,32 +285,13 @@ export default function HowItWorksClient() {
         <div className="absolute top-1/2 right-0 w-4 h-4 bg-oma-plum rounded-full animate-ping" />
         <div className="absolute bottom-1/3 left-0 w-3 h-3 bg-oma-beige rounded-full animate-pulse" />
         <div className="max-w-6xl mx-auto w-full flex flex-col md:flex-row items-center justify-between gap-12 relative z-10">
-          {/* Left - Animated Graphics: stylized card stack with O shape */}
+          {/* Left - Animated Graphics: fashion/jewelry icons */}
           <div className="flex-1 flex items-center justify-center">
-            <div className="relative w-72 h-72">
-              {/* OmaHub O shape */}
-              <div className="absolute top-8 left-8 w-32 h-32 rounded-full border-8 border-oma-plum/40 animate-float-slow"></div>
-              {/* Card stack */}
-              <div className="absolute inset-0 transform rotate-6 animate-pulse">
-                <div className="w-40 h-56 bg-gradient-to-br from-oma-beige/60 to-oma-gold/30 rounded-lg border-2 border-oma-gold/30 backdrop-blur-sm"></div>
-              </div>
-              <div
-                className="absolute inset-0 transform -rotate-3 animate-pulse"
-                style={{ animationDelay: "0.5s" }}
-              >
-                <div className="w-40 h-56 bg-gradient-to-br from-oma-gold/30 to-oma-plum/10 rounded-lg border-2 border-oma-plum/30 backdrop-blur-sm"></div>
-              </div>
-              <div
-                className="absolute inset-0 transform rotate-2 animate-pulse"
-                style={{ animationDelay: "1s" }}
-              >
-                <div className="w-40 h-56 bg-gradient-to-br from-oma-beige/30 to-oma-plum/20 rounded-lg border-2 border-oma-beige/30 backdrop-blur-sm"></div>
-              </div>
-              {/* Small accent dot */}
-              <div
-                className="absolute bottom-8 left-8 w-4 h-4 bg-oma-plum rounded-full animate-bounce shadow-lg"
-                style={{ animationDelay: "0.3s" }}
-              ></div>
+            <div className="relative w-72 h-72 flex items-center justify-center">
+              <ShoppingBag className="absolute left-8 top-8 w-16 h-16 text-oma-plum/70 animate-float-slow" />
+              <Crown className="absolute right-8 top-16 w-14 h-14 text-oma-gold/70 animate-bounce" />
+              <Tag className="absolute left-20 bottom-8 w-12 h-12 text-oma-cocoa/60 animate-pulse" />
+              <Star className="absolute right-12 bottom-12 w-10 h-10 text-oma-plum/40 animate-float-slow" />
             </div>
           </div>
           {/* Right - Copy and CTA */}
@@ -323,12 +304,12 @@ export default function HowItWorksClient() {
             </h2>
             <p
               className="text-xl text-oma-cocoa/80 mb-8 leading-relaxed max-w-xl"
-              style={getTextAnimationState("clients", 0.3)}
+              style={getTextAnimationState("clients", 0.8)}
             >
-              Discover and connect with Africa’s most talented designers. Enjoy
+              Discover and connect with Africa's most talented designers. Enjoy
               a seamless, curated experience from inspiration to delivery.
             </p>
-            <div style={getTextAnimationState("clients", 0.6)}>
+            <div style={getTextAnimationState("clients", 1.2)}>
               <Button
                 asChild
                 size="lg"
@@ -357,10 +338,10 @@ export default function HowItWorksClient() {
         <div className="absolute bottom-8 right-8 w-12 h-12 border-r-4 border-b-4 border-oma-gold/80"></div>
 
         <div className="max-w-6xl mx-auto flex items-center justify-between">
-          {/* Left Side - Animation */}
+          {/* Left Side - Animation with fashion icons */}
           <div className="flex-1 relative">
             <div className="relative w-80 h-80">
-              {/* Animated Design Cards */}
+              {/* Fashion-themed animated elements */}
               <div className="absolute inset-0 transform rotate-12 animate-pulse">
                 <div className="w-48 h-64 bg-gradient-to-br from-oma-plum/30 to-oma-gold/30 rounded-lg border-2 border-oma-gold/40 backdrop-blur-sm">
                   <div className="p-4">
@@ -397,7 +378,7 @@ export default function HowItWorksClient() {
                 </div>
               </div>
 
-              {/* Floating Elements */}
+              {/* Fashion-themed floating elements */}
               <div className="absolute top-4 right-4 w-6 h-6 bg-oma-gold rounded-full animate-bounce shadow-lg"></div>
               <div
                 className="absolute bottom-8 left-8 w-4 h-4 bg-oma-plum rounded-full animate-bounce shadow-lg"
@@ -417,7 +398,7 @@ export default function HowItWorksClient() {
             </h2>
             <p
               className="text-xl text-oma-cocoa/80 mb-8 leading-relaxed max-w-xl"
-              style={getTextAnimationState("curated", 0.3)}
+              style={getTextAnimationState("curated", 0.8)}
             >
               We're by invitation only; which means you only discover designers
               if our team of curators are convinced their work is exceptional
@@ -425,7 +406,7 @@ export default function HowItWorksClient() {
               the top of their craft.
             </p>
 
-            <div style={getTextAnimationState("curated", 0.6)}>
+            <div style={getTextAnimationState("curated", 1.2)}>
               <Button
                 asChild
                 size="lg"
@@ -461,23 +442,13 @@ export default function HowItWorksClient() {
         <div className="absolute top-1/3 left-0 w-4 h-4 bg-oma-gold rounded-full animate-ping" />
         <div className="absolute bottom-1/2 right-0 w-3 h-3 bg-oma-beige rounded-full animate-pulse" />
         <div className="max-w-6xl mx-auto w-full flex flex-col md:flex-row items-center justify-between gap-12 relative z-10">
-          {/* Left - Animated Graphics */}
+          {/* Left - Animated Graphics with design/jewelry icons */}
           <div className="flex-1 flex items-center justify-center">
-            <div className="relative w-72 h-72">
-              {/* Fabric swatch shape */}
-              <div className="absolute top-10 left-10 w-32 h-20 bg-gradient-to-br from-oma-gold/30 to-oma-beige/40 rounded-xl border-4 border-oma-plum/30 rotate-12 animate-float-slow"></div>
-              {/* Card stack */}
-              <div className="absolute inset-0 transform rotate-6 animate-pulse">
-                <div className="w-40 h-56 bg-gradient-to-br from-oma-plum/20 to-oma-gold/20 rounded-lg border-2 border-oma-gold/30 backdrop-blur-sm"></div>
-              </div>
-              <div
-                className="absolute inset-0 transform -rotate-3 animate-pulse"
-                style={{ animationDelay: "0.5s" }}
-              >
-                <div className="w-40 h-56 bg-gradient-to-br from-oma-gold/20 to-oma-beige/20 rounded-lg border-2 border-oma-plum/30 backdrop-blur-sm"></div>
-              </div>
-              {/* Accent O shape */}
-              <div className="absolute bottom-8 right-8 w-16 h-16 rounded-full border-4 border-oma-gold/40 animate-bounce"></div>
+            <div className="relative w-72 h-72 flex items-center justify-center">
+              <Palette className="absolute left-8 top-8 w-16 h-16 text-oma-gold/70 animate-float-slow" />
+              <Scissors className="absolute right-8 top-16 w-14 h-14 text-oma-plum/70 animate-bounce" />
+              <Crown className="absolute left-20 bottom-8 w-12 h-12 text-oma-cocoa/60 animate-pulse" />
+              <Tag className="absolute right-12 bottom-12 w-10 h-10 text-oma-gold/40 animate-float-slow" />
             </div>
           </div>
           {/* Right - Copy and CTA */}
@@ -490,13 +461,13 @@ export default function HowItWorksClient() {
             </h2>
             <p
               className="text-xl text-oma-cocoa/80 mb-8 leading-relaxed max-w-xl"
-              style={getTextAnimationState("designers", 0.3)}
+              style={getTextAnimationState("designers", 0.8)}
             >
               Share your vision and collections with a global audience. Build
               your brand, connect with clients, and grow your creative business
               on OmaHub.
             </p>
-            <div style={getTextAnimationState("designers", 0.6)}>
+            <div style={getTextAnimationState("designers", 1.2)}>
               <Button
                 asChild
                 size="lg"
@@ -532,17 +503,13 @@ export default function HowItWorksClient() {
         <div className="absolute top-2/3 right-0 w-4 h-4 bg-oma-gold rounded-full animate-ping" />
         <div className="absolute bottom-1/4 left-0 w-3 h-3 bg-oma-beige rounded-full animate-pulse" />
         <div className="max-w-6xl mx-auto w-full flex flex-col md:flex-row-reverse items-center justify-between gap-12 relative z-10">
-          {/* Right - Animated Graphics (now on right) */}
+          {/* Right - Animated Graphics with premium/jewelry icons */}
           <div className="flex-1 flex items-center justify-center">
-            <div className="relative w-72 h-72">
-              {/* Abstract O shape */}
-              <div className="absolute top-8 right-8 w-28 h-28 rounded-full border-8 border-oma-gold/40 animate-float-slow"></div>
-              {/* Card stack */}
-              <div className="absolute inset-0 transform rotate-12 animate-pulse">
-                <div className="w-48 h-48 bg-gradient-to-br from-oma-gold/30 to-oma-beige/30 rounded-full border-2 border-oma-plum/30 backdrop-blur-sm"></div>
-              </div>
-              {/* Accent dot */}
-              <div className="absolute bottom-0 left-0 w-6 h-6 bg-oma-plum rounded-full animate-bounce shadow-lg"></div>
+            <div className="relative w-72 h-72 flex items-center justify-center">
+              <Diamond className="absolute left-8 top-8 w-16 h-16 text-oma-gold/70 animate-float-slow" />
+              <Gem className="absolute right-8 top-16 w-14 h-14 text-oma-plum/70 animate-bounce" />
+              <Star className="absolute left-20 bottom-8 w-12 h-12 text-oma-cocoa/60 animate-pulse" />
+              <Heart className="absolute right-12 bottom-12 w-10 h-10 text-oma-gold/40 animate-float-slow" />
             </div>
           </div>
           {/* Left - Copy and CTA */}
@@ -555,12 +522,12 @@ export default function HowItWorksClient() {
             </h2>
             <p
               className="text-xl text-oma-cocoa/80 mb-8 leading-relaxed max-w-xl"
-              style={getTextAnimationState("features", 0.3)}
+              style={getTextAnimationState("features", 0.8)}
             >
               Built for both designers and clients, OmaHub ensures quality,
               transparency, and a seamless experience from start to finish.
             </p>
-            <div style={getTextAnimationState("features", 0.6)}>
+            <div style={getTextAnimationState("features", 1.2)}>
               <Button
                 asChild
                 size="lg"
@@ -596,17 +563,13 @@ export default function HowItWorksClient() {
         <div className="absolute top-1/3 right-0 w-5 h-5 bg-oma-gold/30 rounded-full animate-ping" />
         <div className="absolute bottom-1/2 left-0 w-4 h-4 bg-oma-beige/40 rounded-full animate-pulse" />
         <div className="max-w-6xl mx-auto w-full flex flex-col md:flex-row-reverse items-center justify-between gap-12 relative z-10">
-          {/* Right - Animated Graphics (now on right) */}
+          {/* Right - Animated Graphics with premium fashion icons */}
           <div className="flex-1 flex items-center justify-center">
-            <div className="relative w-72 h-72">
-              {/* O shape */}
-              <div className="absolute top-8 right-8 w-24 h-24 rounded-full border-8 border-oma-plum/30 animate-float-slow"></div>
-              {/* Card stack */}
-              <div className="absolute inset-0 transform rotate-12 animate-pulse">
-                <div className="w-48 h-48 bg-gradient-to-br from-oma-plum/20 to-oma-gold/20 rounded-2xl border-2 border-oma-gold/30 backdrop-blur-sm"></div>
-              </div>
-              {/* Accent dot */}
-              <div className="absolute bottom-0 right-0 w-6 h-6 bg-oma-gold rounded-full animate-bounce shadow-lg"></div>
+            <div className="relative w-72 h-72 flex items-center justify-center">
+              <Diamond className="absolute left-8 top-8 w-16 h-16 text-oma-gold/70 animate-float-slow" />
+              <Crown className="absolute right-8 top-16 w-14 h-14 text-oma-plum/70 animate-bounce" />
+              <Heart className="absolute left-20 bottom-8 w-12 h-12 text-oma-cocoa/60 animate-pulse" />
+              <Star className="absolute right-12 bottom-12 w-10 h-10 text-oma-gold/40 animate-float-slow" />
             </div>
           </div>
           {/* Left - Copy and CTA */}
@@ -619,12 +582,12 @@ export default function HowItWorksClient() {
             </h2>
             <p
               className="text-xl text-oma-cocoa/80 mb-8 leading-relaxed max-w-xl"
-              style={getTextAnimationState("faq", 0.3)}
+              style={getTextAnimationState("faq", 0.8)}
             >
               Everything you need to know about OmaHub, from how to order to
               joining as a designer. Still have questions? We're here to help.
             </p>
-            <div style={getTextAnimationState("faq", 0.6)}>
+            <div style={getTextAnimationState("faq", 1.2)}>
               <Button
                 asChild
                 size="lg"
@@ -683,14 +646,14 @@ export default function HowItWorksClient() {
             </h2>
             <p
               className="text-xl text-oma-cocoa/80 mb-8 leading-relaxed max-w-xl mx-auto md:mx-0"
-              style={getTextAnimationState("cta", 0.3)}
+              style={getTextAnimationState("cta", 0.8)}
             >
               Join thousands of fashion lovers discovering Africa's most
               talented designers, or apply to join our curated community.
             </p>
             <div
               className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start"
-              style={getTextAnimationState("cta", 0.6)}
+              style={getTextAnimationState("cta", 1.2)}
             >
               <Button
                 asChild

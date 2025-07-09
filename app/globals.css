@@ -200,7 +200,7 @@ html:has([data-studio-page]) {
   }
 }
 
-/* Text animation keyframes */
+/* Text animation keyframes - slower and more cinematic */
 @keyframes typewriter {
   from {
     width: 0;
@@ -213,7 +213,7 @@ html:has([data-studio-page]) {
 @keyframes textSlideUp {
   from {
     opacity: 0;
-    transform: translateY(30px);
+    transform: translateY(40px);
   }
   to {
     opacity: 1;
@@ -230,17 +230,17 @@ html:has([data-studio-page]) {
   }
 }
 
-/* Text animation classes */
+/* Text animation classes - slower and more cinematic */
 .animate-typewriter {
-  animation: typewriter 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: typewriter 2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
 }
 
 .animate-text-slide-up {
-  animation: textSlideUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: textSlideUp 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
 }
 
 .animate-text-fade-in {
-  animation: textFadeIn 0.8s ease-in-out forwards;
+  animation: textFadeIn 1.5s ease-in-out forwards;
 }
 
 @keyframes slideUp {
