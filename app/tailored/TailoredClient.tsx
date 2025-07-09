@@ -200,13 +200,13 @@ export default function TailoredClient() {
       <section
         ref={questionsRef}
         id="questions"
-        className="py-24 px-6 relative bg-gradient-to-br from-oma-plum/5 to-oma-gold/5"
+        className="min-h-screen flex items-center py-24 px-6 relative bg-gradient-to-br from-oma-plum/5 to-oma-gold/5"
         style={{
           transform: `translateY(${scrollY * 0.2}px)`,
         }}
       >
         <div
-          className="max-w-6xl mx-auto"
+          className="max-w-6xl mx-auto w-full"
           style={getSectionTransform("questions")}
         >
           <div className="text-center mb-16">
@@ -319,13 +319,13 @@ export default function TailoredClient() {
       <section
         ref={processRef}
         id="process"
-        className="py-24 px-6 relative"
+        className="min-h-screen flex items-center py-24 px-6 relative"
         style={{
           transform: `translateY(${scrollY * 0.15}px)`,
         }}
       >
         <div
-          className="max-w-6xl mx-auto"
+          className="max-w-6xl mx-auto w-full"
           style={getSectionTransform("process")}
         >
           <div className="text-center mb-16">
@@ -414,13 +414,13 @@ export default function TailoredClient() {
       <section
         ref={benefitsRef}
         id="benefits"
-        className="py-24 px-6 relative bg-gradient-to-br from-oma-beige/20 to-white/50"
+        className="min-h-screen flex items-center py-24 px-6 relative bg-gradient-to-br from-oma-beige/20 to-white/50"
         style={{
           transform: `translateY(${scrollY * 0.1}px)`,
         }}
       >
         <div
-          className="max-w-6xl mx-auto"
+          className="max-w-6xl mx-auto w-full"
           style={getSectionTransform("benefits")}
         >
           <div className="text-center mb-16">
@@ -510,7 +510,7 @@ export default function TailoredClient() {
       <section
         ref={ctaRef}
         id="cta"
-        className="py-24 px-6 bg-gradient-to-br from-oma-plum/10 to-oma-gold/10 relative overflow-hidden"
+        className="min-h-screen flex items-center py-24 px-6 bg-gradient-to-br from-oma-plum/10 to-oma-gold/10 relative overflow-hidden"
         style={{
           transform: `translateY(${scrollY * 0.05}px)`,
         }}
@@ -522,7 +522,7 @@ export default function TailoredClient() {
         </div>
 
         <div
-          className="max-w-4xl mx-auto text-center relative z-10"
+          className="max-w-4xl mx-auto text-center relative z-10 w-full"
           style={getSectionTransform("cta")}
         >
           <div className="flex justify-center mb-8">
