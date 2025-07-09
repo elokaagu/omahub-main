@@ -182,6 +182,7 @@ const mapDatabaseCategoryToHomepage = (dbCategory: string): string => {
     "Formal Wear": "Ready to Wear",
     Accessories: "Accessories",
     Jewelry: "Accessories",
+    Streetwear: "Streetwear",
     Couture: "Bridal", // Map Couture to Bridal for homepage display
   };
 
@@ -403,9 +404,8 @@ export default function HomeContent() {
         setDynamicFallbackItems(dynamicItems);
 
         // Process brands data with performance optimization
-        const updatedCategories = initialCategories.map((category) => ({
-          ...category,
-          brands: brandsData
+        const updatedCategories = initialCategories.map((category) => {
+          const categoryBrands = brandsData
             .filter(
               (brand: any) =>
                 mapDatabaseCategoryToHomepage(brand.category) === category.title
@@ -419,8 +419,26 @@ export default function HomeContent() {
               rating: brand.rating,
               isVerified: brand.is_verified || false,
               category: brand.category,
-            })),
-        }));
+            }));
+
+          // Debug logging for Streetwear
+          if (category.title === "Streetwear") {
+            console.log("🔍 Streetwear category brands:", categoryBrands);
+            console.log(
+              "🔍 All brands data:",
+              brandsData.map((b: any) => ({
+                name: b.name,
+                category: b.category,
+                mapped: mapDatabaseCategoryToHomepage(b.category),
+              }))
+            );
+          }
+
+          return {
+            ...category,
+            brands: categoryBrands,
+          };
+        });
 
         setCategories(updatedCategories);
         setHeroSlides(heroData);
@@ -429,6 +447,19 @@ export default function HomeContent() {
         // Debug spotlight content
         console.log("🎯 Spotlight data fetched:", spotlightData);
         console.log("🎯 Spotlight content set:", !!spotlightData);
+
+        // Debug categories
+        console.log(
+          "🔍 Initial categories:",
+          initialCategories.map((c) => c.title)
+        );
+        console.log(
+          "🔍 Updated categories with brands:",
+          updatedCategories.map((c) => ({
+            title: c.title,
+            brandCount: c.brands.length,
+          }))
+        );
       } catch (err) {
         console.error("Error fetching data:", err);
         setError("Failed to load content. Please try again.");
