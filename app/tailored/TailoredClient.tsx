@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { getTailorsWithBrands } from "@/lib/services/tailorService";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 
 export default function TailoredClient() {
   const [visibleSections, setVisibleSections] = useState<Set<string>>(
@@ -14,6 +16,10 @@ export default function TailoredClient() {
   const processRef = useRef<HTMLDivElement>(null);
   const benefitsRef = useRef<HTMLDivElement>(null);
   const ctaRef = useRef<HTMLDivElement>(null);
+
+  const [tailors, setTailors] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const observerOptions = {
@@ -36,6 +42,21 @@ export default function TailoredClient() {
       }
     });
     return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    async function fetchTailors() {
+      try {
+        setLoading(true);
+        const data = await getTailorsWithBrands();
+        setTailors(data);
+      } catch (err) {
+        setError("Failed to load tailor information");
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchTailors();
   }, []);
 
   const getSectionTransform = (sectionId: string) => {
@@ -100,6 +121,75 @@ export default function TailoredClient() {
             <div>Quality Guaranteed</div>
             <div>Timely Delivery</div>
           </div>
+        </div>
+      </section>
+      {/* Tailors Gallery Section */}
+      <section
+        id="tailors-gallery"
+        className="py-24 px-6 bg-white/90 border-t border-oma-beige/30"
+        style={getSectionTransform("tailors-gallery")}
+      >
+        <div className="max-w-7xl mx-auto w-full">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl md:text-5xl font-canela text-black mb-4">
+              Featured Tailors
+            </h2>
+            <p className="text-xl text-black/70 max-w-2xl mx-auto">
+              Explore our curated selection of Africa's most skilled tailors
+            </p>
+          </div>
+          {loading ? (
+            <div className="flex justify-center items-center min-h-[200px]">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-oma-plum" />
+            </div>
+          ) : error ? (
+            <div className="text-center text-oma-plum py-8">{error}</div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+              {tailors.map((tailor) => (
+                <div
+                  key={tailor.id}
+                  className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden group border border-oma-beige/30"
+                >
+                  <div className="relative w-full aspect-[3/4] bg-oma-beige/20">
+                    <OptimizedImage
+                      src={tailor.image || "/placeholder-image.jpg"}
+                      alt={tailor.title || tailor.brand?.name || "Tailor"}
+                      aspectRatio="3/4"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      quality={90}
+                      fill
+                    />
+                    {tailor.brand?.is_verified && (
+                      <span className="absolute top-3 right-3 bg-oma-plum text-white text-xs px-3 py-1 rounded-full shadow font-semibold">
+                        Verified
+                      </span>
+                    )}
+                  </div>
+                  <div className="p-5 text-center">
+                    <h3 className="text-lg font-semibold text-black mb-1 truncate">
+                      {tailor.title || tailor.brand?.name}
+                    </h3>
+                    <div className="text-oma-cocoa/70 text-sm mb-1 truncate">
+                      {tailor.brand?.location}
+                    </div>
+                    {tailor.specialties && tailor.specialties.length > 0 && (
+                      <div className="flex flex-wrap justify-center gap-1 mt-2">
+                        {tailor.specialties.slice(0, 2).map((spec: string) => (
+                          <span
+                            key={spec}
+                            className="bg-oma-gold/10 text-oma-plum text-xs px-2 py-1 rounded-full"
+                          >
+                            {spec}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
       {/* Questions Section */}
