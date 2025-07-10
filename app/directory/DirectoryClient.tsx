@@ -33,7 +33,7 @@ interface BrandDisplay {
   id: string;
   name: string;
   image: string;
-  category: Subcategory;
+  category: string; // Accept any raw category
   location: string;
   isVerified: boolean;
 }
@@ -41,14 +41,10 @@ interface BrandDisplay {
 // Define category and location options using helper functions
 const categories = getAllFilterCategories();
 
-// Map database categories to expected subcategories using the standardized mapping
-const mapDatabaseCategoryToSubcategory = (dbCategory: string): Subcategory => {
-  const mappedCategory = mapDatabaseToDisplayCategory(dbCategory);
-  // Ensure the mapped category is a valid subcategory, default to "Ready to Wear"
-  const allSubcategories = Object.values(subcategories).flat();
-  return allSubcategories.includes(mappedCategory as Subcategory)
-    ? (mappedCategory as Subcategory)
-    : "Ready to Wear";
+// Instead, get unique categories from the fetched brands for the filter dropdown
+const getUniqueCategories = (brands: any[]) => {
+  const categories = brands.map((b) => b.category).filter(Boolean);
+  return ["All Categories", ...Array.from(new Set(categories))];
 };
 
 // Fallback brands with correct category types
@@ -149,119 +145,52 @@ export default function DirectoryClient() {
     }
   }, [searchParams]);
 
-  // Convert brands to display format when allBrands changes
+  // Use raw category for display and filtering
   useEffect(() => {
     if (!allBrands || allBrands.length === 0) {
-      console.log(
-        "⚠️ DirectoryClient: No brands data available, using fallback data"
-      );
       setDisplayedBrands(fallbackBrands);
       return;
     }
-
-    console.log("🔄 DirectoryClient: Converting brands to display format...");
-    console.log("🔍 DirectoryClient: Raw brands data:", allBrands);
-
-    // Convert to display format with fallbacks for all required fields
-    const brandDisplayData: BrandDisplay[] = allBrands.map((brand) => ({
+    const brandDisplayData = allBrands.map((brand) => ({
       id: brand.id || `temp-id-${Math.random().toString(36).substring(2, 9)}`,
       name: brand.name || "Unnamed Brand",
       image: brand.image || "/placeholder.jpg",
-      category: mapDatabaseCategoryToSubcategory(
-        brand.category || "Ready to Wear"
-      ), // Map category
-      location: brand.location ? brand.location.split(",")[0] : "Unknown", // Take just the city name
+      category: brand.category || "Ready to Wear",
+      location: brand.location ? brand.location.split(",")[0] : "Unknown",
       isVerified: brand.is_verified || false,
     }));
-
-    console.log(
-      "✅ DirectoryClient: Processed",
-      brandDisplayData.length,
-      "brands"
-    );
-    console.log("🔍 DirectoryClient: Processed brands:", brandDisplayData);
     setDisplayedBrands(brandDisplayData);
   }, [allBrands]);
 
-  // Filter brands based on search, category, and location
+  // Update filter logic to use raw category
   useEffect(() => {
-    console.log("DirectoryClient: Filtering brands with:", {
-      searchTerm,
-      selectedCategory,
-      selectedLocation,
-      allBrandsCount: allBrands?.length || 0,
-    });
-
     if (!allBrands || allBrands.length === 0) {
-      console.log(
-        "⚠️ DirectoryClient: No brands to filter, using fallback data"
-      );
       setDisplayedBrands(fallbackBrands);
       return;
     }
-
     let filtered = [...allBrands].map((brand) => ({
       id: brand.id || `temp-id-${Math.random().toString(36).substring(2, 9)}`,
       name: brand.name || "Unnamed Brand",
       image: brand.image || "/placeholder.jpg",
-      category: mapDatabaseCategoryToSubcategory(
-        brand.category || "Ready to Wear"
-      ), // Map category
+      category: brand.category || "Ready to Wear",
       location: brand.location ? brand.location.split(",")[0] : "Unknown",
       isVerified: brand.is_verified || false,
     }));
-
-    console.log("🔍 DirectoryClient: Starting with", filtered.length, "brands");
-
-    // Apply search filter
     if (searchTerm) {
       filtered = filtered.filter((brand) =>
         brand.name.toLowerCase().includes(searchTerm.toLowerCase())
       );
-      console.log(
-        "🔍 DirectoryClient: After search filter:",
-        filtered.length,
-        "brands"
-      );
     }
-
-    // Apply category filter
     if (selectedCategory !== "All Categories") {
-      if (
-        collections.includes(selectedCategory as (typeof collections)[number])
-      ) {
-        // If it's a main category, show all brands in its subcategories
-        const subcats =
-          subcategories[selectedCategory as (typeof collections)[number]];
-        filtered = filtered.filter((brand) =>
-          subcats.some((subcat) => subcat === brand.category)
-        );
-      } else {
-        // If it's a subcategory, show only brands in that specific category
-        filtered = filtered.filter(
-          (brand) => brand.category === selectedCategory
-        );
-      }
-      console.log(
-        "🔍 DirectoryClient: After category filter:",
-        filtered.length,
-        "brands"
+      filtered = filtered.filter(
+        (brand) => brand.category === selectedCategory
       );
     }
-
-    // Apply location filter
     if (selectedLocation !== "All Locations") {
       filtered = filtered.filter(
         (brand) => brand.location === selectedLocation
       );
-      console.log(
-        "🔍 DirectoryClient: After location filter:",
-        filtered.length,
-        "brands"
-      );
     }
-
-    console.log("✅ DirectoryClient: Final filtered brands:", filtered.length);
     setDisplayedBrands(filtered);
   }, [searchTerm, selectedCategory, selectedLocation, allBrands]);
 
@@ -271,13 +200,11 @@ export default function DirectoryClient() {
     setSelectedCategory("All Categories");
     setSelectedLocation("All Locations");
     if (allBrands) {
-      const brandDisplayData: BrandDisplay[] = allBrands.map((brand) => ({
+      const brandDisplayData = allBrands.map((brand) => ({
         id: brand.id || `temp-id-${Math.random().toString(36).substring(2, 9)}`,
         name: brand.name || "Unnamed Brand",
         image: brand.image || "/placeholder.jpg",
-        category: mapDatabaseCategoryToSubcategory(
-          brand.category || "Ready to Wear"
-        ), // Map category
+        category: brand.category || "Ready to Wear",
         location: brand.location ? brand.location.split(",")[0] : "Unknown",
         isVerified: brand.is_verified || false,
       }));
@@ -419,7 +346,7 @@ export default function DirectoryClient() {
                   onChange={(e) => setSelectedCategory(e.target.value)}
                   className="w-full mt-1 p-2 sm:p-3 border rounded-md border-oma-gold/20 focus:border-oma-plum min-h-[44px] text-sm sm:text-base"
                 >
-                  {categories.map((category) => (
+                  {getUniqueCategories(allBrands).map((category) => (
                     <option key={category} value={category}>
                       {category}
                     </option>
