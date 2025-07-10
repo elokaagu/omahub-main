@@ -116,9 +116,7 @@ export default function TailoredClient() {
           <h1 className="text-5xl md:text-7xl font-canela text-white mb-6 leading-tight overflow-hidden drop-shadow-[0_2px_16px_rgba(0,0,0,0.45)]">
             Want to make a dress
             <br />
-            <span className="bg-gradient-to-r from-oma-gold via-oma-plum to-white bg-clip-text text-transparent">
-              from scratch?
-            </span>
+            <span className="text-white">from scratch?</span>
           </h1>
           <p className="text-xl md:text-2xl text-white/90 mb-8 max-w-3xl mx-auto leading-relaxed drop-shadow-[0_2px_12px_rgba(0,0,0,0.35)]">
             Transform your vision into reality with Africa's most skilled
