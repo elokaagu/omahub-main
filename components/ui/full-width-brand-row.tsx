@@ -119,7 +119,7 @@ export function FullWidthBrandRow({
   return (
     <div className={cn("w-full overflow-hidden", className)}>
       {/* Section Header aligned with logo */}
-      <div className="max-w-7xl mx-auto px-6 lg:px-8 mb-4">
+      <div className="px-6 lg:px-8 mb-4">
         <h2 className="text-2xl sm:text-3xl md:text-4xl font-canela text-oma-black mb-2">
           {title}
         </h2>

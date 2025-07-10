@@ -61,9 +61,16 @@ export default function TailoredClient() {
             const imageUrl =
               featuredTailor.image || featuredTailor.brand?.image;
             if (imageUrl && imageUrl !== "/placeholder-image.jpg") {
+              console.log("Setting hero image to:", imageUrl);
               setHeroImage(imageUrl);
+            } else {
+              console.log("No suitable image found, using default");
             }
+          } else {
+            console.log("No tailors with images found");
           }
+        } else {
+          console.log("No tailors data available");
         }
       } catch (err) {
         console.error("Error fetching tailors:", err);
