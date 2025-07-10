@@ -10,16 +10,16 @@ export default function TailoredClient() {
   const [visibleSections, setVisibleSections] = useState<Set<string>>(
     new Set()
   );
+  const [tailors, setTailors] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [heroImage, setHeroImage] = useState<string>("/bridal.jpg"); // Default fallback
 
   const heroRef = useRef<HTMLDivElement>(null);
   const questionsRef = useRef<HTMLDivElement>(null);
   const processRef = useRef<HTMLDivElement>(null);
   const benefitsRef = useRef<HTMLDivElement>(null);
   const ctaRef = useRef<HTMLDivElement>(null);
-
-  const [tailors, setTailors] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const observerOptions = {
@@ -51,6 +51,20 @@ export default function TailoredClient() {
         const data = await getTailorsWithBrands();
         console.log("Fetched tailors data:", data);
         setTailors(data);
+
+        // Set hero image from first tailor with a good image
+        if (data && data.length > 0) {
+          const featuredTailor = data.find(
+            (tailor) => tailor.image || (tailor.brand && tailor.brand.image)
+          );
+          if (featuredTailor) {
+            const imageUrl =
+              featuredTailor.image || featuredTailor.brand?.image;
+            if (imageUrl && imageUrl !== "/placeholder-image.jpg") {
+              setHeroImage(imageUrl);
+            }
+          }
+        }
       } catch (err) {
         console.error("Error fetching tailors:", err);
         setError("Failed to load tailor information");
@@ -84,8 +98,8 @@ export default function TailoredClient() {
         {/* Background Image */}
         <div className="absolute inset-0 w-full h-full">
           <img
-            src="/bridal.jpg"
-            alt="Bridal Collection"
+            src={heroImage}
+            alt="Featured Tailor"
             className="w-full h-full object-cover object-center"
           />
           <div className="absolute inset-0 bg-black/40" />

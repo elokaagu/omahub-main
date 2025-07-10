@@ -86,6 +86,7 @@ export async function getTailorsWithBrands(): Promise<
       location: string;
       is_verified: boolean;
       category: string;
+      image: string;
     };
   })[]
 > {
@@ -95,7 +96,7 @@ export async function getTailorsWithBrands(): Promise<
 
   const { data, error } = await supabase.from("tailors").select(`
       *,
-      brand:brands(id, name, location, is_verified, category)
+      brand:brands(id, name, location, is_verified, category, image)
     `);
 
   if (error) {
