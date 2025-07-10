@@ -139,11 +139,3 @@ export default function TermsOfServicePage() {
     </div>
   );
 }
-
-export async function generateMetadata() {
-  return {
-    title: "Terms of Service - OmaHub",
-    description:
-      "Read OmaHub's terms of service and conditions for using our global fashion platform.",
-  };
-}

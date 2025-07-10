@@ -88,11 +88,3 @@ export default function PrivacyPolicyPage() {
     </div>
   );
 }
-
-export async function generateMetadata() {
-  return {
-    title: "Privacy Policy - OmaHub",
-    description:
-      "Learn how OmaHub protects your privacy and handles your personal information on our global fashion platform.",
-  };
-}
