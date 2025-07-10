@@ -80,6 +80,7 @@ export default function CollectionsPage() {
     null
   );
   const [isDeleting, setIsDeleting] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -105,6 +106,7 @@ export default function CollectionsPage() {
     });
 
     setLoading(true);
+    setFetchError(null);
     try {
       // Get user permissions and profile
       const [permissions, profileResult] = await Promise.all([
@@ -209,7 +211,7 @@ export default function CollectionsPage() {
           cataloguesCount: cataloguesData.length,
         });
         setBrands(brandsData);
-        setCatalogues(cataloguesData);
+        setCollections(cataloguesData);
       } else if (finalIsBrandOwner && ownedBrandIds.length > 0) {
         console.log(
           "📚 Catalogues Page: Brand owner with owned brands - fetching filtered data"
@@ -255,17 +257,18 @@ export default function CollectionsPage() {
           }),
         ]);
         setBrands(brandsData);
-        setCatalogues(cataloguesData);
+        setCollections(cataloguesData);
       } else {
         console.log(
           "📚 Catalogues Page: No access - user is not admin and has no owned brands"
         );
         // No access
         setBrands([]);
-        setCatalogues([]);
+        setCollections([]);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("❌ Catalogues Page: Error fetching data:", error);
+      setFetchError(error?.message || "Unknown error");
       toast.error("Failed to load catalogues");
     } finally {
       console.log(
@@ -317,7 +320,7 @@ export default function CollectionsPage() {
 
   const confirmDeleteCatalogue = (catalogueId: string) => {
     // Check if user can delete this catalogue
-    const catalogue = catalogues.find((c) => c.id === catalogueId);
+    const catalogue = collections.find((c) => c.id === catalogueId);
     // Use profile role as primary source of truth
     const profileRole = userProfile?.role;
     const effectiveRole = profileRole || user?.role;
@@ -367,7 +370,7 @@ export default function CollectionsPage() {
     setIsDeleting(true);
     try {
       await deleteCatalogue(catalogueToDelete);
-      setCatalogues(catalogues.filter((c) => c.id !== catalogueToDelete));
+      setCollections(collections.filter((c) => c.id !== catalogueToDelete));
       toast.success("Collection deleted successfully");
     } catch (error) {
       console.error("Error deleting catalogue:", error);
@@ -391,6 +394,20 @@ export default function CollectionsPage() {
     return <Loading />;
   }
 
+  if (fetchError) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 text-center">
+        <h2 className="text-2xl font-bold text-red-600 mb-2">
+          Failed to load catalogues
+        </h2>
+        <p className="text-black/70 mb-4">{fetchError}</p>
+        <Button onClick={fetchData} className="bg-oma-plum text-white">
+          Retry
+        </Button>
+      </div>
+    );
+  }
+
   if (!user) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -411,8 +428,8 @@ export default function CollectionsPage() {
 
   // Debug logging for render
   console.log("📚 Catalogues Page: Rendering with data:", {
-    cataloguesCount: catalogues.length,
-    filteredCataloguesCount: filteredCatalogues.length,
+    cataloguesCount: collections.length,
+    filteredCataloguesCount: filteredCollections.length,
     brandsCount: brands.length,
     selectedBrand,
     searchQuery,
@@ -435,10 +452,10 @@ export default function CollectionsPage() {
                 ? `Manage collections for your ${brands.length > 1 ? `${brands.length} brands` : "brand"}: ${brands.map((b) => b.name).join(", ")}`
                 : "Create and manage your brand collections"}
             </p>
-            {user?.role === "brand_admin" && catalogues.length > 0 && (
+            {user?.role === "brand_admin" && collections.length > 0 && (
               <p className="text-sm text-oma-plum/70 mt-1">
-                Showing {catalogues.length} collection
-                {catalogues.length !== 1 ? "s" : ""} from your owned brands
+                Showing {collections.length} collection
+                {collections.length !== 1 ? "s" : ""} from your owned brands
               </p>
             )}
           </div>
@@ -462,7 +479,7 @@ export default function CollectionsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-black">
-                {catalogues.length}
+                {collections.length}
               </div>
             </CardContent>
           </Card>
@@ -487,7 +504,7 @@ export default function CollectionsPage() {
             <CardContent>
               <div className="text-2xl font-bold text-black">
                 {
-                  catalogues.filter((c) => {
+                  collections.filter((c) => {
                     // Since created_at might not be available in the Catalogue type,
                     // we'll show 0 for now or implement proper date tracking
                     return false;
@@ -525,7 +542,7 @@ export default function CollectionsPage() {
         </div>
 
         {/* Catalogues Grid */}
-        {filteredCatalogues.length === 0 ? (
+        {filteredCollections.length === 0 ? (
           <Card className="border-oma-gold/20 bg-white/80">
             <CardContent className="flex flex-col items-center justify-center py-16">
               <Package className="w-16 h-16 text-black/30 mb-4" />
@@ -533,11 +550,11 @@ export default function CollectionsPage() {
                 No collections found
               </h3>
               <p className="text-black/60 text-center mb-6">
-                {catalogues.length === 0
+                {collections.length === 0
                   ? "Get started by creating your first collection"
                   : "Try adjusting your search or filter criteria"}
               </p>
-              {canCreateCatalogues && catalogues.length === 0 && (
+              {canCreateCatalogues && collections.length === 0 && (
                 <Link href="/studio/collections/create">
                   <Button className="bg-oma-plum hover:bg-oma-plum/90 text-white">
                     <PlusCircle className="w-4 h-4 mr-2" />
@@ -549,14 +566,14 @@ export default function CollectionsPage() {
           </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredCatalogues.map((catalogue) => (
+            {filteredCollections.map((catalogue) => (
               <Card
                 key={catalogue.id}
                 className="border-oma-gold/20 bg-white/80 hover:border-oma-gold/40 transition-all duration-300 hover:shadow-lg"
               >
                 <div className="aspect-[4/3] relative overflow-hidden rounded-t-lg">
                   <AuthImage
-                    src={catalogue.image}
+                    src={catalogue.image || "/placeholder-image.jpg"}
                     alt={catalogue.title}
                     aspectRatio="4/3"
                     className="w-full h-full"
