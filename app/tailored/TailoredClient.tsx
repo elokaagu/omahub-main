@@ -6,6 +6,26 @@ import { Button } from "@/components/ui/button";
 import { getTailorsWithBrands } from "@/lib/services/tailorService";
 import { OptimizedImage } from "@/components/ui/optimized-image";
 
+// Animation helpers inspired by HowItWorksClient
+const getSectionTransform = (isVisible: boolean) => ({
+  transform: `translateY(${isVisible ? 0 : 50}px)`,
+  opacity: isVisible ? 1 : 0,
+  transition: "all 0.8s cubic-bezier(0.4, 0, 0.2, 1)",
+});
+const getTextAnimationState = (isVisible: boolean, delay: number = 0) => ({
+  transform: `translateY(${isVisible ? 0 : 40}px)`,
+  opacity: isVisible ? 1 : 0,
+  transition: `all 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) ${delay}s`,
+});
+const getTypewriterState = (isVisible: boolean) => ({
+  width: isVisible ? "100%" : "0%",
+  opacity: isVisible ? 1 : 0,
+  transition:
+    "width 1.6s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 1.2s ease-in-out",
+  overflow: "hidden",
+  whiteSpace: "nowrap",
+});
+
 export default function TailoredClient() {
   const [visibleSections, setVisibleSections] = useState<Set<string>>(
     new Set()
@@ -20,6 +40,7 @@ export default function TailoredClient() {
   const processRef = useRef<HTMLDivElement>(null);
   const benefitsRef = useRef<HTMLDivElement>(null);
   const ctaRef = useRef<HTMLDivElement>(null);
+  const [heroVisible, setHeroVisible] = useState(false);
 
   useEffect(() => {
     const observerOptions = {
@@ -41,6 +62,17 @@ export default function TailoredClient() {
         observer.observe(ref.current);
       }
     });
+
+    // Add hero observer for animation
+    const heroObserver = new window.IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) setHeroVisible(true);
+        });
+      },
+      { threshold: 0.1 }
+    );
+    if (heroRef.current) heroObserver.observe(heroRef.current);
     return () => observer.disconnect();
   }, []);
 
@@ -82,15 +114,6 @@ export default function TailoredClient() {
     fetchTailors();
   }, []);
 
-  const getSectionTransform = (sectionId: string) => {
-    const isVisible = visibleSections.has(sectionId);
-    return {
-      transform: `translateY(${isVisible ? 0 : 50}px)`,
-      opacity: isVisible ? 1 : 0,
-      transition: "all 0.8s cubic-bezier(0.4, 0, 0.2, 1)",
-    };
-  };
-
   return (
     <div
       className="relative w-full overflow-x-hidden snap-y snap-mandatory h-screen"
@@ -112,17 +135,34 @@ export default function TailoredClient() {
           <div className="absolute inset-0 bg-black/40" />
           <div className="absolute inset-0 bg-gradient-to-t from-oma-plum/30 via-transparent to-oma-gold/20" />
         </div>
-        <div className="max-w-4xl mx-auto text-center relative z-10">
-          <h1 className="text-5xl md:text-7xl font-canela text-white mb-6 leading-tight overflow-hidden drop-shadow-[0_2px_16px_rgba(0,0,0,0.45)]">
+        <div
+          className="max-w-4xl mx-auto text-center relative z-10"
+          style={getSectionTransform(heroVisible)}
+        >
+          <h1
+            className="text-5xl md:text-7xl font-canela text-white mb-6 leading-tight overflow-hidden drop-shadow-[0_2px_16px_rgba(0,0,0,0.45)]"
+            style={getTypewriterState(heroVisible)}
+          >
             Want to make a dress
             <br />
-            <span className="text-white">from scratch?</span>
+            <span
+              className="text-white"
+              style={getTextAnimationState(heroVisible, 0.5)}
+            >
+              from scratch?
+            </span>
           </h1>
-          <p className="text-xl md:text-2xl text-white/90 mb-8 max-w-3xl mx-auto leading-relaxed drop-shadow-[0_2px_12px_rgba(0,0,0,0.35)]">
+          <p
+            className="text-xl md:text-2xl text-white/90 mb-8 max-w-3xl mx-auto leading-relaxed drop-shadow-[0_2px_12px_rgba(0,0,0,0.35)]"
+            style={getTextAnimationState(heroVisible, 1)}
+          >
             Transform your vision into reality with Africa's most skilled
             tailors
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+          <div
+            className="flex flex-col sm:flex-row gap-4 justify-center mb-12"
+            style={getTextAnimationState(heroVisible, 1.4)}
+          >
             <Button
               asChild
               size="lg"
@@ -139,7 +179,10 @@ export default function TailoredClient() {
               <Link href="/tailors">Browse Tailors</Link>
             </Button>
           </div>
-          <div className="flex justify-center gap-8 text-sm text-oma-gold font-semibold">
+          <div
+            className="flex justify-center gap-8 text-sm text-oma-gold font-semibold"
+            style={getTextAnimationState(heroVisible, 1.8)}
+          >
             <div>Verified Tailors</div>
             <div>Quality Guaranteed</div>
             <div>Timely Delivery</div>
