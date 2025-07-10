@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { RichTextEditor } from "@/components/ui/rich-text-editor";
+import OmaHubEditor from "@/app/components/OmaHubEditor";
 import { toast } from "sonner";
 import {
   FileText,
@@ -275,11 +275,11 @@ export default function LegalDocumentsPage() {
             <div>
               <Label htmlFor="content">Document Content</Label>
               <div className="mt-2">
-                <RichTextEditor
-                  value={formData.content}
-                  onChange={(content) => setFormData({ ...formData, content })}
-                  placeholder="Enter the legal document content..."
-                  minHeight="400px"
+                <OmaHubEditor
+                  content={formData.content}
+                  onChange={(content: string) =>
+                    setFormData({ ...formData, content })
+                  }
                 />
               </div>
             </div>

@@ -1,0 +1,81 @@
+.omahub-editor-container {
+  background: #fff8f0;
+  border-radius: 16px;
+  border: 1px solid #e5d6c6;
+  padding: 2rem;
+  font-family: "Suisse Intl", "Canela", serif;
+  color: #2d1a10;
+  max-width: 800px;
+  margin: 0 auto;
+  box-shadow: 0 4px 24px rgba(160, 92, 42, 0.06);
+}
+
+.omahub-toolbar {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  background: #f7e7d8;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  align-items: center;
+}
+
+.omahub-toolbar button {
+  background: none;
+  border: none;
+  color: #6d3b1a;
+  font-size: 1rem;
+  font-family: inherit;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    color 0.2s;
+}
+
+.omahub-toolbar button.active,
+.omahub-toolbar button:hover {
+  background: #e5d6c6;
+  color: #a05c2a;
+}
+
+.ProseMirror {
+  min-height: 300px;
+  outline: none;
+  font-size: 1.1rem;
+  background: transparent;
+}
+
+.ProseMirror h1,
+.ProseMirror h2,
+.ProseMirror h3 {
+  color: #6d3b1a;
+  font-family: "Canela", serif;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
+
+.ProseMirror strong {
+  color: #a05c2a;
+  font-weight: bold;
+}
+
+.ProseMirror em {
+  color: #6d3b1a;
+  font-style: italic;
+}
+
+.ProseMirror blockquote {
+  border-left: 4px solid #a05c2a;
+  margin: 1em 0;
+  padding-left: 1em;
+  color: #6d3b1a;
+  background: #f7e7d8;
+  border-radius: 4px;
+}
+
+.ProseMirror ul,
+.ProseMirror ol {
+  margin-left: 2em;
+}

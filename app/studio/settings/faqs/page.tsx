@@ -43,6 +43,7 @@ import {
   GripVertical,
 } from "lucide-react";
 import { toast } from "sonner";
+import OmaHubEditor from "@/app/components/OmaHubEditor";
 
 interface FAQ {
   id: string;
@@ -336,15 +337,11 @@ export default function FAQManagementPage() {
               </div>
               <div>
                 <Label htmlFor="answer">Answer *</Label>
-                <Textarea
-                  id="answer"
-                  value={formData.answer}
-                  onChange={(e) =>
-                    setFormData({ ...formData, answer: e.target.value })
+                <OmaHubEditor
+                  content={formData.answer}
+                  onChange={(content: string) =>
+                    setFormData({ ...formData, answer: content })
                   }
-                  placeholder="Enter the answer"
-                  rows={4}
-                  required
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
