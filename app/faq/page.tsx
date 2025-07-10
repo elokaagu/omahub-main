@@ -15,6 +15,11 @@ export default function FAQPage() {
   const [faqs, setFaqs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [listVisible, setListVisible] = useState(false);
+
+  useEffect(() => {
+    setListVisible(true);
+  }, []);
 
   useEffect(() => {
     async function fetchFaqs() {
@@ -65,7 +70,9 @@ export default function FAQPage() {
         </div>
 
         {/* FAQ List */}
-        <div className="space-y-4">
+        <div
+          className={`space-y-4 transition-all duration-700 ${listVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
+        >
           {loading ? (
             <div className="text-center text-oma-plum py-8">
               Loading FAQs...
@@ -81,17 +88,15 @@ export default function FAQPage() {
                 open={openFaq === faq.id}
                 onOpenChange={() => toggleFaq(faq.id)}
               >
-                <CollapsibleTrigger className="w-full flex items-center justify-between p-6 bg-white/80 backdrop-blur-sm rounded-xl border border-oma-plum/20 hover:border-oma-plum/40 transition-all duration-300 group">
+                <CollapsibleTrigger className="w-full flex items-center justify-between p-6 bg-white/80 backdrop-blur-sm rounded-xl border border-oma-plum/20 hover:border-oma-plum/40 transition-all duration-300 group focus:shadow-lg hover:shadow-lg">
                   <h3 className="text-lg font-semibold text-black text-left pr-4">
                     {faq.question}
                   </h3>
                   <ChevronDown
-                    className={`w-5 h-5 text-oma-plum transition-transform duration-300 ${
-                      openFaq === faq.id ? "rotate-180" : ""
-                    }`}
+                    className={`w-5 h-5 text-oma-plum transition-transform duration-500 ease-cubic-bezier[.4,0,.2,1] ${openFaq === faq.id ? "rotate-180" : "rotate-0"}`}
                   />
                 </CollapsibleTrigger>
-                <CollapsibleContent className="px-6 pb-6">
+                <CollapsibleContent className="px-6 pb-6 transition-all duration-700 ease-cubic-bezier[.4,0,.2,1]">
                   <div className="pt-4 text-black/70 leading-relaxed">
                     {faq.answer}
                   </div>
