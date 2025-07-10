@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,65 +10,33 @@ import {
 } from "@/components/ui/collapsible";
 import { ChevronDown, ArrowLeft, ArrowRight } from "lucide-react";
 
-const faqList = [
-  {
-    id: "what-is-omahub",
-    question: "What is OmaHub?",
-    answer:
-      "OmaHub is a platform that connects fashion enthusiasts with talented African designers. We showcase unique, high-quality pieces and facilitate direct connections between clients and designers.",
-  },
-  {
-    id: "how-to-order",
-    question: "How do I place an order?",
-    answer:
-      "Browse our designer profiles and collections, then contact designers directly through our platform. You can discuss custom pieces, sizing, pricing, and delivery details.",
-  },
-  {
-    id: "custom-pieces",
-    question: "Can I request custom pieces?",
-    answer:
-      "Yes! Many of our designers offer custom design services. You can discuss your vision directly with them and work together to create something unique.",
-  },
-  {
-    id: "shipping",
-    question: "How does shipping work?",
-    answer:
-      "Shipping is handled directly by each designer. When you contact a designer, they'll provide you with shipping options and costs for your location.",
-  },
-  {
-    id: "join-designer",
-    question: "How can I join as a designer?",
-    answer:
-      "Click 'Join as Designer' and fill out our application form. We'll review your portfolio and get back to you within 5-7 business days.",
-  },
-  {
-    id: "payment-methods",
-    question: "What payment methods do you accept?",
-    answer:
-      "Payment is handled directly between you and the designer. Most designers accept bank transfers, mobile money, and other local payment methods. Discuss payment options when you contact a designer.",
-  },
-  {
-    id: "returns-refunds",
-    question: "What is your return and refund policy?",
-    answer:
-      "Return and refund policies vary by designer. When you contact a designer, ask about their specific policies for returns, exchanges, and refunds.",
-  },
-  {
-    id: "quality-guarantee",
-    question: "Do you guarantee the quality of products?",
-    answer:
-      "We curate our designers carefully to ensure high quality, but each designer manages their own quality control. We recommend reading reviews and asking questions before making a purchase.",
-  },
-  {
-    id: "contact-support",
-    question: "How can I contact customer support?",
-    answer:
-      "You can reach our support team through the contact form on our website. We typically respond within 24-48 hours during business days.",
-  },
-];
-
 export default function FAQPage() {
   const [openFaq, setOpenFaq] = useState<string | null>(null);
+  const [faqs, setFaqs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchFaqs() {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await fetch("/api/admin/faqs");
+        const data = await response.json();
+        if (response.ok) {
+          // Only show active FAQs
+          setFaqs((data.faqs || []).filter((faq: any) => faq.is_active));
+        } else {
+          setError(data.error || "Failed to load FAQs");
+        }
+      } catch (err: any) {
+        setError(err.message || "Failed to load FAQs");
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchFaqs();
+  }, []);
 
   const toggleFaq = (id: string) => {
     setOpenFaq(openFaq === id ? null : id);
@@ -98,29 +66,39 @@ export default function FAQPage() {
 
         {/* FAQ List */}
         <div className="space-y-4">
-          {faqList.map((faq) => (
-            <Collapsible
-              key={faq.id}
-              open={openFaq === faq.id}
-              onOpenChange={() => toggleFaq(faq.id)}
-            >
-              <CollapsibleTrigger className="w-full flex items-center justify-between p-6 bg-white/80 backdrop-blur-sm rounded-xl border border-oma-plum/20 hover:border-oma-plum/40 transition-all duration-300 group">
-                <h3 className="text-lg font-semibold text-black text-left pr-4">
-                  {faq.question}
-                </h3>
-                <ChevronDown
-                  className={`w-5 h-5 text-oma-plum transition-transform duration-300 ${
-                    openFaq === faq.id ? "rotate-180" : ""
-                  }`}
-                />
-              </CollapsibleTrigger>
-              <CollapsibleContent className="px-6 pb-6">
-                <div className="pt-4 text-black/70 leading-relaxed">
-                  {faq.answer}
-                </div>
-              </CollapsibleContent>
-            </Collapsible>
-          ))}
+          {loading ? (
+            <div className="text-center text-oma-plum py-8">
+              Loading FAQs...
+            </div>
+          ) : error ? (
+            <div className="text-center text-red-600 py-8">{error}</div>
+          ) : faqs.length === 0 ? (
+            <div className="text-center text-black/60 py-8">No FAQs found.</div>
+          ) : (
+            faqs.map((faq) => (
+              <Collapsible
+                key={faq.id}
+                open={openFaq === faq.id}
+                onOpenChange={() => toggleFaq(faq.id)}
+              >
+                <CollapsibleTrigger className="w-full flex items-center justify-between p-6 bg-white/80 backdrop-blur-sm rounded-xl border border-oma-plum/20 hover:border-oma-plum/40 transition-all duration-300 group">
+                  <h3 className="text-lg font-semibold text-black text-left pr-4">
+                    {faq.question}
+                  </h3>
+                  <ChevronDown
+                    className={`w-5 h-5 text-oma-plum transition-transform duration-300 ${
+                      openFaq === faq.id ? "rotate-180" : ""
+                    }`}
+                  />
+                </CollapsibleTrigger>
+                <CollapsibleContent className="px-6 pb-6">
+                  <div className="pt-4 text-black/70 leading-relaxed">
+                    {faq.answer}
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+            ))
+          )}
         </div>
 
         {/* CTA Section */}

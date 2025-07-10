@@ -113,12 +113,14 @@ export default function TailoredClient() {
           <div className="absolute inset-0 bg-gradient-to-t from-oma-plum/30 via-transparent to-oma-gold/20" />
         </div>
         <div className="max-w-4xl mx-auto text-center relative z-10">
-          <h1 className="text-5xl md:text-7xl font-canela text-white mb-6 leading-tight overflow-hidden">
+          <h1 className="text-5xl md:text-7xl font-canela text-white mb-6 leading-tight overflow-hidden drop-shadow-[0_2px_16px_rgba(0,0,0,0.45)]">
             Want to make a dress
             <br />
-            <span className="text-oma-plum">from scratch?</span>
+            <span className="bg-gradient-to-r from-oma-gold via-oma-plum to-white bg-clip-text text-transparent">
+              from scratch?
+            </span>
           </h1>
-          <p className="text-xl md:text-2xl text-white/90 mb-8 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-xl md:text-2xl text-white/90 mb-8 max-w-3xl mx-auto leading-relaxed drop-shadow-[0_2px_12px_rgba(0,0,0,0.35)]">
             Transform your vision into reality with Africa's most skilled
             tailors
           </p>
@@ -139,7 +141,7 @@ export default function TailoredClient() {
               <Link href="/tailors">Browse Tailors</Link>
             </Button>
           </div>
-          <div className="flex justify-center gap-8 text-sm text-white/80">
+          <div className="flex justify-center gap-8 text-sm text-oma-gold font-semibold">
             <div>Verified Tailors</div>
             <div>Quality Guaranteed</div>
             <div>Timely Delivery</div>
