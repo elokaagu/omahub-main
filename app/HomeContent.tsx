@@ -616,70 +616,74 @@ export default function HomeContent() {
           )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Collections Card */}
-            <div className="relative group overflow-hidden rounded-lg bg-gray-100 min-h-[400px]">
-              <Link href="/collections">
-                <div className="relative aspect-[3/4]">
-                  <img
-                    src={categoryImages.collectionImage}
-                    alt="Collections"
-                    className="w-full h-full object-cover object-center object-top transition-transform duration-300 group-hover:scale-105"
-                    onLoad={() =>
-                      console.log(
-                        "✅ Collection image loaded:",
-                        categoryImages.collectionImage
-                      )
-                    }
-                    onError={(e) =>
-                      console.error(
-                        "❌ Collection image failed:",
-                        categoryImages.collectionImage,
-                        e
-                      )
-                    }
-                  />
-                  <div className="absolute inset-0 bg-black/30 transition-opacity group-hover:bg-black/40" />
-                  <div className="absolute bottom-6 left-6 text-white">
-                    <h3 className="text-2xl font-canela mb-2">Collections</h3>
-                    <p className="text-sm">
-                      Shop for an occasion, holiday, or ready to wear piece
-                    </p>
+            <FadeIn delay={0.1}>
+              <div className="relative group overflow-hidden rounded-lg bg-gray-100 min-h-[400px]">
+                <Link href="/collections">
+                  <div className="relative aspect-[3/4]">
+                    <img
+                      src={categoryImages.collectionImage}
+                      alt="Collections"
+                      className="w-full h-full object-cover object-center object-top transition-transform duration-300 group-hover:scale-105"
+                      onLoad={() =>
+                        console.log(
+                          "✅ Collection image loaded:",
+                          categoryImages.collectionImage
+                        )
+                      }
+                      onError={(e) =>
+                        console.error(
+                          "❌ Collection image failed:",
+                          categoryImages.collectionImage,
+                          e
+                        )
+                      }
+                    />
+                    <div className="absolute inset-0 bg-black/30 transition-opacity group-hover:bg-black/40" />
+                    <div className="absolute bottom-6 left-6 text-white">
+                      <h3 className="text-2xl font-canela mb-2">Collections</h3>
+                      <p className="text-sm">
+                        Shop for an occasion, holiday, or ready to wear piece
+                      </p>
+                    </div>
                   </div>
-                </div>
-              </Link>
-            </div>
+                </Link>
+              </div>
+            </FadeIn>
 
             {/* Tailored Card */}
-            <div className="relative group overflow-hidden rounded-lg bg-gray-100 min-h-[400px]">
-              <Link href="/tailored">
-                <div className="relative aspect-[3/4]">
-                  <img
-                    src={categoryImages.tailoredImage}
-                    alt="Tailored"
-                    className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105"
-                    onLoad={() =>
-                      console.log(
-                        "✅ Tailored image loaded:",
-                        categoryImages.tailoredImage
-                      )
-                    }
-                    onError={(e) =>
-                      console.error(
-                        "❌ Tailored image failed:",
-                        categoryImages.tailoredImage,
-                        e
-                      )
-                    }
-                  />
-                  <div className="absolute inset-0 bg-black/30 transition-opacity group-hover:bg-black/40" />
-                  <div className="absolute bottom-6 left-6 text-white">
-                    <h3 className="text-2xl font-canela mb-2">Tailored</h3>
-                    <p className="text-sm">
-                      Masters of craft creating perfectly fitted garments
-                    </p>
+            <FadeIn delay={0.2}>
+              <div className="relative group overflow-hidden rounded-lg bg-gray-100 min-h-[400px]">
+                <Link href="/tailored">
+                  <div className="relative aspect-[3/4]">
+                    <img
+                      src={categoryImages.tailoredImage}
+                      alt="Tailored"
+                      className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105"
+                      onLoad={() =>
+                        console.log(
+                          "✅ Tailored image loaded:",
+                          categoryImages.tailoredImage
+                        )
+                      }
+                      onError={(e) =>
+                        console.error(
+                          "❌ Tailored image failed:",
+                          categoryImages.tailoredImage,
+                          e
+                        )
+                      }
+                    />
+                    <div className="absolute inset-0 bg-black/30 transition-opacity group-hover:bg-black/40" />
+                    <div className="absolute bottom-6 left-6 text-white">
+                      <h3 className="text-2xl font-canela mb-2">Tailored</h3>
+                      <p className="text-sm">
+                        Masters of craft creating perfectly fitted garments
+                      </p>
+                    </div>
                   </div>
-                </div>
-              </Link>
-            </div>
+                </Link>
+              </div>
+            </FadeIn>
           </div>
         </div>
       </section>
@@ -866,23 +870,25 @@ export default function HomeContent() {
                 href: "/directory?occasion=Vacation",
               },
             ].map((occasion, index) => (
-              <Link key={index} href={occasion.href} className="group">
-                <div className="relative aspect-square rounded-lg overflow-hidden">
-                  <LazyImage
-                    src={occasion.image}
-                    alt={occasion.title}
-                    fill
-                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 280px"
-                    className="object-cover transition-transform duration-300 group-hover:scale-105"
-                    aspectRatio="square"
-                    quality={80}
-                  />
-                  <div className="absolute inset-0 bg-black/30 transition-opacity group-hover:bg-black/40" />
-                  <div className="absolute bottom-4 left-4 text-white">
-                    <h3 className="text-xl font-medium">{occasion.title}</h3>
+              <FadeIn key={index} delay={index * 0.1}>
+                <Link key={index} href={occasion.href} className="group">
+                  <div className="relative aspect-square rounded-lg overflow-hidden">
+                    <LazyImage
+                      src={occasion.image}
+                      alt={occasion.title}
+                      fill
+                      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 280px"
+                      className="object-cover transition-transform duration-300 group-hover:scale-105"
+                      aspectRatio="square"
+                      quality={80}
+                    />
+                    <div className="absolute inset-0 bg-black/30 transition-opacity group-hover:bg-black/40" />
+                    <div className="absolute bottom-4 left-4 text-white">
+                      <h3 className="text-xl font-medium">{occasion.title}</h3>
+                    </div>
                   </div>
-                </div>
-              </Link>
+                </Link>
+              </FadeIn>
             ))}
           </div>
         </div>
