@@ -98,6 +98,14 @@ export default function Footer() {
                   Privacy Policy
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/faq"
+                  className="text-sm text-oma-cocoa hover:text-oma-plum expand-underline"
+                >
+                  FAQs
+                </Link>
+              </li>
             </ul>
           </div>
 
