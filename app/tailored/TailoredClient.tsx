@@ -40,6 +40,7 @@ export default function TailoredClient() {
   const processRef = useRef<HTMLDivElement>(null);
   const benefitsRef = useRef<HTMLDivElement>(null);
   const ctaRef = useRef<HTMLDivElement>(null);
+  const tailorsGalleryRef = useRef<HTMLDivElement>(null);
   const [heroVisible, setHeroVisible] = useState(false);
 
   useEffect(() => {
@@ -56,7 +57,14 @@ export default function TailoredClient() {
         }
       });
     }, observerOptions);
-    const sections = [heroRef, questionsRef, processRef, benefitsRef, ctaRef];
+    const sections = [
+      heroRef,
+      tailorsGalleryRef,
+      questionsRef,
+      processRef,
+      benefitsRef,
+      ctaRef,
+    ];
     sections.forEach((ref) => {
       if (ref.current) {
         observer.observe(ref.current);
@@ -191,9 +199,10 @@ export default function TailoredClient() {
       </section>
       {/* Tailors Gallery Section */}
       <section
+        ref={tailorsGalleryRef}
         id="tailors-gallery"
         className="py-24 px-6 bg-white/90 border-t border-oma-beige/30"
-        style={getSectionTransform("tailors-gallery")}
+        style={getSectionTransform(visibleSections.has("tailors-gallery"))}
       >
         <div className="max-w-7xl mx-auto w-full">
           <div className="text-center mb-12">
@@ -276,7 +285,7 @@ export default function TailoredClient() {
       >
         <div
           className="max-w-6xl mx-auto w-full"
-          style={getSectionTransform("questions")}
+          style={getSectionTransform(visibleSections.has("questions"))}
         >
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-canela text-black mb-6">
@@ -363,7 +372,7 @@ export default function TailoredClient() {
       >
         <div
           className="max-w-6xl mx-auto w-full"
-          style={getSectionTransform("process")}
+          style={getSectionTransform(visibleSections.has("process"))}
         >
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-canela text-black mb-6">
@@ -455,7 +464,7 @@ export default function TailoredClient() {
       >
         <div
           className="max-w-6xl mx-auto w-full"
-          style={getSectionTransform("benefits")}
+          style={getSectionTransform(visibleSections.has("benefits"))}
         >
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-canela text-black mb-6">
@@ -546,7 +555,7 @@ export default function TailoredClient() {
         </div>
         <div
           className="max-w-4xl mx-auto text-center relative z-10 w-full"
-          style={getSectionTransform("cta")}
+          style={getSectionTransform(visibleSections.has("cta"))}
         >
           <h2 className="text-4xl md:text-5xl font-canela text-black mb-6">
             Ready to Create Something Amazing?
