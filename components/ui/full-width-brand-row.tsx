@@ -145,7 +145,7 @@ export function FullWidthBrandRow({
         <div
           ref={scrollRef}
           onScroll={updateScrollIndicators}
-          className="flex gap-2 sm:gap-3 overflow-x-auto scrollbar-hide snap-x snap-mandatory scroll-smooth ml-[24px] lg:ml-[32px] pb-4 brand-row-scroll"
+          className="flex gap-2 sm:gap-3 overflow-x-auto scrollbar-hide snap-x snap-mandatory scroll-smooth pb-4 brand-row-scroll"
           style={
             {
               // Show exactly 6 cards on desktop, fewer on smaller screens

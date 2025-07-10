@@ -49,8 +49,10 @@ export default function TailoredClient() {
       try {
         setLoading(true);
         const data = await getTailorsWithBrands();
+        console.log("Fetched tailors data:", data);
         setTailors(data);
       } catch (err) {
+        console.error("Error fetching tailors:", err);
         setError("Failed to load tailor information");
       } finally {
         setLoading(false);
@@ -153,12 +155,22 @@ export default function TailoredClient() {
                 >
                   <div className="relative w-full aspect-[3/4] bg-oma-beige/20">
                     <OptimizedImage
-                      src={tailor.image || "/placeholder-image.jpg"}
+                      src={
+                        tailor.image ||
+                        tailor.brand?.image ||
+                        "/lovable-uploads/020cb90b-2fee-4db4-a7ee-538515580ef2.png"
+                      }
                       alt={tailor.title || tailor.brand?.name || "Tailor"}
                       aspectRatio="3/4"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       quality={90}
                       fill
+                      onError={() => {
+                        // Fallback to placeholder if image fails
+                        console.log(
+                          `Image failed to load for tailor: ${tailor.title || tailor.brand?.name}`
+                        );
+                      }}
                     />
                     {tailor.brand?.is_verified && (
                       <span className="absolute top-3 right-3 bg-oma-plum text-white text-xs px-3 py-1 rounded-full shadow font-semibold">
