@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -64,6 +64,49 @@ export default function Header() {
   >(staticNavigationItems);
   const [collectionsHasBrands, setCollectionsHasBrands] = useState(false);
   const [tailoredHasBrands, setTailoredHasBrands] = useState(false);
+  const overlayRef = useRef<HTMLDivElement>(null);
+
+  // Focus trap for accessibility
+  useEffect(() => {
+    if (mobileMenuOpen && overlayRef.current) {
+      const focusable = overlayRef.current.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusable.length) focusable[0].focus();
+      const handleTab = (e: KeyboardEvent) => {
+        if (!overlayRef.current) return;
+        const focusableEls = overlayRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        const first = focusableEls[0];
+        const last = focusableEls[focusableEls.length - 1];
+        if (e.key === "Tab") {
+          if (e.shiftKey) {
+            if (document.activeElement === first) {
+              e.preventDefault();
+              last.focus();
+            }
+          } else {
+            if (document.activeElement === last) {
+              e.preventDefault();
+              first.focus();
+            }
+          }
+        }
+      };
+      document.addEventListener("keydown", handleTab);
+      return () => document.removeEventListener("keydown", handleTab);
+    }
+  }, [mobileMenuOpen]);
+
+  // Close menu on resize to lg or above
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) setMobileMenuOpen(false);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     const hasAdminAccess =
@@ -215,6 +258,8 @@ export default function Header() {
               scrolled || !isHomePage ? "text-oma-black" : "text-white"
             )}
             onClick={() => setMobileMenuOpen(true)}
+            aria-expanded={mobileMenuOpen}
+            aria-controls="mobile-menu-overlay"
           >
             <span className="sr-only">Open main menu</span>
             <Menu className="h-6 w-6" aria-hidden="true" />
@@ -398,10 +443,17 @@ export default function Header() {
 
       {/* Mobile menu */}
       <div
+        ref={overlayRef}
+        id="mobile-menu-overlay"
         className={cn(
-          "fixed inset-0 z-[1100] w-full h-full overflow-y-auto bg-white px-6 py-6 sm:max-w-sm sm:ring-1 sm:ring-gray-900/10 transform transition-transform duration-300 ease-in-out lg:hidden",
-          mobileMenuOpen ? "translate-x-0" : "translate-x-full"
+          "fixed inset-0 z-[1100] w-full min-h-screen overflow-y-auto bg-white px-6 py-6 ring-1 ring-gray-900/10 transform transition-transform duration-300 ease-in-out transition-opacity lg:hidden",
+          mobileMenuOpen
+            ? "translate-x-0 opacity-100"
+            : "translate-x-full opacity-0 pointer-events-none"
         )}
+        tabIndex={-1}
+        aria-modal="true"
+        role="dialog"
       >
         <div className="flex items-center justify-between">
           <NavigationLink href="/" className="-m-1.5 p-1.5">
