@@ -36,6 +36,7 @@ export default function TailoredClient() {
   const [heroImage, setHeroImage] = useState<string>(
     "/lovable-uploads/new-dress-hero.jpg"
   ); // Updated hero image
+  const [isHovered, setIsHovered] = useState(false);
 
   const heroRef = useRef<HTMLDivElement>(null);
   const questionsRef = useRef<HTMLDivElement>(null);
@@ -43,7 +44,32 @@ export default function TailoredClient() {
   const benefitsRef = useRef<HTMLDivElement>(null);
   const ctaRef = useRef<HTMLDivElement>(null);
   const tailorsGalleryRef = useRef<HTMLDivElement>(null);
+  const tailorsScrollRef = useRef<HTMLDivElement>(null);
   const [heroVisible, setHeroVisible] = useState(false);
+
+  // Autoscroll functionality for tailors carousel
+  useEffect(() => {
+    if (!tailorsScrollRef.current || isHovered) return;
+
+    const scrollContainer = tailorsScrollRef.current;
+    const scrollWidth = scrollContainer.scrollWidth;
+    const clientWidth = scrollContainer.clientWidth;
+    const maxScroll = scrollWidth - clientWidth;
+
+    if (maxScroll <= 0) return; // No need to scroll if content fits
+
+    const autoScroll = setInterval(() => {
+      if (scrollContainer.scrollLeft >= maxScroll) {
+        // Reset to beginning when reaching the end
+        scrollContainer.scrollTo({ left: 0, behavior: "smooth" });
+      } else {
+        // Scroll by 300px every 3 seconds
+        scrollContainer.scrollBy({ left: 300, behavior: "smooth" });
+      }
+    }, 3000);
+
+    return () => clearInterval(autoScroll);
+  }, [isHovered]);
 
   useEffect(() => {
     const observerOptions = {
@@ -227,11 +253,16 @@ export default function TailoredClient() {
           ) : error ? (
             <div className="text-center text-oma-plum py-8">{error}</div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+            <div
+              ref={tailorsScrollRef}
+              className="flex gap-8 overflow-x-auto pb-4 scroll-smooth snap-x snap-mandatory scrollbar-hide"
+              onMouseEnter={() => setIsHovered(true)}
+              onMouseLeave={() => setIsHovered(false)}
+            >
               {tailors.map((tailor) => (
                 <div
                   key={tailor.id}
-                  className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden group border border-oma-beige/30"
+                  className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden group border border-oma-beige/30 snap-center flex-shrink-0 w-80"
                 >
                   <div className="relative w-full aspect-[3/4] bg-oma-beige/20">
                     <OptimizedImage
