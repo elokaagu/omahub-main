@@ -34,7 +34,7 @@ export default function TailoredClient() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [heroImage, setHeroImage] = useState<string>(
-    "/lovable-uploads/tailored-hero.jpg"
+    "/lovable-uploads/tailored-image.jpg"
   ); // Tailored hero image
   const [isHovered, setIsHovered] = useState(false);
 
