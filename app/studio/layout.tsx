@@ -258,13 +258,13 @@ export default function StudioLayout({
         <div className="px-8 pt-8 pb-6 h-full flex flex-col">
           {/* Studio title only */}
           <div className="mb-8">
-            <h1 className="text-2xl font-canela text-oma-plum pl-1">Studio</h1>
+            <h1 className="text-2xl font-canela text-oma-plum">Studio</h1>
           </div>
 
           <nav className="space-y-1 flex-1">
             <NavigationLink
               href="/studio"
-              className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100"
+              className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
               onClick={() => setSidebarOpen(false)}
             >
               <Home className="h-5 w-5" />
@@ -273,7 +273,7 @@ export default function StudioLayout({
             {permissions.includes("studio.brands.manage") && (
               <NavigationLink
                 href="/studio/brands"
-                className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100"
+                className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
                 onClick={() => setSidebarOpen(false)}
               >
                 <Package className="h-5 w-5" />
@@ -285,7 +285,7 @@ export default function StudioLayout({
             {permissions.includes("studio.catalogues.manage") && (
               <NavigationLink
                 href="/studio/collections"
-                className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100"
+                className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
                 onClick={() => setSidebarOpen(false)}
               >
                 <ImageIcon className="h-5 w-5" />
@@ -299,7 +299,7 @@ export default function StudioLayout({
             {(user?.role === "super_admin" || user?.role === "brand_admin") && (
               <NavigationLink
                 href="/studio/products"
-                className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100"
+                className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
                 onClick={() => setSidebarOpen(false)}
               >
                 <ShoppingBag className="h-5 w-5" />
@@ -311,7 +311,7 @@ export default function StudioLayout({
             {(user?.role === "super_admin" || user?.role === "brand_admin") && (
               <NavigationLink
                 href="/studio/services"
-                className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100"
+                className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
                 onClick={() => setSidebarOpen(false)}
               >
                 <Scissors className="h-5 w-5" />
@@ -323,7 +323,7 @@ export default function StudioLayout({
             {user?.role === "super_admin" && (
               <NavigationLink
                 href="/studio/hero"
-                className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100"
+                className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
                 onClick={() => setSidebarOpen(false)}
               >
                 <Monitor className="h-5 w-5" />
@@ -333,7 +333,7 @@ export default function StudioLayout({
             {user?.role === "super_admin" && (
               <NavigationLink
                 href="/studio/spotlight"
-                className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100"
+                className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
                 onClick={() => setSidebarOpen(false)}
               >
                 <ImageIcon className="h-5 w-5" />
@@ -343,7 +343,7 @@ export default function StudioLayout({
             {user?.role === "super_admin" && (
               <NavigationLink
                 href="/studio/users"
-                className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100"
+                className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
                 onClick={() => setSidebarOpen(false)}
               >
                 <Users className="h-5 w-5" />
@@ -353,7 +353,7 @@ export default function StudioLayout({
             {(user?.role === "super_admin" || user?.role === "brand_admin") && (
               <NavigationLink
                 href="/studio/reviews"
-                className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100"
+                className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
                 onClick={() => setSidebarOpen(false)}
               >
                 <MessageSquare className="h-5 w-5" />
@@ -365,7 +365,7 @@ export default function StudioLayout({
             {(user?.role === "super_admin" || user?.role === "brand_admin") && (
               <NavigationLink
                 href="/studio/inbox"
-                className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100"
+                className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
                 onClick={() => setSidebarOpen(false)}
               >
                 <Inbox className="h-5 w-5" />
@@ -376,7 +376,7 @@ export default function StudioLayout({
             )}
             <NavigationLink
               href="/studio/profile"
-              className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100"
+              className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
               onClick={() => setSidebarOpen(false)}
             >
               <User className="h-5 w-5" />
@@ -385,7 +385,7 @@ export default function StudioLayout({
             {permissions.includes("studio.settings.manage") && (
               <NavigationLink
                 href="/studio/settings"
-                className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100"
+                className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
                 onClick={() => setSidebarOpen(false)}
               >
                 <Settings className="h-5 w-5" />
@@ -399,7 +399,7 @@ export default function StudioLayout({
                 setSidebarOpen(false);
                 handleBackToSite();
               }}
-              className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100 w-full lg:hidden border-t border-gray-200 mt-4 pt-4"
+              className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100 w-full lg:hidden border-t border-gray-200 mt-4 pt-4"
             >
               <Home className="h-5 w-5" />
               <span>Back to Site</span>
@@ -409,7 +409,7 @@ export default function StudioLayout({
           <div className="pt-6 border-t border-gray-200 mt-auto">
             <button
               onClick={handleSignOut}
-              className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-md hover:bg-gray-100 w-full"
+              className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100 w-full"
             >
               <LogOut className="h-5 w-5" />
               <span>Sign Out</span>
