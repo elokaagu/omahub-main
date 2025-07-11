@@ -255,10 +255,10 @@ export default function StudioLayout({
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         } mt-16`}
       >
-        <div className="p-6 h-full flex flex-col">
+        <div className="px-8 pt-8 pb-6 h-full flex flex-col">
           {/* Studio title only */}
           <div className="mb-8">
-            <h1 className="text-2xl font-canela text-oma-plum">Studio</h1>
+            <h1 className="text-2xl font-canela text-oma-plum pl-1">Studio</h1>
           </div>
 
           <nav className="space-y-1 flex-1">
