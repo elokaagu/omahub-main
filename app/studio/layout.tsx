@@ -249,6 +249,14 @@ export default function StudioLayout({
         </div>
       </header>
 
+      {/* Overlay for mobile - render before sidebar so it does not cover sidebar */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-50 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
       <aside
         className={`bg-white w-64 border-r border-gray-200 fixed inset-y-0 left-0 z-60 transition-transform duration-300 ease-in-out lg:translate-x-0 ${
@@ -422,14 +430,6 @@ export default function StudioLayout({
       <main className="flex-1 lg:ml-64 mt-16">
         <div className="min-h-screen relative">{children}</div>
       </main>
-
-      {/* Overlay for mobile */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-50 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
     </div>
   );
 }
