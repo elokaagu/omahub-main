@@ -3,9 +3,11 @@ import Footer from "@/components/layout/Footer";
 
 export default function TailoredPage() {
   return (
-    <>
-      <TailoredClient />
+    <div className="flex flex-col min-h-screen">
+      <main className="flex-1">
+        <TailoredClient />
+      </main>
       <Footer />
-    </>
+    </div>
   );
 }
