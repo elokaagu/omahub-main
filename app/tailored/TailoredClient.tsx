@@ -232,11 +232,6 @@ export default function TailoredClient() {
         className="py-24 px-0 bg-white/90 border-t border-oma-beige/30 snap-start w-screen overflow-x-hidden relative"
         style={getSectionTransform(visibleSections.has("tailors-gallery"))}
       >
-        {/* Corner Frames */}
-        <div className="absolute top-24 left-8 w-12 h-12 border-l-4 border-t-4 border-oma-gold/80"></div>
-        <div className="absolute top-24 right-8 w-12 h-12 border-r-4 border-t-4 border-oma-gold/80"></div>
-        <div className="absolute bottom-8 left-8 w-12 h-12 border-l-4 border-b-4 border-oma-gold/80"></div>
-        <div className="absolute bottom-8 right-8 w-12 h-12 border-r-4 border-b-4 border-oma-gold/80"></div>
         <div className="w-full">
           <div className="text-center mb-12">
             <h2 className="text-4xl md:text-5xl font-canela text-black mb-4">
@@ -255,14 +250,14 @@ export default function TailoredClient() {
           ) : (
             <div
               ref={tailorsScrollRef}
-              className="flex gap-8 overflow-x-auto pb-4 scroll-smooth snap-x snap-mandatory scrollbar-hide"
+              className="flex gap-6 overflow-x-auto pb-4 scroll-smooth snap-x snap-mandatory scrollbar-hide px-6 lg:px-8"
               onMouseEnter={() => setIsHovered(true)}
               onMouseLeave={() => setIsHovered(false)}
             >
               {tailors.map((tailor) => (
                 <div
                   key={tailor.id}
-                  className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden group border border-oma-beige/30 snap-center flex-shrink-0 w-80"
+                  className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden group border border-oma-beige/30 snap-center flex-shrink-0 w-72"
                 >
                   <div className="relative w-full aspect-[3/4] bg-oma-beige/20">
                     <OptimizedImage
