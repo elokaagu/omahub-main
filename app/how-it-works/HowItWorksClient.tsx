@@ -433,7 +433,7 @@ export default function HowItWorksClient() {
         <div className="absolute bottom-1/2 right-0 w-3 h-3 bg-oma-beige rounded-full animate-pulse" />
         <div className="max-w-6xl mx-auto w-full max-w-full flex flex-col md:flex-row items-center justify-between gap-12 relative z-10 px-2 sm:px-4 md:px-8 pt-32 pb-16">
           {/* Left - Animated Graphics with designer-themed cards and image */}
-          <div className="flex-1 flex flex-col items-center justify-center relative w-full max-w-full">
+          <div className="flex-1 flex flex-col items-center justify-center relative w-full max-w-full mb-8 md:mb-0">
             <div className="relative w-full max-w-xs h-48 sm:h-80 mb-8 md:mb-0 mx-auto">
               {/* OmaHub Perspective Image */}
               <img
