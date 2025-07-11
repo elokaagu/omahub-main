@@ -40,7 +40,7 @@ export function BrandRow({ title, subtitle, brands }: BrandRowProps) {
 
   return (
     <div className="relative py-6 sm:py-8">
-      <div className="mb-4 sm:mb-6 px-4 sm:px-6 lg:px-8">
+      <div className="mb-4 sm:mb-6 px-6 lg:px-8">
         <h2 className="text-xl sm:text-2xl font-normal text-oma-black mb-1">
           {title}
         </h2>
@@ -49,10 +49,10 @@ export function BrandRow({ title, subtitle, brands }: BrandRowProps) {
         )}
       </div>
 
-      <div className="group relative -mx-4 sm:-mx-6 lg:-mx-8">
+      <div className="group relative">
         <div
           ref={rowRef}
-          className="flex space-x-3 sm:space-x-6 overflow-x-scroll scrollbar-hide snap-x snap-mandatory transition-transform duration-500 ease-out pl-4 sm:pl-6 lg:pl-8 pr-4 sm:pr-6 lg:pr-8"
+          className="flex space-x-3 sm:space-x-6 overflow-x-scroll scrollbar-hide snap-x snap-mandatory transition-transform duration-500 ease-out pl-6 lg:pl-8 pr-6 lg:pr-8"
         >
           {brands.map((brand) => (
             <div
