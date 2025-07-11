@@ -251,7 +251,7 @@ export default function StudioLayout({
 
       {/* Sidebar */}
       <aside
-        className={`bg-white w-64 border-r border-gray-200 fixed inset-y-0 left-0 z-50 transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+        className={`bg-white w-64 border-r border-gray-200 fixed inset-y-0 left-0 z-60 transition-transform duration-300 ease-in-out lg:translate-x-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         } mt-16`}
       >
