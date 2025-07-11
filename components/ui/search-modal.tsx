@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, X, Command, MapPin, CheckCircle } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { getAllBrands, searchBrands } from "@/lib/services/brandService";
 import { Brand } from "@/lib/supabase";
 
@@ -20,21 +21,48 @@ interface SearchResult {
   isVerified?: boolean;
 }
 
+// Global search modal state
+let globalSearchModalState: {
+  setIsOpen: (open: boolean) => void;
+} | null = null;
+
+// Export function to trigger search modal from anywhere
+export function triggerSearchModal() {
+  if (globalSearchModalState) {
+    globalSearchModalState.setIsOpen(true);
+  } else {
+    console.warn("Search modal not ready yet");
+  }
+}
+
 export function SearchModal() {
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [allBrands, setAllBrands] = useState<Brand[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  // Register global state handler
+  useEffect(() => {
+    globalSearchModalState = { setIsOpen };
+    return () => {
+      globalSearchModalState = null;
+    };
+  }, []);
 
   // Load all brands when component mounts
   useEffect(() => {
     const loadBrands = async () => {
       try {
+        console.log("Loading brands for search...");
         const brands = await getAllBrands();
         setAllBrands(brands);
+        console.log(`Loaded ${brands.length} brands for search`);
       } catch (error) {
         console.error("Error loading brands:", error);
+        setError("Failed to load brands for search");
       }
     };
     loadBrands();
@@ -62,14 +90,19 @@ export function SearchModal() {
   const performSearch = async (searchQuery: string) => {
     if (!searchQuery.trim()) {
       setResults([]);
+      setError(null);
       return;
     }
 
     setIsLoading(true);
+    setError(null);
 
     try {
+      console.log(`Searching for: "${searchQuery}"`);
+
       // Search brands using the searchBrands function
       const searchResults = await searchBrands(searchQuery);
+      console.log(`Found ${searchResults.length} brand results`);
 
       // Convert brands to search results
       const brandResults: SearchResult[] = searchResults.map((brand) => ({
@@ -108,9 +141,12 @@ export function SearchModal() {
           result.description.toLowerCase().includes(searchQuery.toLowerCase())
       );
 
-      setResults([...brandResults, ...filteredStaticResults]);
+      const allResults = [...brandResults, ...filteredStaticResults];
+      console.log(`Total results: ${allResults.length}`);
+      setResults(allResults);
     } catch (error) {
       console.error("Error performing search:", error);
+      setError("Search failed. Please try again.");
       setResults([]);
     } finally {
       setIsLoading(false);
@@ -126,10 +162,11 @@ export function SearchModal() {
   }, [query]);
 
   const handleResultClick = (result: SearchResult) => {
+    console.log(`Navigating to: ${result.url}`);
     setIsOpen(false);
     setQuery("");
-    // Navigate to result URL
-    window.location.href = result.url;
+    // Use Next.js router for navigation
+    router.push(result.url);
   };
 
   const getIcon = (type: SearchResult["type"]) => {
@@ -169,6 +206,12 @@ export function SearchModal() {
             <span>•</span>
             <span>Esc to close</span>
           </div>
+
+          {error && (
+            <div className="text-center py-4 text-red-600 bg-red-50 rounded-lg mb-4">
+              <p>{error}</p>
+            </div>
+          )}
 
           {isLoading && (
             <div className="flex items-center justify-center py-8">
@@ -222,7 +265,7 @@ export function SearchModal() {
             </div>
           )}
 
-          {!isLoading && query && results.length === 0 && (
+          {!isLoading && query && results.length === 0 && !error && (
             <div className="text-center py-8 text-oma-cocoa/60">
               <Search className="w-8 h-8 mx-auto mb-2 opacity-40" />
               <p>No results found for "{query}"</p>
@@ -230,11 +273,16 @@ export function SearchModal() {
             </div>
           )}
 
-          {!isLoading && !query && (
+          {!isLoading && !query && !error && (
             <div className="text-center py-8 text-oma-cocoa/60">
               <Search className="w-8 h-8 mx-auto mb-2 opacity-40" />
               <p>Search for designers, collections, and products</p>
               <p className="text-sm mt-1">Start typing to see results</p>
+              {allBrands.length > 0 && (
+                <p className="text-xs mt-2 text-oma-cocoa/40">
+                  {allBrands.length} brands loaded
+                </p>
+              )}
             </div>
           )}
         </div>

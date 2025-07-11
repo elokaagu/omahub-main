@@ -120,26 +120,7 @@ export default function TailoredClient() {
         console.log("Fetched tailors data:", data);
         setTailors(data);
 
-        // Set hero image from first tailor with a good image
-        if (data && data.length > 0) {
-          const featuredTailor = data.find(
-            (tailor) => tailor.image || (tailor.brand && tailor.brand.image)
-          );
-          if (featuredTailor) {
-            const imageUrl =
-              featuredTailor.image || featuredTailor.brand?.image;
-            if (imageUrl && imageUrl !== "/placeholder-image.jpg") {
-              console.log("Setting hero image to:", imageUrl);
-              setHeroImage(imageUrl);
-            } else {
-              console.log("No suitable image found, using default");
-            }
-          } else {
-            console.log("No tailors with images found");
-          }
-        } else {
-          console.log("No tailors data available");
-        }
+        // Always use the static tailored hero image
       } catch (err) {
         console.error("Error fetching tailors:", err);
         setError("Failed to load tailor information");

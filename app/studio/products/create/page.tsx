@@ -24,7 +24,7 @@ import {
   Plus,
   Trash2,
   Upload,
-  DollarSign,
+  Coins,
   Package,
   Image as ImageIcon,
   MessageCircle,
@@ -845,7 +845,7 @@ export default function CreateProductPage() {
                     onClick={() => handleServiceTypeChange("service")}
                   >
                     <div className="flex flex-col items-center text-center">
-                      <DollarSign className="h-8 w-8 mb-2 text-oma-plum" />
+                      <Coins className="h-8 w-8 mb-2 text-oma-plum" />
                       <h3 className="font-medium text-black">Service</h3>
                       <p className="text-xs text-black/70">
                         Custom tailoring with flexible pricing
@@ -935,22 +935,17 @@ export default function CreateProductPage() {
                         ? "Consultation Fee *"
                         : "Regular Price *"}
                     </Label>
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
-                        {selectedBrandCurrency}
-                      </span>
-                      <Input
-                        id="price"
-                        type="text"
-                        value={formatPriceForDisplay(formData.price)}
-                        onChange={(e) =>
-                          handleInputChange("price", e.target.value)
-                        }
-                        placeholder="0"
-                        className="border-oma-cocoa/20 focus:border-oma-plum pl-8"
-                        required={!formData.contact_for_pricing}
-                      />
-                    </div>
+                    <Input
+                      id="price"
+                      type="text"
+                      value={formatPriceForDisplay(formData.price)}
+                      onChange={(e) =>
+                        handleInputChange("price", e.target.value)
+                      }
+                      placeholder="0"
+                      className="border-oma-cocoa/20 focus:border-oma-plum"
+                      required={!formData.contact_for_pricing}
+                    />
                     <p className="text-xs text-muted-foreground">
                       {isTailorBrand() &&
                       formData.service_type === "consultation"
@@ -964,21 +959,16 @@ export default function CreateProductPage() {
                 <Label htmlFor="sale_price" className="text-black">
                   Sale Price (Optional)
                 </Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
-                    {selectedBrandCurrency}
-                  </span>
-                  <Input
-                    id="sale_price"
-                    type="text"
-                    value={formatPriceForDisplay(formData.sale_price)}
-                    onChange={(e) =>
-                      handleInputChange("sale_price", e.target.value)
-                    }
-                    placeholder="0"
-                    className="border-oma-cocoa/20 focus:border-oma-plum pl-8"
-                  />
-                </div>
+                <Input
+                  id="sale_price"
+                  type="text"
+                  value={formatPriceForDisplay(formData.sale_price)}
+                  onChange={(e) =>
+                    handleInputChange("sale_price", e.target.value)
+                  }
+                  placeholder="0"
+                  className="border-oma-cocoa/20 focus:border-oma-plum"
+                />
                 <p className="text-xs text-muted-foreground">
                   Optional discounted price (must be less than regular price)
                 </p>

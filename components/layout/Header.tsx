@@ -37,6 +37,7 @@ import {
 import { supabase } from "@/lib/supabase";
 import { getBrandsByCategory } from "@/lib/services/brandService";
 import { checkCategoryHasBrands } from "@/lib/services/categoryService";
+import { triggerSearchModal } from "@/components/ui/search-modal";
 
 const collectionItems = collections.map((category) => ({
   name: category,
@@ -257,22 +258,14 @@ export default function Header() {
 
           <div className="hidden lg:flex lg:flex-1 lg:justify-end lg:gap-x-6">
             <button
-              onClick={() => {
-                // Trigger global search modal
-                document.dispatchEvent(
-                  new KeyboardEvent("keydown", {
-                    key: "k",
-                    metaKey: true,
-                    bubbles: true,
-                  })
-                );
-              }}
+              onClick={triggerSearchModal}
               className={cn(
-                "text-sm font-semibold leading-6",
+                "p-2 rounded-full transition-all duration-200 hover:scale-105",
                 scrolled || !isHomePage
-                  ? "text-oma-black hover:text-oma-plum"
-                  : "text-white hover:text-white/80"
+                  ? "text-oma-black hover:text-oma-plum hover:bg-oma-beige/20"
+                  : "text-white hover:text-white/90 bg-white/10 hover:bg-white/20 backdrop-blur-sm"
               )}
+              aria-label="Search"
             >
               <Search className="h-5 w-5" />
             </button>
@@ -388,7 +381,7 @@ export default function Header() {
       {/* Mobile menu */}
       <div
         className={cn(
-          "fixed inset-y-0 right-0 z-50 w-full overflow-y-auto bg-white px-6 py-6 sm:max-w-sm sm:ring-1 sm:ring-gray-900/10 transform transition-transform duration-300 ease-in-out",
+          "fixed inset-0 z-[999] w-full h-full overflow-y-auto bg-white px-6 py-6 sm:max-w-sm sm:ring-1 sm:ring-gray-900/10 transform transition-transform duration-300 ease-in-out",
           mobileMenuOpen ? "translate-x-0" : "translate-x-full"
         )}
       >
@@ -603,14 +596,7 @@ export default function Header() {
                   <button
                     onClick={() => {
                       setMobileMenuOpen(false);
-                      // Trigger global search modal
-                      document.dispatchEvent(
-                        new KeyboardEvent("keydown", {
-                          key: "k",
-                          metaKey: true,
-                          bubbles: true,
-                        })
-                      );
+                      triggerSearchModal();
                     }}
                     className="-mx-3 flex items-center gap-3 rounded-lg px-3 py-3 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 transition-colors w-full text-left"
                   >

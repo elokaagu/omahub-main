@@ -655,9 +655,6 @@ export default function EditProductPage() {
                     Regular Price *
                   </Label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
-                      {selectedBrandCurrency}
-                    </span>
                     <Input
                       id="price"
                       type="text"
@@ -666,7 +663,7 @@ export default function EditProductPage() {
                         handleInputChange("price", e.target.value)
                       }
                       placeholder="0"
-                      className="border-gray-300 focus:border-gray-500 pl-8"
+                      className="border-gray-300 focus:border-gray-500"
                       required
                     />
                   </div>
@@ -679,9 +676,6 @@ export default function EditProductPage() {
                     Sale Price (Optional)
                   </Label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
-                      {selectedBrandCurrency}
-                    </span>
                     <Input
                       id="sale_price"
                       type="text"
@@ -690,7 +684,7 @@ export default function EditProductPage() {
                         handleInputChange("sale_price", e.target.value)
                       }
                       placeholder="0"
-                      className="border-gray-300 focus:border-gray-500 pl-8"
+                      className="border-gray-300 focus:border-gray-500"
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">
