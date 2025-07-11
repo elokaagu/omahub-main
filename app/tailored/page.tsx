@@ -1,5 +1,4 @@
 import TailoredClient from "./TailoredClient";
-import Footer from "@/components/layout/Footer";
 
 export default function TailoredPage() {
   return (
@@ -7,7 +6,6 @@ export default function TailoredPage() {
       <main className="flex-1">
         <TailoredClient />
       </main>
-      <Footer />
     </div>
   );
 }
