@@ -152,21 +152,6 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* CTA Block */}
-        <div className="mt-12 py-6 flex flex-col sm:flex-row items-center justify-between border-t border-b border-oma-gold/20">
-          <p className="text-sm text-oma-plum font-medium mb-3 sm:mb-0">
-            Want early access to new collections and drops?
-          </p>
-          <a
-            href="https://instagram.com/omahub"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-oma-cocoa hover:text-oma-plum transition-colors"
-          >
-            <span className="expand-underline">Join the newsletter</span>
-          </a>
-        </div>
-
         {/* Copyright */}
         <div className="mt-8 text-center sm:text-left">
           <p className="text-xs leading-5 text-oma-cocoa/80">

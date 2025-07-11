@@ -84,7 +84,10 @@ export default function TermsOfServicePage() {
             ) : error ? (
               <div className="text-center text-red-600 py-8">{error}</div>
             ) : doc ? (
-              <div dangerouslySetInnerHTML={{ __html: doc.content }} />
+              <div
+                className="markdown-content"
+                dangerouslySetInnerHTML={{ __html: doc.content }}
+              />
             ) : (
               <div className="text-center text-black/60 py-8">
                 No Terms of Service found.

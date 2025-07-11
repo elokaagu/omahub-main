@@ -499,3 +499,42 @@ img {
   will-change: transform;
   contain: layout;
 }
+
+/* OmaHub Markdown Theming */
+.markdown-content h1 {
+  @apply text-4xl md:text-5xl font-canela font-bold text-oma-plum mb-6 mt-8;
+}
+.markdown-content h2 {
+  @apply text-2xl md:text-3xl font-canela font-semibold text-oma-plum mb-4 mt-6;
+}
+.markdown-content h3 {
+  @apply text-xl md:text-2xl font-canela font-semibold text-oma-plum mb-3 mt-5;
+}
+.markdown-content h4 {
+  @apply text-lg font-canela font-semibold text-oma-plum mb-2 mt-4;
+}
+.markdown-content p {
+  @apply text-base md:text-lg font-sans text-oma-cocoa mb-4;
+}
+.markdown-content ul,
+.markdown-content ol {
+  @apply list-disc list-inside mb-4 pl-6;
+}
+.markdown-content li {
+  @apply mb-2 text-base text-oma-cocoa;
+}
+.markdown-content strong {
+  @apply font-semibold text-oma-plum;
+}
+.markdown-content em {
+  @apply italic text-oma-cocoa;
+}
+.markdown-content hr {
+  @apply my-8 border-oma-gold/30;
+}
+.markdown-content a {
+  @apply text-oma-plum underline hover:text-oma-gold transition-colors;
+}
+.markdown-content blockquote {
+  @apply border-l-4 border-oma-gold pl-4 italic text-oma-cocoa mb-4 bg-oma-beige/30;
+}
