@@ -101,7 +101,7 @@ export default function FAQPage() {
                       />
                     </CollapsibleTrigger>
                     <CollapsibleContent className="px-6 pb-6 transition-all duration-700 ease-cubic-bezier[.4,0,.2,1]">
-                      <div className="pt-4 text-black/70 leading-relaxed">
+                      <div className="markdown-content pt-4 text-black/70 leading-relaxed">
                         {faq.answer}
                       </div>
                     </CollapsibleContent>

@@ -61,9 +61,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
     <>
       {!isStudioPage && <Header />}
       <main className={isHomePage || isStudioPage ? "" : "pt-20"}>
-        <AnimatePresence mode="wait">
-          <PageFade key={pathname}>{children}</PageFade>
-        </AnimatePresence>
+        {children}
       </main>
       {!isStudioPage && <Footer />}
       <Toaster position="top-right" />

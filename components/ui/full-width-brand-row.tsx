@@ -146,7 +146,7 @@ export function FullWidthBrandRow({
         <div
           ref={scrollRef}
           onScroll={updateScrollIndicators}
-          className="flex gap-2 sm:gap-3 overflow-x-auto scrollbar-hide snap-x snap-mandatory scroll-smooth pb-4 brand-row-scroll max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
+          className="flex gap-2 sm:gap-3 overflow-x-auto scrollbar-hide snap-x snap-mandatory scroll-smooth pb-4 brand-row-scroll pl-4 sm:pl-6 lg:pl-8"
         >
           {brands.map((brand, index) => (
             <FadeIn key={brand.id} delay={index * 0.08}>
