@@ -120,7 +120,7 @@ export function FullWidthBrandRow({
   return (
     <div className={cn("w-full overflow-hidden", className)}>
       {/* Section Header left-aligned with logo and cards */}
-      <div className="mb-4 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="mb-4 max-w-7xl mx-auto px-6 lg:px-8">
         <h2 className="text-2xl sm:text-3xl md:text-4xl font-canela text-oma-black mb-2 text-left">
           {title}
         </h2>
@@ -146,7 +146,7 @@ export function FullWidthBrandRow({
         <div
           ref={scrollRef}
           onScroll={updateScrollIndicators}
-          className="flex gap-2 sm:gap-3 overflow-x-auto scrollbar-hide snap-x snap-mandatory scroll-smooth pb-4 brand-row-scroll pl-4 sm:pl-6 lg:pl-8 pr-4 sm:pr-6 lg:pr-8"
+          className="flex gap-2 sm:gap-3 overflow-x-auto scrollbar-hide snap-x snap-mandatory scroll-smooth pb-4 brand-row-scroll pl-4 sm:pl-6 lg:pl-8"
         >
           {brands.map((brand, index) => (
             <FadeIn key={brand.id} delay={index * 0.08}>

@@ -52,7 +52,7 @@ export function BrandRow({ title, subtitle, brands }: BrandRowProps) {
       <div className="group relative">
         <div
           ref={rowRef}
-          className="flex space-x-3 sm:space-x-6 overflow-x-scroll scrollbar-hide snap-x snap-mandatory transition-transform duration-500 ease-out pl-6 lg:pl-8 pr-6 lg:pr-8"
+          className="flex space-x-3 sm:space-x-6 overflow-x-scroll scrollbar-hide snap-x snap-mandatory transition-transform duration-500 ease-out pl-6 lg:pl-8"
         >
           {brands.map((brand) => (
             <div
