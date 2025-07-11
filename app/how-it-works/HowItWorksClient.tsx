@@ -434,13 +434,12 @@ export default function HowItWorksClient() {
         <div className="max-w-6xl mx-auto w-full max-w-full flex flex-col md:flex-row items-center justify-between gap-12 relative z-10 px-2 sm:px-4 md:px-8 pt-32 pb-16">
           {/* Left - Animated Graphics with designer-themed cards and image */}
           <div className="flex-1 flex flex-col items-center justify-center relative w-full max-w-full mb-8 md:mb-0">
-            <div className="relative w-full max-w-xs h-48 sm:h-80 mb-8 md:mb-0 mx-auto">
-              {/* OmaHub Perspective Image */}
+            <div className="relative w-full max-w-xs h-auto mx-auto">
               <img
                 src="/omahub-perspective.PNG"
                 alt="OmaHub Perspective Mockup"
-                className="w-full h-full rounded-2xl shadow-2xl border-4 border-oma-beige/60 bg-white/80 object-cover"
-                style={{ maxWidth: "100%", height: "auto" }}
+                className="w-full h-auto rounded-2xl shadow-2xl border-4 border-oma-beige/60 bg-white/80 object-cover"
+                style={{ maxWidth: "100%" }}
               />
               {/* Designer-themed floating elements */}
               <div className="absolute top-4 right-4 w-6 h-6 bg-oma-gold rounded-full animate-bounce shadow-lg"></div>
