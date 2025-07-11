@@ -29,46 +29,9 @@ export function NavigationLink({
 
   const handleClick = (e: React.MouseEvent) => {
     try {
-      // Get current path more reliably
-      const currentPath =
-        currentPathname +
-        (typeof window !== "undefined" ? window.location.search : "");
-      const targetPath = href;
-
       // Call custom onClick handler first
       if (onClick) {
         onClick();
-      }
-
-      // Don't show loading for same route or if already navigating
-      if (targetPath === currentPath || isNavigating) {
-        return;
-      }
-
-      console.log(
-        `🔗 NavigationLink: Starting navigation from ${currentPath} to ${targetPath}`
-      );
-      setIsNavigating(true);
-
-      // For studio navigation, use programmatic navigation without scroll interference
-      if (href.startsWith("/studio") && currentPath !== href) {
-        e.preventDefault();
-
-        // Use requestAnimationFrame to ensure smooth navigation
-        requestAnimationFrame(() => {
-          if (replace) {
-            router.replace(href, { scroll: false });
-          } else {
-            router.push(href, { scroll: false });
-          }
-        });
-
-        // Reset navigation state after navigation completes
-        setTimeout(() => {
-          setIsNavigating(false);
-        }, 100);
-
-        return;
       }
 
       // For external links, don't show loading
