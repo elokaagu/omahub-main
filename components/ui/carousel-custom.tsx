@@ -194,7 +194,7 @@ export function Carousel({
 
       {/* Minimal slide indicators */}
       {showIndicators && (
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex space-x-1.5 z-20">
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex space-x-1 z-20">
           {items.map((_, index) => (
             <button
               key={index}
@@ -202,8 +202,8 @@ export function Carousel({
               className={cn(
                 "rounded-full transition-all duration-300",
                 index === currentIndex
-                  ? "bg-white w-3 h-3"
-                  : "bg-white/40 hover:bg-white/60 w-2 h-2"
+                  ? "bg-white w-2 h-2"
+                  : "bg-white/40 hover:bg-white/60 w-1.5 h-1.5"
               )}
               aria-label={`Go to slide ${index + 1}`}
             />
