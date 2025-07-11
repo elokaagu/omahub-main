@@ -379,9 +379,9 @@ export default function HowItWorksClient() {
           </div>
 
           {/* Right Side - Content */}
-          <div className="flex-1 text-oma-cocoa pl-0 md:pl-12 w-full max-w-full">
+          <div className="flex-1 text-oma-cocoa pl-0 md:pl-12 w-full max-w-full px-4">
             <h2
-              className="text-4xl md:text-5xl font-canela mb-6 leading-tight overflow-hidden"
+              className="text-3xl sm:text-4xl md:text-5xl font-canela mb-6 leading-tight overflow-hidden break-words"
               style={getTypewriterState("curated")}
             >
               Curated, and not sorry about it.
