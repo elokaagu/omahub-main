@@ -269,7 +269,7 @@ export default function CollectionsPage() {
     } catch (error: any) {
       console.error("❌ Catalogues Page: Error fetching data:", error);
       setFetchError(error?.message || "Unknown error");
-      toast.error("Failed to load catalogues");
+      toast.error("Failed to load collections");
     } finally {
       console.log(
         "📚 Catalogues Page: Fetch completed, setting loading to false"
@@ -398,7 +398,7 @@ export default function CollectionsPage() {
     return (
       <div className="flex flex-col items-center justify-center h-64 text-center">
         <h2 className="text-2xl font-bold text-red-600 mb-2">
-          Failed to load catalogues
+          Failed to load collections
         </h2>
         <p className="text-black/70 mb-4">{fetchError}</p>
         <Button onClick={fetchData} className="bg-oma-plum text-white">
@@ -420,7 +420,7 @@ export default function CollectionsPage() {
     return (
       <div className="flex items-center justify-center h-64">
         <p className="text-black">
-          You don't have permission to manage catalogues.
+          You don't have permission to manage collections.
         </p>
       </div>
     );
@@ -474,7 +474,7 @@ export default function CollectionsPage() {
           <Card className="border-oma-gold/20 bg-white/80">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-black/70">
-                Total Catalogues
+                Total Collections
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -520,7 +520,7 @@ export default function CollectionsPage() {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-black/40 w-4 h-4" />
             <Input
-              placeholder="Search catalogues..."
+              placeholder="Search collections..."
               value={searchQuery}
               onChange={handleSearchChange}
               className="pl-10 border-oma-cocoa/20 focus:border-oma-plum bg-white/80"
@@ -541,7 +541,7 @@ export default function CollectionsPage() {
           </Select>
         </div>
 
-        {/* Catalogues Grid */}
+        {/* Collections Grid */}
         {filteredCollections.length === 0 ? (
           <Card className="border-oma-gold/20 bg-white/80">
             <CardContent className="flex flex-col items-center justify-center py-16">
@@ -636,9 +636,9 @@ export default function CollectionsPage() {
         >
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Delete Catalogue</AlertDialogTitle>
+              <AlertDialogTitle>Delete Collection</AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to delete this catalogue? This action
+                Are you sure you want to delete this collection? This action
                 cannot be undone and will remove all associated data.
               </AlertDialogDescription>
             </AlertDialogHeader>

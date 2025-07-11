@@ -67,7 +67,7 @@ export default function CreateCataloguePage() {
 
     // Validate form
     if (!title.trim()) {
-      toast.error("Please enter a catalogue title");
+      toast.error("Please enter a collection title");
       return;
     }
 
@@ -90,11 +90,11 @@ export default function CreateCataloguePage() {
         image,
       });
 
-      toast.success("Catalogue created successfully");
-      router.push("/studio/catalogues");
+      toast.success("Collection created successfully");
+      router.push("/studio/collections");
     } catch (error) {
-      console.error("Error creating catalogue:", error);
-      toast.error("Failed to create catalogue");
+      console.error("Error creating collection:", error);
+      toast.error("Failed to create collection");
     } finally {
       setSaving(false);
     }
@@ -119,27 +119,29 @@ export default function CreateCataloguePage() {
           variant="outline"
           size="icon"
           className="mr-4"
-          onClick={() => router.push("/studio/catalogues")}
+          onClick={() => router.push("/studio/collections")}
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <h1 className="text-3xl font-canela text-gray-900">Create Catalogue</h1>
+        <h1 className="text-3xl font-canela text-gray-900">
+          Create Collection
+        </h1>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>New Catalogue</CardTitle>
-          <CardDescription>Create a new catalogue for a brand</CardDescription>
+          <CardTitle>New Collection</CardTitle>
+          <CardDescription>Create a new collection for a brand</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="title">Catalogue Title</Label>
+              <Label htmlFor="title">Collection Title</Label>
               <Input
                 id="title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Enter catalogue title"
+                placeholder="Enter collection title"
               />
             </div>
 
@@ -149,7 +151,7 @@ export default function CreateCataloguePage() {
                 id="description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Enter a brief description of this catalogue..."
+                placeholder="Enter a brief description of this collection..."
                 rows={3}
               />
             </div>
@@ -171,11 +173,11 @@ export default function CreateCataloguePage() {
             </div>
 
             <div className="space-y-2">
-              <Label>Catalogue Image</Label>
+              <Label>Collection Image</Label>
               <FileUpload
                 onUploadComplete={handleImageUpload}
                 bucket="brand-assets"
-                path="catalogues"
+                path="collections"
               />
             </div>
 
@@ -186,7 +188,7 @@ export default function CreateCataloguePage() {
                 disabled={saving}
               >
                 <Save className="h-4 w-4" />
-                {saving ? "Creating..." : "Create Catalogue"}
+                {saving ? "Creating..." : "Create Collection"}
               </Button>
             </div>
           </form>

@@ -74,7 +74,7 @@ export default function EditCataloguePage({
         setBrands(brandsData);
       } catch (error) {
         console.error("Error fetching data:", error);
-        toast.error("Failed to load catalogue data");
+        toast.error("Failed to load collection data");
       } finally {
         setLoading(false);
       }
@@ -88,7 +88,7 @@ export default function EditCataloguePage({
 
     // Validate form
     if (!title.trim()) {
-      toast.error("Please enter a catalogue title");
+      toast.error("Please enter a collection title");
       return;
     }
 
@@ -111,11 +111,11 @@ export default function EditCataloguePage({
         image,
       });
 
-      toast.success("Catalogue updated successfully");
-      router.push("/studio/catalogues");
+      toast.success("Collection updated successfully");
+      router.push("/studio/collections");
     } catch (error) {
-      console.error("Error updating catalogue:", error);
-      toast.error("Failed to update catalogue");
+      console.error("Error updating collection:", error);
+      toast.error("Failed to update collection");
     } finally {
       setSaving(false);
     }
@@ -140,30 +140,32 @@ export default function EditCataloguePage({
           variant="outline"
           size="icon"
           className="mr-4"
-          onClick={() => router.push("/studio/catalogues")}
+          onClick={() => router.push("/studio/collections")}
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <h1 className="text-3xl font-canela text-gray-900">Edit Catalogue</h1>
+        <h1 className="text-3xl font-canela text-gray-900">Edit Collection</h1>
       </div>
 
       <div className="space-y-8">
-        {/* Catalogue Details Card */}
+        {/* Collection Details Card */}
         <Card>
           <CardHeader>
-            <CardTitle>Catalogue Details</CardTitle>
-            <CardDescription>Update your catalogue information</CardDescription>
+            <CardTitle>Collection Details</CardTitle>
+            <CardDescription>
+              Update your collection information
+            </CardDescription>
           </CardHeader>
           <CardContent className="p-6">
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="title">Catalogue Title</Label>
+                  <Label htmlFor="title">Collection Title</Label>
                   <Input
                     id="title"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    placeholder="Enter catalogue title"
+                    placeholder="Enter collection title"
                   />
                 </div>
 
@@ -190,21 +192,21 @@ export default function EditCataloguePage({
                   id="description"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Enter a brief description of this catalogue..."
+                  placeholder="Enter a brief description of this collection..."
                   rows={3}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label>Main Catalogue Image</Label>
+                <Label>Main Collection Image</Label>
                 <p className="text-sm text-gray-600 mb-2">
-                  This image will be used as the main catalogue thumbnail
+                  This image will be used as the main collection thumbnail
                 </p>
                 <FileUpload
                   onUploadComplete={handleImageUpload}
                   defaultValue={image}
                   bucket="brand-assets"
-                  path="catalogues"
+                  path="collections"
                 />
               </div>
 
@@ -222,13 +224,13 @@ export default function EditCataloguePage({
           </CardContent>
         </Card>
 
-        {/* Catalogue Images Manager */}
+        {/* Collection Images Manager */}
         <Card>
           <CardHeader>
-            <CardTitle>Catalogue Gallery</CardTitle>
+            <CardTitle>Collection Gallery</CardTitle>
             <CardDescription>
-              Manage additional images for this catalogue. These images will be
-              displayed in the catalogue gallery.
+              Manage additional images for this collection. These images will be
+              displayed in the collection gallery.
             </CardDescription>
           </CardHeader>
           <CardContent className="p-6">
