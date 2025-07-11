@@ -173,7 +173,7 @@ export default function HowItWorksClient() {
       <section
         ref={heroRef}
         id="hero"
-        className="min-h-screen snap-start flex items-center justify-center relative flex-col text-center px-4 pt-28 bg-gradient-to-b from-oma-beige/30 to-white"
+        className="min-h-screen snap-start flex items-center justify-center relative flex-col text-center px-4 pt-24 sm:pt-28 bg-gradient-to-b from-oma-beige/30 to-white"
         style={{
           transform: getParallaxTransform(0.08),
         }}
@@ -186,6 +186,7 @@ export default function HowItWorksClient() {
             src="/community.jpg"
             alt="OmaHub Community"
             className="w-full h-full object-cover object-center"
+            style={{ maxHeight: "100vh" }}
           />
           <div className="absolute inset-0 bg-black/40" />
           <div className="absolute inset-0 bg-gradient-to-t from-oma-plum/30 via-transparent to-oma-gold/20" />
@@ -208,56 +209,44 @@ export default function HowItWorksClient() {
           style={getSectionTransform("hero")}
         >
           <h1
-            className="text-5xl md:text-7xl font-canela text-white mb-6 leading-tight overflow-hidden"
+            className="text-4xl sm:text-5xl md:text-7xl font-canela text-white mb-4 sm:mb-6 leading-tight overflow-hidden drop-shadow-[0_2px_16px_rgba(0,0,0,0.45)]"
             style={getTypewriterState("hero")}
           >
             How OmaHub Works
           </h1>
           <p
-            className="text-xl md:text-2xl text-white/90 mb-8 max-w-2xl mx-auto leading-relaxed"
-            style={getTextAnimationState("hero", 0.6)}
+            className="text-base sm:text-lg md:text-2xl text-white/90 mb-6 sm:mb-8 max-w-3xl mx-auto leading-relaxed drop-shadow-[0_2px_12px_rgba(0,0,0,0.35)]"
+            style={getTextAnimationState("hero", 1)}
           >
             Connecting fashion lovers with Africa's most talented designers
           </p>
 
           {/* Stats */}
           <div
-            className="flex justify-center gap-8 mb-8"
-            style={getTextAnimationState("hero", 1)}
+            className="flex flex-col sm:flex-row justify-center gap-2 sm:gap-8 text-xs sm:text-sm text-oma-gold font-semibold mb-2 sm:mb-0"
+            style={getTextAnimationState("hero", 1.8)}
           >
-            <div className="text-center">
-              <div className="text-2xl font-bold text-oma-gold">500+</div>
-              <div className="text-sm text-white/80">Designers</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-oma-gold">10k+</div>
-              <div className="text-sm text-white/80">Happy Clients</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-oma-gold">50+</div>
-              <div className="text-sm text-white/80">Countries</div>
-            </div>
+            <div>500+ Designers</div>
+            <div>10k+ Happy Clients</div>
+            <div>50+ Countries</div>
           </div>
 
           <div
-            className="flex flex-col sm:flex-row gap-4 justify-center"
+            className="flex flex-col sm:flex-row gap-4 justify-center mb-8 sm:mb-12 w-full max-w-xs sm:max-w-none mx-auto"
             style={getTextAnimationState("hero", 1.4)}
           >
             <Button
               asChild
               size="lg"
-              className="bg-oma-plum hover:bg-oma-plum/90 text-white px-8 py-3 text-lg group"
+              className="bg-oma-plum hover:bg-oma-plum/90 text-white px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg group w-full sm:w-auto"
             >
-              <Link href="/directory">
-                Explore Designers
-                <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-              </Link>
+              <Link href="/directory">Explore Designers</Link>
             </Button>
             <Button
               asChild
               variant="outline"
               size="lg"
-              className="border-oma-plum text-oma-plum hover:bg-oma-plum/10 px-8 py-3 text-lg"
+              className="border-oma-plum text-oma-plum hover:bg-oma-plum/10 px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg group w-full sm:w-auto"
             >
               <Link href="/join">Join as Designer</Link>
             </Button>

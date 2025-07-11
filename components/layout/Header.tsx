@@ -159,7 +159,7 @@ export default function Header() {
   return (
     <header
       className={cn(
-        "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
+        "fixed top-0 left-0 right-0 z-[1000] transition-all duration-300",
         scrolled || !isHomePage
           ? "bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-100"
           : "bg-transparent"
@@ -381,7 +381,7 @@ export default function Header() {
       {/* Mobile menu */}
       <div
         className={cn(
-          "fixed inset-0 z-[999] w-full h-full overflow-y-auto bg-white px-6 py-6 sm:max-w-sm sm:ring-1 sm:ring-gray-900/10 transform transition-transform duration-300 ease-in-out",
+          "fixed inset-0 z-[999] w-full h-full overflow-y-auto bg-white px-6 py-6 sm:max-w-sm sm:ring-1 sm:ring-gray-900/10 transform transition-transform duration-300 ease-in-out lg:hidden",
           mobileMenuOpen ? "translate-x-0" : "translate-x-full"
         )}
       >

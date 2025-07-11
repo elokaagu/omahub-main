@@ -37,6 +37,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
   const { isNavigating, forceReset } = useNavigation();
   const isHomePage = pathname === "/";
   const isStudioPage = pathname?.startsWith("/studio") || false;
+  const isPasswordGatePage = pathname === "/password-gate";
 
   // Emergency reset for stuck navigation states
   useEffect(() => {
@@ -59,11 +60,15 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      {!isStudioPage && <Header />}
-      <main className={isHomePage || isStudioPage ? "" : "pt-20"}>
+      {!isStudioPage && !isPasswordGatePage && <Header />}
+      <main
+        className={
+          isHomePage || isStudioPage || isPasswordGatePage ? "" : "pt-20"
+        }
+      >
         {children}
       </main>
-      {!isStudioPage && <Footer />}
+      {!isStudioPage && !isPasswordGatePage && <Footer />}
       <Toaster position="top-right" />
       <SearchModal />
     </>

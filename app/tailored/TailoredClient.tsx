@@ -140,7 +140,7 @@ export default function TailoredClient() {
       <section
         ref={heroRef}
         id="hero"
-        className="min-h-screen snap-start flex items-center justify-center relative flex-col text-center px-4 pt-28 bg-gradient-to-b from-oma-beige/30 to-white"
+        className="min-h-screen snap-start flex items-center justify-center relative flex-col text-center px-4 pt-24 sm:pt-28 bg-gradient-to-b from-oma-beige/30 to-white"
       >
         {/* Background Image */}
         <div className="absolute inset-0 w-full h-full">
@@ -148,6 +148,7 @@ export default function TailoredClient() {
             src={heroImage}
             alt="Featured Tailor"
             className="w-full h-full object-cover object-center"
+            style={{ maxHeight: "100vh" }}
           />
           <div className="absolute inset-0 bg-black/40" />
           <div className="absolute inset-0 bg-gradient-to-t from-oma-plum/30 via-transparent to-oma-gold/20" />
@@ -157,7 +158,7 @@ export default function TailoredClient() {
           style={getSectionTransform(heroVisible)}
         >
           <h1
-            className="text-5xl md:text-7xl font-canela text-white mb-6 leading-tight overflow-hidden drop-shadow-[0_2px_16px_rgba(0,0,0,0.45)]"
+            className="text-4xl sm:text-5xl md:text-7xl font-canela text-white mb-4 sm:mb-6 leading-tight overflow-hidden drop-shadow-[0_2px_16px_rgba(0,0,0,0.45)]"
             style={getTypewriterState(heroVisible)}
           >
             Want to make a dress
@@ -170,20 +171,20 @@ export default function TailoredClient() {
             </span>
           </h1>
           <p
-            className="text-xl md:text-2xl text-white/90 mb-8 max-w-3xl mx-auto leading-relaxed drop-shadow-[0_2px_12px_rgba(0,0,0,0.35)]"
+            className="text-base sm:text-lg md:text-2xl text-white/90 mb-6 sm:mb-8 max-w-3xl mx-auto leading-relaxed drop-shadow-[0_2px_12px_rgba(0,0,0,0.35)]"
             style={getTextAnimationState(heroVisible, 1)}
           >
             Transform your vision into reality with Africa's most skilled
             tailors
           </p>
           <div
-            className="flex flex-col sm:flex-row gap-4 justify-center mb-12"
+            className="flex flex-col sm:flex-row gap-4 justify-center mb-8 sm:mb-12 w-full max-w-xs sm:max-w-none mx-auto"
             style={getTextAnimationState(heroVisible, 1.4)}
           >
             <Button
               asChild
               size="lg"
-              className="bg-oma-plum hover:bg-oma-plum/90 text-white px-8 py-4 text-lg group"
+              className="bg-oma-plum hover:bg-oma-plum/90 text-white px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg group w-full sm:w-auto"
             >
               <Link href="#questions">Yes, Let's Create!</Link>
             </Button>
@@ -191,13 +192,13 @@ export default function TailoredClient() {
               asChild
               variant="outline"
               size="lg"
-              className="border-oma-plum text-oma-plum hover:bg-oma-plum/10 px-8 py-4 text-lg group"
+              className="border-oma-plum text-oma-plum hover:bg-oma-plum/10 px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg group w-full sm:w-auto"
             >
               <Link href="/tailors">Browse Tailors</Link>
             </Button>
           </div>
           <div
-            className="flex justify-center gap-8 text-sm text-oma-gold font-semibold"
+            className="flex flex-col sm:flex-row justify-center gap-2 sm:gap-8 text-xs sm:text-sm text-oma-gold font-semibold mb-2 sm:mb-0"
             style={getTextAnimationState(heroVisible, 1.8)}
           >
             <div>Verified Tailors</div>
