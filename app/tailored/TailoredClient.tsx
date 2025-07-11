@@ -33,7 +33,9 @@ export default function TailoredClient() {
   const [tailors, setTailors] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [heroImage, setHeroImage] = useState<string>("/bridal.jpg"); // Default fallback
+  const [heroImage, setHeroImage] = useState<string>(
+    "/lovable-uploads/new-dress-hero.jpg"
+  ); // Updated hero image
 
   const heroRef = useRef<HTMLDivElement>(null);
   const questionsRef = useRef<HTMLDivElement>(null);
@@ -201,10 +203,10 @@ export default function TailoredClient() {
       <section
         ref={tailorsGalleryRef}
         id="tailors-gallery"
-        className="py-24 px-6 bg-white/90 border-t border-oma-beige/30"
+        className="py-24 px-0 bg-white/90 border-t border-oma-beige/30 snap-start w-screen overflow-x-hidden"
         style={getSectionTransform(visibleSections.has("tailors-gallery"))}
       >
-        <div className="max-w-7xl mx-auto w-full">
+        <div className="w-full">
           <div className="text-center mb-12">
             <h2 className="text-4xl md:text-5xl font-canela text-black mb-4">
               Featured Tailors
