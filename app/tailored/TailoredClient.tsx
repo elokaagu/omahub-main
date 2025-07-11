@@ -203,9 +203,14 @@ export default function TailoredClient() {
       <section
         ref={tailorsGalleryRef}
         id="tailors-gallery"
-        className="py-24 px-0 bg-white/90 border-t border-oma-beige/30 snap-start w-screen overflow-x-hidden"
+        className="py-24 px-0 bg-white/90 border-t border-oma-beige/30 snap-start w-screen overflow-x-hidden relative"
         style={getSectionTransform(visibleSections.has("tailors-gallery"))}
       >
+        {/* Corner Frames */}
+        <div className="absolute top-24 left-8 w-12 h-12 border-l-4 border-t-4 border-oma-gold/80"></div>
+        <div className="absolute top-24 right-8 w-12 h-12 border-r-4 border-t-4 border-oma-gold/80"></div>
+        <div className="absolute bottom-8 left-8 w-12 h-12 border-l-4 border-b-4 border-oma-gold/80"></div>
+        <div className="absolute bottom-8 right-8 w-12 h-12 border-r-4 border-b-4 border-oma-gold/80"></div>
         <div className="w-full">
           <div className="text-center mb-12">
             <h2 className="text-4xl md:text-5xl font-canela text-black mb-4">
@@ -285,6 +290,11 @@ export default function TailoredClient() {
         id="questions"
         className="min-h-screen snap-start flex items-center justify-center py-24 px-6 relative bg-gradient-to-br from-oma-plum/5 to-oma-gold/5"
       >
+        {/* Corner Frames */}
+        <div className="absolute top-24 left-8 w-12 h-12 border-l-4 border-t-4 border-oma-gold/80"></div>
+        <div className="absolute top-24 right-8 w-12 h-12 border-r-4 border-t-4 border-oma-gold/80"></div>
+        <div className="absolute bottom-8 left-8 w-12 h-12 border-l-4 border-b-4 border-oma-gold/80"></div>
+        <div className="absolute bottom-8 right-8 w-12 h-12 border-r-4 border-b-4 border-oma-gold/80"></div>
         <div
           className="max-w-6xl mx-auto w-full"
           style={getSectionTransform(visibleSections.has("questions"))}
@@ -372,6 +382,11 @@ export default function TailoredClient() {
         id="process"
         className="min-h-screen snap-start flex items-center justify-center py-24 px-6 relative"
       >
+        {/* Corner Frames */}
+        <div className="absolute top-24 left-8 w-12 h-12 border-l-4 border-t-4 border-oma-gold/80"></div>
+        <div className="absolute top-24 right-8 w-12 h-12 border-r-4 border-t-4 border-oma-gold/80"></div>
+        <div className="absolute bottom-8 left-8 w-12 h-12 border-l-4 border-b-4 border-oma-gold/80"></div>
+        <div className="absolute bottom-8 right-8 w-12 h-12 border-r-4 border-b-4 border-oma-gold/80"></div>
         <div
           className="max-w-6xl mx-auto w-full"
           style={getSectionTransform(visibleSections.has("process"))}
@@ -464,6 +479,11 @@ export default function TailoredClient() {
         id="benefits"
         className="min-h-screen snap-start flex items-center justify-center py-24 px-6 relative bg-gradient-to-br from-oma-beige/20 to-white/50"
       >
+        {/* Corner Frames */}
+        <div className="absolute top-24 left-8 w-12 h-12 border-l-4 border-t-4 border-oma-gold/80"></div>
+        <div className="absolute top-24 right-8 w-12 h-12 border-r-4 border-t-4 border-oma-gold/80"></div>
+        <div className="absolute bottom-8 left-8 w-12 h-12 border-l-4 border-b-4 border-oma-gold/80"></div>
+        <div className="absolute bottom-8 right-8 w-12 h-12 border-r-4 border-b-4 border-oma-gold/80"></div>
         <div
           className="max-w-6xl mx-auto w-full"
           style={getSectionTransform(visibleSections.has("benefits"))}
@@ -544,6 +564,11 @@ export default function TailoredClient() {
         id="cta"
         className="min-h-screen snap-start flex items-center justify-center py-24 px-6 bg-gradient-to-br from-oma-plum/10 to-oma-gold/10 relative overflow-hidden"
       >
+        {/* Corner Frames */}
+        <div className="absolute top-24 left-8 w-12 h-12 border-l-4 border-t-4 border-oma-gold/80"></div>
+        <div className="absolute top-24 right-8 w-12 h-12 border-r-4 border-t-4 border-oma-gold/80"></div>
+        <div className="absolute bottom-8 left-8 w-12 h-12 border-l-4 border-b-4 border-oma-gold/80"></div>
+        <div className="absolute bottom-8 right-8 w-12 h-12 border-r-4 border-b-4 border-oma-gold/80"></div>
         {/* Background Graphics with parallax */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div
