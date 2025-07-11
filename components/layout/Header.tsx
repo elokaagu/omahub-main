@@ -164,7 +164,7 @@ export default function Header() {
           : "bg-transparent"
       )}
     >
-      <nav className="mx-auto flex max-w-7xl items-center justify-between p-6 lg:px-8">
+      <nav className="mx-auto flex w-full items-center justify-between p-3 lg:px-4">
         {/* Logo */}
         <div className="flex lg:flex-1">
           <NavigationLink href="/" className="-m-1.5 p-1.5">
