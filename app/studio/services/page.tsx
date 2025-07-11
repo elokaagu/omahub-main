@@ -39,6 +39,7 @@ import {
 import { AuthImage } from "@/components/ui/auth-image";
 import { Loading } from "@/components/ui/loading";
 import { supabase } from "@/lib/supabase";
+import { usePathname } from "next/navigation";
 
 type ServiceWithBrand = Product & {
   brand: {
@@ -60,6 +61,7 @@ const serviceIcons = {
 export default function ServicesPage() {
   const { user } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const [services, setServices] = useState<ServiceWithBrand[]>([]);
   const [filteredServices, setFilteredServices] = useState<ServiceWithBrand[]>(
     []
@@ -84,7 +86,17 @@ export default function ServicesPage() {
 
   useEffect(() => {
     fetchData();
-  }, [user]);
+    // Listen for page visibility change (tab focus)
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        fetchData();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, [user, pathname]);
 
   useEffect(() => {
     filterServices();
