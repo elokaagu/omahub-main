@@ -257,18 +257,18 @@ export default function DirectoryClient() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-6 sm:py-8">
+    <div className="container mx-auto px-4 py-4 sm:py-6">
       {/* Header section - removed "Brand Directory" text */}
-      <div className="mb-6 sm:mb-8">
+      <div className="mb-3 sm:mb-4">
         <p className="text-sm sm:text-base text-gray-600">
           Discover and connect with our curated selection of brands
         </p>
       </div>
 
       {/* Search and filters section */}
-      <div className="mb-6 sm:mb-8">
+      <div className="mb-3 sm:mb-4">
         <FadeIn>
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
             {/* Search bar */}
             <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-oma-cocoa" />
@@ -282,9 +282,9 @@ export default function DirectoryClient() {
             </div>
 
             {/* Controls row */}
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-2">
+            <div className="flex flex-col sm:flex-row gap-1 sm:gap-2">
               {/* View toggle buttons */}
-              <div className="flex gap-2 order-2 sm:order-1">
+              <div className="flex gap-1 order-2 sm:order-1">
                 <Button
                   variant="outline"
                   size="icon"
@@ -312,7 +312,7 @@ export default function DirectoryClient() {
               </div>
 
               {/* Filter and reset buttons */}
-              <div className="flex gap-2 flex-1 order-1 sm:order-2">
+              <div className="flex gap-1 flex-1 order-1 sm:order-2">
                 <Button
                   variant="outline"
                   className="flex-1 sm:flex-none min-h-[44px] text-sm sm:text-base"
@@ -336,7 +336,7 @@ export default function DirectoryClient() {
 
         {showFilters && (
           <FadeIn>
-            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 sm:p-6 rounded-lg bg-oma-beige/50 border border-oma-gold/10">
+            <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 sm:p-4 rounded-lg bg-oma-beige/50 border border-oma-gold/10">
               <div>
                 <Label className="text-oma-cocoa text-sm sm:text-base">
                   Category
@@ -374,7 +374,7 @@ export default function DirectoryClient() {
         )}
       </div>
 
-      <Separator className="my-6 sm:my-8 bg-oma-gold/10" />
+      <Separator className="my-4 sm:my-6 bg-oma-gold/10" />
 
       {/* Error display */}
       {error && <ErrorDisplay />}
@@ -385,8 +385,8 @@ export default function DirectoryClient() {
       ) : (
         <>
           {/* Results count */}
-          <div className="mb-4">
-            <p className="text-sm sm:text-base text-gray-600">
+          <div className="mb-2">
+            <p className="text-xs sm:text-sm text-gray-600">
               Showing {displayedBrands.length} brand
               {displayedBrands.length === 1 ? "" : "s"}
             </p>
@@ -395,7 +395,7 @@ export default function DirectoryClient() {
           {/* Brand grid/list */}
           <div
             className={cn(
-              "grid gap-4 sm:gap-6",
+              "grid gap-3 sm:gap-4",
               isGridView
                 ? "grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
                 : "grid-cols-1"
