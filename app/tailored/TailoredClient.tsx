@@ -255,11 +255,13 @@ export default function TailoredClient() {
               onMouseLeave={() => setIsHovered(false)}
             >
               {tailors.map((tailor) => (
-                <div
+                <Link
                   key={tailor.id}
-                  className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden group border border-oma-beige/30 snap-center flex-shrink-0 w-72"
+                  href={tailor.brand ? `/brand/${tailor.brand.id}` : "#"}
+                  className="group block snap-center flex-shrink-0 w-96 max-w-full bg-gradient-to-br from-white via-oma-beige/30 to-white rounded-2xl shadow-lg border border-oma-beige/40 hover:border-oma-gold/60 hover:shadow-2xl transition-all duration-300 overflow-hidden cursor-pointer focus:ring-2 focus:ring-oma-gold"
+                  tabIndex={0}
                 >
-                  <div className="relative w-full aspect-[3/4] bg-oma-beige/20">
+                  <div className="relative w-full aspect-[3/4] bg-oma-beige/20 overflow-hidden">
                     <OptimizedImage
                       src={
                         tailor.image ||
@@ -279,24 +281,24 @@ export default function TailoredClient() {
                       }}
                     />
                     {tailor.brand?.is_verified && (
-                      <span className="absolute top-3 right-3 bg-oma-plum text-white text-xs px-3 py-1 rounded-full shadow font-semibold">
+                      <span className="absolute top-4 right-4 bg-oma-plum text-white text-xs px-4 py-1 rounded-full shadow font-semibold z-10">
                         Verified
                       </span>
                     )}
                   </div>
-                  <div className="p-5 text-center">
-                    <h3 className="text-lg font-semibold text-black mb-1 truncate">
+                  <div className="p-6 text-center">
+                    <h3 className="text-2xl font-semibold text-black mb-1 truncate group-hover:text-oma-plum transition-colors">
                       {tailor.title || tailor.brand?.name}
                     </h3>
-                    <div className="text-oma-cocoa/70 text-sm mb-1 truncate">
+                    <div className="text-oma-cocoa/70 text-base mb-2 truncate">
                       {tailor.brand?.location}
                     </div>
                     {tailor.specialties && tailor.specialties.length > 0 && (
-                      <div className="flex flex-wrap justify-center gap-1 mt-2">
+                      <div className="flex flex-wrap justify-center gap-2 mt-3">
                         {tailor.specialties.slice(0, 2).map((spec: string) => (
                           <span
                             key={spec}
-                            className="bg-oma-gold/10 text-oma-plum text-xs px-2 py-1 rounded-full"
+                            className="bg-oma-gold/10 text-oma-plum text-sm px-3 py-1 rounded-full font-medium"
                           >
                             {spec}
                           </span>
@@ -304,7 +306,7 @@ export default function TailoredClient() {
                       </div>
                     )}
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           )}
