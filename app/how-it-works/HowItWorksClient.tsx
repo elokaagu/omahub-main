@@ -326,9 +326,9 @@ export default function HowItWorksClient() {
         <div className="absolute bottom-8 left-8 w-12 h-12 border-l-4 border-b-4 border-oma-gold/80"></div>
         <div className="absolute bottom-8 right-8 w-12 h-12 border-r-4 border-b-4 border-oma-gold/80"></div>
 
-        <div className="max-w-6xl mx-auto w-full max-w-full flex items-center justify-between">
+        <div className="max-w-6xl mx-auto w-full max-w-full flex flex-col md:flex-row items-center justify-between gap-12 relative z-10 px-2 sm:px-4 md:px-8 pt-32 pb-16">
           {/* Left Side - Animation with design-themed cards */}
-          <div className="flex-1 relative flex flex-col items-center justify-center gap-6 w-full max-w-full">
+          <div className="flex-1 relative flex flex-col items-center justify-center gap-6 w-full max-w-full mb-8 md:mb-0">
             {/* Existing animated cards */}
             <div className="relative w-full max-w-xs h-48 sm:h-80 mx-auto">
               {/* Design-themed animated cards */}
