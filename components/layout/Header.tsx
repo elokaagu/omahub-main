@@ -119,6 +119,19 @@ export default function Header() {
     loadDynamicNavigation();
   }, []);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (mobileMenuOpen) {
+      document.body.classList.add("overflow-hidden");
+    } else {
+      document.body.classList.remove("overflow-hidden");
+    }
+    // Clean up on unmount
+    return () => {
+      document.body.classList.remove("overflow-hidden");
+    };
+  }, [mobileMenuOpen]);
+
   const handleSignOut = async () => {
     try {
       await signOut();
@@ -381,7 +394,7 @@ export default function Header() {
       {/* Mobile menu */}
       <div
         className={cn(
-          "fixed inset-0 z-[999] w-full h-full overflow-y-auto bg-white px-6 py-6 sm:max-w-sm sm:ring-1 sm:ring-gray-900/10 transform transition-transform duration-300 ease-in-out lg:hidden",
+          "fixed inset-0 z-[1100] w-full h-full overflow-y-auto bg-white px-6 py-6 sm:max-w-sm sm:ring-1 sm:ring-gray-900/10 transform transition-transform duration-300 ease-in-out lg:hidden",
           mobileMenuOpen ? "translate-x-0" : "translate-x-full"
         )}
       >
