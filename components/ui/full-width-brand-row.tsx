@@ -34,8 +34,6 @@ export function FullWidthBrandRow({
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
   const [isHovered, setIsHovered] = useState(false);
-  const [isAutoScrolling, setIsAutoScrolling] = useState(false);
-  const autoScrollRef = useRef<NodeJS.Timeout | null>(null);
 
   // Update scroll indicators
   const updateScrollIndicators = () => {
@@ -45,60 +43,15 @@ export function FullWidthBrandRow({
     setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 1);
   };
 
-  // Auto-scroll functionality with smoother motion
-  const startAutoScroll = () => {
-    if (!scrollRef.current || isHovered) return;
-
-    setIsAutoScrolling(true);
-    autoScrollRef.current = setInterval(() => {
-      if (!scrollRef.current || isHovered) return;
-
-      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
-
-      // If we've reached the end, scroll back to the beginning
-      if (scrollLeft + clientWidth >= scrollWidth - 1) {
-        scrollRef.current.scrollTo({
-          left: 0,
-          behavior: "smooth",
-        });
-      } else {
-        // Scroll by one card width with smoother timing and easing
-        const cardWidth = window.innerWidth < 768 ? 280 : 320;
-        const targetScroll = scrollLeft + cardWidth;
-
-        // Use a more sophisticated scroll with custom easing
-        scrollRef.current.scrollTo({
-          left: targetScroll,
-          behavior: "smooth",
-        });
-      }
-    }, 6000); // Increased to 6 seconds for the smoothest feel
-  };
-
-  const stopAutoScroll = () => {
-    if (autoScrollRef.current) {
-      clearInterval(autoScrollRef.current);
-      autoScrollRef.current = null;
-    }
-    setIsAutoScrolling(false);
-  };
-
   useEffect(() => {
     updateScrollIndicators();
     const handleResize = () => updateScrollIndicators();
     window.addEventListener("resize", handleResize);
 
-    // Start auto-scroll after a delay
-    const startDelay = setTimeout(() => {
-      startAutoScroll();
-    }, 2000);
-
     return () => {
       window.removeEventListener("resize", handleResize);
-      clearTimeout(startDelay);
-      stopAutoScroll();
     };
-  }, [brands, isHovered]);
+  }, [brands]);
 
   const scroll = (direction: "left" | "right") => {
     if (!scrollRef.current) return;
@@ -133,15 +86,9 @@ export function FullWidthBrandRow({
 
       {/* Scrollable Brand Row - Left aligned with header, right overflows full width */}
       <div
-        className="relative group -mx-4 sm:-mx-6 lg:-mx-8"
-        onMouseEnter={() => {
-          setIsHovered(true);
-          stopAutoScroll();
-        }}
-        onMouseLeave={() => {
-          setIsHovered(false);
-          startAutoScroll();
-        }}
+        className="relative group"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
       >
         <div
           ref={scrollRef}
