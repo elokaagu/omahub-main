@@ -181,7 +181,7 @@ export default function StudioLayout({
     >
       {/* Studio Header */}
       <header className="w-full bg-white border-b border-gray-200 shadow-sm fixed top-0 left-0 right-0 z-50 h-16 flex items-center">
-        <div className="container mx-auto px-4 flex justify-between items-center">
+        <div className="container mx-auto px-8 flex justify-between items-center">
           {/* Mobile sidebar toggle */}
           <div className="lg:hidden flex items-center">
             <Button
