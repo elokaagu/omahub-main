@@ -229,7 +229,7 @@ export default function CataloguesPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-oma-beige/30 to-white">
-      <div className="max-w-7xl mx-auto px-0 lg:px-8 py-24">
+      <div className="max-w-7xl mx-auto px-4 lg:px-8 py-24">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-5xl font-canela text-black mb-6 text-left">
