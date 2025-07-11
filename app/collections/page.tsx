@@ -229,13 +229,13 @@ export default function CataloguesPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-oma-beige/30 to-white">
-      <div className="max-w-7xl mx-auto px-6 py-24">
+      <div className="max-w-7xl mx-auto px-6 lg:px-8 py-24">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-5xl font-canela text-black mb-6">
+        <div className="mb-8">
+          <h1 className="text-5xl font-canela text-black mb-6 text-left">
             {showAllProducts ? "All Products" : "Our Collections"}
           </h1>
-          <p className="text-xl text-oma-cocoa/80 max-w-3xl mx-auto">
+          <p className="text-xl text-oma-cocoa/80 max-w-3xl text-left">
             {showAllProducts
               ? "Browse our complete collection of products"
               : "Explore curated collections from Africa's most talented designers"}
