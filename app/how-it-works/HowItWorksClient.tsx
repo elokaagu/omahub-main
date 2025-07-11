@@ -273,7 +273,7 @@ export default function HowItWorksClient() {
         <div className="absolute bottom-12 right-12 w-8 h-8 bg-oma-gold rounded-full animate-bounce shadow-lg" />
         <div className="absolute top-1/2 right-0 w-4 h-4 bg-oma-plum rounded-full animate-ping" />
         <div className="absolute bottom-1/3 left-0 w-3 h-3 bg-oma-beige rounded-full animate-pulse" />
-        <div className="max-w-6xl mx-auto w-full flex flex-col md:flex-row items-center justify-between gap-12 relative z-10 px-2 sm:px-4 md:px-8 pt-32 pb-16">
+        <div className="max-w-6xl mx-auto w-full max-w-full flex flex-col md:flex-row items-center justify-between gap-12 relative z-10 px-2 sm:px-4 md:px-8 pt-32 pb-16">
           {/* Left - Meet Me Mockup */}
           <div className="flex-1 flex items-center justify-center w-full max-w-full">
             <img
@@ -326,7 +326,7 @@ export default function HowItWorksClient() {
         <div className="absolute bottom-8 left-8 w-12 h-12 border-l-4 border-b-4 border-oma-gold/80"></div>
         <div className="absolute bottom-8 right-8 w-12 h-12 border-r-4 border-b-4 border-oma-gold/80"></div>
 
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
+        <div className="max-w-6xl mx-auto w-full max-w-full flex items-center justify-between">
           {/* Left Side - Animation with design-themed cards */}
           <div className="flex-1 relative flex flex-col items-center justify-center gap-6">
             {/* Existing animated cards */}
@@ -379,7 +379,7 @@ export default function HowItWorksClient() {
           </div>
 
           {/* Right Side - Content */}
-          <div className="flex-1 text-oma-cocoa pl-12">
+          <div className="flex-1 text-oma-cocoa pl-0 md:pl-12 w-full max-w-full">
             <h2
               className="text-4xl md:text-5xl font-canela mb-6 leading-tight overflow-hidden"
               style={getTypewriterState("curated")}
@@ -431,7 +431,7 @@ export default function HowItWorksClient() {
         <div className="absolute bottom-16 left-16 w-7 h-7 bg-oma-plum rounded-full animate-bounce shadow-lg" />
         <div className="absolute top-1/3 left-0 w-4 h-4 bg-oma-gold rounded-full animate-ping" />
         <div className="absolute bottom-1/2 right-0 w-3 h-3 bg-oma-beige rounded-full animate-pulse" />
-        <div className="max-w-6xl mx-auto w-full flex flex-col md:flex-row items-center justify-between gap-12 relative z-10 px-2 sm:px-4 md:px-8 pt-32 pb-16">
+        <div className="max-w-6xl mx-auto w-full max-w-full flex flex-col md:flex-row items-center justify-between gap-12 relative z-10 px-2 sm:px-4 md:px-8 pt-32 pb-16">
           {/* Left - Animated Graphics with designer-themed cards and image */}
           <div className="flex-1 flex flex-col items-center justify-center relative">
             <div className="relative w-80 h-80 mb-8 md:mb-0">
@@ -502,7 +502,7 @@ export default function HowItWorksClient() {
         <div className="absolute bottom-10 right-20 w-10 h-10 bg-oma-plum rounded-full animate-bounce shadow-lg" />
         <div className="absolute top-2/3 right-0 w-4 h-4 bg-oma-gold rounded-full animate-ping" />
         <div className="absolute bottom-1/4 left-0 w-3 h-3 bg-oma-beige rounded-full animate-pulse" />
-        <div className="max-w-6xl mx-auto w-full flex flex-col md:flex-row-reverse items-center justify-between gap-12 relative z-10 px-2 sm:px-4 md:px-8 pt-32 pb-16">
+        <div className="max-w-6xl mx-auto w-full max-w-full flex flex-col md:flex-row-reverse items-center justify-between gap-12 relative z-10 px-2 sm:px-4 md:px-8 pt-32 pb-16">
           {/* Right - Animated Graphics with platform-themed cards */}
           <div className="flex-1 flex items-center justify-center">
             <div className="relative w-80 h-80">
@@ -602,7 +602,7 @@ export default function HowItWorksClient() {
         <div className="absolute bottom-16 right-16 w-10 h-10 bg-oma-plum/30 rounded-full animate-bounce shadow-lg" />
         <div className="absolute top-1/3 right-0 w-5 h-5 bg-oma-gold/30 rounded-full animate-ping" />
         <div className="absolute bottom-1/2 left-0 w-4 h-4 bg-oma-beige/40 rounded-full animate-pulse" />
-        <div className="max-w-6xl mx-auto w-full flex flex-col md:flex-row-reverse items-center justify-between gap-12 relative z-10 px-2 sm:px-4 md:px-8 pt-32 pb-16">
+        <div className="max-w-6xl mx-auto w-full max-w-full flex flex-col md:flex-row-reverse items-center justify-between gap-12 relative z-10 px-2 sm:px-4 md:px-8 pt-32 pb-16">
           {/* Right - Animated Graphics with FAQ-themed cards */}
           <div className="flex-1 flex items-center justify-center">
             <div className="relative w-80 h-80">
@@ -680,7 +680,7 @@ export default function HowItWorksClient() {
           <div className="absolute top-10 left-10 w-40 h-40 bg-gradient-to-br from-oma-plum/10 to-oma-gold/10 rounded-full blur-2xl" />
           <div className="absolute bottom-10 right-10 w-32 h-32 bg-gradient-to-br from-oma-gold/10 to-oma-plum/10 rounded-full blur-xl" />
         </div>
-        <div className="max-w-6xl mx-auto w-full flex flex-col md:flex-row items-center justify-between gap-12 relative z-10 px-2 sm:px-4 md:px-8 pt-32 pb-16">
+        <div className="max-w-6xl mx-auto w-full max-w-full flex flex-col md:flex-row items-center justify-between gap-12 relative z-10 px-2 sm:px-4 md:px-8 pt-32 pb-16">
           {/* Left - Animated Graphics with CTA-themed cards */}
           <div className="flex-1 flex items-center justify-center">
             <div className="relative w-80 h-80">
