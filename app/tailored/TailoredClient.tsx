@@ -34,8 +34,8 @@ export default function TailoredClient() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [heroImage, setHeroImage] = useState<string>(
-    "/lovable-uploads/new-dress-hero.jpg"
-  ); // Updated hero image
+    "/lovable-uploads/tailored-hero.jpg"
+  ); // Tailored hero image
   const [isHovered, setIsHovered] = useState(false);
 
   const heroRef = useRef<HTMLDivElement>(null);
