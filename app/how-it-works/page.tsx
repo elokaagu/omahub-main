@@ -1,4 +1,5 @@
 import dynamic from "next/dynamic";
+import Footer from "@/components/layout/Footer";
 
 // Use dynamic import to load the client component with no SSR
 const HowItWorksClient = dynamic(() => import("./HowItWorksClient.tsx"), {
@@ -12,5 +13,10 @@ const HowItWorksClient = dynamic(() => import("./HowItWorksClient.tsx"), {
 
 // This is a server component
 export default function HowItWorksPage() {
-  return <HowItWorksClient />;
+  return (
+    <>
+      <HowItWorksClient />
+      <Footer />
+    </>
+  );
 }
