@@ -197,7 +197,7 @@ export const mapLegacyToUnified = (legacyCategory: string): string => {
   return (
     LEGACY_CATEGORY_MAPPING[
       legacyCategory as keyof typeof LEGACY_CATEGORY_MAPPING
-    ] || "ready-to-wear"
+    ] || ""
   );
 };
 

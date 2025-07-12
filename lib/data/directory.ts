@@ -63,8 +63,5 @@ export const mapOccasionToCategory = (occasion: string): string => {
 
 // Helper function to map database category to display category
 export const mapDatabaseToDisplayCategory = (dbCategory: string): string => {
-  return (
-    categoryMapping[dbCategory as keyof typeof categoryMapping] ||
-    "Ready to Wear"
-  );
+  return categoryMapping[dbCategory as keyof typeof categoryMapping] || "";
 };

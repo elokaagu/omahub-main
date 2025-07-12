@@ -186,7 +186,7 @@ const mapDatabaseCategoryToHomepage = (dbCategory: string): string => {
     Couture: "Bridal", // Map Couture to Bridal for homepage display
   };
 
-  return categoryMap[dbCategory] || "Ready to Wear"; // Default to Ready to Wear
+  return categoryMap[dbCategory] || ""; // No fallback
 };
 
 // Use unified categories for homepage
