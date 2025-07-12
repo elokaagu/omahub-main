@@ -313,8 +313,10 @@ export default function Header() {
                 // Show all categories, including Collections and Tailored, regardless of count
                 .map((category) => {
                   console.log(
-                    `Dropdown items for ${category.title}:`,
-                    category.items
+                    `🔍 Header: Rendering dropdown for ${category.title}:`,
+                    category.items.map(
+                      (item) => `${item.title} (${item.count})`
+                    )
                   );
                   return (
                     <NavigationMenuItem key={category.title}>

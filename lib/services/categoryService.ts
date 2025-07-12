@@ -95,13 +95,22 @@ export async function getDynamicNavigationItems(): Promise<
     console.log("📊 Brand category counts:", counts);
 
     // Always create Collections items with all predefined categories
-    const collectionsItems = COLLECTIONS_CATEGORIES.map((item) => ({
-      title: item.title,
-      href: `/directory?category=${encodeURIComponent(item.category)}`,
-      count: counts[item.category] || 0,
-    }));
+    console.log("🔍 COLLECTIONS_CATEGORIES array:", COLLECTIONS_CATEGORIES);
+
+    const collectionsItems = COLLECTIONS_CATEGORIES.map((item) => {
+      const result = {
+        title: item.title,
+        href: `/directory?category=${encodeURIComponent(item.category)}`,
+        count: counts[item.category] || 0,
+      };
+      console.log(
+        `🔍 Created item: ${item.title} -> ${item.category} (count: ${counts[item.category] || 0})`
+      );
+      return result;
+    });
 
     console.log("📋 Collections items created:", collectionsItems);
+    console.log("📋 Collections items count:", collectionsItems.length);
 
     // Always create Tailored items with all predefined categories
     const tailoredItems = [

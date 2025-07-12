@@ -55,6 +55,16 @@ export async function getNavigationItems(): Promise<NavigationItem[]> {
     const dynamicItems = await getDynamicNavigationItems();
     console.log("📋 Dynamic items received:", dynamicItems);
 
+    // Debug each category and its items
+    dynamicItems.forEach((category, index) => {
+      console.log(`🔍 Navigation: Category ${index + 1} - ${category.title}:`);
+      category.items.forEach((item, itemIndex) => {
+        console.log(
+          `  Item ${itemIndex + 1}: ${item.title} -> ${item.href} (count: ${item.count})`
+        );
+      });
+    });
+
     // Convert NavigationCategory to NavigationItem format
     const navigationItems: NavigationItem[] = dynamicItems.map((category) => ({
       title: category.title,
