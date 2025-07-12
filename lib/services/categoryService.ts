@@ -78,9 +78,6 @@ const ALWAYS_PRESENT_COLLECTIONS = [
   { title: "Made to Measure", category: "Couture" },
   { title: "Streetwear & Urban", category: "Streetwear & Urban" },
   { title: "Accessories", category: "Accessories" },
-  // Ensure these two are always present
-  { title: "Ready to Wear", category: "Ready to Wear" },
-  { title: "Streetwear & Urban", category: "Streetwear & Urban" },
 ];
 
 // Mapping for always-present categories in Tailored
