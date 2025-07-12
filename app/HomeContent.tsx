@@ -25,7 +25,6 @@ import {
   getActiveSpotlightContent,
   type SpotlightContent,
 } from "@/lib/services/spotlightService";
-import { subcategories, type Subcategory } from "@/lib/data/directory";
 import { Carousel } from "@/components/ui/carousel-custom";
 import { Loading } from "@/components/ui/loading";
 import { InstantImage } from "@/components/ui/instant-image";
@@ -412,10 +411,16 @@ export default function HomeContent() {
         // Process brands data with performance optimization
         const updatedCategories = initialCategories.map((category) => {
           const categoryBrands = brandsData
-            .filter(
-              (brand: any) =>
-                mapDatabaseCategoryToHomepage(brand.category) === category.title
-            )
+            .filter((brand: any) => {
+              // Support both single category and categories array
+              const allCategories = [
+                brand.category,
+                ...(brand.categories || []),
+              ].filter(Boolean);
+              return allCategories.some(
+                (cat) => mapDatabaseCategoryToHomepage(cat) === category.title
+              );
+            })
             .slice(0, 8) // Limit all categories to 8 brands for consistent display
             .map((brand: any) => ({
               id: brand.id,
