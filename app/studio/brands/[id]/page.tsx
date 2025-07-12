@@ -215,6 +215,9 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
       .filter(Boolean);
     const payload = {
       brand_id: brand.id,
+      title: brand.name, // required by schema
+      image: brand.image, // required by schema
+      description: brand.description || brand.long_description || "",
       specialties: specialtiesArr,
       price_range: tailorPriceRange,
       consultation_fee: tailorConsultationFee
