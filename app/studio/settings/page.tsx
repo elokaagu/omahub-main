@@ -38,6 +38,9 @@ export default function SettingsPage() {
   const [aboutText, setAboutText] = useState("");
   const [aboutLoading, setAboutLoading] = useState(false);
   const [aboutSaving, setAboutSaving] = useState(false);
+  const [ourStoryText, setOurStoryText] = useState("");
+  const [ourStoryLoading, setOurStoryLoading] = useState(false);
+  const [ourStorySaving, setOurStorySaving] = useState(false);
 
   // Check if user has super admin permissions
   const isSuperAdmin = user?.role === "super_admin";
@@ -49,15 +52,22 @@ export default function SettingsPage() {
     }
   }, [isSuperAdmin]);
 
-  // Fetch About Us text on mount (super admin only)
+  // Fetch About Us and Our Story text on mount (super admin only)
   useEffect(() => {
     if (isSuperAdmin) {
       setAboutLoading(true);
+      setOurStoryLoading(true);
       fetch("/api/platform-settings")
         .then((res) => res.json())
-        .then((data) => setAboutText(data.about || ""))
-        .catch(() => toast.error("Failed to load About Us text"))
-        .finally(() => setAboutLoading(false));
+        .then((data) => {
+          setAboutText(data.about || "");
+          setOurStoryText(data.ourStory || "");
+        })
+        .catch(() => toast.error("Failed to load About Us/Our Story text"))
+        .finally(() => {
+          setAboutLoading(false);
+          setOurStoryLoading(false);
+        });
     }
   }, [isSuperAdmin]);
 
@@ -159,6 +169,27 @@ export default function SettingsPage() {
     }
   };
 
+  const handleOurStorySave = async () => {
+    setOurStorySaving(true);
+    try {
+      const res = await fetch("/api/platform-settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ourStory: ourStoryText, user }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.success("Our Story updated successfully");
+      } else {
+        toast.error(data.error || "Failed to update Our Story");
+      }
+    } catch {
+      toast.error("Failed to update Our Story");
+    } finally {
+      setOurStorySaving(false);
+    }
+  };
+
   if (!user) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -216,6 +247,38 @@ export default function SettingsPage() {
                   className="bg-oma-plum hover:bg-oma-plum/90 text-white flex items-center gap-2"
                 >
                   {aboutSaving ? "Saving..." : "Save About Us"}
+                </Button>
+              </CardFooter>
+            </Card>
+          )}
+          {/* Our Story Editor - Super Admin Only */}
+          {isSuperAdmin && (
+            <Card className="border-oma-beige">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-oma-plum font-canela">
+                  Our Story
+                </CardTitle>
+                <CardDescription className="text-oma-cocoa">
+                  Edit the Our Story text displayed on the About OmaHub page
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Textarea
+                  value={ourStoryText}
+                  onChange={(e) => setOurStoryText(e.target.value)}
+                  rows={10}
+                  placeholder="Enter Our Story text..."
+                  disabled={ourStoryLoading}
+                  className="mb-4"
+                />
+              </CardContent>
+              <CardFooter>
+                <Button
+                  onClick={handleOurStorySave}
+                  disabled={ourStorySaving || ourStoryLoading}
+                  className="bg-oma-plum hover:bg-oma-plum/90 text-white flex items-center gap-2"
+                >
+                  {ourStorySaving ? "Saving..." : "Save Our Story"}
                 </Button>
               </CardFooter>
             </Card>
