@@ -271,12 +271,7 @@ export default function Header() {
           <NavigationMenu>
             <NavigationMenuList>
               {dynamicNavigationItems
-                .filter((category) => {
-                  if (category.title === "Collections")
-                    return collectionsHasBrands;
-                  if (category.title === "Tailored") return tailoredHasBrands;
-                  return true;
-                })
+                // Show all categories, including Collections and Tailored, regardless of count
                 .map((category) => (
                   <NavigationMenuItem key={category.title}>
                     <NavigationMenuTrigger
