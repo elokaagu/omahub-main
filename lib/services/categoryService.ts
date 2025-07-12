@@ -76,7 +76,7 @@ const ALWAYS_PRESENT_COLLECTIONS = [
   { title: "High-End Fashion Brands", category: "Luxury" },
   { title: "Ready to Wear", category: "Ready to Wear" },
   { title: "Made to Measure", category: "Couture" },
-  { title: "Streetwear & Urban", category: "Streetwear" },
+  { title: "Streetwear & Urban", category: "Streetwear & Urban" },
   { title: "Accessories", category: "Accessories" },
 ];
 
