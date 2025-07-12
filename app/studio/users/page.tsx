@@ -741,83 +741,155 @@ export default function UsersPage() {
               </p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Assigned Brands</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            <div className="overflow-x-auto">
+              <Table className="hidden sm:table">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Role</TableHead>
+                    <TableHead>Assigned Brands</TableHead>
+                    <TableHead>Created</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredUsers.map((user) => (
+                    <TableRow key={user.id}>
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-2">
+                          <Mail className="h-4 w-4 text-oma-cocoa/60" />
+                          {user.email}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={getRoleBadgeColor(user.role)}>
+                          {user.role.replace("_", " ").toUpperCase()}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap gap-1">
+                          {user.role === "super_admin" ? (
+                            <Badge
+                              variant="secondary"
+                              className="text-xs bg-oma-plum text-white"
+                            >
+                              <Building className="h-3 w-3 mr-1" />
+                              All brands
+                            </Badge>
+                          ) : user.brand_names.length > 0 ? (
+                            user.brand_names.map((brandName, index) => (
+                              <Badge
+                                key={index}
+                                variant="secondary"
+                                className="text-xs bg-oma-beige text-oma-plum"
+                              >
+                                <Building className="h-3 w-3 mr-1" />
+                                {brandName}
+                              </Badge>
+                            ))
+                          ) : (
+                            <span className="text-oma-cocoa/60 text-sm">
+                              No brands assigned
+                            </span>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-oma-cocoa/70">
+                        {new Date(user.created_at).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleEditUser(user)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() =>
+                              handleDeleteUser(user.id, user.email)
+                            }
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              {/* Mobile card layout */}
+              <div className="sm:hidden flex flex-col gap-4">
                 {filteredUsers.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell className="font-medium">
-                      <div className="flex items-center gap-2">
-                        <Mail className="h-4 w-4 text-oma-cocoa/60" />
-                        {user.email}
-                      </div>
-                    </TableCell>
-                    <TableCell>
+                  <div
+                    key={user.id}
+                    className="rounded-lg border border-oma-gold/10 bg-white p-4 flex flex-col gap-2 shadow-sm"
+                  >
+                    <div className="flex items-center gap-2 text-base font-medium">
+                      <Mail className="h-4 w-4 text-oma-cocoa/60" />
+                      <span className="break-all">{user.email}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
                       <Badge className={getRoleBadgeColor(user.role)}>
                         {user.role.replace("_", " ").toUpperCase()}
                       </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1">
-                        {user.role === "super_admin" ? (
+                      <span className="text-xs text-oma-cocoa/60 ml-2">
+                        {new Date(user.created_at).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {user.role === "super_admin" ? (
+                        <Badge
+                          variant="secondary"
+                          className="text-xs bg-oma-plum text-white"
+                        >
+                          <Building className="h-3 w-3 mr-1" />
+                          All brands
+                        </Badge>
+                      ) : user.brand_names.length > 0 ? (
+                        user.brand_names.map((brandName, index) => (
                           <Badge
+                            key={index}
                             variant="secondary"
-                            className="text-xs bg-oma-plum text-white"
+                            className="text-xs bg-oma-beige text-oma-plum"
                           >
                             <Building className="h-3 w-3 mr-1" />
-                            All brands
+                            {brandName}
                           </Badge>
-                        ) : user.brand_names.length > 0 ? (
-                          user.brand_names.map((brandName, index) => (
-                            <Badge
-                              key={index}
-                              variant="secondary"
-                              className="text-xs bg-oma-beige text-oma-plum"
-                            >
-                              <Building className="h-3 w-3 mr-1" />
-                              {brandName}
-                            </Badge>
-                          ))
-                        ) : (
-                          <span className="text-oma-cocoa/60 text-sm">
-                            No brands assigned
-                          </span>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-oma-cocoa/70">
-                      {new Date(user.created_at).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleEditUser(user)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => handleDeleteUser(user.id, user.email)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
+                        ))
+                      ) : (
+                        <span className="text-oma-cocoa/60 text-sm">
+                          No brands assigned
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex gap-2 mt-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => handleEditUser(user)}
+                      >
+                        <Edit className="h-4 w-4" />
+                        <span className="ml-1">Edit</span>
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        className="flex-1"
+                        onClick={() => handleDeleteUser(user.id, user.email)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        <span className="ml-1">Delete</span>
+                      </Button>
+                    </div>
+                  </div>
                 ))}
-              </TableBody>
-            </Table>
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>
