@@ -26,6 +26,7 @@ import {
 import { mapLegacyToUnified } from "@/lib/data/unified-categories";
 import { getCategoriesForDirectory } from "@/lib/data/unified-categories";
 import { UnifiedTag, CategoryTag } from "@/components/ui/unified-tag";
+import { getBrandReviews } from "@/lib/services/brandService";
 
 // Interface for brand display
 interface BrandDisplay {
@@ -110,6 +111,8 @@ export default function DirectoryClient() {
   const [showFilters, setShowFilters] = useState(false);
   const [displayedBrands, setDisplayedBrands] = useState<BrandDisplay[]>([]);
   const [isGridView, setIsGridView] = useState(true);
+  // Add a new state for ratings
+  const [brandRatings, setBrandRatings] = useState<Record<string, number>>({});
 
   // Use the useAllBrands hook WITHOUT filtering for brands that have products
   const { brands: allBrands, loading, error } = useAllBrands(false);
@@ -164,7 +167,7 @@ export default function DirectoryClient() {
       id: brand.id || `temp-id-${Math.random().toString(36).substring(2, 9)}`,
       name: brand.name || "Unnamed Brand",
       image: brand.image || "/placeholder.jpg",
-      category: brand.category || "Ready to Wear",
+      category: brand.category || "",
       location: brand.location ? brand.location.split(",")[0] : "Unknown",
       isVerified: brand.is_verified || false,
     }));
@@ -181,7 +184,7 @@ export default function DirectoryClient() {
       id: brand.id || `temp-id-${Math.random().toString(36).substring(2, 9)}`,
       name: brand.name || "Unnamed Brand",
       image: brand.image || "/placeholder.jpg",
-      category: brand.category || "Ready to Wear",
+      category: brand.category || "",
       location: brand.location ? brand.location.split(",")[0] : "Unknown",
       isVerified: brand.is_verified || false,
     }));
@@ -205,6 +208,33 @@ export default function DirectoryClient() {
     }
     setDisplayedBrands(filtered);
   }, [searchTerm, selectedCategory, selectedLocation, allBrands]);
+
+  // Fetch ratings for all brands when allBrands changes
+  useEffect(() => {
+    async function fetchRatings() {
+      if (!allBrands || allBrands.length === 0) return;
+      const ratings: Record<string, number> = {};
+      await Promise.all(
+        allBrands.map(async (brand) => {
+          try {
+            const reviews = await getBrandReviews(brand.id);
+            if (reviews && reviews.length > 0) {
+              const avg =
+                reviews.reduce((sum, r) => sum + (r.rating || 0), 0) /
+                reviews.length;
+              ratings[brand.id] = avg;
+            } else {
+              ratings[brand.id] = 0;
+            }
+          } catch (e) {
+            ratings[brand.id] = 0;
+          }
+        })
+      );
+      setBrandRatings(ratings);
+    }
+    fetchRatings();
+  }, [allBrands]);
 
   // Reset filters
   const resetFilters = () => {
@@ -415,7 +445,12 @@ export default function DirectoryClient() {
             )}
           >
             {displayedBrands.map((brand) => (
-              <BrandCard key={brand.id} {...brand} isPortrait={!isGridView} />
+              <BrandCard
+                key={brand.id}
+                {...brand}
+                isPortrait={!isGridView}
+                rating={brandRatings[brand.id] ?? 0}
+              />
             ))}
           </div>
 
