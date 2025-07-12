@@ -100,6 +100,11 @@ export async function signIn(email: string, password: string) {
       }
     }
 
+    // If the API signals to refresh the session, reload the page to ensure context is correct
+    if (data.refreshSession) {
+      window.location.reload();
+    }
+
     return data;
   } catch (error) {
     console.error("Error signing in:", error);

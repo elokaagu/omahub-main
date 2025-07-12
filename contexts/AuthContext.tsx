@@ -13,6 +13,7 @@ import { createClient } from "@/lib/supabase-unified";
 import { getProfile, User, UserRole } from "@/lib/services/authService";
 import { AuthDebug } from "@/lib/utils/debug";
 import { toast } from "sonner";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 interface AuthContextType {
   user: User | null;
@@ -279,6 +280,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       profileSubscription.unsubscribe();
     };
   }, [session?.user?.id, isClient]); // Removed refreshUserProfile from dependencies
+
+  useEffect(() => {
+    if (!user?.id) return;
+    const supabase = createClientComponentClient();
+    const channel = supabase
+      .channel("profile-updates")
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "profiles",
+          filter: `id=eq.${user.id}`,
+        },
+        async (payload) => {
+          // Re-fetch profile and update context
+          await loadUserProfile(user.id, user.email);
+        }
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id]);
 
   const signOut = async () => {
     try {
