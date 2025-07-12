@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Loading } from "@/components/ui/loading";
 import { NavigationLink } from "@/components/ui/navigation-link";
 import { FileUpload } from "@/components/ui/file-upload";
+import { VideoUpload } from "@/components/ui/video-upload";
 import { getProductById, updateProduct } from "@/lib/services/productService";
 import { getAllCollections } from "@/lib/services/collectionService";
 import { getAllBrands } from "@/lib/services/brandService";
@@ -582,25 +583,18 @@ export default function EditProductPage() {
               {/* Video Upload */}
               <div className="space-y-2">
                 <Label className="text-black">Product Video (Optional)</Label>
-                <FileUpload
+                <VideoUpload
                   onUploadComplete={(url) =>
                     handleInputChange("video_url", url)
                   }
                   defaultValue={formData.video_url}
                   bucket="product-videos"
                   path="videos"
-                  accept={{ "video/mp4": [".mp4"], "video/webm": [".webm"] }}
+                  accept="video/mp4,video/webm,video/quicktime"
                   maxSize={100}
                 />
-                {formData.video_url && (
-                  <video
-                    src={formData.video_url}
-                    controls
-                    className="mt-2 w-full max-w-xs rounded"
-                  />
-                )}
                 <p className="text-xs text-gray-600 mt-2">
-                  Upload a product video (MP4 or WebM, up to 100MB).
+                  Upload a product video (MP4, WebM, or MOV, up to 100MB).
                 </p>
               </div>
               {/* Video Thumbnail Upload */}
