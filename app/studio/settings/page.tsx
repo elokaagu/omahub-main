@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function SettingsPage() {
   const { user } = useAuth();
@@ -34,6 +35,9 @@ export default function SettingsPage() {
     status: string;
   } | null>(null);
   const [isLoadingStatus, setIsLoadingStatus] = useState(true);
+  const [aboutText, setAboutText] = useState("");
+  const [aboutLoading, setAboutLoading] = useState(false);
+  const [aboutSaving, setAboutSaving] = useState(false);
 
   // Check if user has super admin permissions
   const isSuperAdmin = user?.role === "super_admin";
@@ -42,6 +46,18 @@ export default function SettingsPage() {
   useEffect(() => {
     if (isSuperAdmin) {
       fetchPlatformStatus();
+    }
+  }, [isSuperAdmin]);
+
+  // Fetch About Us text on mount (super admin only)
+  useEffect(() => {
+    if (isSuperAdmin) {
+      setAboutLoading(true);
+      fetch("/api/platform-settings")
+        .then((res) => res.json())
+        .then((data) => setAboutText(data.about || ""))
+        .catch(() => toast.error("Failed to load About Us text"))
+        .finally(() => setAboutLoading(false));
     }
   }, [isSuperAdmin]);
 
@@ -122,6 +138,27 @@ export default function SettingsPage() {
     }
   };
 
+  const handleAboutSave = async () => {
+    setAboutSaving(true);
+    try {
+      const res = await fetch("/api/platform-settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ about: aboutText, user }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.success("About Us updated successfully");
+      } else {
+        toast.error(data.error || "Failed to update About Us");
+      }
+    } catch {
+      toast.error("Failed to update About Us");
+    } finally {
+      setAboutSaving(false);
+    }
+  };
+
   if (!user) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -151,6 +188,38 @@ export default function SettingsPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* About Us Editor - Super Admin Only */}
+          {isSuperAdmin && (
+            <Card className="border-oma-beige">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-oma-plum font-canela">
+                  About OmaHub
+                </CardTitle>
+                <CardDescription className="text-oma-cocoa">
+                  Edit the About Us text displayed on the public About page
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Textarea
+                  value={aboutText}
+                  onChange={(e) => setAboutText(e.target.value)}
+                  rows={8}
+                  placeholder="Enter About OmaHub text..."
+                  disabled={aboutLoading}
+                  className="mb-4"
+                />
+              </CardContent>
+              <CardFooter>
+                <Button
+                  onClick={handleAboutSave}
+                  disabled={aboutSaving || aboutLoading}
+                  className="bg-oma-plum hover:bg-oma-plum/90 text-white flex items-center gap-2"
+                >
+                  {aboutSaving ? "Saving..." : "Save About Us"}
+                </Button>
+              </CardFooter>
+            </Card>
+          )}
           {/* Platform Access Control - Only for Super Admins */}
           {isSuperAdmin && (
             <Card className="border-oma-beige">
