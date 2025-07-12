@@ -24,8 +24,9 @@ import {
   mapOccasionToCategory,
   mapDatabaseToDisplayCategory,
   locations,
-  categoryMapping, // <-- import the mapping
+  categoryMapping,
 } from "@/lib/data/directory";
+import { mapLegacyToUnified } from "@/lib/data/unified-categories";
 import { getCategoriesForDirectory } from "@/lib/data/unified-categories";
 import { UnifiedTag, CategoryTag } from "@/components/ui/unified-tag";
 
@@ -190,14 +191,11 @@ export default function DirectoryClient() {
       );
     }
     if (selectedCategory !== "All Categories") {
-      // Use the mapping to match legacy categories
+      // Map both selectedCategory and brand.category to their unified id, then compare
+      const selectedUnifiedId = mapLegacyToUnified(selectedCategory);
       filtered = filtered.filter((brand) => {
-        const mapped =
-          categoryMapping[brand.category as keyof typeof categoryMapping] ||
-          brand.category;
-        return (
-          mapped === selectedCategory || brand.category === selectedCategory
-        );
+        const brandUnifiedId = mapLegacyToUnified(brand.category);
+        return brandUnifiedId === selectedUnifiedId;
       });
     }
     if (selectedLocation !== "All Locations") {
@@ -271,7 +269,7 @@ export default function DirectoryClient() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-4 sm:py-6">
+    <div className="container mx-auto px-4 py-4 sm:py-6 mx-4 sm:mx-6 md:mx-8 lg:mx-12">
       {/* Header section - removed "Brand Directory" text */}
       <div className="mb-3 sm:mb-4">
         <p className="text-sm sm:text-base text-gray-600">
@@ -358,7 +356,7 @@ export default function DirectoryClient() {
                 <select
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="w-full mt-1 p-2 sm:p-3 border rounded-md border-oma-gold/20 focus:border-oma-plum min-h-[44px] text-sm sm:text-base"
+                  className="w-full mt-1 p-2 sm:p-3 border rounded-md border-oma-gold/20 focus:border-oma-plum min-h-[44px] text-sm sm:text-base mx-2 sm:mx-4 md:mx-6 lg:mx-8 max-w-xs"
                 >
                   <option value="All Categories">All Categories</option>
                   {navCategories.map((category) => (
@@ -375,7 +373,7 @@ export default function DirectoryClient() {
                 <select
                   value={selectedLocation}
                   onChange={(e) => setSelectedLocation(e.target.value)}
-                  className="w-full mt-1 p-2 sm:p-3 border rounded-md border-oma-gold/20 focus:border-oma-plum min-h-[44px] text-sm sm:text-base"
+                  className="w-full mt-1 p-2 sm:p-3 border rounded-md border-oma-gold/20 focus:border-oma-plum min-h-[44px] text-sm sm:text-base mx-2 sm:mx-4 md:mx-6 lg:mx-8 max-w-xs"
                 >
                   {locations.map((location) => (
                     <option key={location} value={location}>
