@@ -103,25 +103,13 @@ export function mapCategoriesToNavigation(
   }
 
   // Force all curated categories to be present, regardless of data
-  const collectionsItems = ALWAYS_PRESENT_COLLECTIONS.map((item) => ({
-    title: item.title,
-    href: `/directory?category=${encodeURIComponent(item.category)}`,
-    count: mergedCounts[item.category] || 0,
-    always: true,
-  }));
-
-  const tailoredItems = [
+  const collectionsItems: any[] = [];
+  const tailoredItems: any[] = [
     {
       title: "Browse All Tailors",
       href: "/tailors",
-      count: Object.values(mergedCounts).reduce((sum, c) => sum + c, 0),
+      count: 0,
     },
-    ...ALWAYS_PRESENT_TAILORED.map((item) => ({
-      title: item.title,
-      href: `/directory?category=${encodeURIComponent(item.category)}`,
-      count: mergedCounts[item.category] || 0,
-      always: true,
-    })),
   ];
 
   return [
