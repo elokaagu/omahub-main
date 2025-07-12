@@ -77,6 +77,8 @@ export default function EditProductPage() {
     care_instructions: "",
     is_custom: false,
     lead_time: "",
+    video_url: "",
+    video_thumbnail: "",
   });
 
   // Check if user is super admin or brand owner
@@ -177,6 +179,8 @@ export default function EditProductPage() {
           care_instructions: productData.care_instructions || "",
           is_custom: productData.is_custom ?? false,
           lead_time: productData.lead_time || "",
+          video_url: productData.video_url || "",
+          video_thumbnail: productData.video_thumbnail || "",
         });
 
         // Set initial currency based on product's brand
@@ -370,6 +374,10 @@ export default function EditProductPage() {
           is_custom: formData.is_custom,
         }),
         ...(formData.lead_time && { lead_time: formData.lead_time }),
+        ...(formData.video_url && { video_url: formData.video_url }),
+        ...(formData.video_thumbnail && {
+          video_thumbnail: formData.video_thumbnail,
+        }),
       };
 
       console.log("Updating product with data:", updateData);
@@ -569,6 +577,59 @@ export default function EditProductPage() {
                 <p className="text-xs text-gray-600 mt-2">
                   Upload up to 4 high-quality product images. The first image
                   will be used as the main product image.
+                </p>
+              </div>
+              {/* Video Upload */}
+              <div className="space-y-2">
+                <Label className="text-black">Product Video (Optional)</Label>
+                <FileUpload
+                  onUploadComplete={(url) =>
+                    handleInputChange("video_url", url)
+                  }
+                  defaultValue={formData.video_url}
+                  bucket="product-videos"
+                  path="videos"
+                  accept={{ "video/mp4": [".mp4"], "video/webm": [".webm"] }}
+                  maxSize={100}
+                />
+                {formData.video_url && (
+                  <video
+                    src={formData.video_url}
+                    controls
+                    className="mt-2 w-full max-w-xs rounded"
+                  />
+                )}
+                <p className="text-xs text-gray-600 mt-2">
+                  Upload a product video (MP4 or WebM, up to 100MB).
+                </p>
+              </div>
+              {/* Video Thumbnail Upload */}
+              <div className="space-y-2">
+                <Label className="text-black">Video Thumbnail (Optional)</Label>
+                <FileUpload
+                  onUploadComplete={(url) =>
+                    handleInputChange("video_thumbnail", url)
+                  }
+                  defaultValue={formData.video_thumbnail}
+                  bucket="product-images"
+                  path="thumbnails"
+                  accept={{
+                    "image/png": [".png"],
+                    "image/jpeg": [".jpg", ".jpeg"],
+                    "image/webp": [".webp"],
+                  }}
+                  maxSize={5}
+                />
+                {formData.video_thumbnail && (
+                  <img
+                    src={formData.video_thumbnail}
+                    alt="Video Thumbnail"
+                    className="mt-2 w-32 h-32 object-cover rounded"
+                  />
+                )}
+                <p className="text-xs text-gray-600 mt-2">
+                  Upload a thumbnail image for the video (PNG, JPG, WEBP, up to
+                  5MB).
                 </p>
               </div>
             </CardContent>
