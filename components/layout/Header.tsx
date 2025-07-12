@@ -544,7 +544,7 @@ export default function Header() {
                 </div>
 
                 {/* Categories */}
-                <div className="space-y-2">
+                <div className="flex flex-col gap-y-2 bg-white/90 rounded-xl shadow-lg p-2 z-[1200]">
                   <h3 className="text-xs font-medium uppercase tracking-wider text-gray-500 mb-3">
                     Categories
                   </h3>
@@ -557,21 +557,21 @@ export default function Header() {
                       return true;
                     })
                     .map((category) => (
-                      <div key={category.title} className="space-y-2">
+                      <div key={category.title} className="mb-2">
                         <NavigationLink
                           href={category.href}
                           onClick={() => setMobileMenuOpen(false)}
-                          className="-mx-3 block rounded-lg px-3 py-3 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 transition-colors"
+                          className="block rounded-lg px-3 py-3 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 transition-colors"
                         >
                           {category.title}
                         </NavigationLink>
-                        <div className="pl-4 space-y-1">
+                        <div className="flex flex-col gap-y-1 pl-4">
                           {category.items.map((item) => (
                             <NavigationLink
                               key={item.title}
                               href={item.href}
                               onClick={() => setMobileMenuOpen(false)}
-                              className="-mx-3 block rounded-lg px-3 py-2 text-sm leading-7 text-gray-700 hover:bg-gray-50 transition-colors"
+                              className="block rounded-lg px-3 py-2 text-sm leading-7 text-gray-700 hover:bg-gray-50 transition-colors"
                             >
                               <div className="flex items-center justify-between">
                                 <span>{item.title}</span>
