@@ -824,11 +824,23 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
                   </DialogHeader>
                   <form onSubmit={handleTailorSave} className="space-y-4">
                     <div>
-                      <Label>Specialties (comma separated)</Label>
-                      <Input
-                        value={tailorSpecialties}
-                        onChange={(e) => setTailorSpecialties(e.target.value)}
-                        placeholder="e.g. Bridal, Evening Gowns, Alterations"
+                      <Label>Specialties</Label>
+                      <MultiSelect
+                        options={[
+                          "Bridal",
+                          "Alterations",
+                          "High End Fashion Brand",
+                          "Made to Measure",
+                          "Streetwear & Urban",
+                        ]}
+                        value={tailorSpecialties
+                          .split(",")
+                          .map((s) => s.trim())
+                          .filter(Boolean)}
+                        onValueChange={(selected: string[]) =>
+                          setTailorSpecialties(selected.join(", "))
+                        }
+                        placeholder="Select specialties"
                       />
                     </div>
                     <div>
