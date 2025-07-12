@@ -18,11 +18,13 @@ export type Subcategory = (typeof subcategories)[Category][number];
 
 // Standard categories used across the application
 export const standardCategories = [
+  "High-End Fashion Brands",
   "Bridal",
   "Custom Design",
   "Evening Gowns",
   "Alterations",
   "Ready to Wear",
+  "Made to Measure",
   "Accessories",
   "Vacation",
   "Couture",
