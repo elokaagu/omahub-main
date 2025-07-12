@@ -742,46 +742,74 @@ export default function StudioLeadsPage() {
                   className="cursor-pointer hover:bg-oma-beige/20 transition-colors"
                   onClick={() => toggleLeadExpansion(lead.id)}
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3">
-                        <div className="flex-1">
-                          <CardTitle className="text-lg font-canela text-oma-plum flex items-center gap-2">
-                            <User className="h-5 w-5" />
-                            {lead.customer_name}
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 w-full">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 w-full">
+                        <div className="flex-1 min-w-0">
+                          <CardTitle className="text-lg font-canela text-oma-plum flex flex-wrap items-center gap-2 truncate">
+                            <User className="h-5 w-5 shrink-0" />
+                            <span
+                              className="truncate max-w-[120px] sm:max-w-xs"
+                              title={lead.customer_name}
+                            >
+                              {lead.customer_name}
+                            </span>
                             {lead.company_name && (
-                              <span className="text-sm text-oma-cocoa font-normal">
+                              <span
+                                className="text-sm text-oma-cocoa font-normal truncate max-w-[100px] sm:max-w-xs"
+                                title={lead.company_name}
+                              >
                                 ({lead.company_name})
                               </span>
                             )}
                           </CardTitle>
-                          <div className="flex items-center gap-4 mt-2 text-sm text-oma-cocoa">
-                            <div className="flex items-center gap-1">
-                              <Mail className="h-4 w-4" />
-                              {lead.customer_email}
+                          <div className="flex flex-wrap items-center gap-2 sm:gap-4 mt-2 text-sm text-oma-cocoa w-full">
+                            <div className="flex items-center gap-1 truncate max-w-[120px] sm:max-w-xs">
+                              <Mail className="h-4 w-4 shrink-0" />
+                              <span
+                                className="truncate"
+                                title={lead.customer_email}
+                              >
+                                {lead.customer_email}
+                              </span>
                             </div>
                             {lead.customer_phone && (
-                              <div className="flex items-center gap-1">
-                                <Phone className="h-4 w-4" />
-                                {lead.customer_phone}
+                              <div className="flex items-center gap-1 truncate max-w-[100px] sm:max-w-xs">
+                                <Phone className="h-4 w-4 shrink-0" />
+                                <span
+                                  className="truncate"
+                                  title={lead.customer_phone}
+                                >
+                                  {lead.customer_phone}
+                                </span>
                               </div>
                             )}
                             {lead.location && (
-                              <div className="flex items-center gap-1">
-                                <MapPin className="h-4 w-4" />
-                                {lead.location}
+                              <div className="flex items-center gap-1 truncate max-w-[100px] sm:max-w-xs">
+                                <MapPin className="h-4 w-4 shrink-0" />
+                                <span
+                                  className="truncate"
+                                  title={lead.location}
+                                >
+                                  {lead.location}
+                                </span>
                               </div>
                             )}
                             {lead.brands && (
-                              <div className="flex items-center gap-1">
-                                <Building className="h-4 w-4" />
-                                {lead.brands.name}
+                              <div className="flex items-center gap-1 truncate max-w-[100px] sm:max-w-xs">
+                                <Building className="h-4 w-4 shrink-0" />
+                                <span
+                                  className="truncate"
+                                  title={lead.brands.name}
+                                >
+                                  {lead.brands.name}
+                                </span>
                               </div>
                             )}
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-3">
+                        <div className="flex flex-row flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-3 mt-2 sm:mt-0 overflow-x-auto">
                           <Badge className={getStatusColor(lead.status)}>
                             {lead.status.replace("_", " ")}
                           </Badge>
