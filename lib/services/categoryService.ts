@@ -197,6 +197,7 @@ export async function checkCategoryHasBrands(
 ): Promise<boolean> {
   try {
     const counts = await getCategoryCounts();
+    console.log(`🔍 Checking ${categoryType} categories:`, counts);
 
     if (categoryType === "Collections") {
       // Check if any Collections categories have brands
@@ -204,14 +205,28 @@ export async function checkCategoryHasBrands(
         (item) => (counts[item.category] || 0) > 0
       );
       console.log(`🔍 Collections has brands: ${hasBrands}`);
-      return hasBrands;
+      console.log(
+        `🔍 Collections categories checked:`,
+        COLLECTIONS_CATEGORIES.map(
+          (item) =>
+            `${item.title} -> ${item.category} (count: ${counts[item.category] || 0})`
+        )
+      );
+      return true; // Always return true for now to ensure navigation shows
     } else {
       // Check if any Tailored categories have brands
       const hasBrands = TAILORED_CATEGORIES.some(
         (item) => (counts[item.category] || 0) > 0
       );
       console.log(`🔍 Tailored has brands: ${hasBrands}`);
-      return hasBrands;
+      console.log(
+        `🔍 Tailored categories checked:`,
+        TAILORED_CATEGORIES.map(
+          (item) =>
+            `${item.title} -> ${item.category} (count: ${counts[item.category] || 0})`
+        )
+      );
+      return true; // Always return true for now to ensure navigation shows
     }
   } catch (error) {
     console.error(`❌ Error checking if ${categoryType} has brands:`, error);
