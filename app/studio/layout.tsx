@@ -249,10 +249,10 @@ export default function StudioLayout({
         </div>
       </header>
 
-      {/* Overlay for mobile - only cover main content, not sidebar */}
+      {/* Overlay for mobile - cover entire screen */}
       {sidebarOpen && (
         <div
-          className="fixed inset-y-0 left-64 right-0 bg-black bg-opacity-50 z-50 lg:hidden"
+          className="fixed inset-0 bg-black bg-opacity-50 z-50 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
