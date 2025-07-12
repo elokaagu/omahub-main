@@ -828,10 +828,9 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
                       <MultiSelect
                         options={[
                           "Bridal",
+                          "Custom Design",
                           "Alterations",
-                          "High End Fashion Brand",
-                          "Made to Measure",
-                          "Streetwear & Urban",
+                          "Evening Gowns",
                         ]}
                         value={tailorSpecialties
                           .split(",")
