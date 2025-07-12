@@ -166,7 +166,7 @@ export default function HowItWorksClient() {
 
   return (
     <div
-      className="relative w-full overflow-x-hidden snap-y snap-mandatory h-screen"
+      className="relative w-full overflow-x-hidden md:snap-y md:snap-mandatory h-screen"
       style={{ scrollBehavior: "smooth" }}
     >
       {/* Hero Section */}
@@ -318,7 +318,7 @@ export default function HowItWorksClient() {
       <section
         ref={curatedRef}
         id="curated"
-        className="min-h-screen snap-start flex items-center justify-center pt-28 pb-24 px-6 bg-gradient-to-br from-oma-beige/80 via-white/90 to-oma-gold/10 relative overflow-hidden"
+        className="min-h-[120vh] md:min-h-screen snap-start flex items-center justify-center pt-32 pb-32 px-8 sm:px-16 lg:px-32 bg-gradient-to-br from-oma-beige/80 via-white/90 to-oma-gold/10 relative overflow-hidden"
       >
         {/* Corner Brackets */}
         <div className="absolute top-24 left-8 w-12 h-12 border-l-4 border-t-4 border-oma-gold/80"></div>

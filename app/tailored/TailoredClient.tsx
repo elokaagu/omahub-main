@@ -133,7 +133,7 @@ export default function TailoredClient() {
 
   return (
     <div
-      className="relative w-full overflow-x-hidden snap-y snap-mandatory h-screen"
+      className="relative w-full overflow-x-hidden md:snap-y md:snap-mandatory h-screen"
       style={{ scrollBehavior: "smooth" }}
     >
       {/* Hero Section */}
@@ -390,7 +390,7 @@ export default function TailoredClient() {
       <section
         ref={processRef}
         id="process"
-        className="min-h-screen snap-start flex items-center justify-center py-32 px-8 sm:px-16 lg:px-32 relative"
+        className="min-h-[120vh] md:min-h-screen snap-start flex items-center justify-center py-32 pb-32 px-8 sm:px-16 lg:px-32 relative"
       >
         {/* Corner Frames */}
         <div className="absolute top-24 left-8 w-12 h-12 border-l-4 border-t-4 border-oma-gold/80"></div>
