@@ -48,10 +48,10 @@ async function checkBrandCategories() {
     console.log("\n🔍 Collections Dropdown Analysis:");
 
     const collectionsMapping = {
-      "High-End Fashion Brands": ["Luxury"],
+      "High End Fashion Brands": ["Luxury"],
       "Ready to Wear": ["Ready to Wear", "Casual Wear", "Vacation"],
       "Made to Measure": ["Couture", "Formal Wear"],
-      "Streetwear & Urban": ["Streetwear"],
+      "Streetwear & Urban": ["Streetwear & Urban"],
       Accessories: ["Accessories", "Jewelry"],
     };
 

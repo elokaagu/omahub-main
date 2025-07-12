@@ -54,15 +54,15 @@ async function restoreReadyToWear() {
       // Keep some in Streetwear
       {
         id: brands.find((b) => b.name === "Rendoll")?.id,
-        category: "Streetwear",
+        category: "Streetwear & Urban",
       },
       {
         id: brands.find((b) => b.name === "Mairachamp")?.id,
-        category: "Streetwear",
+        category: "Streetwear & Urban",
       },
       {
         id: brands.find((b) => b.name === "Imaulé")?.id,
-        category: "Streetwear",
+        category: "Streetwear & Urban",
       },
 
       // Keep some in Accessories

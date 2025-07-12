@@ -104,16 +104,15 @@ export const LEGACY_CATEGORY_MAPPING = {
   Vacation: "vacation",
   Couture: "custom-design",
   Luxury: "ready-to-wear",
-  Streetwear: "streetwear",
+  "Streetwear & Urban": "streetwear",
 
   // Homepage categories
   Collections: "ready-to-wear",
   Tailored: "custom-design",
 
   // Directory subcategories
-  "High-End Fashion Brands": "ready-to-wear",
+  "High End Fashion Brands": "ready-to-wear",
   "Made to Measure": "custom-design",
-  "Streetwear & Urban": "ready-to-wear",
 } as const;
 
 // Reverse mapping for database storage
@@ -121,7 +120,7 @@ export const UNIFIED_TO_LEGACY_MAPPING = {
   bridal: "Bridal",
   "ready-to-wear": "Ready to Wear",
   accessories: "Accessories",
-  streetwear: "Streetwear",
+  streetwear: "Streetwear & Urban",
   "custom-design": "Custom Design",
   "evening-gowns": "Evening Gowns",
   vacation: "Vacation",

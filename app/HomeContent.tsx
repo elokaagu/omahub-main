@@ -182,7 +182,7 @@ const mapDatabaseCategoryToHomepage = (dbCategory: string): string => {
     "Formal Wear": "Ready to Wear",
     Accessories: "Accessories",
     Jewelry: "Accessories",
-    Streetwear: "Streetwear",
+    "Streetwear & Urban": "Streetwear",
     Couture: "Bridal", // Map Couture to Bridal for homepage display
   };
 

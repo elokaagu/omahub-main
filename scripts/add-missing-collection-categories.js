@@ -77,7 +77,7 @@ const missingCategoryBrands = [
   {
     id: "streetwear-brand-1",
     name: "Urban Vibe",
-    category: "Streetwear",
+    category: "Streetwear & Urban",
     location: "Lagos, Nigeria",
     description: "Contemporary streetwear brand with urban African influences",
     image:
@@ -90,7 +90,7 @@ const missingCategoryBrands = [
   {
     id: "streetwear-brand-2",
     name: "Street Culture",
-    category: "Streetwear",
+    category: "Streetwear & Urban",
     location: "Abuja, Nigeria",
     description: "Bold streetwear designs for the modern African youth",
     image:
@@ -124,7 +124,7 @@ async function addMissingCategoryBrands() {
     console.log("Current categories:", currentCategories);
 
     // Check which categories are missing
-    const targetCategories = ["Luxury", "Couture", "Streetwear"];
+    const targetCategories = ["Luxury", "Couture", "Streetwear & Urban"];
     const missingCategories = targetCategories.filter(
       (cat) => !currentCategories.includes(cat)
     );

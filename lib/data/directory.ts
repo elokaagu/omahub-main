@@ -4,7 +4,7 @@ export const collections = ["Collections", "Tailored"] as const;
 // Subcategories mapping - updated dropdown options
 export const subcategories = {
   Collections: [
-    "High-End Fashion Brands",
+    "High End Fashion Brands",
     "Ready to Wear",
     "Made to Measure",
     "Streetwear & Urban",
@@ -18,7 +18,7 @@ export type Subcategory = (typeof subcategories)[Category][number];
 
 // Standard categories used across the application
 export const standardCategories = [
-  "High-End Fashion Brands",
+  "High End Fashion Brands",
   "Bridal",
   "Custom Design",
   "Evening Gowns",
@@ -32,7 +32,7 @@ export const standardCategories = [
   "Casual Wear",
   "Formal Wear",
   "Luxury",
-  "Streetwear",
+  "Streetwear & Urban",
 ] as const;
 
 // Occasions used in "What are you dressing for?" section
@@ -65,7 +65,7 @@ export const categoryMapping = {
   Vacation: "Vacation",
   Couture: "Couture",
   Luxury: "Luxury", // Keep Luxury as its own category for navigation
-  Streetwear: "Streetwear", // New streetwear category
+  "Streetwear & Urban": "Streetwear & Urban", // Updated streetwear category
 } as const;
 
 export const locations = [
