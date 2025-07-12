@@ -442,7 +442,7 @@ export default function CollectionsPage() {
     <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-6 py-24">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-8 gap-4">
           <div>
             <h1 className="text-4xl font-canela text-black mb-2">
               Collections
@@ -460,8 +460,11 @@ export default function CollectionsPage() {
             )}
           </div>
           {canCreateCatalogues && (
-            <Link href="/studio/collections/create">
-              <Button className="bg-oma-plum hover:bg-oma-plum/90 text-white">
+            <Link
+              href="/studio/collections/create"
+              className="w-full sm:w-auto"
+            >
+              <Button className="bg-oma-plum hover:bg-oma-plum/90 text-white w-full sm:w-auto">
                 <PlusCircle className="w-4 h-4 mr-2" />
                 Create Collection
               </Button>

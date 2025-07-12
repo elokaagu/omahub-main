@@ -476,7 +476,7 @@ export default function UsersPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
       {/* Header */}
-      <div className="flex items-center justify-between mb-12">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-12 gap-4">
         <div>
           <h1 className="text-3xl font-canela text-gray-900 mb-2">
             User Management
@@ -485,12 +485,12 @@ export default function UsersPage() {
             Manage user accounts and assign brands to users
           </p>
         </div>
-        <div className="flex space-x-3">
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
           <Button
             variant="outline"
             onClick={handleSyncSuperAdminBrands}
             disabled={isSyncing}
-            className="text-oma-plum border-oma-plum hover:bg-oma-plum hover:text-white"
+            className="text-oma-plum border-oma-plum hover:bg-oma-plum hover:text-white w-full sm:w-auto"
           >
             <RefreshCw
               className={`h-4 w-4 mr-2 ${isSyncing ? "animate-spin" : ""}`}
@@ -500,7 +500,7 @@ export default function UsersPage() {
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button
-                className="bg-oma-plum hover:bg-oma-plum/90"
+                className="bg-oma-plum hover:bg-oma-plum/90 w-full sm:w-auto"
                 onClick={handleAddUser}
               >
                 <UserPlus className="h-4 w-4 mr-2" />

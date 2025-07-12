@@ -250,17 +250,17 @@ export default function ServicesPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
       {/* Header */}
-      <div className="flex justify-between items-start mb-8">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-8 gap-4">
         <div>
           <h1 className="text-3xl font-canela text-gray-900">Services</h1>
           <p className="text-gray-600 mt-1">
             Manage your tailoring services and consultations
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <Button
             variant="outline"
-            className="flex items-center gap-2 border-oma-plum text-oma-plum hover:bg-oma-plum/10"
+            className="flex items-center gap-2 border-oma-plum text-oma-plum hover:bg-oma-plum/10 w-full sm:w-auto"
             onClick={fetchData}
             disabled={loading}
             aria-label="Refresh services"
@@ -272,8 +272,8 @@ export default function ServicesPage() {
             )}
             Refresh
           </Button>
-          <Link href="/studio/services/create">
-            <Button className="bg-oma-plum hover:bg-oma-plum/90 flex items-center gap-2">
+          <Link href="/studio/services/create" className="w-full sm:w-auto">
+            <Button className="bg-oma-plum hover:bg-oma-plum/90 flex items-center gap-2 w-full sm:w-auto">
               <PlusCircle className="h-4 w-4" />
               Add Service
             </Button>

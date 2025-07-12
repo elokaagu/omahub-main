@@ -323,7 +323,7 @@ export default function ProductsPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
       {/* Header */}
-      <div className="flex items-center justify-between mb-12">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-12 gap-4">
         <div>
           <h1 className="text-3xl font-canela text-gray-900 mb-2">Products</h1>
           <p className="text-oma-cocoa/80 mb-8">
@@ -331,7 +331,10 @@ export default function ProductsPage() {
             your product catalogue with ease.
           </p>
         </div>
-        <Button asChild className="bg-oma-plum hover:bg-oma-plum/90">
+        <Button
+          asChild
+          className="bg-oma-plum hover:bg-oma-plum/90 w-full sm:w-auto"
+        >
           <NavigationLink href="/studio/products/create">
             <Plus className="h-4 w-4 mr-2" />
             Add Product
