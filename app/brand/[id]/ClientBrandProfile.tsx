@@ -95,6 +95,13 @@ export default function ClientBrandProfile({
     }
   }, [fetchReviews, id]);
 
+  // Show products by default if there are no collections
+  useEffect(() => {
+    if (brandData.collections.length === 0) {
+      setShowAllProducts(true);
+    }
+  }, [brandData.collections]);
+
   // Fetch products when showAllProducts is toggled
   useEffect(() => {
     if (showAllProducts && products.length === 0) {
@@ -172,12 +179,14 @@ export default function ClientBrandProfile({
 
           {/* Mobile-optimized button layout */}
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-            <Button
-              onClick={scrollToCollections}
-              className="bg-oma-plum hover:bg-oma-plum/90 w-full sm:w-auto min-h-[44px] text-sm sm:text-base"
-            >
-              View Collections
-            </Button>
+            {brandData.collections.length > 0 && (
+              <Button
+                onClick={scrollToCollections}
+                className="bg-oma-plum hover:bg-oma-plum/90 w-full sm:w-auto min-h-[44px] text-sm sm:text-base"
+              >
+                View Collections
+              </Button>
+            )}
             <Button
               onClick={handleToggleProducts}
               variant="outline"
@@ -291,57 +300,59 @@ export default function ClientBrandProfile({
         )}
 
         {/* Collections Grid */}
-        <div
-          id="collections-section"
-          className="my-8 sm:my-12 slide-up scroll-mt-20 sm:scroll-mt-24"
-          style={{ animationDelay: "100ms" }}
-        >
-          <h2 className="text-2xl sm:text-3xl font-canela font-normal mb-4 sm:mb-6">
-            Collections
-          </h2>
-          {brandData.collections.length === 0 ? (
-            <div className="text-center py-8 sm:py-12 text-gray-500">
-              <p className="text-sm sm:text-base">
-                No collections available yet.
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {brandData.collections.map((collection, index) => (
-                <NavigationLink
-                  key={collection.id}
-                  href={`/collection/${collection.id}`}
-                  className="block group"
-                >
-                  <div
-                    className="aspect-[4/5] relative overflow-hidden rounded-xl sm:rounded-2xl animate-[fadeIn_500ms_ease-in-out_forwards] opacity-0 transition-transform duration-300 group-hover:scale-105"
-                    style={{ animationDelay: `${index * 150}ms` }}
+        {brandData.collections.length > 0 && (
+          <div
+            id="collections-section"
+            className="my-8 sm:my-12 slide-up scroll-mt-20 sm:scroll-mt-24"
+            style={{ animationDelay: "100ms" }}
+          >
+            <h2 className="text-2xl sm:text-3xl font-canela font-normal mb-4 sm:mb-6">
+              Collections
+            </h2>
+            {brandData.collections.length === 0 ? (
+              <div className="text-center py-8 sm:py-12 text-gray-500">
+                <p className="text-sm sm:text-base">
+                  No collections available yet.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                {brandData.collections.map((collection, index) => (
+                  <NavigationLink
+                    key={collection.id}
+                    href={`/collection/${collection.id}`}
+                    className="block group"
                   >
-                    <LazyImage
-                      src={collection.image}
-                      alt={collection.title}
-                      fill
-                      className="object-cover rounded-xl sm:rounded-2xl"
-                      sizes="(max-width: 768px) 100vw, 400px"
-                      priority={true}
-                      aspectRatio="4/5"
-                      quality={85}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent group-hover:from-black/70 transition-colors duration-300" />
-                    <div className="absolute bottom-0 left-0 p-4 sm:p-6">
-                      <h3 className="text-white text-lg sm:text-xl font-source group-hover:text-oma-gold transition-colors duration-300">
-                        {collection.title}
-                      </h3>
-                      <p className="text-white/80 text-xs sm:text-sm mt-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        Click to view catalogue
-                      </p>
+                    <div
+                      className="aspect-[4/5] relative overflow-hidden rounded-xl sm:rounded-2xl animate-[fadeIn_500ms_ease-in-out_forwards] opacity-0 transition-transform duration-300 group-hover:scale-105"
+                      style={{ animationDelay: `${index * 150}ms` }}
+                    >
+                      <LazyImage
+                        src={collection.image}
+                        alt={collection.title}
+                        fill
+                        className="object-cover rounded-xl sm:rounded-2xl"
+                        sizes="(max-width: 768px) 100vw, 400px"
+                        priority={true}
+                        aspectRatio="4/5"
+                        quality={85}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent group-hover:from-black/70 transition-colors duration-300" />
+                      <div className="absolute bottom-0 left-0 p-4 sm:p-6">
+                        <h3 className="text-white text-lg sm:text-xl font-source group-hover:text-oma-gold transition-colors duration-300">
+                          {collection.title}
+                        </h3>
+                        <p className="text-white/80 text-xs sm:text-sm mt-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                          Click to view catalogue
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                </NavigationLink>
-              ))}
-            </div>
-          )}
-        </div>
+                  </NavigationLink>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         <div
           className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 my-8 sm:my-12 slide-up"
