@@ -85,84 +85,49 @@ export function mapCategoriesToNavigation(
     mergedCounts[cat] = (mergedCounts[cat] || 0) + count;
   }
 
-  // Define which categories belong to Collections vs Tailored
-  const collectionsCategories = [
-    "Bridal",
-    "Ready to Wear",
-    "Accessories",
-    "Luxury",
-    "Couture",
-    "Streetwear",
-    "Jewelry",
-    "Casual Wear",
-    "Formal Wear",
-    "Vacation",
-  ];
+  // Get all categories with at least 1 brand or collection
+  const allCategories = Array.from(new Set(Object.keys(mergedCounts))).filter(
+    (cat) => mergedCounts[cat] > 0
+  );
+  const sortedCategories = [...allCategories].sort((a, b) =>
+    a.localeCompare(b)
+  );
 
-  const tailoredCategories = [
-    "Bridal",
-    "Custom Design",
-    "Evening Gowns",
-    "Alterations",
-    "Tailored",
-    "Event Wear",
-    "Wedding Guest",
-    "Birthday",
-  ];
+  // Collections navigation - show all categories
+  const collectionsItems = sortedCategories.map((cat) => ({
+    title: cat,
+    href: `/directory?category=${encodeURIComponent(cat)}`,
+    count: mergedCounts[cat],
+  }));
 
-  const navigationCategories: NavigationCategory[] = [];
-
-  // Collections navigation - include all categories with brands/collections
-  const collectionsItems = categories
-    .filter((cat) => collectionsCategories.includes(cat))
-    .map((cat) => ({
+  // Tailored navigation - show all categories, with Browse All Tailors at top
+  const tailoredItems = [
+    {
+      title: "Browse All Tailors",
+      href: "/tailors",
+      count: sortedCategories.reduce((sum, cat) => sum + mergedCounts[cat], 0),
+    },
+    ...sortedCategories.map((cat) => ({
       title: cat,
       href: `/directory?category=${encodeURIComponent(cat)}`,
-      count: mergedCounts[cat] || 0,
-    }))
-    .filter((item) => item.count > 0) // Only show categories with brands/collections
-    .sort((a, b) => a.title.localeCompare(b.title));
+      count: mergedCounts[cat],
+    })),
+  ];
 
-  if (collectionsItems.length > 0) {
-    navigationCategories.push({
+  return [
+    {
       title: "Collections",
       href: "/collections",
       description: "Discover curated fashion collections and styles",
       items: collectionsItems,
-    });
-  }
-
-  // Tailored navigation - include all categories with brands/collections
-  const tailoredItems = categories
-    .filter((cat) => tailoredCategories.includes(cat))
-    .map((cat) => ({
-      title: cat,
-      href: `/directory?category=${encodeURIComponent(cat)}`,
-      count: mergedCounts[cat] || 0,
-    }))
-    .filter((item) => item.count > 0) // Only show categories with brands/collections
-    .sort((a, b) => a.title.localeCompare(b.title));
-
-  if (tailoredItems.length > 0) {
-    // Add "Browse All Tailors" as the first item
-    const allTailoredItems = [
-      {
-        title: "Browse All Tailors",
-        href: "/tailors",
-        count: tailoredItems.reduce((sum, item) => sum + item.count, 0),
-      },
-      ...tailoredItems,
-    ];
-
-    navigationCategories.push({
+    },
+    {
       title: "Tailored",
       href: "/tailored",
       description: "Masters of craft creating perfectly fitted garments",
-      items: allTailoredItems,
-    });
-  }
-
-  return navigationCategories;
+      items: tailoredItems,
+    },
+  ];
 }
 
 /**
