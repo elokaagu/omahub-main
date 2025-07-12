@@ -50,7 +50,10 @@ const fallbackNavigationItems: NavigationItem[] = [
  */
 export async function getNavigationItems(): Promise<NavigationItem[]> {
   try {
+    console.log("🔄 Starting getNavigationItems...");
+
     const dynamicItems = await getDynamicNavigationItems();
+    console.log("📋 Dynamic items received:", dynamicItems);
 
     // Convert NavigationCategory to NavigationItem format
     const navigationItems: NavigationItem[] = dynamicItems.map((category) => ({
@@ -64,14 +67,15 @@ export async function getNavigationItems(): Promise<NavigationItem[]> {
       })),
     }));
 
+    console.log("✅ Final navigation items:", navigationItems);
+
+    // Always return the dynamic items if we have them, otherwise fallback
     return navigationItems.length > 0
       ? navigationItems
       : fallbackNavigationItems;
   } catch (error) {
-    console.error("Error loading dynamic navigation items:", error);
+    console.error("❌ Error loading dynamic navigation items:", error);
+    console.log("🔄 Falling back to static navigation items");
     return fallbackNavigationItems;
   }
 }
-
-// Export static items for backward compatibility during transition
-export const navigationItems = fallbackNavigationItems;

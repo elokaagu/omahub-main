@@ -30,7 +30,6 @@ import { useNavigation } from "@/contexts/NavigationContext";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useRouter, usePathname } from "next/navigation";
 import {
-  navigationItems as staticNavigationItems,
   getNavigationItems,
   type NavigationItem,
 } from "@/components/ui/navigation";
@@ -50,6 +49,37 @@ const navigation = [
   { name: "About", href: "/about" },
 ];
 
+// Fallback navigation items
+const fallbackNavigationItems: NavigationItem[] = [
+  {
+    title: "Collections",
+    href: "/collections",
+    description: "Discover curated fashion collections and styles",
+    items: [
+      { title: "High End Fashion Brands", href: "/directory?category=Luxury" },
+      { title: "Ready to Wear", href: "/directory?category=Ready+to+Wear" },
+      { title: "Made to Measure", href: "/directory?category=Couture" },
+      {
+        title: "Streetwear & Urban",
+        href: "/directory?category=Streetwear+%26+Urban",
+      },
+      { title: "Accessories", href: "/directory?category=Accessories" },
+    ],
+  },
+  {
+    title: "Tailored",
+    href: "/tailored",
+    description: "Masters of craft creating perfectly fitted garments",
+    items: [
+      { title: "Browse All Tailors", href: "/tailors" },
+      { title: "Bridal", href: "/directory?category=Bridal" },
+      { title: "Custom Design", href: "/directory?category=Custom+Design" },
+      { title: "Evening Gowns", href: "/directory?category=Evening+Gowns" },
+      { title: "Alterations", href: "/directory?category=Alterations" },
+    ],
+  },
+];
+
 export default function Header() {
   const { user, signOut } = useAuth();
   const { setIsNavigating } = useNavigation();
@@ -61,7 +91,7 @@ export default function Header() {
   const [isNavigatingToStudio, setIsNavigatingToStudio] = useState(false);
   const [dynamicNavigationItems, setDynamicNavigationItems] = useState<
     NavigationItem[]
-  >(staticNavigationItems);
+  >(fallbackNavigationItems);
   const [collectionsHasBrands, setCollectionsHasBrands] = useState(false);
   const [tailoredHasBrands, setTailoredHasBrands] = useState(false);
   const overlayRef = useRef<HTMLDivElement>(null);
@@ -134,11 +164,15 @@ export default function Header() {
   useEffect(() => {
     async function loadDynamicNavigation() {
       try {
+        console.log("🔄 Header: Starting to load dynamic navigation...");
+
         // Load dynamic navigation items
         const dynamicItems = await getNavigationItems();
+        console.log("📋 Header: Dynamic items loaded:", dynamicItems);
+
         setDynamicNavigationItems(dynamicItems);
 
-        // Check if categories have brands
+        // Check if categories have brands (for mobile menu filtering)
         const [collectionsHasBrands, tailoredHasBrands] = await Promise.all([
           checkCategoryHasBrands("Collections"),
           checkCategoryHasBrands("Tailored"),
@@ -147,15 +181,20 @@ export default function Header() {
         setCollectionsHasBrands(collectionsHasBrands);
         setTailoredHasBrands(tailoredHasBrands);
 
-        console.log("Header: Dynamic navigation loaded", {
+        console.log("✅ Header: Dynamic navigation loaded successfully", {
           itemsCount: dynamicItems.length,
           collectionsHasBrands,
           tailoredHasBrands,
+          items: dynamicItems.map((item) => ({
+            title: item.title,
+            itemCount: item.items.length,
+            items: item.items.map((subItem) => subItem.title),
+          })),
         });
       } catch (error) {
-        console.error("Error loading dynamic navigation:", error);
+        console.error("❌ Header: Error loading dynamic navigation:", error);
         // Fallback to static navigation on error
-        setDynamicNavigationItems(staticNavigationItems);
+        setDynamicNavigationItems(fallbackNavigationItems);
       }
     }
 
@@ -272,45 +311,51 @@ export default function Header() {
             <NavigationMenuList>
               {dynamicNavigationItems
                 // Show all categories, including Collections and Tailored, regardless of count
-                .map((category) => (
-                  <NavigationMenuItem key={category.title}>
-                    <NavigationMenuTrigger
-                      className={cn(
-                        "text-sm font-semibold leading-6 gap-x-2 bg-transparent",
-                        scrolled || !isHomePage
-                          ? "text-oma-black hover:text-oma-plum"
-                          : "text-white hover:text-white/80"
-                      )}
-                    >
-                      {category.title}
-                    </NavigationMenuTrigger>
-                    <NavigationMenuContent>
-                      <div className="w-screen max-w-lg">
-                        <div className="p-4">
-                          <div className="mb-4">
-                            <h3 className="text-sm font-medium text-gray-900">
-                              {category.title}
-                            </h3>
-                          </div>
-                          <div className="grid grid-cols-2 gap-2">
-                            {category.items.map((item) => (
-                              <NavigationMenuLink key={item.title} asChild>
-                                <NavigationLink
-                                  href={item.href}
-                                  className="block rounded-md p-2 text-sm hover:bg-gray-50 transition-colors"
-                                >
-                                  <span className="font-medium text-gray-900">
-                                    {item.title}
-                                  </span>
-                                </NavigationLink>
-                              </NavigationMenuLink>
-                            ))}
+                .map((category) => {
+                  console.log(
+                    `Dropdown items for ${category.title}:`,
+                    category.items
+                  );
+                  return (
+                    <NavigationMenuItem key={category.title}>
+                      <NavigationMenuTrigger
+                        className={cn(
+                          "text-sm font-semibold leading-6 gap-x-2 bg-transparent",
+                          scrolled || !isHomePage
+                            ? "text-oma-black hover:text-oma-plum"
+                            : "text-white hover:text-white/80"
+                        )}
+                      >
+                        {category.title}
+                      </NavigationMenuTrigger>
+                      <NavigationMenuContent>
+                        <div className="w-screen max-w-lg">
+                          <div className="p-4">
+                            <div className="mb-4">
+                              <h3 className="text-sm font-medium text-gray-900">
+                                {category.title}
+                              </h3>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                              {category.items.map((item) => (
+                                <NavigationMenuLink key={item.title} asChild>
+                                  <NavigationLink
+                                    href={item.href}
+                                    className="block rounded-md p-2 text-sm hover:bg-gray-50 transition-colors"
+                                  >
+                                    <span className="font-medium text-gray-900">
+                                      {item.title}
+                                    </span>
+                                  </NavigationLink>
+                                </NavigationMenuLink>
+                              ))}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </NavigationMenuContent>
-                  </NavigationMenuItem>
-                ))}
+                      </NavigationMenuContent>
+                    </NavigationMenuItem>
+                  );
+                })}
             </NavigationMenuList>
           </NavigationMenu>
 
