@@ -90,12 +90,7 @@ export default function TailorsPage() {
         (tailor) =>
           tailor.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
           tailor.brand.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          tailor.description
-            ?.toLowerCase()
-            .includes(searchTerm.toLowerCase()) ||
-          tailor.specialties?.some((specialty) =>
-            specialty.toLowerCase().includes(searchTerm.toLowerCase())
-          )
+          tailor.description?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
