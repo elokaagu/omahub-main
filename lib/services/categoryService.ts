@@ -145,7 +145,12 @@ export function mapCategoriesToNavigation(
     ALWAYS_PRESENT_TAILORED.map((i) => i.category)
   );
   const otherTailored = sortedCategories
-    .filter((cat) => !alwaysTailoredSet.has(cat))
+    .filter(
+      (cat) =>
+        !alwaysTailoredSet.has(cat) &&
+        cat !== "Streetwear" &&
+        cat !== "Streetwear & Urban"
+    )
     .map((cat) => ({
       title: cat,
       href: `/directory?category=${encodeURIComponent(cat)}`,
