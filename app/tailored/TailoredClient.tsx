@@ -390,7 +390,7 @@ export default function TailoredClient() {
       <section
         ref={processRef}
         id="process"
-        className="min-h-screen snap-start flex items-center justify-center py-32 px-6 sm:px-12 lg:px-24 relative"
+        className="min-h-screen snap-start flex items-center justify-center py-32 px-8 sm:px-16 lg:px-32 relative"
       >
         {/* Corner Frames */}
         <div className="absolute top-24 left-8 w-12 h-12 border-l-4 border-t-4 border-oma-gold/80"></div>
@@ -398,7 +398,7 @@ export default function TailoredClient() {
         <div className="absolute bottom-8 left-8 w-12 h-12 border-l-4 border-b-4 border-oma-gold/80"></div>
         <div className="absolute bottom-8 right-8 w-12 h-12 border-r-4 border-b-4 border-oma-gold/80"></div>
         <div
-          className="max-w-6xl mx-auto w-full"
+          className="max-w-6xl mx-auto w-full h-full flex flex-col items-center justify-center"
           style={getSectionTransform(visibleSections.has("process"))}
         >
           <div className="text-center mb-16">
