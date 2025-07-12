@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -39,6 +39,27 @@ export default function StudioLayout({
 }) {
   const { user, loading, signOut } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
+  const pendingSidebarClose = useRef(false);
+
+  const handleSidebarNav = (href: string) => () => {
+    if (router && router.push) {
+      if (href !== pathname) {
+        pendingSidebarClose.current = true;
+        router.push(href);
+      } else {
+        setSidebarOpen(false);
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (pendingSidebarClose.current) {
+      setSidebarOpen(false);
+      pendingSidebarClose.current = false;
+    }
+  }, [pathname]);
+
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isCheckingAccess, setIsCheckingAccess] = useState(true);
@@ -287,7 +308,7 @@ export default function StudioLayout({
             <NavigationLink
               href="/studio"
               className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
-              onClick={() => setSidebarOpen(false)}
+              onClick={handleSidebarNav("/studio")}
             >
               <Home className="h-5 w-5" />
               <span>Dashboard</span>
@@ -296,7 +317,7 @@ export default function StudioLayout({
               <NavigationLink
                 href="/studio/brands"
                 className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
-                onClick={() => setSidebarOpen(false)}
+                onClick={handleSidebarNav("/studio/brands")}
               >
                 <Package className="h-5 w-5" />
                 <span>
@@ -308,7 +329,7 @@ export default function StudioLayout({
               <NavigationLink
                 href="/studio/collections"
                 className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
-                onClick={() => setSidebarOpen(false)}
+                onClick={handleSidebarNav("/studio/collections")}
               >
                 <ImageIcon className="h-5 w-5" />
                 <span>
@@ -322,7 +343,7 @@ export default function StudioLayout({
               <NavigationLink
                 href="/studio/products"
                 className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
-                onClick={() => setSidebarOpen(false)}
+                onClick={handleSidebarNav("/studio/products")}
               >
                 <ShoppingBag className="h-5 w-5" />
                 <span>
@@ -334,7 +355,7 @@ export default function StudioLayout({
               <NavigationLink
                 href="/studio/services"
                 className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
-                onClick={() => setSidebarOpen(false)}
+                onClick={handleSidebarNav("/studio/services")}
               >
                 <Scissors className="h-5 w-5" />
                 <span>
@@ -346,7 +367,7 @@ export default function StudioLayout({
               <NavigationLink
                 href="/studio/hero"
                 className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
-                onClick={() => setSidebarOpen(false)}
+                onClick={handleSidebarNav("/studio/hero")}
               >
                 <Monitor className="h-5 w-5" />
                 <span>Hero Carousel</span>
@@ -356,7 +377,7 @@ export default function StudioLayout({
               <NavigationLink
                 href="/studio/spotlight"
                 className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
-                onClick={() => setSidebarOpen(false)}
+                onClick={handleSidebarNav("/studio/spotlight")}
               >
                 <ImageIcon className="h-5 w-5" />
                 <span>Spotlight</span>
@@ -366,7 +387,7 @@ export default function StudioLayout({
               <NavigationLink
                 href="/studio/users"
                 className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
-                onClick={() => setSidebarOpen(false)}
+                onClick={handleSidebarNav("/studio/users")}
               >
                 <Users className="h-5 w-5" />
                 <span>Users</span>
@@ -376,7 +397,7 @@ export default function StudioLayout({
               <NavigationLink
                 href="/studio/reviews"
                 className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
-                onClick={() => setSidebarOpen(false)}
+                onClick={handleSidebarNav("/studio/reviews")}
               >
                 <MessageSquare className="h-5 w-5" />
                 <span>
@@ -388,7 +409,7 @@ export default function StudioLayout({
               <NavigationLink
                 href="/studio/inbox"
                 className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
-                onClick={() => setSidebarOpen(false)}
+                onClick={handleSidebarNav("/studio/inbox")}
               >
                 <Inbox className="h-5 w-5" />
                 <span>
@@ -399,7 +420,7 @@ export default function StudioLayout({
             <NavigationLink
               href="/studio/profile"
               className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
-              onClick={() => setSidebarOpen(false)}
+              onClick={handleSidebarNav("/studio/profile")}
             >
               <User className="h-5 w-5" />
               <span>Profile</span>
@@ -408,7 +429,7 @@ export default function StudioLayout({
               <NavigationLink
                 href="/studio/settings"
                 className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
-                onClick={() => setSidebarOpen(false)}
+                onClick={handleSidebarNav("/studio/settings")}
               >
                 <Settings className="h-5 w-5" />
                 <span>Settings</span>
