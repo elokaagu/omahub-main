@@ -220,7 +220,7 @@ export default function SettingsPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Content Management - About Us & Our Story grouped */}
+          {/* Content Management - Overview with navigation links */}
           {isSuperAdmin && (
             <Card className="border-oma-beige">
               <CardHeader>
@@ -232,88 +232,28 @@ export default function SettingsPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* About Us Editor */}
-                  <div>
-                    <h3 className="text-xl font-canela text-oma-plum mb-1">
-                      About OmaHub
-                    </h3>
-                    <p className="text-oma-cocoa mb-2 text-sm">
-                      Edit the About Us text displayed on the public About page
-                    </p>
-                    <div className="flex flex-col gap-2">
-                      <Textarea
-                        value={aboutText}
-                        onChange={(e) => setAboutText(e.target.value)}
-                        rows={8}
-                        placeholder="Enter About OmaHub text..."
-                        disabled={aboutLoading}
-                        className="mb-4"
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="w-fit mb-2 flex items-center gap-2"
-                        onClick={() => {
-                          navigator.clipboard.writeText(aboutText);
-                          toast.success("About Us content copied to clipboard");
-                        }}
-                        disabled={!aboutText}
-                      >
-                        <Clipboard className="h-4 w-4" />
-                        Content Copy
+                <ul className="flex flex-col gap-4">
+                  <li className="flex items-center justify-between">
+                    <span className="font-medium text-lg text-oma-plum">
+                      About Us
+                    </span>
+                    <a href="/studio/settings/content/about-us">
+                      <Button variant="outline" className="font-normal">
+                        Manage
                       </Button>
-                      <Button
-                        onClick={handleAboutSave}
-                        disabled={aboutSaving || aboutLoading}
-                        className="bg-oma-plum hover:bg-oma-plum/90 text-white flex items-center gap-2"
-                      >
-                        {aboutSaving ? "Saving..." : "Save About Us"}
-                      </Button>
-                    </div>
-                  </div>
-                  {/* Our Story Editor */}
-                  <div>
-                    <h3 className="text-xl font-canela text-oma-plum mb-1">
+                    </a>
+                  </li>
+                  <li className="flex items-center justify-between">
+                    <span className="font-medium text-lg text-oma-plum">
                       Our Story
-                    </h3>
-                    <p className="text-oma-cocoa mb-2 text-sm">
-                      Edit the Our Story text displayed on the About OmaHub page
-                    </p>
-                    <div className="flex flex-col gap-2">
-                      <Textarea
-                        value={ourStoryText}
-                        onChange={(e) => setOurStoryText(e.target.value)}
-                        rows={10}
-                        placeholder="Enter Our Story text..."
-                        disabled={ourStoryLoading}
-                        className="mb-4"
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="w-fit mb-2 flex items-center gap-2"
-                        onClick={() => {
-                          navigator.clipboard.writeText(ourStoryText);
-                          toast.success(
-                            "Our Story content copied to clipboard"
-                          );
-                        }}
-                        disabled={!ourStoryText}
-                      >
-                        <Clipboard className="h-4 w-4" />
-                        Content Copy
+                    </span>
+                    <a href="/studio/settings/content/our-story">
+                      <Button variant="outline" className="font-normal">
+                        Manage
                       </Button>
-                      <Button
-                        onClick={handleOurStorySave}
-                        disabled={ourStorySaving || ourStoryLoading}
-                        className="bg-oma-plum hover:bg-oma-plum/90 text-white flex items-center gap-2"
-                      >
-                        {ourStorySaving ? "Saving..." : "Save Our Story"}
-                      </Button>
-                    </div>
-                  </div>
-                </div>
+                    </a>
+                  </li>
+                </ul>
               </CardContent>
             </Card>
           )}
