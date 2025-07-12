@@ -26,11 +26,7 @@ export const standardCategories = [
   "Ready to Wear",
   "Made to Measure",
   "Accessories",
-  "Vacation",
   "Couture",
-  "Jewelry",
-  "Casual Wear",
-  "Formal Wear",
   "Luxury",
   "Streetwear & Urban",
 ] as const;
@@ -48,7 +44,7 @@ export const occasionToCategoryMapping = {
   Wedding: "Bridal",
   Party: "Ready to Wear",
   "Ready to Wear": "Ready to Wear",
-  Vacation: "Vacation",
+  Vacation: "Ready to Wear",
 } as const;
 
 // Mapping from database categories to display categories
@@ -59,10 +55,9 @@ export const categoryMapping = {
   Alterations: "Alterations",
   "Ready to Wear": "Ready to Wear",
   "Casual Wear": "Ready to Wear",
-  "Formal Wear": "Couture",
   Accessories: "Accessories",
   Jewelry: "Accessories",
-  Vacation: "Vacation",
+  Vacation: "Ready to Wear",
   Couture: "Couture",
   Luxury: "Luxury", // Keep Luxury as its own category for navigation
   "Streetwear & Urban": "Streetwear & Urban", // Updated streetwear category

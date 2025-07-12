@@ -75,18 +75,6 @@ export const UNIFIED_CATEGORIES = [
     homepageCta: "Elegance for every evening.",
     subcategories: ["Formal Gowns", "Cocktail Dresses", "Red Carpet"],
   },
-  {
-    id: "vacation",
-    name: "Vacation",
-    displayName: "Vacation",
-    description: "Resort wear and vacation-ready pieces",
-    slug: "vacation",
-    color: "#7FB069", // Tropical green
-    icon: "🏖️",
-    homepageImage: "/lovable-uploads/25c3fe26-3fc4-43ef-83ac-6931a74468c0.png",
-    homepageCta: "Escape in style.",
-    subcategories: ["Resort Wear", "Swimwear", "Beach Accessories"],
-  },
 ] as const;
 
 // Legacy category mappings for backward compatibility
@@ -95,13 +83,12 @@ export const LEGACY_CATEGORY_MAPPING = {
   Bridal: "bridal",
   "Ready to Wear": "ready-to-wear",
   "Casual Wear": "ready-to-wear",
-  "Formal Wear": "ready-to-wear",
   Accessories: "accessories",
   Jewelry: "accessories",
   "Custom Design": "custom-design",
   "Evening Gowns": "evening-gowns",
   Alterations: "custom-design",
-  Vacation: "vacation",
+  Vacation: "ready-to-wear",
   Couture: "custom-design",
   Luxury: "ready-to-wear",
   "Streetwear & Urban": "streetwear",
@@ -123,7 +110,6 @@ export const UNIFIED_TO_LEGACY_MAPPING = {
   streetwear: "Streetwear & Urban",
   "custom-design": "Custom Design",
   "evening-gowns": "Evening Gowns",
-  vacation: "Vacation",
 } as const;
 
 // Occasions mapping
@@ -149,7 +135,7 @@ export const OCCASIONS = [
   {
     id: "vacation",
     name: "Vacation",
-    categoryId: "vacation",
+    categoryId: "ready-to-wear",
     description: "Travel and leisure",
   },
   {
