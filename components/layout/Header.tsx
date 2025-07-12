@@ -326,7 +326,7 @@ export default function Header() {
                   {category.title}
                   <ChevronDown className="h-4 w-4" />
                 </button>
-                <div className="absolute top-full left-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                <div className="absolute top-full left-0 mt-2 w-80 bg-white/70 backdrop-blur-md rounded-xl shadow-xl border border-oma-gold/30 ring-1 ring-oma-plum/10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                   <div className="p-4">
                     <div className="mb-4">
                       <h3 className="text-sm font-medium text-gray-900">
