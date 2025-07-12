@@ -544,7 +544,7 @@ export default function Header() {
                 </div>
 
                 {/* Categories */}
-                <div className="flex flex-col gap-y-2 bg-white/90 rounded-xl shadow-lg p-2 z-[1200]">
+                <div className="flex flex-col gap-y-2 bg-white/40 backdrop-blur-lg rounded-2xl border border-oma-gold/20 shadow-2xl p-4 z-[1200]">
                   <h3 className="text-xs font-medium uppercase tracking-wider text-gray-500 mb-3">
                     Categories
                   </h3>
