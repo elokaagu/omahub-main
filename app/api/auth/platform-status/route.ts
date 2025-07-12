@@ -31,9 +31,16 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
-    // Check if platform is public by looking for the cookie
-    const isPublic = request.cookies.get("omahub-public")?.value === "true";
-
+    // Check if platform is public by reading from the database
+    const { data: visData, error: visError } = await supabase
+      .from("platform_settings")
+      .select("value")
+      .eq("key", "platform_visibility")
+      .single();
+    if (visError && visError.code !== "PGRST116") {
+      return NextResponse.json({ error: visError.message }, { status: 500 });
+    }
+    const isPublic = visData?.value === "public";
     return NextResponse.json({
       success: true,
       isPublic,

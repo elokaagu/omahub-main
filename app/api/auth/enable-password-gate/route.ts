@@ -31,13 +31,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
-    // Enable password gate by removing the public flag
+    // Set platform_visibility to 'private' in the database
+    const { error: dbError } = await supabase.from("platform_settings").upsert(
+      [
+        {
+          key: "platform_visibility",
+          value: "private",
+          updated_at: new Date().toISOString(),
+        },
+      ],
+      { onConflict: "key" }
+    );
+    if (dbError) {
+      return NextResponse.json({ error: dbError.message }, { status: 500 });
+    }
+    // (Optional) Remove the public cookie for legacy support
     const response = NextResponse.json({
       success: true,
       message: "Password gate enabled. Platform is now private.",
     });
-
-    // Remove the public cookie to enable password gate
     response.cookies.set("omahub-public", "", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -45,7 +57,6 @@ export async function POST(request: NextRequest) {
       maxAge: 0, // Expire immediately
       path: "/",
     });
-
     return response;
   } catch (error) {
     console.error("Enable password gate API error:", error);

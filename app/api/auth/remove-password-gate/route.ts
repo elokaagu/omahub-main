@@ -31,14 +31,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
-    // Set environment variable or flag to disable password gate
-    // Note: In production, you'd want to use a database flag or environment variable
+    // Set platform_visibility to 'public' in the database
+    const { error: dbError } = await supabase.from("platform_settings").upsert(
+      [
+        {
+          key: "platform_visibility",
+          value: "public",
+          updated_at: new Date().toISOString(),
+        },
+      ],
+      { onConflict: "key" }
+    );
+    if (dbError) {
+      return NextResponse.json({ error: dbError.message }, { status: 500 });
+    }
+    // (Optional) Set a cookie to disable the password gate for legacy support
     const response = NextResponse.json({
       success: true,
       message: "Password gate disabled. Platform is now public.",
     });
-
-    // Set a cookie to disable the password gate
     response.cookies.set("omahub-public", "true", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -46,7 +57,6 @@ export async function POST(request: NextRequest) {
       maxAge: 60 * 60 * 24 * 365, // 1 year
       path: "/",
     });
-
     return response;
   } catch (error) {
     console.error("Remove password gate API error:", error);
