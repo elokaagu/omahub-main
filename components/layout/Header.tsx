@@ -326,7 +326,7 @@ export default function Header() {
                   {category.title}
                   <ChevronDown className="h-4 w-4" />
                 </button>
-                <div className="absolute top-full left-0 mt-2 w-80 bg-white/70 backdrop-blur-md rounded-xl shadow-xl border border-oma-gold/30 ring-1 ring-oma-plum/10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                <div className="absolute top-full left-0 mt-2 w-80 bg-gradient-to-br from-white/70 to-oma-beige/60 backdrop-blur-lg rounded-2xl shadow-2xl border border-oma-gold/40 ring-1 ring-oma-plum/10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                   <div className="p-4">
                     <div className="mb-4">
                       <h3 className="text-sm font-medium text-gray-900">
@@ -338,9 +338,9 @@ export default function Header() {
                         <NavigationLink
                           key={item.title}
                           href={item.href}
-                          className="block rounded-md p-2 text-sm hover:bg-gray-50 transition-colors"
+                          className="block rounded-md p-2 text-sm hover:bg-oma-beige/40 transition-colors whitespace-nowrap truncate max-w-xs"
                         >
-                          <span className="font-medium text-gray-900">
+                          <span className="font-medium text-gray-900 whitespace-nowrap truncate block">
                             {item.title}
                           </span>
                         </NavigationLink>
