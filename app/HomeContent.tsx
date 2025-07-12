@@ -902,10 +902,10 @@ export default function HomeContent() {
       {/* Brand Categories - Full Width */}
       {categories.length > 0 ? (
         categories
-          .filter((category) => {
-            // Show categories with 4+ brands to ensure quality content
-            return category.brands.length >= 4;
-          })
+          // .filter((category) => {
+          //   // Show categories with 4+ brands to ensure quality content
+          //   return category.brands.length >= 4;
+          // })
           .map((category, index) => (
             <section
               key={category.title}
