@@ -171,25 +171,6 @@ export default function TailorPage() {
               </div>
             )}
 
-            {/* Specialties */}
-            {tailor.specialties && tailor.specialties.length > 0 && (
-              <div>
-                <h3 className="text-lg font-medium text-black mb-3">
-                  Specialties
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {tailor.specialties.map((specialty, index) => (
-                    <span
-                      key={index}
-                      className="bg-oma-beige/50 text-black px-3 py-1 rounded-full text-sm"
-                    >
-                      {specialty}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-
             {/* Details */}
             <div className="space-y-4">
               {tailor.price_range && (

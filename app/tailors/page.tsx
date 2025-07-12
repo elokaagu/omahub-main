@@ -61,7 +61,6 @@ export default function TailorsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedSpecialty, setSelectedSpecialty] = useState("all");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   useEffect(() => {
@@ -100,21 +99,8 @@ export default function TailorsPage() {
       );
     }
 
-    // Filter by specialty
-    if (selectedSpecialty !== "all") {
-      filtered = filtered.filter((tailor) =>
-        tailor.specialties?.includes(selectedSpecialty)
-      );
-    }
-
     setFilteredTailors(filtered);
-  }, [tailors, searchTerm, selectedSpecialty]);
-
-  // Get all unique specialties for filtering
-  const specialties = [
-    "all",
-    ...Array.from(new Set(tailors.flatMap((t) => t.specialties || []))),
-  ];
+  }, [tailors, searchTerm]);
 
   if (loading) {
     return (
@@ -213,23 +199,6 @@ export default function TailorsPage() {
               </div>
             </div>
           </div>
-
-          {/* Specialty Filter */}
-          <div className="mt-6 flex flex-wrap gap-3">
-            {specialties.map((specialty) => (
-              <button
-                key={specialty}
-                onClick={() => setSelectedSpecialty(specialty)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                  selectedSpecialty === specialty
-                    ? "bg-oma-plum text-white"
-                    : "bg-white/80 text-black/70 hover:bg-oma-cocoa/10 border border-oma-cocoa/20"
-                }`}
-              >
-                {specialty === "all" ? "All Specialties" : specialty}
-              </button>
-            ))}
-          </div>
         </div>
 
         {/* Results Count */}
@@ -291,29 +260,6 @@ export default function TailorsPage() {
                         {tailor.description}
                       </p>
 
-                      {/* Specialties */}
-                      {tailor.specialties && tailor.specialties.length > 0 && (
-                        <div className="mb-3">
-                          <div className="flex flex-wrap gap-1">
-                            {tailor.specialties
-                              .slice(0, 3)
-                              .map((specialty, index) => (
-                                <span
-                                  key={index}
-                                  className="text-xs bg-oma-beige/50 text-black px-2 py-1 rounded-full"
-                                >
-                                  {specialty}
-                                </span>
-                              ))}
-                            {tailor.specialties.length > 3 && (
-                              <span className="text-xs text-black/60">
-                                +{tailor.specialties.length - 3} more
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      )}
-
                       {/* Tailor Info */}
                       <div className="space-y-2 mb-4">
                         {tailor.price_range && (
@@ -369,24 +315,6 @@ export default function TailorsPage() {
                       <p className="text-black/70 mb-3 line-clamp-2">
                         {tailor.description}
                       </p>
-
-                      {/* Specialties */}
-                      {tailor.specialties && tailor.specialties.length > 0 && (
-                        <div className="mb-3">
-                          <div className="flex flex-wrap gap-1">
-                            {tailor.specialties
-                              .slice(0, 4)
-                              .map((specialty, index) => (
-                                <span
-                                  key={index}
-                                  className="text-xs bg-oma-beige/50 text-black px-2 py-1 rounded-full"
-                                >
-                                  {specialty}
-                                </span>
-                              ))}
-                          </div>
-                        </div>
-                      )}
 
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">

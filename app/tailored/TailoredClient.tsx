@@ -275,18 +275,6 @@ export default function TailoredClient() {
                     <div className="text-oma-cocoa/70 text-base mb-2 truncate">
                       {tailor.brand?.location}
                     </div>
-                    {tailor.specialties && tailor.specialties.length > 0 && (
-                      <div className="flex flex-wrap justify-center gap-2 mt-3">
-                        {tailor.specialties.slice(0, 2).map((spec: string) => (
-                          <span
-                            key={spec}
-                            className="bg-oma-gold/10 text-oma-plum text-sm px-3 py-1 rounded-full font-medium"
-                          >
-                            {spec}
-                          </span>
-                        ))}
-                      </div>
-                    )}
                   </div>
                 </Link>
               ))}
