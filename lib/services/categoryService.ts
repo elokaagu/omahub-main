@@ -1,4 +1,6 @@
 import { supabase } from "@/lib/supabase";
+import { getAllCollections } from "@/lib/services/collectionService";
+import { getAllBrands } from "@/lib/services/brandService";
 
 export interface DynamicCategory {
   name: string;
@@ -70,118 +72,40 @@ export async function getCategoryCounts(): Promise<Record<string, number>> {
 }
 
 /**
- * Map database categories to navigation groups
+ * Map all categories with at least 1 brand or collection to navigation
  */
 export function mapCategoriesToNavigation(
   categories: string[],
-  counts: Record<string, number>
+  counts: Record<string, number>,
+  collectionCounts: Record<string, number>
 ): NavigationCategory[] {
-  // Define category mappings for the new Collections structure
-  const collectionsCategories = [
-    "Luxury", // Maps to "High End Fashion Brands"
-    "Ready to Wear",
-    "Couture", // Maps to "Made to Measure"
-    "Streetwear", // Maps to "Streetwear & Urban"
-    "Accessories",
-    // Legacy categories that should also map to collections
-    "Jewelry", // Maps to Accessories
-    "Casual Wear", // Maps to Ready to Wear
-    "Formal Wear", // Maps to Made to Measure
-    "Vacation", // Maps to Ready to Wear
-  ];
-  const tailoredCategories = [
-    "Bridal",
-    "Custom Design",
-    "Evening Gowns",
-    "Alterations",
-    "Tailored",
-    "Event Wear",
-    "Wedding Guest",
-    "Birthday",
-  ];
-
-  const navigationCategories: NavigationCategory[] = [];
-
-  // Collections navigation - map database categories to navigation labels
-  const categoryMapping: Record<string, { title: string; category: string }> = {
-    Luxury: { title: "High-End Fashion Brands", category: "Luxury" },
-    "Ready to Wear": { title: "Ready to Wear", category: "Ready to Wear" },
-    Couture: { title: "Made to Measure", category: "Couture" },
-    Streetwear: { title: "Streetwear & Urban", category: "Streetwear" },
-    Accessories: { title: "Accessories", category: "Accessories" },
-    // Legacy mappings
-    Jewelry: { title: "Accessories", category: "Accessories" },
-    "Casual Wear": { title: "Ready to Wear", category: "Ready to Wear" },
-    "Formal Wear": { title: "Made to Measure", category: "Couture" },
-    Vacation: { title: "Ready to Wear", category: "Ready to Wear" },
-  };
-
-  // Create aggregated collections items
-  const aggregatedCounts: Record<string, number> = {};
-  categories
-    .filter((cat) => collectionsCategories.includes(cat))
-    .forEach((cat) => {
-      const mapping = categoryMapping[cat];
-      if (mapping) {
-        aggregatedCounts[mapping.category] =
-          (aggregatedCounts[mapping.category] || 0) + (counts[cat] || 0);
-      }
-    });
-
-  const collectionsItems = [
-    { title: "High-End Fashion Brands", category: "Luxury" },
-    { title: "Ready to Wear", category: "Ready to Wear" },
-    { title: "Made to Measure", category: "Couture" },
-    { title: "Streetwear & Urban", category: "Streetwear" },
-    { title: "Accessories", category: "Accessories" },
-  ]
-    .map((item) => ({
-      title: item.title,
-      href: `/directory?category=${encodeURIComponent(item.category)}`,
-      count: aggregatedCounts[item.category] || 0,
-    }))
-    .filter((item) => item.count > 0); // Only show categories with brands
-
-  if (collectionsItems.length > 0) {
-    navigationCategories.push({
-      title: "Collections",
-      href: "/collections",
-      description: "Discover curated fashion collections and styles",
-      items: collectionsItems,
-    });
+  // Merge counts for each category (brands + collections)
+  const mergedCounts: Record<string, number> = { ...counts };
+  for (const [cat, count] of Object.entries(collectionCounts)) {
+    mergedCounts[cat] = (mergedCounts[cat] || 0) + count;
   }
 
-  // Tailored navigation - include all categories that fit tailored
-  const tailoredItems = categories
-    .filter((cat) => tailoredCategories.includes(cat))
-    .map((cat) => ({
-      title: cat,
-      href: `/directory?category=${encodeURIComponent(cat)}`,
-      count: counts[cat] || 0,
-    }))
-    .filter((item) => item.count > 0) // Only show categories with brands
-    .sort((a, b) => b.count - a.count); // Sort by count descending
+  // Get all unique categories with at least 1 brand or collection
+  const allCategories = Array.from(
+    new Set([...Object.keys(mergedCounts)])
+  ).filter((cat) => mergedCounts[cat] > 0);
 
-  if (tailoredItems.length > 0) {
-    // Add "Browse All Tailors" as the first item
-    const allTailoredItems = [
-      {
-        title: "Browse All Tailors",
-        href: "/tailors",
-        count: tailoredItems.reduce((sum, item) => sum + item.count, 0),
-      },
-      ...tailoredItems,
-    ];
+  // Sort alphabetically
+  allCategories.sort((a, b) => a.localeCompare(b));
 
-    navigationCategories.push({
-      title: "Tailored",
-      href: "/tailored",
-      description: "Masters of craft creating perfectly fitted garments",
-      items: allTailoredItems,
-    });
-  }
-
-  return navigationCategories;
+  // Build navigation group
+  return [
+    {
+      title: "Categories",
+      href: "/directory",
+      description: "Browse all categories with brands or collections",
+      items: allCategories.map((cat) => ({
+        title: cat,
+        href: `/directory?category=${encodeURIComponent(cat)}`,
+        count: mergedCounts[cat],
+      })),
+    },
+  ];
 }
 
 /**
@@ -191,12 +115,31 @@ export async function getDynamicNavigationItems(): Promise<
   NavigationCategory[]
 > {
   try {
-    const [categories, counts] = await Promise.all([
+    const [categories, counts, collections, brands] = await Promise.all([
       getAllBrandCategories(),
       getCategoryCounts(),
+      getAllCollections(),
+      getAllBrands(),
     ]);
 
-    return mapCategoriesToNavigation(categories, counts);
+    // Build a map of brand_id to category
+    const brandIdToCategory: Record<string, string> = {};
+    brands.forEach((brand) => {
+      if (brand.id && brand.category) {
+        brandIdToCategory[brand.id] = brand.category;
+      }
+    });
+
+    // Count collections by the brand's category
+    const collectionCounts: Record<string, number> = {};
+    collections.forEach((col) => {
+      const cat = col.brand_id ? brandIdToCategory[col.brand_id] : undefined;
+      if (cat) {
+        collectionCounts[cat] = (collectionCounts[cat] || 0) + 1;
+      }
+    });
+
+    return mapCategoriesToNavigation(categories, counts, collectionCounts);
   } catch (error) {
     console.error("Error getting dynamic navigation items:", error);
     // Return empty array on error to prevent navigation breaking
