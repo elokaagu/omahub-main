@@ -18,9 +18,6 @@ import { cn } from "@/lib/utils";
 import { Search, Filter, LayoutGrid, LayoutList } from "@/components/ui/icons";
 import {
   collections,
-  subcategories,
-  type Subcategory,
-  getAllFilterCategories,
   mapOccasionToCategory,
   mapDatabaseToDisplayCategory,
   locations,
@@ -41,7 +38,10 @@ interface BrandDisplay {
 }
 
 // Define category and location options using helper functions
-const categories = getAllFilterCategories();
+const getBrandCategories = (brands: BrandDisplay[]) => {
+  const uniqueCategories = Array.from(new Set(brands.map((b) => b.category)));
+  return uniqueCategories.filter(Boolean).sort((a, b) => a.localeCompare(b));
+};
 
 // Define nav categories for the filter dropdown (Collections + Tailored)
 const navCategories = [
@@ -359,7 +359,7 @@ export default function DirectoryClient() {
                   className="w-full mt-1 p-2 sm:p-3 border rounded-md border-oma-gold/20 focus:border-oma-plum min-h-[44px] text-sm sm:text-base mx-2 sm:mx-4 md:mx-6 lg:mx-8 max-w-xs"
                 >
                   <option value="All Categories">All Categories</option>
-                  {navCategories.map((category) => (
+                  {getBrandCategories(displayedBrands).map((category) => (
                     <option key={category} value={category}>
                       {category}
                     </option>
