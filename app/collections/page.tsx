@@ -172,10 +172,13 @@ export default function CataloguesPage() {
     setFilteredProducts(filtered);
   }, [products, productSearch, selectedBrand, selectedProductCategory]);
 
-  const categories = [
-    "all",
-    ...Array.from(new Set(catalogues.map((c) => c.brand.category))),
-  ];
+  // Dynamic categories: all with at least 1 brand, sorted alphabetically, 'all' at top
+  const uniqueCategories = Array.from(
+    new Set(catalogues.map((c) => c.brand.category))
+  )
+    .filter(Boolean)
+    .sort((a, b) => a.localeCompare(b));
+  const categories = ["all", ...uniqueCategories];
   const brands = [
     "all",
     ...Array.from(new Set(catalogues.map((c) => c.brand.name))),
