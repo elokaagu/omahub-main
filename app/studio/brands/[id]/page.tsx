@@ -61,7 +61,20 @@ import {
 } from "@/lib/utils/priceFormatter";
 import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
-import { standardCategories } from "@/lib/data/directory";
+import { getAllCategoryNames } from "@/lib/data/unified-categories";
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import {
+  getTailorsWithBrands,
+  getTailorById,
+} from "@/lib/services/tailorService";
 
 // Character limits
 const SHORT_DESCRIPTION_LIMIT = 150;
@@ -94,6 +107,13 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
+  const [tailor, setTailor] = useState<any | null>(null);
+  const [tailorModalOpen, setTailorModalOpen] = useState(false);
+  const [tailorSpecialties, setTailorSpecialties] = useState("");
+  const [tailorPriceRange, setTailorPriceRange] = useState("");
+  const [tailorConsultationFee, setTailorConsultationFee] = useState("");
+  const [tailorLeadTime, setTailorLeadTime] = useState("");
+  const [tailorSaving, setTailorSaving] = useState(false);
 
   // Price range state
   const [priceMin, setPriceMin] = useState("");
@@ -101,7 +121,7 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
   const [currency, setCurrency] = useState("NGN");
 
   // Categories for the dropdown
-  const categories = [...standardCategories];
+  const categories = getAllCategoryNames();
 
   useEffect(() => {
     const fetchBrand = async () => {
@@ -154,6 +174,76 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
 
     fetchBrand();
   }, [params.id, router]);
+
+  useEffect(() => {
+    // Fetch tailor profile for this brand (if exists)
+    async function fetchTailor() {
+      if (!brand) return;
+      const { data, error } = await supabase
+        .from("tailors")
+        .select("*")
+        .eq("brand_id", brand.id)
+        .single();
+      if (data) {
+        setTailor(data);
+        setTailorSpecialties((data.specialties || []).join(", "));
+        setTailorPriceRange(data.price_range || "");
+        setTailorConsultationFee(data.consultation_fee || "");
+        setTailorLeadTime(data.lead_time || "");
+      } else {
+        setTailor(null);
+        setTailorSpecialties("");
+        setTailorPriceRange("");
+        setTailorConsultationFee("");
+        setTailorLeadTime("");
+      }
+    }
+    fetchTailor();
+  }, [brand]);
+
+  async function handleTailorSave(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setTailorSaving(true);
+    if (!brand) {
+      toast.error("Brand not loaded");
+      setTailorSaving(false);
+      return;
+    }
+    const specialtiesArr = tailorSpecialties
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const payload = {
+      brand_id: brand.id,
+      specialties: specialtiesArr,
+      price_range: tailorPriceRange,
+      consultation_fee: tailorConsultationFee
+        ? Number(tailorConsultationFee)
+        : null,
+      lead_time: tailorLeadTime,
+    };
+    let result;
+    if (tailor) {
+      // Update
+      result = await supabase
+        .from("tailors")
+        .update(payload)
+        .eq("id", tailor.id)
+        .select()
+        .single();
+    } else {
+      // Create
+      result = await supabase.from("tailors").insert(payload).select().single();
+    }
+    if (result.error) {
+      toast.error("Failed to save tailoring profile");
+    } else {
+      toast.success("Tailoring profile saved");
+      setTailor(result.data);
+      setTailorModalOpen(false);
+    }
+    setTailorSaving(false);
+  }
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -700,6 +790,80 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
                 </Link>
               </Button>
             </CardFooter>
+          </Card>
+
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle>Tailoring</CardTitle>
+              <CardDescription>
+                Enable or edit tailoring options for this brand
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Dialog open={tailorModalOpen} onOpenChange={setTailorModalOpen}>
+                <DialogTrigger asChild>
+                  <Button className="w-full" variant="outline">
+                    {tailor ? "Edit Tailoring" : "Enable Tailoring"}
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>
+                      {tailor
+                        ? "Edit Tailoring Profile"
+                        : "Enable Tailoring for this Brand"}
+                    </DialogTitle>
+                    <DialogDescription>
+                      Add or update tailoring options for this brand. These
+                      details will be shown on the brand profile and in the
+                      tailor directory.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <form onSubmit={handleTailorSave} className="space-y-4">
+                    <div>
+                      <Label>Specialties (comma separated)</Label>
+                      <Input
+                        value={tailorSpecialties}
+                        onChange={(e) => setTailorSpecialties(e.target.value)}
+                        placeholder="e.g. Bridal, Evening Gowns, Alterations"
+                      />
+                    </div>
+                    <div>
+                      <Label>Price Range</Label>
+                      <Input
+                        value={tailorPriceRange}
+                        onChange={(e) => setTailorPriceRange(e.target.value)}
+                        placeholder="e.g. $500 - $2,000"
+                      />
+                    </div>
+                    <div>
+                      <Label>Consultation Fee</Label>
+                      <Input
+                        type="number"
+                        value={tailorConsultationFee}
+                        onChange={(e) =>
+                          setTailorConsultationFee(e.target.value)
+                        }
+                        placeholder="e.g. 100"
+                      />
+                    </div>
+                    <div>
+                      <Label>Lead Time</Label>
+                      <Input
+                        value={tailorLeadTime}
+                        onChange={(e) => setTailorLeadTime(e.target.value)}
+                        placeholder="e.g. 2-3 weeks"
+                      />
+                    </div>
+                    <DialogFooter>
+                      <Button type="submit" disabled={tailorSaving}>
+                        {tailorSaving ? "Saving..." : "Save Tailoring Profile"}
+                      </Button>
+                    </DialogFooter>
+                  </form>
+                </DialogContent>
+              </Dialog>
+            </CardContent>
           </Card>
         </div>
       </div>

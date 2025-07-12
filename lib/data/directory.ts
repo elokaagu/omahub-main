@@ -1,35 +1,9 @@
 // Main categories for the directory
 export const collections = ["Collections", "Tailored"] as const;
 
-// Subcategories mapping - updated dropdown options
-export const subcategories = {
-  Collections: [
-    "High End Fashion Brands",
-    "Ready to Wear",
-    "Made to Measure",
-    "Streetwear & Urban",
-    "Accessories",
-  ],
-  Tailored: ["Bridal", "Custom Design", "Evening Gowns", "Alterations"],
-} as const;
+// (Legacy arrays removed. Use unified categories from lib/data/unified-categories.ts for all UI options.)
 
 export type Category = (typeof collections)[number];
-export type Subcategory = (typeof subcategories)[Category][number];
-
-// Standard categories used across the application
-export const standardCategories = [
-  "High End Fashion Brands",
-  "Bridal",
-  "Custom Design",
-  "Evening Gowns",
-  "Alterations",
-  "Ready to Wear",
-  "Made to Measure",
-  "Accessories",
-  "Couture",
-  "Luxury",
-  "Streetwear & Urban",
-] as const;
 
 // Occasions used in "What are you dressing for?" section
 export const occasions = [
@@ -76,15 +50,7 @@ export const locations = [
   "Kumasi",
 ];
 
-export type StandardCategory = (typeof standardCategories)[number];
 export type Occasion = (typeof occasions)[number];
-
-// Helper function to get all available categories for filtering
-export const getAllFilterCategories = () => [
-  "All Categories",
-  ...collections,
-  ...Object.values(subcategories).flat(),
-];
 
 // Helper function to map occasion to category for filtering
 export const mapOccasionToCategory = (occasion: string): string => {

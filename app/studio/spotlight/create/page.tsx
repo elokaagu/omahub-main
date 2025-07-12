@@ -22,6 +22,8 @@ import {
   type CreateSpotlightData,
   type FeaturedProduct,
 } from "@/lib/services/spotlightService";
+import { getAllBrands } from "@/lib/services/brandService";
+import { getProductsByBrand } from "@/lib/services/productService";
 import { ArrowLeft, Plus, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Loading } from "@/components/ui/loading";
@@ -47,6 +49,24 @@ export default function CreateSpotlightPage() {
     brand_link: "",
     is_active: true,
   });
+  const [brands, setBrands] = useState<any[]>([]);
+  const [selectedBrandId, setSelectedBrandId] = useState<string>("");
+  const [brandProducts, setBrandProducts] = useState<any[]>([]);
+
+  useEffect(() => {
+    // Fetch all brands for dropdown
+    getAllBrands().then(setBrands);
+  }, []);
+
+  useEffect(() => {
+    if (selectedBrandId) {
+      getProductsByBrand(selectedBrandId).then(setBrandProducts);
+    } else {
+      setBrandProducts([]);
+    }
+    // Reset featured products if brand changes
+    setFormData((prev) => ({ ...prev, featured_products: [] }));
+  }, [selectedBrandId]);
 
   // Check if user is super admin
   // useEffect(() => {
@@ -416,6 +436,7 @@ export default function CreateSpotlightPage() {
                 onClick={addProduct}
                 variant="outline"
                 size="sm"
+                disabled={!selectedBrandId}
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Add Product
@@ -452,14 +473,40 @@ export default function CreateSpotlightPage() {
                         <Label htmlFor={`product_name_${index}`}>
                           Product Name
                         </Label>
-                        <Input
+                        <select
                           id={`product_name_${index}`}
                           value={product.name}
-                          onChange={(e) =>
-                            handleProductChange(index, "name", e.target.value)
-                          }
-                          placeholder="e.g., Silk Scarf"
-                        />
+                          onChange={(e) => {
+                            const selected = brandProducts.find(
+                              (p) => p.title === e.target.value
+                            );
+                            handleProductChange(
+                              index,
+                              "name",
+                              selected?.title || ""
+                            );
+                            handleProductChange(
+                              index,
+                              "collection",
+                              selected?.category || ""
+                            );
+                            handleProductChange(
+                              index,
+                              "image",
+                              selected?.image || ""
+                            );
+                          }}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-oma-plum"
+                          required
+                          disabled={!selectedBrandId}
+                        >
+                          <option value="">Select a product</option>
+                          {brandProducts.map((p) => (
+                            <option key={p.id} value={p.title}>
+                              {p.title}
+                            </option>
+                          ))}
+                        </select>
                       </div>
                       <div>
                         <Label htmlFor={`product_collection_${index}`}>
