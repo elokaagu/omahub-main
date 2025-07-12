@@ -328,7 +328,7 @@ export default function ProductsPage() {
           <h1 className="text-3xl font-canela text-gray-900 mb-2">Products</h1>
           <p className="text-oma-cocoa/80 mb-8">
             Manage all products across the platform. Create, edit, and organise
-            your product catalogue with ease.
+            your product collection with ease.
           </p>
         </div>
         <Button

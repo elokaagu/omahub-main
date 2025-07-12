@@ -742,10 +742,10 @@ export default function CreateProductPage() {
             </CardContent>
           </Card>
 
-          {/* Brand and Catalogue */}
+          {/* Brand and Collection */}
           <Card className="border border-oma-gold/10 bg-white">
             <CardHeader>
-              <CardTitle className="text-black">Brand & Catalogue</CardTitle>
+              <CardTitle className="text-black">Brand & Collection</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -784,7 +784,7 @@ export default function CreateProductPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="catalogue" className="text-black">
-                    Catalogue (Optional)
+                    Collection (Optional)
                   </Label>
                   <Select
                     value={formData.catalogue_id}
@@ -793,10 +793,10 @@ export default function CreateProductPage() {
                     }
                   >
                     <SelectTrigger className="border-gray-300 focus:border-gray-500">
-                      <SelectValue placeholder="Select a catalogue (optional)" />
+                      <SelectValue placeholder="Select a collection (optional)" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">No Catalogue</SelectItem>
+                      <SelectItem value="">No Collection</SelectItem>
                       {filteredCatalogues.map((catalogue) => (
                         <SelectItem key={catalogue.id} value={catalogue.id}>
                           {catalogue.title}
