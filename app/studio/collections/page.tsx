@@ -310,7 +310,7 @@ export default function CollectionsPage() {
   };
 
   const handleEditCatalogue = (catalogueId: string) => {
-    router.push(`/studio/catalogues/${catalogueId}/edit`);
+    router.push(`/studio/collections/${catalogueId}/edit`);
   };
 
   const handleViewCatalogue = (catalogueId: string) => {
