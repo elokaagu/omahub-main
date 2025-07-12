@@ -4,6 +4,10 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { getProductById } from "@/lib/services/productService";
 import { getBrandById } from "@/lib/services/brandService";
+import {
+  getSpotlightContent,
+  getAllSpotlightContent,
+} from "@/lib/services/spotlightService";
 import { Product, Brand } from "@/lib/supabase";
 import { AuthImage } from "@/components/ui/auth-image";
 import { VideoPlayer } from "@/components/ui/video-player";
@@ -37,17 +41,45 @@ export default function ProductPage() {
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [selectedImage, setSelectedImage] = useState(0);
   const [isFavourited, setIsFavourited] = useState(false);
+  const [spotlightVideo, setSpotlightVideo] = useState<{
+    url: string;
+    thumbnail?: string;
+  } | null>(null);
 
   useEffect(() => {
     fetchProductData();
   }, [productId]);
 
-  // Auto-select video when product has video_url
+  // Fetch spotlight video if product has none
+  useEffect(() => {
+    async function fetchSpotlightVideo() {
+      if (product && !product.video_url && brand) {
+        // Try to find a spotlight for this brand
+        const allSpotlights = await getAllSpotlightContent();
+        const brandSpotlight = allSpotlights.find(
+          (s) =>
+            s.brand_name?.toLowerCase() === brand.name.toLowerCase() &&
+            s.video_url
+        );
+        if (brandSpotlight) {
+          setSpotlightVideo({
+            url: brandSpotlight.video_url,
+            thumbnail: brandSpotlight.video_thumbnail,
+          });
+        }
+      }
+    }
+    fetchSpotlightVideo();
+  }, [product, brand]);
+
+  // Auto-select video when product or spotlight has video
   useEffect(() => {
     if (product?.video_url) {
       setSelectedImage(-1);
+    } else if (spotlightVideo?.url) {
+      setSelectedImage(-2);
     }
-  }, [product?.video_url]);
+  }, [product?.video_url, spotlightVideo]);
 
   const fetchProductData = async () => {
     try {
@@ -119,6 +151,13 @@ export default function ProductPage() {
     );
   }
 
+  const safeSrc: string =
+    typeof spotlightVideo?.thumbnail === "string"
+      ? spotlightVideo.thumbnail
+      : typeof product?.image === "string"
+        ? product.image
+        : "";
+
   return (
     <div className="min-h-screen bg-white">
       <div className="container mx-auto px-4 sm:px-6 py-8">
@@ -165,6 +204,28 @@ export default function ProductPage() {
                     );
                   }}
                 />
+              ) : spotlightVideo?.url && selectedImage === -2 ? (
+                <VideoPlayer
+                  videoUrl={spotlightVideo.url}
+                  thumbnailUrl={spotlightVideo.thumbnail || product.image}
+                  fallbackImageUrl={product.image}
+                  alt={product.title}
+                  className="w-full h-full"
+                  aspectRatio="square"
+                  autoPlay={true}
+                  muted={true}
+                  loop={true}
+                  controls={false}
+                  showPlayButton={false}
+                  priority={true}
+                  quality={95}
+                  onVideoError={() => {
+                    console.warn(
+                      "Video failed to load for spotlight/brand:",
+                      brand?.name
+                    );
+                  }}
+                />
               ) : (
                 <AuthImage
                   src={productImages[selectedImage] || product.image}
@@ -176,7 +237,9 @@ export default function ProductPage() {
               )}
             </div>
 
-            {(productImages.length > 0 || product.video_url) && (
+            {(productImages.length > 0 ||
+              product.video_url ||
+              spotlightVideo?.url) && (
               <div className="flex gap-2 overflow-x-auto">
                 {product.video_url && (
                   <button
@@ -201,6 +264,37 @@ export default function ProductPage() {
                       </div>
                     </div>
                     {selectedImage === -1 && (
+                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-oma-plum rounded-full"></div>
+                    )}
+                  </button>
+                )}
+                {spotlightVideo?.url && (
+                  <button
+                    onClick={() => setSelectedImage(-2)}
+                    className={cn(
+                      "flex-shrink-0 w-20 h-20 rounded-md overflow-hidden border-2 relative",
+                      selectedImage === -2
+                        ? "border-oma-plum ring-2 ring-oma-plum/20"
+                        : "border-gray-200 hover:border-gray-300"
+                    )}
+                  >
+                    <AuthImage
+                      src={safeSrc}
+                      alt={
+                        product?.title
+                          ? `${product.title} brand video`
+                          : "Brand video"
+                      }
+                      width={80}
+                      height={80}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                      <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
+                        <div className="w-0 h-0 border-l-[6px] border-l-black border-t-[4px] border-t-transparent border-b-[4px] border-b-transparent ml-1" />
+                      </div>
+                    </div>
+                    {selectedImage === -2 && (
                       <div className="absolute -top-1 -right-1 w-3 h-3 bg-oma-plum rounded-full"></div>
                     )}
                   </button>
