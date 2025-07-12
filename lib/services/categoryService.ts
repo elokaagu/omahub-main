@@ -102,41 +102,26 @@ export function mapCategoriesToNavigation(
     mergedCounts[cat] = (mergedCounts[cat] || 0) + count;
   }
 
-  // Get all categories with at least 1 brand or collection
-  const allCategories = Array.from(new Set(Object.keys(mergedCounts))).filter(
-    (cat) => mergedCounts[cat] > 0
-  );
-  const sortedCategories = [...allCategories].sort((a, b) =>
-    a.localeCompare(b)
-  );
-
-  // Collections navigation - always show the 5 key categories at the top
-  const alwaysPresent = ALWAYS_PRESENT_COLLECTIONS.map((item) => ({
+  // Force all curated categories to be present, regardless of data
+  const collectionsItems = ALWAYS_PRESENT_COLLECTIONS.map((item) => ({
     title: item.title,
     href: `/directory?category=${encodeURIComponent(item.category)}`,
-    count: mergedCounts[item.category] || 0, // keep count for display, but do not filter
+    count: mergedCounts[item.category] || 0,
     always: true,
   }));
 
-  // Only show always-present categories for Collections dropdown
-  const collectionsItems = [...alwaysPresent];
-
-  // Tailored navigation - always show the 4 key categories at the top
-  const alwaysPresentTailored = ALWAYS_PRESENT_TAILORED.map((item) => ({
-    title: item.title,
-    href: `/directory?category=${encodeURIComponent(item.category)}`,
-    count: mergedCounts[item.category] || 0, // keep count for display, but do not filter
-    always: true,
-  }));
-
-  // Only show always-present categories for Tailored dropdown
   const tailoredItems = [
     {
       title: "Browse All Tailors",
       href: "/tailors",
-      count: sortedCategories.reduce((sum, cat) => sum + mergedCounts[cat], 0),
+      count: Object.values(mergedCounts).reduce((sum, c) => sum + c, 0),
     },
-    ...alwaysPresentTailored,
+    ...ALWAYS_PRESENT_TAILORED.map((item) => ({
+      title: item.title,
+      href: `/directory?category=${encodeURIComponent(item.category)}`,
+      count: mergedCounts[item.category] || 0,
+      always: true,
+    })),
   ];
 
   return [
