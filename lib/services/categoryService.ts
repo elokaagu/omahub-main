@@ -131,7 +131,8 @@ export function mapCategoriesToNavigation(
       always: false,
     }));
 
-  const collectionsItems = [...alwaysPresent, ...otherCategories];
+  // Only show always-present categories for Collections dropdown
+  const collectionsItems = [...alwaysPresent];
 
   // Tailored navigation - always show the 4 key categories at the top
   const alwaysPresentTailored = ALWAYS_PRESENT_TAILORED.map((item) => ({
@@ -158,6 +159,7 @@ export function mapCategoriesToNavigation(
       always: false,
     }));
 
+  // Only show always-present categories for Tailored dropdown
   const tailoredItems = [
     {
       title: "Browse All Tailors",
@@ -165,7 +167,6 @@ export function mapCategoriesToNavigation(
       count: sortedCategories.reduce((sum, cat) => sum + mergedCounts[cat], 0),
     },
     ...alwaysPresentTailored,
-    ...otherTailored,
   ];
 
   return [
