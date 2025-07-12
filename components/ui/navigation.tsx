@@ -21,10 +21,13 @@ const fallbackNavigationItems: NavigationItem[] = [
     href: "/collections",
     description: "Discover curated fashion collections and styles",
     items: [
-      { title: "High-End Fashion Brands", href: "/directory?category=Luxury" },
+      { title: "High End Fashion Brands", href: "/directory?category=Luxury" },
       { title: "Ready to Wear", href: "/directory?category=Ready+to+Wear" },
       { title: "Made to Measure", href: "/directory?category=Couture" },
-      { title: "Streetwear & Urban", href: "/directory?category=Streetwear" },
+      {
+        title: "Streetwear & Urban",
+        href: "/directory?category=Streetwear+%26+Urban",
+      },
       { title: "Accessories", href: "/directory?category=Accessories" },
     ],
   },
