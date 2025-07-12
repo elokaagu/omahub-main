@@ -80,6 +80,14 @@ const ALWAYS_PRESENT_COLLECTIONS = [
   { title: "Accessories", category: "Accessories" },
 ];
 
+// Mapping for always-present categories in Tailored
+const ALWAYS_PRESENT_TAILORED = [
+  { title: "Bridal", category: "Bridal" },
+  { title: "Custom Design", category: "Custom Design" },
+  { title: "Evening Gowns", category: "Evening Gowns" },
+  { title: "Alterations", category: "Alterations" },
+];
+
 /**
  * Map all categories with at least 1 brand or collection to navigation
  */
@@ -125,18 +133,34 @@ export function mapCategoriesToNavigation(
 
   const collectionsItems = [...alwaysPresent, ...otherCategories];
 
-  // Tailored navigation - show all categories, with Browse All Tailors at top
+  // Tailored navigation - always show the 4 key categories at the top
+  const alwaysPresentTailored = ALWAYS_PRESENT_TAILORED.map((item) => ({
+    title: item.title,
+    href: `/directory?category=${encodeURIComponent(item.category)}`,
+    count: mergedCounts[item.category] || 0,
+    always: true,
+  }));
+
+  const alwaysTailoredSet = new Set(
+    ALWAYS_PRESENT_TAILORED.map((i) => i.category)
+  );
+  const otherTailored = sortedCategories
+    .filter((cat) => !alwaysTailoredSet.has(cat))
+    .map((cat) => ({
+      title: cat,
+      href: `/directory?category=${encodeURIComponent(cat)}`,
+      count: mergedCounts[cat],
+      always: false,
+    }));
+
   const tailoredItems = [
     {
       title: "Browse All Tailors",
       href: "/tailors",
       count: sortedCategories.reduce((sum, cat) => sum + mergedCounts[cat], 0),
     },
-    ...sortedCategories.map((cat) => ({
-      title: cat,
-      href: `/directory?category=${encodeURIComponent(cat)}`,
-      count: mergedCounts[cat],
-    })),
+    ...alwaysPresentTailored,
+    ...otherTailored,
   ];
 
   return [
