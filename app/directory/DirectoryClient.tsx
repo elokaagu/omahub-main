@@ -33,7 +33,8 @@ interface BrandDisplay {
   id: string;
   name: string;
   image: string;
-  category: string; // Accept any raw category
+  category: string; // legacy single category
+  categories?: string[]; // new multiple categories
   location: string;
   isVerified: boolean;
 }
@@ -168,6 +169,7 @@ export default function DirectoryClient() {
       name: brand.name || "Unnamed Brand",
       image: brand.image || "/placeholder.jpg",
       category: brand.category || "",
+      categories: brand.categories || [],
       location: brand.location ? brand.location.split(",")[0] : "Unknown",
       isVerified: brand.is_verified || false,
     }));
@@ -185,6 +187,7 @@ export default function DirectoryClient() {
       name: brand.name || "Unnamed Brand",
       image: brand.image || "/placeholder.jpg",
       category: brand.category || "",
+      categories: brand.categories || [],
       location: brand.location ? brand.location.split(",")[0] : "Unknown",
       isVerified: brand.is_verified || false,
     }));
@@ -194,11 +197,15 @@ export default function DirectoryClient() {
       );
     }
     if (selectedCategory !== "All Categories") {
-      // Map both selectedCategory and brand.category to their unified id, then compare
       const selectedUnifiedId = mapLegacyToUnified(selectedCategory);
       filtered = filtered.filter((brand) => {
-        const brandUnifiedId = mapLegacyToUnified(brand.category);
-        return brandUnifiedId === selectedUnifiedId;
+        const allCategories = [
+          brand.category,
+          ...(brand.categories || []),
+        ].filter(Boolean);
+        return allCategories.some(
+          (cat) => mapLegacyToUnified(cat) === selectedUnifiedId
+        );
       });
     }
     if (selectedLocation !== "All Locations") {
@@ -448,6 +455,11 @@ export default function DirectoryClient() {
               <BrandCard
                 key={brand.id}
                 {...brand}
+                category={
+                  brand.categories && brand.categories.length > 0
+                    ? brand.categories.join(", ")
+                    : brand.category
+                }
                 isPortrait={!isGridView}
                 rating={brandRatings[brand.id] ?? 0}
               />
