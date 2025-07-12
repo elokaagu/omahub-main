@@ -82,8 +82,8 @@ const ALWAYS_PRESENT_COLLECTIONS = [
 
 // Mapping for always-present categories in Tailored
 const ALWAYS_PRESENT_TAILORED = [
-  { title: "Bridal", category: "Bridal" },
   { title: "Custom Design", category: "Custom Design" },
+  { title: "Bridal", category: "Bridal" },
   { title: "Evening Gowns", category: "Evening Gowns" },
   { title: "Alterations", category: "Alterations" },
 ];
