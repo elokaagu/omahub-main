@@ -184,6 +184,22 @@ export default function StudioLayout({
     );
   }
 
+  // Add this helper for mobile nav items
+  const mobileNavItems = [
+    { href: "/studio", label: "Dashboard", icon: Home },
+    { href: "/studio/brands", label: "Brands", icon: Package },
+    { href: "/studio/collections", label: "Collections", icon: ImageIcon },
+    { href: "/studio/products", label: "Products", icon: ShoppingBag },
+    { href: "/studio/services", label: "Services", icon: Scissors },
+    { href: "/studio/hero", label: "Hero Carousel", icon: Monitor },
+    { href: "/studio/spotlight", label: "Spotlight", icon: ImageIcon },
+    { href: "/studio/users", label: "Users", icon: Users },
+    { href: "/studio/reviews", label: "Reviews", icon: MessageSquare },
+    { href: "/studio/inbox", label: "Inbox", icon: Inbox },
+    { href: "/studio/profile", label: "Profile", icon: User },
+    { href: "/studio/settings", label: "Settings", icon: Settings },
+  ];
+
   return (
     <div
       className="min-h-screen bg-gray-50 flex flex-col"
@@ -272,15 +288,16 @@ export default function StudioLayout({
       )}
 
       {/* Sidebar */}
+      {/* Mobile Sidebar: Slide-in with buttons for navigation */}
       <aside
-        className={`bg-white w-4/5 max-w-xs border-r border-gray-200 fixed inset-y-0 left-0 z-40 transition-transform duration-300 ease-in-out lg:w-64 lg:translate-x-0 ${
+        className={`lg:hidden bg-white w-4/5 max-w-xs border-r border-gray-200 fixed inset-y-0 left-0 z-40 transition-transform duration-300 ease-in-out ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         } mt-16 shadow-xl`}
         aria-modal="true"
         role="dialog"
       >
         {/* Mobile Close Button */}
-        <div className="lg:hidden flex items-center px-4 pt-4 pb-2">
+        <div className="flex items-center px-4 pt-4 pb-2">
           <Button
             variant="outline"
             size="icon"
@@ -292,11 +309,38 @@ export default function StudioLayout({
           </Button>
         </div>
         <div className="px-8 pt-4 pb-6 h-[calc(100vh-4rem)] overflow-y-auto flex flex-col">
+          <div className="mb-8">
+            <h1 className="text-2xl font-canela text-oma-plum">Studio</h1>
+          </div>
+          <nav className="space-y-1 flex-1">
+            {mobileNavItems.map((item) => (
+              <button
+                key={item.href}
+                onClick={() => {
+                  router.push(item.href);
+                  setSidebarOpen(false);
+                }}
+                className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100 w-full text-left"
+              >
+                <item.icon className="h-5 w-5" />
+                <span>{item.label}</span>
+              </button>
+            ))}
+          </nav>
+        </div>
+      </aside>
+
+      {/* Desktop Sidebar: Keep existing implementation */}
+      <aside
+        className={`hidden lg:block bg-white w-64 border-r border-gray-200 fixed inset-y-0 left-0 z-40 transition-transform duration-300 ease-in-out lg:translate-x-0 mt-16 shadow-xl`}
+        aria-modal="true"
+        role="dialog"
+      >
+        <div className="px-8 pt-8 pb-6 h-full flex flex-col">
           {/* Studio title only */}
           <div className="mb-8">
             <h1 className="text-2xl font-canela text-oma-plum">Studio</h1>
           </div>
-
           <nav className="space-y-1 flex-1">
             <NavigationLink
               href="/studio"
