@@ -85,27 +85,84 @@ export function mapCategoriesToNavigation(
     mergedCounts[cat] = (mergedCounts[cat] || 0) + count;
   }
 
-  // Get all unique categories with at least 1 brand or collection
-  const allCategories = Array.from(
-    new Set([...Object.keys(mergedCounts)])
-  ).filter((cat) => mergedCounts[cat] > 0);
-
-  // Sort alphabetically
-  allCategories.sort((a, b) => a.localeCompare(b));
-
-  // Build navigation group
-  return [
-    {
-      title: "Categories",
-      href: "/directory",
-      description: "Browse all categories with brands or collections",
-      items: allCategories.map((cat) => ({
-        title: cat,
-        href: `/directory?category=${encodeURIComponent(cat)}`,
-        count: mergedCounts[cat],
-      })),
-    },
+  // Define which categories belong to Collections vs Tailored
+  const collectionsCategories = [
+    "Bridal",
+    "Ready to Wear",
+    "Accessories",
+    "Luxury",
+    "Couture",
+    "Streetwear",
+    "Jewelry",
+    "Casual Wear",
+    "Formal Wear",
+    "Vacation",
   ];
+
+  const tailoredCategories = [
+    "Bridal",
+    "Custom Design",
+    "Evening Gowns",
+    "Alterations",
+    "Tailored",
+    "Event Wear",
+    "Wedding Guest",
+    "Birthday",
+  ];
+
+  const navigationCategories: NavigationCategory[] = [];
+
+  // Collections navigation - include all categories with brands/collections
+  const collectionsItems = categories
+    .filter((cat) => collectionsCategories.includes(cat))
+    .map((cat) => ({
+      title: cat,
+      href: `/directory?category=${encodeURIComponent(cat)}`,
+      count: mergedCounts[cat] || 0,
+    }))
+    .filter((item) => item.count > 0) // Only show categories with brands/collections
+    .sort((a, b) => a.title.localeCompare(b.title));
+
+  if (collectionsItems.length > 0) {
+    navigationCategories.push({
+      title: "Collections",
+      href: "/collections",
+      description: "Discover curated fashion collections and styles",
+      items: collectionsItems,
+    });
+  }
+
+  // Tailored navigation - include all categories with brands/collections
+  const tailoredItems = categories
+    .filter((cat) => tailoredCategories.includes(cat))
+    .map((cat) => ({
+      title: cat,
+      href: `/directory?category=${encodeURIComponent(cat)}`,
+      count: mergedCounts[cat] || 0,
+    }))
+    .filter((item) => item.count > 0) // Only show categories with brands/collections
+    .sort((a, b) => a.title.localeCompare(b.title));
+
+  if (tailoredItems.length > 0) {
+    // Add "Browse All Tailors" as the first item
+    const allTailoredItems = [
+      {
+        title: "Browse All Tailors",
+        href: "/tailors",
+        count: tailoredItems.reduce((sum, item) => sum + item.count, 0),
+      },
+      ...tailoredItems,
+    ];
+
+    navigationCategories.push({
+      title: "Tailored",
+      href: "/tailored",
+      description: "Masters of craft creating perfectly fitted garments",
+      items: allTailoredItems,
+    });
+  }
+
+  return navigationCategories;
 }
 
 /**
