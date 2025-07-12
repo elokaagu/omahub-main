@@ -40,18 +40,6 @@ export const UNIFIED_CATEGORIES = [
     subcategories: ["Jewelry", "Bags", "Shoes", "Scarves & Wraps"],
   },
   {
-    id: "streetwear",
-    name: "Streetwear",
-    displayName: "Streetwear",
-    description: "Urban fashion and street style pieces",
-    slug: "streetwear",
-    color: "#6B7280", // Gray
-    icon: "🛹",
-    homepageImage: "/lovable-uploads/4a7c7e86-6cde-4d07-a246-a5aa4cb6fa51.png",
-    homepageCta: "Urban style, elevated.",
-    subcategories: ["Urban Fashion", "Street Style", "Athleisure"],
-  },
-  {
     id: "custom-design",
     name: "Custom Design",
     displayName: "Custom Design",
@@ -139,7 +127,7 @@ export const LEGACY_CATEGORY_MAPPING = {
   Vacation: "ready-to-wear",
   Couture: "custom-design",
   Luxury: "ready-to-wear",
-  "Streetwear & Urban": "streetwear",
+  "Streetwear & Urban": "streetwear-urban",
 
   // Homepage categories
   Collections: "ready-to-wear",
@@ -155,7 +143,7 @@ export const UNIFIED_TO_LEGACY_MAPPING = {
   bridal: "Bridal",
   "ready-to-wear": "Ready to Wear",
   accessories: "Accessories",
-  streetwear: "Streetwear & Urban",
+  "streetwear-urban": "Streetwear & Urban",
   "custom-design": "Custom Design",
   "evening-gowns": "Evening Gowns",
 } as const;
