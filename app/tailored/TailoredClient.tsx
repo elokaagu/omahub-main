@@ -390,7 +390,7 @@ export default function TailoredClient() {
       <section
         ref={processRef}
         id="process"
-        className="min-h-screen snap-start flex items-center justify-center py-24 px-6 relative"
+        className="min-h-screen snap-start flex items-center justify-center py-32 px-6 sm:px-12 lg:px-24 relative"
       >
         {/* Corner Frames */}
         <div className="absolute top-24 left-8 w-12 h-12 border-l-4 border-t-4 border-oma-gold/80"></div>

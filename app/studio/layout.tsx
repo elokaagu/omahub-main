@@ -259,11 +259,25 @@ export default function StudioLayout({
 
       {/* Sidebar */}
       <aside
-        className={`bg-white w-64 border-r border-gray-200 fixed inset-y-0 left-0 z-60 transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+        className={`bg-white w-4/5 max-w-xs border-r border-gray-200 fixed inset-y-0 left-0 z-40 transition-transform duration-300 ease-in-out lg:w-64 lg:translate-x-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         } mt-16 shadow-xl`}
+        aria-modal="true"
+        role="dialog"
       >
-        <div className="px-8 pt-8 pb-6 h-full flex flex-col">
+        {/* Mobile Close Button */}
+        <div className="lg:hidden flex items-center px-4 pt-4 pb-2">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setSidebarOpen(false)}
+            className="bg-white border-oma-plum"
+            aria-label="Close sidebar"
+          >
+            <X className="h-5 w-5" />
+          </Button>
+        </div>
+        <div className="px-8 pt-4 pb-6 h-[calc(100vh-4rem)] overflow-y-auto flex flex-col">
           {/* Studio title only */}
           <div className="mb-8">
             <h1 className="text-2xl font-canela text-oma-plum">Studio</h1>
