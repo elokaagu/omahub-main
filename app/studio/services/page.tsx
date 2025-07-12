@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/select";
 import {
   PlusCircle,
+  RefreshCw,
   Search,
   Edit,
   Eye,
@@ -256,12 +257,28 @@ export default function ServicesPage() {
             Manage your tailoring services and consultations
           </p>
         </div>
-        <Link href="/studio/services/create">
-          <Button className="bg-oma-plum hover:bg-oma-plum/90 flex items-center gap-2">
-            <PlusCircle className="h-4 w-4" />
-            Add Service
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            className="flex items-center gap-2 border-oma-plum text-oma-plum hover:bg-oma-plum/10"
+            onClick={fetchData}
+            disabled={loading}
+            aria-label="Refresh services"
+          >
+            {loading ? (
+              <RefreshCw className="h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="h-4 w-4" />
+            )}
+            Refresh
           </Button>
-        </Link>
+          <Link href="/studio/services/create">
+            <Button className="bg-oma-plum hover:bg-oma-plum/90 flex items-center gap-2">
+              <PlusCircle className="h-4 w-4" />
+              Add Service
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Filters */}
