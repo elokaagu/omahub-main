@@ -194,13 +194,13 @@ export default function HowItWorksClient() {
 
         {/* Floating Graphics */}
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-20 left-10 w-32 h-32 bg-gradient-to-br from-oma-plum/20 to-oma-gold/20 rounded-full blur-xl animate-pulse" />
+          <div className="absolute top-20 left-10 w-16 h-16 bg-gradient-to-br from-oma-plum/20 to-oma-gold/20 rounded-full blur-xl animate-pulse" />
           <div
-            className="absolute top-40 right-20 w-24 h-24 bg-gradient-to-br from-oma-gold/30 to-oma-plum/30 rounded-full blur-lg animate-pulse"
+            className="absolute top-40 right-20 w-12 h-12 bg-gradient-to-br from-oma-gold/30 to-oma-plum/30 rounded-full blur-lg animate-pulse"
             style={{ animationDelay: "1s" }}
           />
           <div
-            className="absolute bottom-40 left-20 w-20 h-20 bg-gradient-to-br from-oma-beige/40 to-oma-plum/40 rounded-full blur-md animate-pulse"
+            className="absolute bottom-40 left-20 w-10 h-10 bg-gradient-to-br from-oma-beige/40 to-oma-plum/40 rounded-full blur-md animate-pulse"
             style={{ animationDelay: "2s" }}
           />
         </div>
