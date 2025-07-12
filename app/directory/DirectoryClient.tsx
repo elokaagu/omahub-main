@@ -24,6 +24,7 @@ import {
   mapOccasionToCategory,
   mapDatabaseToDisplayCategory,
   locations,
+  categoryMapping, // <-- import the mapping
 } from "@/lib/data/directory";
 import { getCategoriesForDirectory } from "@/lib/data/unified-categories";
 import { UnifiedTag, CategoryTag } from "@/components/ui/unified-tag";
@@ -41,11 +42,18 @@ interface BrandDisplay {
 // Define category and location options using helper functions
 const categories = getAllFilterCategories();
 
-// Instead, get unique categories from the fetched brands for the filter dropdown
-const getUniqueCategories = (brands: any[]) => {
-  const categories = brands.map((b) => b.category).filter(Boolean);
-  return ["All Categories", ...Array.from(new Set(categories))];
-};
+// Define nav categories for the filter dropdown (Collections + Tailored)
+const navCategories = [
+  "High End Fashion Brands",
+  "Ready to Wear",
+  "Made to Measure",
+  "Streetwear & Urban",
+  "Accessories",
+  "Bridal",
+  "Custom Design",
+  "Evening Gowns",
+  "Alterations",
+];
 
 // Fallback brands with correct category types
 const fallbackBrands: BrandDisplay[] = [
@@ -162,7 +170,7 @@ export default function DirectoryClient() {
     setDisplayedBrands(brandDisplayData);
   }, [allBrands]);
 
-  // Update filter logic to use raw category
+  // Update filter logic to use new mapping
   useEffect(() => {
     if (!allBrands || allBrands.length === 0) {
       setDisplayedBrands(fallbackBrands);
@@ -182,9 +190,15 @@ export default function DirectoryClient() {
       );
     }
     if (selectedCategory !== "All Categories") {
-      filtered = filtered.filter(
-        (brand) => brand.category === selectedCategory
-      );
+      // Use the mapping to match legacy categories
+      filtered = filtered.filter((brand) => {
+        const mapped =
+          categoryMapping[brand.category as keyof typeof categoryMapping] ||
+          brand.category;
+        return (
+          mapped === selectedCategory || brand.category === selectedCategory
+        );
+      });
     }
     if (selectedLocation !== "All Locations") {
       filtered = filtered.filter(
@@ -346,7 +360,8 @@ export default function DirectoryClient() {
                   onChange={(e) => setSelectedCategory(e.target.value)}
                   className="w-full mt-1 p-2 sm:p-3 border rounded-md border-oma-gold/20 focus:border-oma-plum min-h-[44px] text-sm sm:text-base"
                 >
-                  {getUniqueCategories(allBrands).map((category) => (
+                  <option value="All Categories">All Categories</option>
+                  {navCategories.map((category) => (
                     <option key={category} value={category}>
                       {category}
                     </option>
