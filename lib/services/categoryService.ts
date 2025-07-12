@@ -114,22 +114,9 @@ export function mapCategoriesToNavigation(
   const alwaysPresent = ALWAYS_PRESENT_COLLECTIONS.map((item) => ({
     title: item.title,
     href: `/directory?category=${encodeURIComponent(item.category)}`,
-    count: mergedCounts[item.category] || 0,
+    count: mergedCounts[item.category] || 0, // keep count for display, but do not filter
     always: true,
   }));
-
-  // All other categories, excluding the always-present ones
-  const alwaysCategoriesSet = new Set(
-    ALWAYS_PRESENT_COLLECTIONS.map((i) => i.category)
-  );
-  const otherCategories = sortedCategories
-    .filter((cat) => !alwaysCategoriesSet.has(cat))
-    .map((cat) => ({
-      title: cat,
-      href: `/directory?category=${encodeURIComponent(cat)}`,
-      count: mergedCounts[cat],
-      always: false,
-    }));
 
   // Only show always-present categories for Collections dropdown
   const collectionsItems = [...alwaysPresent];
@@ -138,26 +125,9 @@ export function mapCategoriesToNavigation(
   const alwaysPresentTailored = ALWAYS_PRESENT_TAILORED.map((item) => ({
     title: item.title,
     href: `/directory?category=${encodeURIComponent(item.category)}`,
-    count: mergedCounts[item.category] || 0,
+    count: mergedCounts[item.category] || 0, // keep count for display, but do not filter
     always: true,
   }));
-
-  const alwaysTailoredSet = new Set(
-    ALWAYS_PRESENT_TAILORED.map((i) => i.category)
-  );
-  const otherTailored = sortedCategories
-    .filter(
-      (cat) =>
-        !alwaysTailoredSet.has(cat) &&
-        cat !== "Streetwear" &&
-        cat !== "Streetwear & Urban"
-    )
-    .map((cat) => ({
-      title: cat,
-      href: `/directory?category=${encodeURIComponent(cat)}`,
-      count: mergedCounts[cat],
-      always: false,
-    }));
 
   // Only show always-present categories for Tailored dropdown
   const tailoredItems = [
