@@ -307,59 +307,50 @@ export default function Header() {
 
         {/* Desktop navigation */}
         <div className="hidden lg:flex lg:items-center lg:gap-x-8">
-          <NavigationMenu>
-            <NavigationMenuList>
-              {dynamicNavigationItems
-                // Show all categories, including Collections and Tailored, regardless of count
-                .map((category) => {
-                  console.log(
-                    `🔍 Header: Rendering dropdown for ${category.title}:`,
-                    category.items.map(
-                      (item) => `${item.title} (${item.count})`
-                    )
-                  );
-                  return (
-                    <NavigationMenuItem key={category.title}>
-                      <NavigationMenuTrigger
-                        className={cn(
-                          "text-sm font-semibold leading-6 gap-x-2 bg-transparent",
-                          scrolled || !isHomePage
-                            ? "text-oma-black hover:text-oma-plum"
-                            : "text-white hover:text-white/80"
-                        )}
-                      >
+          {/* Direct category rendering like mobile */}
+          {dynamicNavigationItems.map((category) => {
+            console.log(
+              `🔍 Header: Rendering desktop dropdown for ${category.title}:`,
+              category.items.map((item) => `${item.title} (${item.count})`)
+            );
+            return (
+              <div key={category.title} className="relative group">
+                <button
+                  className={cn(
+                    "text-sm font-semibold leading-6 gap-x-2 bg-transparent flex items-center",
+                    scrolled || !isHomePage
+                      ? "text-oma-black hover:text-oma-plum"
+                      : "text-white hover:text-white/80"
+                  )}
+                >
+                  {category.title}
+                  <ChevronDown className="h-4 w-4" />
+                </button>
+                <div className="absolute top-full left-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                  <div className="p-4">
+                    <div className="mb-4">
+                      <h3 className="text-sm font-medium text-gray-900">
                         {category.title}
-                      </NavigationMenuTrigger>
-                      <NavigationMenuContent>
-                        <div className="w-screen max-w-lg">
-                          <div className="p-4">
-                            <div className="mb-4">
-                              <h3 className="text-sm font-medium text-gray-900">
-                                {category.title}
-                              </h3>
-                            </div>
-                            <div className="grid grid-cols-2 gap-2">
-                              {category.items.map((item) => (
-                                <NavigationMenuLink key={item.title} asChild>
-                                  <NavigationLink
-                                    href={item.href}
-                                    className="block rounded-md p-2 text-sm hover:bg-gray-50 transition-colors"
-                                  >
-                                    <span className="font-medium text-gray-900">
-                                      {item.title}
-                                    </span>
-                                  </NavigationLink>
-                                </NavigationMenuLink>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      </NavigationMenuContent>
-                    </NavigationMenuItem>
-                  );
-                })}
-            </NavigationMenuList>
-          </NavigationMenu>
+                      </h3>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      {category.items.map((item) => (
+                        <NavigationLink
+                          key={item.title}
+                          href={item.href}
+                          className="block rounded-md p-2 text-sm hover:bg-gray-50 transition-colors"
+                        >
+                          <span className="font-medium text-gray-900">
+                            {item.title}
+                          </span>
+                        </NavigationLink>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
 
           <div className="hidden lg:flex lg:flex-1 lg:justify-end lg:gap-x-6">
             <button
