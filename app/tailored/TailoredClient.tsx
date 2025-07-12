@@ -298,7 +298,7 @@ export default function TailoredClient() {
       <section
         ref={questionsRef}
         id="questions"
-        className="min-h-screen snap-start flex items-center justify-center py-24 px-6 relative bg-gradient-to-br from-oma-plum/5 to-oma-gold/5"
+        className="min-h-[120vh] snap-start flex items-center justify-center py-32 px-8 sm:px-16 lg:px-32 relative bg-gradient-to-br from-oma-plum/5 to-oma-gold/5"
       >
         {/* Corner Frames */}
         <div className="absolute top-24 left-8 w-12 h-12 border-l-4 border-t-4 border-oma-gold/80"></div>
@@ -390,7 +390,7 @@ export default function TailoredClient() {
       <section
         ref={processRef}
         id="process"
-        className="min-h-[120vh] md:min-h-screen snap-start flex items-center justify-center py-32 pb-32 px-8 sm:px-16 lg:px-32 relative"
+        className="min-h-[120vh] snap-start flex items-center justify-center py-32 px-8 sm:px-16 lg:px-32 relative"
       >
         {/* Corner Frames */}
         <div className="absolute top-24 left-8 w-12 h-12 border-l-4 border-t-4 border-oma-gold/80"></div>
@@ -487,7 +487,7 @@ export default function TailoredClient() {
       <section
         ref={benefitsRef}
         id="benefits"
-        className="min-h-screen snap-start flex items-center justify-center py-24 px-6 relative bg-gradient-to-br from-oma-beige/20 to-white/50"
+        className="min-h-[120vh] snap-start flex items-center justify-center py-32 px-8 sm:px-16 lg:px-32 relative bg-gradient-to-br from-oma-beige/20 to-white/50"
       >
         {/* Corner Frames */}
         <div className="absolute top-24 left-8 w-12 h-12 border-l-4 border-t-4 border-oma-gold/80"></div>
@@ -572,7 +572,7 @@ export default function TailoredClient() {
       <section
         ref={ctaRef}
         id="cta"
-        className="min-h-screen snap-start flex items-center justify-center py-24 px-6 bg-gradient-to-br from-oma-plum/10 to-oma-gold/10 relative overflow-hidden"
+        className="min-h-[120vh] snap-start flex items-center justify-center py-32 px-8 sm:px-16 lg:px-32 bg-gradient-to-br from-oma-plum/10 to-oma-gold/10 relative overflow-hidden"
       >
         {/* Corner Frames */}
         <div className="absolute top-24 left-8 w-12 h-12 border-l-4 border-t-4 border-oma-gold/80"></div>
