@@ -327,7 +327,7 @@ export default function Header() {
                   <ChevronDown className="h-4 w-4" />
                 </button>
                 <div
-                  className="absolute top-full left-0 mt-2 min-w-[220px] max-w-[min(90vw,500px)] bg-gradient-to-br from-white/70 to-oma-beige/60 backdrop-blur-lg rounded-2xl shadow-2xl border border-oma-gold/40 ring-1 ring-oma-plum/10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 mx-4 sm:mx-6 md:mx-8 lg:mx-12"
+                  className="absolute top-full left-0 mt-2 min-w-[340px] max-w-[min(98vw,600px)] bg-gradient-to-br from-white/70 to-oma-beige/60 backdrop-blur-lg rounded-2xl shadow-2xl border border-oma-gold/40 ring-1 ring-oma-plum/10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 mx-4 sm:mx-6 md:mx-8 lg:mx-12"
                   style={{ boxSizing: "border-box", right: 0, left: "auto" }}
                 >
                   <div
@@ -339,7 +339,7 @@ export default function Header() {
                         {category.title}
                       </h3>
                     </div>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-2 gap-x-8 gap-y-2">
                       {category.items.map((item) => (
                         <NavigationLink
                           key={item.title}
