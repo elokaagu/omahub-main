@@ -71,6 +71,15 @@ export async function getCategoryCounts(): Promise<Record<string, number>> {
   return counts;
 }
 
+// Mapping for always-present categories in Collections
+const ALWAYS_PRESENT_COLLECTIONS = [
+  { title: "High-End Fashion Brands", category: "Luxury" },
+  { title: "Ready to Wear", category: "Ready to Wear" },
+  { title: "Made to Measure", category: "Couture" },
+  { title: "Streetwear & Urban", category: "Streetwear" },
+  { title: "Accessories", category: "Accessories" },
+];
+
 /**
  * Map all categories with at least 1 brand or collection to navigation
  */
@@ -93,12 +102,28 @@ export function mapCategoriesToNavigation(
     a.localeCompare(b)
   );
 
-  // Collections navigation - show all categories
-  const collectionsItems = sortedCategories.map((cat) => ({
-    title: cat,
-    href: `/directory?category=${encodeURIComponent(cat)}`,
-    count: mergedCounts[cat],
+  // Collections navigation - always show the 5 key categories at the top
+  const alwaysPresent = ALWAYS_PRESENT_COLLECTIONS.map((item) => ({
+    title: item.title,
+    href: `/directory?category=${encodeURIComponent(item.category)}`,
+    count: mergedCounts[item.category] || 0,
+    always: true,
   }));
+
+  // All other categories, excluding the always-present ones
+  const alwaysCategoriesSet = new Set(
+    ALWAYS_PRESENT_COLLECTIONS.map((i) => i.category)
+  );
+  const otherCategories = sortedCategories
+    .filter((cat) => !alwaysCategoriesSet.has(cat))
+    .map((cat) => ({
+      title: cat,
+      href: `/directory?category=${encodeURIComponent(cat)}`,
+      count: mergedCounts[cat],
+      always: false,
+    }));
+
+  const collectionsItems = [...alwaysPresent, ...otherCategories];
 
   // Tailored navigation - show all categories, with Browse All Tailors at top
   const tailoredItems = [
