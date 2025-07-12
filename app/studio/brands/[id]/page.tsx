@@ -242,6 +242,7 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
         body: JSON.stringify({
           name: brand.name,
           description: brand.description,
+          long_description: brand.long_description,
           category: brand.category,
           categories: brand.categories,
           location: brand.location,
@@ -391,6 +392,18 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
                     Keep it concise - this appears in brand listings and
                     previews
                   </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="long_description">Full Description</Label>
+                  <Textarea
+                    id="long_description"
+                    name="long_description"
+                    value={brand.long_description || ""}
+                    onChange={handleChange}
+                    placeholder="Detailed description of the brand, its history, values, etc."
+                    className="min-h-[200px]"
+                  />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
