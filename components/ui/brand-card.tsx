@@ -75,10 +75,13 @@ export function BrandCard({
           <span className="hidden sm:inline">•</span>
           <span className="truncate">{location}</span>
           <span className="hidden sm:inline">•</span>
-          <div className="flex items-center flex-shrink-0">
-            <Star className="h-3 w-3 sm:h-4 sm:w-4 text-amber-500 mr-1" />
-            <span>{rating.toFixed(1)}</span>
-          </div>
+          {/* Only show star and rating if rating > 0 */}
+          {rating > 0 && (
+            <div className="flex items-center flex-shrink-0">
+              <Star className="h-3 w-3 sm:h-4 sm:w-4 text-amber-500 mr-1" />
+              <span>{rating.toFixed(1)}</span>
+            </div>
+          )}
         </div>
       </div>
     </NavigationLink>
