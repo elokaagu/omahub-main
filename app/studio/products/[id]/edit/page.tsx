@@ -43,10 +43,23 @@ import {
 } from "@/lib/utils/priceFormatter";
 import { getBrandCurrency } from "@/lib/utils/currencyUtils";
 import { Checkbox } from "@/components/ui/checkbox";
-import { standardCategories } from "@/lib/data/directory";
+import { standardCategories, subcategories } from "@/lib/data/directory";
 
 // Brand categories - now using standardized categories
 const CATEGORIES = [...standardCategories];
+
+// Curated product categories for dropdown
+const PRODUCT_CATEGORIES: string[] = [
+  "High End Fashion Brands",
+  "Ready to Wear",
+  "Made to Measure",
+  "Streetwear & Urban",
+  "Accessories",
+  "Bridal",
+  "Custom Design",
+  "Evening Gowns",
+  "Alterations",
+];
 
 export default function EditProductPage() {
   const { user } = useAuth();
@@ -506,7 +519,7 @@ export default function EditProductPage() {
                       <SelectValue placeholder="Select a category" />
                     </SelectTrigger>
                     <SelectContent>
-                      {CATEGORIES.map((category) => (
+                      {PRODUCT_CATEGORIES.map((category) => (
                         <SelectItem key={category} value={category}>
                           {category}
                         </SelectItem>
