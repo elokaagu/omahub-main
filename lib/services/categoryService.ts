@@ -74,10 +74,10 @@ export async function getCategoryCounts(): Promise<Record<string, number>> {
 // Mapping for always-present categories in Collections
 const ALWAYS_PRESENT_COLLECTIONS = [
   { title: "High End Fashion Brands", category: "Luxury" },
-  { title: "Made to Measure", category: "Couture" },
   { title: "Ready to Wear", category: "Ready to Wear" },
-  { title: "Accessories", category: "Accessories" },
+  { title: "Made to Measure", category: "Couture" },
   { title: "Streetwear & Urban", category: "Streetwear & Urban" },
+  { title: "Accessories", category: "Accessories" },
 ];
 
 // Mapping for always-present categories in Tailored
