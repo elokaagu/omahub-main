@@ -184,13 +184,14 @@ const mapDatabaseCategoryToHomepage = (dbCategory: string): string => {
     "Evening Gowns": "Evening Gowns",
     Alterations: "Alterations",
     "High End Fashion Brands": "High End Fashion Brands",
+    "High End Fashion Brand": "High End Fashion Brands",
+    Luxury: "High End Fashion Brands",
     // Aliases/legacy
     "Casual Wear": "Ready to Wear",
     "Formal Wear": "Ready to Wear",
     Jewelry: "Accessories",
     Couture: "Bridal",
     Streetwear: "Streetwear & Urban",
-    "High End Fashion Brand": "High End Fashion Brands",
   };
   return categoryMap[dbCategory] || "";
 };
