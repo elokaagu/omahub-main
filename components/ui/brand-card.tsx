@@ -53,8 +53,8 @@ export function BrandCard({
             isPortrait ? "object-center object-top" : ""
           )}
         />
-        {/* Overlay content at the bottom */}
-        <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/70 via-black/30 to-transparent p-4 flex flex-col gap-1">
+        {/* Overlay content at the bottom (always visible) */}
+        <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/70 via-black/30 to-transparent p-4 flex flex-col gap-1 z-10 pointer-events-none">
           <div className="flex items-center justify-between mb-1">
             <h3 className="font-semibold text-lg text-white leading-tight line-clamp-2 pr-2">
               {name}
@@ -74,6 +74,25 @@ export function BrandCard({
               </span>
             )}
           </div>
+        </div>
+        {/* Hover overlay with more details */}
+        <div className="absolute inset-0 flex flex-col justify-center items-center bg-black/80 bg-opacity-90 opacity-0 hover:opacity-100 transition-opacity duration-300 z-20 p-6 cursor-pointer">
+          <h3 className="text-2xl font-bold text-white mb-2 text-center line-clamp-2">
+            {name}
+          </h3>
+          {isVerified && (
+            <span className="bg-oma-plum text-white text-xs px-3 py-1 rounded-full mb-2">
+              Verified
+            </span>
+          )}
+          <div className="text-white text-sm mb-1">{location}</div>
+          <div className="text-white text-sm mb-1">Category: {category}</div>
+          {rating > 0 && (
+            <div className="flex items-center text-white text-sm">
+              <Star className="h-4 w-4 text-amber-400 mr-1" />
+              {rating.toFixed(1)}
+            </div>
+          )}
         </div>
       </div>
     </NavigationLink>
