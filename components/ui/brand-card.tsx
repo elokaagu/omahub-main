@@ -109,11 +109,11 @@ export function BrandCard({
             sizes="(max-width: 768px) 100vw, 400px"
             quality={85}
             priority={false}
-            autoPlay={false}
+            autoPlay={true}
             muted={true}
             loop={true}
             controls={false}
-            showPlayButton={true}
+            showPlayButton={false}
           />
         ) : (
           <AuthImage

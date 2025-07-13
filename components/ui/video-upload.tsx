@@ -19,7 +19,7 @@ interface VideoUploadProps {
 export function VideoUpload({
   onUploadComplete,
   defaultValue,
-  bucket = "product-videos",
+  bucket = "brand-assets",
   path = "",
   accept = "video/mp4,video/webm,video/quicktime",
   maxSize = 50,

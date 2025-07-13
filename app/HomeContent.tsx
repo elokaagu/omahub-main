@@ -451,8 +451,9 @@ export default function HomeContent() {
               rating: brand.rating,
               isVerified: brand.is_verified || false,
               category: brand.category,
-              video_url: brand.video_url,
-              video_thumbnail: brand.video_thumbnail,
+              // Always pass video fields if present, so BrandCard can prefer video over image
+              video_url: brand.video_url || undefined,
+              video_thumbnail: brand.video_thumbnail || undefined,
             }));
 
           // Fix debug logging for Streetwear

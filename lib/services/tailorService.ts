@@ -94,10 +94,16 @@ export async function getTailorsWithBrands(): Promise<
     throw new Error("Supabase client not available");
   }
 
-  const { data, error } = await supabase.from("tailors").select(`
+  const { data, error } = await supabase
+    .from("tailors")
+    .select(
+      `
       *,
       brand:brands(id, name, location, is_verified, category, image)
-    `);
+    `
+    )
+    .order("updated_at", { ascending: false, nullsFirst: false })
+    .order("created_at", { ascending: false, nullsFirst: false });
 
   if (error) {
     console.error("Error fetching tailors with brands:", error);
