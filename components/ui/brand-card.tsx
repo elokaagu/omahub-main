@@ -67,15 +67,7 @@ export function BrandCard({
               </span>
             )}
           </div>
-          <div className="flex items-center gap-2 text-xs text-white/80">
-            <span className="truncate">{location}</span>
-            {rating > 0 && (
-              <span className="flex items-center ml-2">
-                <Star className="h-3 w-3 text-amber-400 mr-1" />
-                {rating.toFixed(1)}
-              </span>
-            )}
-          </div>
+          {/* Removed location and rating */}
         </div>
       </div>
     </NavigationLink>
