@@ -226,6 +226,8 @@ export async function getAllBrands(
       rating: item.rating || 4.5,
       is_verified: item.is_verified || false,
       image: item.image || "/placeholder-image.jpg",
+      video_url: item.video_url || undefined,
+      video_thumbnail: item.video_thumbnail || undefined,
     }));
 
     // Update cache
