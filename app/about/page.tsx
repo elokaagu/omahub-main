@@ -10,8 +10,48 @@ import {
   slideIn,
   scaleIn,
 } from "@/app/utils/animations";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
 
 export default function About() {
+  const [aboutUs, setAboutUs] = useState("");
+  const [ourStory, setOurStory] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchContent() {
+      setLoading(true);
+      const { data: aboutData } = await supabase
+        .from("studio_content")
+        .select("content")
+        .eq("key", "about_us")
+        .single();
+      const { data: storyData } = await supabase
+        .from("studio_content")
+        .select("content")
+        .eq("key", "our_story")
+        .single();
+      setAboutUs(
+        aboutData?.content?.trim() ||
+          `OmaHub is a premier fashion tech platform dedicated to spotlighting Africa's emerging designers. We're creating a digital space where creativity, craftsmanship, and cultural expression intersect.\n\nOur mission is to connect Africa's innovative fashion talent with a global audience, fostering discovery and celebration of the continent's rich design heritage.`
+      );
+      setOurStory(
+        storyData?.content?.trim() ||
+          `OmaHub was born in 2025 from a deep belief: that Africa's designers deserve a global stage on their own terms. Rooted in the meaning of "Oma" (a West African word for beauty), we exist to honour the artistry shaping fashion across the continent.\n\nWhat started as a simple idea, a digital space to spotlight emerging designers, has become a dynamic platform connecting creators to conscious consumers around the world.\n\nOmaHub bridges tradition and innovation. We celebrate the bold, the handmade, and the culturally grounded, helping preserve traditional techniques while championing modern design. More than fashion, this is a movement for craft, community, and creativity.`
+      );
+      setLoading(false);
+    }
+    fetchContent();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="text-center py-24 text-oma-plum">
+        Loading About OmaHub...
+      </div>
+    );
+  }
+
   return (
     <>
       {/* Hero Section */}
@@ -24,17 +64,11 @@ export default function About() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
           <motion.div variants={slideIn} className="order-2 lg:order-1">
             <h1 className="heading-lg mb-6">About OmaHub</h1>
-            <p className="text-oma-cocoa text-lg mb-6">
-              OmaHub is a premier fashion tech platform dedicated to
-              spotlighting Africa's emerging designers. We're creating a digital
-              space where creativity, craftsmanship, and cultural expression
-              intersect.
-            </p>
-            <p className="text-oma-cocoa text-lg mb-8">
-              Our mission is to connect Africa's innovative fashion talent with
-              a global audience, fostering discovery and celebration of the
-              continent's rich design heritage.
-            </p>
+            {aboutUs.split("\n").map((para, i) => (
+              <p key={i} className="text-oma-cocoa text-lg mb-6">
+                {para}
+              </p>
+            ))}
             <Button asChild className="bg-oma-plum hover:bg-oma-plum/90">
               <Link href="/directory">Discover Our Brand Directory</Link>
             </Button>
@@ -60,23 +94,11 @@ export default function About() {
         <div className="max-w-3xl mx-auto">
           <SectionHeader title="Our Story" centered={true} />
           <div className="prose prose-lg max-w-none space-y-6">
-            <motion.p variants={fadeIn} className="text-center">
-              OmaHub was born in 2025 from a deep belief: that Africa's
-              designers deserve a global stage on their own terms. Rooted in the
-              meaning of "Oma" (a West African word for beauty), we exist to
-              honour the artistry shaping fashion across the continent.
-            </motion.p>
-            <motion.p variants={fadeIn} className="text-center">
-              What started as a simple idea, a digital space to spotlight
-              emerging designers, has become a dynamic platform connecting
-              creators to conscious consumers around the world.
-            </motion.p>
-            <motion.p variants={fadeIn} className="text-center">
-              OmaHub bridges tradition and innovation. We celebrate the bold,
-              the handmade, and the culturally grounded, helping preserve
-              traditional techniques while championing modern design. More than
-              fashion, this is a movement for craft, community, and creativity.
-            </motion.p>
+            {ourStory.split("\n").map((para, i) => (
+              <motion.p key={i} variants={fadeIn} className="text-center">
+                {para}
+              </motion.p>
+            ))}
           </div>
         </div>
       </motion.div>
