@@ -23,7 +23,10 @@ import {
   locations,
   categoryMapping,
 } from "@/lib/data/directory";
-import { mapLegacyToUnified } from "@/lib/data/unified-categories";
+import {
+  mapLegacyToUnified,
+  getAllCategoryNames,
+} from "@/lib/data/unified-categories";
 import { getCategoriesForDirectory } from "@/lib/data/unified-categories";
 import { UnifiedTag, CategoryTag } from "@/components/ui/unified-tag";
 import { getBrandReviews } from "@/lib/services/brandService";
@@ -44,19 +47,6 @@ const getBrandCategories = (brands: BrandDisplay[]) => {
   const uniqueCategories = Array.from(new Set(brands.map((b) => b.category)));
   return uniqueCategories.filter(Boolean).sort((a, b) => a.localeCompare(b));
 };
-
-// Define nav categories for the filter dropdown (Collections + Tailored)
-const navCategories = [
-  "High End Fashion Brands",
-  "Ready to Wear",
-  "Made to Measure",
-  "Streetwear & Urban",
-  "Accessories",
-  "Bridal",
-  "Custom Design",
-  "Evening Gowns",
-  "Alterations",
-];
 
 // Fallback brands with correct category types
 const fallbackBrands: BrandDisplay[] = [
@@ -396,7 +386,7 @@ export default function DirectoryClient() {
                   className="w-full mt-1 p-2 sm:p-3 border rounded-md border-oma-gold/20 focus:border-oma-plum min-h-[44px] text-sm sm:text-base mx-2 sm:mx-4 md:mx-6 lg:mx-8 max-w-xs"
                 >
                   <option value="All Categories">All Categories</option>
-                  {getBrandCategories(displayedBrands).map((category) => (
+                  {getAllCategoryNames().map((category) => (
                     <option key={category} value={category}>
                       {category}
                     </option>

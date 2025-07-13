@@ -33,6 +33,7 @@ import {
   getCategoriesForHomepage,
   mapLegacyToUnified,
   getCategoryById,
+  UNIFIED_CATEGORIES,
 } from "@/lib/data/unified-categories";
 import { FullWidthBrandRow } from "@/components/ui/full-width-brand-row";
 
@@ -427,16 +428,15 @@ export default function HomeContent() {
         setDynamicFallbackItems(dynamicItems);
 
         // Process brands data with performance optimization
-        const updatedCategories = initialCategories.map((category) => {
+        const updatedCategories = UNIFIED_CATEGORIES.map((category) => {
           const categoryBrands = shuffleArray(
             brandsData.filter((brand: any) => {
-              // Support both single category and categories array
               const allCategories = [
                 brand.category,
                 ...(brand.categories || []),
               ].filter(Boolean);
               return allCategories.some(
-                (cat) => mapDatabaseCategoryToHomepage(cat) === category.title
+                (cat) => mapLegacyToUnified(cat) === category.id
               );
             })
           )
@@ -451,21 +451,24 @@ export default function HomeContent() {
               category: brand.category,
             }));
 
-          // Debug logging for Streetwear
-          if (category.title === "Streetwear") {
+          // Fix debug logging for Streetwear
+          if (category.id === "streetwear-urban") {
             console.log("🔍 Streetwear category brands:", categoryBrands);
             console.log(
               "🔍 All brands data:",
               brandsData.map((b: any) => ({
                 name: b.name,
                 category: b.category,
-                mapped: mapDatabaseCategoryToHomepage(b.category),
+                mapped: mapLegacyToUnified(b.category),
               }))
             );
           }
 
           return {
-            ...category,
+            title: category.displayName,
+            image: category.homepageImage!,
+            href: `/directory?category=${encodeURIComponent(category.displayName)}`,
+            customCta: category.homepageCta!,
             brands: categoryBrands,
           };
         });
