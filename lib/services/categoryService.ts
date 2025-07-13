@@ -53,29 +53,49 @@ export async function getAllBrandCategories(): Promise<string[]> {
 }
 
 /**
- * Get category counts for each brand category
+ * Get category counts for each brand category (using the categories array)
  */
 export async function getCategoryCounts(): Promise<Record<string, number>> {
   if (!supabase) {
     throw new Error("Supabase client not available");
   }
 
+  // Fetch both legacy 'category' and new 'categories' array for all brands
   const { data, error } = await supabase
     .from("brands")
-    .select("category")
-    .not("category", "is", null);
+    .select("category, categories")
+    .not("categories", "is", null);
 
   if (error) {
     console.error("Error fetching category counts:", error);
     throw error;
   }
 
-  // Count occurrences of each category
+  // Build a set of all curated categories (from COLLECTIONS_CATEGORIES and TAILORED_CATEGORIES)
+  const curatedCategories = [
+    ...COLLECTIONS_CATEGORIES.map((c) => c.category),
+    ...TAILORED_CATEGORIES.map((c) => c.category),
+  ];
+
+  // Count brands for each curated category using the categories array
   const counts: Record<string, number> = {};
+  curatedCategories.forEach((cat) => {
+    counts[cat] = 0;
+  });
+
   data.forEach((item) => {
-    if (item.category) {
-      counts[item.category] = (counts[item.category] || 0) + 1;
-    }
+    // Use the categories array if present, otherwise fallback to legacy category
+    const brandCategories: string[] =
+      Array.isArray(item.categories) && item.categories.length > 0
+        ? item.categories
+        : item.category
+          ? [item.category]
+          : [];
+    curatedCategories.forEach((cat) => {
+      if (brandCategories.includes(cat)) {
+        counts[cat] = (counts[cat] || 0) + 1;
+      }
+    });
   });
 
   return counts;
