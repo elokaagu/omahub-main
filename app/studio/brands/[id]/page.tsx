@@ -114,6 +114,7 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
   const [tailorConsultationFee, setTailorConsultationFee] = useState("");
   const [tailorLeadTime, setTailorLeadTime] = useState("");
   const [tailorSaving, setTailorSaving] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   // Price range state
   const [priceMin, setPriceMin] = useState("");
@@ -160,13 +161,23 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
           }
         } else {
           console.error("Brand not found in database");
-          // Use Next.js notFound() function to show the custom not-found page
-          notFound();
+          setBrand(null);
+          setErrorMsg(
+            "Brand not found. Please check the URL or try again later."
+          );
+          // notFound(); // Remove this line
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error fetching brand:", error);
         toast.error("Error loading brand data");
-        notFound();
+        // Only redirect if error is 404
+        if (error?.status === 404) {
+          notFound();
+        } else {
+          setErrorMsg(
+            "An error occurred while loading the brand. Please try again later."
+          );
+        }
       } finally {
         setLoading(false);
       }
@@ -409,6 +420,17 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
     return (
       <div className="flex justify-center items-center h-64">
         <div className="animate-spin h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
+
+  if (errorMsg) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-gray-600">{errorMsg}</p>
+        <Button asChild className="mt-4">
+          <Link href="/studio/brands">Back to Brands</Link>
+        </Button>
       </div>
     );
   }
