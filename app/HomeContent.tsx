@@ -921,10 +921,7 @@ export default function HomeContent() {
       {/* Brand Categories - Full Width */}
       {categories.length > 0 ? (
         categories
-          // .filter((category) => {
-          //   // Show categories with 4+ brands to ensure quality content
-          //   return category.brands.length >= 4;
-          // })
+          .filter((category) => category.title !== "High End Fashion Brands")
           .map((category, index) => (
             <section
               key={category.title}
@@ -951,35 +948,19 @@ export default function HomeContent() {
               {/* View All Button */}
               <SlideUp delay={0.3}>
                 <div className="mt-4 text-center px-2 sm:px-4 lg:px-6">
-                  {category.title === "High End Fashion Brands" ? (
-                    <Button
-                      asChild
-                      variant="outline"
-                      className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white min-h-[44px] text-sm sm:text-base"
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white min-h-[44px] text-sm sm:text-base"
+                  >
+                    <Link
+                      href={`/directory?category=${encodeURIComponent(
+                        category.title
+                      )}`}
                     >
-                      <Link
-                        href={`/directory?category=${encodeURIComponent(
-                          category.title
-                        )}`}
-                      >
-                        View All High End Fashion Brands
-                      </Link>
-                    </Button>
-                  ) : (
-                    <Button
-                      asChild
-                      variant="outline"
-                      className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white min-h-[44px] text-sm sm:text-base"
-                    >
-                      <Link
-                        href={`/directory?category=${encodeURIComponent(
-                          category.title
-                        )}`}
-                      >
-                        View All {category.title}
-                      </Link>
-                    </Button>
-                  )}
+                      View All {category.title}
+                    </Link>
+                  </Button>
                 </div>
               </SlideUp>
             </section>
