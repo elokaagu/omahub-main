@@ -6,6 +6,7 @@ import { CheckCircle, Star } from "@/components/ui/icons";
 import { NavigationLink } from "./navigation-link";
 import { cn } from "@/lib/utils";
 import { FadeIn } from "@/app/components/ui/animations";
+import { BrandCard } from "./brand-card";
 
 interface Brand {
   id: string;
@@ -104,63 +105,15 @@ export function FullWidthBrandRow({
                   animationFillMode: "both",
                 }}
               >
-                <NavigationLink
-                  href={`/brand/${brand.id}`}
-                  className="block group/card"
-                >
-                  <div className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 hover:scale-[1.02]">
-                    {/* Image */}
-                    <div className="aspect-[4/5] relative overflow-hidden">
-                      <LazyImage
-                        src={brand.image}
-                        alt={brand.name}
-                        fill
-                        sizes="(max-width: 768px) 280px, (max-width: 1024px) 300px, 320px"
-                        className="object-cover transition-transform duration-500 group-hover/card:scale-110"
-                        aspectRatio="4/5"
-                        quality={85}
-                        priority={index < 6} // Prioritize first 6 images
-                      />
-
-                      {/* Gradient Overlay */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-300" />
-
-                      {/* Hover Content */}
-                      <div className="absolute bottom-4 left-4 right-4 transform translate-y-4 group-hover/card:translate-y-0 opacity-0 group-hover/card:opacity-100 transition-all duration-300">
-                        <p className="text-white text-sm font-medium">
-                          View Collection
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Card Content */}
-                    <div className="p-4">
-                      <div className="flex items-start justify-between mb-3">
-                        <h3 className="font-semibold text-lg line-clamp-2 pr-2 text-oma-black group-hover/card:text-oma-plum transition-colors duration-200">
-                          {brand.name}
-                        </h3>
-                        {brand.isVerified && (
-                          <CheckCircle className="h-5 w-5 text-oma-plum flex-shrink-0 mt-0.5" />
-                        )}
-                      </div>
-
-                      <div className="flex flex-wrap items-center gap-2 text-sm text-oma-cocoa mb-2">
-                        <span className="px-2 py-1 bg-oma-beige/60 rounded text-xs font-medium">
-                          {brand.category}
-                        </span>
-                        <span className="text-oma-cocoa/60">•</span>
-                        <span className="truncate">{brand.location}</span>
-                      </div>
-
-                      <div className="flex items-center">
-                        <Star className="h-4 w-4 text-amber-500 mr-1" />
-                        <span className="text-sm font-medium text-oma-cocoa">
-                          {brand.rating.toFixed(1)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </NavigationLink>
+                <BrandCard
+                  id={brand.id}
+                  name={brand.name}
+                  image={brand.image}
+                  category={brand.category}
+                  location={brand.location}
+                  isVerified={brand.isVerified}
+                  rating={brand.rating}
+                />
               </div>
             </FadeIn>
           ))}
