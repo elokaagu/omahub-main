@@ -6,11 +6,29 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function OurStoryEditorPage() {
+  const { user } = useAuth();
   const [ourStory, setOurStory] = useState("");
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  // Only allow super admins
+  if (!user || user.role !== "super_admin") {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <h3 className="mt-4 text-lg font-canela text-oma-plum">
+            Authentication Required
+          </h3>
+          <p className="mt-2 text-oma-cocoa">
+            Please sign in as a super admin to access this page.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   useEffect(() => {
     // Load Our Story content from Supabase
