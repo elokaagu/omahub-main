@@ -285,6 +285,16 @@ const generateDynamicCategoryImages = async (): Promise<{
   }
 };
 
+// Utility to shuffle an array
+function shuffleArray<T>(array: T[]): T[] {
+  const arr = [...array];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
 export default function HomeContent() {
   const [categories, setCategories] =
     useState<CategoryWithBrands[]>(initialCategories);
@@ -416,8 +426,8 @@ export default function HomeContent() {
 
         // Process brands data with performance optimization
         const updatedCategories = initialCategories.map((category) => {
-          const categoryBrands = brandsData
-            .filter((brand: any) => {
+          const categoryBrands = shuffleArray(
+            brandsData.filter((brand: any) => {
               // Support both single category and categories array
               const allCategories = [
                 brand.category,
@@ -427,6 +437,7 @@ export default function HomeContent() {
                 (cat) => mapDatabaseCategoryToHomepage(cat) === category.title
               );
             })
+          )
             .slice(0, 8) // Limit all categories to 8 brands for consistent display
             .map((brand: any) => ({
               id: brand.id,
