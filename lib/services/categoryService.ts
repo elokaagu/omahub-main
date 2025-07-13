@@ -3,6 +3,21 @@ import { getAllCollections } from "@/lib/services/collectionService";
 import { getAllBrands } from "@/lib/services/brandService";
 import { UNIFIED_CATEGORIES } from "@/lib/data/unified-categories";
 
+// Helper: Define which categories belong to Collections and which to Tailored
+const COLLECTIONS_CATEGORY_IDS = [
+  "ready-to-wear",
+  "accessories",
+  "high-end-fashion-brand",
+  "streetwear-urban",
+  "evening-gowns",
+];
+const TAILORED_CATEGORY_IDS = [
+  "bridal",
+  "custom-design",
+  "made-to-measure",
+  "alterations",
+];
+
 export interface NavigationCategory {
   title: string;
   href: string;
@@ -85,8 +100,17 @@ export async function getDynamicNavigationItems(): Promise<
   try {
     const counts = await getCategoryCounts();
 
-    // Map unified categories to navigation structure
-    const collectionsItems = UNIFIED_CATEGORIES.map((cat) => ({
+    // Group unified categories
+    const collectionsItems = UNIFIED_CATEGORIES.filter((cat) =>
+      COLLECTIONS_CATEGORY_IDS.includes(cat.id)
+    ).map((cat) => ({
+      title: cat.displayName,
+      href: `/directory?category=${encodeURIComponent(cat.displayName)}`,
+      count: counts[cat.displayName] || 0,
+    }));
+    const tailoredItems = UNIFIED_CATEGORIES.filter((cat) =>
+      TAILORED_CATEGORY_IDS.includes(cat.id)
+    ).map((cat) => ({
       title: cat.displayName,
       href: `/directory?category=${encodeURIComponent(cat.displayName)}`,
       count: counts[cat.displayName] || 0,
@@ -98,6 +122,12 @@ export async function getDynamicNavigationItems(): Promise<
         href: "/collections",
         description: "Discover curated fashion collections and styles",
         items: collectionsItems,
+      },
+      {
+        title: "Tailored",
+        href: "/tailored",
+        description: "Masters of craft creating perfectly fitted garments",
+        items: tailoredItems,
       },
     ];
   } catch (error) {
