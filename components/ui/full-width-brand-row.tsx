@@ -16,6 +16,8 @@ interface Brand {
   location: string;
   rating: number;
   isVerified: boolean;
+  video_url?: string;
+  video_thumbnail?: string;
 }
 
 interface FullWidthBrandRowProps {
@@ -113,6 +115,8 @@ export function FullWidthBrandRow({
                   location={brand.location}
                   isVerified={brand.isVerified}
                   rating={brand.rating}
+                  video_url={brand.video_url}
+                  video_thumbnail={brand.video_thumbnail}
                 />
               </div>
             </FadeIn>

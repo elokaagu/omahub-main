@@ -2,6 +2,7 @@ import { NavigationLink } from "./navigation-link";
 import { CheckCircle, Star } from "@/components/ui/icons";
 import { cn } from "@/lib/utils";
 import { AuthImage } from "./auth-image";
+import { VideoPlayer } from "./video-player";
 
 interface BrandCardProps {
   id: string;
@@ -13,6 +14,8 @@ interface BrandCardProps {
   rating?: number;
   isPortrait?: boolean;
   className?: string;
+  video_url?: string;
+  video_thumbnail?: string;
 }
 
 export function BrandCard({
@@ -25,6 +28,8 @@ export function BrandCard({
   rating = 4.8,
   isPortrait = false,
   className,
+  video_url,
+  video_thumbnail,
 }: BrandCardProps) {
   return (
     <NavigationLink
@@ -43,16 +48,38 @@ export function BrandCard({
             : "aspect-[4/5] min-h-[340px]"
         )}
       >
-        <AuthImage
-          src={image || "/placeholder.svg"}
-          alt={name}
-          width={800}
-          height={1000}
-          className={cn(
-            "absolute inset-0 w-full h-full object-cover object-center transition-transform duration-300 hover:scale-105",
-            isPortrait ? "object-center object-top" : ""
-          )}
-        />
+        {video_url ? (
+          <VideoPlayer
+            videoUrl={video_url}
+            thumbnailUrl={video_thumbnail}
+            fallbackImageUrl={image}
+            alt={name}
+            className={cn(
+              "absolute inset-0 w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105",
+              isPortrait ? "object-center object-top" : ""
+            )}
+            aspectRatio={isPortrait ? "square" : "3/4"}
+            sizes="(max-width: 768px) 100vw, 400px"
+            quality={85}
+            priority={false}
+            autoPlay={false}
+            muted={true}
+            loop={true}
+            controls={false}
+            showPlayButton={true}
+          />
+        ) : (
+          <AuthImage
+            src={image || "/placeholder.svg"}
+            alt={name}
+            width={800}
+            height={1000}
+            className={cn(
+              "absolute inset-0 w-full h-full object-cover object-center transition-transform duration-300 hover:scale-105",
+              isPortrait ? "object-center object-top" : ""
+            )}
+          />
+        )}
         {/* Smooth dark overlay on hover */}
         <div className="absolute inset-0 pointer-events-none transition-all duration-300 bg-black/0 group-hover:bg-black/40 group-hover:backdrop-blur-sm z-10" />
         {/* Overlay content at the bottom (always visible) */}

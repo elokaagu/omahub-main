@@ -55,6 +55,8 @@ interface BrandDisplay {
   rating: number;
   isVerified: boolean;
   category: string;
+  video_url?: string;
+  video_thumbnail?: string;
 }
 
 interface CategoryWithBrands {
@@ -449,6 +451,8 @@ export default function HomeContent() {
               rating: brand.rating,
               isVerified: brand.is_verified || false,
               category: brand.category,
+              video_url: brand.video_url,
+              video_thumbnail: brand.video_thumbnail,
             }));
 
           // Fix debug logging for Streetwear
@@ -496,7 +500,7 @@ export default function HomeContent() {
 
         // Debug Streetwear specifically
         const streetwearCategory = updatedCategories.find(
-          (c) => c.title === "Streetwear"
+          (c) => c.title === "Streetwear & Urban"
         );
         if (streetwearCategory) {
           console.log(
@@ -944,6 +948,8 @@ export default function HomeContent() {
                     location: brand.location,
                     rating: brand.rating,
                     isVerified: brand.isVerified,
+                    video_url: brand.video_url,
+                    video_thumbnail: brand.video_thumbnail,
                   }))}
                 />
               </FadeIn>
