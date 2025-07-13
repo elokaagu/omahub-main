@@ -29,6 +29,7 @@ import {
   isValidWhatsAppNumber,
   formatPhoneForDisplay,
 } from "@/lib/utils/phoneUtils";
+import { FavouriteButton } from "@/components/ui/favourite-button";
 
 interface ClientBrandProfileProps {
   brandData: BrandData;
@@ -151,6 +152,11 @@ export default function ClientBrandProfile({
 
           <h1 className="text-3xl sm:text-4xl md:text-6xl font-canela font-normal tracking-tight mb-3 sm:mb-2 leading-tight">
             {brandData.name}
+            {user && (
+              <span className="ml-3 align-middle inline-block">
+                <FavouriteButton itemId={brandData.id} itemType="brand" />
+              </span>
+            )}
           </h1>
 
           <div className="flex flex-col sm:flex-row sm:items-center text-oma-cocoa mb-4 sm:mb-6 gap-2 sm:gap-0">
