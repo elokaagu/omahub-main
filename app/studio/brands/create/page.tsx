@@ -641,8 +641,8 @@ export default function CreateBrandPage() {
                   <VideoUpload
                     onUploadComplete={handleVideoUpload}
                     defaultValue={formData.video_url}
-                    bucket="brand-assets"
-                    path="videos"
+                    bucket="product-videos"
+                    path="brands"
                     accept="video/mp4,video/webm,video/quicktime"
                     maxSize={50}
                   />
