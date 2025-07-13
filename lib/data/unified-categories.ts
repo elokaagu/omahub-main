@@ -123,7 +123,7 @@ export const LEGACY_CATEGORY_MAPPING = {
   Jewelry: "accessories",
   "Custom Design": "custom-design",
   "Evening Gowns": "evening-gowns",
-  Alterations: "custom-design",
+  Alterations: "alterations",
   Vacation: "ready-to-wear",
   Couture: "custom-design",
   Luxury: "ready-to-wear",
