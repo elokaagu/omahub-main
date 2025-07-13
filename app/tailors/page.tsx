@@ -226,9 +226,16 @@ export default function TailorsPage() {
                   <CardTitle className="text-2xl font-canela text-oma-cocoa">
                     {tailor.title}
                   </CardTitle>
-                  <p className="text-oma-cocoa/70 text-lg">
-                    {tailor.brand.name}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-oma-cocoa/70 text-lg">
+                      {tailor.brand.name}
+                    </p>
+                    {tailor.brand.is_verified && (
+                      <Badge className="bg-oma-gold text-black font-semibold px-2 py-1 text-xs uppercase ml-2">
+                        Verified
+                      </Badge>
+                    )}
+                  </div>
                 </CardHeader>
                 <CardContent className="p-6 pt-0">
                   <div className="flex items-center gap-2 mb-4">
