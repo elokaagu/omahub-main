@@ -683,14 +683,6 @@ export default function HomeContent() {
 
   return (
     <main className="flex-1">
-      {/* Admin-only Refresh Brands Button */}
-      {user?.role === "admin" || user?.role === "super_admin" ? (
-        <div className="flex justify-end max-w-7xl mx-auto px-4 pt-4">
-          <Button onClick={handleRefreshBrands} variant="outline">
-            Refresh Brands
-          </Button>
-        </div>
-      ) : null}
       {/* Hero Section */}
       <section className="relative">
         <Carousel
