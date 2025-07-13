@@ -131,21 +131,6 @@ export function BrandCard({
         <div className="absolute inset-0 pointer-events-none transition-all duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] bg-black/0 group-hover:bg-black/40 group-hover:backdrop-blur-sm z-10" />
 
         {/* Favourite button - positioned in top right */}
-        {user && (
-          <button
-            onClick={handleToggleFavourite}
-            disabled={isLoading}
-            className="absolute top-3 right-3 z-30 bg-white/90 hover:bg-white text-oma-plum hover:text-oma-plum/80 p-2 rounded-full shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50"
-            aria-label={
-              isFavourited ? "Remove from favourites" : "Add to favourites"
-            }
-          >
-            <Heart
-              className={`h-5 w-5 ${isFavourited ? "fill-current" : ""}`}
-              fill={isFavourited ? "currentColor" : "none"}
-            />
-          </button>
-        )}
 
         {/* Overlay content at the bottom (always visible) */}
         <div className="absolute bottom-0 left-0 w-full z-20 p-4 bg-gradient-to-t from-black/60 via-black/30 to-transparent flex flex-col gap-1">

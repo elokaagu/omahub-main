@@ -152,11 +152,6 @@ export default function ClientBrandProfile({
 
           <h1 className="text-3xl sm:text-4xl md:text-6xl font-canela font-normal tracking-tight mb-3 sm:mb-2 leading-tight">
             {brandData.name}
-            {user && (
-              <span className="ml-3 align-middle inline-block">
-                <FavouriteButton itemId={brandData.id} itemType="brand" />
-              </span>
-            )}
           </h1>
 
           <div className="flex flex-col sm:flex-row sm:items-center text-oma-cocoa mb-4 sm:mb-6 gap-2 sm:gap-0">
@@ -205,19 +200,24 @@ export default function ClientBrandProfile({
             {brandData.whatsapp &&
               isValidWhatsAppNumber(brandData.whatsapp) && (
                 <WhatsAppContact
-                  phoneNumber={brandData.whatsapp}
-                  brandName={brandData.name}
-                  variant="outline"
-                  className="border-green-500 text-green-600 hover:bg-green-500 hover:text-white w-full sm:w-auto min-h-[44px] text-sm sm:text-base"
-                  showIcon={true}
-                  showText={false}
+                  phone={brandData.whatsapp}
+                  name={brandData.name}
+                  className="w-full sm:w-auto min-h-[44px] text-sm sm:text-base"
                 />
               )}
+            {user && (
+              <FavouriteButton
+                itemId={brandData.id}
+                itemType="brand"
+                className="w-full sm:w-auto min-h-[44px] text-sm sm:text-base"
+              />
+            )}
             <Button
               onClick={handleOpenContactModal}
               variant="outline"
               className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white w-full sm:w-auto min-h-[44px] text-sm sm:text-base"
             >
+              <MessageCircle size={16} className="mr-2 flex-shrink-0" />
               Contact Designer
             </Button>
           </div>
