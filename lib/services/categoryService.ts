@@ -1,6 +1,7 @@
 import { supabase } from "@/lib/supabase";
 import { getAllCollections } from "@/lib/services/collectionService";
 import { getAllBrands } from "@/lib/services/brandService";
+import { UNIFIED_CATEGORIES } from "@/lib/data/unified-categories";
 
 export interface NavigationCategory {
   title: string;
@@ -12,22 +13,6 @@ export interface NavigationCategory {
     count: number;
   }[];
 }
-
-// Define the exact categories that should always be present
-const COLLECTIONS_CATEGORIES = [
-  { title: "High End Fashion Brands", category: "Luxury" },
-  { title: "Ready to Wear", category: "Ready to Wear" },
-  { title: "Made to Measure", category: "Couture" },
-  { title: "Streetwear & Urban", category: "Streetwear & Urban" },
-  { title: "Accessories", category: "Accessories" },
-];
-
-const TAILORED_CATEGORIES = [
-  { title: "Bridal", category: "Bridal" },
-  { title: "Custom Design", category: "Custom Design" },
-  { title: "Evening Gowns", category: "Evening Gowns" },
-  { title: "Alterations", category: "Alterations" },
-];
 
 /**
  * Get all unique categories from the brands table
@@ -53,17 +38,17 @@ export async function getAllBrandCategories(): Promise<string[]> {
 }
 
 /**
- * Get category counts for each brand category (using the categories array)
+ * Get category counts for each unified category (using the categories array)
  */
 export async function getCategoryCounts(): Promise<Record<string, number>> {
   if (!supabase) {
     throw new Error("Supabase client not available");
   }
 
-  // Fetch both legacy 'category' and new 'categories' array for all brands
+  // Fetch all brands with their categories array
   const { data, error } = await supabase
     .from("brands")
-    .select("category, categories")
+    .select("categories")
     .not("categories", "is", null);
 
   if (error) {
@@ -71,29 +56,19 @@ export async function getCategoryCounts(): Promise<Record<string, number>> {
     throw error;
   }
 
-  // Build a set of all curated categories (from COLLECTIONS_CATEGORIES and TAILORED_CATEGORIES)
-  const curatedCategories = [
-    ...COLLECTIONS_CATEGORIES.map((c) => c.category),
-    ...TAILORED_CATEGORIES.map((c) => c.category),
-  ];
-
-  // Count brands for each curated category using the categories array
+  // Count brands for each unified category by displayName
   const counts: Record<string, number> = {};
-  curatedCategories.forEach((cat) => {
-    counts[cat] = 0;
+  UNIFIED_CATEGORIES.forEach((cat) => {
+    counts[cat.displayName] = 0;
   });
 
   data.forEach((item) => {
-    // Use the categories array if present, otherwise fallback to legacy category
-    const brandCategories: string[] =
-      Array.isArray(item.categories) && item.categories.length > 0
-        ? item.categories
-        : item.category
-          ? [item.category]
-          : [];
-    curatedCategories.forEach((cat) => {
-      if (brandCategories.includes(cat)) {
-        counts[cat] = (counts[cat] || 0) + 1;
+    const brandCategories: string[] = Array.isArray(item.categories)
+      ? item.categories
+      : [];
+    UNIFIED_CATEGORIES.forEach((cat) => {
+      if (brandCategories.includes(cat.displayName)) {
+        counts[cat.displayName] = (counts[cat.displayName] || 0) + 1;
       }
     });
   });
@@ -102,72 +77,31 @@ export async function getCategoryCounts(): Promise<Record<string, number>> {
 }
 
 /**
- * Get dynamic navigation items - ALWAYS returns all categories regardless of brand data
+ * Get dynamic navigation items using UNIFIED_CATEGORIES
  */
 export async function getDynamicNavigationItems(): Promise<
   NavigationCategory[]
 > {
   try {
-    console.log("🔄 Starting getDynamicNavigationItems...");
-
-    // Get brand counts for display purposes only
     const counts = await getCategoryCounts();
-    console.log("📊 Brand category counts:", counts);
 
-    // Always create Collections items with all predefined categories
-    console.log("🔍 COLLECTIONS_CATEGORIES array:", COLLECTIONS_CATEGORIES);
+    // Map unified categories to navigation structure
+    const collectionsItems = UNIFIED_CATEGORIES.map((cat) => ({
+      title: cat.displayName,
+      href: `/directory?category=${encodeURIComponent(cat.displayName)}`,
+      count: counts[cat.displayName] || 0,
+    }));
 
-    const collectionsItems = COLLECTIONS_CATEGORIES.map((item) => {
-      const result = {
-        title: item.title,
-        href: `/directory?category=${encodeURIComponent(item.category)}`,
-        count: counts[item.category] || 0,
-      };
-      console.log(
-        `🔍 Created item: ${item.title} -> ${item.category} (count: ${counts[item.category] || 0})`
-      );
-      return result;
-    });
-
-    console.log("📋 Collections items created:", collectionsItems);
-    console.log("📋 Collections items count:", collectionsItems.length);
-
-    // Always create Tailored items with all predefined categories
-    const tailoredItems = [
-      {
-        title: "Browse All Tailors",
-        href: "/tailors",
-        count: Object.values(counts).reduce((sum, c) => sum + c, 0),
-      },
-      ...TAILORED_CATEGORIES.map((item) => ({
-        title: item.title,
-        href: `/directory?category=${encodeURIComponent(item.category)}`,
-        count: counts[item.category] || 0,
-      })),
-    ];
-
-    console.log("📋 Tailored items created:", tailoredItems);
-
-    const navigationCategories = [
+    return [
       {
         title: "Collections",
         href: "/collections",
         description: "Discover curated fashion collections and styles",
         items: collectionsItems,
       },
-      {
-        title: "Tailored",
-        href: "/tailored",
-        description: "Masters of craft creating perfectly fitted garments",
-        items: tailoredItems,
-      },
     ];
-
-    console.log("✅ Navigation categories created:", navigationCategories);
-    return navigationCategories;
   } catch (error) {
     console.error("❌ Error getting dynamic navigation items:", error);
-    // Return fallback navigation on error
     return getFallbackNavigationItems();
   }
 }
@@ -176,35 +110,16 @@ export async function getDynamicNavigationItems(): Promise<
  * Fallback navigation items in case of database errors
  */
 function getFallbackNavigationItems(): NavigationCategory[] {
-  console.log("🔄 Using fallback navigation items");
-
   return [
     {
       title: "Collections",
       href: "/collections",
       description: "Discover curated fashion collections and styles",
-      items: COLLECTIONS_CATEGORIES.map((item) => ({
-        title: item.title,
-        href: `/directory?category=${encodeURIComponent(item.category)}`,
+      items: UNIFIED_CATEGORIES.map((cat) => ({
+        title: cat.displayName,
+        href: `/directory?category=${encodeURIComponent(cat.displayName)}`,
         count: 0,
       })),
-    },
-    {
-      title: "Tailored",
-      href: "/tailored",
-      description: "Masters of craft creating perfectly fitted garments",
-      items: [
-        {
-          title: "Browse All Tailors",
-          href: "/tailors",
-          count: 0,
-        },
-        ...TAILORED_CATEGORIES.map((item) => ({
-          title: item.title,
-          href: `/directory?category=${encodeURIComponent(item.category)}`,
-          count: 0,
-        })),
-      ],
     },
   ];
 }
@@ -221,29 +136,29 @@ export async function checkCategoryHasBrands(
 
     if (categoryType === "Collections") {
       // Check if any Collections categories have brands
-      const hasBrands = COLLECTIONS_CATEGORIES.some(
-        (item) => (counts[item.category] || 0) > 0
+      const hasBrands = UNIFIED_CATEGORIES.some(
+        (item) => (counts[item.displayName] || 0) > 0
       );
       console.log(`🔍 Collections has brands: ${hasBrands}`);
       console.log(
         `🔍 Collections categories checked:`,
-        COLLECTIONS_CATEGORIES.map(
+        UNIFIED_CATEGORIES.map(
           (item) =>
-            `${item.title} -> ${item.category} (count: ${counts[item.category] || 0})`
+            `${item.displayName} -> ${item.displayName} (count: ${counts[item.displayName] || 0})`
         )
       );
       return true; // Always return true for now to ensure navigation shows
     } else {
       // Check if any Tailored categories have brands
-      const hasBrands = TAILORED_CATEGORIES.some(
-        (item) => (counts[item.category] || 0) > 0
+      const hasBrands = UNIFIED_CATEGORIES.some(
+        (item) => (counts[item.displayName] || 0) > 0
       );
       console.log(`🔍 Tailored has brands: ${hasBrands}`);
       console.log(
         `🔍 Tailored categories checked:`,
-        TAILORED_CATEGORIES.map(
+        UNIFIED_CATEGORIES.map(
           (item) =>
-            `${item.title} -> ${item.category} (count: ${counts[item.category] || 0})`
+            `${item.displayName} -> ${item.displayName} (count: ${counts[item.displayName] || 0})`
         )
       );
       return true; // Always return true for now to ensure navigation shows
