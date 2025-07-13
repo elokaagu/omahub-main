@@ -93,9 +93,11 @@ export default function TailorsPage() {
         if (!tailor.specialties) return false;
         let specialtiesArr: string[] = [];
         if (Array.isArray(tailor.specialties)) {
-          specialtiesArr = tailor.specialties;
+          specialtiesArr = tailor.specialties as string[];
         } else if (typeof tailor.specialties === "string") {
-          specialtiesArr = tailor.specialties.split(",").map((s) => s.trim());
+          specialtiesArr = (tailor.specialties as string)
+            .split(",")
+            .map((s: string) => s.trim());
         }
         return specialtiesArr.some(
           (s) => s.toLowerCase() === specialty.toLowerCase()
@@ -234,9 +236,11 @@ export default function TailorsPage() {
                 </div>
                 <div className="flex items-center gap-2 mb-4">
                   <DollarSign className="w-5 h-5 text-oma-cocoa/60" />
-                  <span className="text-oma-cocoa/70 text-sm">
-                    {tailor.price}
-                  </span>
+                  {tailor.price_range && (
+                    <span className="text-oma-cocoa/70 text-sm">
+                      {tailor.price_range}
+                    </span>
+                  )}
                 </div>
                 <div className="flex items-center gap-2 mb-4">
                   <Scissors className="w-5 h-5 text-oma-cocoa/60" />
@@ -252,10 +256,10 @@ export default function TailorsPage() {
                 </div>
                 <div className="flex items-center gap-2 mb-4">
                   <OptimizedImage
-                    src={tailor.image_url}
+                    src={tailor.image}
                     alt={tailor.title}
                     className={`w-full h-48 object-cover rounded-lg ${getImageFocalPoint(
-                      tailor.image_url,
+                      tailor.image,
                       tailor.title
                     )}`}
                   />
