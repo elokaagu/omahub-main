@@ -381,13 +381,13 @@ export default function HowItWorksClient() {
           {/* Right Side - Content */}
           <div className="flex-1 text-oma-cocoa pl-0 md:pl-12 w-full max-w-full px-4">
             <h2
-              className="text-3xl sm:text-4xl md:text-5xl font-canela mb-6 leading-tight overflow-hidden break-words"
+              className="text-2xl sm:text-3xl md:text-5xl font-canela mb-6 leading-tight overflow-visible break-words whitespace-normal"
               style={getTypewriterState("curated")}
             >
               Curated, and not sorry about it.
             </h2>
             <p
-              className="text-xl text-oma-cocoa/80 mb-8 leading-relaxed max-w-xl"
+              className="text-base sm:text-xl text-oma-cocoa/80 mb-8 leading-relaxed max-w-xl break-words whitespace-normal"
               style={getTextAnimationState("curated", 0.6)}
             >
               We're by invitation only; which means you only discover designers
