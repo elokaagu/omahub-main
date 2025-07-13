@@ -3,6 +3,11 @@ import { CheckCircle, Star } from "@/components/ui/icons";
 import { cn } from "@/lib/utils";
 import { AuthImage } from "./auth-image";
 import { VideoPlayer } from "./video-player";
+import { Heart } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import useFavourites from "@/lib/hooks/useFavourites";
+import { useState } from "react";
+import { useToast } from "@/components/ui/use-toast";
 
 interface BrandCardProps {
   id: string;
@@ -31,6 +36,48 @@ export function BrandCard({
   video_url,
   video_thumbnail,
 }: BrandCardProps) {
+  const { user } = useAuth();
+  const { isFavourite, toggleFavourite } = useFavourites();
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+
+  const isFavourited = isFavourite(id, "brand");
+
+  const handleToggleFavourite = async (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent navigation
+    e.stopPropagation();
+
+    if (!user) {
+      toast({
+        title: "Please sign in",
+        description: "You need to sign in to save favourites.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      await toggleFavourite(id, "brand");
+
+      toast({
+        title: isFavourited ? "Removed from favourites" : "Added to favourites",
+        description: isFavourited
+          ? "Brand has been removed from your favourites."
+          : "Brand has been added to your favourites.",
+      });
+    } catch (error) {
+      console.error("Error toggling favourite:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update favourites. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <NavigationLink
       href={`/brand/${id}`}
@@ -82,6 +129,22 @@ export function BrandCard({
         )}
         {/* Smooth dark overlay on hover */}
         <div className="absolute inset-0 pointer-events-none transition-all duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] bg-black/0 group-hover:bg-black/40 group-hover:backdrop-blur-sm z-10" />
+
+        {/* Favourite button - positioned in top right */}
+        <button
+          onClick={handleToggleFavourite}
+          disabled={isLoading}
+          className="absolute top-3 right-3 z-30 bg-white/90 hover:bg-white text-oma-plum hover:text-oma-plum/80 p-2 rounded-full shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50"
+          aria-label={
+            isFavourited ? "Remove from favourites" : "Add to favourites"
+          }
+        >
+          <Heart
+            className={`h-5 w-5 ${isFavourited ? "fill-current" : ""}`}
+            fill={isFavourited ? "currentColor" : "none"}
+          />
+        </button>
+
         {/* Overlay content at the bottom (always visible) */}
         <div className="absolute bottom-0 left-0 w-full z-20 p-4 bg-gradient-to-t from-black/60 via-black/30 to-transparent flex flex-col gap-1">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-1 gap-1 sm:gap-0">
