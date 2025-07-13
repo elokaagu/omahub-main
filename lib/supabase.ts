@@ -106,6 +106,8 @@ export type Brand = {
   founded_year?: string;
   created_at?: string;
   updated_at?: string;
+  video_url?: string;
+  video_thumbnail?: string;
 };
 
 export type Review = {

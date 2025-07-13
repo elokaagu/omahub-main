@@ -75,6 +75,7 @@ import {
   getTailorsWithBrands,
   getTailorById,
 } from "@/lib/services/tailorService";
+import { VideoUpload } from "@/components/ui/video-upload";
 
 // Character limits
 const SHORT_DESCRIPTION_LIMIT = 150;
@@ -742,6 +743,28 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
                 defaultValue={brand.image}
                 bucket="brand-assets"
                 path="brands"
+              />
+            </CardContent>
+          </Card>
+
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle>Brand Video (optional)</CardTitle>
+              <CardDescription>
+                Upload a video to showcase your brand (MP4, WebM, QuickTime, max
+                50MB)
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <VideoUpload
+                onUploadComplete={(url) => {
+                  if (brand) setBrand({ ...brand, video_url: url });
+                }}
+                defaultValue={brand.video_url}
+                bucket="product-videos"
+                path="brands"
+                accept="video/mp4,video/webm,video/quicktime"
+                maxSize={50}
               />
             </CardContent>
           </Card>
