@@ -33,6 +33,7 @@ import {
 } from "@/lib/utils/priceFormatter";
 import { LazyImage } from "@/components/ui/lazy-image";
 import { getAllCategoryNames } from "@/lib/data/unified-categories";
+import { VideoUpload } from "@/components/ui/video-upload";
 
 // Brand categories - now using unified categories (same as product)
 const CATEGORIES = getAllCategoryNames();
@@ -84,6 +85,8 @@ export default function CreateBrandPage() {
     whatsapp: "",
     contact_email: "",
     founded_year: "",
+    video_url: "",
+    video_thumbnail: "",
   });
 
   const handleInputChange = (
@@ -127,6 +130,13 @@ export default function CreateBrandPage() {
       ...prev,
       image: url,
     }));
+  };
+
+  const handleVideoUpload = (url: string) => {
+    setFormData((prev) => ({ ...prev, video_url: url }));
+  };
+  const handleVideoThumbnailUpload = (url: string) => {
+    setFormData((prev) => ({ ...prev, video_thumbnail: url }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -237,6 +247,8 @@ export default function CreateBrandPage() {
       whatsapp: formData.whatsapp || undefined,
       contact_email: formData.contact_email,
       founded_year: formData.founded_year || undefined,
+      video_url: formData.video_url || undefined,
+      video_thumbnail: formData.video_thumbnail || undefined,
     };
 
     console.log("📤 Sending brand creation payload:", payload);
@@ -623,6 +635,27 @@ export default function CreateBrandPage() {
                   accept="image/png,image/jpeg,image/jpg,image/webp"
                   maxSize={5}
                 />
+                {/* Always show brand video and thumbnail upload fields */}
+                <div className="mt-6 space-y-4">
+                  <Label>Brand Video (optional)</Label>
+                  <VideoUpload
+                    onUploadComplete={handleVideoUpload}
+                    defaultValue={formData.video_url}
+                    bucket="brand-assets"
+                    path="videos"
+                    accept="video/mp4,video/webm,video/quicktime"
+                    maxSize={50}
+                  />
+                  <Label className="mt-4">Video Thumbnail (optional)</Label>
+                  <SimpleFileUpload
+                    onUploadComplete={handleVideoThumbnailUpload}
+                    defaultValue={formData.video_thumbnail}
+                    bucket="brand-assets"
+                    path="thumbnails"
+                    accept="image/png,image/jpeg,image/jpg,image/webp"
+                    maxSize={5}
+                  />
+                </div>
               </CardContent>
               <CardFooter>
                 <Button
