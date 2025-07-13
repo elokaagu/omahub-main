@@ -84,12 +84,12 @@ export function BrandCard({
         <div className="absolute inset-0 pointer-events-none transition-all duration-500 ease-in-out bg-black/0 group-hover:bg-black/40 group-hover:backdrop-blur-sm z-10" />
         {/* Overlay content at the bottom (always visible) */}
         <div className="absolute bottom-0 left-0 w-full z-20 p-4 bg-gradient-to-t from-black/60 via-black/30 to-transparent flex flex-col gap-1">
-          <div className="flex items-center justify-between mb-1">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-1 gap-1 sm:gap-0">
             <h3 className="font-semibold text-lg text-white leading-tight line-clamp-2 pr-2">
               {name}
             </h3>
             {isVerified && (
-              <span className="bg-oma-plum text-white text-xs px-3 py-1 rounded-full ml-2">
+              <span className="bg-oma-plum text-white text-xs px-3 py-1 rounded-full sm:ml-2">
                 Verified
               </span>
             )}
