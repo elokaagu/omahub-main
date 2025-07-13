@@ -81,7 +81,7 @@ export function BrandCard({
           />
         )}
         {/* Smooth dark overlay on hover */}
-        <div className="absolute inset-0 pointer-events-none transition-all duration-500 ease-in-out bg-black/0 group-hover:bg-black/40 group-hover:backdrop-blur-sm z-10" />
+        <div className="absolute inset-0 pointer-events-none transition-all duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] bg-black/0 group-hover:bg-black/40 group-hover:backdrop-blur-sm z-10" />
         {/* Overlay content at the bottom (always visible) */}
         <div className="absolute bottom-0 left-0 w-full z-20 p-4 bg-gradient-to-t from-black/60 via-black/30 to-transparent flex flex-col gap-1">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-1 gap-1 sm:gap-0">
