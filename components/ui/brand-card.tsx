@@ -89,7 +89,7 @@ export function BrandCard({
               {name}
             </h3>
             {isVerified && (
-              <span className="bg-oma-plum text-white text-xs px-3 py-1 rounded-full sm:ml-2">
+              <span className="inline-block bg-oma-plum text-white text-xs px-3 py-1 rounded-full sm:ml-2 w-auto min-w-0">
                 Verified
               </span>
             )}
