@@ -30,7 +30,7 @@ export function BrandCard({
     <NavigationLink
       href={`/brand/${id}`}
       className={cn(
-        "block bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow relative h-full min-h-[44px] p-0",
+        "group block bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow relative h-full min-h-[44px] p-0",
         isPortrait ? "flex gap-3 sm:gap-6" : "",
         className
       )}
@@ -54,7 +54,7 @@ export function BrandCard({
           )}
         />
         {/* Smooth dark overlay on hover */}
-        <div className="absolute inset-0 pointer-events-none transition-all duration-300 bg-black/0 hover:bg-black/40 hover:backdrop-blur-sm z-10" />
+        <div className="absolute inset-0 pointer-events-none transition-all duration-300 bg-black/0 group-hover:bg-black/40 group-hover:backdrop-blur-sm z-10" />
         {/* Overlay content at the bottom (always visible) */}
         <div className="absolute bottom-0 left-0 w-full z-20 p-4 bg-gradient-to-t from-black/60 via-black/30 to-transparent flex flex-col gap-1">
           <div className="flex items-center justify-between mb-1">
