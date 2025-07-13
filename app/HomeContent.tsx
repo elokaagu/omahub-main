@@ -177,15 +177,21 @@ const mapDatabaseCategoryToHomepage = (dbCategory: string): string => {
   const categoryMap: { [key: string]: string } = {
     Bridal: "Bridal",
     "Ready to Wear": "Ready to Wear",
+    "Made to Measure": "Made to Measure",
+    "Streetwear & Urban": "Streetwear & Urban",
+    Accessories: "Accessories",
+    "Custom Design": "Custom Design",
+    "Evening Gowns": "Evening Gowns",
+    Alterations: "Alterations",
+    "High End Fashion Brands": "High End Fashion Brands",
+    // Aliases/legacy
     "Casual Wear": "Ready to Wear",
     "Formal Wear": "Ready to Wear",
-    Accessories: "Accessories",
     Jewelry: "Accessories",
-    "Streetwear & Urban": "Streetwear",
-    Couture: "Bridal", // Map Couture to Bridal for homepage display
+    Couture: "Bridal",
+    Streetwear: "Streetwear & Urban",
   };
-
-  return categoryMap[dbCategory] || ""; // No fallback
+  return categoryMap[dbCategory] || "";
 };
 
 // Use unified categories for homepage
