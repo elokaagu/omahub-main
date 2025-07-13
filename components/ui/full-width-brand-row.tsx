@@ -89,7 +89,7 @@ export function FullWidthBrandRow({
 
       {/* Scrollable Brand Row - Left aligned with header, right overflows full width */}
       <div
-        className="relative group"
+        className="relative"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
