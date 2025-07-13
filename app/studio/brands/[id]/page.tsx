@@ -76,6 +76,7 @@ import {
   getTailorById,
 } from "@/lib/services/tailorService";
 import { VideoUpload } from "@/components/ui/video-upload";
+import { VideoPlayer } from "@/components/ui/video-player";
 
 // Character limits
 const SHORT_DESCRIPTION_LIMIT = 150;
@@ -779,7 +780,23 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
             <CardContent>
               <div className="rounded-lg border overflow-hidden">
                 <div className="h-36 bg-gray-100 relative">
-                  {imageUrl ? (
+                  {brand.video_url ? (
+                    <VideoPlayer
+                      videoUrl={brand.video_url}
+                      thumbnailUrl={brand.video_thumbnail}
+                      fallbackImageUrl={imageUrl}
+                      alt={brand.name}
+                      aspectRatio="16/9"
+                      className="w-full h-full"
+                      sizes="800px"
+                      quality={85}
+                      autoPlay={true}
+                      muted={true}
+                      loop={true}
+                      controls={false}
+                      showPlayButton={false}
+                    />
+                  ) : imageUrl ? (
                     <AuthImage
                       src={imageUrl}
                       alt={brand.name}
