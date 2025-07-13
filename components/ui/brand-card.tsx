@@ -69,9 +69,7 @@ export function BrandCard({
           )}
         </div>
         <div className="flex flex-wrap items-center gap-1 sm:gap-2 text-xs sm:text-sm text-oma-cocoa">
-          <span className="px-2 py-1 bg-oma-beige/50 rounded text-xs">
-            {category}
-          </span>
+          {/* Removed category display */}
           <span className="hidden sm:inline">•</span>
           <span className="truncate">{location}</span>
           <span className="hidden sm:inline">•</span>
