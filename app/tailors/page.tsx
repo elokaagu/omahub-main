@@ -70,8 +70,18 @@ export default function TailorsPage() {
       try {
         setLoading(true);
         const data = await getTailorsWithBrands();
-        setTailors(data);
-        setFilteredTailors(data);
+        // Filter out tailors with missing or incomplete brand info
+        const validTailors = data.filter(
+          (t) =>
+            t.brand &&
+            t.brand.id &&
+            t.brand.name &&
+            t.brand.location &&
+            typeof t.brand.is_verified === "boolean" &&
+            t.brand.category
+        );
+        setTailors(validTailors);
+        setFilteredTailors(validTailors);
       } catch (err) {
         console.error("Error fetching tailors:", err);
         setError("Failed to load tailor information");
@@ -93,9 +103,11 @@ export default function TailorsPage() {
         if (!tailor.specialties) return false;
         let specialtiesArr: string[] = [];
         if (Array.isArray(tailor.specialties)) {
-          specialtiesArr = tailor.specialties;
+          specialtiesArr = tailor.specialties as string[];
         } else if (typeof tailor.specialties === "string") {
-          specialtiesArr = tailor.specialties.split(",").map((s) => s.trim());
+          specialtiesArr = (tailor.specialties as string)
+            .split(",")
+            .map((s: string) => s.trim());
         }
         return specialtiesArr.some(
           (s) => s.toLowerCase() === specialty.toLowerCase()
@@ -233,10 +245,7 @@ export default function TailorsPage() {
                   </span>
                 </div>
                 <div className="flex items-center gap-2 mb-4">
-                  <DollarSign className="w-5 h-5 text-oma-cocoa/60" />
-                  <span className="text-oma-cocoa/70 text-sm">
-                    {tailor.price}
-                  </span>
+                  {/* Price field removed as it's not present on TailorWithBrand */}
                 </div>
                 <div className="flex items-center gap-2 mb-4">
                   <Scissors className="w-5 h-5 text-oma-cocoa/60" />
@@ -252,10 +261,10 @@ export default function TailorsPage() {
                 </div>
                 <div className="flex items-center gap-2 mb-4">
                   <OptimizedImage
-                    src={tailor.image_url}
+                    src={tailor.image}
                     alt={tailor.title}
                     className={`w-full h-48 object-cover rounded-lg ${getImageFocalPoint(
-                      tailor.image_url,
+                      tailor.image,
                       tailor.title
                     )}`}
                   />
