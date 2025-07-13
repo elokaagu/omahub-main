@@ -30,7 +30,7 @@ export function BrandCard({
     <NavigationLink
       href={`/brand/${id}`}
       className={cn(
-        "group block bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow relative h-full min-h-[44px] p-0",
+        "block bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow relative h-full min-h-[44px] p-0",
         isPortrait ? "flex gap-3 sm:gap-6" : "",
         className
       )}
@@ -49,7 +49,7 @@ export function BrandCard({
           width={800}
           height={1000}
           className={cn(
-            "absolute inset-0 w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105",
+            "absolute inset-0 w-full h-full object-cover object-center transition-transform duration-300 hover:scale-105",
             isPortrait ? "object-center object-top" : ""
           )}
         />

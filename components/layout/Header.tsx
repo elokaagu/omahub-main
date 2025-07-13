@@ -94,6 +94,7 @@ export default function Header() {
   >(fallbackNavigationItems);
   const [collectionsHasBrands, setCollectionsHasBrands] = useState(false);
   const [tailoredHasBrands, setTailoredHasBrands] = useState(false);
+  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
 
   // Focus trap for accessibility
@@ -558,32 +559,53 @@ export default function Header() {
                     })
                     .map((category) => (
                       <div key={category.title} className="mb-2">
-                        <NavigationLink
-                          href={category.href}
-                          onClick={() => setMobileMenuOpen(false)}
-                          className="block rounded-lg px-3 py-3 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 transition-colors"
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setExpandedCategory(
+                              expandedCategory === category.title
+                                ? null
+                                : category.title
+                            )
+                          }
+                          className="flex items-center justify-between w-full rounded-lg px-3 py-3 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 transition-colors focus:outline-none"
+                          aria-expanded={expandedCategory === category.title}
+                          aria-controls={`category-items-${category.title}`}
                         >
-                          {category.title}
-                        </NavigationLink>
-                        <div className="flex flex-col gap-y-1 pl-4">
-                          {category.items.map((item) => (
-                            <NavigationLink
-                              key={item.title}
-                              href={item.href}
-                              onClick={() => setMobileMenuOpen(false)}
-                              className="block rounded-lg px-3 py-2 text-sm leading-7 text-gray-700 hover:bg-gray-50 transition-colors"
-                            >
-                              <div className="flex items-center justify-between">
-                                <span>{item.title}</span>
-                                {item.count && (
-                                  <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                                    {item.count}
-                                  </span>
-                                )}
-                              </div>
-                            </NavigationLink>
-                          ))}
-                        </div>
+                          <span>{category.title}</span>
+                          <ChevronDown
+                            className={cn(
+                              "h-4 w-4 ml-2 transition-transform",
+                              expandedCategory === category.title
+                                ? "rotate-180"
+                                : "rotate-0"
+                            )}
+                          />
+                        </button>
+                        {expandedCategory === category.title && (
+                          <div
+                            id={`category-items-${category.title}`}
+                            className="flex flex-col gap-y-1 pl-4 mt-1"
+                          >
+                            {category.items.map((item) => (
+                              <NavigationLink
+                                key={item.title}
+                                href={item.href}
+                                onClick={() => setMobileMenuOpen(false)}
+                                className="block rounded-lg px-3 py-2 text-sm leading-7 text-gray-700 hover:bg-gray-50 transition-colors"
+                              >
+                                <div className="flex items-center justify-between">
+                                  <span>{item.title}</span>
+                                  {item.count && (
+                                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                                      {item.count}
+                                    </span>
+                                  )}
+                                </div>
+                              </NavigationLink>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     ))}
                 </div>
