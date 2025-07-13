@@ -53,10 +53,10 @@ export function BrandCard({
             isPortrait ? "object-center object-top" : ""
           )}
         />
-        {/* Darken image on hover */}
-        <div className="absolute inset-0 transition-all duration-300 pointer-events-none bg-black/0 hover:bg-black/20 z-10" />
+        {/* Smooth dark overlay on hover */}
+        <div className="absolute inset-0 pointer-events-none transition-all duration-300 bg-black/0 hover:bg-black/20 z-10" />
         {/* Overlay content at the bottom (always visible) */}
-        <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/70 via-black/30 to-transparent p-4 flex flex-col gap-1 z-20 pointer-events-none">
+        <div className="absolute bottom-0 left-0 w-full z-20 p-4 bg-gradient-to-t from-black/60 via-black/30 to-transparent flex flex-col gap-1">
           <div className="flex items-center justify-between mb-1">
             <h3 className="font-semibold text-lg text-white leading-tight line-clamp-2 pr-2">
               {name}
