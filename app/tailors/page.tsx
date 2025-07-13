@@ -26,6 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Loading } from "@/components/ui/loading";
+import { useSearchParams } from "next/navigation";
 
 type TailorWithBrand = Tailor & {
   brand: {
@@ -56,6 +57,7 @@ const getImageFocalPoint = (imageUrl: string, title: string) => {
 };
 
 export default function TailorsPage() {
+  const searchParams = useSearchParams();
   const [tailors, setTailors] = useState<TailorWithBrand[]>([]);
   const [filteredTailors, setFilteredTailors] = useState<TailorWithBrand[]>([]);
   const [loading, setLoading] = useState(true);
@@ -84,6 +86,23 @@ export default function TailorsPage() {
   useEffect(() => {
     let filtered = tailors;
 
+    // Filter by specialty query param
+    const specialty = searchParams.get("specialty");
+    if (specialty) {
+      filtered = filtered.filter((tailor) => {
+        if (!tailor.specialties) return false;
+        let specialtiesArr: string[] = [];
+        if (Array.isArray(tailor.specialties)) {
+          specialtiesArr = tailor.specialties;
+        } else if (typeof tailor.specialties === "string") {
+          specialtiesArr = tailor.specialties.split(",").map((s) => s.trim());
+        }
+        return specialtiesArr.some(
+          (s) => s.toLowerCase() === specialty.toLowerCase()
+        );
+      });
+    }
+
     // Filter by search term
     if (searchTerm) {
       filtered = filtered.filter(
@@ -95,7 +114,7 @@ export default function TailorsPage() {
     }
 
     setFilteredTailors(filtered);
-  }, [tailors, searchTerm]);
+  }, [tailors, searchTerm, searchParams]);
 
   if (loading) {
     return (
@@ -196,157 +215,62 @@ export default function TailorsPage() {
           </div>
         </div>
 
-        {/* Results Count */}
-        <div className="mb-8">
-          <p className="text-black/60">
-            {filteredTailors.length} tailor
-            {filteredTailors.length !== 1 ? "s" : ""} found
-          </p>
-        </div>
-
         {/* Tailors Grid/List */}
-        {filteredTailors.length === 0 ? (
-          <div className="text-center py-16">
-            <Scissors className="w-16 h-16 text-black/30 mx-auto mb-4" />
-            <h3 className="text-xl font-canela text-black mb-2">
-              No tailors found
-            </h3>
-            <p className="text-black/60">
-              Try adjusting your search or filter criteria
-            </p>
-          </div>
-        ) : (
-          <div
-            className={
-              viewMode === "grid"
-                ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-                : "space-y-6"
-            }
-          >
-            {filteredTailors.map((tailor) => (
-              <Link
-                key={tailor.id}
-                href={`/tailor/${tailor.id}`}
-                className={`group block ${
-                  viewMode === "list"
-                    ? "bg-white/80 rounded-xl p-6 border border-oma-gold/10 hover:border-oma-gold/30 transition-all duration-300 hover:shadow-lg"
-                    : ""
-                }`}
-              >
-                {viewMode === "grid" ? (
-                  <div className="bg-white/80 rounded-xl overflow-hidden border border-oma-gold/10 hover:border-oma-gold/30 transition-all duration-300 hover:shadow-lg group-hover:-translate-y-1">
-                    <div className="aspect-[4/3] relative overflow-hidden">
-                      <OptimizedImage
-                        src={tailor.image}
-                        alt={tailor.title}
-                        fill
-                        className={`object-cover ${getImageFocalPoint(tailor.image, tailor.title)} group-hover:scale-105 transition-transform duration-300`}
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                        priority={false}
-                        aspectRatio="4/3"
-                        quality={80}
-                      />
-                    </div>
-                    <div className="p-6">
-                      <h3 className="text-xl font-canela text-black mb-2 group-hover:text-oma-plum transition-colors">
-                        {tailor.title}
-                      </h3>
-                      <p className="text-black/70 mb-3 line-clamp-2">
-                        {tailor.description}
-                      </p>
-
-                      {/* Tailor Info */}
-                      <div className="space-y-2 mb-4">
-                        {tailor.price_range && (
-                          <div className="flex items-center gap-2 text-sm text-black/70">
-                            <DollarSign className="w-4 h-4" />
-                            <span>{tailor.price_range}</span>
-                          </div>
-                        )}
-                        {tailor.lead_time && (
-                          <div className="flex items-center gap-2 text-sm text-black/70">
-                            <Clock className="w-4 h-4" />
-                            <span>{tailor.lead_time}</span>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-medium text-black">
-                            {tailor.brand.name}
-                          </p>
-                          <p className="text-xs text-black/60">
-                            {tailor.brand.location}
-                          </p>
-                        </div>
-                        {tailor.brand.is_verified && (
-                          <div className="bg-oma-gold/20 text-black text-xs px-2 py-1 rounded-full">
-                            Verified
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex gap-6">
-                    <div className="w-48 h-36 relative overflow-hidden rounded-lg flex-shrink-0">
-                      <div className="aspect-[4/3] relative overflow-hidden rounded-lg">
-                        <OptimizedImage
-                          src={tailor.image}
-                          alt={tailor.title}
-                          fill
-                          className={`object-cover ${getImageFocalPoint(tailor.image, tailor.title)}`}
-                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                          aspectRatio="4/3"
-                          quality={80}
-                        />
-                      </div>
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-xl font-canela text-black mb-2 group-hover:text-oma-plum transition-colors">
-                        {tailor.title}
-                      </h3>
-                      <p className="text-black/70 mb-3 line-clamp-2">
-                        {tailor.description}
-                      </p>
-
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          <div>
-                            <p className="text-sm font-medium text-black">
-                              {tailor.brand.name}
-                            </p>
-                            <p className="text-xs text-black/60">
-                              {tailor.brand.location}
-                            </p>
-                          </div>
-                          {tailor.price_range && (
-                            <div className="flex items-center gap-1 text-sm text-black/70">
-                              <DollarSign className="w-4 h-4" />
-                              <span>{tailor.price_range}</span>
-                            </div>
-                          )}
-                          {tailor.lead_time && (
-                            <div className="flex items-center gap-1 text-sm text-black/70">
-                              <Clock className="w-4 h-4" />
-                              <span>{tailor.lead_time}</span>
-                            </div>
-                          )}
-                        </div>
-                        {tailor.brand.is_verified && (
-                          <div className="bg-oma-gold/20 text-black text-xs px-2 py-1 rounded-full">
-                            Verified
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </Link>
-            ))}
-          </div>
-        )}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          {filteredTailors.map((tailor) => (
+            <Card key={tailor.id} className="overflow-hidden">
+              <CardHeader className="p-6 pb-4">
+                <CardTitle className="text-2xl font-canela text-oma-cocoa">
+                  {tailor.title}
+                </CardTitle>
+                <p className="text-oma-cocoa/70 text-lg">{tailor.brand.name}</p>
+              </CardHeader>
+              <CardContent className="p-6 pt-0">
+                <div className="flex items-center gap-2 mb-4">
+                  <Clock className="w-5 h-5 text-oma-cocoa/60" />
+                  <span className="text-oma-cocoa/70 text-sm">
+                    {tailor.created_at}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 mb-4">
+                  <DollarSign className="w-5 h-5 text-oma-cocoa/60" />
+                  <span className="text-oma-cocoa/70 text-sm">
+                    {tailor.price}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 mb-4">
+                  <Scissors className="w-5 h-5 text-oma-cocoa/60" />
+                  <span className="text-oma-cocoa/70 text-sm">
+                    {tailor.brand.category}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 mb-4">
+                  <Filter className="w-5 h-5 text-oma-cocoa/60" />
+                  <span className="text-oma-cocoa/70 text-sm">
+                    {tailor.brand.location}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 mb-4">
+                  <OptimizedImage
+                    src={tailor.image_url}
+                    alt={tailor.title}
+                    className={`w-full h-48 object-cover rounded-lg ${getImageFocalPoint(
+                      tailor.image_url,
+                      tailor.title
+                    )}`}
+                  />
+                </div>
+                <div className="flex justify-end">
+                  <Link href={`/tailors/${tailor.id}`}>
+                    <Button className="bg-oma-plum text-white hover:bg-oma-plum/90 transition-colors">
+                      View Details
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
     </div>
   );
