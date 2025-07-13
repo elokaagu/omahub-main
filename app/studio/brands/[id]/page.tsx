@@ -400,6 +400,11 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
     ? BRAND_NAME_LIMIT - (brand.name || "").length
     : BRAND_NAME_LIMIT;
 
+  // When rendering the MultiSelect or category chips, filter out 'High End Fashion Brands' from the displayed categories
+  const displayedCategories = (brand?.categories || []).filter(
+    (cat) => cat !== "High End Fashion Brands"
+  );
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -504,9 +509,7 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
                     <Label htmlFor="categories">Categories</Label>
                     <MultiSelect
                       options={categories}
-                      value={
-                        brand.categories || [brand.category].filter(Boolean)
-                      }
+                      value={displayedCategories}
                       onValueChange={handleCategoriesChange}
                       placeholder="Select categories"
                     />
