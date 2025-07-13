@@ -36,6 +36,7 @@ import {
   UNIFIED_CATEGORIES,
 } from "@/lib/data/unified-categories";
 import { FullWidthBrandRow } from "@/components/ui/full-width-brand-row";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Brand {
   id: string;
@@ -301,6 +302,7 @@ function shuffleArray<T>(array: T[]): T[] {
 }
 
 export default function HomeContent() {
+  const { user } = useAuth();
   const [categories, setCategories] =
     useState<CategoryWithBrands[]>(initialCategories);
   const [isLoading, setIsLoading] = useState(true);
@@ -600,6 +602,54 @@ export default function HomeContent() {
     };
   }, []); // Empty dependency array - run only once
 
+  // Add a function to force refresh brands
+  const handleRefreshBrands = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      // Force refresh brands from backend
+      const brandsData = await getAllBrands(false, true);
+      // Re-run the category mapping logic
+      const updatedCategories = UNIFIED_CATEGORIES.map((category) => {
+        const categoryBrands = shuffleArray(
+          brandsData.filter((brand: any) => {
+            const allCategories = [
+              brand.category,
+              ...(brand.categories || []),
+            ].filter(Boolean);
+            return allCategories.some(
+              (cat) => mapLegacyToUnified(cat) === category.id
+            );
+          })
+        )
+          .slice(0, 8)
+          .map((brand: any) => ({
+            id: brand.id,
+            name: brand.name,
+            image: brand.image || "/placeholder-image.jpg",
+            location: brand.location?.split(",")[0] || "Unknown",
+            rating: brand.rating,
+            isVerified: brand.is_verified || false,
+            category: brand.category,
+            video_url: brand.video_url || undefined,
+            video_thumbnail: brand.video_thumbnail || undefined,
+          }));
+        return {
+          title: category.displayName,
+          image: category.homepageImage!,
+          href: `/directory?category=${encodeURIComponent(category.displayName)}`,
+          customCta: category.homepageCta!,
+          brands: categoryBrands,
+        };
+      });
+      setCategories(updatedCategories);
+    } catch (err) {
+      setError("Failed to refresh brands. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen px-4">
@@ -619,6 +669,14 @@ export default function HomeContent() {
 
   return (
     <main className="flex-1">
+      {/* Admin-only Refresh Brands Button */}
+      {user?.role === "admin" || user?.role === "super_admin" ? (
+        <div className="flex justify-end max-w-7xl mx-auto px-4 pt-4">
+          <Button onClick={handleRefreshBrands} variant="outline">
+            Refresh Brands
+          </Button>
+        </div>
+      ) : null}
       {/* Hero Section */}
       <section className="relative">
         <Carousel
