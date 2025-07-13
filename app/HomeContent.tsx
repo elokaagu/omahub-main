@@ -458,6 +458,20 @@ export default function HomeContent() {
               video_thumbnail: brand.video_thumbnail || undefined,
             }));
 
+          // Debug: Log brands with videos for this category
+          const brandsWithVideos = categoryBrands.filter(
+            (brand: any) => brand.video_url
+          );
+          if (brandsWithVideos.length > 0) {
+            console.log(
+              `🎬 Category "${category.displayName}" has ${brandsWithVideos.length} brands with videos:`,
+              brandsWithVideos.map((b: any) => ({
+                name: b.name,
+                video_url: b.video_url,
+              }))
+            );
+          }
+
           // Fix debug logging for Streetwear
           if (category.id === "streetwear-urban") {
             console.log("🔍 Streetwear category brands:", categoryBrands);
