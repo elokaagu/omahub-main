@@ -133,9 +133,11 @@ export const LEGACY_CATEGORY_MAPPING = {
   Collections: "ready-to-wear",
   Tailored: "custom-design",
 
-  // Directory subcategories
-  "High End Fashion Brands": "ready-to-wear",
-  "Made to Measure": "custom-design",
+  // Directory subcategories and new mappings
+  "High End Fashion": "high-end-fashion-brand",
+  "High End Fashion Brand": "high-end-fashion-brand",
+  "High End Fashion Brands": "high-end-fashion-brand",
+  "Made to Measure": "made-to-measure",
 } as const;
 
 // Reverse mapping for database storage
