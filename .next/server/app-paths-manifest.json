@@ -1,6 +1,3 @@
 {
-  "/page": "app/page.js",
-  "/directory/page": "app/directory/page.js",
-  "/collections/page": "app/collections/page.js",
-  "/tailors/page": "app/tailors/page.js"
+  "/page": "app/page.js"
 }
