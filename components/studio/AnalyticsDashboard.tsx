@@ -60,6 +60,9 @@ export default function AnalyticsDashboard({
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [vercelAnalytics, setVercelAnalytics] = useState<any>(null);
+  const [vercelLoading, setVercelLoading] = useState(true);
+  const [vercelError, setVercelError] = useState<string | null>(null);
 
   const fetchData = async () => {
     try {
@@ -158,6 +161,31 @@ export default function AnalyticsDashboard({
       fetchData();
     }
   }, [isBrandOwner, ownedBrandIds, user, authLoading]);
+
+  // Fetch Vercel Analytics data
+  useEffect(() => {
+    async function fetchVercelAnalytics() {
+      setVercelLoading(true);
+      setVercelError(null);
+      try {
+        const res = await fetch("/api/analytics");
+        if (!res.ok) {
+          const err = await res.json();
+          setVercelError(err.error || "Failed to fetch analytics");
+          setVercelAnalytics(null);
+        } else {
+          const data = await res.json();
+          setVercelAnalytics(data);
+        }
+      } catch (error) {
+        setVercelError("Failed to fetch analytics");
+        setVercelAnalytics(null);
+      } finally {
+        setVercelLoading(false);
+      }
+    }
+    if (!isBrandOwner) fetchVercelAnalytics();
+  }, [isBrandOwner]);
 
   // Show loading state while auth is loading
   if (authLoading || loading) {
@@ -445,31 +473,33 @@ export default function AnalyticsDashboard({
         <Card className="border-l-4 border-l-green-500 border-oma-beige">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-oma-cocoa">
-              Page Views
+              Web Analytics
             </CardTitle>
             <Eye className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-canela text-oma-plum">
-              {formatNumber(analytics.totalPageViews)}
-            </div>
-            <div className="flex items-center justify-between mt-2">
-              <p className="text-xs text-oma-cocoa">
-                {isBrandOwner ? "Estimated brand page views" : "Last 30 days"}
-              </p>
-              <Badge
-                variant={
-                  analyticsSource === "Estimated" ? "secondary" : "default"
-                }
-                className={
-                  analyticsSource === "Estimated"
-                    ? "bg-oma-beige text-oma-cocoa"
-                    : "bg-green-100 text-green-800"
-                }
-              >
-                {analyticsSource}
-              </Badge>
-            </div>
+            {vercelLoading ? (
+              <div className="text-oma-cocoa">Loading...</div>
+            ) : vercelError ? (
+              <div className="text-red-600 text-xs">{vercelError}</div>
+            ) : vercelAnalytics ? (
+              <>
+                <div className="text-2xl font-canela text-oma-plum">
+                  {vercelAnalytics.visitors ?? 0} visitors
+                </div>
+                <div className="text-lg text-oma-cocoa mt-1">
+                  {vercelAnalytics.pageViews ?? 0} page views
+                </div>
+                <div className="text-xs text-oma-cocoa mt-2">
+                  Bounce Rate: {vercelAnalytics.bounceRate ?? 0}%
+                </div>
+                <div className="text-xs text-oma-cocoa mt-1">
+                  (Last 7 days, powered by Vercel Analytics)
+                </div>
+              </>
+            ) : (
+              <div className="text-oma-cocoa">No analytics data</div>
+            )}
           </CardContent>
         </Card>
       </div>
