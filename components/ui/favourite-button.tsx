@@ -79,36 +79,44 @@ export function FavouriteButton({
       </Button>
       {/* Modal Popup */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-lg shadow-lg p-8 max-w-sm w-full relative animate-fadeInUp">
-            <button
-              className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
-              onClick={() => setShowModal(false)}
-              aria-label="Close"
-            >
-              <X className="h-5 w-5" />
-            </button>
-            <div className="flex flex-col items-center text-center">
-              <Heart
-                className="h-10 w-10 text-oma-plum mb-4"
-                fill="currentColor"
-              />
-              <h2 className="text-xl font-semibold mb-2 text-oma-plum">
-                Added to Favourites!
-              </h2>
-              <p className="text-gray-700 mb-4">
-                This item has been added to your favourites. You can view all
-                your favourites from your account menu.
-              </p>
-              <Button
+        <>
+          {/* Overlay */}
+          <div
+            className="fixed inset-0 z-40 bg-black/40"
+            style={{ pointerEvents: "auto" }}
+          />
+          {/* Modal Popup */}
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            <div className="bg-white rounded-lg shadow-lg p-8 max-w-sm w-full relative animate-fadeInUp">
+              <button
+                className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
                 onClick={() => setShowModal(false)}
-                className="bg-oma-plum text-white hover:bg-oma-plum/90 w-full"
+                aria-label="Close"
               >
-                Close
-              </Button>
+                <X className="h-5 w-5" />
+              </button>
+              <div className="flex flex-col items-center text-center">
+                <Heart
+                  className="h-10 w-10 text-oma-plum mb-4"
+                  fill="currentColor"
+                />
+                <h2 className="text-xl font-semibold mb-2 text-oma-plum">
+                  Added to Favourites!
+                </h2>
+                <p className="text-gray-700 mb-4">
+                  This item has been added to your favourites. You can view all
+                  your favourites from your account menu.
+                </p>
+                <Button
+                  onClick={() => setShowModal(false)}
+                  className="bg-oma-plum text-white hover:bg-oma-plum/90 w-full"
+                >
+                  Close
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
+        </>
       )}
     </>
   );
