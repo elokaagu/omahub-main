@@ -15,15 +15,28 @@ export async function GET() {
       .select("value")
       .eq("key", "our_story")
       .single();
+    const { data: tailoredServicesData, error: tailoredServicesError } =
+      await supabase
+        .from("platform_settings")
+        .select("value")
+        .eq("key", "tailored_services")
+        .single();
     if (aboutError && aboutError.code !== "PGRST116") {
       return NextResponse.json({ error: aboutError.message }, { status: 500 });
     }
     if (storyError && storyError.code !== "PGRST116") {
       return NextResponse.json({ error: storyError.message }, { status: 500 });
     }
+    if (tailoredServicesError && tailoredServicesError.code !== "PGRST116") {
+      return NextResponse.json(
+        { error: tailoredServicesError.message },
+        { status: 500 }
+      );
+    }
     return NextResponse.json({
       about: aboutData?.value || "",
       ourStory: storyData?.value || "",
+      tailoredServices: tailoredServicesData?.value || "",
     });
   } catch (err) {
     return NextResponse.json(
@@ -36,7 +49,7 @@ export async function GET() {
 // POST: Update About Us and/or Our Story text (super admin only)
 export async function POST(req: NextRequest) {
   try {
-    const { user, about, ourStory } = await req.json();
+    const { user, about, ourStory, tailoredServices } = await req.json();
     const profile = await getProfile(user?.id);
     if (!profile || profile.role !== "super_admin") {
       return NextResponse.json({ error: "Permission denied" }, { status: 403 });
@@ -53,6 +66,13 @@ export async function POST(req: NextRequest) {
       updates.push({
         key: "our_story",
         value: ourStory,
+        updated_at: new Date().toISOString(),
+      });
+    }
+    if (tailoredServices !== undefined) {
+      updates.push({
+        key: "tailored_services",
+        value: tailoredServices,
         updated_at: new Date().toISOString(),
       });
     }
