@@ -84,19 +84,11 @@ export default function PageViewsCard({
             <div className="text-2xl font-canela text-oma-plum">
               {pageViews !== null
                 ? pageViews.toLocaleString()
-                : estimated.toLocaleString()}
+                : estimated.toLocaleString() + "*"}
             </div>
             <p className="text-xs text-oma-cocoa mt-2">
-              {source === "vercel"
-                ? "Real analytics from Vercel"
-                : "Estimated based on platform activity"}
+              {source === "vercel" ? "Real analytics from Vercel" : ""}
             </p>
-            {error && (
-              <div className="flex items-center gap-1 text-xs text-oma-cocoa mt-2">
-                <AlertTriangle className="h-3 w-3 text-yellow-500" />
-                {error}
-              </div>
-            )}
           </>
         )}
       </CardContent>
