@@ -328,7 +328,11 @@ export default function BrandsPage() {
                   <TableCell>
                     <div className="flex items-center">
                       <Star className="h-4 w-4 text-yellow-400 mr-1" />
-                      {brand.rating.toFixed(1)}
+                      {brand.rating && brand.rating > 0 ? (
+                        brand.rating.toFixed(1)
+                      ) : (
+                        <span className="text-gray-400">No ratings yet</span>
+                      )}
                     </div>
                   </TableCell>
                   <TableCell>

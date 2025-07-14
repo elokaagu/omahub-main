@@ -846,7 +846,11 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
                   </p>
                   <div className="flex items-center">
                     <Star className="h-4 w-4 text-yellow-400 mr-1" />
-                    <span>{brand.rating.toFixed(1)}</span>
+                    {brand.rating && brand.rating > 0 ? (
+                      brand.rating.toFixed(1)
+                    ) : (
+                      <span className="text-gray-400">No ratings yet</span>
+                    )}
                   </div>
                 </div>
               </div>
