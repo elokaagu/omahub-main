@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { getProfile } from "@/lib/services/authService";
+import { createServerSupabaseClient } from "@/lib/supabase-unified";
 
 // GET: Fetch About Us and Our Story text
 export async function GET() {
@@ -49,11 +50,20 @@ export async function GET() {
 // POST: Update About Us and/or Our Story text (super admin only)
 export async function POST(req: NextRequest) {
   try {
-    const { user, about, ourStory, tailoredServices } = await req.json();
-    const profile = await getProfile(user?.id);
+    const supabase = await createServerSupabaseClient();
+    // Get authenticated user from session
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const profile = await getProfile(user.id);
     if (!profile || profile.role !== "super_admin") {
       return NextResponse.json({ error: "Permission denied" }, { status: 403 });
     }
+    const { about, ourStory, tailoredServices } = await req.json();
     const updates = [];
     if (about !== undefined) {
       updates.push({
