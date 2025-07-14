@@ -51,14 +51,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return "user";
   };
 
-  // Helper function to get owned brands based on email
-  const getOwnedBrandsFromEmail = (email: string): string[] => {
-    if (email === "eloka@culturin.com") {
-      return ["ehbs-couture", "malit", "rendoll"];
-    }
-    return [];
-  };
-
   // Ensure we're on the client side
   useEffect(() => {
     setIsClient(true);
@@ -156,7 +148,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // If no profile exists, create a basic user object with proper role detection
         const userEmail = email || "";
         const role = getRoleFromEmail(userEmail);
-        const ownedBrands = getOwnedBrandsFromEmail(userEmail);
 
         const basicUser: User = {
           id: userId,
@@ -165,7 +156,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           last_name: "",
           avatar_url: "",
           role: role,
-          owned_brands: ownedBrands,
+          owned_brands: [], // Start with empty array, will be populated from database
         };
         setUser(basicUser);
         AuthDebug.log(
@@ -185,7 +176,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       ) {
         const userEmail = email || "";
         const role = getRoleFromEmail(userEmail);
-        const ownedBrands = getOwnedBrandsFromEmail(userEmail);
 
         const basicUser: User = {
           id: userId,
@@ -194,7 +184,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           last_name: "",
           avatar_url: "",
           role: role,
-          owned_brands: ownedBrands,
+          owned_brands: [], // Start with empty array, will be populated from database
         };
         setUser(basicUser);
         AuthDebug.log(
