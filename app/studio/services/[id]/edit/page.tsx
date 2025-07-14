@@ -691,6 +691,13 @@ export default function EditServicePage() {
           >
             Cancel
           </Button>
+          <Button
+            type="submit"
+            className="bg-oma-plum hover:bg-oma-plum/90 text-white"
+            disabled={isSaving}
+          >
+            {isSaving ? "Saving..." : "Save Changes"}
+          </Button>
           <AlertDialog
             open={showDeleteDialog}
             onOpenChange={setShowDeleteDialog}
@@ -711,8 +718,7 @@ export default function EditServicePage() {
                 <AlertDialogDescription>
                   Are you sure you want to delete the service
                   <span className="font-semibold text-oma-plum">
-                    {" "}
-                    {formData.title}{" "}
+                    {formData.title}
                   </span>
                   ? This action cannot be undone.
                 </AlertDialogDescription>
@@ -720,7 +726,16 @@ export default function EditServicePage() {
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
                 <AlertDialogAction
-                  onClick={handleDelete}
+                  onClick={async () => {
+                    try {
+                      await handleDelete();
+                    } catch (err) {
+                      console.error("Delete error:", err);
+                      toast.error(
+                        (err as any)?.message || "Failed to delete service"
+                      );
+                    }
+                  }}
                   className="bg-red-600 text-white hover:bg-red-700"
                 >
                   Delete
