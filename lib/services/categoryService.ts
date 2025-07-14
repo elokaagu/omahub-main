@@ -108,11 +108,12 @@ export async function getDynamicNavigationItems(): Promise<
       href: `/directory?category=${encodeURIComponent(cat.displayName)}`,
       count: counts[cat.displayName] || 0,
     }));
+    // Tailored items should route to /tailors with specialty filters
     const tailoredItems = UNIFIED_CATEGORIES.filter((cat) =>
       TAILORED_CATEGORY_IDS.includes(cat.id)
     ).map((cat) => ({
       title: cat.displayName,
-      href: `/directory?category=${encodeURIComponent(cat.displayName)}`,
+      href: `/tailors?specialty=${encodeURIComponent(cat.displayName)}`,
       count: counts[cat.displayName] || 0,
     }));
 
@@ -155,9 +156,11 @@ function getFallbackNavigationItems(): NavigationCategory[] {
       title: "Tailored",
       href: "/tailors",
       description: "Masters of craft creating perfectly fitted garments",
-      items: UNIFIED_CATEGORIES.map((cat) => ({
+      items: UNIFIED_CATEGORIES.filter((cat) =>
+        TAILORED_CATEGORY_IDS.includes(cat.id)
+      ).map((cat) => ({
         title: cat.displayName,
-        href: `/directory?category=${encodeURIComponent(cat.displayName)}`,
+        href: `/tailors?specialty=${encodeURIComponent(cat.displayName)}`,
         count: 0,
       })),
     },
