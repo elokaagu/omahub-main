@@ -192,7 +192,7 @@ export default function CreateServicePage() {
       fetchData();
     });
     return () => unsubscribe();
-  }, [user, tailoringEvent]);
+  }, [user]);
 
   const handleInputChange = (name: string, value: string | boolean) => {
     setFormData((prev) => ({
