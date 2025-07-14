@@ -31,6 +31,10 @@ import { toast } from "sonner";
 import { Pencil, Trash2, Star, MapPin, Package, RefreshCw } from "lucide-react";
 import { AuthImage } from "@/components/ui/auth-image";
 import { FileUpload } from "@/components/ui/file-upload";
+import {
+  createTailor,
+  getTailorsWithBrands,
+} from "@/lib/services/tailorService";
 
 interface BrandManagementProps {
   className?: string;
@@ -68,6 +72,26 @@ export default function BrandManagement({ className }: BrandManagementProps) {
     whatsapp: "",
     image: "",
   });
+  const [isTailoringEnabled, setIsTailoringEnabled] = useState(false);
+  const [tailorLoading, setTailorLoading] = useState(false);
+
+  // Check if tailoring is enabled for the editing brand
+  useEffect(() => {
+    if (editingBrand) {
+      (async () => {
+        setTailorLoading(true);
+        try {
+          const tailors = await getTailorsWithBrands();
+          const found = tailors.some((t) => t.brand.id === editingBrand.id);
+          setIsTailoringEnabled(found);
+        } catch {
+          setIsTailoringEnabled(false);
+        } finally {
+          setTailorLoading(false);
+        }
+      })();
+    }
+  }, [editingBrand]);
 
   useEffect(() => {
     if (!accessLoading && user && canManageBrands) {
@@ -657,6 +681,49 @@ export default function BrandManagement({ className }: BrandManagementProps) {
                         quality={75}
                       />
                     </div>
+                  )}
+                </div>
+                {/* Enable Tailoring Toggle */}
+                <div className="flex items-center space-x-4 mt-4">
+                  <Label htmlFor="enable-tailoring">Enable Tailoring</Label>
+                  <input
+                    id="enable-tailoring"
+                    type="checkbox"
+                    checked={isTailoringEnabled}
+                    disabled={isTailoringEnabled || tailorLoading}
+                    onChange={async (e) => {
+                      if (e.target.checked && editingBrand) {
+                        setTailorLoading(true);
+                        try {
+                          await createTailor({
+                            brand_id: editingBrand.id,
+                            title: editingBrand.name,
+                            image: editingBrand.image,
+                            description:
+                              editingBrand.description ||
+                              editingBrand.long_description ||
+                              "",
+                            specialties: [editingBrand.category],
+                          });
+                          setIsTailoringEnabled(true);
+                          toast.success("Tailoring enabled for this brand!");
+                        } catch (err) {
+                          toast.error(
+                            "Failed to enable tailoring for this brand"
+                          );
+                        } finally {
+                          setTailorLoading(false);
+                        }
+                      }
+                    }}
+                  />
+                  {tailorLoading && (
+                    <span className="text-xs text-oma-cocoa">Enabling...</span>
+                  )}
+                  {isTailoringEnabled && (
+                    <span className="text-xs text-green-600">
+                      Tailoring enabled
+                    </span>
                   )}
                 </div>
               </CardContent>

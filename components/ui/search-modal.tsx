@@ -192,7 +192,7 @@ export function SearchModal() {
               placeholder="Search for designers, collections, products..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="border-0 shadow-none text-lg focus:ring-0 focus:outline-none"
+              className="border-0 shadow-none text-lg focus:ring-0 focus:outline-none focus-visible:outline-none"
               autoFocus
             />
           </div>

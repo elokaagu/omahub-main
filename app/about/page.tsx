@@ -65,7 +65,7 @@ export default function About() {
           <motion.div variants={slideIn} className="order-2 lg:order-1">
             <h1 className="heading-lg mb-6">About OmaHub</h1>
             {aboutUs
-              .replace(/\n\n/g, "\n")
+              .replace(/\n\n/g, " ")
               .split("\n")
               .map((para, i) => (
                 <p key={i} className="text-oma-cocoa text-lg mb-6">
