@@ -135,12 +135,7 @@ export default function CreateServicePage() {
 
   // Check if selected brand is a tailor brand
   const isTailorBrand = (): boolean => {
-    const selectedBrand = brands.find(
-      (brand) => brand.id === formData.brand_id
-    );
-    return selectedBrand
-      ? tailoredCategories.includes(selectedBrand.category)
-      : false;
+    return brands.some((brand) => brand.id === formData.brand_id);
   };
 
   // Fetch brands
