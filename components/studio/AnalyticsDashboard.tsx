@@ -470,35 +470,19 @@ export default function AnalyticsDashboard({
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-green-500 border-oma-beige">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-oma-cocoa">
-              Web Analytics
-            </CardTitle>
-            <Eye className="h-4 w-4 text-green-500" />
+        <Card className="border border-oma-gold/10 bg-white">
+          <CardHeader>
+            <CardTitle className="text-black">Page Views</CardTitle>
           </CardHeader>
           <CardContent>
             {vercelLoading ? (
-              <div className="text-oma-cocoa">Loading...</div>
+              <span>Loading...</span>
             ) : vercelError ? (
-              <div className="text-red-600 text-xs">{vercelError}</div>
-            ) : vercelAnalytics ? (
-              <>
-                <div className="text-2xl font-canela text-oma-plum">
-                  {vercelAnalytics.visitors ?? 0} visitors
-                </div>
-                <div className="text-lg text-oma-cocoa mt-1">
-                  {vercelAnalytics.pageViews ?? 0} page views
-                </div>
-                <div className="text-xs text-oma-cocoa mt-2">
-                  Bounce Rate: {vercelAnalytics.bounceRate ?? 0}%
-                </div>
-                <div className="text-xs text-oma-cocoa mt-1">
-                  (Last 7 days, powered by Vercel Analytics)
-                </div>
-              </>
+              <span className="text-red-600">{vercelError}</span>
             ) : (
-              <div className="text-oma-cocoa">No analytics data</div>
+              <span className="text-2xl font-bold text-oma-plum">
+                {vercelAnalytics?.pageViews ?? "-"}
+              </span>
             )}
           </CardContent>
         </Card>
