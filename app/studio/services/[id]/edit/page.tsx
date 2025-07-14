@@ -3,7 +3,11 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import { getProductById, updateProduct } from "@/lib/services/productService";
+import {
+  getProductById,
+  updateProduct,
+  deleteProduct,
+} from "@/lib/services/productService";
 import { getAllBrands } from "@/lib/services/brandService";
 import { Brand } from "@/lib/supabase";
 import { toast } from "sonner";
@@ -223,6 +227,23 @@ export default function EditServicePage() {
       toast.error(err.message || "Failed to update service");
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!serviceId) return;
+    if (
+      !window.confirm(
+        "Are you sure you want to delete this service? This action cannot be undone."
+      )
+    )
+      return;
+    try {
+      await deleteProduct(serviceId);
+      toast.success("Service deleted successfully");
+      router.push("/studio/services");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to delete service");
     }
   };
 
@@ -670,6 +691,15 @@ export default function EditServicePage() {
             disabled={isSaving}
           >
             {isSaving ? "Saving..." : "Save Changes"}
+          </Button>
+          <Button
+            type="button"
+            variant="destructive"
+            className="ml-auto bg-red-600 hover:bg-red-700 text-white border-red-200"
+            onClick={handleDelete}
+            disabled={isSaving}
+          >
+            <Trash2 className="h-4 w-4 mr-1" /> Delete Service
           </Button>
         </div>
       </form>
