@@ -125,7 +125,7 @@ export async function getDynamicNavigationItems(): Promise<
       },
       {
         title: "Tailored",
-        href: "/tailored",
+        href: "/tailors",
         description: "Masters of craft creating perfectly fitted garments",
         items: tailoredItems,
       },
@@ -145,6 +145,16 @@ function getFallbackNavigationItems(): NavigationCategory[] {
       title: "Collections",
       href: "/collections",
       description: "Discover curated fashion collections and styles",
+      items: UNIFIED_CATEGORIES.map((cat) => ({
+        title: cat.displayName,
+        href: `/directory?category=${encodeURIComponent(cat.displayName)}`,
+        count: 0,
+      })),
+    },
+    {
+      title: "Tailored",
+      href: "/tailors",
+      description: "Masters of craft creating perfectly fitted garments",
       items: UNIFIED_CATEGORIES.map((cat) => ({
         title: cat.displayName,
         href: `/directory?category=${encodeURIComponent(cat.displayName)}`,
