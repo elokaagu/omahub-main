@@ -221,67 +221,47 @@ export default function TailorsPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredTailors.map((tailor) =>
             tailor.brand ? (
-              <Card key={tailor.id} className="overflow-hidden">
-                <CardHeader className="p-6 pb-4">
-                  <CardTitle className="text-2xl font-canela text-oma-cocoa">
-                    {tailor.title}
-                  </CardTitle>
-                  <div className="flex items-center gap-2">
-                    <p className="text-oma-cocoa/70 text-lg">
+              <Card key={tailor.id} className="overflow-hidden flex flex-col">
+                <div className="w-full h-56 bg-gray-100">
+                  <OptimizedImage
+                    src={tailor.image}
+                    alt={tailor.title}
+                    className="w-full h-full object-cover object-center rounded-t-lg"
+                  />
+                </div>
+                <div className="flex-1 flex flex-col p-6">
+                  <div className="flex items-center gap-2 mb-2">
+                    <h3 className="font-semibold text-lg text-black leading-tight line-clamp-2 pr-2">
                       {tailor.brand.name}
-                    </p>
+                    </h3>
                     {tailor.brand.is_verified && (
                       <Badge className="bg-oma-gold text-black font-semibold px-2 py-1 text-xs uppercase ml-2">
                         Verified
                       </Badge>
                     )}
                   </div>
-                </CardHeader>
-                <CardContent className="p-6 pt-0">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Clock className="w-5 h-5 text-oma-cocoa/60" />
-                    <span className="text-oma-cocoa/70 text-sm">
-                      {tailor.created_at}
-                    </span>
+                  <div className="font-canela text-xl text-black mb-1">
+                    {tailor.title}
                   </div>
-                  <div className="flex items-center gap-2 mb-4">
-                    <DollarSign className="w-5 h-5 text-oma-cocoa/60" />
-                    {tailor.price_range && (
-                      <span className="text-oma-cocoa/70 text-sm">
-                        {tailor.price_range}
-                      </span>
-                    )}
+                  {tailor.price_range && (
+                    <div className="text-base text-black mb-1">
+                      {tailor.price_range}
+                    </div>
+                  )}
+                  <div className="text-sm text-black mb-1">
+                    {tailor.brand.category}
                   </div>
-                  <div className="flex items-center gap-2 mb-4">
-                    <Scissors className="w-5 h-5 text-oma-cocoa/60" />
-                    <span className="text-oma-cocoa/70 text-sm">
-                      {tailor.brand.category}
-                    </span>
+                  <div className="text-sm text-black mb-4">
+                    {tailor.brand.location}
                   </div>
-                  <div className="flex items-center gap-2 mb-4">
-                    <Filter className="w-5 h-5 text-oma-cocoa/60" />
-                    <span className="text-oma-cocoa/70 text-sm">
-                      {tailor.brand.location}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 mb-4">
-                    <OptimizedImage
-                      src={tailor.image}
-                      alt={tailor.title}
-                      className={`w-full h-48 object-cover rounded-lg ${getImageFocalPoint(
-                        tailor.image,
-                        tailor.title
-                      )}`}
-                    />
-                  </div>
-                  <div className="flex justify-end">
+                  <div className="flex justify-end mt-auto">
                     <Link href={`/tailors/${tailor.id}`}>
                       <Button className="bg-oma-plum text-white hover:bg-oma-plum/90 transition-colors">
                         View Details
                       </Button>
                     </Link>
                   </div>
-                </CardContent>
+                </div>
               </Card>
             ) : null
           )}
