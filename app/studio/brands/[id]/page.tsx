@@ -129,6 +129,14 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
   const categories = getAllCategoryNames();
   const tailoringEvent = useTailoringEvent();
 
+  const CATEGORIES = getAllCategoryNames();
+  const [selectedCategory, setSelectedCategory] = useState(
+    brand?.category || ""
+  );
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(
+    brand?.categories || []
+  );
+
   useEffect(() => {
     const fetchBrand = async () => {
       setLoading(true);
@@ -241,6 +249,14 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
         : null,
       lead_time: tailorLeadTime,
     };
+    // Update brand's category/categories if changed
+    await supabase
+      .from("brands")
+      .update({
+        category: selectedCategory,
+        categories: selectedCategories,
+      })
+      .eq("id", brand.id);
     let result;
     if (tailor) {
       // Update
@@ -1030,6 +1046,34 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
                           value={tailorLeadTime}
                           onChange={(e) => setTailorLeadTime(e.target.value)}
                           placeholder="e.g. 2-3 weeks"
+                        />
+                      </div>
+                      <div>
+                        <Label>Category</Label>
+                        <Select
+                          value={selectedCategory}
+                          onValueChange={setSelectedCategory}
+                          required
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select a category" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {CATEGORIES.map((cat) => (
+                              <SelectItem key={cat} value={cat}>
+                                {cat}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label>Categories (optional, multi-select)</Label>
+                        <MultiSelect
+                          options={CATEGORIES}
+                          value={selectedCategories}
+                          onValueChange={setSelectedCategories}
+                          placeholder="Select categories"
                         />
                       </div>
                       <DialogFooter>
