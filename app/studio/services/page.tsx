@@ -154,7 +154,8 @@ export default function ServicesPage() {
 
         if (userProfile.data?.owned_brands) {
           const ownedBrandIds = userProfile.data.owned_brands;
-          userBrands = tailorBrands.filter((brand) =>
+          // Show all tailoring-enabled brands owned by the user, regardless of category
+          userBrands = brandsData.filter((brand) =>
             ownedBrandIds.includes(brand.id)
           );
         }
