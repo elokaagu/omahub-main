@@ -118,6 +118,7 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
   const [tailorLeadTime, setTailorLeadTime] = useState("");
   const [tailorSaving, setTailorSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [disableTailoring, setDisableTailoring] = useState(false);
 
   // Price range state
   const [priceMin, setPriceMin] = useState("");
@@ -262,6 +263,35 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
       tailoringEvent.notify();
     }
     setTailorSaving(false);
+  }
+
+  async function handleDisableTailoring() {
+    if (!brand || !tailor) return;
+
+    setDisableTailoring(true);
+    try {
+      const { error } = await supabase
+        .from("tailors")
+        .delete()
+        .eq("id", tailor.id);
+
+      if (error) {
+        toast.error("Failed to disable tailoring");
+      } else {
+        toast.success("Tailoring disabled successfully");
+        setTailor(null);
+        setTailorSpecialties("");
+        setTailorPriceRange("");
+        setTailorConsultationFee("");
+        setTailorLeadTime("");
+        tailoringEvent.notify();
+      }
+    } catch (error) {
+      console.error("Error disabling tailoring:", error);
+      toast.error("Failed to disable tailoring");
+    } finally {
+      setDisableTailoring(false);
+    }
   }
 
   const handleChange = (
@@ -875,80 +905,144 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Dialog open={tailorModalOpen} onOpenChange={setTailorModalOpen}>
-                <DialogTrigger asChild>
-                  <Button className="w-full" variant="outline">
-                    {tailor ? "Edit Tailoring" : "Enable Tailoring"}
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>
-                      {tailor
-                        ? "Edit Tailoring Profile"
-                        : "Enable Tailoring for this Brand"}
-                    </DialogTitle>
-                    <DialogDescription>
-                      Add or update tailoring options for this brand. These
-                      details will be shown on the brand profile and in the
-                      tailor directory.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <form onSubmit={handleTailorSave} className="space-y-4">
-                    <div>
-                      <Label>Specialties</Label>
-                      <MultiSelect
-                        options={[
-                          "Bridal",
-                          "Custom Design",
-                          "Alterations",
-                          "Evening Gowns",
-                        ]}
-                        value={tailorSpecialties
-                          .split(",")
-                          .map((s) => s.trim())
-                          .filter(Boolean)}
-                        onValueChange={(selected: string[]) =>
-                          setTailorSpecialties(selected.join(", "))
-                        }
-                        placeholder="Select specialties"
-                      />
-                    </div>
-                    <div>
-                      <Label>Price Range</Label>
-                      <Input
-                        value={tailorPriceRange}
-                        onChange={(e) => setTailorPriceRange(e.target.value)}
-                        placeholder="e.g. $500 - $2,000"
-                      />
-                    </div>
-                    <div>
-                      <Label>Consultation Fee</Label>
-                      <Input
-                        type="number"
-                        value={tailorConsultationFee}
-                        onChange={(e) =>
-                          setTailorConsultationFee(e.target.value)
-                        }
-                        placeholder="e.g. 100"
-                      />
-                    </div>
-                    <div>
-                      <Label>Lead Time</Label>
-                      <Input
-                        value={tailorLeadTime}
-                        onChange={(e) => setTailorLeadTime(e.target.value)}
-                        placeholder="e.g. 2-3 weeks"
-                      />
-                    </div>
-                    <DialogFooter>
-                      <Button type="submit" disabled={tailorSaving}>
-                        {tailorSaving ? "Saving..." : "Save Tailoring Profile"}
+              {tailor ? (
+                <div className="space-y-4">
+                  <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
+                        <span className="text-green-800 font-medium">
+                          Tailoring Enabled
+                        </span>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setTailorModalOpen(true)}
+                        className="text-green-700 border-green-300 hover:bg-green-100"
+                      >
+                        Edit
                       </Button>
-                    </DialogFooter>
-                  </form>
-                </DialogContent>
-              </Dialog>
+                    </div>
+                    <div className="mt-2 text-sm text-green-700">
+                      <p>
+                        Specialties: {tailorSpecialties || "None specified"}
+                      </p>
+                      <p>Price Range: {tailorPriceRange || "Not specified"}</p>
+                    </div>
+                  </div>
+
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-full text-red-600 border-red-300 hover:bg-red-50"
+                        disabled={disableTailoring}
+                      >
+                        {disableTailoring
+                          ? "Disabling..."
+                          : "Disable Tailoring"}
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Disable Tailoring</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to disable tailoring for this
+                          brand? This will remove all tailoring services and the
+                          brand will no longer appear in the tailor directory or
+                          service creation forms.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={handleDisableTailoring}
+                          className="bg-red-600 hover:bg-red-700"
+                        >
+                          Disable Tailoring
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              ) : (
+                <Dialog
+                  open={tailorModalOpen}
+                  onOpenChange={setTailorModalOpen}
+                >
+                  <DialogTrigger asChild>
+                    <Button className="w-full" variant="outline">
+                      Enable Tailoring
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Enable Tailoring for this Brand</DialogTitle>
+                      <DialogDescription>
+                        Add tailoring options for this brand. These details will
+                        be shown on the brand profile and in the tailor
+                        directory.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handleTailorSave} className="space-y-4">
+                      <div>
+                        <Label>Specialties</Label>
+                        <MultiSelect
+                          options={[
+                            "Bridal",
+                            "Custom Design",
+                            "Alterations",
+                            "Evening Gowns",
+                          ]}
+                          value={tailorSpecialties
+                            .split(",")
+                            .map((s) => s.trim())
+                            .filter(Boolean)}
+                          onValueChange={(selected: string[]) =>
+                            setTailorSpecialties(selected.join(", "))
+                          }
+                          placeholder="Select specialties"
+                        />
+                      </div>
+                      <div>
+                        <Label>Price Range</Label>
+                        <Input
+                          value={tailorPriceRange}
+                          onChange={(e) => setTailorPriceRange(e.target.value)}
+                          placeholder="e.g. $500 - $2,000"
+                        />
+                      </div>
+                      <div>
+                        <Label>Consultation Fee</Label>
+                        <Input
+                          type="number"
+                          value={tailorConsultationFee}
+                          onChange={(e) =>
+                            setTailorConsultationFee(e.target.value)
+                          }
+                          placeholder="e.g. 100"
+                        />
+                      </div>
+                      <div>
+                        <Label>Lead Time</Label>
+                        <Input
+                          value={tailorLeadTime}
+                          onChange={(e) => setTailorLeadTime(e.target.value)}
+                          placeholder="e.g. 2-3 weeks"
+                        />
+                      </div>
+                      <DialogFooter>
+                        <Button type="submit" disabled={tailorSaving}>
+                          {tailorSaving
+                            ? "Saving..."
+                            : "Save Tailoring Profile"}
+                        </Button>
+                      </DialogFooter>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+              )}
             </CardContent>
           </Card>
         </div>
