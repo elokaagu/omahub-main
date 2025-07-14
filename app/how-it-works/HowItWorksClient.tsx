@@ -258,7 +258,7 @@ export default function HowItWorksClient() {
       <section
         ref={clientsRef}
         id="clients"
-        className="min-h-screen snap-center flex items-center justify-center relative flex-col px-4 py-24 bg-white"
+        className="min-h-screen snap-center flex items-center justify-center relative flex-col px-4 py-16 bg-white"
         style={getSectionTransform("clients")}
       >
         {/* Corner Brackets - increased offset for guaranteed visibility */}
@@ -277,7 +277,7 @@ export default function HowItWorksClient() {
             <img
               src="/meet-me.PNG"
               alt="Meet Me Collection Mobile Mockup"
-              className="w-full max-w-xs sm:max-w-full rounded-2xl shadow-2xl border border-oma-beige/40"
+              className="w-full max-w-sm max-h-[60vh] rounded-2xl shadow-2xl border border-oma-beige/40"
               style={{ background: "transparent" }}
             />
           </div>
