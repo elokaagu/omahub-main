@@ -230,12 +230,6 @@ const generateDynamicCategoryImages = async (): Promise<{
   collectionImage: string;
   tailoredImage: string;
 }> => {
-  const fallbackImages = {
-    collectionImage:
-      "/lovable-uploads/827fb8c0-e5da-4520-a979-6fc054eefc6e.png",
-    tailoredImage: "/lovable-uploads/bb152c0b-6378-419b-a0e6-eafce44631b2.png",
-  };
-
   try {
     console.log("🔍 Fetching catalogues and tailors for dynamic images...");
 
@@ -251,8 +245,8 @@ const generateDynamicCategoryImages = async (): Promise<{
 
     const [cataloguesResult, tailorsResult] = results;
 
-    let collectionImage = fallbackImages.collectionImage;
-    let tailoredImage = fallbackImages.tailoredImage;
+    let collectionImage = "";
+    let tailoredImage = "";
 
     // Handle collections
     if (
@@ -287,7 +281,7 @@ const generateDynamicCategoryImages = async (): Promise<{
     return { collectionImage, tailoredImage };
   } catch (error) {
     console.error("❌ Error generating dynamic images:", error);
-    return fallbackImages;
+    return { collectionImage: "", tailoredImage: "" };
   }
 };
 
@@ -314,9 +308,8 @@ export default function HomeContent() {
     CarouselItem[]
   >(fallbackCarouselItems);
   const [categoryImages, setCategoryImages] = useState({
-    collectionImage:
-      "/lovable-uploads/827fb8c0-e5da-4520-a979-6fc054eefc6e.png",
-    tailoredImage: "/lovable-uploads/bb152c0b-6378-419b-a0e6-eafce44631b2.png",
+    collectionImage: "",
+    tailoredImage: "",
   });
   const [categoryImagesLoaded, setCategoryImagesLoaded] = useState(false);
   const [occasionImages, setOccasionImages] = useState<{
@@ -716,24 +709,30 @@ export default function HomeContent() {
               <div className="relative group overflow-hidden rounded-lg bg-gray-100 min-h-[400px]">
                 <Link href="/collections">
                   <div className="relative aspect-[3/4]">
-                    <img
-                      src={categoryImages.collectionImage}
-                      alt="Collections"
-                      className="w-full h-full object-cover object-center object-top transition-transform duration-300 group-hover:scale-105"
-                      onLoad={() =>
-                        console.log(
-                          "✅ Collection image loaded:",
-                          categoryImages.collectionImage
-                        )
-                      }
-                      onError={(e) =>
-                        console.error(
-                          "❌ Collection image failed:",
-                          categoryImages.collectionImage,
-                          e
-                        )
-                      }
-                    />
+                    {categoryImages.collectionImage ? (
+                      <img
+                        src={categoryImages.collectionImage}
+                        alt="Collections"
+                        className="w-full h-full object-cover object-center object-top transition-transform duration-300 group-hover:scale-105"
+                        onLoad={() =>
+                          console.log(
+                            "✅ Collection image loaded:",
+                            categoryImages.collectionImage
+                          )
+                        }
+                        onError={(e) =>
+                          console.error(
+                            "❌ Collection image failed:",
+                            categoryImages.collectionImage,
+                            e
+                          )
+                        }
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gray-300 flex items-center justify-center text-gray-500">
+                        No Collection Image Available
+                      </div>
+                    )}
                     <div className="absolute inset-0 bg-black/30 transition-opacity group-hover:bg-black/40" />
                     <div className="absolute bottom-6 left-6 text-white">
                       <h3 className="text-2xl font-canela mb-2">Collections</h3>
@@ -751,24 +750,30 @@ export default function HomeContent() {
               <div className="relative group overflow-hidden rounded-lg bg-gray-100 min-h-[400px]">
                 <Link href="/tailored">
                   <div className="relative aspect-[3/4]">
-                    <img
-                      src={categoryImages.tailoredImage}
-                      alt="Tailored"
-                      className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105"
-                      onLoad={() =>
-                        console.log(
-                          "✅ Tailored image loaded:",
-                          categoryImages.tailoredImage
-                        )
-                      }
-                      onError={(e) =>
-                        console.error(
-                          "❌ Tailored image failed:",
-                          categoryImages.tailoredImage,
-                          e
-                        )
-                      }
-                    />
+                    {categoryImages.tailoredImage ? (
+                      <img
+                        src={categoryImages.tailoredImage}
+                        alt="Tailored"
+                        className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105"
+                        onLoad={() =>
+                          console.log(
+                            "✅ Tailored image loaded:",
+                            categoryImages.tailoredImage
+                          )
+                        }
+                        onError={(e) =>
+                          console.error(
+                            "❌ Tailored image failed:",
+                            categoryImages.tailoredImage,
+                            e
+                          )
+                        }
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gray-300 flex items-center justify-center text-gray-500">
+                        No Tailored Image Available
+                      </div>
+                    )}
                     <div className="absolute inset-0 bg-black/30 transition-opacity group-hover:bg-black/40" />
                     <div className="absolute bottom-6 left-6 text-white">
                       <h3 className="text-2xl font-canela mb-2">Tailored</h3>
