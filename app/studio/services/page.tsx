@@ -45,6 +45,18 @@ import {
   useSearchParams,
   useRouter as useNextRouter,
 } from "next/navigation";
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
+import { deleteProduct } from "@/lib/services/productService";
 
 type ServiceWithBrand = Product & {
   brand: {
@@ -78,6 +90,8 @@ export default function ServicesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedBrand, setSelectedBrand] = useState("all");
   const [selectedServiceType, setSelectedServiceType] = useState("all");
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   // Tailor-specific categories
   const tailoredCategories = [
@@ -92,24 +106,13 @@ export default function ServicesPage() {
   ];
 
   useEffect(() => {
-    // If redirected with ?refresh=1, force fetch and clean URL
+    // Only fetch data on mount or when user/pathname changes
     if (searchParams.get("refresh") === "1") {
       fetchData();
-      // Remove the param from the URL
       nextRouter.replace(pathname);
     } else {
       fetchData();
     }
-    // Listen for page visibility change (tab focus)
-    const handleVisibility = () => {
-      if (document.visibilityState === "visible") {
-        fetchData();
-      }
-    };
-    document.addEventListener("visibilitychange", handleVisibility);
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibility);
-    };
   }, [user, pathname]);
 
   useEffect(() => {
@@ -223,6 +226,17 @@ export default function ServicesPage() {
 
   const handleViewService = (serviceId: string) => {
     window.open(`/product/${serviceId}`, "_blank");
+  };
+
+  const handleDelete = async (serviceId: string) => {
+    try {
+      await deleteProduct(serviceId);
+      setShowDeleteDialog(false);
+      setDeletingId(null);
+      fetchData();
+    } catch (err: any) {
+      alert(err.message || "Failed to delete service");
+    }
   };
 
   const formatPrice = (service: ServiceWithBrand): string => {
@@ -396,6 +410,61 @@ export default function ServicesPage() {
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
+                      <AlertDialog
+                        open={showDeleteDialog && deletingId === service.id}
+                        onOpenChange={(open) => {
+                          setShowDeleteDialog(open);
+                          if (!open) setDeletingId(null);
+                        }}
+                      >
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setDeletingId(service.id);
+                              setShowDeleteDialog(true);
+                            }}
+                            className="h-8 w-8 p-0 text-red-600 hover:bg-red-50"
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-4 w-4"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M6 18L18 6M6 6l12 12"
+                              />
+                            </svg>
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Service</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete the service{" "}
+                              <span className="font-semibold text-oma-plum">
+                                {service.title}
+                              </span>
+                              ? This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              className="bg-red-600 text-white hover:bg-red-700"
+                              onClick={() => handleDelete(service.id)}
+                            >
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   </div>
                   <CardTitle className="text-lg">{service.title}</CardTitle>
