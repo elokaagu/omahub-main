@@ -200,8 +200,8 @@ export default function ClientBrandProfile({
             {brandData.whatsapp &&
               isValidWhatsAppNumber(brandData.whatsapp) && (
                 <WhatsAppContact
-                  phone={brandData.whatsapp}
-                  name={brandData.name}
+                  phoneNumber={brandData.whatsapp}
+                  brandName={brandData.name}
                   className="w-full sm:w-auto min-h-[44px] text-sm sm:text-base"
                 />
               )}

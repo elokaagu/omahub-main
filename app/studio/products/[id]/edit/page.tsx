@@ -43,10 +43,22 @@ import {
 } from "@/lib/utils/priceFormatter";
 import { getBrandCurrency } from "@/lib/utils/currencyUtils";
 import { Checkbox } from "@/components/ui/checkbox";
-import { standardCategories, subcategories } from "@/lib/data/directory";
 
 // Brand categories - now using standardized categories
-const CATEGORIES = [...standardCategories];
+const CATEGORIES = [
+  "Bridal",
+  "Custom Design",
+  "Evening Gowns",
+  "Alterations",
+  "Ready to Wear",
+  "Casual Wear",
+  "Accessories",
+  "Jewelry",
+  "Vacation",
+  "Couture",
+  "Luxury",
+  "Streetwear & Urban",
+];
 
 // Curated product categories for dropdown
 const PRODUCT_CATEGORIES: string[] = [
