@@ -907,11 +907,11 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
             <CardContent>
               {tailor ? (
                 <div className="space-y-4">
-                  <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="p-4 bg-oma-beige border border-oma-plum rounded-lg">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center">
-                        <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
-                        <span className="text-green-800 font-medium">
+                        <CheckCircle className="h-5 w-5 text-oma-plum mr-2" />
+                        <span className="text-oma-plum font-medium">
                           Tailoring Enabled
                         </span>
                       </div>
@@ -919,12 +919,12 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
                         variant="outline"
                         size="sm"
                         onClick={() => setTailorModalOpen(true)}
-                        className="text-green-700 border-green-300 hover:bg-green-100"
+                        className="text-oma-plum border-oma-plum hover:bg-oma-beige"
                       >
                         Edit
                       </Button>
                     </div>
-                    <div className="mt-2 text-sm text-green-700">
+                    <div className="mt-2 text-sm text-oma-plum">
                       <p>
                         Specialties: {tailorSpecialties || "None specified"}
                       </p>
@@ -936,7 +936,7 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
                     <AlertDialogTrigger asChild>
                       <Button
                         variant="outline"
-                        className="w-full text-red-600 border-red-300 hover:bg-red-50"
+                        className="w-full text-oma-plum border-oma-plum hover:bg-oma-beige"
                         disabled={disableTailoring}
                       >
                         {disableTailoring
