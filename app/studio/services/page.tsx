@@ -205,7 +205,7 @@ export default function ServicesPage() {
   };
 
   const handleEditService = (serviceId: string) => {
-    router.push(`/studio/products/${serviceId}/edit`);
+    router.push(`/studio/services/${serviceId}/edit`);
   };
 
   const handleViewService = (serviceId: string) => {
