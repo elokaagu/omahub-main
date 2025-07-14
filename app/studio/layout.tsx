@@ -31,6 +31,7 @@ import {
 import { LoadingPage } from "@/components/ui/loading";
 import UserProfile from "@/components/auth/UserProfile";
 import { NavigationLink } from "@/components/ui/navigation-link";
+import { TailoringEventProvider } from "@/contexts/NavigationContext";
 
 export default function StudioLayout({
   children,
@@ -201,302 +202,312 @@ export default function StudioLayout({
   ];
 
   return (
-    <div
-      className="min-h-screen bg-gray-50 flex flex-col"
-      data-studio-page
-      style={{
-        position: "relative",
-        overflow: "hidden auto",
-      }}
-    >
-      {/* Studio Header */}
-      <header className="w-full bg-white border-b border-gray-200 shadow-sm fixed top-0 left-0 right-0 z-50 h-16 flex items-center">
-        <div className="container mx-auto px-8 flex justify-between items-center">
-          {/* Mobile sidebar toggle */}
-          <div className="lg:hidden flex items-center">
+    <TailoringEventProvider>
+      <div
+        className="min-h-screen bg-gray-50 flex flex-col"
+        data-studio-page
+        style={{
+          position: "relative",
+          overflow: "hidden auto",
+        }}
+      >
+        {/* Studio Header */}
+        <header className="w-full bg-white border-b border-gray-200 shadow-sm fixed top-0 left-0 right-0 z-50 h-16 flex items-center">
+          <div className="container mx-auto px-8 flex justify-between items-center">
+            {/* Mobile sidebar toggle */}
+            <div className="lg:hidden flex items-center">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={toggleSidebar}
+                className="bg-white"
+              >
+                {sidebarOpen ? (
+                  <X className="h-5 w-5" />
+                ) : (
+                  <Menu className="h-5 w-5" />
+                )}
+              </Button>
+            </div>
+
+            {/* Desktop: OmaHub logo */}
+            <div className="hidden lg:flex items-center">
+              <button
+                onClick={handleBackToSite}
+                className="hover:opacity-80 transition-opacity"
+              >
+                <Image
+                  src="/lovable-uploads/omahub-logo.png"
+                  alt="OmaHub"
+                  width={90}
+                  height={25}
+                  className="h-6 w-auto"
+                  priority
+                />
+              </button>
+            </div>
+
+            {/* Mobile: OmaHub logo */}
+            <div className="lg:hidden flex-1 flex justify-center">
+              <button
+                onClick={handleBackToSite}
+                className="hover:opacity-80 transition-opacity"
+              >
+                <Image
+                  src="/lovable-uploads/omahub-logo.png"
+                  alt="OmaHub"
+                  width={90}
+                  height={25}
+                  className="h-6 w-auto"
+                  priority
+                />
+              </button>
+            </div>
+
+            <div className="hidden md:flex items-center space-x-4">
+              <button
+                onClick={handleBackToSite}
+                className="text-sm text-gray-600 hover:text-oma-plum transition-colors"
+              >
+                Back to Site
+              </button>
+              <UserProfile />
+            </div>
+
+            {/* Mobile user profile */}
+            <div className="md:hidden">
+              <UserProfile />
+            </div>
+          </div>
+        </header>
+
+        {/* Overlay for mobile - cover entire screen */}
+        {/* Removed overlay for cleaner mobile experience */}
+
+        {/* Sidebar */}
+        {/* Mobile Sidebar: Slide-in with buttons for navigation */}
+        <aside
+          className={`lg:hidden bg-white w-4/5 max-w-xs border-r border-gray-200 fixed inset-y-0 left-0 z-40 transition-transform duration-300 ease-in-out ${
+            sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          } mt-16 shadow-xl`}
+          aria-modal="true"
+          role="dialog"
+        >
+          {/* Mobile Close Button */}
+          <div className="flex items-center px-4 pt-4 pb-2">
             <Button
               variant="outline"
               size="icon"
-              onClick={toggleSidebar}
-              className="bg-white"
+              onClick={() => setSidebarOpen(false)}
+              className="bg-white border-oma-plum"
+              aria-label="Close sidebar"
             >
-              {sidebarOpen ? (
-                <X className="h-5 w-5" />
-              ) : (
-                <Menu className="h-5 w-5" />
-              )}
+              <X className="h-5 w-5" />
             </Button>
           </div>
-
-          {/* Desktop: OmaHub logo */}
-          <div className="hidden lg:flex items-center">
-            <button
-              onClick={handleBackToSite}
-              className="hover:opacity-80 transition-opacity"
-            >
-              <Image
-                src="/lovable-uploads/omahub-logo.png"
-                alt="OmaHub"
-                width={90}
-                height={25}
-                className="h-6 w-auto"
-                priority
-              />
-            </button>
+          <div className="px-8 pt-4 pb-6 h-[calc(100vh-4rem)] overflow-y-auto flex flex-col">
+            <div className="mb-8">
+              <h1 className="text-2xl font-canela text-oma-plum">Studio</h1>
+            </div>
+            <nav className="space-y-1 flex-1">
+              {mobileNavItems.map((item) => (
+                <button
+                  key={item.href}
+                  onClick={() => {
+                    router.push(item.href);
+                    setSidebarOpen(false);
+                  }}
+                  className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100 w-full text-left"
+                >
+                  <item.icon className="h-5 w-5" />
+                  <span>{item.label}</span>
+                </button>
+              ))}
+            </nav>
           </div>
+        </aside>
 
-          {/* Mobile: OmaHub logo */}
-          <div className="lg:hidden flex-1 flex justify-center">
-            <button
-              onClick={handleBackToSite}
-              className="hover:opacity-80 transition-opacity"
-            >
-              <Image
-                src="/lovable-uploads/omahub-logo.png"
-                alt="OmaHub"
-                width={90}
-                height={25}
-                className="h-6 w-auto"
-                priority
-              />
-            </button>
-          </div>
+        {/* Desktop Sidebar: Keep existing implementation */}
+        <aside
+          className={`hidden lg:block bg-white w-64 border-r border-gray-200 fixed inset-y-0 left-0 z-40 transition-transform duration-300 ease-in-out lg:translate-x-0 mt-16 shadow-xl`}
+          aria-modal="true"
+          role="dialog"
+        >
+          <div className="px-8 pt-8 pb-6 h-full flex flex-col">
+            {/* Studio title only */}
+            <div className="mb-8">
+              <h1 className="text-2xl font-canela text-oma-plum">Studio</h1>
+            </div>
+            <nav className="space-y-1 flex-1">
+              <NavigationLink
+                href="/studio"
+                className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
+                onClick={handleSidebarNav}
+              >
+                <Home className="h-5 w-5" />
+                <span>Dashboard</span>
+              </NavigationLink>
+              {permissions.includes("studio.brands.manage") && (
+                <NavigationLink
+                  href="/studio/brands"
+                  className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
+                  onClick={handleSidebarNav}
+                >
+                  <Package className="h-5 w-5" />
+                  <span>
+                    {user?.role === "brand_admin" ? "Your Brands" : "Brands"}
+                  </span>
+                </NavigationLink>
+              )}
+              {permissions.includes("studio.catalogues.manage") && (
+                <NavigationLink
+                  href="/studio/collections"
+                  className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
+                  onClick={handleSidebarNav}
+                >
+                  <ImageIcon className="h-5 w-5" />
+                  <span>
+                    {user?.role === "brand_admin"
+                      ? "Your Collections"
+                      : "Collections"}
+                  </span>
+                </NavigationLink>
+              )}
+              {(user?.role === "super_admin" ||
+                user?.role === "brand_admin") && (
+                <NavigationLink
+                  href="/studio/products"
+                  className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
+                  onClick={handleSidebarNav}
+                >
+                  <ShoppingBag className="h-5 w-5" />
+                  <span>
+                    {user?.role === "brand_admin"
+                      ? "Your Products"
+                      : "Products"}
+                  </span>
+                </NavigationLink>
+              )}
+              {(user?.role === "super_admin" ||
+                user?.role === "brand_admin") && (
+                <NavigationLink
+                  href="/studio/services"
+                  className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
+                  onClick={handleSidebarNav}
+                >
+                  <Scissors className="h-5 w-5" />
+                  <span>
+                    {user?.role === "brand_admin"
+                      ? "Your Services"
+                      : "Services"}
+                  </span>
+                </NavigationLink>
+              )}
+              {user?.role === "super_admin" && (
+                <NavigationLink
+                  href="/studio/hero"
+                  className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
+                  onClick={handleSidebarNav}
+                >
+                  <Monitor className="h-5 w-5" />
+                  <span>Hero Carousel</span>
+                </NavigationLink>
+              )}
+              {user?.role === "super_admin" && (
+                <NavigationLink
+                  href="/studio/spotlight"
+                  className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
+                  onClick={handleSidebarNav}
+                >
+                  <ImageIcon className="h-5 w-5" />
+                  <span>Spotlight</span>
+                </NavigationLink>
+              )}
+              {user?.role === "super_admin" && (
+                <NavigationLink
+                  href="/studio/users"
+                  className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
+                  onClick={handleSidebarNav}
+                >
+                  <Users className="h-5 w-5" />
+                  <span>Users</span>
+                </NavigationLink>
+              )}
+              {(user?.role === "super_admin" ||
+                user?.role === "brand_admin") && (
+                <NavigationLink
+                  href="/studio/reviews"
+                  className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
+                  onClick={handleSidebarNav}
+                >
+                  <MessageSquare className="h-5 w-5" />
+                  <span>
+                    {user?.role === "brand_admin" ? "Your Reviews" : "Reviews"}
+                  </span>
+                </NavigationLink>
+              )}
+              {(user?.role === "super_admin" ||
+                user?.role === "brand_admin") && (
+                <NavigationLink
+                  href="/studio/inbox"
+                  className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
+                  onClick={handleSidebarNav}
+                >
+                  <Inbox className="h-5 w-5" />
+                  <span>
+                    {user?.role === "brand_admin" ? "Your Inbox" : "Inbox"}
+                  </span>
+                </NavigationLink>
+              )}
+              <NavigationLink
+                href="/studio/profile"
+                className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
+                onClick={handleSidebarNav}
+              >
+                <User className="h-5 w-5" />
+                <span>Profile</span>
+              </NavigationLink>
+              {permissions.includes("studio.settings.manage") && (
+                <NavigationLink
+                  href="/studio/settings"
+                  className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
+                  onClick={handleSidebarNav}
+                >
+                  <Settings className="h-5 w-5" />
+                  <span>Settings</span>
+                </NavigationLink>
+              )}
 
-          <div className="hidden md:flex items-center space-x-4">
-            <button
-              onClick={handleBackToSite}
-              className="text-sm text-gray-600 hover:text-oma-plum transition-colors"
-            >
-              Back to Site
-            </button>
-            <UserProfile />
-          </div>
-
-          {/* Mobile user profile */}
-          <div className="md:hidden">
-            <UserProfile />
-          </div>
-        </div>
-      </header>
-
-      {/* Overlay for mobile - cover entire screen */}
-      {/* Removed overlay for cleaner mobile experience */}
-
-      {/* Sidebar */}
-      {/* Mobile Sidebar: Slide-in with buttons for navigation */}
-      <aside
-        className={`lg:hidden bg-white w-4/5 max-w-xs border-r border-gray-200 fixed inset-y-0 left-0 z-40 transition-transform duration-300 ease-in-out ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } mt-16 shadow-xl`}
-        aria-modal="true"
-        role="dialog"
-      >
-        {/* Mobile Close Button */}
-        <div className="flex items-center px-4 pt-4 pb-2">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setSidebarOpen(false)}
-            className="bg-white border-oma-plum"
-            aria-label="Close sidebar"
-          >
-            <X className="h-5 w-5" />
-          </Button>
-        </div>
-        <div className="px-8 pt-4 pb-6 h-[calc(100vh-4rem)] overflow-y-auto flex flex-col">
-          <div className="mb-8">
-            <h1 className="text-2xl font-canela text-oma-plum">Studio</h1>
-          </div>
-          <nav className="space-y-1 flex-1">
-            {mobileNavItems.map((item) => (
+              {/* Mobile Back to Site in sidebar */}
               <button
-                key={item.href}
                 onClick={() => {
-                  router.push(item.href);
                   setSidebarOpen(false);
+                  handleBackToSite();
                 }}
-                className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100 w-full text-left"
+                className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100 w-full lg:hidden border-t border-gray-200 mt-4 pt-4"
               >
-                <item.icon className="h-5 w-5" />
-                <span>{item.label}</span>
+                <Home className="h-5 w-5" />
+                <span>Back to Site</span>
               </button>
-            ))}
-          </nav>
-        </div>
-      </aside>
+            </nav>
 
-      {/* Desktop Sidebar: Keep existing implementation */}
-      <aside
-        className={`hidden lg:block bg-white w-64 border-r border-gray-200 fixed inset-y-0 left-0 z-40 transition-transform duration-300 ease-in-out lg:translate-x-0 mt-16 shadow-xl`}
-        aria-modal="true"
-        role="dialog"
-      >
-        <div className="px-8 pt-8 pb-6 h-full flex flex-col">
-          {/* Studio title only */}
-          <div className="mb-8">
-            <h1 className="text-2xl font-canela text-oma-plum">Studio</h1>
+            <div className="pt-6 border-t border-gray-200 mt-auto">
+              <button
+                onClick={handleSignOut}
+                className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100 w-full"
+              >
+                <LogOut className="h-5 w-5" />
+                <span>Sign Out</span>
+              </button>
+            </div>
           </div>
-          <nav className="space-y-1 flex-1">
-            <NavigationLink
-              href="/studio"
-              className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
-              onClick={handleSidebarNav}
-            >
-              <Home className="h-5 w-5" />
-              <span>Dashboard</span>
-            </NavigationLink>
-            {permissions.includes("studio.brands.manage") && (
-              <NavigationLink
-                href="/studio/brands"
-                className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
-                onClick={handleSidebarNav}
-              >
-                <Package className="h-5 w-5" />
-                <span>
-                  {user?.role === "brand_admin" ? "Your Brands" : "Brands"}
-                </span>
-              </NavigationLink>
-            )}
-            {permissions.includes("studio.catalogues.manage") && (
-              <NavigationLink
-                href="/studio/collections"
-                className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
-                onClick={handleSidebarNav}
-              >
-                <ImageIcon className="h-5 w-5" />
-                <span>
-                  {user?.role === "brand_admin"
-                    ? "Your Collections"
-                    : "Collections"}
-                </span>
-              </NavigationLink>
-            )}
-            {(user?.role === "super_admin" || user?.role === "brand_admin") && (
-              <NavigationLink
-                href="/studio/products"
-                className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
-                onClick={handleSidebarNav}
-              >
-                <ShoppingBag className="h-5 w-5" />
-                <span>
-                  {user?.role === "brand_admin" ? "Your Products" : "Products"}
-                </span>
-              </NavigationLink>
-            )}
-            {(user?.role === "super_admin" || user?.role === "brand_admin") && (
-              <NavigationLink
-                href="/studio/services"
-                className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
-                onClick={handleSidebarNav}
-              >
-                <Scissors className="h-5 w-5" />
-                <span>
-                  {user?.role === "brand_admin" ? "Your Services" : "Services"}
-                </span>
-              </NavigationLink>
-            )}
-            {user?.role === "super_admin" && (
-              <NavigationLink
-                href="/studio/hero"
-                className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
-                onClick={handleSidebarNav}
-              >
-                <Monitor className="h-5 w-5" />
-                <span>Hero Carousel</span>
-              </NavigationLink>
-            )}
-            {user?.role === "super_admin" && (
-              <NavigationLink
-                href="/studio/spotlight"
-                className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
-                onClick={handleSidebarNav}
-              >
-                <ImageIcon className="h-5 w-5" />
-                <span>Spotlight</span>
-              </NavigationLink>
-            )}
-            {user?.role === "super_admin" && (
-              <NavigationLink
-                href="/studio/users"
-                className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
-                onClick={handleSidebarNav}
-              >
-                <Users className="h-5 w-5" />
-                <span>Users</span>
-              </NavigationLink>
-            )}
-            {(user?.role === "super_admin" || user?.role === "brand_admin") && (
-              <NavigationLink
-                href="/studio/reviews"
-                className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
-                onClick={handleSidebarNav}
-              >
-                <MessageSquare className="h-5 w-5" />
-                <span>
-                  {user?.role === "brand_admin" ? "Your Reviews" : "Reviews"}
-                </span>
-              </NavigationLink>
-            )}
-            {(user?.role === "super_admin" || user?.role === "brand_admin") && (
-              <NavigationLink
-                href="/studio/inbox"
-                className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
-                onClick={handleSidebarNav}
-              >
-                <Inbox className="h-5 w-5" />
-                <span>
-                  {user?.role === "brand_admin" ? "Your Inbox" : "Inbox"}
-                </span>
-              </NavigationLink>
-            )}
-            <NavigationLink
-              href="/studio/profile"
-              className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
-              onClick={handleSidebarNav}
-            >
-              <User className="h-5 w-5" />
-              <span>Profile</span>
-            </NavigationLink>
-            {permissions.includes("studio.settings.manage") && (
-              <NavigationLink
-                href="/studio/settings"
-                className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
-                onClick={handleSidebarNav}
-              >
-                <Settings className="h-5 w-5" />
-                <span>Settings</span>
-              </NavigationLink>
-            )}
+        </aside>
 
-            {/* Mobile Back to Site in sidebar */}
-            <button
-              onClick={() => {
-                setSidebarOpen(false);
-                handleBackToSite();
-              }}
-              className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100 w-full lg:hidden border-t border-gray-200 mt-4 pt-4"
-            >
-              <Home className="h-5 w-5" />
-              <span>Back to Site</span>
-            </button>
-          </nav>
-
-          <div className="pt-6 border-t border-gray-200 mt-auto">
-            <button
-              onClick={handleSignOut}
-              className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100 w-full"
-            >
-              <LogOut className="h-5 w-5" />
-              <span>Sign Out</span>
-            </button>
-          </div>
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <main className="flex-1 lg:ml-64 mt-16">
-        <div className="min-h-screen relative">{children}</div>
-      </main>
-    </div>
+        {/* Main Content */}
+        <main className="flex-1 lg:ml-64 mt-16">
+          <div className="min-h-screen relative">{children}</div>
+        </main>
+      </div>
+    </TailoringEventProvider>
   );
 }

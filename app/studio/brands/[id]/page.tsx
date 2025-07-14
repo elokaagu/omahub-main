@@ -77,6 +77,7 @@ import {
 } from "@/lib/services/tailorService";
 import { VideoUpload } from "@/components/ui/video-upload";
 import { VideoPlayer } from "@/components/ui/video-player";
+import { useTailoringEvent } from "@/contexts/NavigationContext";
 
 // Character limits
 const SHORT_DESCRIPTION_LIMIT = 150;
@@ -125,6 +126,7 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
 
   // Categories for the dropdown
   const categories = getAllCategoryNames();
+  const tailoringEvent = useTailoringEvent();
 
   useEffect(() => {
     const fetchBrand = async () => {
@@ -257,6 +259,7 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
       toast.success("Tailoring profile saved");
       setTailor(result.data);
       setTailorModalOpen(false);
+      tailoringEvent.notify();
     }
     setTailorSaving(false);
   }

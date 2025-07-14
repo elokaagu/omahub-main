@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/lib/supabase";
+import { useTailoringEvent } from "@/contexts/NavigationContext";
 
 // Service types for tailors
 const serviceTypes = [
@@ -92,6 +93,7 @@ export default function CreateServicePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(true);
+  const tailoringEvent = useTailoringEvent();
 
   const [formData, setFormData] = useState({
     title: "",
@@ -184,7 +186,13 @@ export default function CreateServicePage() {
     if (user?.role === "super_admin" || user?.role === "brand_admin") {
       fetchData();
     }
-  }, [user]);
+
+    // Subscribe to tailoring events to refetch brands
+    const unsubscribe = tailoringEvent.subscribe(() => {
+      fetchData();
+    });
+    return () => unsubscribe();
+  }, [user, tailoringEvent]);
 
   const handleInputChange = (name: string, value: string | boolean) => {
     setFormData((prev) => ({

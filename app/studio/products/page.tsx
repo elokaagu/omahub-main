@@ -50,6 +50,14 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
 import { formatProductPrice } from "@/lib/utils/priceFormatter";
 import { ActiveFilters } from "@/components/ui/unified-tag";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 type ProductWithDetails = Product & {
   brand: {
@@ -90,6 +98,8 @@ export default function ProductsPage() {
     totalFavourites: 0,
     mostPopular: null,
   });
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<string | null>(null);
 
   // Check if user is super admin or brand owner
   // useEffect(() => {
@@ -268,18 +278,26 @@ export default function ProductsPage() {
   }, [products, searchQuery, categoryFilter, stockFilter, brandFilter]);
 
   const handleDeleteProduct = async (productId: string) => {
-    if (!confirm("Are you sure you want to delete this product?")) return;
+    setProductToDelete(productId);
+    setDeleteModalOpen(true);
+  };
 
+  const confirmDeleteProduct = async () => {
+    if (!productToDelete) return;
     try {
-      setIsDeleting(productId);
-      await deleteProduct(productId);
-      setProducts((prev) => prev.filter((product) => product.id !== productId));
+      setIsDeleting(productToDelete);
+      await deleteProduct(productToDelete);
+      setProducts((prev) =>
+        prev.filter((product) => product.id !== productToDelete)
+      );
       toast.success("Product deleted successfully");
     } catch (error) {
       console.error("Error deleting product:", error);
       toast.error("Failed to delete product");
     } finally {
       setIsDeleting(null);
+      setDeleteModalOpen(false);
+      setProductToDelete(null);
     }
   };
 
@@ -897,6 +915,29 @@ export default function ProductsPage() {
           ))}
         </div>
       )}
+      <Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Product</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this product? This action cannot
+              be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmDeleteProduct}
+              disabled={isDeleting === productToDelete}
+            >
+              {isDeleting === productToDelete ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

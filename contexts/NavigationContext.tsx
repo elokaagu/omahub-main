@@ -20,6 +20,43 @@ const NavigationContext = createContext<NavigationContextType | undefined>(
   undefined
 );
 
+// Tailoring event context for cross-component communication
+const TailoringEventContext = createContext<
+  { notify: () => void; subscribe: (cb: () => void) => () => void } | undefined
+>(undefined);
+
+export const TailoringEventProvider = ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => {
+  const listeners = useRef<Set<() => void>>(new Set());
+
+  const notify = () => {
+    listeners.current.forEach((cb) => cb());
+  };
+
+  const subscribe = (cb: () => void) => {
+    listeners.current.add(cb);
+    return () => listeners.current.delete(cb);
+  };
+
+  return (
+    <TailoringEventContext.Provider value={{ notify, subscribe }}>
+      {children}
+    </TailoringEventContext.Provider>
+  );
+};
+
+export const useTailoringEvent = () => {
+  const ctx = useContext(TailoringEventContext);
+  if (!ctx)
+    throw new Error(
+      "useTailoringEvent must be used within TailoringEventProvider"
+    );
+  return ctx;
+};
+
 export function NavigationProvider({
   children,
 }: {
