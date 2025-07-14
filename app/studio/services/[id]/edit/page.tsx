@@ -247,7 +247,7 @@ export default function EditServicePage() {
     try {
       await deleteProduct(serviceId);
       toast.success("Service deleted successfully");
-      router.push("/studio/services");
+      router.push("/studio/services?refresh=1");
     } catch (err: any) {
       toast.error(err.message || "Failed to delete service");
     }

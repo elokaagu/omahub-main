@@ -40,7 +40,11 @@ import {
 import { AuthImage } from "@/components/ui/auth-image";
 import { Loading } from "@/components/ui/loading";
 import { supabase } from "@/lib/supabase";
-import { usePathname } from "next/navigation";
+import {
+  usePathname,
+  useSearchParams,
+  useRouter as useNextRouter,
+} from "next/navigation";
 
 type ServiceWithBrand = Product & {
   brand: {
@@ -62,7 +66,9 @@ const serviceIcons = {
 export default function ServicesPage() {
   const { user } = useAuth();
   const router = useRouter();
+  const nextRouter = useNextRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [services, setServices] = useState<ServiceWithBrand[]>([]);
   const [filteredServices, setFilteredServices] = useState<ServiceWithBrand[]>(
     []
@@ -86,7 +92,14 @@ export default function ServicesPage() {
   ];
 
   useEffect(() => {
-    fetchData();
+    // If redirected with ?refresh=1, force fetch and clean URL
+    if (searchParams.get("refresh") === "1") {
+      fetchData();
+      // Remove the param from the URL
+      nextRouter.replace(pathname);
+    } else {
+      fetchData();
+    }
     // Listen for page visibility change (tab focus)
     const handleVisibility = () => {
       if (document.visibilityState === "visible") {
