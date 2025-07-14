@@ -944,7 +944,6 @@ export default function CreateProductPage() {
                       }
                       placeholder="0.00"
                       inputMode="decimal"
-                      pattern="^\\d{1,3}(,?\\d{3})*(\\.\\d{0,2})?$"
                       className="border-oma-cocoa/20 focus:border-oma-plum"
                       required={!formData.contact_for_pricing}
                     />
@@ -970,7 +969,6 @@ export default function CreateProductPage() {
                   }
                   placeholder="0.00"
                   inputMode="decimal"
-                  pattern="^\\d{1,3}(,?\\d{3})*(\\.\\d{0,2})?$"
                   className="border-oma-cocoa/20 focus:border-oma-plum"
                 />
                 <p className="text-xs text-muted-foreground">
