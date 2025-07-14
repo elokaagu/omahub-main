@@ -143,7 +143,8 @@ export function BrandCard({
               {name}
             </h3>
             {isVerified && (
-              <span className="inline-block bg-oma-plum text-white text-xs px-3 py-1 rounded-full sm:ml-2 w-auto min-w-0">
+              // Make the tag only as wide as the text, even on mobile
+              <span className="inline-block bg-oma-plum text-white text-xs px-3 py-1 rounded-full sm:ml-2">
                 Verified
               </span>
             )}
