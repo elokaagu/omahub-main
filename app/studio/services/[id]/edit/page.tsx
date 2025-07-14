@@ -37,6 +37,17 @@ import {
   Sparkles,
   MessageCircle,
 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
 
 const serviceTypes = [
   {
@@ -97,6 +108,7 @@ export default function EditServicePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState<any>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -232,12 +244,6 @@ export default function EditServicePage() {
 
   const handleDelete = async () => {
     if (!serviceId) return;
-    if (
-      !window.confirm(
-        "Are you sure you want to delete this service? This action cannot be undone."
-      )
-    )
-      return;
     try {
       await deleteProduct(serviceId);
       toast.success("Service deleted successfully");
@@ -685,22 +691,43 @@ export default function EditServicePage() {
           >
             Cancel
           </Button>
-          <Button
-            type="submit"
-            className="bg-oma-plum hover:bg-oma-plum/90"
-            disabled={isSaving}
+          <AlertDialog
+            open={showDeleteDialog}
+            onOpenChange={setShowDeleteDialog}
           >
-            {isSaving ? "Saving..." : "Save Changes"}
-          </Button>
-          <Button
-            type="button"
-            variant="destructive"
-            className="ml-auto bg-red-600 hover:bg-red-700 text-white border-red-200"
-            onClick={handleDelete}
-            disabled={isSaving}
-          >
-            <Trash2 className="h-4 w-4 mr-1" /> Delete Service
-          </Button>
+            <AlertDialogTrigger asChild>
+              <Button
+                type="button"
+                variant="destructive"
+                className="ml-auto"
+                onClick={() => setShowDeleteDialog(true)}
+              >
+                <Trash2 className="mr-2 h-4 w-4" /> Delete Service
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete Service</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to delete the service
+                  <span className="font-semibold text-oma-plum">
+                    {" "}
+                    {formData.title}{" "}
+                  </span>
+                  ? This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleDelete}
+                  className="bg-red-600 text-white hover:bg-red-700"
+                >
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </form>
     </div>
