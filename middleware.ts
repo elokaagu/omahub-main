@@ -22,8 +22,34 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Check if platform has been made public
-  const isPublic = request.cookies.get("omahub-public")?.value === "true";
+  // Check platform_visibility from the database (Supabase)
+  let isPublic = false;
+  try {
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return request.cookies.get(name)?.value;
+          },
+          set() {},
+          remove() {},
+        },
+      }
+    );
+    const { data, error } = await supabase
+      .from("platform_settings")
+      .select("value")
+      .eq("key", "platform_visibility")
+      .single();
+    if (!error && data?.value === "public") {
+      isPublic = true;
+    }
+  } catch (err) {
+    // If DB check fails, fallback to cookie for legacy support
+    isPublic = request.cookies.get("omahub-public")?.value === "true";
+  }
 
   // TEMPORARY: Bypass password gate for development
   // TODO: Remove this bypass when going to production
