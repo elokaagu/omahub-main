@@ -146,19 +146,16 @@ export default function ServicesPage() {
         try {
           const brandProducts = await getProductsByBrand(brand.id);
 
-          // Filter for services only (products with service_type)
-          const brandServices = brandProducts
-            .filter((product) => product.service_type)
-            .map((product) => ({
-              ...product,
-              brand: {
-                name: brand.name,
-                id: brand.id,
-                category: brand.category,
-                location: brand.location,
-              },
-            }));
-
+          // Show all products for tailoring brands
+          const brandServices = brandProducts.map((product) => ({
+            ...product,
+            brand: {
+              name: brand.name,
+              id: brand.id,
+              category: brand.category,
+              location: brand.location,
+            },
+          }));
           allServices.push(...brandServices);
         } catch (error) {
           console.error(

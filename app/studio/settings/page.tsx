@@ -26,13 +26,14 @@ import {
   Edit3,
   Save,
   X,
+  RefreshCw,
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 
 export default function SettingsPage() {
-  const { user } = useAuth();
+  const { user, refreshUserProfile, loading } = useAuth();
   const [isChangingStatus, setIsChangingStatus] = useState(false);
   const [platformStatus, setPlatformStatus] = useState<{
     isPublic: boolean;
@@ -45,6 +46,8 @@ export default function SettingsPage() {
   const [ourStoryText, setOurStoryText] = useState("");
   const [ourStoryLoading, setOurStoryLoading] = useState(false);
   const [ourStorySaving, setOurStorySaving] = useState(false);
+  const [refreshingHomepageBrands, setRefreshingHomepageBrands] =
+    useState(false);
 
   // Inline editing states
   const [isEditingAbout, setIsEditingAbout] = useState(false);
@@ -80,6 +83,25 @@ export default function SettingsPage() {
         });
     }
   }, [isSuperAdmin]);
+
+  // Ensure user is always up to date
+  useEffect(() => {
+    if (!user && !loading) {
+      refreshUserProfile();
+    }
+  }, [user, loading, refreshUserProfile]);
+
+  useEffect(() => {
+    console.log("Current user in settings page:", user);
+  }, [user]);
+
+  if (loading || !user) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        Loading...
+      </div>
+    );
+  }
 
   const fetchPlatformStatus = async () => {
     try {
@@ -226,6 +248,28 @@ export default function SettingsPage() {
     setTempOurStoryText("");
   };
 
+  // Super admin: Refresh homepage brands
+  const handleRefreshHomepageBrands = async () => {
+    setRefreshingHomepageBrands(true);
+    try {
+      const res = await fetch("/api/admin/refresh-homepage-brands", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.success("Homepage brands refreshed successfully");
+      } else {
+        toast.error(data.error || "Failed to refresh homepage brands");
+      }
+    } catch {
+      toast.error("Failed to refresh homepage brands");
+    } finally {
+      setRefreshingHomepageBrands(false);
+    }
+  };
+
   if (!user) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -252,6 +296,31 @@ export default function SettingsPage() {
           <p className="text-oma-cocoa mt-2">
             Manage your studio configuration and content
           </p>
+          {/* Super admin only: Refresh homepage brands button */}
+          {isSuperAdmin && (
+            <div className="mt-4 flex items-center gap-3">
+              <Button
+                onClick={handleRefreshHomepageBrands}
+                disabled={refreshingHomepageBrands}
+                className="bg-oma-plum text-white flex items-center gap-2"
+              >
+                {refreshingHomepageBrands ? (
+                  <span className="flex items-center gap-2">
+                    <RefreshCw className="animate-spin h-4 w-4" />
+                    Refreshing...
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    <RefreshCw className="h-4 w-4" />
+                    Refresh Homepage Brands
+                  </span>
+                )}
+              </Button>
+              <span className="text-xs text-oma-cocoa/70">
+                Ensures homepage brand rows are up to date
+              </span>
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
