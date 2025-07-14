@@ -70,9 +70,11 @@ export default function UserProfile() {
   const displayName =
     user?.first_name && user?.last_name
       ? `${user.first_name} ${user.last_name}`
-      : session?.user?.user_metadata?.full_name
-        ? session.user.user_metadata.full_name
-        : session?.user?.email?.split("@")[0] || "User";
+      : user?.first_name
+        ? user.first_name
+        : user?.last_name
+          ? user.last_name
+          : (user?.email || session?.user?.email || "").split("@")[0];
 
   const avatarUrl =
     user?.avatar_url || session?.user?.user_metadata?.avatar_url;
