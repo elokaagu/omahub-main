@@ -148,6 +148,7 @@ export default function CreateServicePage() {
     const fetchData = async () => {
       try {
         const brandsData = await getTailorBrands();
+        console.log("Fetched tailoring brands:", brandsData);
 
         // Filter brands based on user role
         if (user?.role === "super_admin") {
