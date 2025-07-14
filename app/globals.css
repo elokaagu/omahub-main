@@ -346,6 +346,19 @@ html:has([data-studio-page]) {
   scrollbar-width: none;
 }
 
+/* Hide scrollbars for all browsers */
+body,
+html,
+* {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+body::-webkit-scrollbar,
+html::-webkit-scrollbar,
+*::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
 /* Mobile-specific utilities */
 @layer utilities {
   /* Touch-friendly minimum sizes */
