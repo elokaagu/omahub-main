@@ -76,5 +76,12 @@ const nextConfig = {
   },
 };
 
-// Do not add duplicate environment variables
-module.exports = nextConfig;
+const withPWA = require("next-pwa")({
+  dest: "public",
+  disable: process.env.NODE_ENV === "development",
+});
+
+module.exports = withPWA({
+  // ...existing config
+  // You can add more Next.js config here
+});

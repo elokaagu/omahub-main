@@ -5,6 +5,7 @@ import { Preloader } from "@/components/ui/preloader";
 import { suisseIntl, canela } from "./fonts";
 import { Toaster } from "sonner";
 import { Analytics } from "@vercel/analytics/react";
+import Head from "next/head";
 
 export const metadata: Metadata = {
   title: "OmaHub",
@@ -18,10 +19,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${suisseIntl.variable} ${canela.variable}`}>
-      <head>
-        <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link rel="icon" type="image/png" href="/favicon.png" sizes="32x32" />
-      </head>
+      <Head>
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#2D1921" />
+        <link rel="apple-touch-icon" href="/favicon.png" />
+      </Head>
       <body>
         <Preloader>
           <RootLayoutClient>{children}</RootLayoutClient>
