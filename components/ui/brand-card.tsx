@@ -132,7 +132,7 @@ export function BrandCard({
           />
         )}
         {/* Smooth dark overlay on hover */}
-        <div className="absolute inset-0 pointer-events-none transition-all duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] bg-black/0 group-hover:bg-black/40 group-hover:backdrop-blur-sm z-10" />
+        <div className="absolute inset-0 pointer-events-none transition-all duration-700 ease-in-out bg-black/0 group-hover:bg-black/40 group-hover:backdrop-blur-sm z-10" />
 
         {/* Favourite button - positioned in top right */}
 

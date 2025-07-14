@@ -64,11 +64,14 @@ export default function About() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
           <motion.div variants={slideIn} className="order-2 lg:order-1">
             <h1 className="heading-lg mb-6">About OmaHub</h1>
-            {aboutUs.split("\n").map((para, i) => (
-              <p key={i} className="text-oma-cocoa text-lg mb-6">
-                {para}
-              </p>
-            ))}
+            {aboutUs
+              .replace(/\n\n/g, "\n")
+              .split("\n")
+              .map((para, i) => (
+                <p key={i} className="text-oma-cocoa text-lg mb-6">
+                  {para}
+                </p>
+              ))}
             <Button asChild className="bg-oma-plum hover:bg-oma-plum/90">
               <Link href="/directory">Discover Our Brand Directory</Link>
             </Button>
@@ -94,11 +97,14 @@ export default function About() {
         <div className="max-w-3xl mx-auto">
           <SectionHeader title="Our Story" centered={true} />
           <div className="prose prose-lg max-w-none space-y-6">
-            {ourStory.split("\n").map((para, i) => (
-              <motion.p key={i} variants={fadeIn} className="text-center">
-                {para}
-              </motion.p>
-            ))}
+            {ourStory
+              .replace(/\n\n/g, "\n")
+              .split("\n")
+              .map((para, i) => (
+                <motion.p key={i} variants={fadeIn} className="text-center">
+                  {para}
+                </motion.p>
+              ))}
           </div>
         </div>
       </motion.div>

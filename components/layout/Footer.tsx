@@ -145,7 +145,7 @@ export default function Footer() {
                   className="text-sm text-oma-cocoa hover:text-oma-plum flex items-center gap-2 group"
                 >
                   <MessageCircle className="h-4 w-4 transition group-hover:text-oma-plum" />
-                  <span className="expand-underline">WhatsApp Community</span>
+                  <span className="expand-underline">Whatsapp</span>
                 </a>
               </li>
             </ul>

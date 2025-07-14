@@ -1089,6 +1089,72 @@ export default function HomeContent() {
           </FadeIn>
         </div>
       </section>
+
+      {/* For Clients Panel (ensure four visible corners) */}
+      <section className="relative flex items-center justify-center py-16 bg-white min-h-[500px]">
+        {/* Four always-visible corners */}
+        <div className="absolute top-4 left-4 w-10 h-10 border-l-4 border-t-4 border-oma-gold/80 z-20" />
+        <div className="absolute top-4 right-4 w-10 h-10 border-r-4 border-t-4 border-oma-gold/80 z-20" />
+        <div className="absolute bottom-4 left-4 w-10 h-10 border-l-4 border-b-4 border-oma-gold/80 z-20" />
+        <div className="absolute bottom-4 right-4 w-10 h-10 border-r-4 border-b-4 border-oma-gold/80 z-20" />
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6 relative z-10">
+          <FadeIn>
+            <SectionHeader
+              title="For Clients"
+              subtitle="Explore our talented designers and their unique styles."
+              titleClassName="text-3xl md:text-4xl font-canela"
+              subtitleClassName="text-base text-oma-cocoa/80"
+            />
+          </FadeIn>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
+            <SlideUp delay={0.1}>
+              <CategoryCard
+                title="Wedding"
+                image={
+                  occasionImages.Wedding ||
+                  "/lovable-uploads/57cc6a40-0f0d-4a7d-8786-41f15832ebfb.png"
+                }
+                href="/directory?occasion=Wedding"
+                customCta="Find your perfect bridal look"
+              />
+            </SlideUp>
+            <SlideUp delay={0.2}>
+              <CategoryCard
+                title="Party"
+                image={
+                  occasionImages.Party ||
+                  "/lovable-uploads/4a7c7e86-6cde-4d07-a246-a5aa4cb6fa51.png"
+                }
+                href="/directory?occasion=Party"
+                customCta="Make a statement at your next event"
+              />
+            </SlideUp>
+            <SlideUp delay={0.3}>
+              <CategoryCard
+                title="Ready to Wear"
+                image={
+                  occasionImages["Ready to Wear"] ||
+                  "/lovable-uploads/99ca757a-bed8-422e-b155-0b9d365b58e0.png"
+                }
+                href="/directory?occasion=Ready+to+Wear"
+                customCta="Shop timeless pieces for everyday elegance"
+              />
+            </SlideUp>
+            <SlideUp delay={0.4}>
+              <CategoryCard
+                title="Vacation"
+                image={
+                  occasionImages.Vacation ||
+                  "/lovable-uploads/25c3fe26-3fc4-43ef-83ac-6931a74468c0.png"
+                }
+                href="/directory?occasion=Vacation"
+                customCta="Escape to a new destination"
+              />
+            </SlideUp>
+          </div>
+        </div>
+      </section>
     </main>
   );
 }
