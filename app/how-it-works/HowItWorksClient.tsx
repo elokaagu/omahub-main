@@ -262,10 +262,10 @@ export default function HowItWorksClient() {
         style={getSectionTransform("clients")}
       >
         {/* Corner Brackets - increased offset for guaranteed visibility */}
-        <div className="absolute top-6 left-6 md:top-10 md:left-10 w-8 h-8 md:w-10 md:h-10 border-l-4 border-t-4 border-oma-gold/80"></div>
-        <div className="absolute top-6 right-6 md:top-10 md:right-10 w-8 h-8 md:w-10 md:h-10 border-r-4 border-t-4 border-oma-gold/80"></div>
-        <div className="absolute bottom-6 left-6 md:bottom-10 md:left-10 w-8 h-8 md:w-10 md:h-10 border-l-4 border-b-4 border-oma-gold/80"></div>
-        <div className="absolute bottom-6 right-6 md:bottom-10 md:right-10 w-8 h-8 md:w-10 md:h-10 border-r-4 border-b-4 border-oma-gold/80"></div>
+        <div className="absolute top-16 left-10 md:top-20 md:left-16 w-10 h-10 border-l-4 border-t-4 border-oma-gold/80 z-30" />
+        <div className="absolute top-16 right-10 md:top-20 md:right-16 w-10 h-10 border-r-4 border-t-4 border-oma-gold/80 z-30" />
+        <div className="absolute bottom-6 left-6 md:bottom-10 md:left-10 w-8 h-8 md:w-10 md:h-10 border-l-4 border-b-4 border-oma-gold/80 z-20" />
+        <div className="absolute bottom-6 right-6 md:bottom-10 md:right-10 w-8 h-8 md:w-10 md:h-10 border-r-4 border-b-4 border-oma-gold/80 z-20" />
         {/* Floating Graphics */}
         <div className="absolute top-8 left-1/4 w-24 h-24 bg-gradient-to-br from-oma-plum/20 to-oma-gold/20 rounded-full blur-2xl animate-float-slow" />
         <div className="absolute bottom-12 right-12 w-8 h-8 bg-oma-gold rounded-full animate-bounce shadow-lg" />
