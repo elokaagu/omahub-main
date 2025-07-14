@@ -93,7 +93,7 @@ export default function FAQPage() {
                     onOpenChange={() => toggleFaq(faq.id)}
                   >
                     <CollapsibleTrigger className="w-full flex items-center justify-between p-6 bg-white/80 backdrop-blur-sm rounded-xl border border-oma-plum/20 hover:border-oma-plum/40 transition-all duration-300 group focus:shadow-lg hover:shadow-lg">
-                      <h3 className="text-lg font-semibold text-black text-left pr-4">
+                      <h3 className="text-lg font-canela font-semibold text-oma-plum text-left pr-4">
                         {faq.question}
                       </h3>
                       <ChevronDown
@@ -101,7 +101,7 @@ export default function FAQPage() {
                       />
                     </CollapsibleTrigger>
                     <CollapsibleContent className="px-6 pb-6 transition-all duration-700 ease-cubic-bezier[.4,0,.2,1]">
-                      <div className="markdown-content pt-4 text-black/70 leading-relaxed">
+                      <div className="markdown-content pt-4 text-oma-cocoa font-source leading-relaxed">
                         {faq.answer}
                       </div>
                     </CollapsibleContent>
