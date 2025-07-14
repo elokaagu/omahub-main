@@ -296,7 +296,11 @@ export default function TailoredClient() {
         id="questions"
         className="min-h-[120vh] snap-start flex items-center justify-center py-40 px-4 sm:px-10 md:px-20 lg:px-32 relative bg-gradient-to-br from-oma-plum/5 to-oma-gold/5"
       >
-        {/* Removed Corner Frames */}
+        {/* Corner Frames */}
+        <div className="absolute top-8 left-2 sm:top-10 sm:left-6 w-10 h-10 border-l-4 border-t-4 border-oma-gold/80"></div>
+        <div className="absolute top-8 right-2 sm:top-10 sm:right-6 w-10 h-10 border-r-4 border-t-4 border-oma-gold/80"></div>
+        <div className="absolute bottom-2 left-2 sm:bottom-6 sm:left-6 w-10 h-10 border-l-4 border-b-4 border-oma-gold/80"></div>
+        <div className="absolute bottom-2 right-2 sm:bottom-6 sm:right-6 w-10 h-10 border-r-4 border-b-4 border-oma-gold/80"></div>
         <div
           className="max-w-6xl mx-auto w-full"
           style={getSectionTransform(visibleSections.has("questions"))}
@@ -384,7 +388,11 @@ export default function TailoredClient() {
         id="process"
         className="min-h-[120vh] snap-start flex items-center justify-center py-40 px-4 sm:px-10 md:px-20 lg:px-32 relative"
       >
-        {/* Removed Corner Frames */}
+        {/* Corner Frames */}
+        <div className="absolute top-8 left-2 sm:top-10 sm:left-6 w-10 h-10 border-l-4 border-t-4 border-oma-gold/80"></div>
+        <div className="absolute top-8 right-2 sm:top-10 sm:right-6 w-10 h-10 border-r-4 border-t-4 border-oma-gold/80"></div>
+        <div className="absolute bottom-2 left-2 sm:bottom-6 sm:left-6 w-10 h-10 border-l-4 border-b-4 border-oma-gold/80"></div>
+        <div className="absolute bottom-2 right-2 sm:bottom-6 sm:right-6 w-10 h-10 border-r-4 border-b-4 border-oma-gold/80"></div>
         <div
           className="max-w-6xl mx-auto w-full h-full flex flex-col items-center justify-center"
           style={getSectionTransform(visibleSections.has("process"))}
@@ -477,7 +485,11 @@ export default function TailoredClient() {
         id="benefits"
         className="min-h-[120vh] snap-start flex items-center justify-center py-40 px-4 sm:px-10 md:px-20 lg:px-32 relative bg-gradient-to-br from-oma-beige/20 to-white/50"
       >
-        {/* Removed Corner Frames */}
+        {/* Corner Frames */}
+        <div className="absolute top-8 left-2 sm:top-10 sm:left-6 w-10 h-10 border-l-4 border-t-4 border-oma-gold/80"></div>
+        <div className="absolute top-8 right-2 sm:top-10 sm:right-6 w-10 h-10 border-r-4 border-t-4 border-oma-gold/80"></div>
+        <div className="absolute bottom-2 left-2 sm:bottom-6 sm:left-6 w-10 h-10 border-l-4 border-b-4 border-oma-gold/80"></div>
+        <div className="absolute bottom-2 right-2 sm:bottom-6 sm:right-6 w-10 h-10 border-r-4 border-b-4 border-oma-gold/80"></div>
         <div
           className="max-w-6xl mx-auto w-full"
           style={getSectionTransform(visibleSections.has("benefits"))}
@@ -558,7 +570,11 @@ export default function TailoredClient() {
         id="cta"
         className="min-h-[120vh] snap-start flex items-center justify-center py-32 px-8 sm:px-16 lg:px-32 bg-gradient-to-br from-oma-plum/10 to-oma-gold/10 relative overflow-hidden"
       >
-        {/* Removed Corner Frames */}
+        {/* Corner Frames */}
+        <div className="absolute top-24 left-8 w-12 h-12 border-l-4 border-t-4 border-oma-gold/80"></div>
+        <div className="absolute top-24 right-8 w-12 h-12 border-r-4 border-t-4 border-oma-gold/80"></div>
+        <div className="absolute bottom-8 left-8 w-12 h-12 border-l-4 border-b-4 border-oma-gold/80"></div>
+        <div className="absolute bottom-8 right-8 w-12 h-12 border-r-4 border-b-4 border-oma-gold/80"></div>
         {/* Background Graphics with parallax */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div
