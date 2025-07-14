@@ -92,7 +92,7 @@ export function BrandCard({
           "relative w-full h-full",
           isPortrait
             ? "w-32 h-32 sm:w-48 sm:h-48 flex-shrink-0"
-            : "aspect-[4/5] min-h-[340px]"
+            : "aspect-[4/5] min-h-[440px]"
         )}
       >
         {/* Prioritize video over image - show video if available */}

@@ -250,7 +250,7 @@ export default function TailorsPage() {
                         transition={{ duration: 0.2 }}
                       >
                         <Card className="overflow-hidden flex flex-col h-full cursor-pointer group">
-                          <div className="w-full h-48 bg-gray-100 overflow-hidden">
+                          <div className="w-full h-80 bg-gray-100 overflow-hidden">
                             <BrandCard
                               id={tailor.brand.id}
                               name={tailor.brand.name}
@@ -311,7 +311,7 @@ export default function TailorsPage() {
                       >
                         <Card className="overflow-hidden cursor-pointer group">
                           <div className="flex">
-                            <div className="w-48 h-32 bg-gray-100 overflow-hidden flex-shrink-0">
+                            <div className="w-48 h-48 bg-gray-100 overflow-hidden flex-shrink-0">
                               <BrandCard
                                 id={tailor.brand.id}
                                 name={tailor.brand.name}

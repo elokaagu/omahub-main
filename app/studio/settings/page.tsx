@@ -23,6 +23,9 @@ import {
   Eye,
   EyeOff,
   Clipboard,
+  Edit3,
+  Save,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -42,6 +45,12 @@ export default function SettingsPage() {
   const [ourStoryText, setOurStoryText] = useState("");
   const [ourStoryLoading, setOurStoryLoading] = useState(false);
   const [ourStorySaving, setOurStorySaving] = useState(false);
+
+  // Inline editing states
+  const [isEditingAbout, setIsEditingAbout] = useState(false);
+  const [isEditingOurStory, setIsEditingOurStory] = useState(false);
+  const [tempAboutText, setTempAboutText] = useState("");
+  const [tempOurStoryText, setTempOurStoryText] = useState("");
 
   // Check if user has super admin permissions
   const isSuperAdmin = user?.role === "super_admin";
@@ -149,16 +158,24 @@ export default function SettingsPage() {
     }
   };
 
-  const handleAboutSave = async () => {
+  // Inline editing handlers for About Us
+  const handleEditAbout = () => {
+    setTempAboutText(aboutText);
+    setIsEditingAbout(true);
+  };
+
+  const handleSaveAbout = async () => {
     setAboutSaving(true);
     try {
       const res = await fetch("/api/platform-settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ about: aboutText, user }),
+        body: JSON.stringify({ about: tempAboutText, user }),
       });
       const data = await res.json();
       if (res.ok && data.success) {
+        setAboutText(tempAboutText);
+        setIsEditingAbout(false);
         toast.success("About Us updated successfully");
       } else {
         toast.error(data.error || "Failed to update About Us");
@@ -170,16 +187,29 @@ export default function SettingsPage() {
     }
   };
 
-  const handleOurStorySave = async () => {
+  const handleCancelAbout = () => {
+    setIsEditingAbout(false);
+    setTempAboutText("");
+  };
+
+  // Inline editing handlers for Our Story
+  const handleEditOurStory = () => {
+    setTempOurStoryText(ourStoryText);
+    setIsEditingOurStory(true);
+  };
+
+  const handleSaveOurStory = async () => {
     setOurStorySaving(true);
     try {
       const res = await fetch("/api/platform-settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ourStory: ourStoryText, user }),
+        body: JSON.stringify({ ourStory: tempOurStoryText, user }),
       });
       const data = await res.json();
       if (res.ok && data.success) {
+        setOurStoryText(tempOurStoryText);
+        setIsEditingOurStory(false);
         toast.success("Our Story updated successfully");
       } else {
         toast.error(data.error || "Failed to update Our Story");
@@ -189,6 +219,11 @@ export default function SettingsPage() {
     } finally {
       setOurStorySaving(false);
     }
+  };
+
+  const handleCancelOurStory = () => {
+    setIsEditingOurStory(false);
+    setTempOurStoryText("");
   };
 
   if (!user) {
@@ -219,44 +254,185 @@ export default function SettingsPage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Content Management - Overview with navigation links */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Content Management - Inline editing for super admins */}
           {isSuperAdmin && (
-            <Card className="border-oma-beige">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-oma-plum font-canela">
-                  Content
-                </CardTitle>
-                <CardDescription className="text-oma-cocoa">
-                  Manage public-facing content for OmaHub
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ul className="flex flex-col gap-4">
-                  <li className="flex items-center justify-between">
-                    <span className="font-medium text-lg text-oma-plum">
-                      About Us
-                    </span>
-                    <a href="/studio/settings/content/about-us">
-                      <Button variant="outline" className="font-normal">
-                        Manage
+            <>
+              {/* About Us Card */}
+              <Card className="border-oma-beige">
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between text-oma-plum font-canela">
+                    <span>About Us</span>
+                    {!isEditingAbout && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleEditAbout}
+                        className="h-8 w-8 p-0"
+                      >
+                        <Edit3 className="h-4 w-4" />
                       </Button>
-                    </a>
-                  </li>
-                  <li className="flex items-center justify-between">
-                    <span className="font-medium text-lg text-oma-plum">
-                      Our Story
-                    </span>
-                    <a href="/studio/settings/content/our-story">
-                      <Button variant="outline" className="font-normal">
-                        Manage
+                    )}
+                  </CardTitle>
+                  <CardDescription className="text-oma-cocoa">
+                    Edit the About Us content displayed on the public About page
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {isEditingAbout ? (
+                    <div className="space-y-4">
+                      <Textarea
+                        value={tempAboutText}
+                        onChange={(e) => setTempAboutText(e.target.value)}
+                        placeholder="Enter About Us content..."
+                        rows={8}
+                        className="min-h-[200px]"
+                      />
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={handleSaveAbout}
+                          disabled={aboutSaving}
+                          size="sm"
+                          className="bg-oma-plum hover:bg-oma-plum/90 text-white"
+                        >
+                          <Save className="h-4 w-4 mr-2" />
+                          {aboutSaving ? "Saving..." : "Save"}
+                        </Button>
+                        <Button
+                          onClick={handleCancelAbout}
+                          variant="outline"
+                          size="sm"
+                        >
+                          <X className="h-4 w-4 mr-2" />
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="bg-oma-cream/30 rounded-lg p-4 min-h-[200px]">
+                        {aboutLoading ? (
+                          <div className="flex items-center justify-center h-32">
+                            <div className="animate-spin h-6 w-6 border-2 border-oma-plum border-t-transparent rounded-full" />
+                          </div>
+                        ) : aboutText ? (
+                          <div className="prose prose-sm max-w-none">
+                            {aboutText.split("\n").map((paragraph, index) => (
+                              <p key={index} className="text-oma-cocoa mb-3">
+                                {paragraph}
+                              </p>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-oma-cocoa/60 italic">
+                            No content set. Click edit to add About Us content.
+                          </p>
+                        )}
+                      </div>
+                      <Button
+                        onClick={handleEditAbout}
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                      >
+                        <Edit3 className="h-4 w-4 mr-2" />
+                        Edit Content
                       </Button>
-                    </a>
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Our Story Card */}
+              <Card className="border-oma-beige">
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between text-oma-plum font-canela">
+                    <span>Our Story</span>
+                    {!isEditingOurStory && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleEditOurStory}
+                        className="h-8 w-8 p-0"
+                      >
+                        <Edit3 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </CardTitle>
+                  <CardDescription className="text-oma-cocoa">
+                    Edit the Our Story content displayed on the public About
+                    page
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {isEditingOurStory ? (
+                    <div className="space-y-4">
+                      <Textarea
+                        value={tempOurStoryText}
+                        onChange={(e) => setTempOurStoryText(e.target.value)}
+                        placeholder="Enter Our Story content..."
+                        rows={8}
+                        className="min-h-[200px]"
+                      />
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={handleSaveOurStory}
+                          disabled={ourStorySaving}
+                          size="sm"
+                          className="bg-oma-plum hover:bg-oma-plum/90 text-white"
+                        >
+                          <Save className="h-4 w-4 mr-2" />
+                          {ourStorySaving ? "Saving..." : "Save"}
+                        </Button>
+                        <Button
+                          onClick={handleCancelOurStory}
+                          variant="outline"
+                          size="sm"
+                        >
+                          <X className="h-4 w-4 mr-2" />
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="bg-oma-cream/30 rounded-lg p-4 min-h-[200px]">
+                        {ourStoryLoading ? (
+                          <div className="flex items-center justify-center h-32">
+                            <div className="animate-spin h-6 w-6 border-2 border-oma-plum border-t-transparent rounded-full" />
+                          </div>
+                        ) : ourStoryText ? (
+                          <div className="prose prose-sm max-w-none">
+                            {ourStoryText
+                              .split("\n")
+                              .map((paragraph, index) => (
+                                <p key={index} className="text-oma-cocoa mb-3">
+                                  {paragraph}
+                                </p>
+                              ))}
+                          </div>
+                        ) : (
+                          <p className="text-oma-cocoa/60 italic">
+                            No content set. Click edit to add Our Story content.
+                          </p>
+                        )}
+                      </div>
+                      <Button
+                        onClick={handleEditOurStory}
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                      >
+                        <Edit3 className="h-4 w-4 mr-2" />
+                        Edit Content
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </>
           )}
+
           {/* Platform Access Control - Only for Super Admins */}
           {isSuperAdmin && (
             <Card className="border-oma-beige">
@@ -421,27 +597,15 @@ export default function SettingsPage() {
               </div>
             </CardContent>
             <CardFooter>
-              {isSuperAdmin ? (
-                <Link
-                  href="/studio/settings/legal-documents"
-                  className="w-full"
-                >
-                  <Button className="bg-oma-plum hover:bg-oma-plum/90 text-white flex items-center gap-2 w-full">
-                    <span>Manage Legal Documents</span>
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
+              <Button
+                asChild
+                className="w-full bg-oma-plum hover:bg-oma-plum/90 text-white"
+              >
+                <Link href="/studio/settings/legal-documents">
+                  Manage Legal Documents
+                  <ArrowRight className="h-4 w-4 ml-2" />
                 </Link>
-              ) : (
-                <div className="text-center w-full">
-                  <p className="text-sm text-oma-cocoa/60 mb-3">
-                    Super admin access required
-                  </p>
-                  <Button disabled className="w-full">
-                    <span>Manage Legal Documents</span>
-                    <ArrowRight className="h-4 w-4 ml-2" />
-                  </Button>
-                </div>
-              )}
+              </Button>
             </CardFooter>
           </Card>
 
@@ -478,29 +642,20 @@ export default function SettingsPage() {
               </div>
             </CardContent>
             <CardFooter>
-              {isSuperAdmin ? (
-                <Link href="/studio/settings/faqs" className="w-full">
-                  <Button className="bg-oma-plum hover:bg-oma-plum/90 text-white flex items-center gap-2 w-full">
-                    <span>Manage FAQs</span>
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
+              <Button
+                asChild
+                className="w-full bg-oma-plum hover:bg-oma-plum/90 text-white"
+              >
+                <Link href="/studio/settings/faqs">
+                  Manage FAQs
+                  <ArrowRight className="h-4 w-4 ml-2" />
                 </Link>
-              ) : (
-                <div className="text-center w-full">
-                  <p className="text-sm text-oma-cocoa/60 mb-3">
-                    Super admin access required
-                  </p>
-                  <Button disabled className="w-full">
-                    <span>Manage FAQs</span>
-                    <ArrowRight className="h-4 w-4 ml-2" />
-                  </Button>
-                </div>
-              )}
+              </Button>
             </CardFooter>
           </Card>
         </div>
 
-        {/* Information Card */}
+        {/* Information Section */}
         <Card className="border-oma-beige bg-oma-cream/30">
           <CardHeader>
             <CardTitle className="text-oma-plum font-canela">
@@ -516,6 +671,17 @@ export default function SettingsPage() {
                     <strong>Platform Access:</strong> Control whether the
                     platform requires a password for access. Remove the password
                     gate when you're ready to launch publicly.
+                  </p>
+                </div>
+              )}
+              {isSuperAdmin && (
+                <div className="flex items-start gap-2">
+                  <Edit3 className="h-4 w-4 text-oma-plum mt-0.5 flex-shrink-0" />
+                  <p>
+                    <strong>Content Editing:</strong> Edit About Us and Our
+                    Story content directly in the studio without needing to
+                    navigate to separate pages. Changes are saved immediately
+                    and reflected on the public About page.
                   </p>
                 </div>
               )}
