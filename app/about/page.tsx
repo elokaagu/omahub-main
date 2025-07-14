@@ -22,21 +22,21 @@ export default function About() {
     async function fetchContent() {
       setLoading(true);
       const { data: aboutData } = await supabase
-        .from("studio_content")
-        .select("content")
-        .eq("key", "about_us")
+        .from("platform_settings")
+        .select("value")
+        .eq("key", "about_omahub")
         .single();
       const { data: storyData } = await supabase
-        .from("studio_content")
-        .select("content")
+        .from("platform_settings")
+        .select("value")
         .eq("key", "our_story")
         .single();
       setAboutUs(
-        aboutData?.content?.trim() ||
+        aboutData?.value?.trim() ||
           `OmaHub is a premier fashion tech platform dedicated to spotlighting Africa's emerging designers. We're creating a digital space where creativity, craftsmanship, and cultural expression intersect.\n\nOur mission is to connect Africa's innovative fashion talent with a global audience, fostering discovery and celebration of the continent's rich design heritage.`
       );
       setOurStory(
-        storyData?.content?.trim() ||
+        storyData?.value?.trim() ||
           `OmaHub was born in 2025 from a deep belief: that Africa's designers deserve a global stage on their own terms. Rooted in the meaning of "Oma" (a West African word for beauty), we exist to honour the artistry shaping fashion across the continent.\n\nWhat started as a simple idea, a digital space to spotlight emerging designers, has become a dynamic platform connecting creators to conscious consumers around the world.\n\nOmaHub bridges tradition and innovation. We celebrate the bold, the handmade, and the culturally grounded, helping preserve traditional techniques while championing modern design. More than fashion, this is a movement for craft, community, and creativity.`
       );
       setLoading(false);
