@@ -36,6 +36,19 @@ import {
   SlideUp,
 } from "@/app/components/ui/animations";
 import { UNIFIED_CATEGORIES } from "@/lib/data/unified-categories";
+import { getCategoriesForDirectory } from "@/lib/data/unified-categories";
+
+// Curated subset of category IDs for tailors
+const CURATED_CATEGORY_IDS = [
+  "bridal",
+  "custom-design",
+  "made-to-measure",
+  "alterations",
+];
+
+const tailoredCategories = getCategoriesForDirectory().filter((cat) =>
+  CURATED_CATEGORY_IDS.includes(cat.id)
+);
 
 type TailorWithBrand = Tailor & {
   brand: {
@@ -95,20 +108,10 @@ export default function TailorsPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [selectedCategory, setSelectedCategory] = useState<string>("");
 
-  // Tailored categories for filter dropdown
-  const tailoredCategories = UNIFIED_CATEGORIES.filter((cat) =>
-    ["bridal", "custom-design", "made-to-measure", "alterations"].includes(
-      cat.id
-    )
-  );
-
   // Sync selectedCategory with specialty query param
   useEffect(() => {
     const specialty = searchParams.get("specialty");
-    if (
-      specialty &&
-      tailoredCategories.some((cat) => cat.displayName === specialty)
-    ) {
+    if (specialty && tailoredCategories.some((cat) => cat.name === specialty)) {
       setSelectedCategory(specialty);
     } else if (!specialty) {
       setSelectedCategory("");
@@ -275,8 +278,8 @@ export default function TailorsPage() {
                   <SelectContent>
                     <SelectItem value="">All Categories</SelectItem>
                     {tailoredCategories.map((cat) => (
-                      <SelectItem key={cat.id} value={cat.displayName}>
-                        {cat.displayName}
+                      <SelectItem key={cat.id} value={cat.name}>
+                        {cat.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
