@@ -351,11 +351,6 @@ export default function TailorsPage() {
                             <div className="font-canela text-xl text-black mb-1">
                               {tailor.title}
                             </div>
-                            {tailor.price_range && (
-                              <div className="text-base text-black mb-1">
-                                {tailor.price_range}
-                              </div>
-                            )}
                             <div className="text-sm text-black mb-1">
                               {tailor.brand.category}
                             </div>
@@ -414,11 +409,6 @@ export default function TailorsPage() {
                                 <div className="font-canela text-xl text-black mb-1">
                                   {tailor.title}
                                 </div>
-                                {tailor.price_range && (
-                                  <div className="text-base text-black mb-1">
-                                    {tailor.price_range}
-                                  </div>
-                                )}
                                 <div className="text-sm text-black mb-1">
                                   {tailor.brand.category}
                                 </div>
