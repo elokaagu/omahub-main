@@ -134,7 +134,7 @@ export default function TailoredClient() {
 
   return (
     <div
-      className="relative w-full snap-y snap-mandatory"
+      className="relative w-full snap-y snap-mandatory overflow-y-auto h-screen"
       style={{ scrollBehavior: "smooth" }}
     >
       {/* Hero Section */}
