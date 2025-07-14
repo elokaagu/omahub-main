@@ -43,7 +43,7 @@ export default function TermsOfServicePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-oma-cream via-white to-oma-beige">
       {/* Header */}
-      <div className="bg-white/80 backdrop-blur-sm border-b border-oma-gold/20 sticky top-0 z-10">
+      <div className="bg-white/80 backdrop-blur-sm border-b border-oma-gold/20 rounded-t-2xl">
         <div className="max-w-4xl mx-auto px-6 py-6">
           <Link href="/">
             <Button
