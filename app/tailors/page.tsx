@@ -67,6 +67,24 @@ const getImageFocalPoint = (imageUrl: string, title: string) => {
   return "object-top";
 };
 
+// Mapping from unified category names to actual specialties
+const categoryToSpecialtiesMap: Record<string, string[]> = {
+  Bridal: ["Wedding Dresses", "Bridal Wear", "Evening Gowns", "Bridal"],
+  "Custom Design": [
+    "Custom Design",
+    "Bespoke Garments",
+    "Made-to-Measure",
+    "Bespoke Tailoring",
+  ],
+  "Made to Measure": [
+    "Made-to-Measure",
+    "Custom Fit",
+    "Bespoke Tailoring",
+    "Custom Design",
+  ],
+  Alterations: ["Alterations", "Hemming", "Resizing", "Repairs"],
+};
+
 export default function TailorsPage() {
   const searchParams = useSearchParams();
   const [tailors, setTailors] = useState<TailorWithBrand[]>([]);
@@ -115,6 +133,11 @@ export default function TailorsPage() {
     // Filter by specialty query param
     const specialty = searchParams.get("specialty");
     if (specialty) {
+      // Get the mapped specialties for this category
+      const mappedSpecialties = categoryToSpecialtiesMap[specialty] || [
+        specialty,
+      ];
+
       filtered = filtered.filter((tailor) => {
         if (!tailor.specialties) return false;
         let specialtiesArr: string[] = [];
@@ -125,8 +148,18 @@ export default function TailorsPage() {
             .split(",")
             .map((s: string) => s.trim());
         }
-        return specialtiesArr.some(
-          (s) => s.toLowerCase() === specialty.toLowerCase()
+
+        // Check if any of the mapped specialties match the tailor's specialties
+        return specialtiesArr.some((tailorSpecialty) =>
+          mappedSpecialties.some(
+            (mappedSpecialty) =>
+              tailorSpecialty
+                .toLowerCase()
+                .includes(mappedSpecialty.toLowerCase()) ||
+              mappedSpecialty
+                .toLowerCase()
+                .includes(tailorSpecialty.toLowerCase())
+          )
         );
       });
     }
