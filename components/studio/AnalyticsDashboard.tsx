@@ -38,7 +38,7 @@ interface BrandGrowthData {
 interface ReviewTrendsData {
   month: string;
   reviews: number;
-  avgRating: number;
+  avgRating?: number; // Make avgRating optional to match the service
 }
 
 interface AnalyticsDashboardProps {
@@ -162,30 +162,10 @@ export default function AnalyticsDashboard({
     }
   }, [isBrandOwner, ownedBrandIds, user, authLoading]);
 
-  // Fetch Vercel Analytics data
-  useEffect(() => {
-    async function fetchVercelAnalytics() {
-      setVercelLoading(true);
-      setVercelError(null);
-      try {
-        const res = await fetch("/api/analytics");
-        if (!res.ok) {
-          const err = await res.json();
-          setVercelError(err.error || "Failed to fetch analytics");
-          setVercelAnalytics(null);
-        } else {
-          const data = await res.json();
-          setVercelAnalytics(data);
-        }
-      } catch (error) {
-        setVercelError("Failed to fetch analytics");
-        setVercelAnalytics(null);
-      } finally {
-        setVercelLoading(false);
-      }
-    }
-    if (!isBrandOwner) fetchVercelAnalytics();
-  }, [isBrandOwner]);
+  // Calculate estimated monthly page views
+  const estimatedMonthlyPageViews = analytics
+    ? Math.round(analytics.totalProducts * 150 + analytics.totalBrands * 200)
+    : 0;
 
   // Show loading state while auth is loading
   if (authLoading || loading) {
@@ -472,18 +452,17 @@ export default function AnalyticsDashboard({
 
         <Card className="border border-oma-gold/10 bg-white">
           <CardHeader>
-            <CardTitle className="text-black">Page Views</CardTitle>
+            <CardTitle className="text-black">
+              Estimated Monthly Page Views
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            {vercelLoading ? (
-              <span>Loading...</span>
-            ) : vercelError ? (
-              <span className="text-red-600">{vercelError}</span>
-            ) : (
-              <span className="text-2xl font-bold text-oma-plum">
-                {vercelAnalytics?.pageViews ?? "-"}
-              </span>
-            )}
+            <span className="text-2xl font-bold text-oma-plum">
+              {formatNumber(estimatedMonthlyPageViews)}
+            </span>
+            <p className="text-xs text-oma-cocoa mt-2">
+              Based on products and brands
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -616,7 +595,7 @@ export default function AnalyticsDashboard({
                         <span className="text-white text-xs font-medium">
                           {data.reviews}
                         </span>
-                        {data.avgRating > 0 && (
+                        {data.avgRating && data.avgRating > 0 && (
                           <span className="text-white text-xs">
                             ⭐{data.avgRating.toFixed(1)}
                           </span>
