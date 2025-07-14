@@ -737,7 +737,8 @@ export default function EditProductPage() {
                   <div className="relative">
                     <Input
                       id="price"
-                      type="text"
+                      type="number"
+                      step="0.01"
                       value={formatPriceForDisplay(formData.price)}
                       onChange={(e) =>
                         handleInputChange("price", e.target.value)
@@ -758,7 +759,8 @@ export default function EditProductPage() {
                   <div className="relative">
                     <Input
                       id="sale_price"
-                      type="text"
+                      type="number"
+                      step="0.01"
                       value={formatPriceForDisplay(formData.sale_price)}
                       onChange={(e) =>
                         handleInputChange("sale_price", e.target.value)
