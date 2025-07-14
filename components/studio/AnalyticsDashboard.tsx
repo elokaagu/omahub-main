@@ -29,6 +29,7 @@ import {
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
+import PageViewsCard from "./PageViewsCard";
 
 interface BrandGrowthData {
   month: string;
@@ -163,10 +164,6 @@ export default function AnalyticsDashboard({
   }, [isBrandOwner, ownedBrandIds, user, authLoading]);
 
   // Calculate estimated monthly page views
-  const estimatedMonthlyPageViews = analytics
-    ? Math.round(analytics.totalProducts * 150 + analytics.totalBrands * 200)
-    : 0;
-
   // Show loading state while auth is loading
   if (authLoading || loading) {
     return (
@@ -456,21 +453,12 @@ export default function AnalyticsDashboard({
           </CardContent>
         </Card>
 
-        <Card className="border border-oma-gold/10 bg-white">
-          <CardHeader>
-            <CardTitle className="text-black">
-              Estimated Monthly Page Views
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <span className="text-2xl font-bold text-oma-plum">
-              {formatNumber(estimatedMonthlyPageViews)}
-            </span>
-            <p className="text-xs text-oma-cocoa mt-2">
-              Based on products and brands
-            </p>
-          </CardContent>
-        </Card>
+        {/* New Page Views Card */}
+        <PageViewsCard
+          totalBrands={analytics.totalBrands}
+          totalReviews={analytics.totalReviews}
+          totalProducts={analytics.totalProducts}
+        />
       </div>
 
       {/* Platform Health Section */}
