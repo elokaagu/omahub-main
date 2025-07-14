@@ -57,6 +57,7 @@ import {
   AlertDialogCancel,
 } from "@/components/ui/alert-dialog";
 import { deleteProduct } from "@/lib/services/productService";
+import { useTailoringEvent } from "@/contexts/NavigationContext";
 
 type ServiceWithBrand = Product & {
   brand: {
@@ -92,6 +93,7 @@ export default function ServicesPage() {
   const [selectedServiceType, setSelectedServiceType] = useState("all");
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const tailoringEvent = useTailoringEvent();
 
   // Tailor-specific categories
   const tailoredCategories = [
@@ -113,6 +115,11 @@ export default function ServicesPage() {
     } else {
       fetchData();
     }
+    // Subscribe to tailoring events to refetch brands/services
+    const unsubscribe = tailoringEvent.subscribe(() => {
+      fetchData();
+    });
+    return () => unsubscribe();
   }, [user, pathname]);
 
   useEffect(() => {
@@ -221,6 +228,7 @@ export default function ServicesPage() {
   };
 
   const handleEditService = (serviceId: string) => {
+    // Stay on the Services page after editing
     router.push(`/studio/services/${serviceId}/edit`);
   };
 
