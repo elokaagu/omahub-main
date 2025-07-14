@@ -166,7 +166,7 @@ export default function HowItWorksClient() {
 
   return (
     <div
-      className="relative w-full overflow-x-hidden md:snap-y md:snap-mandatory h-screen"
+      className="relative w-full overflow-y-auto md:snap-y md:snap-mandatory h-screen"
       style={{ scrollBehavior: "smooth" }}
     >
       {/* Hero Section */}
@@ -258,10 +258,8 @@ export default function HowItWorksClient() {
       <section
         ref={clientsRef}
         id="clients"
-        className="min-h-screen snap-start flex items-center justify-center py-32 px-8 sm:px-16 lg:px-32 bg-gradient-to-br from-oma-beige/80 via-white/90 to-oma-gold/10 relative"
-        style={{
-          transform: getParallaxTransform(0.04),
-        }}
+        className="min-h-screen snap-center flex items-center justify-center relative flex-col px-4 py-24 bg-white"
+        style={getSectionTransform("clients")}
       >
         {/* Corner Brackets */}
         <div className="absolute top-24 left-8 w-12 h-12 border-l-4 border-t-4 border-oma-gold/80"></div>
@@ -318,7 +316,8 @@ export default function HowItWorksClient() {
       <section
         ref={curatedRef}
         id="curated"
-        className="min-h-[120vh] md:min-h-screen snap-start flex items-center justify-center pt-32 pb-32 px-8 sm:px-16 lg:px-32 bg-gradient-to-br from-oma-beige/80 via-white/90 to-oma-gold/10 relative overflow-hidden"
+        className="min-h-screen snap-center flex items-center justify-center relative flex-col px-4 py-24 bg-oma-beige/20"
+        style={getSectionTransform("curated")}
       >
         {/* Corner Brackets */}
         <div className="absolute top-24 left-8 w-12 h-12 border-l-4 border-t-4 border-oma-gold/80"></div>
@@ -416,10 +415,8 @@ export default function HowItWorksClient() {
       <section
         ref={designersRef}
         id="designers"
-        className="min-h-screen snap-start flex items-center justify-center pt-28 pb-24 px-6 bg-gradient-to-br from-oma-beige/80 via-white/90 to-oma-gold/10 relative"
-        style={{
-          transform: getParallaxTransform(0.03),
-        }}
+        className="min-h-screen snap-center flex items-center justify-center relative flex-col px-4 py-24 bg-white"
+        style={getSectionTransform("designers")}
       >
         {/* Corner Brackets */}
         <div className="absolute top-24 left-8 w-12 h-12 border-l-4 border-t-4 border-oma-gold/80"></div>
@@ -486,10 +483,8 @@ export default function HowItWorksClient() {
       <section
         ref={featuresRef}
         id="features"
-        className="min-h-screen snap-start flex items-center justify-center pt-28 pb-24 px-6 bg-gradient-to-br from-oma-beige/80 via-white/90 to-oma-gold/10 relative"
-        style={{
-          transform: getParallaxTransform(0.02),
-        }}
+        className="min-h-screen snap-center flex items-center justify-center relative flex-col px-4 py-24 bg-oma-beige/10"
+        style={getSectionTransform("features")}
       >
         {/* Corner Brackets */}
         <div className="absolute top-24 left-8 w-12 h-12 border-l-4 border-t-4 border-oma-gold/80"></div>
@@ -586,10 +581,8 @@ export default function HowItWorksClient() {
       <section
         ref={faqRef}
         id="faq"
-        className="min-h-screen snap-start flex items-center justify-center pt-28 pb-24 px-6 bg-gradient-to-br from-oma-beige/80 via-white/90 to-oma-gold/10 relative"
-        style={{
-          transform: getParallaxTransform(0.01),
-        }}
+        className="min-h-screen snap-center flex items-center justify-center relative flex-col px-4 py-24 bg-white"
+        style={getSectionTransform("faq")}
       >
         {/* Corner Brackets */}
         <div className="absolute top-24 left-8 w-12 h-12 border-l-4 border-t-4 border-oma-gold/80"></div>
@@ -664,10 +657,8 @@ export default function HowItWorksClient() {
       <section
         ref={ctaRef}
         id="cta"
-        className="min-h-screen snap-start flex items-center justify-center pt-28 pb-24 px-6 bg-gradient-to-br from-oma-beige/80 via-white/90 to-oma-gold/10 relative overflow-hidden"
-        style={{
-          transform: getParallaxTransform(0.005),
-        }}
+        className="min-h-screen snap-end flex items-center justify-center relative flex-col px-4 py-24 bg-gradient-to-t from-oma-plum/10 to-white"
+        style={getSectionTransform("cta")}
       >
         {/* Corner Brackets */}
         <div className="absolute top-24 left-8 w-12 h-12 border-l-4 border-t-4 border-oma-gold/80"></div>
