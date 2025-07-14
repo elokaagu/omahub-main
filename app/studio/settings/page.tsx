@@ -297,30 +297,7 @@ export default function SettingsPage() {
             Manage your studio configuration and content
           </p>
           {/* Super admin only: Refresh homepage brands button */}
-          {isSuperAdmin && (
-            <div className="mt-4 flex items-center gap-3">
-              <Button
-                onClick={handleRefreshHomepageBrands}
-                disabled={refreshingHomepageBrands}
-                className="bg-oma-plum text-white flex items-center gap-2"
-              >
-                {refreshingHomepageBrands ? (
-                  <span className="flex items-center gap-2">
-                    <RefreshCw className="animate-spin h-4 w-4" />
-                    Refreshing...
-                  </span>
-                ) : (
-                  <span className="flex items-center gap-2">
-                    <RefreshCw className="h-4 w-4" />
-                    Refresh Homepage Brands
-                  </span>
-                )}
-              </Button>
-              <span className="text-xs text-oma-cocoa/70">
-                Ensures homepage brand rows are up to date
-              </span>
-            </div>
-          )}
+          {/* Removed Refresh Homepage Brands button and description */}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
