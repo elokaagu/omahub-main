@@ -942,15 +942,17 @@ export default function CreateProductPage() {
                       onChange={(e) =>
                         handleInputChange("price", e.target.value)
                       }
-                      placeholder="0"
+                      placeholder="0.00"
+                      inputMode="decimal"
+                      pattern="^\\d{1,3}(,?\\d{3})*(\\.\\d{0,2})?$"
                       className="border-oma-cocoa/20 focus:border-oma-plum"
                       required={!formData.contact_for_pricing}
                     />
                     <p className="text-xs text-muted-foreground">
                       {isTailorBrand() &&
                       formData.service_type === "consultation"
-                        ? "Enter your consultation fee (e.g., 100)"
-                        : "Enter the regular selling price (e.g., 15,000)"}
+                        ? "Enter your consultation fee (e.g., 100.00)"
+                        : "Enter the regular selling price (e.g., 15,000.50)"}
                     </p>
                   </div>
                 </>
@@ -966,11 +968,14 @@ export default function CreateProductPage() {
                   onChange={(e) =>
                     handleInputChange("sale_price", e.target.value)
                   }
-                  placeholder="0"
+                  placeholder="0.00"
+                  inputMode="decimal"
+                  pattern="^\\d{1,3}(,?\\d{3})*(\\.\\d{0,2})?$"
                   className="border-oma-cocoa/20 focus:border-oma-plum"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Optional discounted price (must be less than regular price)
+                  Optional discounted price (must be less than regular price,
+                  decimals allowed)
                 </p>
               </div>
             </CardContent>
