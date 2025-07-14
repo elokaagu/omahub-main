@@ -48,18 +48,12 @@ export default function SettingsPage() {
   const [ourStorySaving, setOurStorySaving] = useState(false);
   const [refreshingHomepageBrands, setRefreshingHomepageBrands] =
     useState(false);
-  const [tailoredServicesText, setTailoredServicesText] = useState("");
-  const [tailoredServicesLoading, setTailoredServicesLoading] = useState(false);
-  const [tailoredServicesSaving, setTailoredServicesSaving] = useState(false);
 
   // Inline editing states
   const [isEditingAbout, setIsEditingAbout] = useState(false);
   const [isEditingOurStory, setIsEditingOurStory] = useState(false);
-  const [isEditingTailoredServices, setIsEditingTailoredServices] =
-    useState(false);
   const [tempAboutText, setTempAboutText] = useState("");
   const [tempOurStoryText, setTempOurStoryText] = useState("");
-  const [tempTailoredServicesText, setTempTailoredServicesText] = useState("");
 
   // Check if user has super admin permissions
   const isSuperAdmin = user?.role === "super_admin";
@@ -76,19 +70,16 @@ export default function SettingsPage() {
     if (isSuperAdmin) {
       setAboutLoading(true);
       setOurStoryLoading(true);
-      setTailoredServicesLoading(true);
       fetch("/api/platform-settings")
         .then((res) => res.json())
         .then((data) => {
           setAboutText(data.about || "");
           setOurStoryText(data.ourStory || "");
-          setTailoredServicesText(data.tailoredServices || "");
         })
         .catch(() => toast.error("Failed to load About Us/Our Story text"))
         .finally(() => {
           setAboutLoading(false);
           setOurStoryLoading(false);
-          setTailoredServicesLoading(false);
         });
     }
   }, [isSuperAdmin]);
@@ -255,43 +246,6 @@ export default function SettingsPage() {
   const handleCancelOurStory = () => {
     setIsEditingOurStory(false);
     setTempOurStoryText("");
-  };
-
-  // Inline editing handlers for Tailored Services
-  const handleEditTailoredServices = () => {
-    setTempTailoredServicesText(tailoredServicesText);
-    setIsEditingTailoredServices(true);
-  };
-
-  const handleSaveTailoredServices = async () => {
-    setTailoredServicesSaving(true);
-    try {
-      const res = await fetch("/api/platform-settings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          tailoredServices: tempTailoredServicesText,
-          user,
-        }),
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setTailoredServicesText(tempTailoredServicesText);
-        setIsEditingTailoredServices(false);
-        toast.success("Tailored Services content updated successfully");
-      } else {
-        toast.error(data.error || "Failed to update Tailored Services content");
-      }
-    } catch {
-      toast.error("Failed to update Tailored Services content");
-    } finally {
-      setTailoredServicesSaving(false);
-    }
-  };
-
-  const handleCancelTailoredServices = () => {
-    setIsEditingTailoredServices(false);
-    setTempTailoredServicesText("");
   };
 
   // Super admin: Refresh homepage brands
@@ -534,97 +488,6 @@ export default function SettingsPage() {
                       </div>
                       <Button
                         onClick={handleEditOurStory}
-                        variant="outline"
-                        size="sm"
-                        className="w-full"
-                      >
-                        <Edit3 className="h-4 w-4 mr-2" />
-                        Edit Content
-                      </Button>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Tailored Services Card */}
-              <Card className="border-oma-beige">
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between text-oma-plum font-canela">
-                    <span>Tailored Services</span>
-                    {!isEditingTailoredServices && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={handleEditTailoredServices}
-                        className="h-8 w-8 p-0"
-                      >
-                        <Edit3 className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </CardTitle>
-                  <CardDescription className="text-oma-cocoa">
-                    Edit the Tailored Services content displayed on the tailors
-                    and tailored pages
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {isEditingTailoredServices ? (
-                    <div className="space-y-4">
-                      <Textarea
-                        value={tempTailoredServicesText}
-                        onChange={(e) =>
-                          setTempTailoredServicesText(e.target.value)
-                        }
-                        placeholder="Enter Tailored Services content..."
-                        rows={8}
-                        className="min-h-[200px]"
-                      />
-                      <div className="flex gap-2">
-                        <Button
-                          onClick={handleSaveTailoredServices}
-                          disabled={tailoredServicesSaving}
-                          size="sm"
-                          className="bg-oma-plum hover:bg-oma-plum/90 text-white"
-                        >
-                          <Save className="h-4 w-4 mr-2" />
-                          {tailoredServicesSaving ? "Saving..." : "Save"}
-                        </Button>
-                        <Button
-                          onClick={handleCancelTailoredServices}
-                          variant="outline"
-                          size="sm"
-                        >
-                          <X className="h-4 w-4 mr-2" />
-                          Cancel
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      <div className="bg-oma-cream/30 rounded-lg p-4 min-h-[200px]">
-                        {tailoredServicesLoading ? (
-                          <div className="flex items-center justify-center h-32">
-                            <div className="animate-spin h-6 w-6 border-2 border-oma-plum border-t-transparent rounded-full" />
-                          </div>
-                        ) : tailoredServicesText ? (
-                          <div className="prose prose-sm max-w-none">
-                            {tailoredServicesText
-                              .split("\n")
-                              .map((paragraph, index) => (
-                                <p key={index} className="text-oma-cocoa mb-3">
-                                  {paragraph}
-                                </p>
-                              ))}
-                          </div>
-                        ) : (
-                          <p className="text-oma-cocoa/60 italic">
-                            No content set. Click edit to add Tailored Services
-                            content.
-                          </p>
-                        )}
-                      </div>
-                      <Button
-                        onClick={handleEditTailoredServices}
                         variant="outline"
                         size="sm"
                         className="w-full"
