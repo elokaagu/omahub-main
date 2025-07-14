@@ -405,28 +405,22 @@ export default function CreateServicePage() {
               <Select
                 value={formData.brand_id}
                 onValueChange={(value) => handleInputChange("brand_id", value)}
+                required
               >
-                <SelectTrigger className="border-oma-cocoa/20 focus:border-oma-plum">
-                  <SelectValue placeholder="Select a tailor brand" />
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select a brand" />
                 </SelectTrigger>
                 <SelectContent>
-                  {brands
-                    .filter((brand) =>
-                      tailoredCategories.includes(brand.category)
-                    )
-                    .map((brand) => (
-                      <SelectItem key={brand.id} value={brand.id}>
-                        <div className="flex items-center gap-2">
-                          <span>{brand.name}</span>
-                          <Badge
-                            variant="secondary"
-                            className="text-xs bg-oma-plum text-white"
-                          >
-                            {brand.category}
-                          </Badge>
-                        </div>
-                      </SelectItem>
-                    ))}
+                  {brands.map((brand) => (
+                    <SelectItem key={brand.id} value={brand.id}>
+                      {brand.name}
+                      {brand.category && (
+                        <Badge className="ml-2" variant="secondary">
+                          {brand.category}
+                        </Badge>
+                      )}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               {brands.filter((brand) =>
