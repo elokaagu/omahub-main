@@ -452,13 +452,7 @@ export default function AnalyticsDashboard({
             </p>
           </CardContent>
         </Card>
-
-        {/* New Page Views Card */}
-        <PageViewsCard
-          totalBrands={analytics.totalBrands}
-          totalReviews={analytics.totalReviews}
-          totalProducts={analytics.totalProducts}
-        />
+        {/* PageViewsCard removed as requested */}
       </div>
 
       {/* Platform Health Section */}
