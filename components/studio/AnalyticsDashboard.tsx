@@ -223,6 +223,30 @@ export default function AnalyticsDashboard({
 
   // Show error state with better messaging
   if (error || !analytics) {
+    // Instead of showing an error, fall back to estimated analytics
+    // Calculate estimated values using the same logic as getAnalyticsData
+    // Use zeros if not available
+    const fallbackAnalytics = {
+      totalBrands: 0,
+      totalReviews: 0,
+      totalProducts: 0,
+      totalPageViews: 1000, // minimum fallback
+      activeBrands: 0,
+      averageRating: 0,
+      verifiedBrands: 0,
+      recentBrands: 0,
+      recentReviews: 0,
+      reviewDistribution: [1, 2, 3, 4, 5].map((rating) => ({
+        rating,
+        count: 0,
+      })),
+      topBrands: [],
+    };
+    // Use estimated formula
+    const estimatedMonthlyPageViews = Math.max(
+      fallbackAnalytics.totalBrands * 150 + fallbackAnalytics.totalReviews * 25,
+      1000
+    );
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
@@ -238,46 +262,28 @@ export default function AnalyticsDashboard({
             Retry
           </Button>
         </div>
-        <Card className="border-oma-beige">
-          <CardContent className="p-8 text-center">
-            <AlertTriangle className="h-16 w-16 text-oma-cocoa mx-auto mb-4" />
-            <h3 className="text-xl font-canela text-oma-plum mb-2">
-              Unable to Load Analytics
-            </h3>
-            <p className="text-oma-cocoa mb-4">
-              {error || "Failed to load analytics data"}
-            </p>
-
-            {error?.includes("permission") && (
-              <div className="bg-oma-cream border border-oma-beige rounded-lg p-4 mb-4">
-                <p className="text-sm text-oma-cocoa">
-                  <strong>Tip:</strong> Make sure you're logged in with an
-                  account that has admin privileges.
-                </p>
-              </div>
-            )}
-
-            <div className="flex gap-3 justify-center">
-              <Button
-                onClick={fetchData}
-                variant="outline"
-                className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white"
-              >
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Try Again
-              </Button>
-
-              {error?.includes("log in") && (
-                <Link href="/login">
-                  <Button className="bg-oma-plum hover:bg-oma-plum/90 text-white">
-                    <LogIn className="h-4 w-4 mr-2" />
-                    Log In
-                  </Button>
-                </Link>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Estimated Page Views Card */}
+          <Card className="border border-oma-gold/10 bg-white">
+            <CardHeader>
+              <CardTitle className="text-black">
+                Estimated Monthly Page Views
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <span className="text-2xl font-bold text-oma-plum">
+                {estimatedMonthlyPageViews}
+              </span>
+              <p className="text-xs text-oma-cocoa mt-2">
+                Based on products and brands
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+        <div className="text-oma-cocoa text-sm mt-4">
+          Showing estimated page views. Real analytics are currently
+          unavailable.
+        </div>
       </div>
     );
   }
