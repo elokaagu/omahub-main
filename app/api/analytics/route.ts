@@ -3,7 +3,6 @@ import { NextResponse } from "next/server";
 export async function GET() {
   const token = process.env.VERCEL_API_TOKEN;
   const project = "oma-hub.com"; // Change if your Vercel project slug is different
-  const team = undefined; // Optionally set your team ID if needed
 
   if (!token) {
     return NextResponse.json(
@@ -13,7 +12,6 @@ export async function GET() {
   }
 
   try {
-    // Vercel Analytics API endpoint (replace with correct endpoint if needed)
     const url = `https://api.vercel.com/v6/analytics/projects/${project}/stats?range=7d`;
     const res = await fetch(url, {
       headers: {
