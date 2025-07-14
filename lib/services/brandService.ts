@@ -117,7 +117,7 @@ export async function getAllBrands(
       }
       const { data, error } = await supabase
         .from("brands")
-        .select(ESSENTIAL_BRAND_FIELDS)
+        .select("*, video_url, video_thumbnail")
         .order("name");
       if (error) throw new Error(`Failed to fetch brands: ${error.message}`);
       if (!data || data.length === 0)
@@ -134,6 +134,8 @@ export async function getAllBrands(
         rating: item.rating || 4.5,
         is_verified: item.is_verified || false,
         image: item.image || "/placeholder-image.jpg",
+        video_url: item.video_url || undefined,
+        video_thumbnail: item.video_thumbnail || undefined,
       }));
     }
 
@@ -188,7 +190,7 @@ export async function getAllBrands(
     // Fetch all brand data
     const { data, error } = await supabase
       .from("brands")
-      .select(ESSENTIAL_BRAND_FIELDS)
+      .select("*, video_url, video_thumbnail")
       .order("name");
 
     if (error) {
