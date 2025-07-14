@@ -643,3 +643,27 @@ export async function getBrandNamesMap(): Promise<Map<string, string>> {
     throw err;
   }
 }
+
+/**
+ * Fetch brands with tailoring enabled (i.e., brands that have a record in the tailors table)
+ */
+export async function getTailorBrands(): Promise<Brand[]> {
+  if (!supabase) {
+    throw new Error("Supabase client not available");
+  }
+  // Join brands with tailors on brand_id
+  const { data, error } = await supabase
+    .from("brands")
+    .select("*", { count: "exact" })
+    .in(
+      "id",
+      (await supabase.from("tailors").select("brand_id")).data?.map(
+        (t: any) => t.brand_id
+      ) || []
+    );
+  if (error) {
+    console.error("Error fetching tailor brands:", error);
+    return [];
+  }
+  return data || [];
+}

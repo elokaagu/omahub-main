@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { FileUpload } from "@/components/ui/file-upload";
-import { getAllBrands } from "@/lib/services/brandService";
+import { getTailorBrands } from "@/lib/services/brandService";
 import { createProduct } from "@/lib/services/productService";
 import { Brand } from "@/lib/supabase";
 import {
@@ -145,7 +145,7 @@ export default function CreateServicePage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const brandsData = await getAllBrands();
+        const brandsData = await getTailorBrands();
 
         // Filter brands based on user role
         if (user?.role === "super_admin") {
@@ -317,7 +317,11 @@ export default function CreateServicePage() {
         in_stock: true,
         is_custom: true,
         // Service-specific metadata
-        service_type: formData.service_type,
+        service_type: ["consultation", "product", "service"].includes(
+          formData.service_type
+        )
+          ? (formData.service_type as "consultation" | "product" | "service")
+          : undefined,
         consultation_fee: formData.consultation_fee
           ? parseFloat(formData.consultation_fee)
           : undefined,
@@ -337,7 +341,7 @@ export default function CreateServicePage() {
         measurement_guide: formData.measurement_guide || undefined,
         fitting_sessions: formData.fitting_sessions || undefined,
         delivery_method: formData.delivery_method || undefined,
-        includes: formData.includes,
+        includes: formData.includes || [],
       };
 
       await createProduct(serviceData);
