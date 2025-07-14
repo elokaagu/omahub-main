@@ -56,6 +56,7 @@ import {
   type AnalyticsData,
   detectAnalyticsSource,
 } from "@/lib/services/analyticsService";
+import PageViewsCard from "./PageViewsCard";
 
 const COLORS = ["#6B46C1", "#F59E0B", "#10B981", "#EF4444", "#8B5CF6"]; // OmaHub color palette: plum, amber, emerald, red, violet
 
@@ -618,37 +619,11 @@ export default function LeadsTrackingDashboard({
                 </p>
               </Card>
               <Card className="p-4 border-l-4 border-l-blue-500">
-                <h3 className="text-sm font-medium text-oma-cocoa">
-                  Page Views
-                </h3>
-                {vercelLoading ? (
-                  <p className="text-oma-cocoa">Loading...</p>
-                ) : vercelError ? (
-                  <p className="text-red-600 text-xs">{vercelError}</p>
-                ) : vercelAnalytics ? (
-                  <>
-                    <p className="text-2xl font-canela text-oma-plum">
-                      {vercelAnalytics.pageViews?.toLocaleString() ?? 0}
-                    </p>
-                    <p className="text-sm text-oma-cocoa">
-                      {vercelAnalytics.visitors?.toLocaleString() ?? 0} visitors
-                    </p>
-                    <p className="text-xs text-oma-cocoa">
-                      Bounce Rate: {vercelAnalytics.bounceRate ?? 0}%
-                    </p>
-                    <p className="text-xs text-oma-cocoa mt-1">
-                      (Last 7 days, powered by Vercel Analytics)
-                    </p>
-                  </>
-                ) : (
-                  <>
-                    <p className="text-2xl font-canela text-oma-plum">
-                      {platformAnalytics?.totalPageViews?.toLocaleString() ??
-                        "0"}
-                    </p>
-                    <p className="text-sm text-oma-cocoa">Estimated monthly</p>
-                  </>
-                )}
+                <PageViewsCard
+                  totalBrands={platformAnalytics?.totalBrands || 0}
+                  totalReviews={platformAnalytics?.totalReviews || 0}
+                  totalProducts={platformAnalytics?.totalProducts || 0}
+                />
               </Card>
               <Card className="p-4 border-l-4 border-l-purple-500">
                 <h3 className="text-sm font-medium text-oma-cocoa">
