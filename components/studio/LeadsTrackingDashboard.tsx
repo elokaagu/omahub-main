@@ -180,6 +180,9 @@ export default function LeadsTrackingDashboard({
   const [leadsError, setLeadsError] = useState<string | null>(null);
   const [analyticsError, setAnalyticsError] = useState<string | null>(null);
   const [platformError, setPlatformError] = useState<string | null>(null);
+  const [vercelAnalytics, setVercelAnalytics] = useState<any>(null);
+  const [vercelLoading, setVercelLoading] = useState(true);
+  const [vercelError, setVercelError] = useState<string | null>(null);
 
   // Inline editing states
   const [updatingLead, setUpdatingLead] = useState<string | null>(null);
@@ -359,6 +362,28 @@ export default function LeadsTrackingDashboard({
       fetchLeads();
       fetchAnalytics();
       fetchPlatformAnalytics();
+      // Fetch Vercel Analytics
+      async function fetchVercelAnalytics() {
+        setVercelLoading(true);
+        setVercelError(null);
+        try {
+          const res = await fetch("/api/analytics");
+          if (!res.ok) {
+            const err = await res.json();
+            setVercelError(err.error || "Failed to fetch analytics");
+            setVercelAnalytics(null);
+          } else {
+            const data = await res.json();
+            setVercelAnalytics(data);
+          }
+        } catch (error) {
+          setVercelError("Failed to fetch analytics");
+          setVercelAnalytics(null);
+        } finally {
+          setVercelLoading(false);
+        }
+      }
+      fetchVercelAnalytics();
     }
   }, [user, currentPage, filters]);
 
@@ -596,12 +621,34 @@ export default function LeadsTrackingDashboard({
                 <h3 className="text-sm font-medium text-oma-cocoa">
                   Page Views
                 </h3>
-                <p className="text-2xl font-canela text-oma-plum">
-                  {platformAnalytics?.totalPageViews
-                    ? platformAnalytics.totalPageViews.toLocaleString()
-                    : "0"}
-                </p>
-                <p className="text-sm text-oma-cocoa">Estimated monthly</p>
+                {vercelLoading ? (
+                  <p className="text-oma-cocoa">Loading...</p>
+                ) : vercelError ? (
+                  <p className="text-red-600 text-xs">{vercelError}</p>
+                ) : vercelAnalytics ? (
+                  <>
+                    <p className="text-2xl font-canela text-oma-plum">
+                      {vercelAnalytics.pageViews?.toLocaleString() ?? 0}
+                    </p>
+                    <p className="text-sm text-oma-cocoa">
+                      {vercelAnalytics.visitors?.toLocaleString() ?? 0} visitors
+                    </p>
+                    <p className="text-xs text-oma-cocoa">
+                      Bounce Rate: {vercelAnalytics.bounceRate ?? 0}%
+                    </p>
+                    <p className="text-xs text-oma-cocoa mt-1">
+                      (Last 7 days, powered by Vercel Analytics)
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-2xl font-canela text-oma-plum">
+                      {platformAnalytics?.totalPageViews?.toLocaleString() ??
+                        "0"}
+                    </p>
+                    <p className="text-sm text-oma-cocoa">Estimated monthly</p>
+                  </>
+                )}
               </Card>
               <Card className="p-4 border-l-4 border-l-purple-500">
                 <h3 className="text-sm font-medium text-oma-cocoa">
