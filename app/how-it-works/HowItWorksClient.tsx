@@ -261,11 +261,11 @@ export default function HowItWorksClient() {
         className="min-h-screen snap-center flex items-center justify-center relative flex-col px-4 py-24 bg-white"
         style={getSectionTransform("clients")}
       >
-        {/* Corner Brackets - adjusted for snap visibility */}
-        <div className="absolute top-4 left-4 md:top-8 md:left-8 w-8 h-8 md:w-12 md:h-12 border-l-4 border-t-4 border-oma-gold/80"></div>
-        <div className="absolute top-4 right-4 md:top-8 md:right-8 w-8 h-8 md:w-12 md:h-12 border-r-4 border-t-4 border-oma-gold/80"></div>
-        <div className="absolute bottom-4 left-4 md:bottom-8 md:left-8 w-8 h-8 md:w-12 md:h-12 border-l-4 border-b-4 border-oma-gold/80"></div>
-        <div className="absolute bottom-4 right-4 md:bottom-8 md:right-8 w-8 h-8 md:w-12 md:h-12 border-r-4 border-b-4 border-oma-gold/80"></div>
+        {/* Corner Brackets - increased offset for guaranteed visibility */}
+        <div className="absolute top-6 left-6 md:top-10 md:left-10 w-8 h-8 md:w-10 md:h-10 border-l-4 border-t-4 border-oma-gold/80"></div>
+        <div className="absolute top-6 right-6 md:top-10 md:right-10 w-8 h-8 md:w-10 md:h-10 border-r-4 border-t-4 border-oma-gold/80"></div>
+        <div className="absolute bottom-6 left-6 md:bottom-10 md:left-10 w-8 h-8 md:w-10 md:h-10 border-l-4 border-b-4 border-oma-gold/80"></div>
+        <div className="absolute bottom-6 right-6 md:bottom-10 md:right-10 w-8 h-8 md:w-10 md:h-10 border-r-4 border-b-4 border-oma-gold/80"></div>
         {/* Floating Graphics */}
         <div className="absolute top-8 left-1/4 w-24 h-24 bg-gradient-to-br from-oma-plum/20 to-oma-gold/20 rounded-full blur-2xl animate-float-slow" />
         <div className="absolute bottom-12 right-12 w-8 h-8 bg-oma-gold rounded-full animate-bounce shadow-lg" />
@@ -664,11 +664,11 @@ export default function HowItWorksClient() {
         className="min-h-screen snap-end flex items-center justify-center relative flex-col px-4 py-24 bg-gradient-to-t from-oma-plum/10 to-white"
         style={getSectionTransform("cta")}
       >
-        {/* Corner Brackets - adjusted for snap visibility */}
-        <div className="absolute top-4 left-4 md:top-8 md:left-8 w-8 h-8 md:w-12 md:h-12 border-l-4 border-t-4 border-oma-gold/80"></div>
-        <div className="absolute top-4 right-4 md:top-8 md:right-8 w-8 h-8 md:w-12 md:h-12 border-r-4 border-t-4 border-oma-gold/80"></div>
-        <div className="absolute bottom-4 left-4 md:bottom-8 md:left-8 w-8 h-8 md:w-12 md:h-12 border-l-4 border-b-4 border-oma-gold/80"></div>
-        <div className="absolute bottom-4 right-4 md:bottom-8 md:right-8 w-8 h-8 md:w-12 md:h-12 border-r-4 border-b-4 border-oma-gold/80"></div>
+        {/* Corner Brackets - increased offset for guaranteed visibility */}
+        <div className="absolute top-6 left-6 md:top-10 md:left-10 w-8 h-8 md:w-10 md:h-10 border-l-4 border-t-4 border-oma-gold/80"></div>
+        <div className="absolute top-6 right-6 md:top-10 md:right-10 w-8 h-8 md:w-10 md:h-10 border-r-4 border-t-4 border-oma-gold/80"></div>
+        <div className="absolute bottom-6 left-6 md:bottom-10 md:left-10 w-8 h-8 md:w-10 md:h-10 border-l-4 border-b-4 border-oma-gold/80"></div>
+        <div className="absolute bottom-6 right-6 md:bottom-10 md:right-10 w-8 h-8 md:w-10 md:h-10 border-r-4 border-b-4 border-oma-gold/80"></div>
         {/* Background Graphics */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute top-10 left-10 w-40 h-40 bg-gradient-to-br from-oma-plum/10 to-oma-gold/10 rounded-full blur-2xl" />
