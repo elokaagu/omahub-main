@@ -35,6 +35,7 @@ import {
   FadeIn,
   SlideUp,
 } from "@/app/components/ui/animations";
+import { UNIFIED_CATEGORIES } from "@/lib/data/unified-categories";
 
 type TailorWithBrand = Tailor & {
   brand: {
@@ -74,6 +75,14 @@ export default function TailorsPage() {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
+
+  // Tailored categories for filter dropdown
+  const tailoredCategories = UNIFIED_CATEGORIES.filter((cat) =>
+    ["bridal", "custom-design", "made-to-measure", "alterations"].includes(
+      cat.id
+    )
+  );
 
   useEffect(() => {
     async function fetchTailors() {
@@ -95,6 +104,13 @@ export default function TailorsPage() {
 
   useEffect(() => {
     let filtered = tailors;
+
+    // Filter by category
+    if (selectedCategory) {
+      filtered = filtered.filter(
+        (tailor) => tailor.brand.category === selectedCategory
+      );
+    }
 
     // Filter by specialty query param
     const specialty = searchParams.get("specialty");
@@ -126,7 +142,7 @@ export default function TailorsPage() {
     }
 
     setFilteredTailors(filtered);
-  }, [tailors, searchTerm, searchParams]);
+  }, [tailors, searchTerm, searchParams, selectedCategory]);
 
   if (loading) {
     return (
@@ -201,7 +217,25 @@ export default function TailorsPage() {
                   className="w-full pl-12 pr-4 py-3 border border-oma-cocoa/20 rounded-lg focus:outline-none focus:border-oma-plum/50 bg-white/80 text-black placeholder-black/50"
                 />
               </div>
-
+              {/* Category Filter */}
+              <div className="w-full max-w-xs">
+                <Select
+                  value={selectedCategory}
+                  onValueChange={setSelectedCategory}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Filter by Category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">All Categories</SelectItem>
+                    {tailoredCategories.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.displayName}>
+                        {cat.displayName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               {/* View Toggle */}
               <div className="flex items-center gap-4">
                 <div className="flex bg-white/80 rounded-lg p-1 border border-oma-cocoa/20">
@@ -250,7 +284,8 @@ export default function TailorsPage() {
                         transition={{ duration: 0.2 }}
                       >
                         <Card className="overflow-hidden flex flex-col h-full cursor-pointer group">
-                          <div className="w-full h-80 bg-gray-100 overflow-hidden">
+                          {/* Make image much larger vertically */}
+                          <div className="w-full h-[500px] bg-gray-100 overflow-hidden">
                             <BrandCard
                               id={tailor.brand.id}
                               name={tailor.brand.name}
@@ -311,7 +346,8 @@ export default function TailorsPage() {
                       >
                         <Card className="overflow-hidden cursor-pointer group">
                           <div className="flex">
-                            <div className="w-48 h-48 bg-gray-100 overflow-hidden flex-shrink-0">
+                            {/* Make image much larger vertically */}
+                            <div className="w-48 h-64 bg-gray-100 overflow-hidden flex-shrink-0">
                               <BrandCard
                                 id={tailor.brand.id}
                                 name={tailor.brand.name}
@@ -363,3 +399,4 @@ export default function TailorsPage() {
     </div>
   );
 }
+// Note: The tailored nav dropdown is already connected to /tailors in navigation logic.
