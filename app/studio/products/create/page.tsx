@@ -939,7 +939,7 @@ export default function CreateProductPage() {
                       id="price"
                       type="number"
                       step="0.01"
-                      value={formatPriceForDisplay(formData.price)}
+                      value={formData.price}
                       onChange={(e) =>
                         handleInputChange("price", e.target.value)
                       }
@@ -965,7 +965,7 @@ export default function CreateProductPage() {
                   id="sale_price"
                   type="number"
                   step="0.01"
-                  value={formatPriceForDisplay(formData.sale_price)}
+                  value={formData.sale_price}
                   onChange={(e) =>
                     handleInputChange("sale_price", e.target.value)
                   }
