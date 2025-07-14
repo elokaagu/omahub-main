@@ -102,6 +102,19 @@ export default function TailorsPage() {
     )
   );
 
+  // Sync selectedCategory with specialty query param
+  useEffect(() => {
+    const specialty = searchParams.get("specialty");
+    if (
+      specialty &&
+      tailoredCategories.some((cat) => cat.displayName === specialty)
+    ) {
+      setSelectedCategory(specialty);
+    } else if (!specialty) {
+      setSelectedCategory("");
+    }
+  }, [searchParams, tailoredCategories]);
+
   useEffect(() => {
     async function fetchTailors() {
       try {
