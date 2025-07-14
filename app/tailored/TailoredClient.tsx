@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { getTailorsWithBrands } from "@/lib/services/tailorService";
 import { OptimizedImage } from "@/components/ui/optimized-image";
+import { BrandCard } from "@/components/ui/brand-card";
 
 // Animation helpers inspired by HowItWorksClient
 const getSectionTransform = (isVisible: boolean) => ({
@@ -244,28 +245,35 @@ export default function TailoredClient() {
                   tabIndex={0}
                 >
                   <div className="relative w-full aspect-[3/4] bg-oma-beige/20 overflow-hidden">
-                    <OptimizedImage
-                      src={
-                        tailor.image ||
-                        tailor.brand?.image ||
-                        "/lovable-uploads/020cb90b-2fee-4db4-a7ee-538515580ef2.png"
-                      }
-                      alt={tailor.title || tailor.brand?.name || "Tailor"}
-                      aspectRatio="3/4"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      quality={90}
-                      fill
-                      onError={() => {
-                        // Fallback to placeholder if image fails
-                        console.log(
-                          `Image failed to load for tailor: ${tailor.title || tailor.brand?.name}`
-                        );
-                      }}
-                    />
-                    {tailor.brand?.is_verified && (
-                      <span className="absolute top-4 right-4 bg-oma-plum text-white text-xs px-4 py-1 rounded-full shadow font-semibold z-10">
-                        Verified
-                      </span>
+                    {tailor.brand ? (
+                      <BrandCard
+                        id={tailor.brand.id}
+                        name={tailor.brand.name}
+                        image={tailor.image || tailor.brand.image}
+                        category={tailor.brand.category}
+                        location={tailor.brand.location}
+                        isVerified={tailor.brand.is_verified}
+                        video_url={tailor.brand.video_url}
+                        video_thumbnail={tailor.brand.video_thumbnail}
+                        className="h-full"
+                      />
+                    ) : (
+                      <OptimizedImage
+                        src={
+                          tailor.image ||
+                          "/lovable-uploads/020cb90b-2fee-4db4-a7ee-538515580ef2.png"
+                        }
+                        alt={tailor.title || "Tailor"}
+                        aspectRatio="3/4"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        quality={90}
+                        fill
+                        onError={() => {
+                          console.log(
+                            `Image failed to load for tailor: ${tailor.title}`
+                          );
+                        }}
+                      />
                     )}
                   </div>
                   <div className="p-6 text-center">

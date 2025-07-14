@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { BrandCard } from "@/components/ui/brand-card";
 import {
   Select,
   SelectContent,
@@ -27,6 +28,13 @@ import {
 } from "@/components/ui/select";
 import { Loading } from "@/components/ui/loading";
 import { useSearchParams } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  StaggerContainer,
+  StaggerItem,
+  FadeIn,
+  SlideUp,
+} from "@/app/components/ui/animations";
 
 type TailorWithBrand = Tailor & {
   brand: {
@@ -35,6 +43,8 @@ type TailorWithBrand = Tailor & {
     location: string;
     is_verified: boolean;
     category: string;
+    video_url?: string;
+    video_thumbnail?: string;
   };
 };
 
@@ -121,12 +131,12 @@ export default function TailorsPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-oma-beige/30 to-white">
-        <div className="max-w-7xl mx-auto px-6 py-24">
+        <div className="max-w-7xl mx-auto px-6 py-12">
           <div className="animate-pulse">
             <div className="h-12 bg-oma-cocoa/10 rounded-lg mb-8"></div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[...Array(6)].map((_, i) => (
-                <div key={i} className="bg-white rounded-xl p-6 shadow-sm">
+                <div key={i} className="bg-white rounded-xl p-4 shadow-sm">
                   <div className="h-48 bg-oma-cocoa/10 rounded-lg mb-4"></div>
                   <div className="h-6 bg-oma-cocoa/10 rounded mb-2"></div>
                   <div className="h-4 bg-oma-cocoa/10 rounded w-2/3"></div>
@@ -142,7 +152,7 @@ export default function TailorsPage() {
   if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-oma-beige/30 to-white">
-        <div className="max-w-7xl mx-auto px-6 py-24">
+        <div className="max-w-7xl mx-auto px-6 py-12">
           <div className="text-center">
             <h1 className="text-3xl font-canela text-oma-cocoa mb-4">
               Something went wrong
@@ -162,110 +172,193 @@ export default function TailorsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-oma-beige/30 to-white">
-      <div className="max-w-7xl mx-auto px-6 py-24">
+      <div className="max-w-7xl mx-auto px-6 py-12">
         {/* Header */}
-        <div className="text-center mb-16">
-          <h1 className="text-5xl font-canela text-black mb-6">
-            Our Designers
-          </h1>
-          <p className="text-xl text-oma-cocoa/80 max-w-3xl mx-auto">
-            Discover skilled artisans creating bespoke garments with precision
-            and passion
-          </p>
-        </div>
+        <FadeIn>
+          <div className="text-center mb-12">
+            <h1 className="text-5xl font-canela text-black mb-4">
+              Our Designers
+            </h1>
+            <p className="text-xl text-oma-cocoa/80 max-w-3xl mx-auto">
+              Discover skilled artisans creating bespoke garments with precision
+              and passion
+            </p>
+          </div>
+        </FadeIn>
 
         {/* Search and Filters */}
-        <div className="mb-12">
-          <div className="flex flex-col lg:flex-row gap-6 items-center justify-between">
-            {/* Search */}
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-black/40 w-5 h-5" />
-              <input
-                type="text"
-                placeholder="Search tailors..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 border border-oma-cocoa/20 rounded-lg focus:outline-none focus:border-oma-plum/50 bg-white/80 text-black placeholder-black/50"
-              />
-            </div>
+        <SlideUp delay={0.2}>
+          <div className="mb-8">
+            <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
+              {/* Search */}
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-black/40 w-5 h-5" />
+                <input
+                  type="text"
+                  placeholder="Search tailors..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-12 pr-4 py-3 border border-oma-cocoa/20 rounded-lg focus:outline-none focus:border-oma-plum/50 bg-white/80 text-black placeholder-black/50"
+                />
+              </div>
 
-            {/* View Toggle */}
-            <div className="flex items-center gap-4">
-              <div className="flex bg-white/80 rounded-lg p-1 border border-oma-cocoa/20">
-                <button
-                  onClick={() => setViewMode("grid")}
-                  className={`p-2 rounded-md transition-colors ${
-                    viewMode === "grid"
-                      ? "bg-oma-plum text-white"
-                      : "text-black/60 hover:text-black"
-                  }`}
-                >
-                  <Grid className="w-5 h-5" />
-                </button>
-                <button
-                  onClick={() => setViewMode("list")}
-                  className={`p-2 rounded-md transition-colors ${
-                    viewMode === "list"
-                      ? "bg-oma-plum text-white"
-                      : "text-black/60 hover:text-black"
-                  }`}
-                >
-                  <List className="w-5 h-5" />
-                </button>
+              {/* View Toggle */}
+              <div className="flex items-center gap-4">
+                <div className="flex bg-white/80 rounded-lg p-1 border border-oma-cocoa/20">
+                  <button
+                    onClick={() => setViewMode("grid")}
+                    className={`p-2 rounded-md transition-colors ${
+                      viewMode === "grid"
+                        ? "bg-oma-plum text-white"
+                        : "text-black/60 hover:text-black"
+                    }`}
+                  >
+                    <Grid className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={() => setViewMode("list")}
+                    className={`p-2 rounded-md transition-colors ${
+                      viewMode === "list"
+                        ? "bg-oma-plum text-white"
+                        : "text-black/60 hover:text-black"
+                    }`}
+                  >
+                    <List className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </SlideUp>
 
         {/* Tailors Grid/List */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredTailors.map((tailor) =>
-            tailor.brand ? (
-              <Card key={tailor.id} className="overflow-hidden flex flex-col">
-                <div className="w-full h-56 bg-gray-100">
-                  <OptimizedImage
-                    src={tailor.image}
-                    alt={tailor.title}
-                    className="w-full h-full object-cover object-center rounded-t-lg"
-                  />
-                </div>
-                <div className="flex-1 flex flex-col p-6">
-                  <div className="flex items-center gap-2 mb-2">
-                    <h3 className="font-semibold text-lg text-black leading-tight line-clamp-2 pr-2">
-                      {tailor.brand.name}
-                    </h3>
-                    {tailor.brand.is_verified && (
-                      <Badge className="bg-oma-gold text-black font-semibold px-2 py-1 text-xs uppercase ml-2">
-                        Verified
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="font-canela text-xl text-black mb-1">
-                    {tailor.title}
-                  </div>
-                  {tailor.price_range && (
-                    <div className="text-base text-black mb-1">
-                      {tailor.price_range}
-                    </div>
-                  )}
-                  <div className="text-sm text-black mb-1">
-                    {tailor.brand.category}
-                  </div>
-                  <div className="text-sm text-black mb-4">
-                    {tailor.brand.location}
-                  </div>
-                  <div className="flex justify-end mt-auto">
-                    <Link href={`/tailors/${tailor.id}`}>
-                      <Button className="bg-oma-plum text-white hover:bg-oma-plum/90 transition-colors">
-                        View Details
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
-              </Card>
-            ) : null
+        <AnimatePresence mode="wait">
+          {viewMode === "grid" ? (
+            <motion.div
+              key="grid"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredTailors.map((tailor, index) =>
+                  tailor.brand ? (
+                    <StaggerItem key={tailor.id} index={index}>
+                      <motion.div
+                        whileHover={{ y: -4 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <Card className="overflow-hidden flex flex-col h-full cursor-pointer group">
+                          <div className="w-full h-48 bg-gray-100 overflow-hidden">
+                            <BrandCard
+                              id={tailor.brand.id}
+                              name={tailor.brand.name}
+                              image={tailor.image}
+                              category={tailor.brand.category}
+                              location={tailor.brand.location}
+                              isVerified={tailor.brand.is_verified}
+                              video_url={tailor.brand.video_url}
+                              video_thumbnail={tailor.brand.video_thumbnail}
+                              className="h-full"
+                            />
+                          </div>
+                          <div className="flex-1 flex flex-col p-4">
+                            <div className="font-canela text-xl text-black mb-1">
+                              {tailor.title}
+                            </div>
+                            {tailor.price_range && (
+                              <div className="text-base text-black mb-1">
+                                {tailor.price_range}
+                              </div>
+                            )}
+                            <div className="text-sm text-black mb-1">
+                              {tailor.brand.category}
+                            </div>
+                            <div className="text-sm text-black mb-4">
+                              {tailor.brand.location}
+                            </div>
+                            <div className="flex justify-end mt-auto">
+                              <Link href={`/tailor/${tailor.id}`}>
+                                <Button className="bg-oma-plum text-white hover:bg-oma-plum/90 transition-colors">
+                                  View Details
+                                </Button>
+                              </Link>
+                            </div>
+                          </div>
+                        </Card>
+                      </motion.div>
+                    </StaggerItem>
+                  ) : null
+                )}
+              </StaggerContainer>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="list"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <StaggerContainer className="space-y-4">
+                {filteredTailors.map((tailor, index) =>
+                  tailor.brand ? (
+                    <StaggerItem key={tailor.id} index={index}>
+                      <motion.div
+                        whileHover={{ x: 4 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <Card className="overflow-hidden cursor-pointer group">
+                          <div className="flex">
+                            <div className="w-48 h-32 bg-gray-100 overflow-hidden flex-shrink-0">
+                              <BrandCard
+                                id={tailor.brand.id}
+                                name={tailor.brand.name}
+                                image={tailor.image}
+                                category={tailor.brand.category}
+                                location={tailor.brand.location}
+                                isVerified={tailor.brand.is_verified}
+                                video_url={tailor.brand.video_url}
+                                video_thumbnail={tailor.brand.video_thumbnail}
+                                className="h-full"
+                              />
+                            </div>
+                            <div className="flex-1 flex flex-col justify-between p-4">
+                              <div>
+                                <div className="font-canela text-xl text-black mb-1">
+                                  {tailor.title}
+                                </div>
+                                {tailor.price_range && (
+                                  <div className="text-base text-black mb-1">
+                                    {tailor.price_range}
+                                  </div>
+                                )}
+                                <div className="text-sm text-black mb-1">
+                                  {tailor.brand.category}
+                                </div>
+                                <div className="text-sm text-black">
+                                  {tailor.brand.location}
+                                </div>
+                              </div>
+                              <div className="flex justify-end mt-4">
+                                <Link href={`/tailor/${tailor.id}`}>
+                                  <Button className="bg-oma-plum text-white hover:bg-oma-plum/90 transition-colors">
+                                    View Details
+                                  </Button>
+                                </Link>
+                              </div>
+                            </div>
+                          </div>
+                        </Card>
+                      </motion.div>
+                    </StaggerItem>
+                  ) : null
+                )}
+              </StaggerContainer>
+            </motion.div>
           )}
-        </div>
+        </AnimatePresence>
       </div>
     </div>
   );

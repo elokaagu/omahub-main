@@ -25,7 +25,11 @@ export async function middleware(request: NextRequest) {
   // Check if platform has been made public
   const isPublic = request.cookies.get("omahub-public")?.value === "true";
 
-  if (!isPublic) {
+  // TEMPORARY: Bypass password gate for development
+  // TODO: Remove this bypass when going to production
+  const isDevelopment = process.env.NODE_ENV === "development";
+
+  if (!isPublic && !isDevelopment) {
     // Check for password gate access
     const hasPasswordAccess =
       request.cookies.get("omahub-access")?.value === "granted";

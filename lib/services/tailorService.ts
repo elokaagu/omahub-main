@@ -87,6 +87,8 @@ export async function getTailorsWithBrands(): Promise<
       is_verified: boolean;
       category: string;
       image: string;
+      video_url?: string;
+      video_thumbnail?: string;
     };
   })[]
 > {
@@ -99,7 +101,7 @@ export async function getTailorsWithBrands(): Promise<
     .select(
       `
       *,
-      brand:brands(id, name, location, is_verified, category, image)
+      brand:brands(id, name, location, is_verified, category, image, video_url, video_thumbnail)
     `
     )
     .order("updated_at", { ascending: false, nullsFirst: false })

@@ -95,10 +95,11 @@ export function BrandCard({
             : "aspect-[4/5] min-h-[340px]"
         )}
       >
+        {/* Prioritize video over image - show video if available */}
         {video_url ? (
           <VideoPlayer
             videoUrl={video_url}
-            thumbnailUrl={video_thumbnail}
+            thumbnailUrl={video_thumbnail || image}
             fallbackImageUrl={image}
             alt={name}
             className={cn(
@@ -114,6 +115,9 @@ export function BrandCard({
             loop={true}
             controls={false}
             showPlayButton={false}
+            onVideoError={() => {
+              console.warn(`Video failed to load for brand: ${name}`);
+            }}
           />
         ) : (
           <AuthImage
