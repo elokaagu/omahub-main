@@ -50,7 +50,7 @@ export default function FAQPage() {
     <div className="min-h-screen bg-gradient-to-br from-oma-cream via-white to-oma-beige">
       <div className="max-w-4xl mx-auto px-6 pt-40 pb-24">
         {/* Header */}
-        <div className="bg-white/80 backdrop-blur-sm border-b border-oma-gold/20 sticky top-0 z-10 rounded-t-2xl">
+        <div className="bg-white/80 backdrop-blur-sm border-b border-oma-gold/20 rounded-t-2xl">
           <div className="px-6 py-6">
             <Link
               href="/"
