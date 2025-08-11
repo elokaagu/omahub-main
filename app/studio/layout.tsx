@@ -32,7 +32,7 @@ import { LoadingPage } from "@/components/ui/loading";
 import UserProfile from "@/components/auth/UserProfile";
 import { NavigationLink } from "@/components/ui/navigation-link";
 import { TailoringEventProvider } from "@/contexts/NavigationContext";
-import ErrorBoundary from "@/components/ErrorBoundary";
+import ErrorBoundary from "../components/ErrorBoundary";
 
 export default function StudioLayout({
   children,
