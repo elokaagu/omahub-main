@@ -120,7 +120,8 @@ export async function POST(request: NextRequest) {
     }
 
     // If the user is being assigned super_admin role, automatically assign all brands
-    let finalOwnedBrands = owned_brands || [];
+    // IMPORTANT: For super_admin, we ALWAYS assign all brands regardless of form input
+    let finalOwnedBrands: string[] = [];
 
     if (role === "super_admin") {
       console.log("🔄 Auto-assigning all brands to super admin:", email);
@@ -135,7 +136,10 @@ export async function POST(request: NextRequest) {
           "❌ Error fetching brands for auto-assignment:",
           brandsError
         );
-        // Continue with manual assignment if brand fetch fails
+        return NextResponse.json(
+          { error: "Failed to fetch brands for super admin assignment" },
+          { status: 500 }
+        );
       } else {
         const allBrandIds = allBrands.map((brand) => brand.id);
         finalOwnedBrands = allBrandIds;
@@ -143,6 +147,9 @@ export async function POST(request: NextRequest) {
           `✅ Auto-assigned ${allBrandIds.length} brands to super admin`
         );
       }
+    } else {
+      // For non-super-admin roles, use the brands from the form
+      finalOwnedBrands = owned_brands || [];
     }
 
     // Check if user already exists
@@ -159,6 +166,13 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
+
+    // Log the final assignment details for debugging
+    console.log(`📋 Role assignment details for ${email}:`);
+    console.log(`  Requested role: ${role}`);
+    console.log(`  Form brands: ${owned_brands ? owned_brands.length : 0}`);
+    console.log(`  Final brands: ${finalOwnedBrands.length}`);
+    console.log(`  Is super admin: ${role === "super_admin"}`);
 
     if (existingUser) {
       // Update existing user
@@ -217,12 +231,29 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      // Validate that super_admin users have all brands assigned
+      if (role === "super_admin") {
+        const { data: totalBrands, error: countError } = await supabaseAdmin
+          .from("brands")
+          .select("id", { count: "exact" });
+        
+        if (!countError && totalBrands && finalOwnedBrands.length !== totalBrands.length) {
+          console.error(`🚨 Super admin validation failed: Expected ${totalBrands.length} brands, got ${finalOwnedBrands.length}`);
+          return NextResponse.json(
+            { error: "Super admin brand assignment validation failed" },
+            { status: 500 }
+          );
+        }
+        console.log(`✅ Super admin validation passed: ${finalOwnedBrands.length} brands assigned`);
+      }
+
       return NextResponse.json({
         user: updatedUser,
         action: "updated",
         autoAssignedBrands:
           role === "super_admin" ? finalOwnedBrands.length : 0,
         profileRefreshTriggered: true,
+        validation: role === "super_admin" ? "passed" : "not_applicable",
       });
     } else {
       // Create new user profile
@@ -246,11 +277,28 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      // Validate that super_admin users have all brands assigned
+      if (role === "super_admin") {
+        const { data: totalBrands, error: countError } = await supabaseAdmin
+          .from("brands")
+          .select("id", { count: "exact" });
+        
+        if (!countError && totalBrands && finalOwnedBrands.length !== totalBrands.length) {
+          console.error(`🚨 Super admin validation failed: Expected ${totalBrands.length} brands, got ${finalOwnedBrands.length}`);
+          return NextResponse.json(
+            { error: "Super admin brand assignment validation failed" },
+            { status: 500 }
+          );
+        }
+        console.log(`✅ Super admin validation passed: ${finalOwnedBrands.length} brands assigned`);
+      }
+
       return NextResponse.json({
         user: newUser,
         action: "created",
         autoAssignedBrands:
           role === "super_admin" ? finalOwnedBrands.length : 0,
+        validation: role === "super_admin" ? "passed" : "not_applicable",
       });
     }
   } catch (error) {
