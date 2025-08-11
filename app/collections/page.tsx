@@ -89,6 +89,9 @@ export default function CataloguesPage() {
           }),
         ]);
 
+        // Filter out portfolio items from public display
+        const publicProducts = productData.filter((product: any) => product.service_type !== "portfolio");
+
         console.log("✅ Fetched data:", {
           catalogues: catalogueData.length,
           products: productData.length,
@@ -104,8 +107,8 @@ export default function CataloguesPage() {
           }))
         );
         setFilteredCatalogues(catalogueData || []);
-        setProducts(productData || []);
-        setFilteredProducts(productData || []);
+        setProducts(publicProducts || []);
+        setFilteredProducts(publicProducts || []);
       } catch (err) {
         console.error("Error fetching data:", err);
         setError("Failed to load information");

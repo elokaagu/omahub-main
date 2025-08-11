@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { getAllBrands } from "@/lib/services/brandService";
-import { getProductsByBrand } from "@/lib/services/productService";
+import { getProductsByBrand, getAllProductsByBrand } from "@/lib/services/productService";
 import { Brand, Product } from "@/lib/supabase";
 import {
   Card,
@@ -168,7 +168,7 @@ export default function ServicesPage() {
 
       for (const brand of userBrands) {
         try {
-          const brandProducts = await getProductsByBrand(brand.id);
+          const brandProducts = await getAllProductsByBrand(brand.id); // Use getAllProductsByBrand to include portfolio items
 
           // Show all products for tailoring brands
           const brandServices = brandProducts.map((product) => ({

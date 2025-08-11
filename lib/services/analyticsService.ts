@@ -709,6 +709,7 @@ export async function getBrandOwnerGrowthData(
       .from("products")
       .select("created_at")
       .in("brand_id", ownedBrandIds)
+      .neq("service_type", "portfolio") // Exclude portfolio items from public analytics
       .order("created_at");
 
     if (error) throw error;

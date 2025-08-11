@@ -14,6 +14,7 @@ import {
   getAllProducts,
   getProductsWithDetails,
   getProductsWithBrandCurrency,
+  getAllProductsWithBrandCurrency,
   deleteProduct,
 } from "@/lib/services/productService";
 import { Product, Brand, Catalogue } from "@/lib/supabase";
@@ -182,7 +183,7 @@ export default function ProductsPage() {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        const productsData = await getProductsWithBrandCurrency();
+        const productsData = await getAllProductsWithBrandCurrency(); // Use getAllProductsWithBrandCurrency to include portfolio items for admin
 
         // Filter products based on user role
         if (user?.role === "super_admin") {

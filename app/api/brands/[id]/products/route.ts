@@ -25,7 +25,7 @@ export async function GET(
     const supabase = await createServerSupabaseClient();
     const brandId = params.id;
 
-    // Get brand products with pricing data
+    // Get brand products with pricing data (excludes portfolio items)
     const { data: products, error } = await supabase
       .from("products")
       .select(
@@ -47,6 +47,7 @@ export async function GET(
       )
       .eq("brand_id", brandId)
       .eq("in_stock", true)
+      .neq("service_type", "portfolio") // Exclude portfolio items from public display
       .order("created_at", { ascending: false });
 
     if (error) {

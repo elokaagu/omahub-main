@@ -45,7 +45,7 @@ export async function getProductById(id: string): Promise<Product | null> {
 }
 
 /**
- * Fetch products by brand ID
+ * Fetch products by brand ID (excludes portfolio items for public display)
  */
 export async function getProductsByBrand(brandId: string): Promise<Product[]> {
   if (!supabase) {
@@ -56,6 +56,7 @@ export async function getProductsByBrand(brandId: string): Promise<Product[]> {
     .from("products")
     .select("*")
     .eq("brand_id", brandId)
+    .neq("service_type", "portfolio") // Exclude portfolio items from public display
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -67,7 +68,29 @@ export async function getProductsByBrand(brandId: string): Promise<Product[]> {
 }
 
 /**
- * Fetch products by catalogue ID
+ * Fetch ALL products by brand ID (including portfolio items for admin use)
+ */
+export async function getAllProductsByBrand(brandId: string): Promise<Product[]> {
+  if (!supabase) {
+    throw new Error("Supabase client not available");
+  }
+
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .eq("brand_id", brandId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching all products by brand:", error);
+    throw error;
+  }
+
+  return data || [];
+}
+
+/**
+ * Fetch products by catalogue ID (excludes portfolio items for public display)
  */
 export async function getProductsByCatalogue(
   catalogueId: string
@@ -80,6 +103,7 @@ export async function getProductsByCatalogue(
     .from("products")
     .select("*")
     .eq("catalogue_id", catalogueId)
+    .neq("service_type", "portfolio") // Exclude portfolio items from public display
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -170,12 +194,13 @@ export async function getProductsWithBrandCurrency(): Promise<
   }
 
   try {
-    // Get products with complete brand information including price_range
+    // Get products with complete brand information including price_range (excludes portfolio items)
     const { data: productsWithBrands, error: productsError } =
       await supabase.from("products").select(`
         *,
         brand:brands(id, name, location, is_verified, price_range)
-      `);
+      `)
+      .neq("service_type", "portfolio"); // Exclude portfolio items from public display
 
     if (productsError) {
       console.error("Error fetching products with brands:", productsError);
@@ -212,6 +237,72 @@ export async function getProductsWithBrandCurrency(): Promise<
     return productsWithDetails;
   } catch (error) {
     console.error("Error in getProductsWithBrandCurrency:", error);
+    throw error;
+  }
+}
+
+/**
+ * Fetch ALL products with complete brand information including price_range (includes portfolio items for admin use)
+ */
+export async function getAllProductsWithBrandCurrency(): Promise<
+  (Product & {
+    brand: {
+      name: string;
+      id: string;
+      location: string;
+      is_verified: boolean;
+      price_range?: string;
+    };
+    catalogue?: { title: string; id: string };
+  })[]
+> {
+  if (!supabase) {
+    throw new Error("Supabase client not available");
+  }
+
+  try {
+    // Get ALL products with complete brand information including price_range (includes portfolio items)
+    const { data: productsWithBrands, error: productsError } =
+      await supabase.from("products").select(`
+        *,
+        brand:brands(id, name, location, is_verified, price_range)
+      `);
+
+    if (productsError) {
+      console.error("Error fetching all products with brands:", productsError);
+      throw productsError;
+    }
+
+    if (!productsWithBrands || productsWithBrands.length === 0) {
+      return [];
+    }
+
+    // Get all catalogues to manually join
+    const { data: catalogues, error: cataloguesError } = await supabase
+      .from("catalogues")
+      .select("id, title");
+
+    if (cataloguesError) {
+      console.error("Error fetching catalogues:", cataloguesError);
+      // Continue without catalogues data
+    }
+
+    // Manually join catalogues data
+    const productsWithDetails = productsWithBrands.map((product: any) => {
+      const catalogue = catalogues?.find(
+        (c: any) => c.id === product.catalogue_id
+      );
+      return {
+        ...product,
+        catalogue: catalogue
+          ? { id: catalogue.id, title: catalogue.title }
+          : undefined,
+      };
+    });
+
+    return productsWithDetails;
+  } catch (error) {
+    console.error("Error in getAllProductsWithBrandCurrency:", error);
     throw error;
   }
 }
