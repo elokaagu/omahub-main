@@ -7,12 +7,9 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-// Admin emails to notify
-const ADMIN_EMAILS = [
-  "eloka.agu@icloud.com",
-  "shannonalisa@oma-hub.com",
-  "eloka@satellitelabs.xyz",
-];
+import { adminEmailServiceServer } from "@/lib/services/adminEmailService.server";
+
+// Admin emails will be fetched from database
 
 export async function POST(request: NextRequest) {
   try {
@@ -41,8 +38,11 @@ export async function POST(request: NextRequest) {
       created_at: newUser.created_at,
     });
 
+    // Get admin emails from database
+    const adminEmails = await adminEmailServiceServer.getWebhookAdminEmails();
+    
     // Send notification emails to admins
-    await sendNewAccountNotification(newUser);
+    await sendNewAccountNotification(newUser, adminEmails);
 
     // Log to console for immediate visibility
     console.log("=== NEW ACCOUNT CREATED ===");
@@ -50,6 +50,7 @@ export async function POST(request: NextRequest) {
     console.log(`Role: ${newUser.role}`);
     console.log(`User ID: ${newUser.id}`);
     console.log(`Created: ${new Date(newUser.created_at).toLocaleString()}`);
+    console.log(`Notifying admins: ${adminEmails.join(', ')}`);
     console.log("============================");
 
     return NextResponse.json({
@@ -65,7 +66,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function sendNewAccountNotification(user: any) {
+async function sendNewAccountNotification(user: any, adminEmails: string[]) {
   try {
     // Check if Resend is configured
     if (!process.env.RESEND_API_KEY) {
@@ -82,7 +83,7 @@ async function sendNewAccountNotification(user: any) {
     const roleDisplay = user.role.replace("_", " ").toUpperCase();
 
     // Send email to each admin
-    for (const adminEmail of ADMIN_EMAILS) {
+    for (const adminEmail of adminEmails) {
       try {
         await resend.emails.send({
           from: "OmaHub <info@oma-hub.com>",

@@ -1,5 +1,6 @@
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import type { Database } from "../types/supabase";
+import { adminEmailService } from "./adminEmailService";
 
 export type Permission =
   | "studio.access"
@@ -35,19 +36,13 @@ const rolePermissions: Record<Role, Permission[]> = {
   ],
 };
 
-const SUPER_ADMIN_EMAILS = [
-  "eloka.agu@icloud.com",
-  "shannonalisa@oma-hub.com",
-  "nnamdiohaka@gmail.com",
-];
-const BRAND_ADMIN_EMAILS = ["eloka@culturin.com"];
-
-function isSuperAdminEmail(email: string): boolean {
-  return SUPER_ADMIN_EMAILS.includes(email);
+// Admin emails are now managed by adminEmailService
+async function isSuperAdminEmail(email: string): Promise<boolean> {
+  return await adminEmailService.isSuperAdmin(email);
 }
 
-function isBrandAdminEmail(email: string): boolean {
-  return BRAND_ADMIN_EMAILS.includes(email);
+async function isBrandAdminEmail(email: string): Promise<boolean> {
+  return await adminEmailService.isBrandAdmin(email);
 }
 
 export async function getUserPermissions(
@@ -60,13 +55,13 @@ export async function getUserPermissions(
 
     // Fast path: If we have the user's email, check for admin roles immediately
     if (userEmail) {
-      if (isSuperAdminEmail(userEmail)) {
+      if (await isSuperAdminEmail(userEmail)) {
         console.log(
           "✅ Client Permissions: Super admin email detected, returning super admin permissions"
         );
         return rolePermissions.super_admin;
       }
-      if (isBrandAdminEmail(userEmail)) {
+      if (await isBrandAdminEmail(userEmail)) {
         console.log(
           "✅ Client Permissions: Brand admin email detected, returning brand admin permissions"
         );
@@ -100,13 +95,13 @@ export async function getUserPermissions(
       console.error("❌ Client Permissions: Session error:", sessionError);
       // Fallback to email-based permissions if available
       if (userEmail) {
-        if (isSuperAdminEmail(userEmail)) {
+        if (await isSuperAdminEmail(userEmail)) {
           console.log(
             "🔄 Client Permissions: Session failed but super admin email provided"
           );
           return rolePermissions.super_admin;
         }
-        if (isBrandAdminEmail(userEmail)) {
+        if (await isBrandAdminEmail(userEmail)) {
           console.log(
             "🔄 Client Permissions: Session failed but brand admin email provided"
           );
@@ -156,9 +151,9 @@ export async function getUserPermissions(
         console.log(
           "⚠️ Client Permissions: Profile not found, attempting to create..."
         );
-        const role = isSuperAdminEmail(session.user.email)
+        const role = (await isSuperAdminEmail(session.user.email))
           ? "super_admin"
-          : isBrandAdminEmail(session.user.email)
+          : (await isBrandAdminEmail(session.user.email))
             ? "brand_admin"
             : "user";
 
