@@ -1,6 +1,33 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase-unified";
 
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const supabase = await createServerSupabaseClient();
+    const brandId = params.id;
+
+    const { data: brand, error } = await supabase
+      .from("brands")
+      .select("*")
+      .eq("id", brandId)
+      .single();
+
+    if (error) {
+      return NextResponse.json({ error: "Brand not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ brand });
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+
 export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }

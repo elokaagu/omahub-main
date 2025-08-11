@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Edit, Trash2, Eye, Image as ImageIcon } from "lucide-react";
 import Link from "next/link";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 interface PortfolioItem {
   id: string;
@@ -46,26 +46,16 @@ export default function PortfolioPage() {
       if (response.ok) {
         const data = await response.json();
         // Filter for portfolio items only
-        const portfolioData = data.filter((item: any) => 
-          item.service_type === "portfolio" && item.brand_id
+        const portfolioData = data.filter(
+          (item: any) => item.service_type === "portfolio" && item.brand_id
         );
-        
-        // Enrich with brand names
-        const enrichedPortfolio = await Promise.all(
-          portfolioData.map(async (item: any) => {
-            try {
-              const brandResponse = await fetch(`/api/studio/brands/${item.brand_id}`);
-              if (brandResponse.ok) {
-                const brandData = await brandResponse.json();
-                return { ...item, brand_name: brandData.brand?.name || "Unknown Brand" };
-              }
-            } catch (error) {
-              console.error("Error fetching brand:", error);
-            }
-            return { ...item, brand_name: "Unknown Brand" };
-          })
-        );
-        
+
+        // Enrich with brand names from the joined data
+        const enrichedPortfolio = portfolioData.map((item: any) => ({
+          ...item,
+          brand_name: item.brand?.name || "Unknown Brand",
+        }));
+
         setPortfolioItems(enrichedPortfolio);
       }
     } catch (error) {
@@ -110,7 +100,9 @@ export default function PortfolioPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-canela text-gray-900">Portfolio Management</h1>
+          <h1 className="text-3xl font-canela text-gray-900">
+            Portfolio Management
+          </h1>
           <p className="text-gray-600 mt-2">
             Showcase your work and craftsmanship without individual pricing
           </p>
@@ -131,9 +123,13 @@ export default function PortfolioPage() {
               No portfolio items yet
             </h3>
             <p className="text-gray-600 mb-6">
-              Start building your portfolio to showcase your work to potential clients.
+              Start building your portfolio to showcase your work to potential
+              clients.
             </p>
-            <Button asChild className="bg-oma-plum hover:bg-oma-plum/90 text-white">
+            <Button
+              asChild
+              className="bg-oma-plum hover:bg-oma-plum/90 text-white"
+            >
               <Link href="/studio/portfolio/create">
                 <Plus className="h-4 w-4 mr-2" />
                 Create Your First Portfolio
@@ -146,14 +142,26 @@ export default function PortfolioPage() {
           {portfolioItems.map((item) => (
             <Card key={item.id} className="overflow-hidden">
               <div className="aspect-[4/5] relative overflow-hidden">
-                <img
-                  src={item.image}
-                  alt={item.title}
-                  className="w-full h-full object-cover"
-                />
+                {item.image ? (
+                  <img
+                    src={item.image}
+                    alt={item.title}
+                    className="w-full h-full object-cover"
+                  />
+                ) : item.images && item.images.length > 0 ? (
+                  <img
+                    src={item.images[0]}
+                    alt={item.title}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                    <ImageIcon className="h-12 w-12 text-gray-400" />
+                  </div>
+                )}
                 <div className="absolute inset-0 bg-black/20 opacity-0 hover:opacity-100 transition-opacity" />
               </div>
-              
+
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -182,13 +190,13 @@ export default function PortfolioPage() {
                       {item.specialties.slice(0, 3).map((specialty, index) => (
                         <span
                           key={index}
-                          className="px-2 py-1 bg-oma-beige/30 text-xs text-oma-cocoa rounded-full"
+                          className="px-2 py-1 bg-gray-100 text-xs text-gray-700 rounded-full"
                         >
                           {specialty}
                         </span>
                       ))}
                       {item.specialties.length > 3 && (
-                        <span className="px-2 py-1 bg-oma-beige/30 text-xs text-oma-cocoa rounded-full">
+                        <span className="px-2 py-1 bg-gray-100 text-xs text-gray-700 rounded-full">
                           +{item.specialties.length - 3} more
                         </span>
                       )}
@@ -204,19 +212,19 @@ export default function PortfolioPage() {
                       asChild
                       className="text-oma-plum border-oma-plum hover:bg-oma-plum hover:text-white"
                     >
-                      <Link href={`/studio/portfolio/${item.id}/edit`}>
+                      <Link href={`/studio/products/${item.id}/edit`}>
                         <Edit className="h-3 w-3 mr-1" />
                         Edit
                       </Link>
                     </Button>
-                    
+
                     <Button
                       variant="outline"
                       size="sm"
                       asChild
                       className="text-oma-cocoa border-oma-cocoa/20 hover:bg-oma-cocoa hover:text-white"
                     >
-                      <Link href={`/tailor/${item.brand_id}`}>
+                      <Link href={`/brand/${item.brand_id}`}>
                         <Eye className="h-3 w-3 mr-1" />
                         View
                       </Link>

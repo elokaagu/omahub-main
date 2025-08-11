@@ -10,9 +10,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Plus, X, Upload } from "lucide-react";
 import Link from "next/link";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { SimpleFileUpload } from "@/components/ui/simple-file-upload";
 import { MultiSelect } from "@/components/ui/multi-select";
+import { getAllBrands } from "@/lib/services/brandService";
 
 interface Brand {
   id: string;
@@ -48,7 +49,7 @@ export default function CreatePortfolioPage() {
   // Tailor categories that can have portfolios
   const tailorCategories = [
     "Bridal",
-    "Custom Design", 
+    "Custom Design",
     "Evening Gowns",
     "Alterations",
     "Tailored",
@@ -60,7 +61,7 @@ export default function CreatePortfolioPage() {
   // Common tailor specialties
   const tailorSpecialties = [
     "Bridal Wear",
-    "Wedding Dresses", 
+    "Wedding Dresses",
     "Evening Gowns",
     "Cocktail Dresses",
     "Formal Wear",
@@ -123,17 +124,15 @@ export default function CreatePortfolioPage() {
 
   const fetchBrands = async () => {
     try {
-      const response = await fetch("/api/studio/brands");
-      if (response.ok) {
-        const data = await response.json();
-        // Only show brands that are tailors
-        const tailorBrands = data.filter((brand: Brand) =>
-          tailorCategories.includes(brand.category)
-        );
-        setBrands(tailorBrands);
-      }
+      const brandsData = await getAllBrands();
+      // Only show brands that are tailors
+      const tailorBrands = brandsData.filter((brand: Brand) =>
+        tailorCategories.includes(brand.category)
+      );
+      setBrands(tailorBrands);
     } catch (error) {
       console.error("Error fetching brands:", error);
+      toast.error("Failed to load brands");
     } finally {
       setLoading(false);
     }
@@ -193,7 +192,9 @@ export default function CreatePortfolioPage() {
         price_range: formData.price_range,
         specialties: formData.specialties,
         lead_time: formData.lead_time,
-        consultation_fee: formData.consultation_fee ? parseFloat(formData.consultation_fee) : undefined,
+        consultation_fee: formData.consultation_fee
+          ? parseFloat(formData.consultation_fee)
+          : undefined,
         // Portfolio fields
         materials: formData.materials,
         techniques: formData.techniques,
@@ -267,7 +268,9 @@ export default function CreatePortfolioPage() {
               <Textarea
                 id="description"
                 value={formData.description}
-                onChange={(e) => handleInputChange("description", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("description", e.target.value)
+                }
                 placeholder="Describe your portfolio, your style, and what makes your work unique..."
                 rows={4}
                 className="border-oma-cocoa/20 focus:border-oma-plum"
@@ -280,7 +283,9 @@ export default function CreatePortfolioPage() {
                 <select
                   id="brand_id"
                   value={formData.brand_id}
-                  onChange={(e) => handleInputChange("brand_id", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("brand_id", e.target.value)
+                  }
                   className="w-full p-2 border border-oma-cocoa/20 rounded-md focus:border-oma-plum"
                 >
                   <option value="">Select a brand</option>
@@ -297,7 +302,9 @@ export default function CreatePortfolioPage() {
                 <select
                   id="category"
                   value={formData.category}
-                  onChange={(e) => handleInputChange("category", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("category", e.target.value)
+                  }
                   className="w-full p-2 border border-oma-cocoa/20 rounded-md focus:border-oma-plum"
                 >
                   <option value="">Select category</option>
@@ -328,7 +335,8 @@ export default function CreatePortfolioPage() {
                 maxSize={10}
               />
               <p className="text-xs text-muted-foreground mt-1">
-                Upload high-quality images of your work. No individual pricing needed.
+                Upload high-quality images of your work. No individual pricing
+                needed.
               </p>
             </div>
 
@@ -370,7 +378,9 @@ export default function CreatePortfolioPage() {
                 <Input
                   id="price_range"
                   value={formData.price_range}
-                  onChange={(e) => handleInputChange("price_range", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("price_range", e.target.value)
+                  }
                   placeholder="e.g., $500 - $5,000"
                   className="border-oma-cocoa/20 focus:border-oma-plum"
                 />
@@ -380,12 +390,16 @@ export default function CreatePortfolioPage() {
               </div>
 
               <div>
-                <Label htmlFor="consultation_fee">Consultation Fee (Optional)</Label>
+                <Label htmlFor="consultation_fee">
+                  Consultation Fee (Optional)
+                </Label>
                 <Input
                   id="consultation_fee"
                   type="number"
                   value={formData.consultation_fee}
-                  onChange={(e) => handleInputChange("consultation_fee", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("consultation_fee", e.target.value)
+                  }
                   placeholder="e.g., 100"
                   className="border-oma-cocoa/20 focus:border-oma-plum"
                 />
@@ -455,7 +469,9 @@ export default function CreatePortfolioPage() {
               <Textarea
                 id="inspiration"
                 value={formData.inspiration}
-                onChange={(e) => handleInputChange("inspiration", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("inspiration", e.target.value)
+                }
                 placeholder="What inspires your designs? (optional)"
                 rows={3}
                 className="border-oma-cocoa/20 focus:border-oma-plum"
