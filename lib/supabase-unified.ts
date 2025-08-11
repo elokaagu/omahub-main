@@ -11,7 +11,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error("Missing required Supabase environment variables");
 }
 
-// Unified client configuration with consistent session handling
+// Enhanced client configuration with robust session handling
 const clientConfig = {
   auth: {
     persistSession: true,
@@ -19,8 +19,40 @@ const clientConfig = {
     detectSessionInUrl: true,
     flowType: "pkce" as const,
     debug: process.env.NODE_ENV === "development",
-    // Use default storage key for consistency with SSR
+    // Use consistent storage key for better session persistence
     storageKey: `sb-${new URL(supabaseUrl).hostname.split(".")[0]}-auth-token`,
+    // Enhanced storage handling with error recovery
+    storage: {
+      getItem: (key: string) => {
+        try {
+          if (typeof window !== "undefined") {
+            return localStorage.getItem(key);
+          }
+          return null;
+        } catch (e) {
+          console.warn("Storage getItem failed:", e);
+          return null;
+        }
+      },
+      setItem: (key: string, value: string) => {
+        try {
+          if (typeof window !== "undefined") {
+            localStorage.setItem(key, value);
+          }
+        } catch (e) {
+          console.warn("Storage setItem failed:", e);
+        }
+      },
+      removeItem: (key: string) => {
+        try {
+          if (typeof window !== "undefined") {
+            localStorage.removeItem(key);
+          }
+        } catch (e) {
+          console.warn("Storage removeItem failed:", e);
+        }
+      }
+    }
   },
   global: {
     headers: {

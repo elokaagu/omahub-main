@@ -21,6 +21,7 @@ interface AuthContextType {
   loading: boolean;
   signOut: () => Promise<void>;
   refreshUserProfile: () => Promise<void>;
+  attemptSessionRecovery: () => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -219,24 +220,58 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     []
   ); // Empty dependency array since it doesn't depend on external values
 
-  // Set up auth state listener
+  // Set up auth state listener with enhanced session handling
   useEffect(() => {
     if (!isClient) return;
 
-    AuthDebug.log("🔄 Setting up auth state listener...");
+    AuthDebug.log("🔄 Setting up enhanced auth state listener...");
 
     const supabase = createClient();
 
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      handleAuthStateChange("INITIAL_SESSION", session);
-      setLoading(false);
-    });
+    // Get initial session with retry logic
+    const getInitialSession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          AuthDebug.error("❌ Initial session error:", error);
+          // Don't fail completely on session error, try to recover
+          setLoading(false);
+          return;
+        }
 
-    // Listen for auth changes
+        if (session) {
+          AuthDebug.log("✅ Initial session found:", session.user.email);
+          await handleAuthStateChange("INITIAL_SESSION", session);
+        } else {
+          AuthDebug.log("ℹ️  No initial session found");
+        }
+        
+        setLoading(false);
+      } catch (error) {
+        AuthDebug.error("❌ Unexpected error getting initial session:", error);
+        setLoading(false);
+      }
+    };
+
+    getInitialSession();
+
+    // Listen for auth changes with enhanced error handling
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(handleAuthStateChange);
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      AuthDebug.log("🔄 Auth state change:", event, {
+        hasSession: !!session,
+        userId: session?.user?.id,
+      });
+
+      try {
+        await handleAuthStateChange(event, session);
+      } catch (error) {
+        AuthDebug.error("❌ Error handling auth state change:", error);
+        // Don't let auth errors crash the app
+      }
+    });
 
     return () => {
       subscription.unsubscribe();
@@ -295,6 +330,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [user?.id]);
 
+  // Session recovery mechanism
+  const attemptSessionRecovery = useCallback(async () => {
+    if (!isClient) return;
+    
+    try {
+      AuthDebug.log("🔄 Attempting session recovery...");
+      
+      const supabase = createClient();
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        AuthDebug.error("❌ Session recovery failed:", error);
+        return false;
+      }
+      
+      if (session) {
+        AuthDebug.log("✅ Session recovered successfully");
+        await handleAuthStateChange("SESSION_RECOVERED", session);
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      AuthDebug.error("❌ Unexpected error during session recovery:", error);
+      return false;
+    }
+  }, [isClient, handleAuthStateChange]);
+
   const signOut = async () => {
     try {
       AuthDebug.log("🚪 Signing out...");
@@ -325,6 +388,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loading,
     signOut,
     refreshUserProfile,
+    attemptSessionRecovery,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
