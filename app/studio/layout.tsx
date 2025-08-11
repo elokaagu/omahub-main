@@ -32,12 +32,14 @@ import { LoadingPage } from "@/components/ui/loading";
 import UserProfile from "@/components/auth/UserProfile";
 import { NavigationLink } from "@/components/ui/navigation-link";
 import { TailoringEventProvider } from "@/contexts/NavigationContext";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 export default function StudioLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+
   const { user, loading, signOut } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
@@ -141,6 +143,26 @@ export default function StudioLayout({
     checkAccess();
   }, [user, loading, router]);
 
+  // Cleanup error event listeners on unmount
+  useEffect(() => {
+    const handleError = (event: ErrorEvent) => {
+      console.error('Studio Layout Error:', event.error);
+    };
+    
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      console.error('Studio Layout Unhandled Promise Rejection:', event.reason);
+      event.preventDefault();
+    };
+
+    window.addEventListener('error', handleError);
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+
+    return () => {
+      window.removeEventListener('error', handleError);
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+    };
+  }, []);
+
   const handleBackToSite = () => {
     // Use window.location.href for more reliable navigation
     // This ensures a clean transition from Studio back to main site
@@ -203,15 +225,16 @@ export default function StudioLayout({
   ];
 
   return (
-    <TailoringEventProvider>
-      <div
-        className="min-h-screen bg-gray-50 flex flex-col"
-        data-studio-page
-        style={{
-          position: "relative",
-          overflow: "hidden auto",
-        }}
-      >
+    <ErrorBoundary>
+      <TailoringEventProvider>
+        <div
+          className="min-h-screen bg-gray-50 flex flex-col"
+          data-studio-page
+          style={{
+            position: "relative",
+            overflow: "hidden auto",
+          }}
+        >
         {/* Studio Header */}
         <header className="w-full bg-white border-b border-gray-200 shadow-sm fixed top-0 left-0 right-0 z-50 h-16 flex items-center">
           <div className="container mx-auto px-8 flex justify-between items-center">
@@ -519,6 +542,7 @@ export default function StudioLayout({
           <div className="min-h-screen relative">{children}</div>
         </main>
       </div>
-    </TailoringEventProvider>
-  );
+        </TailoringEventProvider>
+      </ErrorBoundary>
+    );
 }

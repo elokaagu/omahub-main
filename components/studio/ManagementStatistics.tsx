@@ -78,11 +78,14 @@ export default function ManagementStatistics({
     // Set up periodic refresh every 5 minutes
     const interval = setInterval(() => fetchStatistics(false), 5 * 60 * 1000);
 
+    // Cleanup function to prevent memory leaks
     return () => {
       if (subscription) {
         subscription.unsubscribe();
       }
-      clearInterval(interval);
+      if (interval) {
+        clearInterval(interval);
+      }
     };
   }, []);
 

@@ -334,14 +334,24 @@ export const performanceService = {
   },
 };
 
-// Auto-cleanup cache every 10 minutes
+// Auto-cleanup cache every 10 minutes with proper cleanup
+let cleanupInterval: NodeJS.Timeout | null = null;
+
 if (typeof window !== "undefined") {
-  setInterval(
+  cleanupInterval = setInterval(
     () => {
       performanceService.cleanupCache();
     },
     10 * 60 * 1000
   );
+  
+  // Cleanup on page unload to prevent memory leaks
+  window.addEventListener('beforeunload', () => {
+    if (cleanupInterval) {
+      clearInterval(cleanupInterval);
+      cleanupInterval = null;
+    }
+  });
 }
 
 export default performanceService;
