@@ -351,26 +351,36 @@ export default function ProductPage() {
               </h1>
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2">
-                  <span className="text-2xl font-bold text-oma-plum">
-                    {formatProductPrice(product, brand).displayPrice}
-                  </span>
-                  {product.sale_price && (
-                    <span className="text-lg text-gray-500 line-through">
-                      {formatProductPrice(product, brand).originalPrice}
+                  {product.service_type === "portfolio" ? (
+                    <span className="text-2xl font-bold text-oma-plum">
+                      Portfolio Item
                     </span>
+                  ) : (
+                    <>
+                      <span className="text-2xl font-bold text-oma-plum">
+                        {formatProductPrice(product, brand).displayPrice}
+                      </span>
+                      {product.sale_price && (
+                        <span className="text-lg text-gray-500 line-through">
+                          {formatProductPrice(product, brand).originalPrice}
+                        </span>
+                      )}
+                    </>
                   )}
                 </div>
-                <Badge
-                  variant="secondary"
-                  className={cn(
-                    "text-xs",
-                    product.in_stock
-                      ? "bg-oma-gold text-oma-cocoa hover:bg-oma-gold/90 hover:text-oma-cocoa"
-                      : "bg-oma-cocoa/40 text-white hover:bg-oma-cocoa/50"
-                  )}
-                >
-                  {product.in_stock ? "In Stock" : "Out of Stock"}
-                </Badge>
+                {product.service_type !== "portfolio" && (
+                  <Badge
+                    variant="secondary"
+                    className={cn(
+                      "text-xs",
+                      product.in_stock
+                        ? "bg-oma-gold text-oma-cocoa hover:bg-oma-gold/90 hover:text-oma-cocoa"
+                        : "bg-oma-cocoa/40 text-white hover:bg-oma-cocoa/50"
+                    )}
+                  >
+                    {product.in_stock ? "In Stock" : "Out of Stock"}
+                  </Badge>
+                )}
               </div>
             </div>
 

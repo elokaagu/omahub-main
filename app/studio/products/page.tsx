@@ -760,9 +760,9 @@ export default function ProductsPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-lg font-bold text-oma-plum">
-                      {formatProductPrice(product, product.brand).displayPrice}
+                      {product.service_type === "portfolio" ? "Portfolio Item" : formatProductPrice(product, product.brand).displayPrice}
                     </span>
-                    {product.sale_price && (
+                    {product.sale_price && product.service_type !== "portfolio" && (
                       <span className="text-sm text-oma-cocoa/60 line-through">
                         {
                           formatProductPrice(product, product.brand)
@@ -772,17 +772,19 @@ export default function ProductsPage() {
                     )}
                   </div>
                   <div className="flex items-center justify-between">
-                    <Badge
-                      variant="secondary"
-                      className={cn(
-                        "text-xs",
-                        product.in_stock
-                          ? "bg-oma-gold text-oma-cocoa hover:bg-oma-gold/90 hover:text-oma-cocoa"
-                          : "bg-oma-cocoa/40 text-white hover:bg-oma-cocoa/50"
-                      )}
-                    >
-                      {product.in_stock ? "In Stock" : "Out of Stock"}
-                    </Badge>
+                    {product.service_type !== "portfolio" && (
+                      <Badge
+                        variant="secondary"
+                        className={cn(
+                          "text-xs",
+                          product.in_stock
+                            ? "bg-oma-gold text-oma-cocoa hover:bg-oma-gold/90 hover:text-oma-cocoa"
+                            : "bg-oma-cocoa/40 text-white hover:bg-oma-cocoa/50"
+                        )}
+                      >
+                        {product.in_stock ? "In Stock" : "Out of Stock"}
+                      </Badge>
+                    )}
                     <span className="text-xs text-oma-cocoa/60 px-2 py-1 bg-oma-beige/50 rounded">
                       {product.category}
                     </span>
@@ -842,12 +844,9 @@ export default function ProductsPage() {
                       <div className="text-right space-y-2">
                         <div className="flex items-center gap-2">
                           <span className="text-lg font-bold text-oma-plum">
-                            {
-                              formatProductPrice(product, product.brand)
-                                .displayPrice
-                            }
+                            {product.service_type === "portfolio" ? "Portfolio Item" : formatProductPrice(product, product.brand).displayPrice}
                           </span>
-                          {product.sale_price && (
+                          {product.sale_price && product.service_type !== "portfolio" && (
                             <span className="text-sm text-oma-cocoa/60 line-through">
                               {
                                 formatProductPrice(product, product.brand)
@@ -857,17 +856,19 @@ export default function ProductsPage() {
                           )}
                         </div>
                         <div className="flex items-center gap-2">
-                          <Badge
-                            variant="secondary"
-                            className={cn(
-                              "text-xs",
-                              product.in_stock
-                                ? "bg-oma-gold text-oma-cocoa hover:bg-oma-gold/90 hover:text-oma-cocoa"
-                                : "bg-oma-cocoa/40 text-white hover:bg-oma-cocoa/50"
-                            )}
-                          >
-                            {product.in_stock ? "In Stock" : "Out of Stock"}
-                          </Badge>
+                          {product.service_type !== "portfolio" && (
+                            <Badge
+                              variant="secondary"
+                              className={cn(
+                                "text-xs",
+                                product.in_stock
+                                  ? "bg-oma-gold text-oma-cocoa hover:bg-oma-gold/90 hover:text-oma-cocoa"
+                                  : "bg-oma-cocoa/40 text-white hover:bg-oma-cocoa/50"
+                              )}
+                            >
+                              {product.in_stock ? "In Stock" : "Out of Stock"}
+                            </Badge>
+                          )}
                           {product.is_custom && (
                             <Badge
                               variant="secondary"

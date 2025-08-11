@@ -47,7 +47,7 @@ export async function GET(
       )
       .eq("brand_id", brandId)
       .eq("in_stock", true)
-      .neq("service_type", "portfolio") // Exclude portfolio items from public display
+
       .order("created_at", { ascending: false });
 
     if (error) {

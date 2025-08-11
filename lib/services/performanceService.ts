@@ -137,7 +137,6 @@ export const performanceService = {
         .from("products")
         .select(fields.join(", "))
         .eq("in_stock", true)
-        .neq("service_type", "portfolio") // Exclude portfolio items from public display
         .range(offset, offset + limit - 1)
         .order("created_at", { ascending: false });
 

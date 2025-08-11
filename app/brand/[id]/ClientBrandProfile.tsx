@@ -282,19 +282,27 @@ export default function ClientBrandProfile({
                           {product.category}
                         </p>
                         <div className="flex items-center justify-between">
-                          <p className="text-oma-plum font-medium text-sm sm:text-base">
-                            ${product.sale_price || product.price}
-                          </p>
-                          <Badge
-                            variant="secondary"
-                            className={`text-xs ${
-                              product.in_stock
-                                ? "bg-oma-gold text-oma-cocoa"
-                                : "bg-oma-cocoa/40 text-white"
-                            }`}
-                          >
-                            {product.in_stock ? "In Stock" : "Out of Stock"}
-                          </Badge>
+                          {product.service_type === "portfolio" ? (
+                            <p className="text-oma-plum font-medium text-sm sm:text-base">
+                              Portfolio Item
+                            </p>
+                          ) : (
+                            <p className="text-oma-plum font-medium text-sm sm:text-base">
+                              ${product.sale_price || product.price}
+                            </p>
+                          )}
+                          {product.service_type !== "portfolio" && (
+                            <Badge
+                              variant="secondary"
+                              className={`text-xs ${
+                                product.in_stock
+                                  ? "bg-oma-gold text-oma-cocoa"
+                                  : "bg-oma-cocoa/40 text-white"
+                              }`}
+                            >
+                              {product.in_stock ? "In Stock" : "Out of Stock"}
+                            </Badge>
+                          )}
                         </div>
                       </div>
                     </div>

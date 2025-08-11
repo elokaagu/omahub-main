@@ -56,7 +56,6 @@ export async function getProductsByBrand(brandId: string): Promise<Product[]> {
     .from("products")
     .select("*")
     .eq("brand_id", brandId)
-    .neq("service_type", "portfolio") // Exclude portfolio items from public display
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -103,7 +102,6 @@ export async function getProductsByCatalogue(
     .from("products")
     .select("*")
     .eq("catalogue_id", catalogueId)
-    .neq("service_type", "portfolio") // Exclude portfolio items from public display
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -199,8 +197,7 @@ export async function getProductsWithBrandCurrency(): Promise<
       await supabase.from("products").select(`
         *,
         brand:brands(id, name, location, is_verified, price_range)
-      `)
-      .neq("service_type", "portfolio"); // Exclude portfolio items from public display
+      `);
 
     if (productsError) {
       console.error("Error fetching products with brands:", productsError);

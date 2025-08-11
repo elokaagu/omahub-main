@@ -89,9 +89,6 @@ export default function CataloguesPage() {
           }),
         ]);
 
-        // Filter out portfolio items from public display
-        const publicProducts = productData.filter((product: any) => product.service_type !== "portfolio");
-
         console.log("✅ Fetched data:", {
           catalogues: catalogueData.length,
           products: productData.length,
@@ -107,8 +104,8 @@ export default function CataloguesPage() {
           }))
         );
         setFilteredCatalogues(catalogueData || []);
-        setProducts(publicProducts || []);
-        setFilteredProducts(publicProducts || []);
+        setProducts(productData || []);
+        setFilteredProducts(productData || []);
       } catch (err) {
         console.error("Error fetching data:", err);
         setError("Failed to load information");
@@ -418,6 +415,9 @@ export default function CataloguesPage() {
                     <p className="text-oma-plum font-medium">
                       {(() => {
                         try {
+                          if (product.service_type === "portfolio") {
+                            return "Portfolio Item";
+                          }
                           return formatProductPrice(product, product.brand)
                             .displayPrice;
                         } catch (error) {
