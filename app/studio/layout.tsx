@@ -192,6 +192,7 @@ export default function StudioLayout({
     { href: "/studio/collections", label: "Collections", icon: ImageIcon },
     { href: "/studio/products", label: "Products", icon: ShoppingBag },
     { href: "/studio/services", label: "Services", icon: Scissors },
+    { href: "/studio/portfolio", label: "Portfolio", icon: ImageIcon },
     { href: "/studio/hero", label: "Hero Carousel", icon: Monitor },
     { href: "/studio/spotlight", label: "Spotlight", icon: ImageIcon },
     { href: "/studio/users", label: "Users", icon: Users },
@@ -401,6 +402,16 @@ export default function StudioLayout({
                       ? "Your Services"
                       : "Services"}
                   </span>
+                </NavigationLink>
+              )}
+              {user?.role === "super_admin" && (
+                <NavigationLink
+                  href="/studio/portfolio"
+                  className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
+                  onClick={handleSidebarNav}
+                >
+                  <ImageIcon className="h-5 w-5" />
+                  <span>Portfolio</span>
                 </NavigationLink>
               )}
               {user?.role === "super_admin" && (

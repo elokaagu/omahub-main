@@ -71,7 +71,23 @@ export async function getAllBrandsWithProductCounts(): Promise<
       return [];
     }
 
-    // Map the data to include product_count
+    // Debug: Check if video fields are present in the raw data
+    const brandsWithVideos = data.filter((brand: any) => brand.video_url);
+    console.log(
+      `🎬 getAllBrandsWithProductCounts: Found ${brandsWithVideos.length} brands with videos`
+    );
+    if (brandsWithVideos.length > 0) {
+      console.log(
+        "🎬 Brands with videos:",
+        brandsWithVideos.map((b: any) => ({
+          name: b.name,
+          video_url: b.video_url,
+          video_thumbnail: b.video_thumbnail,
+        }))
+      );
+    }
+
+    // Map the data to include product_count and video fields
     const brandsWithCounts: (Brand & { product_count: number })[] = data.map(
       (item) => ({
         id: item.id || `temp-id-${Math.random().toString(36).substring(2, 9)}`,
@@ -86,6 +102,9 @@ export async function getAllBrandsWithProductCounts(): Promise<
         is_verified: item.is_verified || false,
         image: item.image || "/placeholder-image.jpg",
         product_count: item.products?.[0]?.count || 0,
+        // Include video fields
+        video_url: item.video_url || undefined,
+        video_thumbnail: item.video_thumbnail || undefined,
       })
     );
 
@@ -215,6 +234,22 @@ export async function getAllBrands(
     // Log the first brand for debugging
     console.log("📋 Sample brand data:", JSON.stringify(data[0], null, 2));
 
+    // Debug: Check if video fields are present in the raw data
+    const brandsWithVideos = data.filter((brand: any) => brand.video_url);
+    console.log(
+      `🎬 Found ${brandsWithVideos.length} brands with videos in database`
+    );
+    if (brandsWithVideos.length > 0) {
+      console.log(
+        "🎬 Brands with videos:",
+        brandsWithVideos.map((b: any) => ({
+          name: b.name,
+          video_url: b.video_url,
+          video_thumbnail: b.video_thumbnail,
+        }))
+      );
+    }
+
     // Map the data to Brand objects
     const fullBrands: Brand[] = data.map((item) => ({
       id: item.id || `temp-id-${Math.random().toString(36).substring(2, 9)}`,
@@ -271,6 +306,8 @@ function getSampleBrandsData(): Brand[] {
       rating: 4.8,
       is_verified: true,
       image: "/lovable-uploads/4a7c7e86-6cde-4d07-a246-a5aa4cb6fa51.png",
+      video_url: undefined,
+      video_thumbnail: undefined,
     },
     {
       id: "sample-brand-2",
@@ -283,6 +320,8 @@ function getSampleBrandsData(): Brand[] {
       rating: 5.0,
       is_verified: true,
       image: "/lovable-uploads/57cc6a40-0f0d-4a7d-8786-41f15832ebfb.png",
+      video_url: undefined,
+      video_thumbnail: undefined,
     },
     {
       id: "sample-brand-3",
@@ -296,6 +335,8 @@ function getSampleBrandsData(): Brand[] {
       rating: 4.6,
       is_verified: true,
       image: "/lovable-uploads/99ca757a-bed8-422e-b155-0b9d365b58e0.png",
+      video_url: undefined,
+      video_thumbnail: undefined,
     },
     {
       id: "sample-brand-4",
@@ -308,6 +349,8 @@ function getSampleBrandsData(): Brand[] {
       rating: 4.7,
       is_verified: true,
       image: "/lovable-uploads/25c3fe26-3fc4-43ef-83ac-6931a74468c0.png",
+      video_url: undefined,
+      video_thumbnail: undefined,
     },
   ];
 }

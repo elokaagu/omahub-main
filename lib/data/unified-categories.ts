@@ -28,6 +28,23 @@ export const UNIFIED_CATEGORIES = [
     subcategories: ["Casual Wear", "Formal Wear", "Streetwear", "Luxury"],
   },
   {
+    id: "vacation-resort",
+    name: "Vacation & Resort",
+    displayName: "Vacation & Resort",
+    description: "Resort wear, vacation fashion, and travel-ready styles",
+    slug: "vacation-resort",
+    color: "#87CEEB", // Sky blue
+    icon: "🏖️",
+    homepageImage: "/lovable-uploads/4a7c7e86-6cde-4d07-a246-a5aa4cb6fa51.png",
+    homepageCta: "Style that travels with you.",
+    subcategories: [
+      "Resort Wear",
+      "Vacation Fashion",
+      "Travel Styles",
+      "Beach Wear",
+    ],
+  },
+  {
     id: "accessories",
     name: "Accessories",
     displayName: "Accessories",
@@ -64,14 +81,14 @@ export const UNIFIED_CATEGORIES = [
     subcategories: ["Formal Gowns", "Cocktail Dresses", "Red Carpet"],
   },
   {
-    id: "high-end-fashion-brand",
+    id: "high-end-fashion",
     name: "High End Fashion",
     displayName: "High End Fashion",
-    description: "Luxury and premium fashion brands.",
-    slug: "high-end-fashion-brand",
+    description: "Luxury and premium fashion brands",
+    slug: "high-end-fashion",
     color: "#BFAE9C",
     icon: "👑",
-    homepageImage: "/lovable-uploads/4a7c7e86-6cde-4a7d-a5aa4cb6fa51.png",
+    homepageImage: "/lovable-uploads/4a7c7e86-6cde-4d07-a246-a5aa4cb6fa51.png",
     homepageCta: "Luxury, redefined.",
     subcategories: ["Luxury", "Premium", "Designer"],
   },
@@ -79,7 +96,7 @@ export const UNIFIED_CATEGORIES = [
     id: "made-to-measure",
     name: "Made to Measure",
     displayName: "Made to Measure",
-    description: "Custom-fitted garments tailored to individual measurements.",
+    description: "Custom-fitted garments tailored to individual measurements",
     slug: "made-to-measure",
     color: "#7C9CA6",
     icon: "📏",
@@ -91,7 +108,7 @@ export const UNIFIED_CATEGORIES = [
     id: "streetwear-urban",
     name: "Streetwear & Urban",
     displayName: "Streetwear & Urban",
-    description: "Trendy streetwear and urban fashion styles.",
+    description: "Trendy streetwear and urban fashion styles",
     slug: "streetwear-urban",
     color: "#4A6B8B",
     icon: "🧢",
@@ -103,13 +120,13 @@ export const UNIFIED_CATEGORIES = [
     id: "alterations",
     name: "Alterations",
     displayName: "Alterations",
-    description: "Garment adjustments and tailoring services.",
+    description: "Garment alterations and fitting services",
     slug: "alterations",
-    color: "#A67C52",
+    color: "#9B7B8B",
     icon: "🪡",
     homepageImage: "/lovable-uploads/57cc6a40-0f0d-4a7d-8786-41f15832ebfb.png",
-    homepageCta: "Fit perfected.",
-    subcategories: ["Hemming", "Resizing", "Repairs"],
+    homepageCta: "Perfect fit, guaranteed.",
+    subcategories: ["Hemming", "Fitting", "Adjustments"],
   },
 ] as const;
 
@@ -124,30 +141,35 @@ export const LEGACY_CATEGORY_MAPPING = {
   "Custom Design": "custom-design",
   "Evening Gowns": "evening-gowns",
   Alterations: "alterations",
-  Vacation: "ready-to-wear",
+  Vacation: "vacation-resort",
+  "Vacation & Resort": "vacation-resort",
+  Resort: "vacation-resort",
   Couture: "custom-design",
-  Luxury: "ready-to-wear",
-  "Streetwear & Urban": "streetwear-urban",
+  Luxury: "high-end-fashion",
 
   // Homepage categories
   Collections: "ready-to-wear",
   Tailored: "custom-design",
 
   // Directory subcategories and new mappings
-  "High End Fashion": "high-end-fashion-brand",
-  "High End Fashion Brand": "high-end-fashion-brand",
-  "High End Fashion Brands": "high-end-fashion-brand",
+  "High End Fashion": "high-end-fashion",
+  "High End Fashion Brand": "high-end-fashion",
+  "High End Fashion Brands": "high-end-fashion",
   "Made to Measure": "made-to-measure",
+  "Streetwear & Urban": "streetwear-urban",
 } as const;
 
 // Reverse mapping for database storage
 export const UNIFIED_TO_LEGACY_MAPPING = {
   bridal: "Bridal",
   "ready-to-wear": "Ready to Wear",
+  "vacation-resort": "Vacation & Resort",
   accessories: "Accessories",
   "streetwear-urban": "Streetwear & Urban",
   "custom-design": "Custom Design",
   "evening-gowns": "Evening Gowns",
+  "high-end-fashion": "High End Fashion",
+  "made-to-measure": "Made to Measure",
 } as const;
 
 // Occasions mapping

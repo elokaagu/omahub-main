@@ -167,7 +167,7 @@ export type Product = {
   is_custom?: boolean; // For tailored/custom pieces
   lead_time?: string; // e.g., "2-3 weeks"
   // Tailor-specific fields
-  service_type?: "product" | "service" | "consultation";
+  service_type?: "product" | "service" | "consultation" | "portfolio";
   consultation_fee?: number;
   hourly_rate?: number;
   fixed_price?: number;
@@ -180,6 +180,10 @@ export type Product = {
   requirements?: string;
   delivery_method?: string;
   includes?: string[];
+  // Portfolio-specific fields
+  materials?: string[];
+  techniques?: string[];
+  inspiration?: string;
   created_at?: string;
   updated_at?: string;
 };

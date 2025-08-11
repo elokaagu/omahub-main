@@ -408,6 +408,8 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
           founded_year: brand.founded_year,
           is_verified: brand.is_verified,
           image: imageUrl,
+          video_url: brand.video_url,
+          video_thumbnail: brand.video_thumbnail,
         }),
       });
 

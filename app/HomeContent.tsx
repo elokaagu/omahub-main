@@ -997,53 +997,51 @@ export default function HomeContent() {
 
       {/* Brand Categories - Full Width */}
       {categories.length > 0 ? (
-        categories
-          .filter((category) => category.title !== "High End Fashion Brands")
-          .map((category, index) => (
-            <section
-              key={category.title}
-              className={`py-6 sm:py-8 ${
-                index % 2 === 0 ? "bg-white" : "bg-oma-beige/20"
-              }`}
-            >
-              <FadeIn delay={0.1}>
-                <FullWidthBrandRow
-                  title={category.title}
-                  subtitle={category.customCta}
-                  brands={category.brands.map((brand) => ({
-                    id: brand.id,
-                    name: brand.name,
-                    image: brand.image,
-                    category: brand.category,
-                    location: brand.location,
-                    rating: brand.rating,
-                    isVerified: brand.isVerified,
-                    video_url: brand.video_url,
-                    video_thumbnail: brand.video_thumbnail,
-                  }))}
-                />
-              </FadeIn>
+        categories.map((category, index) => (
+          <section
+            key={category.title}
+            className={`py-6 sm:py-8 ${
+              index % 2 === 0 ? "bg-white" : "bg-oma-beige/20"
+            }`}
+          >
+            <FadeIn delay={0.1}>
+              <FullWidthBrandRow
+                title={category.title}
+                subtitle={category.customCta}
+                brands={category.brands.map((brand) => ({
+                  id: brand.id,
+                  name: brand.name,
+                  image: brand.image,
+                  category: brand.category,
+                  location: brand.location,
+                  rating: brand.rating,
+                  isVerified: brand.isVerified,
+                  video_url: brand.video_url,
+                  video_thumbnail: brand.video_thumbnail,
+                }))}
+              />
+            </FadeIn>
 
-              {/* View All Button */}
-              <SlideUp delay={0.3}>
-                <div className="mt-4 text-center px-2 sm:px-4 lg:px-6">
-                  <Button
-                    asChild
-                    variant="outline"
-                    className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white min-h-[44px] text-sm sm:text-base"
+            {/* View All Button */}
+            <SlideUp delay={0.3}>
+              <div className="mt-4 text-center px-2 sm:px-4 lg:px-6">
+                <Button
+                  asChild
+                  variant="outline"
+                  className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white min-h-[44px] text-sm sm:text-base"
+                >
+                  <Link
+                    href={`/directory?category=${encodeURIComponent(
+                      category.title
+                    )}`}
                   >
-                    <Link
-                      href={`/directory?category=${encodeURIComponent(
-                        category.title
-                      )}`}
-                    >
-                      View All {category.title}
-                    </Link>
-                  </Button>
-                </div>
-              </SlideUp>
-            </section>
-          ))
+                    View All {category.title}
+                  </Link>
+                </Button>
+              </div>
+            </SlideUp>
+          </section>
+        ))
       ) : (
         <section className="py-8 bg-oma-cream">
           <div className="px-2 sm:px-4 lg:px-6">
