@@ -143,23 +143,53 @@ export default function StudioLayout({
     checkAccess();
   }, [user, loading, router]);
 
-  // Cleanup error event listeners on unmount
+  // Enhanced error handling and performance monitoring
   useEffect(() => {
     const handleError = (event: ErrorEvent) => {
       console.error('Studio Layout Error:', event.error);
+      // Log to analytics service if available
+      if (typeof window !== 'undefined' && (window as any).gtag) {
+        (window as any).gtag('event', 'exception', {
+          description: event.error?.message || 'Unknown error',
+          fatal: false
+        });
+      }
     };
     
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
       console.error('Studio Layout Unhandled Promise Rejection:', event.reason);
       event.preventDefault();
+      // Log to analytics service if available
+      if (typeof window !== 'undefined' && (window as any).gtag) {
+        (window as any).gtag('event', 'exception', {
+          description: event.reason?.message || 'Unhandled promise rejection',
+          fatal: false
+        });
+      }
+    };
+
+    // Performance monitoring
+    const handleLoad = () => {
+      if (typeof window !== 'undefined' && window.performance) {
+        const navigation = performance.getEntriesByType('navigation')[0] as any;
+        if (navigation) {
+          console.log('📊 Studio Load Performance:', {
+            domContentLoaded: navigation.domContentLoadedEventEnd - navigation.domContentLoadedEventStart,
+            loadComplete: navigation.loadEventEnd - navigation.loadEventStart,
+            total: navigation.loadEventEnd - navigation.navigationStart
+          });
+        }
+      }
     };
 
     window.addEventListener('error', handleError);
     window.addEventListener('unhandledrejection', handleUnhandledRejection);
+    window.addEventListener('load', handleLoad);
 
     return () => {
       window.removeEventListener('error', handleError);
       window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+      window.removeEventListener('load', handleLoad);
     };
   }, []);
 
@@ -181,10 +211,21 @@ export default function StudioLayout({
   // Show loading state while checking authentication and access
   if (loading || isCheckingAccess) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading studio...</p>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white flex items-center justify-center">
+        <div className="text-center space-y-6">
+          <div className="relative">
+            <div className="animate-spin h-12 w-12 border-4 border-oma-plum border-t-transparent rounded-full mx-auto"></div>
+            <div className="absolute inset-0 rounded-full border-4 border-oma-gold/20"></div>
+          </div>
+          <div className="space-y-2">
+            <p className="text-lg font-medium text-gray-700">Loading Studio...</p>
+            <p className="text-sm text-gray-500">Preparing your workspace</p>
+          </div>
+          <div className="flex justify-center space-x-1">
+            <div className="w-2 h-2 bg-oma-plum rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+            <div className="w-2 h-2 bg-oma-plum rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+            <div className="w-2 h-2 bg-oma-plum rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+          </div>
         </div>
       </div>
     );
@@ -316,6 +357,8 @@ export default function StudioLayout({
           } mt-16 shadow-xl`}
           aria-modal="true"
           role="dialog"
+          aria-label="Studio navigation menu"
+          aria-hidden={!sidebarOpen}
         >
           {/* Mobile Close Button */}
           <div className="flex items-center px-4 pt-4 pb-2">
@@ -324,7 +367,8 @@ export default function StudioLayout({
               size="icon"
               onClick={() => setSidebarOpen(false)}
               className="bg-white border-oma-plum"
-              aria-label="Close sidebar"
+              aria-label="Close navigation menu"
+              aria-expanded={sidebarOpen}
             >
               <X className="h-5 w-5" />
             </Button>
@@ -333,7 +377,7 @@ export default function StudioLayout({
             <div className="mb-8">
               <h1 className="text-2xl font-canela text-oma-plum">Studio</h1>
             </div>
-            <nav className="space-y-1 flex-1">
+            <nav className="space-y-1 flex-1" role="navigation" aria-label="Studio navigation">
               {mobileNavItems.map((item) => (
                 <button
                   key={item.href}
@@ -341,9 +385,10 @@ export default function StudioLayout({
                     router.push(item.href);
                     setSidebarOpen(false);
                   }}
-                  className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100 w-full text-left"
+                  className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100 w-full text-left transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-oma-plum focus:ring-offset-2"
+                  aria-label={`Navigate to ${item.label}`}
                 >
-                  <item.icon className="h-5 w-5" />
+                  <item.icon className="h-5 w-5" aria-hidden="true" />
                   <span>{item.label}</span>
                 </button>
               ))}

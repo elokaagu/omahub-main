@@ -93,10 +93,54 @@ export default function StudioPage() {
   if (loading) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8">
-        <div className="h-12 bg-gray-200 rounded-lg animate-pulse mb-8"></div>
-        <div className="grid grid-cols-1 gap-8">
-          <div className="h-64 bg-gray-200 rounded-lg animate-pulse"></div>
-          <div className="h-64 bg-gray-200 rounded-lg animate-pulse"></div>
+        {/* Enhanced skeleton loading with better visual hierarchy */}
+        <div className="space-y-4">
+          <div className="h-12 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg animate-pulse"></div>
+          <div className="h-6 bg-gray-200 rounded w-2/3 animate-pulse"></div>
+        </div>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Analytics Card Skeleton */}
+          <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+            <div className="space-y-4">
+              <div className="h-6 bg-gray-200 rounded w-1/3 animate-pulse"></div>
+              <div className="h-12 bg-gray-200 rounded w-1/2 animate-pulse"></div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="h-16 bg-gray-200 rounded animate-pulse"></div>
+                <div className="h-16 bg-gray-200 rounded animate-pulse"></div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Quick Actions Skeleton */}
+          <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+            <div className="space-y-4">
+              <div className="h-6 bg-gray-200 rounded w-1/2 animate-pulse"></div>
+              <div className="space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="h-12 bg-gray-200 rounded animate-pulse"></div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Recent Activity Skeleton */}
+        <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+          <div className="space-y-4">
+            <div className="h-6 bg-gray-200 rounded w-1/4 animate-pulse"></div>
+            <div className="space-y-3">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="flex items-center space-x-4">
+                  <div className="h-10 w-10 bg-gray-200 rounded-full animate-pulse"></div>
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse"></div>
+                    <div className="h-3 bg-gray-200 rounded w-1/2 animate-pulse"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     );
