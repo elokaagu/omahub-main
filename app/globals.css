@@ -444,6 +444,26 @@ html::-webkit-scrollbar,
     min-height: 44px;
     font-size: 16px; /* Prevents zoom on iOS */
   }
+  
+  /* Enhanced mobile horizontal scrolling */
+  .mobile-scroll-container {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+    scroll-snap-type: x mandatory;
+    scroll-padding: 0 1rem;
+  }
+  
+  .mobile-scroll-item {
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+  
+  /* Show partial next item on mobile */
+  .mobile-scroll-preview {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 /* Improve focus states for accessibility */

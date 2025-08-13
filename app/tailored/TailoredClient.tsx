@@ -212,15 +212,15 @@ export default function TailoredClient() {
       <section
         ref={tailorsGalleryRef}
         id="tailors-gallery"
-        className="py-24 px-0 bg-white/90 border-t border-oma-beige/30 snap-start w-screen overflow-x-hidden relative"
+        className="py-16 sm:py-24 px-0 bg-white/90 border-t border-oma-beige/30 snap-start w-screen overflow-x-hidden relative"
         style={getSectionTransform(visibleSections.has("tailors-gallery"))}
       >
         <div className="w-full">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl md:text-5xl font-canela text-black mb-4">
+          <div className="text-center mb-8 sm:mb-12 px-4 sm:px-6">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-canela text-black mb-4">
               Featured Tailors
             </h2>
-            <p className="text-xl text-black/70 max-w-2xl mx-auto">
+            <p className="text-lg sm:text-xl text-black/70 max-w-2xl mx-auto">
               Explore our curated selection of Africa's most skilled tailors
             </p>
           </div>
@@ -231,61 +231,92 @@ export default function TailoredClient() {
           ) : error ? (
             <div className="text-center text-oma-plum py-8">{error}</div>
           ) : (
-            <div
-              ref={tailorsScrollRef}
-              className="flex gap-6 overflow-x-auto pb-4 scroll-smooth snap-x snap-mandatory scrollbar-hide px-6 lg:px-8"
-              onMouseEnter={() => setIsHovered(true)}
-              onMouseLeave={() => setIsHovered(false)}
-            >
-              {tailors.map((tailor) => (
-                <Link
-                  key={tailor.id}
-                  href={tailor.brand ? `/brand/${tailor.brand.id}` : "#"}
-                  className="group block snap-center flex-shrink-0 w-96 max-w-full bg-gradient-to-br from-white via-oma-beige/30 to-white rounded-2xl shadow-lg border border-oma-beige/40 hover:border-oma-gold/60 hover:shadow-2xl transition-all duration-300 overflow-hidden cursor-pointer focus:ring-2 focus:ring-oma-gold"
-                  tabIndex={0}
-                >
-                  <div className="relative w-full aspect-[3/4] bg-oma-beige/20 overflow-hidden">
-                    {tailor.brand ? (
-                      <BrandCard
-                        id={tailor.brand.id}
-                        name={tailor.brand.name}
-                        image={tailor.image || tailor.brand.image}
-                        category={tailor.brand.category}
-                        location={tailor.brand.location}
-                        isVerified={tailor.brand.is_verified}
-                        video_url={tailor.brand.video_url}
-                        video_thumbnail={tailor.brand.video_thumbnail}
-                        className="h-full"
-                      />
-                    ) : (
-                      <OptimizedImage
-                        src={
-                          tailor.image ||
-                          "/lovable-uploads/020cb90b-2fee-4db4-a7ee-538515580ef2.png"
-                        }
-                        alt={tailor.title || "Tailor"}
-                        aspectRatio="3/4"
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        quality={90}
-                        fill
-                        onError={() => {
-                          console.log(
-                            `Image failed to load for tailor: ${tailor.title}`
-                          );
-                        }}
-                      />
-                    )}
-                  </div>
-                  <div className="p-6 text-center">
-                    <h3 className="text-2xl font-semibold text-black mb-1 truncate group-hover:text-oma-plum transition-colors">
-                      {tailor.title || tailor.brand?.name}
-                    </h3>
-                    <div className="text-oma-cocoa/70 text-base mb-2 truncate">
-                      {tailor.brand?.location}
+            <div className="relative">
+              {/* Mobile scroll indicator */}
+              <div className="hidden sm:block absolute -right-4 top-1/2 -translate-y-1/2 z-10">
+                <div className="w-2 h-16 bg-gradient-to-b from-oma-gold/60 to-transparent rounded-full"></div>
+              </div>
+              
+              {/* Right edge fade indicator for mobile */}
+              <div className="sm:hidden absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white/80 to-transparent pointer-events-none z-10"></div>
+              
+              <div
+                ref={tailorsScrollRef}
+                className="flex gap-4 sm:gap-6 overflow-x-auto pb-6 scroll-smooth snap-x snap-mandatory scrollbar-hide px-4 sm:px-6 lg:px-8 mobile-scroll-container"
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
+                style={{
+                  scrollbarWidth: 'none',
+                  msOverflowStyle: 'none',
+                  WebkitOverflowScrolling: 'touch',
+                  scrollSnapType: 'x mandatory',
+                  scrollPadding: '0 1rem'
+                }}
+              >
+                {tailors.map((tailor, index) => (
+                  <Link
+                    key={tailor.id}
+                    href={tailor.brand ? `/brand/${tailor.brand.id}` : "#"}
+                    className="group block snap-center flex-shrink-0 w-[280px] sm:w-[320px] md:w-96 max-w-full bg-gradient-to-br from-white via-oma-beige/30 to-white rounded-2xl shadow-lg border border-oma-beige/40 hover:border-oma-gold/60 hover:shadow-2xl transition-all duration-300 overflow-hidden cursor-pointer focus:ring-2 focus:ring-oma-gold mobile-scroll-item"
+                    tabIndex={0}
+                  >
+                    <div className="relative w-full aspect-[3/4] bg-oma-beige/20 overflow-hidden">
+                      {tailor.brand ? (
+                        <BrandCard
+                          id={tailor.brand.id}
+                          name={tailor.brand.name}
+                          image={tailor.image || tailor.brand.image}
+                          category={tailor.brand.category}
+                          location={tailor.brand.location}
+                          isVerified={tailor.brand.is_verified}
+                          video_url={tailor.brand.video_url}
+                          video_thumbnail={tailor.brand.video_thumbnail}
+                          className="h-full"
+                        />
+                      ) : (
+                        <OptimizedImage
+                          src={
+                            tailor.image ||
+                            "/lovable-uploads/020cb90b-2fee-4db4-a7ee-538515580ef2.png"
+                          }
+                          alt={tailor.title || "Tailor"}
+                          aspectRatio="3/4"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          quality={90}
+                          fill
+                          onError={() => {
+                            console.log(
+                              `Image failed to load for tailor: ${tailor.title}`
+                            );
+                          }}
+                        />
+                      )}
                     </div>
-                  </div>
-                </Link>
-              ))}
+                    <div className="p-4 sm:p-6 text-center">
+                      <h3 className="text-xl sm:text-2xl font-semibold text-black mb-1 group-hover:text-oma-plum transition-colors">
+                        {tailor.title || tailor.brand?.name}
+                      </h3>
+                      <div className="text-oma-cocoa/70 text-sm sm:text-base mb-2">
+                        {tailor.brand?.location}
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+                
+                {/* Show preview of next item on mobile */}
+                {tailors.length > 1 && (
+                  <div className="flex-shrink-0 w-8 sm:w-12 md:w-16"></div>
+                )}
+              </div>
+              
+              {/* Scroll hint for mobile */}
+              <div className="sm:hidden text-center mt-4">
+                <div className="flex items-center justify-center gap-2 text-sm text-oma-cocoa/60">
+                  <div className="w-2 h-2 bg-oma-gold/40 rounded-full animate-pulse"></div>
+                  <span>Swipe to see more</span>
+                  <div className="w-2 h-2 bg-oma-gold/40 rounded-full animate-pulse"></div>
+                </div>
+              </div>
             </div>
           )}
         </div>
