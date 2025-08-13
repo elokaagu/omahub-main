@@ -1,5 +1,5 @@
 import { supabase, safeDbOperation } from "../supabase";
-import { Brand, Collection, Product, Profile } from "../supabase";
+import { Brand, Catalogue, Product, Profile } from "../supabase";
 
 // Improved build time detection
 const isBuildTime =

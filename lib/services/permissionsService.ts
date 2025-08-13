@@ -115,13 +115,13 @@ export async function getUserPermissions(
       console.error("❌ Client Permissions: No valid session found");
       // Fallback to email-based permissions if available
       if (userEmail) {
-        if (isSuperAdminEmail(userEmail)) {
+        if (await isSuperAdminEmail(userEmail)) {
           console.log(
             "🔄 Client Permissions: No session but super admin email provided"
           );
           return rolePermissions.super_admin;
         }
-        if (isBrandAdminEmail(userEmail)) {
+        if (await isBrandAdminEmail(userEmail)) {
           console.log(
             "🔄 Client Permissions: No session but brand admin email provided"
           );

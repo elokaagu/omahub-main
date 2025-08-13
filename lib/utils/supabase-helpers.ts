@@ -71,7 +71,7 @@ export const supabaseHelpers = {
       single?: boolean;
       limit?: number;
     } = {}
-  ): Promise<{ data: T | T[] | null; error: any }> {
+  ): Promise<{ data: T | T[] | null; error: any | null }> {
     const supabase = createClientComponentClient<Database>();
 
     try {
@@ -103,7 +103,7 @@ export const supabaseHelpers = {
         return { data: null, error: result.error };
       }
 
-      return { data: result.data, error: null };
+      return { data: result.data as T | T[], error: null };
     } catch (error) {
       console.error(`Unexpected error fetching from ${tableName}:`, error);
       return { data: null, error };

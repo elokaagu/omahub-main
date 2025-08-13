@@ -231,8 +231,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Get initial session with retry logic
     const getInitialSession = async () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.getSession();
+
         if (error) {
           AuthDebug.error("❌ Initial session error:", error);
           // Don't fail completely on session error, try to recover
@@ -246,7 +249,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } else {
           AuthDebug.log("ℹ️  No initial session found");
         }
-        
+
         setLoading(false);
       } catch (error) {
         AuthDebug.error("❌ Unexpected error getting initial session:", error);
@@ -332,25 +335,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Session recovery mechanism
   const attemptSessionRecovery = useCallback(async () => {
-    if (!isClient) return;
-    
+    if (!isClient) return false;
+
     try {
       AuthDebug.log("🔄 Attempting session recovery...");
-      
+
       const supabase = createClient();
-      const { data: { session }, error } = await supabase.auth.getSession();
-      
+      const {
+        data: { session },
+        error,
+      } = await supabase.auth.getSession();
+
       if (error) {
         AuthDebug.error("❌ Session recovery failed:", error);
         return false;
       }
-      
+
       if (session) {
         AuthDebug.log("✅ Session recovered successfully");
         await handleAuthStateChange("SESSION_RECOVERED", session);
         return true;
       }
-      
+
       return false;
     } catch (error) {
       AuthDebug.error("❌ Unexpected error during session recovery:", error);

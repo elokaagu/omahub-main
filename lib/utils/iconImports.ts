@@ -113,6 +113,7 @@ export {
   HardDrive,
   Cloud,
   Wifi,
+  WifiOff,
   Signal,
   ShoppingCart,
   Tag,

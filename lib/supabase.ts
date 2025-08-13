@@ -181,7 +181,6 @@ export type Product = {
   delivery_method?: string;
   includes?: string[];
   // Portfolio-specific fields
-  materials?: string[];
   techniques?: string[];
   inspiration?: string;
   created_at?: string;

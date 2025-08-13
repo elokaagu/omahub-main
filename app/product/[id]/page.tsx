@@ -61,10 +61,10 @@ export default function ProductPage() {
             s.brand_name?.toLowerCase() === brand.name.toLowerCase() &&
             s.video_url
         );
-        if (brandSpotlight) {
+        if (brandSpotlight && brandSpotlight.video_url) {
           setSpotlightVideo({
             url: brandSpotlight.video_url,
-            thumbnail: brandSpotlight.video_thumbnail,
+            thumbnail: brandSpotlight.video_thumbnail || "",
           });
         }
       }

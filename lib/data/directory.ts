@@ -5,6 +5,22 @@ export const collections = ["Collections", "Tailored"] as const;
 
 export type Category = (typeof collections)[number];
 
+// Standard categories for forms and UI
+export const standardCategories = [
+  "Bridal",
+  "Ready to Wear",
+  "Vacation & Resort",
+  "Accessories",
+  "Custom Design",
+  "Evening Gowns",
+  "High End Fashion",
+  "Made to Measure",
+  "Alterations",
+  "Couture",
+  "Luxury",
+  "Streetwear & Urban",
+] as const;
+
 // Occasions used in "What are you dressing for?" section
 export const occasions = [
   "Wedding",

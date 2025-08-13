@@ -1,22 +1,197 @@
 {
-  "name": "OmaHub",
+  "name": "OmaHub - Premium Fashion & Tailoring Platform",
   "short_name": "OmaHub",
-  "description": "Spotlighting Africa's emerging designers.",
+  "description": "Discover premium fashion brands, connect with expert tailors, and explore curated collections. Your gateway to luxury fashion and bespoke tailoring.",
+  "version": "2.0.0",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#fff",
-  "theme_color": "#2D1921",
-  "orientation": "portrait",
+  "orientation": "portrait-primary",
+  "theme_color": "#1e293b",
+  "background_color": "#ffffff",
+  "scope": "/",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["fashion", "shopping", "lifestyle", "business"],
   "icons": [
     {
-      "src": "/favicon.png",
-      "sizes": "192x192",
-      "type": "image/png"
+      "src": "/icons/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
-      "src": "/favicon.png",
+      "src": "/icons/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
-  ]
+  ],
+  "shortcuts": [
+    {
+      "name": "Collections",
+      "short_name": "Collections",
+      "description": "Browse fashion collections",
+      "url": "/collections",
+      "icons": [
+        {
+          "src": "/icons/collections-96x96.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Tailors",
+      "short_name": "Tailors",
+      "description": "Find expert tailors",
+      "url": "/tailors",
+      "icons": [
+        {
+          "src": "/icons/tailors-96x96.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Studio",
+      "short_name": "Studio",
+      "description": "Access your studio dashboard",
+      "url": "/studio",
+      "icons": [
+        {
+          "src": "/icons/studio-96x96.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Favourites",
+      "short_name": "Favourites",
+      "description": "View your saved items",
+      "url": "/favourites",
+      "icons": [
+        {
+          "src": "/icons/favourites-96x96.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/desktop-home.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "OmaHub Homepage - Desktop View"
+    },
+    {
+      "src": "/screenshots/mobile-home.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "OmaHub Homepage - Mobile View"
+    },
+    {
+      "src": "/screenshots/collections.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Fashion Collections"
+    },
+    {
+      "src": "/screenshots/tailor-profile.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Tailor Profile"
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  },
+  "protocol_handlers": [
+    {
+      "protocol": "web+omahub",
+      "url": "/?protocol=%s"
+    }
+  ],
+  "file_handlers": [
+    {
+      "action": "/upload",
+      "accept": {
+        "image/*": [".jpg", ".jpeg", ".png", ".webp", ".gif"],
+        "application/pdf": [".pdf"]
+      }
+    }
+  ],
+  "share_target": {
+    "action": "/share",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url",
+      "files": [
+        {
+          "name": "files",
+          "accept": ["image/*", "application/pdf"]
+        }
+      ]
+    }
+  },
+  "permissions": ["notifications", "background-sync", "storage"],
+  "features": [
+    "Cross Platform",
+    "Offline Support",
+    "Push Notifications",
+    "Background Sync",
+    "Fast Loading",
+    "Responsive Design"
+  ],
+  "developer": {
+    "name": "OmaHub Team",
+    "url": "https://omahub.com"
+  }
 }
