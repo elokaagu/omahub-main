@@ -12,6 +12,7 @@ import { supabaseHelpers } from "@/lib/utils/supabase-helpers";
 import { Button } from "@/components/ui/button";
 import { NavigationLink } from "@/components/ui/navigation-link";
 import UserProfile from "@/components/auth/UserProfile";
+// Phase 2B: Selective icon imports instead of large lucide-react bundle
 import {
   Home,
   Package,
@@ -27,7 +28,7 @@ import {
   LogOut,
   Menu,
   X,
-} from "lucide-react";
+} from "@/lib/utils/iconImports";
 import { TailoringEventProvider } from "@/contexts/NavigationContext";
 import ErrorBoundary from "../components/ErrorBoundary";
 

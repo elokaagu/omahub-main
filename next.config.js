@@ -89,38 +89,115 @@ const nextConfig = {
   webpack: (config, { dev, isServer }) => {
     // Only apply production optimizations
     if (!dev && !isServer) {
-      // Enable tree shaking
+      // Enable aggressive tree shaking
       config.optimization.usedExports = true;
       config.optimization.sideEffects = false;
+      config.optimization.concatenateModules = true;
+      config.optimization.minimize = true;
       
-      // Split vendor chunks for better caching
+      // Phase 2B: Aggressive vendor chunk splitting
       config.optimization.splitChunks = {
         chunks: "all",
+        maxInitialRequests: 25, // Allow more chunks for better splitting
+        maxAsyncRequests: 25,
+        minSize: 20000, // Smaller chunks for better caching
+        maxSize: 244000, // Target chunks under 250KB
         cacheGroups: {
+          // Supabase - separate chunk for database operations
+          supabase: {
+            test: /[\\/]node_modules[\\/]@supabase[\\/]/,
+            name: "supabase",
+            chunks: "all",
+            priority: 20,
+            enforce: true,
+            reuseExistingChunk: true,
+          },
+          // Lucide React - separate chunk for icons
+          lucide: {
+            test: /[\\/]node_modules[\\/]lucide-react[\\/]/,
+            name: "lucide-icons",
+            chunks: "all",
+            priority: 20,
+            enforce: true,
+            reuseExistingChunk: true,
+          },
+          // Framer Motion - separate chunk for animations
+          framer: {
+            test: /[\\/]node_modules[\\/]framer-motion[\\/]/,
+            name: "framer-motion",
+            chunks: "all",
+            priority: 20,
+            enforce: true,
+            reuseExistingChunk: true,
+          },
+          // React and React DOM - separate chunk
+          react: {
+            test: /[\\/]node_modules[\\/](react|react-dom)[\\/]/,
+            name: "react-vendor",
+            chunks: "all",
+            priority: 30,
+            enforce: true,
+            reuseExistingChunk: true,
+          },
+          // Next.js - separate chunk
+          next: {
+            test: /[\\/]node_modules[\\/]next[\\/]/,
+            name: "next-vendor",
+            chunks: "all",
+            priority: 25,
+            enforce: true,
+            reuseExistingChunk: true,
+          },
+          // Tailwind CSS and styling - separate chunk
+          styles: {
+            test: /[\\/]node_modules[\\/](tailwindcss|@tailwindcss|autoprefixer)[\\/]/,
+            name: "tailwind-styles",
+            chunks: "all",
+            priority: 15,
+            enforce: true,
+            reuseExistingChunk: true,
+          },
+          // Other large packages
+          largePackages: {
+            test: /[\\/]node_modules[\\/](@radix-ui|@headlessui|@heroicons|clsx|class-variance-authority)[\\/]/,
+            name: "large-packages",
+            chunks: "all",
+            priority: 15,
+            enforce: true,
+            reuseExistingChunk: true,
+          },
+          // Common vendor packages
           vendor: {
             test: /[\\/]node_modules[\\/]/,
             name: "vendors",
             chunks: "all",
             priority: 10,
+            reuseExistingChunk: true,
           },
+          // Common chunks for shared code
           common: {
             name: "common",
             minChunks: 2,
             chunks: "all",
             priority: 5,
             reuseExistingChunk: true,
+            enforce: true,
           },
         },
       };
       
-      // Enable module concatenation
+      // Phase 2B: Module concatenation optimization
       config.optimization.concatenateModules = true;
       
-      // Minimize CSS
+      // Phase 2B: Enable scope hoisting
+      config.optimization.moduleIds = "deterministic";
+      config.optimization.chunkIds = "deterministic";
+      
+      // Phase 2B: CSS optimization
       config.optimization.minimize = true;
     }
     
-    // Phase 2: Bundle analyzer for development
+    // Phase 2B: Bundle analyzer for development
     if (dev && process.env.ANALYZE === "true") {
       const { BundleAnalyzerPlugin } = require("webpack-bundle-analyzer");
       config.plugins.push(
@@ -128,6 +205,20 @@ const nextConfig = {
           analyzerMode: "server",
           analyzerPort: 8888,
           openAnalyzer: true,
+        })
+      );
+    }
+    
+    // Phase 2B: Add bundle size monitoring
+    if (!dev) {
+      const { BundleAnalyzerPlugin } = require("webpack-bundle-analyzer");
+      config.plugins.push(
+        new BundleAnalyzerPlugin({
+          analyzerMode: "static",
+          openAnalyzer: false,
+          reportFilename: "bundle-analysis.html",
+          generateStatsFile: true,
+          statsFilename: "bundle-stats.json",
         })
       );
     }

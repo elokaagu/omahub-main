@@ -7,20 +7,14 @@ import { getUserPermissions, Permission } from "@/lib/services/permissionsServic
 import { supabaseHelpers } from "@/lib/utils/supabase-helpers";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+// Phase 2B: Selective icon imports instead of large lucide-react bundle
 import { 
   Package, 
   Users, 
   ShoppingBag, 
   MessageSquare, 
-  Inbox, 
-  Settings, 
-  User, 
-  Scissors, 
-  ImageIcon, 
-  Monitor, 
-  LogOut, 
   BarChart3 
-} from "lucide-react";
+} from "@/lib/utils/iconImports";
 import Link from "next/link";
 import type { Database } from "@/lib/types/supabase";
 
