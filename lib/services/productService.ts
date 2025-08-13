@@ -691,3 +691,153 @@ export async function getIntelligentRecommendations(
     return [];
   }
 }
+
+/**
+ * Get intelligent recommendations with brand information for proper currency display
+ */
+export async function getIntelligentRecommendationsWithBrand(
+  userId?: string,
+  catalogueId?: string,
+  brandId?: string,
+  limit: number = 4
+): Promise<(Product & { brand: { price_range?: string } })[]> {
+  if (!supabase) {
+    throw new Error("Supabase client not available");
+  }
+
+  try {
+    let recommendations: (Product & { brand: { price_range?: string } })[] = [];
+
+    // If user is logged in, get recommendations based on their favourite brands
+    if (userId) {
+      // Get user's favourite products to understand their preferred brands
+      const { data: favourites } = await supabase
+        .from("favourites")
+        .select("product_id")
+        .eq("user_id", userId);
+
+      if (favourites && favourites.length > 0) {
+        // Get the brands of favourited products
+        const { data: favouritedProducts } = await supabase
+          .from("products")
+          .select("brand_id")
+          .in(
+            "id",
+            favourites.map((f: any) => f.product_id)
+          );
+
+        if (favouritedProducts && favouritedProducts.length > 0) {
+          const favouriteBrandIds = [
+            ...new Set(favouritedProducts.map((p: any) => p.brand_id)),
+          ];
+
+          // Get products from favourite brands with brand info (up to half of the limit)
+          const favouriteLimit = Math.ceil(limit / 2);
+          const { data: favouriteBasedProducts } = await supabase
+            .from("products")
+            .select(`
+              *,
+              brand:brands(price_range)
+            `)
+            .in("brand_id", favouriteBrandIds)
+            .limit(favouriteLimit)
+            .order("created_at", { ascending: false });
+
+          if (favouriteBasedProducts) {
+            recommendations.push(...favouriteBasedProducts);
+          }
+        }
+      }
+    }
+
+    // Fill remaining slots with catalogue products
+    const remainingLimit = limit - recommendations.length;
+    if (remainingLimit > 0 && catalogueId) {
+      const { data: catalogueProducts } = await supabase
+        .from("products")
+        .select(`
+          *,
+          brand:brands(price_range)
+        `)
+        .eq("catalogue_id", catalogueId)
+        .not("id", "in", `(${recommendations.map((r) => r.id).join(",")})`)
+        .limit(remainingLimit)
+        .order("created_at", { ascending: false });
+
+      if (catalogueProducts) {
+        recommendations.push(...catalogueProducts);
+      }
+    }
+
+    // If still need more, get products from the same brand
+    const stillNeedMore = limit - recommendations.length;
+    if (stillNeedMore > 0 && brandId) {
+      const { data: brandProducts } = await supabase
+        .from("products")
+        .select(`
+          *,
+          brand:brands(price_range)
+        `)
+        .eq("brand_id", brandId)
+        .not("id", "in", `(${recommendations.map((r) => r.id).join(",")})`)
+        .limit(stillNeedMore)
+        .order("created_at", { ascending: false });
+
+      if (brandProducts) {
+        recommendations.push(...brandProducts);
+      }
+    }
+
+    // Shuffle the recommendations for variety
+    return recommendations.sort(() => Math.random() - 0.5);
+  } catch (error) {
+    console.error("Error in getIntelligentRecommendationsWithBrand:", error);
+    // Fallback to catalogue products with brand info if intelligent recommendations fail
+    if (catalogueId) {
+      return getCatalogueRecommendationsWithBrand(catalogueId, undefined, limit);
+    }
+    return [];
+  }
+}
+
+/**
+ * Get catalogue recommendations with brand information for proper currency display
+ */
+export async function getCatalogueRecommendationsWithBrand(
+  catalogueId: string,
+  excludeProductId?: string,
+  limit: number = 4
+): Promise<(Product & { brand: { price_range?: string } })[]> {
+  if (!supabase) {
+    throw new Error("Supabase client not available");
+  }
+
+  try {
+    let query = supabase
+      .from("products")
+      .select(`
+        *,
+        brand:brands(price_range)
+      `)
+      .eq("catalogue_id", catalogueId)
+      .limit(limit);
+
+    if (excludeProductId) {
+      query = query.neq("id", excludeProductId);
+    }
+
+    const { data, error } = await query.order("created_at", {
+      ascending: false,
+    });
+
+    if (error) {
+      console.error("Error fetching catalogue recommendations with brand:", error);
+      throw error;
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error("Error in getCatalogueRecommendationsWithBrand:", error);
+    throw error;
+  }
+}

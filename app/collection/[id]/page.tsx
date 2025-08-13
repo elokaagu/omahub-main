@@ -13,7 +13,7 @@ import {
 import { getCollectionWithBrand } from "@/lib/services/collectionService";
 import {
   getProductsByCatalogue,
-  getIntelligentRecommendations,
+  getIntelligentRecommendationsWithBrand,
 } from "@/lib/services/productService";
 import { Catalogue, Brand, Product } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
@@ -56,7 +56,7 @@ export default function CataloguePage() {
 
   const [catalogue, setCatalogue] = useState<CatalogueWithBrand | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
-  const [recommendedProducts, setRecommendedProducts] = useState<Product[]>([]);
+  const [recommendedProducts, setRecommendedProducts] = useState<(Product & { brand: { price_range?: string } })[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -78,7 +78,7 @@ export default function CataloguePage() {
         setProducts(productsData);
 
         // Fetch intelligent recommendations
-        const recommendations = await getIntelligentRecommendations(
+        const recommendations = await getIntelligentRecommendationsWithBrand(
           user?.id,
           catalogueId,
           collectionData.brand_id,
@@ -377,15 +377,15 @@ export default function CataloguePage() {
                         {product.sale_price ? (
                           <>
                             <span className="text-lg font-semibold text-oma-plum">
-                              {formatProductPrice({ price: product.price, sale_price: product.sale_price }, { price_range: catalogue.brand.price_range }).displayPrice}
+                              {formatProductPrice({ price: product.price, sale_price: product.sale_price }, { price_range: product.brand?.price_range }).displayPrice}
                             </span>
                             <span className="text-sm text-black/60 line-through">
-                              {formatProductPrice({ price: product.price, sale_price: product.sale_price }, { price_range: catalogue.brand.price_range }).originalPrice}
+                              {formatProductPrice({ price: product.price, sale_price: product.sale_price }, { price_range: product.brand?.price_range }).originalPrice}
                             </span>
                           </>
                         ) : (
                           <span className="text-lg font-semibold text-black">
-                            {formatProductPrice({ price: product.price, sale_price: product.sale_price }, { price_range: catalogue.brand.price_range }).displayPrice}
+                            {formatProductPrice({ price: product.price, sale_price: product.sale_price }, { price_range: product.brand?.price_range }).displayPrice}
                           </span>
                         )}
                       </div>
