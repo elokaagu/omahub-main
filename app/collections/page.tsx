@@ -416,7 +416,7 @@ export default function CataloguesPage() {
                       {(() => {
                         try {
                           if (product.service_type === "portfolio") {
-                            return "Portfolio Item";
+                            return "";
                           }
                           return formatProductPrice(product, product.brand)
                             .displayPrice;

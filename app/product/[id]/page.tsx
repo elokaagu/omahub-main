@@ -352,9 +352,7 @@ export default function ProductPage() {
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2">
                   {product.service_type === "portfolio" ? (
-                    <span className="text-2xl font-bold text-oma-plum">
-                      Portfolio Item
-                    </span>
+                    <div></div>
                   ) : (
                     <>
                       <span className="text-2xl font-bold text-oma-plum">

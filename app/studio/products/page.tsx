@@ -760,7 +760,7 @@ export default function ProductsPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-lg font-bold text-oma-plum">
-                      {product.service_type === "portfolio" ? "Portfolio Item" : formatProductPrice(product, product.brand).displayPrice}
+                      {product.service_type === "portfolio" ? "" : formatProductPrice(product, product.brand).displayPrice}
                     </span>
                     {product.sale_price && product.service_type !== "portfolio" && (
                       <span className="text-sm text-oma-cocoa/60 line-through">
@@ -844,7 +844,7 @@ export default function ProductsPage() {
                       <div className="text-right space-y-2">
                         <div className="flex items-center gap-2">
                           <span className="text-lg font-bold text-oma-plum">
-                            {product.service_type === "portfolio" ? "Portfolio Item" : formatProductPrice(product, product.brand).displayPrice}
+                            {product.service_type === "portfolio" ? "" : formatProductPrice(product, product.brand).displayPrice}
                           </span>
                           {product.sale_price && product.service_type !== "portfolio" && (
                             <span className="text-sm text-oma-cocoa/60 line-through">

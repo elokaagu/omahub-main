@@ -283,9 +283,7 @@ export default function ClientBrandProfile({
                         </p>
                         <div className="flex items-center justify-between">
                           {product.service_type === "portfolio" ? (
-                            <p className="text-oma-plum font-medium text-sm sm:text-base">
-                              Portfolio Item
-                            </p>
+                            <div></div>
                           ) : (
                             <p className="text-oma-plum font-medium text-sm sm:text-base">
                               ${product.sale_price || product.price}
