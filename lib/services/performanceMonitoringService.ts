@@ -83,34 +83,33 @@ export class PerformanceMonitoringService {
    */
   private monitorCoreWebVitals() {
     if ("web-vitals" in window) {
-      import("web-vitals").then(
-        ({ getCLS, getFID, getFCP, getLCP, getTTFB }) => {
-          getCLS((metric) => {
-            this.metrics.cls = metric.value;
-            this.reportMetric("CLS", metric);
-          });
+      import("web-vitals").then((webVitals) => {
+        webVitals.onCLS((metric) => {
+          this.metrics.cls = metric.value;
+          this.reportMetric("CLS", metric);
+        });
 
-          getFID((metric) => {
-            this.metrics.fid = metric.value;
-            this.reportMetric("FID", metric);
-          });
+        // Note: onFID is deprecated, using onINP instead for interactivity metrics
+        webVitals.onINP((metric) => {
+          this.metrics.fid = metric.value; // Store in fid field for backward compatibility
+          this.reportMetric("INP", metric);
+        });
 
-          getFCP((metric) => {
-            this.metrics.fcp = metric.value;
-            this.reportMetric("FCP", metric);
-          });
+        webVitals.onFCP((metric) => {
+          this.metrics.fcp = metric.value;
+          this.reportMetric("FCP", metric);
+        });
 
-          getLCP((metric) => {
-            this.metrics.lcp = metric.value;
-            this.reportMetric("LCP", metric);
-          });
+        webVitals.onLCP((metric) => {
+          this.metrics.lcp = metric.value;
+          this.reportMetric("LCP", metric);
+        });
 
-          getTTFB((metric) => {
-            this.metrics.ttfb = metric.value;
-            this.reportMetric("TTFB", metric);
-          });
-        }
-      );
+        webVitals.onTTFB((metric) => {
+          this.metrics.ttfb = metric.value;
+          this.reportMetric("TTFB", metric);
+        });
+      });
     }
   }
 
@@ -269,9 +268,9 @@ export class PerformanceMonitoringService {
    */
   private reportCacheMetrics() {
     console.log("📦 Cache Performance:", {
-      hitRate: `${(this.metrics.cacheHitRate * 100).toFixed(1)}%`,
-      size: `${(this.metrics.cacheSize / 1024 / 1024).toFixed(2)}MB`,
-      entries: this.metrics.cacheEntries,
+      hitRate: `${((this.metrics.cacheHitRate || 0) * 100).toFixed(1)}%`,
+      size: `${((this.metrics.cacheSize || 0) / 1024 / 1024).toFixed(2)}MB`,
+      entries: this.metrics.cacheEntries || 0,
     });
   }
 
@@ -379,8 +378,8 @@ export class PerformanceMonitoringService {
    */
   private sendToAnalytics(name: string, value: number, rating: string) {
     // Send to Google Analytics if available
-    if (typeof gtag !== "undefined") {
-      gtag("event", "performance_metric", {
+    if (typeof window !== "undefined" && (window as any).gtag) {
+      (window as any).gtag("event", "performance_metric", {
         metric_name: name,
         metric_value: value,
         metric_rating: rating,

@@ -11,32 +11,104 @@ export interface Currency {
 
 // Centralized currency definitions
 export const CURRENCIES: Currency[] = [
-  { code: "NGN", symbol: "₦", name: "Nigerian Naira", country: "Nigeria", defaultLocation: ["Nigeria", "Lagos", "Abuja", "Port Harcourt"] },
-  { code: "GHS", symbol: "GHS", name: "Ghanaian Cedi", country: "Ghana", defaultLocation: ["Ghana", "Accra", "Kumasi", "Tamale"] },
-  { code: "KES", symbol: "KSh", name: "Kenyan Shilling", country: "Kenya", defaultLocation: ["Kenya", "Nairobi", "Mombasa", "Kisumu"] },
-  { code: "ZAR", symbol: "R", name: "South African Rand", country: "South Africa", defaultLocation: ["South Africa", "Johannesburg", "Cape Town", "Durban"] },
-  { code: "EGP", symbol: "EGP", name: "Egyptian Pound", country: "Egypt", defaultLocation: ["Egypt", "Cairo", "Alexandria", "Giza"] },
-  { code: "MAD", symbol: "MAD", name: "Moroccan Dirham", country: "Morocco", defaultLocation: ["Morocco", "Casablanca", "Rabat", "Marrakech"] },
-  { code: "TND", symbol: "TND", name: "Tunisian Dinar", country: "Tunisia", defaultLocation: ["Tunisia", "Tunis", "Sfax", "Sousse"] },
-  { code: "XOF", symbol: "XOF", name: "West African CFA Franc", country: "West Africa", defaultLocation: ["Senegal", "Ivory Coast", "Burkina Faso", "Mali"] },
-  { code: "DZD", symbol: "DA", name: "Algerian Dinar", country: "Algeria", defaultLocation: ["Algeria", "Algiers", "Oran", "Constantine"] },
-  { code: "USD", symbol: "$", name: "US Dollar", country: "United States", defaultLocation: ["United States", "USA"] },
-  { code: "EUR", symbol: "€", name: "Euro", country: "European Union", defaultLocation: ["European Union", "EU"] },
-  { code: "GBP", symbol: "£", name: "British Pound", country: "United Kingdom", defaultLocation: ["United Kingdom", "UK", "England", "Scotland", "Wales"] },
+  {
+    code: "NGN",
+    symbol: "₦",
+    name: "Nigerian Naira",
+    country: "Nigeria",
+    defaultLocation: ["Nigeria", "Lagos", "Abuja", "Port Harcourt"],
+  },
+  {
+    code: "GHS",
+    symbol: "GHS",
+    name: "Ghanaian Cedi",
+    country: "Ghana",
+    defaultLocation: ["Ghana", "Accra", "Kumasi", "Tamale"],
+  },
+  {
+    code: "KES",
+    symbol: "KSh",
+    name: "Kenyan Shilling",
+    country: "Kenya",
+    defaultLocation: ["Kenya", "Nairobi", "Mombasa", "Kisumu"],
+  },
+  {
+    code: "ZAR",
+    symbol: "R",
+    name: "South African Rand",
+    country: "South Africa",
+    defaultLocation: ["South Africa", "Johannesburg", "Cape Town", "Durban"],
+  },
+  {
+    code: "EGP",
+    symbol: "EGP",
+    name: "Egyptian Pound",
+    country: "Egypt",
+    defaultLocation: ["Egypt", "Cairo", "Alexandria", "Giza"],
+  },
+  {
+    code: "MAD",
+    symbol: "MAD",
+    name: "Moroccan Dirham",
+    country: "Morocco",
+    defaultLocation: ["Morocco", "Casablanca", "Rabat", "Marrakech"],
+  },
+  {
+    code: "TND",
+    symbol: "TND",
+    name: "Tunisian Dinar",
+    country: "Tunisia",
+    defaultLocation: ["Tunisia", "Tunis", "Sfax", "Sousse"],
+  },
+  {
+    code: "XOF",
+    symbol: "XOF",
+    name: "West African CFA Franc",
+    country: "West Africa",
+    defaultLocation: ["Senegal", "Ivory Coast", "Burkina Faso", "Mali"],
+  },
+  {
+    code: "DZD",
+    symbol: "DA",
+    name: "Algerian Dinar",
+    country: "Algeria",
+    defaultLocation: ["Algeria", "Algiers", "Oran", "Constantine"],
+  },
+  {
+    code: "USD",
+    symbol: "$",
+    name: "US Dollar",
+    country: "United States",
+    defaultLocation: ["United States", "USA"],
+  },
+  {
+    code: "EUR",
+    symbol: "€",
+    name: "Euro",
+    country: "European Union",
+    defaultLocation: ["European Union", "EU"],
+  },
+  {
+    code: "GBP",
+    symbol: "£",
+    name: "British Pound",
+    country: "United Kingdom",
+    defaultLocation: ["United Kingdom", "UK", "England", "Scotland", "Wales"],
+  },
 ];
 
 /**
  * Get currency by code
  */
 export function getCurrencyByCode(code: string): Currency | undefined {
-  return CURRENCIES.find(c => c.code === code.toUpperCase());
+  return CURRENCIES.find((c) => c.code === code.toUpperCase());
 }
 
 /**
  * Get currency by symbol
  */
 export function getCurrencyBySymbol(symbol: string): Currency | undefined {
-  return CURRENCIES.find(c => c.symbol === symbol);
+  return CURRENCIES.find((c) => c.symbol === symbol);
 }
 
 /**
@@ -44,29 +116,31 @@ export function getCurrencyBySymbol(symbol: string): Currency | undefined {
  */
 export function getCurrencyByLocation(location: string): Currency | undefined {
   if (!location) return undefined;
-  
+
   const normalizedLocation = location.toLowerCase();
-  
+
   // First try exact country match
-  const countryMatch = CURRENCIES.find(c => 
-    c.country.toLowerCase() === normalizedLocation
+  const countryMatch = CURRENCIES.find(
+    (c) => c.country.toLowerCase() === normalizedLocation
   );
   if (countryMatch) return countryMatch;
-  
+
   // Then try default location matches
-  const locationMatch = CURRENCIES.find(c => 
-    c.defaultLocation?.some(loc => 
-      loc.toLowerCase().includes(normalizedLocation) || 
-      normalizedLocation.includes(loc.toLowerCase())
+  const locationMatch = CURRENCIES.find((c) =>
+    c.defaultLocation?.some(
+      (loc) =>
+        loc.toLowerCase().includes(normalizedLocation) ||
+        normalizedLocation.includes(loc.toLowerCase())
     )
   );
   if (locationMatch) return locationMatch;
-  
+
   // Fallback: try partial matches
-  return CURRENCIES.find(c => 
-    c.defaultLocation?.some(loc => 
-      loc.toLowerCase().includes(normalizedLocation) || 
-      normalizedLocation.includes(loc.toLowerCase())
+  return CURRENCIES.find((c) =>
+    c.defaultLocation?.some(
+      (loc) =>
+        loc.toLowerCase().includes(normalizedLocation) ||
+        normalizedLocation.includes(loc.toLowerCase())
     )
   );
 }
@@ -76,7 +150,9 @@ export function getCurrencyByLocation(location: string): Currency | undefined {
  * @param priceRange - Price range string (e.g., "₦15,000 - ₦120,000")
  * @returns Currency object or undefined
  */
-export function extractCurrencyFromPriceRange(priceRange: string): Currency | undefined {
+export function extractCurrencyFromPriceRange(
+  priceRange: string
+): Currency | undefined {
   if (!priceRange || priceRange === "Contact for pricing") {
     return undefined;
   }
@@ -102,7 +178,9 @@ export function extractCurrencyFromPriceRange(priceRange: string): Currency | un
  * @param brand - Brand object with location and price_range
  * @returns Currency object or default (NGN)
  */
-export function getBrandCurrency(brand: { location?: string; price_range?: string } | null): Currency {
+export function getBrandCurrency(
+  brand: { location?: string; price_range?: string } | null
+): Currency {
   if (!brand) {
     return getCurrencyByCode("NGN")!; // Default to Nigerian Naira
   }
@@ -133,18 +211,22 @@ export function getBrandCurrency(brand: { location?: string; price_range?: strin
  * @param brand - Brand object to determine currency
  * @returns Formatted price string with correct currency
  */
-export function formatPriceWithBrandCurrency(price: string | number, brand: { location?: string; price_range?: string } | null): string {
+export function formatPriceWithBrandCurrency(
+  price: string | number,
+  brand: { location?: string; price_range?: string } | null
+): string {
   const currency = getBrandCurrency(brand);
-  const numericPrice = typeof price === 'string' ? parseFloat(price.replace(/,/g, '')) : price;
-  
+  const numericPrice =
+    typeof price === "string" ? parseFloat(price.replace(/,/g, "")) : price;
+
   if (isNaN(numericPrice)) {
     return `${currency.symbol}0`;
   }
 
   // Format with commas for thousands
-  const formattedPrice = numericPrice.toLocaleString('en-US', {
+  const formattedPrice = numericPrice.toLocaleString("en-US", {
     minimumFractionDigits: 0,
-    maximumFractionDigits: 2
+    maximumFractionDigits: 2,
   });
 
   return `${currency.symbol}${formattedPrice}`;
@@ -163,22 +245,28 @@ export function formatPriceRangeWithBrandCurrency(
   brand: { location?: string; price_range?: string } | null
 ): string {
   const currency = getBrandCurrency(brand);
-  
-  const min = typeof minPrice === 'string' ? parseFloat(minPrice.replace(/,/g, '')) : minPrice;
-  const max = typeof maxPrice === 'string' ? parseFloat(maxPrice.replace(/,/g, '')) : maxPrice;
-  
+
+  const min =
+    typeof minPrice === "string"
+      ? parseFloat(minPrice.replace(/,/g, ""))
+      : minPrice;
+  const max =
+    typeof maxPrice === "string"
+      ? parseFloat(maxPrice.replace(/,/g, ""))
+      : maxPrice;
+
   if (isNaN(min) || isNaN(max)) {
     return "Contact for pricing";
   }
 
-  const formattedMin = min.toLocaleString('en-US', {
+  const formattedMin = min.toLocaleString("en-US", {
     minimumFractionDigits: 0,
-    maximumFractionDigits: 2
+    maximumFractionDigits: 2,
   });
-  
-  const formattedMax = max.toLocaleString('en-US', {
+
+  const formattedMax = max.toLocaleString("en-US", {
     minimumFractionDigits: 0,
-    maximumFractionDigits: 2
+    maximumFractionDigits: 2,
   });
 
   return `${currency.symbol}${formattedMin} - ${currency.symbol}${formattedMax}`;
@@ -199,18 +287,28 @@ export function getDefaultCurrencyForLocation(location: string): Currency {
  * @param brand - Brand object
  * @returns Object with validation results
  */
-export function validateBrandCurrency(brand: { location?: string; price_range?: string }): {
+export function validateBrandCurrency(brand: {
+  location?: string;
+  price_range?: string;
+}): {
   isValid: boolean;
   locationCurrency?: Currency;
   priceRangeCurrency?: Currency;
   mismatch: boolean;
   recommendation: string;
 } {
-  const locationCurrency = brand.location ? getCurrencyByLocation(brand.location) : undefined;
-  const priceRangeCurrency = brand.price_range ? extractCurrencyFromPriceRange(brand.price_range) : undefined;
-  
-  const mismatch = locationCurrency && priceRangeCurrency && locationCurrency.code !== priceRangeCurrency.code;
-  
+  const locationCurrency = brand.location
+    ? getCurrencyByLocation(brand.location)
+    : undefined;
+  const priceRangeCurrency = brand.price_range
+    ? extractCurrencyFromPriceRange(brand.price_range)
+    : undefined;
+
+  const mismatch =
+    locationCurrency &&
+    priceRangeCurrency &&
+    locationCurrency.code !== priceRangeCurrency.code;
+
   let recommendation = "";
   if (mismatch) {
     recommendation = `Currency mismatch: Location suggests ${locationCurrency?.name} (${locationCurrency?.symbol}) but price range uses ${priceRangeCurrency?.name} (${priceRangeCurrency?.symbol}). Consider updating the price range to match the location.`;
@@ -219,13 +317,13 @@ export function validateBrandCurrency(brand: { location?: string; price_range?: 
   } else if (!locationCurrency && priceRangeCurrency) {
     recommendation = `Location not recognized. Consider updating the location to match the currency (${priceRangeCurrency.country}).`;
   }
-  
+
   return {
     isValid: !mismatch,
     locationCurrency,
     priceRangeCurrency,
-    mismatch,
-    recommendation
+    mismatch: !!mismatch,
+    recommendation,
   };
 }
 
@@ -239,5 +337,5 @@ export default {
   formatPriceWithBrandCurrency,
   formatPriceRangeWithBrandCurrency,
   getDefaultCurrencyForLocation,
-  validateBrandCurrency
+  validateBrandCurrency,
 };

@@ -137,9 +137,41 @@ export function formatPriceRangeWithBrand(
  * @param brand - Brand object with location and price_range
  * @returns Currency symbol
  */
-export function getBrandCurrencySymbol(brand: { location?: string; price_range?: string } | null): string {
+export function getBrandCurrencySymbol(
+  brand: { location?: string; price_range?: string } | null
+): string {
   const currency = getBrandCurrency(brand);
   return currency.symbol;
+}
+
+/**
+ * Format product price with brand currency information
+ * @param product - Product with price information
+ * @param brand - Brand with price_range information
+ * @returns Formatted price object with displayPrice, originalPrice, and currency
+ */
+export function formatProductPrice(
+  product: { price: number; sale_price?: number },
+  brand?: { price_range?: string; location?: string } | null
+): {
+  displayPrice: string;
+  originalPrice?: string;
+  currency: string;
+} {
+  const currency = getBrandCurrency(brand || null);
+  const displayPrice = formatPrice(
+    product.sale_price || product.price,
+    currency.symbol
+  );
+  const originalPrice = product.sale_price
+    ? formatPrice(product.price, currency.symbol)
+    : undefined;
+
+  return {
+    displayPrice,
+    originalPrice,
+    currency: currency.symbol,
+  };
 }
 
 /**
@@ -167,10 +199,10 @@ export function convertPrice(
   exchangeRates: Record<string, number>
 ): number {
   if (fromCurrency === toCurrency) return price;
-  
+
   const fromRate = exchangeRates[fromCurrency] || 1;
   const toRate = exchangeRates[toCurrency] || 1;
-  
+
   // Convert to USD first, then to target currency
   const usdPrice = price / fromRate;
   return usdPrice * toRate;
@@ -186,6 +218,7 @@ export default {
   formatPriceWithBrand,
   formatPriceRangeWithBrand,
   getBrandCurrencySymbol,
+  formatProductPrice,
   isValidPrice,
-  convertPrice
+  convertPrice,
 };

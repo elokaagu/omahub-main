@@ -16,7 +16,7 @@ import {
   Activity,
   Zap,
   Database,
-  Smartphone,
+  Monitor,
   Download,
   Clock,
   TrendingUp,
@@ -290,7 +290,9 @@ export default function PerformanceDashboard() {
                   if (["lcp", "fid", "cls", "ttfb"].includes(key) && value) {
                     const rating = getPerformanceRating(
                       key as keyof PerformanceMetrics,
-                      value
+                      typeof value === "number"
+                        ? value
+                        : parseFloat(value as string)
                     );
                     return (
                       <div
@@ -303,8 +305,15 @@ export default function PerformanceDashboard() {
                         <div className="flex items-center space-x-2">
                           <span className="text-sm">
                             {key === "cls"
-                              ? value.toFixed(3)
-                              : formatTime(value)}
+                              ? (typeof value === "number"
+                                  ? value
+                                  : parseFloat(value as string)
+                                ).toFixed(3)
+                              : formatTime(
+                                  typeof value === "number"
+                                    ? value
+                                    : parseFloat(value as string)
+                                )}
                           </span>
                           <Badge
                             variant="outline"
@@ -389,7 +398,12 @@ export default function PerformanceDashboard() {
             ].map(({ key, label, description }) => {
               const value = metrics[key as keyof PerformanceMetrics];
               const rating = value
-                ? getPerformanceRating(key as keyof PerformanceMetrics, value)
+                ? getPerformanceRating(
+                    key as keyof PerformanceMetrics,
+                    typeof value === "number"
+                      ? value
+                      : parseFloat(value as string)
+                  )
                 : "unknown";
 
               return (
@@ -403,8 +417,15 @@ export default function PerformanceDashboard() {
                       <span className="text-2xl font-bold">
                         {value
                           ? key === "cls"
-                            ? value.toFixed(3)
-                            : formatTime(value)
+                            ? (typeof value === "number"
+                                ? value
+                                : parseFloat(value as string)
+                              ).toFixed(3)
+                            : formatTime(
+                                typeof value === "number"
+                                  ? value
+                                  : parseFloat(value as string)
+                              )
                           : "N/A"}
                       </span>
                       <Badge
@@ -415,7 +436,18 @@ export default function PerformanceDashboard() {
                       </Badge>
                     </div>
                     <Progress
-                      value={value ? Math.min((value / 5000) * 100, 100) : 0}
+                      value={
+                        value
+                          ? Math.min(
+                              ((typeof value === "number"
+                                ? value
+                                : parseFloat(value as string)) /
+                                5000) *
+                                100,
+                              100
+                            )
+                          : 0
+                      }
                       className="w-full"
                     />
                   </CardContent>
