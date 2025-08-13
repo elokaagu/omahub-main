@@ -98,7 +98,7 @@ export default function StudioPage() {
           <div className="h-12 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg animate-pulse"></div>
           <div className="h-6 bg-gray-200 rounded w-2/3 animate-pulse"></div>
         </div>
-        
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Analytics Card Skeleton */}
           <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
@@ -111,20 +111,23 @@ export default function StudioPage() {
               </div>
             </div>
           </div>
-          
+
           {/* Quick Actions Skeleton */}
           <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
             <div className="space-y-4">
               <div className="h-6 bg-gray-200 rounded w-1/2 animate-pulse"></div>
               <div className="space-y-3">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="h-12 bg-gray-200 rounded animate-pulse"></div>
+                  <div
+                    key={i}
+                    className="h-12 bg-gray-200 rounded animate-pulse"
+                  ></div>
                 ))}
               </div>
             </div>
           </div>
         </div>
-        
+
         {/* Recent Activity Skeleton */}
         <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
           <div className="space-y-4">

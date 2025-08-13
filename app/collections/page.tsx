@@ -76,7 +76,6 @@ export default function CataloguesPage() {
     async function fetchData() {
       try {
         setLoading(true);
-        console.log("🔄 Starting to fetch collections data...");
 
         const [catalogueData, productData] = await Promise.all([
           getCollectionsWithBrands().catch((err) => {
@@ -89,20 +88,7 @@ export default function CataloguesPage() {
           }),
         ]);
 
-        console.log("✅ Fetched data:", {
-          catalogues: catalogueData.length,
-          products: productData.length,
-        });
-
         setCatalogues(catalogueData || []);
-        console.log(
-          "🖼️ Catalogue images debug:",
-          catalogueData.map((c) => ({
-            title: c.title,
-            image: c.image,
-            hasImage: !!c.image,
-          }))
-        );
         setFilteredCatalogues(catalogueData || []);
         setProducts(productData || []);
         setFilteredProducts(productData || []);

@@ -188,14 +188,17 @@ export function useBrandOwnerAccess(): BrandOwnerAccess {
 
   // Debug logging for derived values (only log when values actually change)
   useEffect(() => {
-    console.log("🎯 useBrandOwnerAccess: Derived values:", {
-      isBrandOwner,
-      isAdmin,
-      ownedBrandIds,
-      canManageBrands,
-      effectiveProfileRole: effectiveProfile.role,
-      userProfileExists: !!userProfile,
-    });
+    // Only log in development mode
+    if (process.env.NODE_ENV === "development") {
+      console.log("🎯 useBrandOwnerAccess: Derived values:", {
+        isBrandOwner,
+        isAdmin,
+        ownedBrandIds,
+        canManageBrands,
+        effectiveProfileRole: effectiveProfile.role,
+        userProfileExists: !!userProfile,
+      });
+    }
   }, [
     isBrandOwner,
     isAdmin,

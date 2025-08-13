@@ -94,11 +94,8 @@ export default function UsersPage() {
   // Fetch users and brands
   useEffect(() => {
     const fetchData = async () => {
-      const startTime = performance.now();
-
       try {
         setLoading(true);
-        console.log("🚀 Users page: Starting data fetch...");
 
         // Fetch users and brand names in parallel for better performance
         // Use getBrandNamesMap for lighter payload since we only need names
@@ -109,11 +106,6 @@ export default function UsersPage() {
           getBrandNamesMap(), // Lightweight brand names only
           getAllBrands(), // Full brand data for the form dropdown
         ]);
-
-        const fetchTime = performance.now();
-        console.log(
-          `⏱️ Users page: API calls completed in ${Math.round(fetchTime - startTime)}ms`
-        );
 
         if (!usersResponse.ok) {
           const errorData = await usersResponse.json();
@@ -139,17 +131,9 @@ export default function UsersPage() {
 
         setUsers(usersWithBrands);
         setFilteredUsers(usersWithBrands);
-
-        const endTime = performance.now();
-        console.log(
-          `✅ Users page: Total load time ${Math.round(endTime - startTime)}ms`
-        );
-        console.log(
-          `📊 Users page: Loaded ${usersWithBrands.length} users and ${brandsData.length} brands`
-        );
       } catch (error) {
-        console.error("Error fetching data:", error);
-        toast.error("Failed to load data");
+        console.error("Error fetching users:", error);
+        toast.error("Failed to load users");
       } finally {
         setLoading(false);
       }

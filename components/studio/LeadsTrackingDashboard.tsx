@@ -257,31 +257,15 @@ export default function LeadsTrackingDashboard({
       setPlatformLoading(true);
       setPlatformError(null);
 
-      console.log("🔍 BRAND ANALYTICS DEBUG: Starting fetchPlatformAnalytics", {
-        isSuperAdmin,
-        isBrandAdmin,
-        effectiveOwnedBrands,
-        effectiveOwnedBrandsCount: effectiveOwnedBrands.length,
-        userRole: user?.role,
-        userEmail: user?.email,
-      });
-
       if (isSuperAdmin) {
         // Super admins get platform-wide analytics
-        console.log("📊 Fetching platform analytics for super admin");
         const platformData = await getAnalyticsData();
         setPlatformAnalytics(platformData);
-        console.log("✅ Platform analytics fetched:", platformData);
       } else if (isBrandAdmin && effectiveOwnedBrands.length > 0) {
         // Brand owners get their brand-specific analytics
         const apiUrl = `/api/admin/brand-analytics?brand_ids=${effectiveOwnedBrands.join(",")}`;
-        console.log("📊 Fetching brand analytics for brand admin:", {
-          apiUrl,
-          brandIds: effectiveOwnedBrands,
-        });
 
         const response = await fetch(apiUrl);
-        console.log("📊 Brand analytics response status:", response.status);
 
         if (!response.ok) {
           const errorText = await response.text();
@@ -296,14 +280,9 @@ export default function LeadsTrackingDashboard({
         }
 
         const brandData = await response.json();
-        console.log("✅ Brand analytics data received:", brandData);
         setBrandOwnerAnalytics(brandData);
       } else {
-        console.log("⚠️ No analytics to fetch:", {
-          isSuperAdmin,
-          isBrandAdmin,
-          effectiveOwnedBrandsLength: effectiveOwnedBrands.length,
-        });
+        // No analytics to fetch
       }
     } catch (error) {
       console.error("❌ Platform analytics fetch error:", error);
@@ -325,25 +304,28 @@ export default function LeadsTrackingDashboard({
   // Debug logging - throttle to prevent spam
   const lastLogTime = useRef(0);
   useEffect(() => {
-    const now = Date.now();
-    if (now - lastLogTime.current > 5000) {
-      // Log every 5 seconds max
-      console.log("🔍 LeadsTrackingDashboard Debug:", {
-        user: user?.email,
-        authLoading,
-        leadsLoading,
-        analyticsLoading,
-        leadsCount: leads?.length,
-        totalCount,
-        analyticsData: analytics
-          ? {
-              total_leads: analytics.total_leads,
-              qualified_leads: analytics.qualified_leads,
-              conversion_rate: analytics.conversion_rate,
-            }
-          : null,
-      });
-      lastLogTime.current = now;
+    // Only log in development mode
+    if (process.env.NODE_ENV === "development") {
+      const now = Date.now();
+      if (now - lastLogTime.current > 5000) {
+        // Log every 5 seconds max
+        console.log("🔍 LeadsTrackingDashboard Debug:", {
+          user: user?.email,
+          authLoading,
+          leadsLoading,
+          analyticsLoading,
+          leadsCount: leads?.length,
+          totalCount,
+          analyticsData: analytics
+            ? {
+                total_leads: analytics.total_leads,
+                qualified_leads: analytics.qualified_leads,
+                conversion_rate: analytics.conversion_rate,
+              }
+            : null,
+        });
+        lastLogTime.current = now;
+      }
     }
   }, [
     user,

@@ -30,7 +30,7 @@ export default class ErrorBoundary extends Component<Props, State> {
   static getDerivedStateFromError(error: Error): State {
     // Generate a unique error ID for tracking
     const errorId = `error_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+
     return {
       hasError: true,
       error,
@@ -42,7 +42,7 @@ export default class ErrorBoundary extends Component<Props, State> {
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     // Log error to console for debugging
     console.error("🚨 ErrorBoundary caught an error:", error, errorInfo);
-    
+
     // Update state with error info
     this.setState({
       errorInfo,
@@ -111,9 +111,10 @@ export default class ErrorBoundary extends Component<Props, State> {
             <h1 className="text-2xl font-bold text-gray-900 mb-4">
               Oops! Something went wrong
             </h1>
-            
+
             <p className="text-gray-600 mb-6">
-              We encountered an unexpected error. Our team has been notified and is working to fix it.
+              We encountered an unexpected error. Our team has been notified and
+              is working to fix it.
             </p>
 
             {/* Error Details (Development Only) */}
