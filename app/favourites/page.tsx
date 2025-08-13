@@ -142,7 +142,7 @@ export default function FavouritesPage() {
             items={brands}
             icon={Store}
             emptyMessage="No favourite brands yet. Discover amazing designers and save your favourites!"
-            getHref={(item) => `/designer/${item.id}`}
+            getHref={(item) => `/brand/${item.id}`}
           />
 
           <FavouriteSection

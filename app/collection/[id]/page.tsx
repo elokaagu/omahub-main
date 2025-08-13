@@ -179,7 +179,7 @@ export default function CataloguePage() {
               {/* Brand Info */}
               <div className="flex items-center gap-3 mb-6">
                 <Link
-                  href={`/designer/${catalogue.brand.id}`}
+                  href={`/brand/${catalogue.brand.id}`}
                   className="flex items-center gap-2 text-oma-plum hover:text-oma-plum/80 transition-colors"
                 >
                   <span className="text-lg font-medium">
@@ -232,11 +232,11 @@ export default function CataloguePage() {
             {/* Action Buttons */}
             <div className="flex gap-4">
               <Link
-                href={`/designer/${catalogue.brand.id}`}
+                href={`/brand/${catalogue.brand.id}`}
                 className="min-w-[180px]"
               >
                 <Button className="w-full px-6 py-3 text-base bg-oma-plum hover:bg-oma-plum/90 text-white">
-                  View Designer Profile
+                  View Brand Profile
                 </Button>
               </Link>
               <FavouriteButton
