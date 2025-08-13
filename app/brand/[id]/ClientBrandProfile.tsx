@@ -30,6 +30,7 @@ import {
   formatPhoneForDisplay,
 } from "@/lib/utils/phoneUtils";
 import { FavouriteButton } from "@/components/ui/favourite-button";
+import { formatProductPrice } from "@/lib/utils/priceFormatter";
 
 interface ClientBrandProfileProps {
   brandData: BrandData;
@@ -286,7 +287,7 @@ export default function ClientBrandProfile({
                             <div></div>
                           ) : (
                             <p className="text-oma-plum font-medium text-sm sm:text-base">
-                              ${product.sale_price || product.price}
+                              {formatProductPrice(product, { price_range: brandData.priceRange }).displayPrice}
                             </p>
                           )}
                           {product.service_type !== "portfolio" && (

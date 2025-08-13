@@ -37,6 +37,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { formatProductPrice } from "@/lib/utils/priceFormatter";
 
 interface TailoredOrderModalProps {
   product: Product;
@@ -199,7 +200,7 @@ export function TailoredOrderModal({
                 </div>
                 <div className="text-right">
                   <p className="text-2xl font-bold text-oma-plum">
-                    ${product.sale_price || product.price}
+                    {formatProductPrice(product, { price_range: brand.price_range }).displayPrice}
                   </p>
                   <Badge variant="secondary" className="mt-1">
                     Custom Order

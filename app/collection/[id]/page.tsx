@@ -21,6 +21,7 @@ import Link from "next/link";
 import { LazyImage } from "@/components/ui/lazy-image";
 import { Button } from "@/components/ui/button";
 import { FavouriteButton } from "@/components/ui/favourite-button";
+import { formatProductPrice } from "@/lib/utils/priceFormatter";
 
 type CatalogueWithBrand = Catalogue & {
   brand: {
@@ -31,6 +32,7 @@ type CatalogueWithBrand = Catalogue & {
     category: string;
     rating: number;
     long_description: string;
+    price_range?: string;
   };
   created_at?: string;
 };
@@ -303,15 +305,15 @@ export default function CataloguePage() {
                         {product.sale_price ? (
                           <>
                             <span className="text-lg font-semibold text-oma-plum">
-                              ${product.sale_price}
+                              {formatProductPrice({ price: product.price, sale_price: product.sale_price }, { price_range: catalogue.brand.price_range }).displayPrice}
                             </span>
                             <span className="text-sm text-black/60 line-through">
-                              ${product.price}
+                              {formatProductPrice({ price: product.price, sale_price: product.sale_price }, { price_range: catalogue.brand.price_range }).originalPrice}
                             </span>
                           </>
                         ) : (
                           <span className="text-lg font-semibold text-black">
-                            ${product.price}
+                            {formatProductPrice({ price: product.price, sale_price: product.sale_price }, { price_range: catalogue.brand.price_range }).displayPrice}
                           </span>
                         )}
                       </div>
@@ -375,15 +377,15 @@ export default function CataloguePage() {
                         {product.sale_price ? (
                           <>
                             <span className="text-lg font-semibold text-oma-plum">
-                              ${product.sale_price}
+                              {formatProductPrice({ price: product.price, sale_price: product.sale_price }, { price_range: catalogue.brand.price_range }).displayPrice}
                             </span>
                             <span className="text-sm text-black/60 line-through">
-                              ${product.price}
+                              {formatProductPrice({ price: product.price, sale_price: product.sale_price }, { price_range: catalogue.brand.price_range }).originalPrice}
                             </span>
                           </>
                         ) : (
                           <span className="text-lg font-semibold text-black">
-                            ${product.price}
+                            {formatProductPrice({ price: product.price, sale_price: product.sale_price }, { price_range: catalogue.brand.price_range }).displayPrice}
                           </span>
                         )}
                       </div>

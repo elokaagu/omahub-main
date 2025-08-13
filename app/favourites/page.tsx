@@ -6,6 +6,7 @@ import Link from "next/link";
 import { LazyImage } from "@/components/ui/lazy-image";
 import { Button } from "@/components/ui/button";
 import { Heart, Store, BookOpen, ShoppingBag } from "lucide-react";
+import { formatProductPrice } from "@/lib/utils/priceFormatter";
 
 export default function FavouritesPage() {
   const { favourites, loading } = useFavourites();
@@ -80,7 +81,9 @@ export default function FavouritesPage() {
                   </p>
                 )}
                 {item.price && (
-                  <p className="text-oma-plum font-medium">${item.price}</p>
+                  <p className="text-oma-plum font-medium">
+                    ₦{item.price.toLocaleString()}
+                  </p>
                 )}
               </div>
             </Link>
