@@ -1,38 +1,96 @@
 "use client";
 
+import dynamic from "next/dynamic";
+import { Suspense } from "react";
 import { useEffect, useState, useRef } from "react";
-import { useAuth } from "@/contexts/AuthContext";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import { useAuth } from "@/contexts/AuthContext";
+import { getUserPermissions, Permission } from "@/lib/services/permissionsService";
+import { supabaseHelpers } from "@/lib/utils/supabase-helpers";
 import { Button } from "@/components/ui/button";
+import { NavigationLink } from "@/components/ui/navigation-link";
+import UserProfile from "@/components/auth/UserProfile";
 import {
   Home,
   Package,
-  Image as ImageIcon,
-  User,
-  LogOut,
-  Menu,
-  X,
-  Settings,
-} from "@/components/ui/icons";
-import {
-  Monitor,
+  ImageIcon,
   ShoppingBag,
+  Scissors,
+  Monitor,
   Users,
   MessageSquare,
   Inbox,
-  Scissors,
+  User,
+  Settings,
+  LogOut,
+  Menu,
+  X,
 } from "lucide-react";
-import {
-  Permission,
-  getUserPermissions,
-} from "@/lib/services/permissionsService";
-import { LoadingPage } from "@/components/ui/loading";
-import UserProfile from "@/components/auth/UserProfile";
-import { NavigationLink } from "@/components/ui/navigation-link";
 import { TailoringEventProvider } from "@/contexts/NavigationContext";
 import ErrorBoundary from "../components/ErrorBoundary";
+
+// Dynamic imports for heavy Studio pages
+const StudioBrandsPage = dynamic(() => import("./brands/page"), {
+  loading: () => <div className="h-64 bg-gray-200 rounded-lg animate-pulse" />,
+  ssr: false
+});
+
+const StudioCollectionsPage = dynamic(() => import("./collections/page"), {
+  loading: () => <div className="h-64 bg-gray-200 rounded-lg animate-pulse" />,
+  ssr: false
+});
+
+const StudioProductsPage = dynamic(() => import("./products/page"), {
+  loading: () => <div className="h-64 bg-gray-200 rounded-lg animate-pulse" />,
+  ssr: false
+});
+
+const StudioServicesPage = dynamic(() => import("./services/page"), {
+  loading: () => <div className="h-64 bg-gray-200 rounded-lg animate-pulse" />,
+  ssr: false
+});
+
+const StudioPortfolioPage = dynamic(() => import("./portfolio/page"), {
+  loading: () => <div className="h-64 bg-gray-200 rounded-lg animate-pulse" />,
+  ssr: false
+});
+
+const StudioHeroPage = dynamic(() => import("./hero/page"), {
+  loading: () => <div className="h-64 bg-gray-200 rounded-lg animate-pulse" />,
+  ssr: false
+});
+
+const StudioSpotlightPage = dynamic(() => import("./spotlight/page"), {
+  loading: () => <div className="h-64 bg-gray-200 rounded-lg animate-pulse" />,
+  ssr: false
+});
+
+const StudioUsersPage = dynamic(() => import("./users/page"), {
+  loading: () => <div className="h-64 bg-gray-200 rounded-lg animate-pulse" />,
+  ssr: false
+});
+
+const StudioReviewsPage = dynamic(() => import("./reviews/page"), {
+  loading: () => <div className="h-64 bg-gray-200 rounded-lg animate-pulse" />,
+  ssr: false
+});
+
+const StudioInboxPage = dynamic(() => import("./inbox/page"), {
+  loading: () => <div className="h-64 bg-gray-200 rounded-lg animate-pulse" />,
+  ssr: false
+});
+
+const StudioProfilePage = dynamic(() => import("./profile/page"), {
+  loading: () => <div className="h-64 bg-gray-200 rounded-lg animate-pulse" />,
+  ssr: false
+});
+
+const StudioSettingsPage = dynamic(() => import("./settings/page"), {
+  loading: () => <div className="h-64 bg-gray-200 rounded-lg animate-pulse" />,
+  ssr: false
+});
 
 export default function StudioLayout({
   children,

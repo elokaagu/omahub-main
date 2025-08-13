@@ -1,5 +1,10 @@
-import { createClientComponentClient } from "@supabase/supabase-js";
+import { createClient } from "@supabase/supabase-js";
 import { Database } from "@/lib/types/supabase";
+
+// Create Supabase client
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabase = createClient<Database>(supabaseUrl, supabaseKey);
 
 export interface AdminEmailConfig {
   super_admin_emails: string[];
@@ -33,7 +38,7 @@ export class AdminEmailService {
     }
 
     try {
-      const supabase = createClientComponentClient<Database>();
+      const supabase = createClient<Database>(supabaseUrl, supabaseKey);
       
       const { data, error } = await supabase
         .from('platform_settings')
@@ -133,7 +138,7 @@ export class AdminEmailService {
     }
 
     try {
-      const supabase = createClientComponentClient<Database>();
+      const supabase = createClient<Database>(supabaseUrl, supabaseKey);
       
       const updates = Object.entries(config).map(([key, emails]) => ({
         key: key,
