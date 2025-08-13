@@ -58,6 +58,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { deleteProduct } from "@/lib/services/productService";
 import { useTailoringEvent } from "@/contexts/NavigationContext";
+import { formatProductPrice } from "@/lib/utils/priceFormatter";
 
 type ServiceWithBrand = Product & {
   brand: {
@@ -65,6 +66,7 @@ type ServiceWithBrand = Product & {
     id: string;
     category: string;
     location: string;
+    price_range?: string;
   };
 };
 
@@ -254,15 +256,15 @@ export default function ServicesPage() {
     }
 
     if (service.consultation_fee) {
-      return `$${service.consultation_fee} consultation`;
+      return formatProductPrice({ price: service.consultation_fee }, { price_range: service.brand?.price_range }).displayPrice + " consultation";
     }
 
     if (service.hourly_rate) {
-      return `$${service.hourly_rate}/hour`;
+      return formatProductPrice({ price: service.hourly_rate }, { price_range: service.brand?.price_range }).displayPrice + "/hour";
     }
 
     if (service.price > 0) {
-      return `$${service.price}`;
+      return formatProductPrice({ price: service.price }, { price_range: service.brand?.price_range }).displayPrice;
     }
 
     return "Contact for Pricing";

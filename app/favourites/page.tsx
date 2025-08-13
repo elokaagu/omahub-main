@@ -82,7 +82,7 @@ export default function FavouritesPage() {
                 )}
                 {item.price && (
                   <p className="text-oma-plum font-medium">
-                    ₦{item.price.toLocaleString()}
+                    {item.price.toLocaleString()}
                   </p>
                 )}
               </div>

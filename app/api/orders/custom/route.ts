@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { extractCurrencyFromPriceRange } from "@/lib/utils/priceFormatter";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -104,7 +105,7 @@ export async function POST(request: NextRequest) {
                 <p><strong>Order Number:</strong> ${orderNumber}</p>
                 <p><strong>Product:</strong> ${product.title}</p>
                 <p><strong>Brand:</strong> ${brand.name}</p>
-                <p><strong>Price:</strong> $${total_amount || product.sale_price || product.price}</p>
+                <p><strong>Price:</strong> ${extractCurrencyFromPriceRange(brand.price_range)} ${total_amount || product.sale_price || product.price}</p>
                 <p><strong>Order Date:</strong> ${new Date().toLocaleDateString()}</p>
               </div>
 
@@ -166,7 +167,7 @@ export async function POST(request: NextRequest) {
       `Address: ${delivery_address.address_line_1}, ${delivery_address.city}, ${delivery_address.state} ${delivery_address.postal_code}, ${delivery_address.country}`
     );
     console.log(
-      `Price: $${total_amount || product.sale_price || product.price}`
+      `Price: ${extractCurrencyFromPriceRange(brand.price_range)} ${total_amount || product.sale_price || product.price}`
     );
     if (customer_notes) {
       console.log(`Notes: ${customer_notes}`);

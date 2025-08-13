@@ -20,7 +20,7 @@ export function formatNumberWithCommas(value: number | string): string {
  */
 export function formatPrice(
   price: number | string,
-  currency: string = "$"
+  currency: string = "₦"
 ): string {
   const formattedNumber = formatNumberWithCommas(price);
   return `${currency}${formattedNumber}`;
@@ -36,7 +36,7 @@ export function formatPrice(
 export function formatPriceRange(
   minPrice: number | string,
   maxPrice: number | string,
-  currency: string = "$"
+  currency: string = "₦"
 ): string {
   const formattedMin = formatNumberWithCommas(minPrice);
   const formattedMax = formatNumberWithCommas(maxPrice);
@@ -59,7 +59,7 @@ export function parseFormattedNumber(formattedValue: string): number {
  */
 export function extractCurrencyFromPriceRange(priceRange: string): string {
   if (!priceRange || priceRange === "Contact for pricing") {
-    return "$"; // Default to USD
+    return "₦"; // Default to Naira for Nigerian market
   }
 
   // Parse price range to extract currency symbol (e.g., "₦15,000 - ₦120,000")
@@ -72,7 +72,7 @@ export function extractCurrencyFromPriceRange(priceRange: string): string {
     return symbol1.trim();
   }
 
-  return "$"; // Default fallback
+  return "₦"; // Default fallback
 }
 
 /**

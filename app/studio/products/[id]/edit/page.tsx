@@ -85,7 +85,7 @@ export default function EditProductPage() {
   const [catalogues, setCatalogues] = useState<Catalogue[]>([]);
   const [filteredCatalogues, setFilteredCatalogues] = useState<Catalogue[]>([]);
   const [product, setProduct] = useState<Product | null>(null);
-  const [selectedBrandCurrency, setSelectedBrandCurrency] = useState("$"); // Default to USD symbol
+  const [selectedBrandCurrency, setSelectedBrandCurrency] = useState("₦"); // Default to Naira for Nigerian market
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -287,6 +287,21 @@ export default function EditProductPage() {
     const numericPrice = parseFloat(price.replace(/,/g, ""));
     if (isNaN(numericPrice)) return price;
     return formatNumberWithCommas(numericPrice);
+  };
+
+  // Get brand currency from price_range field
+  const getBrandCurrency = (brand: Brand): string => {
+    if (!brand || !brand.price_range) {
+      return "₦"; // Default to Naira for Nigerian market
+    }
+
+    // Extract currency symbol from price_range (e.g., "₦15,000 - ₦120,000")
+    const currencyMatch = brand.price_range.match(/^([^\d,]+)/);
+    if (currencyMatch) {
+      return currencyMatch[1].trim();
+    }
+
+    return "₦"; // Default fallback
   };
 
   const handleImageUpload = (url: string, index?: number) => {
