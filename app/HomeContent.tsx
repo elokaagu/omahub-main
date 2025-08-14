@@ -13,6 +13,7 @@ import {
 import { getAllBrands, getBrandsByCategory } from "@/lib/services/brandService";
 import { getCollectionsWithBrands } from "@/lib/services/collectionService";
 import { getTailorsWithBrands } from "@/lib/services/tailorService";
+import { getProductsByCategories } from "@/lib/services/productSearchService";
 import { SectionHeader } from "@/components/ui/section-header";
 import { CategoryCard } from "@/components/ui/category-card";
 import { Button } from "@/components/ui/button";
@@ -421,20 +422,46 @@ export default function HomeContent() {
             generateDynamicFallbackItems(),
           ]);
 
+        // Fetch products for each category to enhance filtering
+        const categoryProducts = await Promise.all(
+          UNIFIED_CATEGORIES.map(async (category) => {
+            try {
+              const products = await getProductsByCategories([category.name]);
+              return { categoryId: category.id, products };
+            } catch (error) {
+              console.error(`Error fetching products for ${category.name}:`, error);
+              return { categoryId: category.id, products: [] };
+            }
+          })
+        );
+
         // Set dynamic fallback items
         setDynamicFallbackItems(dynamicItems);
 
         // Process brands data with performance optimization
-        const updatedCategories = UNIFIED_CATEGORIES.map((category) => {
+        const updatedCategories = UNIFIED_CATEGORIES.map((category, index) => {
+          // Get products for this category
+          const categoryProductData = categoryProducts[index];
+          const categoryProductIds = new Set(
+            categoryProductData?.products?.map((p: any) => p.brand_id) || []
+          );
+
           const categoryBrands = shuffleArray(
             brandsData.filter((brand: any) => {
               const allCategories = [
                 brand.category,
                 ...(brand.categories || []),
               ].filter(Boolean);
-              return allCategories.some(
+              
+              // Check if brand matches category directly
+              const brandMatchesCategory = allCategories.some(
                 (cat) => mapLegacyToUnified(cat) === category.id
               );
+              
+              // Check if brand has products that match this category
+              const brandHasMatchingProducts = categoryProductIds.has(brand.id);
+              
+              return brandMatchesCategory || brandHasMatchingProducts;
             })
           )
             .slice(0, 8) // Limit all categories to 8 brands for consistent display

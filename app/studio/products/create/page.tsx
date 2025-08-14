@@ -447,7 +447,8 @@ export default function CreateProductPage() {
               ],
         brand_id: formData.brand_id,
         catalogue_id: formData.catalogue_id || undefined,
-        category: formData.categories[0], // Use first category as primary, or you could join them
+        category: formData.categories[0], // Use first category as primary for backward compatibility
+        categories: formData.categories, // Save the full categories array
         in_stock: formData.in_stock,
         sizes: formData.sizes.length > 0 ? formData.sizes : [],
         colors: formData.colors.length > 0 ? formData.colors : [],

@@ -325,6 +325,7 @@ export async function createProduct(
       brand_id: productData.brand_id,
       catalogue_id: productData.catalogue_id || null,
       category: productData.category,
+      categories: productData.categories || [],
       in_stock: productData.in_stock ?? true,
       sizes: productData.sizes || [],
       colors: productData.colors || [],

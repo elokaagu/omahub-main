@@ -318,6 +318,10 @@ export default function CreateServicePage() {
         category:
           serviceTypes.find((s) => s.id === formData.service_type)?.category ||
           "Custom Design",
+        categories: [
+          serviceTypes.find((s) => s.id === formData.service_type)?.category ||
+          "Custom Design"
+        ],
         in_stock: true,
         is_custom: true,
         // Service-specific metadata

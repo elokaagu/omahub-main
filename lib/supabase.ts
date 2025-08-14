@@ -158,7 +158,8 @@ export type Product = {
   video_description?: string;
   brand_id: string;
   catalogue_id?: string;
-  category: string;
+  category: string; // Legacy single category (kept for backward compatibility)
+  categories: string[]; // New array of product-specific categories
   in_stock: boolean;
   sizes?: string[];
   colors?: string[];
