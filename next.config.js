@@ -208,7 +208,8 @@ const nextConfig = {
     return [
       {
         source: "/api/video/:path*",
-        destination: "https://gswduyodzdgucjscjtvz.supabase.co/storage/v1/object/public/:path*",
+        destination:
+          "https://gswduyodzdgucjscjtvz.supabase.co/storage/v1/object/public/:path*",
       },
     ];
   },
