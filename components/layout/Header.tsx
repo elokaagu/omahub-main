@@ -527,21 +527,44 @@ export default function Header() {
           <div className="-my-6 divide-y divide-gray-500/10">
             <div className="flex-1 overflow-y-auto px-6 py-4 max-h-[calc(100vh-80px)]">
               <div className="space-y-6">
-                {/* Main Navigation */}
+                {/* Search Bar */}
                 <div className="space-y-2">
                   <h3 className="text-xs font-medium uppercase tracking-wider text-gray-500 mb-3">
-                    Navigate
+                    About
                   </h3>
-                  {navigation.map((item) => (
-                    <NavigationLink
-                      key={item.name}
-                      href={item.href}
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="-mx-3 block rounded-lg px-3 py-3 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 transition-colors"
-                    >
-                      {item.name}
-                    </NavigationLink>
-                  ))}
+                  <button
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      triggerSearchModal();
+                    }}
+                    className="flex items-center w-full px-3 py-3 text-left text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 transition-colors rounded-lg border border-gray-200"
+                  >
+                    <Search className="h-5 w-5 mr-3 text-gray-400" />
+                    <span className="text-gray-500">
+                      Search brands, collections...
+                    </span>
+                  </button>
+                  <NavigationLink
+                    href="/"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="-mx-3 block rounded-lg px-3 py-3 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 transition-colors"
+                  >
+                    Home
+                  </NavigationLink>
+                  <NavigationLink
+                    href="/how-it-works"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="-mx-3 block rounded-lg px-3 py-3 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 transition-colors"
+                  >
+                    How It Works
+                  </NavigationLink>
+                  <NavigationLink
+                    href="/about"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="-mx-3 block rounded-lg px-3 py-3 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 transition-colors"
+                  >
+                    About
+                  </NavigationLink>
                   <NavigationLink
                     href="/directory"
                     onClick={() => setMobileMenuOpen(false)}

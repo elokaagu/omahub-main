@@ -49,20 +49,8 @@ async function migrateData() {
       continue;
     }
 
-    // Migrate reviews
-    for (const review of brand.reviews) {
-      const { error: reviewError } = await supabase.from("reviews").insert({
-        brand_id: id,
-        author: review.author,
-        comment: review.comment,
-        rating: review.rating,
-        date: review.date,
-      });
-
-      if (reviewError) {
-        console.error(`Error inserting review for ${id}:`, reviewError);
-      }
-    }
+    // Note: Reviews migration removed as BrandData interface doesn't include reviews
+    // Reviews can be added separately through the reviews table
 
     // Migrate collections
     for (const collection of brand.collections) {
