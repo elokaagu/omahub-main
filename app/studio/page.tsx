@@ -26,8 +26,8 @@ import Link from "next/link";
 import type { Database } from "@/lib/types/supabase";
 
 // Dynamic imports for heavy components
-const AnalyticsDashboard = dynamic(
-  () => import("@/components/studio/AnalyticsDashboard"),
+const SimpleAnalyticsDashboard = dynamic(
+  () => import("@/components/studio/SimpleAnalyticsDashboard"),
   {
     loading: () => (
       <div className="h-64 bg-gray-200 rounded-lg animate-pulse" />
@@ -36,8 +36,8 @@ const AnalyticsDashboard = dynamic(
   }
 );
 
-const LeadsTrackingDashboard = dynamic(
-  () => import("@/components/studio/LeadsTrackingDashboard"),
+const SimpleLeadsDashboard = dynamic(
+  () => import("@/components/studio/SimpleLeadsDashboard"),
   {
     loading: () => (
       <div className="h-64 bg-gray-200 rounded-lg animate-pulse" />
@@ -311,7 +311,7 @@ export default function StudioPage() {
                 <div className="h-64 bg-gray-200 rounded-lg animate-pulse" />
               }
             >
-              <AnalyticsDashboard />
+              <SimpleAnalyticsDashboard />
             </Suspense>
           </CardContent>
         </Card>
@@ -327,7 +327,7 @@ export default function StudioPage() {
                 <div className="h-64 bg-gray-200 rounded-lg animate-pulse" />
               }
             >
-              <LeadsTrackingDashboard
+              <SimpleLeadsDashboard
                 userRole={userProfile?.role || "user"}
                 ownedBrandIds={userProfile?.owned_brands || []}
               />
