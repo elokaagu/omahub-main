@@ -10,9 +10,8 @@ interface SimpleLeadsData {
   totalBrands: number;
   totalProducts: number;
   totalReviews: number;
-  pageViews: number;
+  totalPageViews: number; // Changed from pageViews to match API
   averageRating: number;
-  verifiedBrands: number;
 }
 
 interface SimpleLeadsDashboardProps {
@@ -39,9 +38,8 @@ export default function SimpleLeadsDashboard({
           totalBrands: stats.totalBrands || 39,
           totalProducts: stats.totalProducts || 63,
           totalReviews: stats.totalReviews || 1,
-          pageViews: stats.totalPageViews || 6505,
+          totalPageViews: stats.totalPageViews || 6505,
           averageRating: stats.averageRating || 2.7,
-          verifiedBrands: 5 // Hardcoded for now
         });
       } else {
         // Fallback data
@@ -49,9 +47,8 @@ export default function SimpleLeadsDashboard({
           totalBrands: 39,
           totalProducts: 63,
           totalReviews: 1,
-          pageViews: 6505,
+          totalPageViews: 6505,
           averageRating: 2.7,
-          verifiedBrands: 5
         });
       }
     } catch (error) {
@@ -61,9 +58,8 @@ export default function SimpleLeadsDashboard({
         totalBrands: 39,
         totalProducts: 63,
         totalReviews: 1,
-        pageViews: 6505,
+        totalPageViews: 6505,
         averageRating: 2.7,
-        verifiedBrands: 5
       });
     } finally {
       setLoading(false);
@@ -125,7 +121,6 @@ export default function SimpleLeadsDashboard({
                     </div>
                     <Badge variant="outline">{data.totalBrands}</Badge>
                   </div>
-                  <div className="text-xs text-gray-500 ml-6">{data.verifiedBrands} verified</div>
                   
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
@@ -152,7 +147,7 @@ export default function SimpleLeadsDashboard({
                       <Eye className="h-4 w-4 text-gray-600" />
                       <span className="text-sm text-gray-600">Page Views</span>
                     </div>
-                    <Badge variant="outline">{data.pageViews.toLocaleString()}</Badge>
+                    <Badge variant="outline">{data.totalPageViews.toLocaleString()}</Badge>
                   </div>
                   
                   <div className="flex items-center justify-between">

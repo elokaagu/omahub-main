@@ -12,7 +12,7 @@ interface SimpleAnalyticsData {
   totalProducts: number;
   totalUsers: number;
   totalReviews: number;
-  pageViews: number;
+  totalPageViews: number; // Changed from pageViews to match API
   averageRating: number;
   brandsThisMonth: number;
   productsThisMonth: number;
@@ -39,7 +39,7 @@ export default function SimpleAnalyticsDashboard() {
           totalProducts: 63,
           totalUsers: 9,
           totalReviews: 1,
-          pageViews: 6505,
+          totalPageViews: 6505,
           averageRating: 2.7,
           brandsThisMonth: 10,
           productsThisMonth: 40,
@@ -54,7 +54,7 @@ export default function SimpleAnalyticsDashboard() {
         totalProducts: 63,
         totalUsers: 9,
         totalReviews: 1,
-        pageViews: 6505,
+        totalPageViews: 6505,
         averageRating: 2.7,
         brandsThisMonth: 10,
         productsThisMonth: 40,
@@ -179,7 +179,7 @@ export default function SimpleAnalyticsDashboard() {
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">Page Views</span>
-                  <Badge variant="secondary">{data.pageViews.toLocaleString()}</Badge>
+                  <Badge variant="secondary">{data.totalPageViews.toLocaleString()}</Badge>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">Avg Rating</span>
