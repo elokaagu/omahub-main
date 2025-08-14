@@ -3,58 +3,36 @@
 import dynamic from "next/dynamic";
 import { Suspense, useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import {
-  getUserPermissions,
-  Permission,
-} from "@/lib/services/permissionsService";
+import { getUserPermissions, Permission } from "@/lib/services/permissionsService";
 import { supabaseHelpers } from "@/lib/utils/supabase-helpers";
-import {
-  dashboardService,
-  DashboardStats,
-} from "@/lib/services/dashboardService";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 // Phase 2B: Selective icon imports instead of large lucide-react bundle
-import {
-  Package,
-  Users,
-  ShoppingBag,
-  MessageSquare,
-  BarChart3,
+import { 
+  Package, 
+  Users, 
+  ShoppingBag, 
+  MessageSquare, 
+  BarChart3 
 } from "@/lib/utils/iconImports";
 import Link from "next/link";
 import type { Database } from "@/lib/types/supabase";
 
 // Dynamic imports for heavy components
-const SimpleAnalyticsDashboard = dynamic(
-  () => import("@/components/studio/SimpleAnalyticsDashboard"),
-  {
-    loading: () => (
-      <div className="h-64 bg-gray-200 rounded-lg animate-pulse" />
-    ),
-    ssr: false,
-  }
-);
+const AnalyticsDashboard = dynamic(() => import("@/components/studio/AnalyticsDashboard"), {
+  loading: () => <div className="h-64 bg-gray-200 rounded-lg animate-pulse" />,
+  ssr: false
+});
 
-const SimpleLeadsDashboard = dynamic(
-  () => import("@/components/studio/SimpleLeadsDashboard"),
-  {
-    loading: () => (
-      <div className="h-64 bg-gray-200 rounded-lg animate-pulse" />
-    ),
-    ssr: false,
-  }
-);
+const LeadsTrackingDashboard = dynamic(() => import("@/components/studio/LeadsTrackingDashboard"), {
+  loading: () => <div className="h-64 bg-gray-200 rounded-lg animate-pulse" />,
+  ssr: false
+});
 
-const RecentAccountsWidget = dynamic(
-  () => import("./dashboard/RecentAccountsWidget"),
-  {
-    loading: () => (
-      <div className="h-32 bg-gray-200 rounded-lg animate-pulse" />
-    ),
-    ssr: false,
-  }
-);
+const RecentAccountsWidget = dynamic(() => import("./dashboard/RecentAccountsWidget"), {
+  loading: () => <div className="h-32 bg-gray-200 rounded-lg animate-pulse" />,
+  ssr: false
+});
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
@@ -62,9 +40,6 @@ export default function StudioPage() {
   const [loading, setLoading] = useState(true);
   const [userPermissions, setUserPermissions] = useState<Permission[]>([]);
   const [userProfile, setUserProfile] = useState<Profile | null>(null);
-  const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(
-    null
-  );
   const { user } = useAuth();
 
   useEffect(() => {
@@ -76,15 +51,13 @@ export default function StudioPage() {
           return;
         }
 
-        // Get user permissions, profile, and dashboard stats in parallel
-        const [permissions, profileResult, stats] = await Promise.all([
+        // Get user permissions and profile directly without refreshing
+        const [permissions, profileResult] = await Promise.all([
           getUserPermissions(user.id, user.email),
           supabaseHelpers.getProfileById(user.id),
-          dashboardService.getDashboardStats(),
         ]);
 
         setUserPermissions(permissions);
-        setDashboardStats(stats);
 
         let profile = profileResult.data;
 
@@ -129,21 +102,6 @@ export default function StudioPage() {
     }
   }, [user]);
 
-  // Helper function to format change text
-  const formatChangeText = (current: number, previous: number) => {
-    const change = current - previous;
-    const changePercent =
-      previous > 0 ? Math.round((change / previous) * 100) : 0;
-
-    if (change > 0) {
-      return `+${change} from last month (+${changePercent}%)`;
-    } else if (change < 0) {
-      return `${change} from last month (${changePercent}%)`;
-    } else {
-      return "No change from last month";
-    }
-  };
-
   if (loading) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8">
@@ -152,7 +110,7 @@ export default function StudioPage() {
           <div className="h-12 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg animate-pulse"></div>
           <div className="h-6 bg-gray-200 rounded w-2/3 animate-pulse"></div>
         </div>
-
+        
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Analytics Card Skeleton */}
           <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
@@ -165,7 +123,7 @@ export default function StudioPage() {
               </div>
             </div>
           </div>
-
+          
           {/* Quick Actions Skeleton */}
           <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
             <div className="space-y-4">
@@ -181,7 +139,7 @@ export default function StudioPage() {
             </div>
           </div>
         </div>
-
+        
         {/* Recent Activity Skeleton */}
         <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
           <div className="space-y-4">
@@ -237,13 +195,9 @@ export default function StudioPage() {
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {dashboardStats?.totalBrands || 0}
-            </div>
+            <div className="text-2xl font-bold">24</div>
             <p className="text-xs text-muted-foreground">
-              {dashboardStats
-                ? formatChangeText(dashboardStats.brandsThisMonth, 0)
-                : "Loading..."}
+              +2 from last month
             </p>
           </CardContent>
         </Card>
@@ -254,13 +208,9 @@ export default function StudioPage() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {dashboardStats?.totalUsers || 0}
-            </div>
+            <div className="text-2xl font-bold">156</div>
             <p className="text-xs text-muted-foreground">
-              {dashboardStats
-                ? formatChangeText(dashboardStats.usersThisMonth, 0)
-                : "Loading..."}
+              +12 from last month
             </p>
           </CardContent>
         </Card>
@@ -271,13 +221,9 @@ export default function StudioPage() {
             <ShoppingBag className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {dashboardStats?.totalProducts || 0}
-            </div>
+            <div className="text-2xl font-bold">1,234</div>
             <p className="text-xs text-muted-foreground">
-              {dashboardStats
-                ? formatChangeText(dashboardStats.productsThisMonth, 0)
-                : "Loading..."}
+              +89 from last month
             </p>
           </CardContent>
         </Card>
@@ -288,11 +234,9 @@ export default function StudioPage() {
             <MessageSquare className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {dashboardStats?.revenue || "₦0"}
-            </div>
+            <div className="text-2xl font-bold">₦2.4M</div>
             <p className="text-xs text-muted-foreground">
-              {dashboardStats?.revenueChange || "Loading..."}
+              +19% from last month
             </p>
           </CardContent>
         </Card>
@@ -306,12 +250,8 @@ export default function StudioPage() {
             <CardTitle>Analytics Overview</CardTitle>
           </CardHeader>
           <CardContent>
-            <Suspense
-              fallback={
-                <div className="h-64 bg-gray-200 rounded-lg animate-pulse" />
-              }
-            >
-              <SimpleAnalyticsDashboard />
+            <Suspense fallback={<div className="h-64 bg-gray-200 rounded-lg animate-pulse" />}>
+              <AnalyticsDashboard />
             </Suspense>
           </CardContent>
         </Card>
@@ -322,12 +262,8 @@ export default function StudioPage() {
             <CardTitle>Leads & Conversions</CardTitle>
           </CardHeader>
           <CardContent>
-            <Suspense
-              fallback={
-                <div className="h-64 bg-gray-200 rounded-lg animate-pulse" />
-              }
-            >
-              <SimpleLeadsDashboard
+            <Suspense fallback={<div className="h-64 bg-gray-200 rounded-lg animate-pulse" />}>
+              <LeadsTrackingDashboard 
                 userRole={userProfile?.role || "user"}
                 ownedBrandIds={userProfile?.owned_brands || []}
               />
@@ -342,11 +278,7 @@ export default function StudioPage() {
           <CardTitle>Recent Account Activity</CardTitle>
         </CardHeader>
         <CardContent>
-          <Suspense
-            fallback={
-              <div className="h-32 bg-gray-200 rounded-lg animate-pulse" />
-            }
-          >
+          <Suspense fallback={<div className="h-32 bg-gray-200 rounded-lg animate-pulse" />}>
             <RecentAccountsWidget />
           </Suspense>
         </CardContent>
