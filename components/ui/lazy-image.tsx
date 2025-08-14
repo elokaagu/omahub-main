@@ -89,6 +89,7 @@ export function LazyImage({
             "spotlight-images",
             "product-images",
             "brand-assets",
+            "lovable-uploads",
           ];
           const isPublicBucket = publicBuckets.some((bucket) =>
             src.includes(`/storage/v1/object/public/${bucket}/`)
@@ -98,10 +99,16 @@ export function LazyImage({
             console.log("📸 Using public URL directly (public bucket):", src);
             setSignedUrl(src);
           } else {
-            console.log("🔐 Converting Supabase URL to signed URL:", src);
-            const signed = await convertToSignedUrl(src);
-            console.log("✅ Signed URL created:", signed);
-            setSignedUrl(signed);
+            try {
+              console.log("🔐 Converting Supabase URL to signed URL:", src);
+              const signed = await convertToSignedUrl(src);
+              console.log("✅ Signed URL created:", signed);
+              setSignedUrl(signed);
+            } catch (signError) {
+              console.warn("⚠️ Failed to get signed URL, falling back to public URL:", signError);
+              // Fall back to using the public URL if signing fails
+              setSignedUrl(src);
+            }
           }
         } else {
           // For static URLs (like /lovable-uploads/) or external URLs, use as-is
@@ -110,8 +117,10 @@ export function LazyImage({
         }
       } catch (err) {
         console.error("❌ Error getting signed URL for:", src, err);
-        setHasError(true);
-        onError?.();
+        // Instead of failing completely, try to use the original URL
+        console.warn("🔄 Falling back to original URL due to error:", err);
+        setSignedUrl(src);
+        setHasError(false); // Don't show error state, try to load the image
       }
     }
 
@@ -151,8 +160,8 @@ export function LazyImage({
     className
   );
 
-  // Error state
-  if (hasError) {
+  // Error state - only show if we have a signed URL and it actually failed
+  if (hasError && signedUrl && signedUrl !== src) {
     return (
       <div ref={imgRef} className={containerClasses}>
         {fallback || (
