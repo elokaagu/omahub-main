@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import { convertToSignedUrl } from "@/lib/services/imageService";
 import { cn } from "@/lib/utils";
 
 interface LazyImageProps {
@@ -34,7 +33,7 @@ export function LazyImage({
   sizes,
   fill = false,
 }: LazyImageProps) {
-  const [signedUrl, setSignedUrl] = useState<string>("");
+  const [imageUrl, setImageUrl] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [isInView, setIsInView] = useState(priority);
@@ -64,11 +63,11 @@ export function LazyImage({
     return () => observer.disconnect();
   }, [priority]);
 
-  // Get signed URL when image comes into view
+  // Process image URL when image comes into view
   useEffect(() => {
     if (!isInView) return;
 
-    async function getSignedUrl() {
+    async function processImageUrl() {
       try {
         setIsLoading(true);
         setHasError(false);
@@ -78,61 +77,28 @@ export function LazyImage({
         // Handle object URLs (blob:) immediately without conversion
         if (src.startsWith("blob:")) {
           console.log("📸 Using object URL directly (temporary preview):", src);
-          setSignedUrl(src);
+          setImageUrl(src);
           return;
         }
 
-        // Check if it's a Supabase storage URL that needs signing
-        if (src.includes("/storage/v1/object/public/")) {
-          // Check if it's from a public bucket that doesn't need signing
-          const publicBuckets = [
-            "spotlight-images",
-            "product-images",
-            "brand-assets",
-            "lovable-uploads",
-          ];
-          const isPublicBucket = publicBuckets.some((bucket) =>
-            src.includes(`/storage/v1/object/public/${bucket}/`)
-          );
-
-          if (isPublicBucket) {
-            console.log("📸 Using public URL directly (public bucket):", src);
-            setSignedUrl(src);
-          } else {
-            try {
-              console.log("🔐 Converting Supabase URL to signed URL:", src);
-              const signed = await convertToSignedUrl(src);
-              console.log("✅ Signed URL created:", signed);
-              setSignedUrl(signed);
-            } catch (signError) {
-              console.warn("⚠️ Failed to get signed URL, falling back to public URL:", signError);
-              // Fall back to using the public URL if signing fails
-              setSignedUrl(src);
-            }
-          }
-        } else if (src.startsWith("http")) {
-          // For external URLs (like placeholder images), use as-is
-          console.log("📸 Using external URL directly:", src);
-          setSignedUrl(src);
-        } else {
-          // For static URLs (like /lovable-uploads/) or relative URLs, use as-is
-          console.log("📸 Using static/relative URL directly:", src);
-          setSignedUrl(src);
-        }
+        // For all other URLs (including Supabase), use as-is
+        // The Supabase URLs are already public and accessible
+        console.log("📸 Using URL directly:", src);
+        setImageUrl(src);
+        
       } catch (err) {
-        console.error("❌ Error getting signed URL for:", src, err);
-        // Instead of failing completely, try to use the original URL
-        console.warn("🔄 Falling back to original URL due to error:", err);
-        setSignedUrl(src);
-        setHasError(false); // Don't show error state, try to load the image
+        console.error("❌ Error processing image URL:", src, err);
+        // Don't set error state, just try to use the original URL
+        setImageUrl(src);
       }
     }
 
-    getSignedUrl();
-  }, [src, isInView, onError]);
+    processImageUrl();
+  }, [src, isInView]);
 
   const handleImageLoad = () => {
     setIsLoading(false);
+    setHasError(false);
     onLoad?.();
   };
 
@@ -195,7 +161,7 @@ export function LazyImage({
   }
 
   // Loading state or not in view yet
-  if (!isInView || !signedUrl) {
+  if (!isInView || !imageUrl) {
     return (
       <div ref={imgRef} className={containerClasses}>
         <div className="absolute inset-0 bg-gray-100 animate-pulse">
@@ -216,7 +182,7 @@ export function LazyImage({
 
       {/* Actual image */}
       <Image
-        src={signedUrl}
+        src={imageUrl}
         alt={alt}
         width={fill ? undefined : width}
         height={fill ? undefined : height}
