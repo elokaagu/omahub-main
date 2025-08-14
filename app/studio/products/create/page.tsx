@@ -48,6 +48,7 @@ import {
   getCategoriesForStudio,
   getAllCategoryNames,
 } from "@/lib/data/unified-categories";
+import { MultiSelect } from "@/components/ui/multi-select";
 
 // Common currencies used across Africa
 const CURRENCIES = [
@@ -96,7 +97,7 @@ export default function CreateProductPage() {
     video_description: "",
     brand_id: "",
     catalogue_id: "",
-    category: "",
+    categories: [] as string[],
     in_stock: true,
     sizes: [] as string[],
     colors: [] as string[],
@@ -311,6 +312,13 @@ export default function CreateProductPage() {
     }
   };
 
+  const handleCategoriesChange = (categories: string[]) => {
+    setFormData((prev) => ({
+      ...prev,
+      categories,
+    }));
+  };
+
   const removeImage = (index: number) => {
     setFormData((prev) => {
       const newImages = prev.images.filter((_, i) => i !== index);
@@ -403,8 +411,8 @@ export default function CreateProductPage() {
       return;
     }
 
-    if (!formData.category) {
-      toast.error("Please select a category");
+    if (!formData.categories.length) {
+      toast.error("Please select at least one category");
       return;
     }
 
@@ -439,7 +447,7 @@ export default function CreateProductPage() {
               ],
         brand_id: formData.brand_id,
         catalogue_id: formData.catalogue_id || undefined,
-        category: formData.category,
+        category: formData.categories[0], // Use first category as primary, or you could join them
         in_stock: formData.in_stock,
         sizes: formData.sizes.length > 0 ? formData.sizes : [],
         colors: formData.colors.length > 0 ? formData.colors : [],
@@ -563,26 +571,15 @@ export default function CreateProductPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="category" className="text-black">
-                    Category *
+                  <Label htmlFor="categories" className="text-black">
+                    Categories *
                   </Label>
-                  <Select
-                    value={formData.category}
-                    onValueChange={(value) =>
-                      handleInputChange("category", value)
-                    }
-                  >
-                    <SelectTrigger className="border-oma-cocoa/20 focus:border-oma-plum">
-                      <SelectValue placeholder="Select a category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {CATEGORIES.map((category) => (
-                        <SelectItem key={category} value={category}>
-                          {category}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <MultiSelect
+                    options={CATEGORIES}
+                    value={formData.categories}
+                    onValueChange={handleCategoriesChange}
+                    placeholder="Select categories"
+                  />
                 </div>
               </div>
 
