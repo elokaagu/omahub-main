@@ -7,7 +7,9 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!supabaseUrl || !supabaseServiceKey) {
   console.error("❌ Missing Supabase environment variables");
-  console.error("Please set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY");
+  console.error(
+    "Please set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY"
+  );
   process.exit(1);
 }
 
@@ -19,7 +21,10 @@ async function runProductCategoriesMigration() {
     console.log("📋 This migration adds product-level categories support");
 
     // Read the migration SQL file
-    const migrationPath = path.join(__dirname, "../supabase/migrations/20250115000000_add_product_categories.sql");
+    const migrationPath = path.join(
+      __dirname,
+      "../supabase/migrations/20250115000000_add_product_categories.sql"
+    );
     const migrationSQL = fs.readFileSync(migrationPath, "utf8");
 
     console.log("📖 Migration SQL loaded, executing...");
@@ -29,21 +34,23 @@ async function runProductCategoriesMigration() {
 
     if (error) {
       console.error("❌ Migration failed:", error);
-      
+
       // If exec_sql doesn't exist, try direct SQL execution
       console.log("🔄 Trying direct SQL execution...");
-      
+
       // Split the SQL into individual statements
       const statements = migrationSQL
         .split(";")
-        .map(stmt => stmt.trim())
-        .filter(stmt => stmt.length > 0);
+        .map((stmt) => stmt.trim())
+        .filter((stmt) => stmt.length > 0);
 
       for (const statement of statements) {
         try {
           console.log(`🔧 Executing: ${statement.substring(0, 50)}...`);
-          const { error: stmtError } = await supabase.rpc("exec_sql", { sql: statement + ";" });
-          
+          const { error: stmtError } = await supabase.rpc("exec_sql", {
+            sql: statement + ";",
+          });
+
           if (stmtError) {
             console.error(`❌ Statement failed: ${stmtError.message}`);
             // Continue with next statement
@@ -58,7 +65,7 @@ async function runProductCategoriesMigration() {
 
     // Verify the changes
     console.log("🔍 Verifying migration...");
-    
+
     try {
       const { data: columns, error: columnError } = await supabase
         .from("products")
@@ -84,9 +91,16 @@ async function runProductCategoriesMigration() {
       );
 
       if (searchError) {
-        console.log("⚠️ Search function test failed (function may not exist yet):", searchError.message);
+        console.log(
+          "⚠️ Search function test failed (function may not exist yet):",
+          searchError.message
+        );
       } else {
-        console.log("✅ Search function working:", searchTest?.length || 0, "results");
+        console.log(
+          "✅ Search function working:",
+          searchTest?.length || 0,
+          "results"
+        );
       }
     } catch (searchTestError) {
       console.log("⚠️ Search function test failed:", searchTestError.message);
@@ -94,10 +108,13 @@ async function runProductCategoriesMigration() {
 
     console.log("🎉 Migration process completed!");
     console.log("\n📝 Next steps:");
-    console.log("1. Update your product creation forms to use the new categories field");
+    console.log(
+      "1. Update your product creation forms to use the new categories field"
+    );
     console.log("2. Test product filtering on the homepage");
-    console.log("3. Verify that products tagged with 'Vacation' now show up in vacation filters");
-
+    console.log(
+      "3. Verify that products tagged with 'Vacation' now show up in vacation filters"
+    );
   } catch (error) {
     console.error("❌ Migration failed with error:", error);
     process.exit(1);
