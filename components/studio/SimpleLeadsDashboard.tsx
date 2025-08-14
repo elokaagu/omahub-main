@@ -15,7 +15,15 @@ interface SimpleLeadsData {
   verifiedBrands: number;
 }
 
-export default function SimpleLeadsDashboard() {
+interface SimpleLeadsDashboardProps {
+  userRole?: string;
+  ownedBrandIds?: string[];
+}
+
+export default function SimpleLeadsDashboard({ 
+  userRole, 
+  ownedBrandIds 
+}: SimpleLeadsDashboardProps) {
   const [data, setData] = useState<SimpleLeadsData | null>(null);
   const [loading, setLoading] = useState(true);
 
