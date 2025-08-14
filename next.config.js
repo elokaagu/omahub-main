@@ -203,6 +203,16 @@ const nextConfig = {
     ],
   },
 
+  // Phase 2C: Video optimization and security
+  async rewrites() {
+    return [
+      {
+        source: "/api/video/:path*",
+        destination: "https://gswduyodzdgucjscjtvz.supabase.co/storage/v1/object/public/:path*",
+      },
+    ];
+  },
+
   // Phase 2C: Enhanced security headers
   async headers() {
     return [
@@ -232,7 +242,7 @@ const nextConfig = {
           {
             key: "Content-Security-Policy",
             value:
-              "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https:;",
+              "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; media-src 'self' https: data:; font-src 'self' data:; connect-src 'self' https:;",
           },
         ],
       },
