@@ -5,6 +5,7 @@ import { Suspense, useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { getUserPermissions, Permission } from "@/lib/services/permissionsService";
 import { supabaseHelpers } from "@/lib/utils/supabase-helpers";
+import { dashboardService, DashboardStats } from "@/lib/services/dashboardService";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 // Phase 2B: Selective icon imports instead of large lucide-react bundle
@@ -13,7 +14,9 @@ import {
   Users, 
   ShoppingBag, 
   MessageSquare, 
-  BarChart3 
+  BarChart3,
+  TrendingUp,
+  TrendingDown
 } from "@/lib/utils/iconImports";
 import Link from "next/link";
 import type { Database } from "@/lib/types/supabase";
@@ -40,6 +43,7 @@ export default function StudioPage() {
   const [loading, setLoading] = useState(true);
   const [userPermissions, setUserPermissions] = useState<Permission[]>([]);
   const [userProfile, setUserProfile] = useState<Profile | null>(null);
+  const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -51,13 +55,15 @@ export default function StudioPage() {
           return;
         }
 
-        // Get user permissions and profile directly without refreshing
-        const [permissions, profileResult] = await Promise.all([
+        // Get user permissions, profile, and dashboard stats in parallel
+        const [permissions, profileResult, stats] = await Promise.all([
           getUserPermissions(user.id, user.email),
           supabaseHelpers.getProfileById(user.id),
+          dashboardService.getDashboardStats(),
         ]);
 
         setUserPermissions(permissions);
+        setDashboardStats(stats);
 
         let profile = profileResult.data;
 
@@ -101,6 +107,20 @@ export default function StudioPage() {
       setLoading(false);
     }
   }, [user]);
+
+  // Helper function to format change text
+  const formatChangeText = (current: number, previous: number) => {
+    const change = current - previous;
+    const changePercent = previous > 0 ? Math.round((change / previous) * 100) : 0;
+    
+    if (change > 0) {
+      return `+${change} from last month (+${changePercent}%)`;
+    } else if (change < 0) {
+      return `${change} from last month (${changePercent}%)`;
+    } else {
+      return "No change from last month";
+    }
+  };
 
   if (loading) {
     return (
@@ -195,9 +215,11 @@ export default function StudioPage() {
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">24</div>
+            <div className="text-2xl font-bold">
+              {dashboardStats?.totalBrands || 0}
+            </div>
             <p className="text-xs text-muted-foreground">
-              +2 from last month
+              {dashboardStats ? formatChangeText(dashboardStats.brandsThisMonth, 0) : "Loading..."}
             </p>
           </CardContent>
         </Card>
@@ -208,9 +230,11 @@ export default function StudioPage() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">156</div>
+            <div className="text-2xl font-bold">
+              {dashboardStats?.totalUsers || 0}
+            </div>
             <p className="text-xs text-muted-foreground">
-              +12 from last month
+              {dashboardStats ? formatChangeText(dashboardStats.usersThisMonth, 0) : "Loading..."}
             </p>
           </CardContent>
         </Card>
@@ -221,9 +245,11 @@ export default function StudioPage() {
             <ShoppingBag className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">1,234</div>
+            <div className="text-2xl font-bold">
+              {dashboardStats?.totalProducts || 0}
+            </div>
             <p className="text-xs text-muted-foreground">
-              +89 from last month
+              {dashboardStats ? formatChangeText(dashboardStats.productsThisMonth, 0) : "Loading..."}
             </p>
           </CardContent>
         </Card>
@@ -234,9 +260,11 @@ export default function StudioPage() {
             <MessageSquare className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">₦2.4M</div>
+            <div className="text-2xl font-bold">
+              {dashboardStats?.revenue || "₦0"}
+            </div>
             <p className="text-xs text-muted-foreground">
-              +19% from last month
+              {dashboardStats?.revenueChange || "Loading..."}
             </p>
           </CardContent>
         </Card>
