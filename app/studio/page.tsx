@@ -19,11 +19,6 @@ import Link from "next/link";
 import type { Database } from "@/lib/types/supabase";
 
 // Dynamic imports for heavy components
-const AnalyticsDashboard = dynamic(() => import("@/components/studio/AnalyticsDashboard"), {
-  loading: () => <div className="h-64 bg-gray-200 rounded-lg animate-pulse" />,
-  ssr: false
-});
-
 const LeadsTrackingDashboard = dynamic(() => import("@/components/studio/LeadsTrackingDashboard"), {
   loading: () => <div className="h-64 bg-gray-200 rounded-lg animate-pulse" />,
   ssr: false
@@ -243,19 +238,7 @@ export default function StudioPage() {
       </div>
 
       {/* Main Dashboard Components */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Analytics Dashboard */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Analytics Overview</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Suspense fallback={<div className="h-64 bg-gray-200 rounded-lg animate-pulse" />}>
-              <AnalyticsDashboard />
-            </Suspense>
-          </CardContent>
-        </Card>
-
+      <div className="grid grid-cols-1 gap-8">
         {/* Leads Dashboard */}
         <Card>
           <CardHeader>
