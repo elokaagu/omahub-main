@@ -208,16 +208,13 @@ export default function CreateBrandPage() {
       return;
     }
 
-    if (!formData.contact_email) {
-      toast.error("Contact email is required");
-      return;
-    }
-
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.contact_email)) {
-      toast.error("Please enter a valid email address");
-      return;
+    // Email is optional - only validate format if provided
+    if (formData.contact_email) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.contact_email)) {
+        toast.error("Please enter a valid email address");
+        return;
+      }
     }
 
     // Format price range if both min and max are provided
@@ -245,7 +242,7 @@ export default function CreateBrandPage() {
       website: formData.website || undefined,
       instagram: formData.instagram || undefined,
       whatsapp: formData.whatsapp || undefined,
-      contact_email: formData.contact_email,
+      contact_email: formData.contact_email || undefined,
       founded_year: formData.founded_year || undefined,
       video_url: formData.video_url || undefined,
       video_thumbnail: formData.video_thumbnail || undefined,
@@ -581,7 +578,7 @@ export default function CreateBrandPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="contact_email">Contact Email *</Label>
+                    <Label htmlFor="contact_email">Contact Email</Label>
                     <Input
                       id="contact_email"
                       name="contact_email"
@@ -589,7 +586,6 @@ export default function CreateBrandPage() {
                       value={formData.contact_email}
                       onChange={handleInputChange}
                       placeholder="hello@brand.com"
-                      required
                     />
                   </div>
                 </div>
