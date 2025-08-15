@@ -3,31 +3,38 @@
 import dynamic from "next/dynamic";
 import { Suspense, useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { getUserPermissions, Permission } from "@/lib/services/permissionsService";
+import {
+  getUserPermissions,
+  Permission,
+} from "@/lib/services/permissionsService";
 import { supabaseHelpers } from "@/lib/utils/supabase-helpers";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 // Phase 2B: Selective icon imports instead of large lucide-react bundle
-import { 
-  Package, 
-  Users, 
-  ShoppingBag, 
-  MessageSquare, 
-  BarChart3 
-} from "@/lib/utils/iconImports";
+import { BarChart3 } from "@/lib/utils/iconImports";
 import Link from "next/link";
 import type { Database } from "@/lib/types/supabase";
 
 // Dynamic imports for heavy components
-const LeadsTrackingDashboard = dynamic(() => import("@/components/studio/LeadsTrackingDashboard"), {
-  loading: () => <div className="h-64 bg-gray-200 rounded-lg animate-pulse" />,
-  ssr: false
-});
+const LeadsTrackingDashboard = dynamic(
+  () => import("@/components/studio/LeadsTrackingDashboard"),
+  {
+    loading: () => (
+      <div className="h-64 bg-gray-200 rounded-lg animate-pulse" />
+    ),
+    ssr: false,
+  }
+);
 
-const RecentAccountsWidget = dynamic(() => import("./dashboard/RecentAccountsWidget"), {
-  loading: () => <div className="h-32 bg-gray-200 rounded-lg animate-pulse" />,
-  ssr: false
-});
+const RecentAccountsWidget = dynamic(
+  () => import("./dashboard/RecentAccountsWidget"),
+  {
+    loading: () => (
+      <div className="h-32 bg-gray-200 rounded-lg animate-pulse" />
+    ),
+    ssr: false,
+  }
+);
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
@@ -105,7 +112,7 @@ export default function StudioPage() {
           <div className="h-12 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg animate-pulse"></div>
           <div className="h-6 bg-gray-200 rounded w-2/3 animate-pulse"></div>
         </div>
-        
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Analytics Card Skeleton */}
           <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
@@ -118,7 +125,7 @@ export default function StudioPage() {
               </div>
             </div>
           </div>
-          
+
           {/* Quick Actions Skeleton */}
           <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
             <div className="space-y-4">
@@ -134,7 +141,7 @@ export default function StudioPage() {
             </div>
           </div>
         </div>
-        
+
         {/* Recent Activity Skeleton */}
         <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
           <div className="space-y-4">
@@ -174,79 +181,28 @@ export default function StudioPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8">
       {/* Welcome Header */}
       <div className="text-center">
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">
+        <h1 className="text-4xl font-bold text-omahub-primary mb-2">
           Welcome to OmaHub Studio
         </h1>
-        <p className="text-lg text-gray-600">
+        <p className="text-lg text-omahub-secondary">
           Manage your brands, products, and business operations
         </p>
-      </div>
-
-      {/* Quick Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Brands</CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">24</div>
-            <p className="text-xs text-muted-foreground">
-              +2 from last month
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Users</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">156</div>
-            <p className="text-xs text-muted-foreground">
-              +12 from last month
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Products</CardTitle>
-            <ShoppingBag className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">1,234</div>
-            <p className="text-xs text-muted-foreground">
-              +89 from last month
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Revenue</CardTitle>
-            <MessageSquare className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">₦2.4M</div>
-            <p className="text-xs text-muted-foreground">
-              +19% from last month
-            </p>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Main Dashboard Components */}
       <div className="grid grid-cols-1 gap-8">
         {/* Leads Dashboard */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Leads & Conversions</CardTitle>
+        <Card className="border-omahub-accent shadow-omahub">
+          <CardHeader className="bg-gradient-to-r from-omahub-primary to-omahub-secondary text-white rounded-t-lg">
+            <CardTitle className="text-white">Leads & Conversions</CardTitle>
           </CardHeader>
-          <CardContent>
-            <Suspense fallback={<div className="h-64 bg-gray-200 rounded-lg animate-pulse" />}>
-              <LeadsTrackingDashboard 
+          <CardContent className="bg-white">
+            <Suspense
+              fallback={
+                <div className="h-64 bg-omahub-light rounded-lg animate-pulse" />
+              }
+            >
+              <LeadsTrackingDashboard
                 userRole={userProfile?.role || "user"}
                 ownedBrandIds={userProfile?.owned_brands || []}
               />
@@ -256,12 +212,16 @@ export default function StudioPage() {
       </div>
 
       {/* Recent Accounts */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Account Activity</CardTitle>
+      <Card className="border-omahub-accent shadow-omahub">
+        <CardHeader className="bg-gradient-to-r from-omahub-primary to-omahub-secondary text-white rounded-t-lg">
+          <CardTitle className="text-white">Recent Account Activity</CardTitle>
         </CardHeader>
-        <CardContent>
-          <Suspense fallback={<div className="h-32 bg-gray-200 rounded-lg animate-pulse" />}>
+        <CardContent className="bg-white">
+          <Suspense
+            fallback={
+              <div className="h-32 bg-omahub-light rounded-lg animate-pulse" />
+            }
+          >
             <RecentAccountsWidget />
           </Suspense>
         </CardContent>
