@@ -1088,7 +1088,7 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
                       <Button
                         type="submit"
                         disabled={tailorSaving}
-                        className="bg-oma-cocoa hover:bg-oma-cocoa/90 text-white"
+                        className="bg-oma-black hover:bg-oma-black/90 text-white"
                       >
                         {tailorSaving
                           ? "Saving..."
