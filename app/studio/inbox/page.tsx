@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { createClient } from "@/lib/supabase-unified";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -63,7 +63,16 @@ export default function StudioInboxPage() {
     }
   }, [user, authLoading]);
 
+  // Add a ref to track if we've already loaded inquiries
+  const hasLoadedInquiries = useRef(false);
+
   const loadInquiries = async () => {
+    // Skip loading if we already have inquiries and user hasn't changed
+    if (hasLoadedInquiries.current && inquiries.length > 0) {
+      console.log("📧 Skipping inquiry reload - already loaded");
+      return;
+    }
+
     try {
       const supabase = createClient();
 
@@ -119,6 +128,7 @@ export default function StudioInboxPage() {
 
       console.log(`📧 Loaded ${inquiriesData?.length || 0} inquiries`);
       setInquiries(inquiriesData || []);
+      hasLoadedInquiries.current = true;
     } catch (error) {
       console.error("Error loading inquiries:", error);
       toast.error("Failed to load inbox");
@@ -282,7 +292,13 @@ export default function StudioInboxPage() {
         throw new Error(errorData.error || "Failed to delete inquiry");
       }
 
-      // Remove from local state
+      // Verify the response
+      const responseData = await response.json();
+      if (!responseData.success) {
+        throw new Error(responseData.error || "Delete operation failed");
+      }
+
+      // Remove from local state immediately
       setInquiries((prev) => prev.filter((inq) => inq.id !== inquiry.id));
 
       toast.success(
@@ -290,9 +306,19 @@ export default function StudioInboxPage() {
       );
       setDeleteDialogOpen(false);
       setInquiryToDelete(null);
+      
+      // Log successful deletion for debugging
+      console.log(`✅ Inquiry ${inquiry.id} deleted successfully from local state`);
     } catch (error) {
       console.error("Error deleting inquiry:", error);
       toast.error("Failed to delete inquiry");
+      
+      // Log error details for debugging
+      console.error("Delete inquiry error details:", {
+        inquiryId: inquiry.id,
+        customerName: inquiry.customer_name,
+        error: error
+      });
     } finally {
       setIsDeleting(false);
     }
