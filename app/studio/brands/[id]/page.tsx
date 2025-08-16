@@ -112,7 +112,7 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
   const [imageUrl, setImageUrl] = useState("");
   const [tailor, setTailor] = useState<any | null>(null);
   const [tailorModalOpen, setTailorModalOpen] = useState(false);
-  const [tailorSpecialties, setTailorSpecialties] = useState("");
+  const [tailorSpecialties, setTailorSpecialties] = useState<string[]>([]);
   const [tailorPriceRange, setTailorPriceRange] = useState("");
   const [tailorConsultationFee, setTailorConsultationFee] = useState("");
   const [tailorLeadTime, setTailorLeadTime] = useState("");
@@ -210,13 +210,13 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
         .single();
       if (data) {
         setTailor(data);
-        setTailorSpecialties((data.specialties || []).join(", "));
+        setTailorSpecialties(data.specialties || []);
         setTailorPriceRange(data.price_range || "");
         setTailorConsultationFee(data.consultation_fee || "");
         setTailorLeadTime(data.lead_time || "");
       } else {
         setTailor(null);
-        setTailorSpecialties("");
+        setTailorSpecialties([]);
         setTailorPriceRange("");
         setTailorConsultationFee("");
         setTailorLeadTime("");
@@ -233,10 +233,7 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
       setTailorSaving(false);
       return;
     }
-    const specialtiesArr = tailorSpecialties
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
+    const specialtiesArr = tailorSpecialties; // No need to split since it's already an array
     const payload = {
       brand_id: brand.id,
       title: brand.name, // required by schema
@@ -296,7 +293,7 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
       } else {
         toast.success("Tailoring disabled successfully");
         setTailor(null);
-        setTailorSpecialties("");
+        setTailorSpecialties([]);
         setTailorPriceRange("");
         setTailorConsultationFee("");
         setTailorLeadTime("");
@@ -944,7 +941,10 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
                     </div>
                     <div className="mt-2 text-sm text-oma-plum">
                       <p>
-                        Specialties: {tailorSpecialties || "None specified"}
+                        Specialties:{" "}
+                        {tailorSpecialties.length > 0
+                          ? tailorSpecialties.join(", ")
+                          : "None specified"}
                       </p>
                       <p>Price Range: {tailorPriceRange || "Not specified"}</p>
                     </div>
@@ -1013,13 +1013,8 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
                             "Alterations",
                             "Evening Gowns",
                           ]}
-                          value={tailorSpecialties
-                            .split(",")
-                            .map((s) => s.trim())
-                            .filter(Boolean)}
-                          onValueChange={(selected: string[]) =>
-                            setTailorSpecialties(selected.join(", "))
-                          }
+                          value={tailorSpecialties}
+                          onValueChange={setTailorSpecialties}
                           placeholder="Select specialties"
                         />
                       </div>

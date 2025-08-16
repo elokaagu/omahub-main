@@ -29,12 +29,14 @@ export function FileUpload({
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState<string | null>(defaultValue || null);
   const [imageError, setImageError] = useState(false);
+  const [isTemporaryPreview, setIsTemporaryPreview] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Update preview when defaultValue changes
   useEffect(() => {
     setPreview(defaultValue || null);
     setImageError(false); // Reset error state when defaultValue changes
+    setIsTemporaryPreview(false);
   }, [defaultValue]);
 
   // Process accept parameter to handle both string and object formats
@@ -263,17 +265,21 @@ export function FileUpload({
       return;
     }
 
-    // Create preview
+    // Create temporary preview and mark it as such
     const objectUrl = URL.createObjectURL(file);
     setPreview(objectUrl);
+    setIsTemporaryPreview(true);
+    setImageError(false); // Reset any previous errors
 
     // Upload file
     setUploading(true);
     try {
       const url = await uploadToSupabase(file);
 
-      // Update preview with the uploaded URL so it stays visible
+      // Update preview with the uploaded URL and mark as permanent
       setPreview(url);
+      setIsTemporaryPreview(false);
+      setImageError(false);
 
       onUploadComplete(url);
       toast.success("Image uploaded successfully!");
@@ -293,6 +299,8 @@ export function FileUpload({
 
       toast.error(errorMessage);
       setPreview(defaultValue || null);
+      setIsTemporaryPreview(false);
+      setImageError(false);
     } finally {
       setUploading(false);
       // Clean up the temporary object URL
@@ -314,7 +322,10 @@ export function FileUpload({
   };
 
   const handleImageError = () => {
-    setImageError(true);
+    // Only set error if this is not a temporary preview during upload
+    if (!isTemporaryPreview && !uploading) {
+      setImageError(true);
+    }
   };
 
   const handleImageLoad = () => {
@@ -351,14 +362,16 @@ export function FileUpload({
           >
             <X className="h-4 w-4" />
           </Button>
-          {/* Hidden image to detect loading errors */}
-          <img
-            src={preview}
-            alt=""
-            className="hidden"
-            onError={handleImageError}
-            onLoad={handleImageLoad}
-          />
+          {/* Hidden image to detect loading errors - only for permanent URLs */}
+          {!isTemporaryPreview && (
+            <img
+              src={preview}
+              alt=""
+              className="hidden"
+              onError={handleImageError}
+              onLoad={handleImageLoad}
+            />
+          )}
         </div>
       ) : (
         <div
@@ -374,7 +387,7 @@ export function FileUpload({
               <p className="text-xs text-gray-500 mt-1">
                 PNG, JPG or WEBP (max. {maxSize}MB)
               </p>
-              {imageError && preview && (
+              {imageError && preview && !isTemporaryPreview && (
                 <p className="text-xs text-red-500 mt-1">
                   Image failed to load. Please upload a new one.
                 </p>
