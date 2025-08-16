@@ -10,12 +10,14 @@ interface LazyImageProps {
   className?: string;
   priority?: boolean;
   aspectRatio?: "square" | "video" | "portrait" | "landscape" | string;
-  fallback?: React.ReactNode;
-  onLoad?: () => void;
-  onError?: () => void;
   quality?: number;
   sizes?: string;
   fill?: boolean;
+  fallback?: React.ReactNode;
+  onLoad?: () => void;
+  onError?: () => void;
+  isUploading?: boolean;
+  uploadProgress?: number;
 }
 
 export function LazyImage({
@@ -26,12 +28,14 @@ export function LazyImage({
   className = "",
   priority = false,
   aspectRatio,
-  fallback,
-  onLoad,
-  onError,
   quality = 75,
   sizes,
   fill = false,
+  fallback,
+  onLoad,
+  onError,
+  isUploading = false,
+  uploadProgress = 0,
 }: LazyImageProps) {
   const [imageUrl, setImageUrl] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
@@ -154,6 +158,39 @@ export function LazyImage({
               <p className="text-sm font-medium">Image Coming Soon</p>
               <p className="text-xs text-gray-400 mt-1">We're working on it</p>
             </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Uploading state - show upload progress
+  if (isUploading) {
+    return (
+      <div ref={imgRef} className={containerClasses}>
+        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
+          <div className="text-center text-gray-500">
+            <svg
+              className="mx-auto h-12 w-12 mb-3 text-gray-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+              />
+            </svg>
+            <p className="text-sm font-medium">Image Loading</p>
+            <div className="w-32 bg-gray-200 rounded-full h-2 mt-2 mx-auto">
+              <div 
+                className="bg-oma-plum h-2 rounded-full transition-all duration-300 ease-out"
+                style={{ width: `${uploadProgress}%` }}
+              ></div>
+            </div>
+            <p className="text-xs text-gray-400 mt-1">{Math.round(uploadProgress)}% complete</p>
           </div>
         )}
       </div>

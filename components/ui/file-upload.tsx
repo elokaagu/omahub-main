@@ -9,6 +9,8 @@ import { AuthImage } from "./auth-image";
 
 interface FileUploadProps {
   onUploadComplete: (url: string) => void;
+  onUploadStart?: () => void;
+  onUploadProgress?: (progress: number) => void;
   defaultValue?: string;
   bucket?: string;
   path?: string;
@@ -19,6 +21,8 @@ interface FileUploadProps {
 
 export function FileUpload({
   onUploadComplete,
+  onUploadStart,
+  onUploadProgress,
   defaultValue,
   bucket = "brand-assets",
   path = "",
@@ -273,14 +277,19 @@ export function FileUpload({
     setImageError(false); // Reset any previous errors
     setUploadProgress(0); // Reset progress
 
+    // Notify upload start
+    onUploadStart?.();
+
     // Upload file
     setUploading(true);
     try {
       // Simulate progress updates during upload
       const progressInterval = setInterval(() => {
-        setUploadProgress((prev) => {
+        setUploadProgress(prev => {
           if (prev >= 90) return prev; // Don't go to 100% until actually complete
-          return prev + Math.random() * 15;
+          const newProgress = prev + Math.random() * 15;
+          onUploadProgress?.(newProgress);
+          return newProgress;
         });
       }, 200);
 
@@ -289,6 +298,7 @@ export function FileUpload({
       // Clear progress interval and set to 100%
       clearInterval(progressInterval);
       setUploadProgress(100);
+      onUploadProgress?.(100);
 
       // Update preview with the uploaded URL and mark as permanent
       setPreview(url);
@@ -315,6 +325,7 @@ export function FileUpload({
       setPreview(defaultValue || null);
       setIsTemporaryPreview(false);
       setUploadProgress(0);
+      onUploadProgress?.(0);
     } finally {
       setUploading(false);
       // Clean up the temporary object URL

@@ -110,6 +110,8 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
+  const [imageUploading, setImageUploading] = useState(false);
+  const [imageUploadProgress, setImageUploadProgress] = useState(0);
   const [tailor, setTailor] = useState<any | null>(null);
   const [tailorModalOpen, setTailorModalOpen] = useState(false);
   const [tailorSpecialties, setTailorSpecialties] = useState<string[]>([]);
@@ -351,12 +353,23 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
 
   const handleImageUpload = (url: string) => {
     setImageUrl(url);
+    setImageUploading(false);
+    setImageUploadProgress(0);
     if (brand) {
       setBrand({
         ...brand,
         image: url,
       });
     }
+  };
+
+  const handleImageUploadStart = () => {
+    setImageUploading(true);
+    setImageUploadProgress(0);
+  };
+
+  const handleImageUploadProgress = (progress: number) => {
+    setImageUploadProgress(progress);
   };
 
   const handleVerifiedToggle = () => {
@@ -789,6 +802,8 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
             <CardContent>
               <FileUpload
                 onUploadComplete={handleImageUpload}
+                onUploadStart={handleImageUploadStart}
+                onUploadProgress={handleImageUploadProgress}
                 defaultValue={brand.image}
                 bucket="brand-assets"
                 path="brands"
@@ -852,6 +867,8 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
                       className="w-full h-full"
                       sizes="800px"
                       quality={85}
+                      isUploading={imageUploading}
+                      uploadProgress={imageUploadProgress}
                     />
                   ) : (
                     <div className="flex items-center justify-center h-full text-gray-400">

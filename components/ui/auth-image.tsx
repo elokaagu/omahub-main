@@ -11,6 +11,8 @@ interface AuthImageProps {
   quality?: number;
   sizes?: string;
   fill?: boolean;
+  isUploading?: boolean;
+  uploadProgress?: number;
 }
 
 export function AuthImage({
@@ -24,6 +26,8 @@ export function AuthImage({
   quality = 75,
   sizes,
   fill = false,
+  isUploading = false,
+  uploadProgress = 0,
 }: AuthImageProps) {
   return (
     <LazyImage
@@ -37,6 +41,8 @@ export function AuthImage({
       quality={quality}
       sizes={sizes}
       fill={fill}
+      isUploading={isUploading}
+      uploadProgress={uploadProgress}
     />
   );
 }
