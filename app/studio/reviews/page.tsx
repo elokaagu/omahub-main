@@ -199,7 +199,20 @@ export default function ReviewManagementPage() {
       }
 
       toast.success("Review deleted successfully");
-      fetchReviews(currentPage, searchTerm, selectedBrand);
+      
+      // Remove the deleted review from local state immediately
+      setReviews(prevReviews => prevReviews.filter(review => review.id !== reviewId));
+      
+      // Refresh the data to get updated counts and handle pagination
+      // If we're on page 1 or if there are still reviews on current page, stay on current page
+      // Otherwise, go back to page 1
+      const remainingReviews = reviews.filter(review => review.id !== reviewId);
+      if (remainingReviews.length === 0 && currentPage > 1) {
+        setCurrentPage(prev => Math.max(1, prev - 1));
+        fetchReviews(Math.max(1, currentPage - 1), searchTerm, selectedBrand);
+      } else {
+        fetchReviews(currentPage, searchTerm, selectedBrand);
+      }
     } catch (error) {
       console.error("Error deleting review:", error);
       toast.error("Failed to delete review");
@@ -271,6 +284,16 @@ export default function ReviewManagementPage() {
       }
 
       toast.success("Reply deleted successfully");
+      
+      // Remove the deleted reply from local state immediately
+      setReviews(prevReviews => 
+        prevReviews.map(review => ({
+          ...review,
+          replies: review.replies.filter(reply => reply.id !== replyId)
+        }))
+      );
+      
+      // Refresh the data to get updated counts
       fetchReviews(currentPage, searchTerm, selectedBrand);
     } catch (error) {
       console.error("Error deleting reply:", error);
