@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase-unified";
+import { normalizeProductImages } from "@/lib/utils/productImageUtils";
 
 export async function GET(request: NextRequest) {
   try {
@@ -58,7 +59,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    return NextResponse.json(products || []);
+    // Normalize product images to ensure first image is always the main image
+    const normalizedProducts = normalizeProductImages(products || []);
+    return NextResponse.json(normalizedProducts);
   } catch (error) {
     console.error("Products API error:", error);
     return NextResponse.json(

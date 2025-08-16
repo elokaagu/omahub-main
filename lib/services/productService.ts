@@ -1,4 +1,5 @@
 import { supabase, Product } from "../supabase";
+import { normalizeProductImages } from "../utils/productImageUtils";
 
 /**
  * Fetch all products from the database
@@ -18,7 +19,8 @@ export async function getAllProducts(): Promise<Product[]> {
     throw error;
   }
 
-  return data || [];
+  // Normalize product images to ensure first image is always the main image
+  return normalizeProductImages(data || []);
 }
 
 /**
@@ -63,13 +65,16 @@ export async function getProductsByBrand(brandId: string): Promise<Product[]> {
     throw error;
   }
 
-  return data || [];
+  // Normalize product images to ensure first image is always the main image
+  return normalizeProductImages(data || []);
 }
 
 /**
  * Fetch ALL products by brand ID (including portfolio items for admin use)
  */
-export async function getAllProductsByBrand(brandId: string): Promise<Product[]> {
+export async function getAllProductsByBrand(
+  brandId: string
+): Promise<Product[]> {
   if (!supabase) {
     throw new Error("Supabase client not available");
   }
@@ -85,7 +90,8 @@ export async function getAllProductsByBrand(brandId: string): Promise<Product[]>
     throw error;
   }
 
-  return data || [];
+  // Normalize product images to ensure first image is always the main image
+  return normalizeProductImages(data || []);
 }
 
 /**
@@ -109,7 +115,8 @@ export async function getProductsByCatalogue(
     throw error;
   }
 
-  return data || [];
+  // Normalize product images to ensure first image is always the main image
+  return normalizeProductImages(data || []);
 }
 
 /**
@@ -165,7 +172,8 @@ export async function getProductsWithDetails(): Promise<
       };
     });
 
-    return productsWithDetails;
+    // Normalize product images to ensure first image is always the main image
+    return normalizeProductImages(productsWithDetails);
   } catch (error) {
     console.error("Error in getProductsWithDetails:", error);
     throw error;
@@ -231,7 +239,8 @@ export async function getProductsWithBrandCurrency(): Promise<
       };
     });
 
-    return productsWithDetails;
+    // Normalize product images to ensure first image is always the main image
+    return normalizeProductImages(productsWithDetails);
   } catch (error) {
     console.error("Error in getProductsWithBrandCurrency:", error);
     throw error;
@@ -297,7 +306,8 @@ export async function getAllProductsWithBrandCurrency(): Promise<
       };
     });
 
-    return productsWithDetails;
+    // Normalize product images to ensure first image is always the main image
+    return normalizeProductImages(productsWithDetails);
   } catch (error) {
     console.error("Error in getAllProductsWithBrandCurrency:", error);
     throw error;
@@ -484,7 +494,8 @@ export async function searchProducts(query: string): Promise<Product[]> {
     throw error;
   }
 
-  return data || [];
+  // Normalize product images to ensure first image is always the main image
+  return normalizeProductImages(data || []);
 }
 
 /**
@@ -736,10 +747,12 @@ export async function getIntelligentRecommendationsWithBrand(
           const favouriteLimit = Math.ceil(limit / 2);
           const { data: favouriteBasedProducts } = await supabase
             .from("products")
-            .select(`
+            .select(
+              `
               *,
               brand:brands(price_range)
-            `)
+            `
+            )
             .in("brand_id", favouriteBrandIds)
             .limit(favouriteLimit)
             .order("created_at", { ascending: false });
@@ -756,10 +769,12 @@ export async function getIntelligentRecommendationsWithBrand(
     if (remainingLimit > 0 && catalogueId) {
       const { data: catalogueProducts } = await supabase
         .from("products")
-        .select(`
+        .select(
+          `
           *,
           brand:brands(price_range)
-        `)
+        `
+        )
         .eq("catalogue_id", catalogueId)
         .not("id", "in", `(${recommendations.map((r) => r.id).join(",")})`)
         .limit(remainingLimit)
@@ -775,10 +790,12 @@ export async function getIntelligentRecommendationsWithBrand(
     if (stillNeedMore > 0 && brandId) {
       const { data: brandProducts } = await supabase
         .from("products")
-        .select(`
+        .select(
+          `
           *,
           brand:brands(price_range)
-        `)
+        `
+        )
         .eq("brand_id", brandId)
         .not("id", "in", `(${recommendations.map((r) => r.id).join(",")})`)
         .limit(stillNeedMore)
@@ -795,7 +812,11 @@ export async function getIntelligentRecommendationsWithBrand(
     console.error("Error in getIntelligentRecommendationsWithBrand:", error);
     // Fallback to catalogue products with brand info if intelligent recommendations fail
     if (catalogueId) {
-      return getCatalogueRecommendationsWithBrand(catalogueId, undefined, limit);
+      return getCatalogueRecommendationsWithBrand(
+        catalogueId,
+        undefined,
+        limit
+      );
     }
     return [];
   }
@@ -816,10 +837,12 @@ export async function getCatalogueRecommendationsWithBrand(
   try {
     let query = supabase
       .from("products")
-      .select(`
+      .select(
+        `
         *,
         brand:brands(price_range)
-      `)
+      `
+      )
       .eq("catalogue_id", catalogueId)
       .limit(limit);
 
@@ -832,7 +855,10 @@ export async function getCatalogueRecommendationsWithBrand(
     });
 
     if (error) {
-      console.error("Error fetching catalogue recommendations with brand:", error);
+      console.error(
+        "Error fetching catalogue recommendations with brand:",
+        error
+      );
       throw error;
     }
 

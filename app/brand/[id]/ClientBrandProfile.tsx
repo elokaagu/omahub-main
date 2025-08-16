@@ -31,6 +31,7 @@ import {
 } from "@/lib/utils/phoneUtils";
 import { FavouriteButton } from "@/components/ui/favourite-button";
 import { formatProductPrice } from "@/lib/utils/priceFormatter";
+import { getProductMainImage } from "@/lib/utils/productImageUtils";
 
 interface ClientBrandProfileProps {
   brandData: BrandData;
@@ -265,7 +266,9 @@ export default function ClientBrandProfile({
                     >
                       <div className="aspect-square relative overflow-hidden">
                         <LazyImage
-                          src={product.image || "/placeholder.png"}
+                          src={
+                            getProductMainImage(product) || "/placeholder.png"
+                          }
                           alt={product.title}
                           fill
                           className="object-cover group-hover:scale-105 transition-transform duration-300"
@@ -287,7 +290,11 @@ export default function ClientBrandProfile({
                             <div></div>
                           ) : (
                             <p className="text-oma-plum font-medium text-sm sm:text-base">
-                              {formatProductPrice(product, { price_range: brandData.priceRange }).displayPrice}
+                              {
+                                formatProductPrice(product, {
+                                  price_range: brandData.priceRange,
+                                }).displayPrice
+                              }
                             </p>
                           )}
                           {product.service_type !== "portfolio" && (

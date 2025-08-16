@@ -21,6 +21,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loading } from "@/components/ui/loading";
 import { formatProductPrice } from "@/lib/utils/priceFormatter";
 import { CategoryTag } from "@/components/ui/unified-tag";
+import { getProductMainImage } from "@/lib/utils/productImageUtils";
 
 type CatalogueWithBrand = Catalogue & {
   brand: {
@@ -368,7 +369,7 @@ export default function CataloguesPage() {
                 <Link href={`/product/${product.id}`}>
                   <div className="relative aspect-square">
                     <LazyImage
-                      src={product.image || "/placeholder.png"}
+                      src={getProductMainImage(product) || "/placeholder.png"}
                       alt={product.title}
                       fill
                       className="object-cover"

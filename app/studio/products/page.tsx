@@ -50,6 +50,7 @@ import {
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
 import { formatProductPrice } from "@/lib/utils/priceFormatter";
+import { getProductMainImage } from "@/lib/utils/productImageUtils";
 import { ActiveFilters } from "@/components/ui/unified-tag";
 import {
   Dialog,
@@ -690,7 +691,7 @@ export default function ProductsPage() {
             >
               <div className="aspect-square relative overflow-hidden rounded-t-lg">
                 <AuthImage
-                  src={product.image}
+                  src={getProductMainImage(product)}
                   alt={product.title}
                   width={300}
                   height={300}
@@ -808,7 +809,7 @@ export default function ProductsPage() {
                 <div className="flex items-center gap-6">
                   <div className="w-20 h-20 relative rounded-lg overflow-hidden flex-shrink-0">
                     <AuthImage
-                      src={product.image}
+                      src={getProductMainImage(product)}
                       alt={product.title}
                       width={80}
                       height={80}

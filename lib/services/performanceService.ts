@@ -1,5 +1,6 @@
 // Performance optimization service
 import { supabase } from "../supabase";
+import { normalizeProductImages } from "../utils/productImageUtils";
 
 // Cache configuration
 const CACHE_DURATION = {
@@ -156,7 +157,7 @@ export const performanceService = {
         cacheUtils.set(cacheKey, data, CACHE_DURATION.SHORT);
       }
 
-      return data;
+      return data || [];
     } catch (error) {
       console.error("Error fetching optimized products:", error);
       return [];
@@ -344,9 +345,9 @@ if (typeof window !== "undefined") {
     },
     10 * 60 * 1000
   );
-  
+
   // Cleanup on page unload to prevent memory leaks
-  window.addEventListener('beforeunload', () => {
+  window.addEventListener("beforeunload", () => {
     if (cleanupInterval) {
       clearInterval(cleanupInterval);
       cleanupInterval = null;
