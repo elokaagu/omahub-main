@@ -1000,20 +1000,18 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
               )}
 
               {/* Tailoring Modal - Always Available */}
-              <Dialog
-                open={tailorModalOpen}
-                onOpenChange={setTailorModalOpen}
-              >
+              <Dialog open={tailorModalOpen} onOpenChange={setTailorModalOpen}>
                 <DialogContent>
                   <DialogHeader>
                     <DialogTitle>
-                      {tailor ? "Edit Tailoring Options" : "Enable Tailoring for this Brand"}
+                      {tailor
+                        ? "Edit Tailoring Options"
+                        : "Enable Tailoring for this Brand"}
                     </DialogTitle>
                     <DialogDescription>
-                      {tailor 
+                      {tailor
                         ? "Update tailoring options for this brand. These details will be shown on the brand profile and in the tailor directory."
-                        : "Add tailoring options for this brand. These details will be shown on the brand profile and in the tailor directory."
-                      }
+                        : "Add tailoring options for this brand. These details will be shown on the brand profile and in the tailor directory."}
                     </DialogDescription>
                   </DialogHeader>
                   <form onSubmit={handleTailorSave} className="space-y-4">
@@ -1087,14 +1085,16 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
                       />
                     </div>
                     <DialogFooter>
-                      <Button 
-                        type="submit" 
+                      <Button
+                        type="submit"
                         disabled={tailorSaving}
                         className="bg-oma-cocoa hover:bg-oma-cocoa/90 text-white"
                       >
                         {tailorSaving
                           ? "Saving..."
-                          : tailor ? "Update Tailoring Profile" : "Save Tailoring Profile"}
+                          : tailor
+                            ? "Update Tailoring Profile"
+                            : "Save Tailoring Profile"}
                       </Button>
                     </DialogFooter>
                   </form>
