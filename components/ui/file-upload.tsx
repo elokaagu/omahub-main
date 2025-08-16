@@ -278,7 +278,7 @@ export function FileUpload({
     try {
       // Simulate progress updates during upload
       const progressInterval = setInterval(() => {
-        setUploadProgress(prev => {
+        setUploadProgress((prev) => {
           if (prev >= 90) return prev; // Don't go to 100% until actually complete
           return prev + Math.random() * 15;
         });
@@ -407,14 +407,14 @@ export function FileUpload({
                 </p>
               )}
             </div>
-            
+
             {uploading ? (
               <div className="w-full mt-4 space-y-3">
                 <p className="text-sm text-oma-plum font-medium">
                   Image is uploading...
                 </p>
                 <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
+                  <div
                     className="bg-oma-plum h-2 rounded-full transition-all duration-300 ease-out"
                     style={{ width: `${uploadProgress}%` }}
                   ></div>
