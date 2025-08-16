@@ -10,6 +10,7 @@ interface Brand {
   location: string;
   is_verified: boolean;
   rating: number;
+  item_type: 'brand';
 }
 
 interface Catalogue {
@@ -18,6 +19,7 @@ interface Catalogue {
   image: string;
   brand_id: string;
   description?: string;
+  item_type: 'catalogue';
 }
 
 interface Product {
@@ -28,6 +30,7 @@ interface Product {
   price: number;
   sale_price?: number;
   category: string;
+  item_type: 'product';
 }
 
 export interface FavouriteResult {
@@ -58,14 +61,16 @@ const useFavourites = () => {
       const response = await fetch(`/api/favourites?userId=${user.id}`);
 
       if (!response.ok) {
-        throw new Error("Failed to fetch favourites");
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Failed to fetch favourites: ${response.status}`);
       }
 
       const data = await response.json();
+      console.log("📧 Fetched favourites:", data.favourites?.length || 0);
       setFavourites(data.favourites || []);
       setError(null);
     } catch (err) {
-      console.error("Error fetching favourites:", err);
+      console.error("❌ Error fetching favourites:", err);
       setError("Failed to load favourites");
     } finally {
       setLoading(false);
@@ -99,9 +104,13 @@ const useFavourites = () => {
         const responseData = await res.json();
         console.log("🔍 API response data:", responseData);
 
-        if (!res.ok) throw new Error("Failed to add favourite");
-        toast({ title: "Favourite added successfully" });
-        fetchFavourites();
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
+          throw new Error(errorData.error || `Failed to add favourite: ${res.status}`);
+        }
+        
+        console.log("✅ Favourite added successfully to database");
+        await fetchFavourites(); // Refresh the favourites list
       } catch (err: any) {
         console.error("❌ Error in addFavourite:", err);
         toast({
@@ -128,10 +137,15 @@ const useFavourites = () => {
             method: "DELETE",
           }
         );
-        if (!res.ok) throw new Error("Failed to remove favourite");
-        toast({ title: "Favourite removed successfully" });
-        fetchFavourites();
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
+          throw new Error(errorData.error || `Failed to remove favourite: ${res.status}`);
+        }
+        
+        console.log("✅ Favourite removed successfully from database");
+        await fetchFavourites(); // Refresh the favourites list
       } catch (err: any) {
+        console.error("❌ Error in removeFavourite:", err);
         toast({
           title: "Error",
           description: err.message || "Failed to remove favourite",
@@ -145,7 +159,9 @@ const useFavourites = () => {
   // Check if an item is favourited
   const isFavourite = useCallback(
     (itemId: string, itemType: "brand" | "catalogue" | "product"): boolean => {
-      return favourites.some((favourite) => favourite.id === itemId);
+      return favourites.some((favourite) => 
+        favourite.id === itemId && favourite.item_type === itemType
+      );
     },
     [favourites]
   );

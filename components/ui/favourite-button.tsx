@@ -38,10 +38,7 @@ export function FavouriteButton({
 
       if (!isFavourited) {
         setShowModal(true);
-        toast({
-          title: "Added to favourites",
-          description: "Item has been added to your favourites.",
-        });
+        // Don't show toast when showing modal - modal is more prominent
       } else {
         toast({
           title: "Removed from favourites",
