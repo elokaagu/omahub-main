@@ -30,6 +30,7 @@ export function FileUpload({
   const [preview, setPreview] = useState<string | null>(defaultValue || null);
   const [imageError, setImageError] = useState(false);
   const [isTemporaryPreview, setIsTemporaryPreview] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Update preview when defaultValue changes
@@ -270,11 +271,24 @@ export function FileUpload({
     setPreview(objectUrl);
     setIsTemporaryPreview(true);
     setImageError(false); // Reset any previous errors
+    setUploadProgress(0); // Reset progress
 
     // Upload file
     setUploading(true);
     try {
+      // Simulate progress updates during upload
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => {
+          if (prev >= 90) return prev; // Don't go to 100% until actually complete
+          return prev + Math.random() * 15;
+        });
+      }, 200);
+
       const url = await uploadToSupabase(file);
+
+      // Clear progress interval and set to 100%
+      clearInterval(progressInterval);
+      setUploadProgress(100);
 
       // Update preview with the uploaded URL and mark as permanent
       setPreview(url);
@@ -300,7 +314,7 @@ export function FileUpload({
       toast.error(errorMessage);
       setPreview(defaultValue || null);
       setIsTemporaryPreview(false);
-      setImageError(false);
+      setUploadProgress(0);
     } finally {
       setUploading(false);
       // Clean up the temporary object URL
@@ -393,13 +407,31 @@ export function FileUpload({
                 </p>
               )}
             </div>
-            <Button
-              type="button"
-              className="mt-4 bg-oma-plum hover:bg-oma-plum/90"
-              disabled={uploading}
-            >
-              {uploading ? "Uploading..." : "Select Image"}
-            </Button>
+            
+            {uploading ? (
+              <div className="w-full mt-4 space-y-3">
+                <p className="text-sm text-oma-plum font-medium">
+                  Image is uploading...
+                </p>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    className="bg-oma-plum h-2 rounded-full transition-all duration-300 ease-out"
+                    style={{ width: `${uploadProgress}%` }}
+                  ></div>
+                </div>
+                <p className="text-xs text-gray-500">
+                  {Math.round(uploadProgress)}% complete
+                </p>
+              </div>
+            ) : (
+              <Button
+                type="button"
+                className="mt-4 bg-oma-plum hover:bg-oma-plum/90"
+                disabled={uploading}
+              >
+                Select Image
+              </Button>
+            )}
           </div>
         </div>
       )}
