@@ -5,7 +5,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { getAllBrands } from "@/lib/services/brandService";
-import { getProductsByBrand, getAllProductsByBrand } from "@/lib/services/productService";
+import {
+  getProductsByBrand,
+  getAllProductsByBrand,
+} from "@/lib/services/productService";
 import { Brand, Product } from "@/lib/supabase";
 import {
   Card,
@@ -59,6 +62,7 @@ import {
 import { deleteProduct } from "@/lib/services/productService";
 import { useTailoringEvent } from "@/contexts/NavigationContext";
 import { formatProductPrice } from "@/lib/utils/priceFormatter";
+import { getProductMainImage } from "@/lib/utils/productImageUtils";
 
 type ServiceWithBrand = Product & {
   brand: {
@@ -73,9 +77,65 @@ type ServiceWithBrand = Product & {
 // Service type icons
 const serviceIcons = {
   consultation: MessageCircle,
-  alterations: Scissors,
-  custom_design: Sparkles,
-  fitting: Users,
+  product: Scissors,
+  portfolio: Sparkles,
+  service: MessageCircle,
+};
+
+// Service type display labels
+const serviceTypeLabels = {
+  consultation: "Consultation",
+  product: "Product",
+  portfolio: "Portfolio",
+  service: "Service",
+};
+
+// Get appropriate icon for service
+const getServiceIcon = (service: ServiceWithBrand) => {
+  // For portfolio items, show Sparkles icon
+  if (service.service_type === "portfolio") {
+    return Sparkles;
+  }
+
+  // For consultations, show MessageCircle
+  if (service.service_type === "consultation") {
+    return MessageCircle;
+  }
+
+  // For services, show MessageCircle
+  if (service.service_type === "service") {
+    return MessageCircle;
+  }
+
+  // Default to Scissors for products
+  return Scissors;
+};
+
+// Get service type display label
+const getServiceTypeLabel = (service: ServiceWithBrand): string => {
+  if (
+    service.service_type &&
+    serviceTypeLabels[service.service_type as keyof typeof serviceTypeLabels]
+  ) {
+    return serviceTypeLabels[
+      service.service_type as keyof typeof serviceTypeLabels
+    ];
+  }
+
+  // Fallback based on product properties
+  if (service.is_custom) {
+    return "Custom Design";
+  }
+
+  if (service.consultation_fee) {
+    return "Consultation";
+  }
+
+  if (service.hourly_rate) {
+    return "Hourly Service";
+  }
+
+  return "Product";
 };
 
 export default function ServicesPage() {
@@ -211,9 +271,26 @@ export default function ServicesPage() {
 
     // Filter by service type
     if (selectedServiceType !== "all") {
-      filtered = filtered.filter(
-        (service) => service.service_type === selectedServiceType
-      );
+      filtered = filtered.filter((service) => {
+        if (selectedServiceType === "product") {
+          return (
+            service.service_type === "product" ||
+            (!service.service_type && !service.is_custom)
+          );
+        }
+        if (selectedServiceType === "portfolio") {
+          return service.service_type === "portfolio";
+        }
+        if (selectedServiceType === "consultation") {
+          return (
+            service.service_type === "consultation" || service.consultation_fee
+          );
+        }
+        if (selectedServiceType === "service") {
+          return service.service_type === "service";
+        }
+        return service.service_type === selectedServiceType;
+      });
     }
 
     // Filter by search query
@@ -251,20 +328,38 @@ export default function ServicesPage() {
   };
 
   const formatPrice = (service: ServiceWithBrand): string => {
+    // For portfolio items, always show "Contact for Pricing"
+    if (service.service_type === "portfolio") {
+      return "Contact for Pricing";
+    }
+
     if (service.contact_for_pricing) {
-      return service.price_range || "Contact for Pricing";
+      return "Contact for Pricing";
     }
 
-    if (service.consultation_fee) {
-      return formatProductPrice({ price: service.consultation_fee }, { price_range: service.brand?.price_range }).displayPrice + " consultation";
+    if (service.consultation_fee && service.consultation_fee > 0) {
+      return (
+        formatProductPrice(
+          { price: service.consultation_fee },
+          { price_range: service.brand?.price_range }
+        ).displayPrice + " consultation"
+      );
     }
 
-    if (service.hourly_rate) {
-      return formatProductPrice({ price: service.hourly_rate }, { price_range: service.brand?.price_range }).displayPrice + "/hour";
+    if (service.hourly_rate && service.hourly_rate > 0) {
+      return (
+        formatProductPrice(
+          { price: service.hourly_rate },
+          { price_range: service.brand?.price_range }
+        ).displayPrice + "/hour"
+      );
     }
 
-    if (service.price > 0) {
-      return formatProductPrice({ price: service.price }, { price_range: service.brand?.price_range }).displayPrice;
+    if (service.price && service.price > 0) {
+      return formatProductPrice(
+        { price: service.price },
+        { price_range: service.brand?.price_range }
+      ).displayPrice;
     }
 
     return "Contact for Pricing";
@@ -351,10 +446,10 @@ export default function ServicesPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Services</SelectItem>
+            <SelectItem value="product">Products</SelectItem>
+            <SelectItem value="portfolio">Portfolio Items</SelectItem>
             <SelectItem value="consultation">Consultations</SelectItem>
-            <SelectItem value="alterations">Alterations</SelectItem>
-            <SelectItem value="custom_design">Custom Design</SelectItem>
-            <SelectItem value="fitting">Fitting Sessions</SelectItem>
+            <SelectItem value="service">Other Services</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -385,9 +480,8 @@ export default function ServicesPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredServices.map((service) => {
-            const ServiceIcon =
-              serviceIcons[service.service_type as keyof typeof serviceIcons] ||
-              Scissors;
+            const ServiceIcon = getServiceIcon(service);
+            const serviceTypeLabel = getServiceTypeLabel(service);
 
             return (
               <Card
@@ -399,9 +493,7 @@ export default function ServicesPage() {
                     <div className="flex items-center gap-2">
                       <ServiceIcon className="h-5 w-5 text-oma-plum" />
                       <Badge variant="outline" className="text-xs">
-                        {service.service_type
-                          ?.replace("_", " ")
-                          .replace(/\b\w/g, (l) => l.toUpperCase())}
+                        {serviceTypeLabel}
                       </Badge>
                     </div>
                     <div className="flex gap-1">
@@ -485,10 +577,10 @@ export default function ServicesPage() {
                 </CardHeader>
 
                 <CardContent className="pt-0">
-                  {service.image && (
+                  {getProductMainImage(service) && (
                     <div className="relative h-32 mb-4 rounded-lg overflow-hidden">
                       <AuthImage
-                        src={service.image}
+                        src={getProductMainImage(service)}
                         alt={service.title}
                         width={300}
                         height={128}
