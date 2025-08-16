@@ -56,22 +56,33 @@ export default function PortfolioPage() {
 
   const fetchPortfolioItems = async () => {
     try {
-      // Fetch products that are portfolio type
-      const response = await fetch("/api/studio/products");
+      // Fetch portfolio items from dedicated portfolio API
+      const response = await fetch("/api/studio/portfolio");
       if (response.ok) {
         const data = await response.json();
-        // Filter for portfolio items only
-        const portfolioData = data.filter(
-          (item: any) => item.service_type === "portfolio" && item.brand_id
-        );
-
+        
         // Enrich with brand names from the joined data
-        const enrichedPortfolio = portfolioData.map((item: any) => ({
+        const enrichedPortfolio = data.map((item: any) => ({
           ...item,
           brand_name: item.brand?.name || "Unknown Brand",
         }));
 
+        console.log("📸 Portfolio items fetched:", enrichedPortfolio.length);
+        
+        // Debug: Log image information for each portfolio item
+        enrichedPortfolio.forEach((item: PortfolioItem, index: number) => {
+          console.log(`📸 Portfolio item ${index + 1}:`, {
+            title: item.title,
+            mainImage: item.image,
+            imagesArray: item.images,
+            imagesArrayLength: item.images?.length || 0,
+            firstImage: item.images?.[0] || "none"
+          });
+        });
+        
         setPortfolioItems(enrichedPortfolio);
+      } else {
+        throw new Error("Failed to fetch portfolio items");
       }
     } catch (error) {
       console.error("Error fetching portfolio items:", error);
