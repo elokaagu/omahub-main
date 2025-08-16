@@ -89,7 +89,6 @@ export function LazyImage({
         // The Supabase URLs are already public and accessible
         console.log("📸 Using URL directly:", src);
         setImageUrl(src);
-        
       } catch (err) {
         console.error("❌ Error processing image URL:", src, err);
         // Don't set error state, just try to use the original URL
@@ -164,35 +163,18 @@ export function LazyImage({
     );
   }
 
-  // Uploading state - show upload progress
+  // Uploading state - show upload progress (temporarily disabled to fix build)
   if (isUploading) {
     return (
       <div ref={imgRef} className={containerClasses}>
         <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
           <div className="text-center text-gray-500">
-            <svg
-              className="mx-auto h-12 w-12 mb-3 text-gray-400"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1.5}
-                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-              />
-            </svg>
-            <p className="text-sm font-medium">Image Loading</p>
-            <div className="w-32 bg-gray-200 rounded-full h-2 mt-2 mx-auto">
-              <div 
-                className="bg-oma-plum h-2 rounded-full transition-all duration-300 ease-out"
-                style={{ width: `${uploadProgress}%` }}
-              ></div>
-            </div>
-            <p className="text-xs text-gray-400 mt-1">{Math.round(uploadProgress)}% complete</p>
+            <p className="text-sm font-medium">Image Loading...</p>
+            <p className="text-xs text-gray-400 mt-1">
+              {Math.round(uploadProgress)}% complete
+            </p>
           </div>
-        )}
+        </div>
       </div>
     );
   }
@@ -202,7 +184,7 @@ export function LazyImage({
     return (
       <div ref={imgRef} className={containerClasses}>
         <div className="absolute inset-0 bg-gray-100 animate-pulse">
-          <div className="absolute inset-0 bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 animate-shimmer" />
+          <div className="absolute inset-0 bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100" />
         </div>
       </div>
     );
@@ -213,7 +195,7 @@ export function LazyImage({
       {/* Loading overlay */}
       {isLoading && (
         <div className="absolute inset-0 bg-gray-100 animate-pulse z-10">
-          <div className="absolute inset-0 bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 animate-shimmer" />
+          <div className="absolute inset-0 bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100" />
         </div>
       )}
 
