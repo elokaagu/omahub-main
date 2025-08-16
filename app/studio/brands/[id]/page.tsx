@@ -985,105 +985,117 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
                   </AlertDialog>
                 </div>
               ) : (
-                <Dialog
-                  open={tailorModalOpen}
-                  onOpenChange={setTailorModalOpen}
-                >
-                  <DialogTrigger asChild>
-                    <Button className="w-full" variant="outline">
-                      Enable Tailoring
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Enable Tailoring for this Brand</DialogTitle>
-                      <DialogDescription>
-                        Add tailoring options for this brand. These details will
-                        be shown on the brand profile and in the tailor
-                        directory.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <form onSubmit={handleTailorSave} className="space-y-4">
-                      <div>
-                        <Label>Specialties</Label>
-                        <MultiSelect
-                          options={[
-                            "Bridal",
-                            "Custom Design",
-                            "Alterations",
-                            "Evening Gowns",
-                          ]}
-                          value={tailorSpecialties}
-                          onValueChange={setTailorSpecialties}
-                          placeholder="Select specialties"
-                        />
-                      </div>
-                      <div>
-                        <Label>Price Range</Label>
-                        <Input
-                          value={tailorPriceRange}
-                          onChange={(e) => setTailorPriceRange(e.target.value)}
-                          placeholder="e.g. $500 - $2,000"
-                        />
-                      </div>
-                      <div>
-                        <Label>Consultation Fee</Label>
-                        <Input
-                          type="number"
-                          value={tailorConsultationFee}
-                          onChange={(e) =>
-                            setTailorConsultationFee(e.target.value)
-                          }
-                          placeholder="e.g. 100"
-                        />
-                      </div>
-                      <div>
-                        <Label>Lead Time</Label>
-                        <Input
-                          value={tailorLeadTime}
-                          onChange={(e) => setTailorLeadTime(e.target.value)}
-                          placeholder="e.g. 2-3 weeks"
-                        />
-                      </div>
-                      <div>
-                        <Label>Category</Label>
-                        <Select
-                          value={selectedCategory}
-                          onValueChange={setSelectedCategory}
-                          required
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Select a category" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {CATEGORIES.map((cat) => (
-                              <SelectItem key={cat} value={cat}>
-                                {cat}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label>Categories (optional, multi-select)</Label>
-                        <MultiSelect
-                          options={CATEGORIES}
-                          value={selectedCategories}
-                          onValueChange={setSelectedCategories}
-                          placeholder="Select categories"
-                        />
-                      </div>
-                      <DialogFooter>
-                        <Button type="submit" disabled={tailorSaving}>
-                          {tailorSaving
-                            ? "Saving..."
-                            : "Save Tailoring Profile"}
-                        </Button>
-                      </DialogFooter>
-                    </form>
-                  </DialogContent>
-                </Dialog>
+                <div className="space-y-4">
+                  <p className="text-gray-500 text-sm">
+                    No tailoring options configured for this brand.
+                  </p>
+                  <Button
+                    variant="outline"
+                    onClick={() => setTailorModalOpen(true)}
+                    className="w-full text-oma-plum border-oma-plum hover:bg-oma-beige"
+                  >
+                    Enable Tailoring
+                  </Button>
+                </div>
               )}
+
+              {/* Tailoring Modal - Always Available */}
+              <Dialog
+                open={tailorModalOpen}
+                onOpenChange={setTailorModalOpen}
+              >
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>
+                      {tailor ? "Edit Tailoring Options" : "Enable Tailoring for this Brand"}
+                    </DialogTitle>
+                    <DialogDescription>
+                      {tailor 
+                        ? "Update tailoring options for this brand. These details will be shown on the brand profile and in the tailor directory."
+                        : "Add tailoring options for this brand. These details will be shown on the brand profile and in the tailor directory."
+                      }
+                    </DialogDescription>
+                  </DialogHeader>
+                  <form onSubmit={handleTailorSave} className="space-y-4">
+                    <div>
+                      <Label>Specialties</Label>
+                      <MultiSelect
+                        options={[
+                          "Bridal",
+                          "Custom Design",
+                          "Alterations",
+                          "Evening Gowns",
+                        ]}
+                        value={tailorSpecialties}
+                        onValueChange={setTailorSpecialties}
+                        placeholder="Select specialties"
+                      />
+                    </div>
+                    <div>
+                      <Label>Price Range</Label>
+                      <Input
+                        value={tailorPriceRange}
+                        onChange={(e) => setTailorPriceRange(e.target.value)}
+                        placeholder="e.g. $500 - $2,000"
+                      />
+                    </div>
+                    <div>
+                      <Label>Consultation Fee</Label>
+                      <Input
+                        type="number"
+                        value={tailorConsultationFee}
+                        onChange={(e) =>
+                          setTailorConsultationFee(e.target.value)
+                        }
+                        placeholder="e.g. 100"
+                      />
+                    </div>
+                    <div>
+                      <Label>Lead Time</Label>
+                      <Input
+                        value={tailorLeadTime}
+                        onChange={(e) => setTailorLeadTime(e.target.value)}
+                        placeholder="e.g. 2-3 weeks"
+                      />
+                    </div>
+                    <div>
+                      <Label>Category</Label>
+                      <Select
+                        value={selectedCategory}
+                        onValueChange={setSelectedCategory}
+                        required
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select a category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {CATEGORIES.map((cat) => (
+                            <SelectItem key={cat} value={cat}>
+                              {cat}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label>Categories (optional, multi-select)</Label>
+                      <MultiSelect
+                        options={CATEGORIES}
+                        value={selectedCategories}
+                        onValueChange={setSelectedCategories}
+                        placeholder="Select categories"
+                      />
+                    </div>
+                    <DialogFooter>
+                      <Button type="submit" disabled={tailorSaving}>
+                        {tailorSaving
+                          ? "Saving..."
+                          : tailor ? "Update Tailoring Profile" : "Save Tailoring Profile"}
+                      </Button>
+                    </DialogFooter>
+                  </form>
+                </DialogContent>
+              </Dialog>
             </CardContent>
           </Card>
         </div>
