@@ -1087,7 +1087,11 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
                       />
                     </div>
                     <DialogFooter>
-                      <Button type="submit" disabled={tailorSaving}>
+                      <Button 
+                        type="submit" 
+                        disabled={tailorSaving}
+                        className="bg-oma-cocoa hover:bg-oma-cocoa/90 text-white"
+                      >
                         {tailorSaving
                           ? "Saving..."
                           : tailor ? "Update Tailoring Profile" : "Save Tailoring Profile"}
