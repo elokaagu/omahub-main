@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { StudioNav } from "@/components/ui/studio-nav";
 import { TrashIcon } from "@heroicons/react/24/outline";
+import { RefreshCw } from "lucide-react";
 
 interface Inquiry {
   id: string;
@@ -72,6 +73,9 @@ export default function StudioInboxPage() {
       console.log("📧 Skipping inquiry reload - already loaded");
       return;
     }
+
+    // Reset the ref when explicitly loading
+    hasLoadedInquiries.current = false;
 
     try {
       const supabase = createClient();
@@ -162,6 +166,11 @@ export default function StudioInboxPage() {
     } catch (error) {
       console.error("Error marking as read:", error);
     }
+  };
+
+  const refreshInquiries = async () => {
+    hasLoadedInquiries.current = false;
+    await loadInquiries();
   };
 
   const handleReply = async () => {
@@ -301,23 +310,28 @@ export default function StudioInboxPage() {
       // Remove from local state immediately
       setInquiries((prev) => prev.filter((inq) => inq.id !== inquiry.id));
 
+      // Reset the ref to allow future reloads if needed
+      hasLoadedInquiries.current = false;
+
       toast.success(
         `Inquiry from ${inquiry.customer_name} deleted successfully`
       );
       setDeleteDialogOpen(false);
       setInquiryToDelete(null);
-      
+
       // Log successful deletion for debugging
-      console.log(`✅ Inquiry ${inquiry.id} deleted successfully from local state`);
+      console.log(
+        `✅ Inquiry ${inquiry.id} deleted successfully from local state`
+      );
     } catch (error) {
       console.error("Error deleting inquiry:", error);
       toast.error("Failed to delete inquiry");
-      
+
       // Log error details for debugging
       console.error("Delete inquiry error details:", {
         inquiryId: inquiry.id,
         customerName: inquiry.customer_name,
-        error: error
+        error: error,
       });
     } finally {
       setIsDeleting(false);
@@ -367,22 +381,37 @@ export default function StudioInboxPage() {
     <div className="min-h-screen bg-oma-cream">
       <div className="max-w-7xl mx-auto px-6 py-8">
         <StudioNav />
-        <div className="mb-8">
-          <h1 className="text-3xl font-canela text-oma-plum mb-2">
-            Studio Inbox
-          </h1>
-          <p className="text-oma-cocoa">
-            {isSuperAdmin
-              ? "Manage all customer inquiries and messages across the platform"
-              : "Manage inquiries and messages from potential clients"}
-          </p>
-          {isSuperAdmin && (
-            <div className="mt-2">
-              <Badge className="bg-oma-plum text-white">
-                Super Admin View - All Inquiries
-              </Badge>
-            </div>
-          )}
+        <div className="mb-8 flex justify-between items-start">
+          <div>
+            <h1 className="text-3xl font-canela text-oma-plum mb-2">
+              Studio Inbox
+            </h1>
+            <p className="text-oma-cocoa">
+              {isSuperAdmin
+                ? "Manage all customer inquiries and messages across the platform"
+                : "Manage inquiries and messages from potential clients"}
+            </p>
+            {isSuperAdmin && (
+              <div className="mt-2">
+                <Badge className="bg-oma-plum text-white">
+                  Super Admin View - All Inquiries
+                </Badge>
+              </div>
+            )}
+          </div>
+          <Button
+            onClick={refreshInquiries}
+            variant="outline"
+            className="border-oma-plum text-oma-plum hover:bg-oma-plum/10"
+            disabled={loading}
+          >
+            {loading ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-oma-plum mr-2"></div>
+            ) : (
+              <RefreshCw className="h-4 w-4 mr-2" />
+            )}
+            Refresh
+          </Button>
         </div>
 
         {inquiries.length === 0 ? (

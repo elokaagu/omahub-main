@@ -8,6 +8,21 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Edit, Trash2, Eye, Image as ImageIcon } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { AuthImage } from "@/components/ui/auth-image";
+
+// Helper function to get the main image for portfolio items
+const getPortfolioMainImage = (item: PortfolioItem): string => {
+  // If item has multiple images, use the first one
+  if (item.images && item.images.length > 0) {
+    const firstImage = item.images[0];
+    if (firstImage) {
+      return firstImage;
+    }
+  }
+
+  // Fallback to the main image field
+  return item.image || "";
+};
 
 interface PortfolioItem {
   id: string;
@@ -142,16 +157,12 @@ export default function PortfolioPage() {
           {portfolioItems.map((item) => (
             <Card key={item.id} className="overflow-hidden">
               <div className="aspect-[4/5] relative overflow-hidden">
-                {item.image ? (
-                  <img
-                    src={item.image}
+                {getPortfolioMainImage(item) ? (
+                  <AuthImage
+                    src={getPortfolioMainImage(item)}
                     alt={item.title}
-                    className="w-full h-full object-cover"
-                  />
-                ) : item.images && item.images.length > 0 ? (
-                  <img
-                    src={item.images[0]}
-                    alt={item.title}
+                    width={400}
+                    height={500}
                     className="w-full h-full object-cover"
                   />
                 ) : (

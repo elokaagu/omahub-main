@@ -99,9 +99,12 @@ export async function GET(request) {
 
     // Combine all favourites with their item_type information
     const favourites = [
-      ...brandsData.map(brand => ({ ...brand, item_type: 'brand' })),
-      ...cataloguesData.map(catalogue => ({ ...catalogue, item_type: 'catalogue' })),
-      ...productsData.map(product => ({ ...product, item_type: 'product' }))
+      ...brandsData.map((brand) => ({ ...brand, item_type: "brand" })),
+      ...cataloguesData.map((catalogue) => ({
+        ...catalogue,
+        item_type: "catalogue",
+      })),
+      ...productsData.map((product) => ({ ...product, item_type: "product" })),
     ];
 
     return NextResponse.json({ favourites });

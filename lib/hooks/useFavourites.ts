@@ -10,7 +10,7 @@ interface Brand {
   location: string;
   is_verified: boolean;
   rating: number;
-  item_type: 'brand';
+  item_type: "brand";
 }
 
 interface Catalogue {
@@ -19,7 +19,7 @@ interface Catalogue {
   image: string;
   brand_id: string;
   description?: string;
-  item_type: 'catalogue';
+  item_type: "catalogue";
 }
 
 interface Product {
@@ -30,7 +30,7 @@ interface Product {
   price: number;
   sale_price?: number;
   category: string;
-  item_type: 'product';
+  item_type: "product";
 }
 
 export interface FavouriteResult {
@@ -62,7 +62,9 @@ const useFavourites = () => {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `Failed to fetch favourites: ${response.status}`);
+        throw new Error(
+          errorData.error || `Failed to fetch favourites: ${response.status}`
+        );
       }
 
       const data = await response.json();
@@ -106,9 +108,11 @@ const useFavourites = () => {
 
         if (!res.ok) {
           const errorData = await res.json().catch(() => ({}));
-          throw new Error(errorData.error || `Failed to add favourite: ${res.status}`);
+          throw new Error(
+            errorData.error || `Failed to add favourite: ${res.status}`
+          );
         }
-        
+
         console.log("✅ Favourite added successfully to database");
         await fetchFavourites(); // Refresh the favourites list
       } catch (err: any) {
@@ -139,9 +143,11 @@ const useFavourites = () => {
         );
         if (!res.ok) {
           const errorData = await res.json().catch(() => ({}));
-          throw new Error(errorData.error || `Failed to remove favourite: ${res.status}`);
+          throw new Error(
+            errorData.error || `Failed to remove favourite: ${res.status}`
+          );
         }
-        
+
         console.log("✅ Favourite removed successfully from database");
         await fetchFavourites(); // Refresh the favourites list
       } catch (err: any) {
@@ -159,8 +165,9 @@ const useFavourites = () => {
   // Check if an item is favourited
   const isFavourite = useCallback(
     (itemId: string, itemType: "brand" | "catalogue" | "product"): boolean => {
-      return favourites.some((favourite) => 
-        favourite.id === itemId && favourite.item_type === itemType
+      return favourites.some(
+        (favourite) =>
+          favourite.id === itemId && favourite.item_type === itemType
       );
     },
     [favourites]
