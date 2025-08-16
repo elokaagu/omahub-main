@@ -285,7 +285,7 @@ export function FileUpload({
     try {
       // Simulate progress updates during upload
       const progressInterval = setInterval(() => {
-        setUploadProgress(prev => {
+        setUploadProgress((prev) => {
           if (prev >= 90) return prev; // Don't go to 100% until actually complete
           const newProgress = prev + Math.random() * 15;
           onUploadProgress?.(newProgress);
@@ -376,6 +376,8 @@ export function FileUpload({
             width={300}
             height={200}
             className="w-full h-48 object-cover rounded-md border border-gray-200"
+            isUploading={uploading}
+            uploadProgress={uploadProgress}
           />
           <Button
             type="button"
