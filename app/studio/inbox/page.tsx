@@ -59,13 +59,31 @@ export default function StudioInboxPage() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
-    if (!authLoading && user) {
-      loadInquiries();
+    if (!authLoading && user?.id && !hasLoadedInquiries.current) {
+      // Only load if user ID has changed or we haven't loaded yet
+      if (lastUserId.current !== user.id) {
+        console.log("📧 User ID changed, loading inquiries for new user");
+        lastUserId.current = user.id;
+        hasLoadedInquiries.current = false;
+        loadInquiries();
+      } else if (!hasLoadedInquiries.current) {
+        console.log("📧 Initial load for current user");
+        loadInquiries();
+      }
     }
-  }, [user, authLoading]);
+  }, [user?.id, authLoading]); // Only depend on user.id, not the entire user object
+
+  // Cleanup effect to reset state when component unmounts
+  useEffect(() => {
+    return () => {
+      hasLoadedInquiries.current = false;
+      lastUserId.current = null;
+    };
+  }, []);
 
   // Add a ref to track if we've already loaded inquiries
   const hasLoadedInquiries = useRef(false);
+  const lastUserId = useRef<string | null>(null);
 
   const loadInquiries = async () => {
     // Skip loading if we already have inquiries and user hasn't changed
@@ -74,8 +92,8 @@ export default function StudioInboxPage() {
       return;
     }
 
-    // Reset the ref when explicitly loading
-    hasLoadedInquiries.current = false;
+    // Don't reset the ref here - only reset it when explicitly refreshing
+    console.log("📧 Loading inquiries...");
 
     try {
       const supabase = createClient();
