@@ -108,22 +108,10 @@ export default function CollectionsPage() {
     setLoading(true);
     setFetchError(null);
     try {
-      // Get user permissions and profile with fallback
+      // Get user permissions and profile
       const [permissions, profileResult] = await Promise.all([
         getUserPermissions(user.id, user.email),
-        supabase.from("profiles").select("*").eq("id", user.id).single().catch((error) => {
-          console.log("⚠️ Profile fetch failed, using fallback:", error);
-          // Return a fallback profile structure based on user context
-          return {
-            data: {
-              id: user.id,
-              email: user.email,
-              role: user.role,
-              owned_brands: user.owned_brands || [],
-            },
-            error: null
-          };
-        }),
+        supabase.from("profiles").select("*").eq("id", user.id).single(),
       ]);
 
       console.log("🔍 ENHANCED DEBUG: Auth data fetched:", {
@@ -162,8 +150,13 @@ export default function CollectionsPage() {
         const fallbackProfile = {
           id: user.id,
           email: user.email,
-          role: user.role,
+          role: user.role || "user",
           owned_brands: user.owned_brands || [],
+          first_name: user.first_name || null,
+          last_name: user.last_name || null,
+          avatar_url: user.avatar_url || null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         };
         console.log("🔄 Using fallback profile data:", fallbackProfile);
         setUserProfile(fallbackProfile);

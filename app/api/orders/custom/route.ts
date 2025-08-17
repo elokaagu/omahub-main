@@ -33,26 +33,13 @@ export async function POST(request: NextRequest) {
     const [productResult, brandResult, userResult] = await Promise.all([
       supabase.from("products").select("*").eq("id", product_id).single(),
       supabase.from("brands").select("*").eq("id", brand_id).single(),
-      supabase.from("profiles").select("*").eq("id", user_id).single().catch((error) => {
-        console.log("⚠️ Profile fetch failed, using fallback:", error);
-        // Return a fallback profile structure
-        return {
-          data: {
-            id: user_id,
-            email: "customer@example.com", // Fallback email
-            role: "user",
-            owned_brands: [],
-          },
-          error: null
-        };
-      }),
+      supabase.from("profiles").select("*").eq("id", user_id).single(),
     ]);
 
-    if (productResult.error || brandResult.error || userResult.error) {
-      console.error("Error fetching data:", {
+    if (productResult.error || brandResult.error) {
+      console.error("Error fetching product or brand data:", {
         product: productResult.error,
         brand: brandResult.error,
-        user: userResult.error,
       });
       return NextResponse.json(
         { error: "Failed to fetch order details" },
@@ -60,9 +47,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Handle profile fetch error gracefully
+    let userProfile = userResult.data;
+    if (userResult.error) {
+      console.log("⚠️ Profile fetch failed, using fallback:", userResult.error);
+      // Use fallback profile data
+      userProfile = {
+        id: user_id,
+        email: "customer@example.com", // Fallback email
+        role: "user",
+        owned_brands: [],
+      };
+    }
+
     const product = productResult.data;
     const brand = brandResult.data;
-    const user = userResult.data;
+    const user = userProfile;
 
     // Create the order in the database
     const { data: order, error: orderError } = await supabase
