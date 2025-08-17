@@ -79,7 +79,7 @@ export default function StudioInboxPage() {
       hasLoadedInquiries.current = false;
       lastUserId.current = null;
       deletedInquiryIds.current.clear();
-      
+
       // Clear localStorage on unmount
       if (typeof window !== "undefined" && user?.id) {
         localStorage.removeItem(`deleted_inquiries_${user.id}`);
@@ -100,10 +100,15 @@ export default function StudioInboxPage() {
         if (stored) {
           const deletedIds = JSON.parse(stored);
           deletedInquiryIds.current = new Set(deletedIds);
-          console.log(`📧 Loaded ${deletedIds.length} deleted inquiry IDs from localStorage`);
+          console.log(
+            `📧 Loaded ${deletedIds.length} deleted inquiry IDs from localStorage`
+          );
         }
       } catch (error) {
-        console.warn("Failed to load deleted inquiries from localStorage:", error);
+        console.warn(
+          "Failed to load deleted inquiries from localStorage:",
+          error
+        );
       }
     }
   }, [user?.id]);
@@ -113,10 +118,18 @@ export default function StudioInboxPage() {
     if (typeof window !== "undefined" && user?.id) {
       try {
         const deletedArray = Array.from(deletedInquiryIds.current);
-        localStorage.setItem(`deleted_inquiries_${user.id}`, JSON.stringify(deletedArray));
-        console.log(`💾 Saved ${deletedArray.length} deleted inquiry IDs to localStorage`);
+        localStorage.setItem(
+          `deleted_inquiries_${user.id}`,
+          JSON.stringify(deletedArray)
+        );
+        console.log(
+          `💾 Saved ${deletedArray.length} deleted inquiry IDs to localStorage`
+        );
       } catch (error) {
-        console.warn("Failed to save deleted inquiries to localStorage:", error);
+        console.warn(
+          "Failed to save deleted inquiries to localStorage:",
+          error
+        );
       }
     }
   }, [user?.id]);
@@ -185,19 +198,21 @@ export default function StudioInboxPage() {
       }
 
       console.log(`📧 Loaded ${inquiriesData?.length || 0} inquiries`);
-      
+
       // Filter out any inquiries that were deleted in this session
       const filteredInquiries = (inquiriesData || []).filter(
-        inquiry => !deletedInquiryIds.current.has(inquiry.id)
+        (inquiry) => !deletedInquiryIds.current.has(inquiry.id)
       );
-      
-      console.log(`📧 Filtered to ${filteredInquiries.length} inquiries (${deletedInquiryIds.current.size} deleted in session)`);
-      
+
+      console.log(
+        `📧 Filtered to ${filteredInquiries.length} inquiries (${deletedInquiryIds.current.size} deleted in session)`
+      );
+
       // Only update state if we have new data or if this is the initial load
       if (filteredInquiries.length > 0 || inquiries.length === 0) {
         setInquiries(filteredInquiries);
       }
-      
+
       hasLoadedInquiries.current = true;
     } catch (error) {
       console.error("Error loading inquiries:", error);
@@ -235,16 +250,18 @@ export default function StudioInboxPage() {
   };
 
   const refreshInquiries = async () => {
-    console.log("🔄 Manual refresh requested - clearing deleted set and reloading");
+    console.log(
+      "🔄 Manual refresh requested - clearing deleted set and reloading"
+    );
     hasLoadedInquiries.current = false;
     deletedInquiryIds.current.clear(); // Clear deleted set on manual refresh
-    
+
     // Clear localStorage as well
     if (typeof window !== "undefined" && user?.id) {
       localStorage.removeItem(`deleted_inquiries_${user.id}`);
       console.log("🗑️ Cleared deleted inquiries from localStorage");
     }
-    
+
     setInquiries([]); // Clear current inquiries to show loading state
     setLoading(true); // Show loading state
     await loadInquiries();
@@ -367,7 +384,9 @@ export default function StudioInboxPage() {
   const deleteInquiry = async (inquiry: Inquiry) => {
     setIsDeleting(true);
 
-    console.log(`🗑️ Starting deletion of inquiry: ${inquiry.id} (${inquiry.customer_name})`);
+    console.log(
+      `🗑️ Starting deletion of inquiry: ${inquiry.id} (${inquiry.customer_name})`
+    );
 
     try {
       const response = await fetch(`/api/studio/inbox/${inquiry.id}`, {
@@ -387,7 +406,7 @@ export default function StudioInboxPage() {
       // Verify the response
       const responseData = await response.json();
       console.log(`📡 Delete response data:`, responseData);
-      
+
       if (!responseData.success) {
         console.error("❌ Delete operation failed:", responseData);
         throw new Error(responseData.error || "Delete operation failed");
@@ -396,18 +415,22 @@ export default function StudioInboxPage() {
       // Add to deleted set to prevent re-appearing
       deletedInquiryIds.current.add(inquiry.id);
       saveDeletedInquiries(); // Save to localStorage
-      
+
       // Remove from local state immediately
       setInquiries((prev) => {
         const filtered = prev.filter((inq) => inq.id !== inquiry.id);
-        console.log(`🗑️ Local state updated: ${prev.length} -> ${filtered.length} inquiries`);
+        console.log(
+          `🗑️ Local state updated: ${prev.length} -> ${filtered.length} inquiries`
+        );
         return filtered;
       });
 
       // Mark as loaded to prevent automatic re-fetch
       hasLoadedInquiries.current = true;
-      
-      console.log(`🗑️ Added inquiry ${inquiry.id} to deleted set. Total deleted in session: ${deletedInquiryIds.current.size}`);
+
+      console.log(
+        `🗑️ Added inquiry ${inquiry.id} to deleted set. Total deleted in session: ${deletedInquiryIds.current.size}`
+      );
 
       toast.success(
         `Inquiry from ${inquiry.customer_name} deleted successfully`
