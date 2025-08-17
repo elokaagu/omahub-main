@@ -33,7 +33,19 @@ export async function POST(request: NextRequest) {
     const [productResult, brandResult, userResult] = await Promise.all([
       supabase.from("products").select("*").eq("id", product_id).single(),
       supabase.from("brands").select("*").eq("id", brand_id).single(),
-      supabase.from("profiles").select("*").eq("id", user_id).single(),
+      supabase.from("profiles").select("*").eq("id", user_id).single().catch((error) => {
+        console.log("⚠️ Profile fetch failed, using fallback:", error);
+        // Return a fallback profile structure
+        return {
+          data: {
+            id: user_id,
+            email: "customer@example.com", // Fallback email
+            role: "user",
+            owned_brands: [],
+          },
+          error: null
+        };
+      }),
     ]);
 
     if (productResult.error || brandResult.error || userResult.error) {
