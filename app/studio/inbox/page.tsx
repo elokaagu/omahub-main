@@ -290,25 +290,38 @@ export default function StudioInboxPage() {
   const deleteInquiry = async (inquiry: Inquiry) => {
     setIsDeleting(true);
 
+    console.log(`🗑️ Starting deletion of inquiry: ${inquiry.id} (${inquiry.customer_name})`);
+
     try {
       const response = await fetch(`/api/studio/inbox/${inquiry.id}`, {
         method: "DELETE",
         credentials: "include",
       });
 
+      console.log(`📡 Delete response status: ${response.status}`);
+      console.log(`📡 Delete response ok: ${response.ok}`);
+
       if (!response.ok) {
         const errorData = await response.json();
+        console.error("❌ Delete failed with error:", errorData);
         throw new Error(errorData.error || "Failed to delete inquiry");
       }
 
       // Verify the response
       const responseData = await response.json();
+      console.log(`📡 Delete response data:`, responseData);
+      
       if (!responseData.success) {
+        console.error("❌ Delete operation failed:", responseData);
         throw new Error(responseData.error || "Delete operation failed");
       }
 
       // Remove from local state immediately
-      setInquiries((prev) => prev.filter((inq) => inq.id !== inquiry.id));
+      setInquiries((prev) => {
+        const filtered = prev.filter((inq) => inq.id !== inquiry.id);
+        console.log(`🗑️ Local state updated: ${prev.length} -> ${filtered.length} inquiries`);
+        return filtered;
+      });
 
       // Reset the ref to allow future reloads if needed
       hasLoadedInquiries.current = false;

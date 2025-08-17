@@ -127,6 +127,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
+    console.log(`🗑️ DELETE request received for inquiry ID: ${params.id}`);
     const supabase = await createServerSupabaseClient();
     const inquiryId = params.id;
 
@@ -214,32 +215,36 @@ export async function DELETE(
     }
 
     // Delete inquiry replies first (cascade delete)
+    console.log(`🗑️ Deleting inquiry replies for inquiry ID: ${inquiryId}`);
     const { error: repliesError } = await supabase
       .from("inquiry_replies")
       .delete()
       .eq("inquiry_id", inquiryId);
 
     if (repliesError) {
-      console.error("Error deleting inquiry replies:", repliesError);
+      console.error("❌ Error deleting inquiry replies:", repliesError);
       return NextResponse.json(
         { error: "Failed to delete inquiry replies" },
         { status: 500 }
       );
     }
+    console.log(`✅ Inquiry replies deleted successfully`);
 
     // Delete the inquiry
+    console.log(`🗑️ Deleting inquiry with ID: ${inquiryId}`);
     const { error: deleteError } = await supabase
       .from("inquiries")
       .delete()
       .eq("id", inquiryId);
 
     if (deleteError) {
-      console.error("Error deleting inquiry:", deleteError);
+      console.error("❌ Error deleting inquiry:", deleteError);
       return NextResponse.json(
         { error: "Failed to delete inquiry" },
         { status: 500 }
       );
     }
+    console.log(`✅ Inquiry deleted successfully from database`);
 
     console.log(
       `✅ Deleted inquiry ${inquiryId} from ${inquiry.customer_name}`
