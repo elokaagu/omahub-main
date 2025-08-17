@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { createClient } from "@/lib/supabase-unified";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -73,19 +73,53 @@ export default function StudioInboxPage() {
     }
   }, [user?.id, authLoading]); // Only depend on user.id, not the entire user object
 
-  // Cleanup effect to reset state when component unmounts
+  // Cleanup effect to reset refs when component unmounts
   useEffect(() => {
     return () => {
       hasLoadedInquiries.current = false;
       lastUserId.current = null;
       deletedInquiryIds.current.clear();
+      
+      // Clear localStorage on unmount
+      if (typeof window !== "undefined" && user?.id) {
+        localStorage.removeItem(`deleted_inquiries_${user.id}`);
+      }
     };
-  }, []);
+  }, [user?.id]);
 
   // Add a ref to track if we've already loaded inquiries
   const hasLoadedInquiries = useRef(false);
   const lastUserId = useRef<string | null>(null);
   const deletedInquiryIds = useRef<Set<string>>(new Set());
+
+  // Load deleted inquiries from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== "undefined" && user?.id) {
+      try {
+        const stored = localStorage.getItem(`deleted_inquiries_${user.id}`);
+        if (stored) {
+          const deletedIds = JSON.parse(stored);
+          deletedInquiryIds.current = new Set(deletedIds);
+          console.log(`📧 Loaded ${deletedIds.length} deleted inquiry IDs from localStorage`);
+        }
+      } catch (error) {
+        console.warn("Failed to load deleted inquiries from localStorage:", error);
+      }
+    }
+  }, [user?.id]);
+
+  // Save deleted inquiries to localStorage whenever the set changes
+  const saveDeletedInquiries = useCallback(() => {
+    if (typeof window !== "undefined" && user?.id) {
+      try {
+        const deletedArray = Array.from(deletedInquiryIds.current);
+        localStorage.setItem(`deleted_inquiries_${user.id}`, JSON.stringify(deletedArray));
+        console.log(`💾 Saved ${deletedArray.length} deleted inquiry IDs to localStorage`);
+      } catch (error) {
+        console.warn("Failed to save deleted inquiries to localStorage:", error);
+      }
+    }
+  }, [user?.id]);
 
   const loadInquiries = async () => {
     // Skip loading if we already have inquiries and user hasn't changed
@@ -158,7 +192,12 @@ export default function StudioInboxPage() {
       );
       
       console.log(`📧 Filtered to ${filteredInquiries.length} inquiries (${deletedInquiryIds.current.size} deleted in session)`);
-      setInquiries(filteredInquiries);
+      
+      // Only update state if we have new data or if this is the initial load
+      if (filteredInquiries.length > 0 || inquiries.length === 0) {
+        setInquiries(filteredInquiries);
+      }
+      
       hasLoadedInquiries.current = true;
     } catch (error) {
       console.error("Error loading inquiries:", error);
@@ -199,6 +238,15 @@ export default function StudioInboxPage() {
     console.log("🔄 Manual refresh requested - clearing deleted set and reloading");
     hasLoadedInquiries.current = false;
     deletedInquiryIds.current.clear(); // Clear deleted set on manual refresh
+    
+    // Clear localStorage as well
+    if (typeof window !== "undefined" && user?.id) {
+      localStorage.removeItem(`deleted_inquiries_${user.id}`);
+      console.log("🗑️ Cleared deleted inquiries from localStorage");
+    }
+    
+    setInquiries([]); // Clear current inquiries to show loading state
+    setLoading(true); // Show loading state
     await loadInquiries();
   };
 
@@ -347,6 +395,7 @@ export default function StudioInboxPage() {
 
       // Add to deleted set to prevent re-appearing
       deletedInquiryIds.current.add(inquiry.id);
+      saveDeletedInquiries(); // Save to localStorage
       
       // Remove from local state immediately
       setInquiries((prev) => {
@@ -355,7 +404,9 @@ export default function StudioInboxPage() {
         return filtered;
       });
 
-      // DON'T reset the ref - this prevents unnecessary re-fetches
+      // Mark as loaded to prevent automatic re-fetch
+      hasLoadedInquiries.current = true;
+      
       console.log(`🗑️ Added inquiry ${inquiry.id} to deleted set. Total deleted in session: ${deletedInquiryIds.current.size}`);
 
       toast.success(
