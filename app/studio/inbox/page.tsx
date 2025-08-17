@@ -78,12 +78,14 @@ export default function StudioInboxPage() {
     return () => {
       hasLoadedInquiries.current = false;
       lastUserId.current = null;
+      deletedInquiryIds.current.clear();
     };
   }, []);
 
   // Add a ref to track if we've already loaded inquiries
   const hasLoadedInquiries = useRef(false);
   const lastUserId = useRef<string | null>(null);
+  const deletedInquiryIds = useRef<Set<string>>(new Set());
 
   const loadInquiries = async () => {
     // Skip loading if we already have inquiries and user hasn't changed
@@ -149,7 +151,14 @@ export default function StudioInboxPage() {
       }
 
       console.log(`📧 Loaded ${inquiriesData?.length || 0} inquiries`);
-      setInquiries(inquiriesData || []);
+      
+      // Filter out any inquiries that were deleted in this session
+      const filteredInquiries = (inquiriesData || []).filter(
+        inquiry => !deletedInquiryIds.current.has(inquiry.id)
+      );
+      
+      console.log(`📧 Filtered to ${filteredInquiries.length} inquiries (${deletedInquiryIds.current.size} deleted in session)`);
+      setInquiries(filteredInquiries);
       hasLoadedInquiries.current = true;
     } catch (error) {
       console.error("Error loading inquiries:", error);
@@ -187,7 +196,9 @@ export default function StudioInboxPage() {
   };
 
   const refreshInquiries = async () => {
+    console.log("🔄 Manual refresh requested - clearing deleted set and reloading");
     hasLoadedInquiries.current = false;
+    deletedInquiryIds.current.clear(); // Clear deleted set on manual refresh
     await loadInquiries();
   };
 
@@ -334,6 +345,9 @@ export default function StudioInboxPage() {
         throw new Error(responseData.error || "Delete operation failed");
       }
 
+      // Add to deleted set to prevent re-appearing
+      deletedInquiryIds.current.add(inquiry.id);
+      
       // Remove from local state immediately
       setInquiries((prev) => {
         const filtered = prev.filter((inq) => inq.id !== inquiry.id);
@@ -341,8 +355,8 @@ export default function StudioInboxPage() {
         return filtered;
       });
 
-      // Reset the ref to allow future reloads if needed
-      hasLoadedInquiries.current = false;
+      // DON'T reset the ref - this prevents unnecessary re-fetches
+      console.log(`🗑️ Added inquiry ${inquiry.id} to deleted set. Total deleted in session: ${deletedInquiryIds.current.size}`);
 
       toast.success(
         `Inquiry from ${inquiry.customer_name} deleted successfully`
