@@ -59,12 +59,13 @@ export default function StudioInboxPage() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
-    if (!authLoading && user?.id && !hasLoadedInquiries.current) {
-      // Only load if user ID has changed or we haven't loaded yet
+    if (!authLoading && user?.id && !hasLoadedInquiries.current && !isDeletingRef.current) {
+      // Only load if user ID has changed or we haven't loaded yet, and we're not currently deleting
       if (lastUserId.current !== user.id) {
         console.log("📧 User ID changed, loading inquiries for new user");
         lastUserId.current = user.id;
         hasLoadedInquiries.current = false;
+        deletedInquiryIds.current.clear(); // Clear deleted set for new user
         loadInquiries();
       } else if (!hasLoadedInquiries.current) {
         console.log("📧 Initial load for current user");
@@ -91,6 +92,7 @@ export default function StudioInboxPage() {
   const hasLoadedInquiries = useRef(false);
   const lastUserId = useRef<string | null>(null);
   const deletedInquiryIds = useRef<Set<string>>(new Set());
+  const isDeletingRef = useRef(false); // Track deletion state to prevent reloading
 
   // Load deleted inquiries from localStorage on mount
   useEffect(() => {
@@ -135,13 +137,17 @@ export default function StudioInboxPage() {
   }, [user?.id]);
 
   const loadInquiries = async () => {
-    // Skip loading if we already have inquiries and user hasn't changed
+    // Skip loading if we're currently deleting or if we already have inquiries and user hasn't changed
+    if (isDeletingRef.current) {
+      console.log("📧 Skipping inquiry reload - currently deleting");
+      return;
+    }
+    
     if (hasLoadedInquiries.current && inquiries.length > 0) {
       console.log("📧 Skipping inquiry reload - already loaded");
       return;
     }
 
-    // Don't reset the ref here - only reset it when explicitly refreshing
     console.log("📧 Loading inquiries...");
 
     try {
@@ -383,6 +389,7 @@ export default function StudioInboxPage() {
 
   const deleteInquiry = async (inquiry: Inquiry) => {
     setIsDeleting(true);
+    isDeletingRef.current = true; // Set ref to true
 
     console.log(
       `🗑️ Starting deletion of inquiry: ${inquiry.id} (${inquiry.customer_name})`
@@ -442,6 +449,27 @@ export default function StudioInboxPage() {
       console.log(
         `✅ Inquiry ${inquiry.id} deleted successfully from local state`
       );
+
+      // Verify deletion from database after a short delay
+      setTimeout(async () => {
+        try {
+          const verifyResponse = await fetch(`/api/studio/inbox/${inquiry.id}`, {
+            method: "GET",
+            credentials: "include",
+          });
+          
+          if (verifyResponse.ok) {
+            console.warn(`⚠️ Inquiry ${inquiry.id} still exists in database after deletion`);
+            // If it still exists, we might need to refresh the list
+            // But don't do it immediately to avoid race conditions
+          } else if (verifyResponse.status === 404) {
+            console.log(`✅ Inquiry ${inquiry.id} confirmed deleted from database`);
+          }
+        } catch (error) {
+          console.log(`✅ Inquiry ${inquiry.id} verification completed (${error instanceof Error ? error.message : 'unknown error'})`);
+        }
+      }, 1000);
+
     } catch (error) {
       console.error("Error deleting inquiry:", error);
       toast.error("Failed to delete inquiry");
@@ -454,6 +482,7 @@ export default function StudioInboxPage() {
       });
     } finally {
       setIsDeleting(false);
+      isDeletingRef.current = false; // Reset ref after deletion
     }
   };
 
