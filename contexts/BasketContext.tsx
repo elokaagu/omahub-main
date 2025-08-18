@@ -152,7 +152,13 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
       dispatch({ type: "SET_LOADING", payload: true });
       dispatch({ type: "SET_ERROR", payload: null });
 
-      const response = await fetch("/api/basket");
+      const response = await fetch("/api/basket", {
+        method: "GET",
+        credentials: "include", // Include cookies for authentication
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
       const data = await response.json();
 
       if (!response.ok) {
@@ -181,6 +187,7 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
 
       const response = await fetch("/api/basket", {
         method: "POST",
+        credentials: "include", // Include cookies for authentication
         headers: {
           "Content-Type": "application/json",
         },
@@ -224,6 +231,7 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
 
       const response = await fetch(`/api/basket?itemId=${itemId}`, {
         method: "DELETE",
+        credentials: "include", // Include cookies for authentication
       });
 
       const data = await response.json();
@@ -258,6 +266,7 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
 
       const response = await fetch(`/api/basket?itemId=${itemId}`, {
         method: "PATCH",
+        credentials: "include", // Include cookies for authentication
         headers: {
           "Content-Type": "application/json",
         },
