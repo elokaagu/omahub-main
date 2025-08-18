@@ -6,7 +6,8 @@ import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
 import Link from "next/link";
 
 export default function BasketPage() {
-  const { state, removeFromBasket, updateQuantity, getTotalPrice } = useBasket();
+  const { state, removeFromBasket, updateQuantity, getTotalPrice } =
+    useBasket();
   const { baskets, isLoading, error } = state;
 
   if (isLoading) {
@@ -29,15 +30,16 @@ export default function BasketPage() {
             Error loading basket
           </h1>
           <p className="text-gray-600 mb-4">{error}</p>
-          <Button onClick={() => window.location.reload()}>
-            Try Again
-          </Button>
+          <Button onClick={() => window.location.reload()}>Try Again</Button>
         </div>
       </div>
     );
   }
 
-  const totalItems = baskets.reduce((sum, basket) => sum + basket.totalItems, 0);
+  const totalItems = baskets.reduce(
+    (sum, basket) => sum + basket.totalItems,
+    0
+  );
   const totalPrice = getTotalPrice();
 
   if (totalItems === 0) {
@@ -66,16 +68,22 @@ export default function BasketPage() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-white shadow-lg rounded-lg overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h1 className="text-2xl font-semibold text-gray-900">Your Basket</h1>
+            <h1 className="text-2xl font-semibold text-gray-900">
+              Your Basket
+            </h1>
             <p className="text-gray-600">
-              {totalItems} item{totalItems !== 1 ? "s" : ""} • Total: £{totalPrice.toFixed(2)}
+              {totalItems} item{totalItems !== 1 ? "s" : ""} • Total: £
+              {totalPrice.toFixed(2)}
             </p>
           </div>
 
           <div className="divide-y divide-gray-200">
             {baskets.map((basket) =>
               basket.items.map((item) => (
-                <div key={item.id} className="px-6 py-4 flex items-center space-x-4">
+                <div
+                  key={item.id}
+                  className="px-6 py-4 flex items-center space-x-4"
+                >
                   <div className="flex-shrink-0">
                     <img
                       src={item.productImage}
