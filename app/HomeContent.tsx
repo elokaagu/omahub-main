@@ -429,7 +429,10 @@ export default function HomeContent() {
               const products = await getProductsByCategories([category.name]);
               return { categoryId: category.id, products };
             } catch (error) {
-              console.error(`Error fetching products for ${category.name}:`, error);
+              console.error(
+                `Error fetching products for ${category.name}:`,
+                error
+              );
               return { categoryId: category.id, products: [] };
             }
           })
@@ -452,15 +455,15 @@ export default function HomeContent() {
                 brand.category,
                 ...(brand.categories || []),
               ].filter(Boolean);
-              
+
               // Check if brand matches category directly
               const brandMatchesCategory = allCategories.some(
                 (cat) => mapLegacyToUnified(cat) === category.id
               );
-              
+
               // Check if brand has products that match this category
               const brandHasMatchingProducts = categoryProductIds.has(brand.id);
-              
+
               return brandMatchesCategory || brandHasMatchingProducts;
             })
           )
@@ -841,18 +844,18 @@ export default function HomeContent() {
                         "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
                       }
                       thumbnailUrl={
-                        spotlightContent.video_thumbnail && 
-                        !spotlightContent.video_thumbnail.includes('.mp4') && 
-                        !spotlightContent.video_thumbnail.includes('.mov') && 
-                        !spotlightContent.video_thumbnail.includes('.avi')
+                        spotlightContent.video_thumbnail &&
+                        !spotlightContent.video_thumbnail.includes(".mp4") &&
+                        !spotlightContent.video_thumbnail.includes(".mov") &&
+                        !spotlightContent.video_thumbnail.includes(".avi")
                           ? spotlightContent.video_thumbnail
                           : undefined
                       }
                       fallbackImageUrl={
-                        spotlightContent.main_image && 
-                        !spotlightContent.main_image.includes('.mp4') && 
-                        !spotlightContent.main_image.includes('.mov') && 
-                        !spotlightContent.main_image.includes('.avi')
+                        spotlightContent.main_image &&
+                        !spotlightContent.main_image.includes(".mp4") &&
+                        !spotlightContent.main_image.includes(".mov") &&
+                        !spotlightContent.main_image.includes(".avi")
                           ? spotlightContent.main_image
                           : "/placeholder.jpg"
                       }

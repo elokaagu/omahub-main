@@ -186,18 +186,18 @@ export default function ProductPage() {
                 <VideoPlayer
                   videoUrl={product.video_url}
                   thumbnailUrl={
-                    product.video_thumbnail && 
-                    !product.video_thumbnail.includes('.mp4') && 
-                    !product.video_thumbnail.includes('.mov') && 
-                    !product.video_thumbnail.includes('.avi')
+                    product.video_thumbnail &&
+                    !product.video_thumbnail.includes(".mp4") &&
+                    !product.video_thumbnail.includes(".mov") &&
+                    !product.video_thumbnail.includes(".avi")
                       ? product.video_thumbnail
                       : undefined
                   }
                   fallbackImageUrl={
-                    product.image && 
-                    !product.image.includes('.mp4') && 
-                    !product.image.includes('.mov') && 
-                    !product.image.includes('.avi')
+                    product.image &&
+                    !product.image.includes(".mp4") &&
+                    !product.image.includes(".mov") &&
+                    !product.image.includes(".avi")
                       ? product.image
                       : "/placeholder.jpg"
                   }
@@ -222,18 +222,18 @@ export default function ProductPage() {
                 <VideoPlayer
                   videoUrl={spotlightVideo.url}
                   thumbnailUrl={
-                    spotlightVideo.thumbnail && 
-                    !spotlightVideo.thumbnail.includes('.mp4') && 
-                    !spotlightVideo.thumbnail.includes('.mov') && 
-                    !spotlightVideo.thumbnail.includes('.avi')
+                    spotlightVideo.thumbnail &&
+                    !spotlightVideo.thumbnail.includes(".mp4") &&
+                    !spotlightVideo.thumbnail.includes(".mov") &&
+                    !spotlightVideo.thumbnail.includes(".avi")
                       ? spotlightVideo.thumbnail
                       : undefined
                   }
                   fallbackImageUrl={
-                    product.image && 
-                    !product.image.includes('.mp4') && 
-                    !product.image.includes('.mov') && 
-                    !product.image.includes('.avi')
+                    product.image &&
+                    !product.image.includes(".mp4") &&
+                    !product.image.includes(".mov") &&
+                    !product.image.includes(".avi")
                       ? product.image
                       : "/placeholder.jpg"
                   }
