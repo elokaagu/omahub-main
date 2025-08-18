@@ -527,10 +527,10 @@ export default function Header() {
           <div className="-my-6 divide-y divide-gray-500/10">
             <div className="flex-1 overflow-y-auto px-6 py-4 max-h-[calc(100vh-80px)]">
               <div className="space-y-6">
-                {/* Search Bar */}
+                {/* Search Bar - Moved to top */}
                 <div className="space-y-2">
                   <h3 className="text-xs font-medium uppercase tracking-wider text-gray-500 mb-3">
-                    About
+                    Search
                   </h3>
                   <button
                     onClick={() => {
@@ -544,6 +544,13 @@ export default function Header() {
                       Search brands, collections...
                     </span>
                   </button>
+                </div>
+
+                {/* Main Navigation */}
+                <div className="space-y-2">
+                  <h3 className="text-xs font-medium uppercase tracking-wider text-gray-500 mb-3">
+                    About
+                  </h3>
                   <NavigationLink
                     href="/"
                     onClick={() => setMobileMenuOpen(false)}
@@ -750,20 +757,6 @@ export default function Header() {
                       </NavigationLink>
                     </div>
                   )}
-                </div>
-
-                {/* Search Button */}
-                <div className="border-t border-gray-200 pt-6">
-                  <button
-                    onClick={() => {
-                      setMobileMenuOpen(false);
-                      triggerSearchModal();
-                    }}
-                    className="-mx-3 flex items-center gap-3 rounded-lg px-3 py-3 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 transition-colors w-full text-left"
-                  >
-                    <Search className="h-5 w-5 text-gray-500" />
-                    Search
-                  </button>
                 </div>
               </div>
             </div>
