@@ -438,7 +438,7 @@ export default function CataloguesPage() {
           <div
             className={`grid gap-4 sm:gap-6 ${
               viewMode === "grid"
-                ? "grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
+                ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
                 : "grid-cols-1 lg:grid-cols-2 xl:grid-cols-3"
             }`}
           >
@@ -468,7 +468,7 @@ export default function CataloguesPage() {
                       sizes={
                         viewMode === "list"
                           ? "(max-width: 1024px) 50vw, 33vw"
-                          : "(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
+                          : "(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw"
                       }
                       priority={false}
                       aspectRatio={viewMode === "list" ? "4/3" : "3/4"}
