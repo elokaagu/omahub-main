@@ -43,7 +43,7 @@ export function VideoPlayer({
   onVideoError,
   showPlayButton = true,
 }: VideoPlayerProps) {
-  const [isPlaying, setIsPlaying] = useState(false);
+  
   const [hasError, setHasError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showVideo, setShowVideo] = useState(false);
@@ -71,61 +71,47 @@ export function VideoPlayer({
   useEffect(() => {
     if (videoRef.current) {
       const video = videoRef.current;
-
-      const handleLoadedData = () => {
+      
+      const handleLoadStart = () => {
+        setIsLoading(true);
+      };
+      
+      const handleCanPlay = () => {
         setIsLoading(false);
         onVideoLoad?.();
       };
-
-      const handleError = (e: Event) => {
-        console.error("Video loading error:", e);
-        console.error("Video URL:", videoUrl);
-        setHasError(true);
+      
+      const handleError = () => {
         setIsLoading(false);
+        setHasError(true);
         onVideoError?.();
       };
 
-      const handlePlay = () => {
-        setIsPlaying(true);
-      };
-
-      const handlePause = () => {
-        setIsPlaying(false);
-      };
-
-      video.addEventListener("loadeddata", handleLoadedData);
-      video.addEventListener("error", handleError);
-      video.addEventListener("play", handlePlay);
-      video.addEventListener("pause", handlePause);
+      video.addEventListener('loadstart', handleLoadStart);
+      video.addEventListener('canplay', handleCanPlay);
+      video.addEventListener('error', handleError);
 
       return () => {
-        video.removeEventListener("loadeddata", handleLoadedData);
-        video.removeEventListener("error", handleError);
-        video.removeEventListener("play", handlePlay);
-        video.removeEventListener("pause", handlePause);
+        video.removeEventListener('loadstart', handleLoadStart);
+        video.removeEventListener('canplay', handleCanPlay);
+        video.removeEventListener('error', handleError);
       };
     }
   }, [onVideoLoad, onVideoError]);
 
   const togglePlay = () => {
     if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause();
-      } else {
+      if (videoRef.current.paused) {
         videoRef.current.play();
+      } else {
+        videoRef.current.pause();
       }
     }
   };
 
   const handlePlayButtonClick = () => {
-    if (!showVideo && videoUrl) {
+    if (videoUrl) {
       setShowVideo(true);
-      // Small delay to ensure video element is rendered
-      setTimeout(() => {
-        if (videoRef.current) {
-          videoRef.current.play();
-        }
-      }, 100);
     } else {
       togglePlay();
     }
@@ -141,15 +127,26 @@ export function VideoPlayer({
           className
         )}
       >
-        <LazyImage
-          src={imageToShow || "/placeholder-image.jpg"}
-          alt={alt}
-          fill
-          className="object-cover"
-          sizes={sizes}
-          quality={quality}
-          priority={priority}
-        />
+        {/* Only use LazyImage for actual image files, not video URLs */}
+        {imageToShow && !imageToShow.includes('.mp4') && !imageToShow.includes('.mov') && !imageToShow.includes('.avi') ? (
+          <LazyImage
+            src={imageToShow}
+            alt={alt}
+            fill
+            className="object-cover"
+            sizes={sizes}
+            quality={quality}
+            priority={priority}
+          />
+        ) : (
+          // Fallback for video files or missing images
+          <div className="absolute inset-0 bg-gray-200 flex items-center justify-center">
+            <div className="text-gray-500 text-center">
+              <div className="text-2xl mb-2">🎬</div>
+              <div className="text-sm">Video Content</div>
+            </div>
+          </div>
+        )}
 
         {/* Play button overlay if video is available */}
         {videoUrl && showPlayButton && !showVideo && (
@@ -186,50 +183,45 @@ export function VideoPlayer({
     >
       <video
         ref={videoRef}
-        src={videoUrl}
-        poster={thumbnailUrl}
+        className="w-full h-full object-cover"
         autoPlay={autoPlay}
         muted={muted}
         loop={loop}
         controls={controls}
-        className="w-full h-full object-cover"
-        preload="auto"
         playsInline
-        webkit-playsinline="true"
-        crossOrigin="anonymous"
-        style={{
-          objectFit: "cover",
-          objectPosition: "center",
-        }}
-        onLoadStart={() => setIsLoading(true)}
-        onCanPlay={() => setIsLoading(false)}
-        onError={(e) => {
-          console.error("Video element error:", e);
-          console.error("Video src:", videoUrl);
-          setHasError(true);
-          setIsLoading(false);
-        }}
+        preload="metadata"
       >
+        {videoUrl && (
+          <source src={videoUrl} type="video/mp4" />
+        )}
         Your browser does not support the video tag.
       </video>
 
       {/* Loading indicator */}
       {isLoading && (
-        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white" />
+        <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
         </div>
       )}
 
-      {/* Error fallback */}
+      {/* Play/Pause button overlay */}
+      {!controls && (
+        <div className="absolute inset-0 bg-black/0 hover:bg-black/20 flex items-center justify-center transition-colors cursor-pointer">
+          <Button
+            onClick={togglePlay}
+            variant="secondary"
+            size="lg"
+            className="bg-white/90 hover:bg-white text-black rounded-full p-4 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+          >
+            <Play className="h-8 w-8 ml-1" />
+          </Button>
+        </div>
+      )}
+
+      {/* Error indicator */}
       {hasError && (
-        <div className="absolute inset-0 bg-black/80 flex items-center justify-center text-white">
-          <div className="text-center">
-            <AlertCircle className="h-12 w-12 mx-auto mb-4 text-red-400" />
-            <p className="text-lg font-medium">Video failed to load</p>
-            <p className="text-sm text-gray-300">
-              Please try refreshing the page
-            </p>
-          </div>
+        <div className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full">
+          <AlertCircle className="h-4 w-4" />
         </div>
       )}
     </div>
