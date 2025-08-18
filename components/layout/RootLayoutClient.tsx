@@ -15,6 +15,9 @@ import { Toaster } from "sonner";
 import { LoadingPage } from "@/components/ui/loading";
 import { AuthDebug } from "@/lib/utils/debug";
 import { SearchModal } from "@/components/ui/search-modal";
+import { BasketProvider } from "@/contexts/BasketContext";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import LayoutContent from "./LayoutContent";
 
 interface RootLayoutClientProps {
   children: React.ReactNode;
@@ -31,56 +34,16 @@ function LoadingSpinner() {
   );
 }
 
-function LayoutContent({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-  const { loading: authLoading } = useAuth();
-  const { isNavigating, forceReset } = useNavigation();
-  const isHomePage = pathname === "/";
-  const isStudioPage = pathname?.startsWith("/studio") || false;
-  const isPasswordGatePage = pathname === "/password-gate";
-
-  // Emergency reset for stuck navigation states
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Allow users to force reset with Escape key
-      if (e.key === "Escape" && isNavigating) {
-        console.log("🔄 Emergency navigation reset triggered by Escape key");
-        forceReset();
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isNavigating, forceReset]);
-
-  // Show loading spinner for auth loading or navigation loading
-  if (authLoading || isNavigating) {
-    return <LoadingSpinner />;
-  }
-
-  return (
-    <>
-      {!isStudioPage && !isPasswordGatePage && <Header />}
-      <main
-        className={
-          isHomePage || isStudioPage || isPasswordGatePage ? "" : "pt-20"
-        }
-      >
-        {children}
-      </main>
-      {!isStudioPage && !isPasswordGatePage && <Footer />}
-      <Toaster position="top-right" />
-      <SearchModal />
-    </>
-  );
-}
-
 export default function RootLayoutClient({ children }: RootLayoutClientProps) {
   return (
-    <AuthProvider>
-      <NavigationProvider>
-        <LayoutContent>{children}</LayoutContent>
-      </NavigationProvider>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <BasketProvider>
+          <NavigationProvider>
+            <LayoutContent>{children}</LayoutContent>
+          </NavigationProvider>
+        </BasketProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
