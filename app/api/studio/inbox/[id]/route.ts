@@ -137,8 +137,10 @@ export async function DELETE(
       error: authError,
     } = await supabase.auth.getUser();
     if (authError || !user) {
+      console.error("❌ Auth error:", authError);
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    console.log(`👤 Authenticated user: ${user.id} (${user.email})`);
 
     // Get user profile with fallback for super_admin users
     let profile;
@@ -175,14 +177,17 @@ export async function DELETE(
       }
     } else {
       profile = profileData;
+      console.log(`👤 User profile: role=${profile.role}, brands=${JSON.stringify(profile.owned_brands)}`);
     }
 
     // Check permissions
     if (!["super_admin", "brand_admin"].includes(profile.role)) {
+      console.error("❌ Access denied: role not allowed");
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
     // Verify inquiry exists and user has access
+    console.log(`🔍 Verifying inquiry exists and user has access...`);
     let verifyQuery = supabase
       .from("inquiries")
       .select("brand_id, customer_name")
@@ -190,29 +195,33 @@ export async function DELETE(
 
     if (profile.role === "brand_admin") {
       if (!profile.owned_brands || profile.owned_brands.length === 0) {
+        console.error("❌ No accessible brands for brand_admin");
         return NextResponse.json(
           { error: "No accessible brands" },
           { status: 403 }
         );
       }
       verifyQuery = verifyQuery.in("brand_id", profile.owned_brands);
+      console.log(`🔍 Filtering by brand IDs: ${JSON.stringify(profile.owned_brands)}`);
     }
 
     const { data: inquiry, error: verifyError } = await verifyQuery.single();
 
     if (verifyError) {
       if (verifyError.code === "PGRST116") {
+        console.error("❌ Inquiry not found during verification");
         return NextResponse.json(
           { error: "Inquiry not found" },
           { status: 404 }
         );
       }
-      console.error("Error verifying inquiry:", verifyError);
+      console.error("❌ Error verifying inquiry:", verifyError);
       return NextResponse.json(
         { error: "Failed to verify inquiry" },
         { status: 500 }
       );
     }
+    console.log(`✅ Inquiry verified: ${inquiry.customer_name} (brand: ${inquiry.brand_id})`);
 
     // Delete inquiry replies first (cascade delete)
     console.log(`🗑️ Deleting inquiry replies for inquiry ID: ${inquiryId}`);
@@ -232,19 +241,69 @@ export async function DELETE(
 
     // Delete the inquiry
     console.log(`🗑️ Deleting inquiry with ID: ${inquiryId}`);
-    const { error: deleteError } = await supabase
+    const { data: deleteResult, error: deleteError } = await supabase
       .from("inquiries")
       .delete()
-      .eq("id", inquiryId);
+      .eq("id", inquiryId)
+      .select(); // Add select to see what was actually deleted
 
     if (deleteError) {
       console.error("❌ Error deleting inquiry:", deleteError);
+      console.error("❌ Delete error details:", {
+        code: deleteError.code,
+        message: deleteError.message,
+        details: deleteError.details,
+        hint: deleteError.hint
+      });
       return NextResponse.json(
         { error: "Failed to delete inquiry" },
         { status: 500 }
       );
     }
+    
+    console.log(`✅ Inquiry delete result:`, deleteResult);
     console.log(`✅ Inquiry deleted successfully from database`);
+
+    // Verify deletion by trying to fetch the inquiry again
+    console.log(`🔍 Verifying deletion by attempting to fetch inquiry again...`);
+    const { data: verifyDelete, error: verifyDeleteError } = await supabase
+      .from("inquiries")
+      .select("id")
+      .eq("id", inquiryId)
+      .single();
+
+    if (verifyDeleteError && verifyDeleteError.code === "PGRST116") {
+      console.log(`✅ Deletion verified: Inquiry no longer exists in database`);
+    } else if (verifyDelete) {
+      console.error(`⚠️ WARNING: Inquiry still exists after deletion!`, verifyDelete);
+      console.error(`⚠️ This suggests RLS policies or database constraints are preventing deletion`);
+      
+      // Let's check if there are any foreign key constraints or other issues
+      console.log(`🔍 Checking for potential database constraints...`);
+      try {
+        // Check if there are any other tables that might reference this inquiry
+        const { data: references, error: refError } = await supabase
+          .from("inquiry_replies")
+          .select("id")
+          .eq("inquiry_id", inquiryId)
+          .limit(1);
+        
+        if (refError) {
+          console.log(`📊 Inquiry replies check error:`, refError);
+        } else {
+          console.log(`📊 Remaining inquiry replies: ${references?.length || 0}`);
+        }
+        
+        // Check if there are any other potential references
+        console.log(`🔍 This might be an RLS policy issue. Checking user permissions...`);
+        console.log(`🔍 Current user: ${user.id}, Role: ${profile.role}`);
+        
+      } catch (constraintError) {
+        console.log(`📊 Constraint check error:`, constraintError);
+      }
+    } else {
+      console.log(`✅ Deletion verification completed`);
+    }
 
     console.log(
       `✅ Deleted inquiry ${inquiryId} from ${inquiry.customer_name}`
