@@ -56,7 +56,9 @@ export default function CataloguePage() {
 
   const [catalogue, setCatalogue] = useState<CatalogueWithBrand | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
-  const [recommendedProducts, setRecommendedProducts] = useState<(Product & { brand: { price_range?: string } })[]>([]);
+  const [recommendedProducts, setRecommendedProducts] = useState<
+    (Product & { brand: { price_range?: string } })[]
+  >([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -305,15 +307,62 @@ export default function CataloguePage() {
                         {product.sale_price ? (
                           <>
                             <span className="text-lg font-semibold text-oma-plum">
-                              {formatProductPrice({ price: product.price, sale_price: product.sale_price }, { price_range: catalogue.brand.price_range }).displayPrice}
+                              {(() => {
+                                // Debug logging for currency issues
+                                if (process.env.NODE_ENV === 'development') {
+                                  console.log('Product price debug:', {
+                                    productTitle: product.title,
+                                    productPrice: product.price,
+                                    productSalePrice: product.sale_price,
+                                    catalogueBrand: catalogue.brand,
+                                    priceRange: catalogue.brand?.price_range,
+                                    location: catalogue.brand?.location
+                                  });
+                                }
+                                
+                                return formatProductPrice(
+                                  {
+                                    price: product.price,
+                                    sale_price: product.sale_price,
+                                  },
+                                  { price_range: catalogue.brand.price_range }
+                                ).displayPrice;
+                              })()}
                             </span>
                             <span className="text-sm text-black/60 line-through">
-                              {formatProductPrice({ price: product.price, sale_price: product.sale_price }, { price_range: catalogue.brand.price_range }).originalPrice}
+                              {(() => {
+                                return formatProductPrice(
+                                  {
+                                    price: product.price,
+                                    sale_price: product.sale_price,
+                                  },
+                                  { price_range: catalogue.brand.price_range }
+                                ).originalPrice;
+                              })()}
                             </span>
                           </>
                         ) : (
                           <span className="text-lg font-semibold text-black">
-                            {formatProductPrice({ price: product.price, sale_price: product.sale_price }, { price_range: catalogue.brand.price_range }).displayPrice}
+                            {(() => {
+                              // Debug logging for currency issues
+                              if (process.env.NODE_ENV === 'development') {
+                                console.log('Product price debug:', {
+                                  productTitle: product.title,
+                                  productPrice: product.price,
+                                  catalogueBrand: catalogue.brand,
+                                  priceRange: catalogue.brand?.price_range,
+                                  location: catalogue.brand?.location
+                                });
+                              }
+                              
+                              return formatProductPrice(
+                                {
+                                  price: product.price,
+                                  sale_price: product.sale_price,
+                                },
+                                { price_range: catalogue.brand.price_range }
+                              ).displayPrice;
+                            })()}
                           </span>
                         )}
                       </div>
@@ -377,15 +426,39 @@ export default function CataloguePage() {
                         {product.sale_price ? (
                           <>
                             <span className="text-lg font-semibold text-oma-plum">
-                              {formatProductPrice({ price: product.price, sale_price: product.sale_price }, { price_range: product.brand?.price_range }).displayPrice}
+                              {
+                                formatProductPrice(
+                                  {
+                                    price: product.price,
+                                    sale_price: product.sale_price,
+                                  },
+                                  { price_range: product.brand?.price_range }
+                                ).displayPrice
+                              }
                             </span>
                             <span className="text-sm text-black/60 line-through">
-                              {formatProductPrice({ price: product.price, sale_price: product.sale_price }, { price_range: product.brand?.price_range }).originalPrice}
+                              {
+                                formatProductPrice(
+                                  {
+                                    price: product.price,
+                                    sale_price: product.sale_price,
+                                  },
+                                  { price_range: product.brand?.price_range }
+                                ).originalPrice
+                              }
                             </span>
                           </>
                         ) : (
                           <span className="text-lg font-semibold text-black">
-                            {formatProductPrice({ price: product.price, sale_price: product.sale_price }, { price_range: product.brand?.price_range }).displayPrice}
+                            {
+                              formatProductPrice(
+                                {
+                                  price: product.price,
+                                  sale_price: product.sale_price,
+                                },
+                                { price_range: product.brand?.price_range }
+                              ).displayPrice
+                            }
                           </span>
                         )}
                       </div>
