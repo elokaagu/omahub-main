@@ -6,7 +6,7 @@ import { VideoPlayer } from "./video-player";
 import { Heart } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import useFavourites from "@/lib/hooks/useFavourites";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 
 interface BrandCardProps {
@@ -40,6 +40,19 @@ export function BrandCard({
   const { isFavourite, toggleFavourite } = useFavourites();
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+
+  // Debug logging for slow loading issues
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('BrandCard debug:', {
+        brandName: name,
+        image,
+        video_url,
+        video_thumbnail,
+        hasVideo: !!video_url
+      });
+    }
+  }, [name, image, video_url, video_thumbnail]);
 
   const isFavourited = isFavourite(id, "brand");
 
@@ -99,7 +112,7 @@ export function BrandCard({
         {video_url ? (
           <VideoPlayer
             videoUrl={video_url}
-            thumbnailUrl={video_thumbnail || image}
+            thumbnailUrl={image} // Use the main image as thumbnail, not video_thumbnail
             fallbackImageUrl={image}
             alt={name}
             className={cn(

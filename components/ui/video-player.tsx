@@ -43,11 +43,34 @@ export function VideoPlayer({
   onVideoError,
   showPlayButton = true,
 }: VideoPlayerProps) {
-  
   const [hasError, setHasError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showVideo, setShowVideo] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+
+  // Check if the image URL is actually a video file
+  const isVideoFile = (url: string) => {
+    if (!url) return false;
+    const videoExtensions = ['.mp4', '.mov', '.avi', '.webm', '.mkv', '.flv', '.wmv', '.m4v', '.3gp'];
+    const lowerUrl = url.toLowerCase();
+    return videoExtensions.some(ext => lowerUrl.includes(ext)) || 
+           lowerUrl.includes('/video/') || 
+           lowerUrl.includes('video') ||
+           lowerUrl.includes('blob:');
+  };
+
+  // Debug logging for slow loading issues
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('VideoPlayer debug:', {
+        videoUrl,
+        thumbnailUrl,
+        fallbackImageUrl,
+        alt,
+        isVideoFile: isVideoFile(thumbnailUrl || fallbackImageUrl || '')
+      });
+    }
+  }, [videoUrl, thumbnailUrl, fallbackImageUrl, alt]);
 
   // If no video URL is provided, show image fallback
   const shouldShowImage = !videoUrl || hasError;
@@ -71,30 +94,30 @@ export function VideoPlayer({
   useEffect(() => {
     if (videoRef.current) {
       const video = videoRef.current;
-      
+
       const handleLoadStart = () => {
         setIsLoading(true);
       };
-      
+
       const handleCanPlay = () => {
         setIsLoading(false);
         onVideoLoad?.();
       };
-      
+
       const handleError = () => {
         setIsLoading(false);
         setHasError(true);
         onVideoError?.();
       };
 
-      video.addEventListener('loadstart', handleLoadStart);
-      video.addEventListener('canplay', handleCanPlay);
-      video.addEventListener('error', handleError);
+      video.addEventListener("loadstart", handleLoadStart);
+      video.addEventListener("canplay", handleCanPlay);
+      video.addEventListener("error", handleError);
 
       return () => {
-        video.removeEventListener('loadstart', handleLoadStart);
-        video.removeEventListener('canplay', handleCanPlay);
-        video.removeEventListener('error', handleError);
+        video.removeEventListener("loadstart", handleLoadStart);
+        video.removeEventListener("canplay", handleCanPlay);
+        video.removeEventListener("error", handleError);
       };
     }
   }, [onVideoLoad, onVideoError]);
@@ -128,7 +151,8 @@ export function VideoPlayer({
         )}
       >
         {/* Only use LazyImage for actual image files, not video URLs */}
-        {imageToShow && !imageToShow.includes('.mp4') && !imageToShow.includes('.mov') && !imageToShow.includes('.avi') ? (
+        {imageToShow &&
+        !isVideoFile(imageToShow) ? (
           <LazyImage
             src={imageToShow}
             alt={alt}
@@ -191,9 +215,7 @@ export function VideoPlayer({
         playsInline
         preload="metadata"
       >
-        {videoUrl && (
-          <source src={videoUrl} type="video/mp4" />
-        )}
+        {videoUrl && <source src={videoUrl} type="video/mp4" />}
         Your browser does not support the video tag.
       </video>
 
