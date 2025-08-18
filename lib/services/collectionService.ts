@@ -8,7 +8,10 @@ export async function getAllCollections(): Promise<Catalogue[]> {
     throw new Error("Supabase client not available");
   }
 
-  const { data, error } = await supabase.from("catalogues").select("*");
+  const { data, error } = await supabase
+    .from("catalogues")
+    .select("*")
+    .order("created_at", { ascending: false }); // Newest first
 
   if (error) {
     console.error("Error fetching collections:", error);
@@ -100,10 +103,13 @@ export async function getCollectionsWithBrands(): Promise<
     throw new Error("Supabase client not available");
   }
 
-  const { data, error } = await supabase.from("catalogues").select(`
+  const { data, error } = await supabase
+    .from("catalogues")
+    .select(`
       *,
       brand:brands(id, name, location, is_verified, category, rating, long_description)
-    `);
+    `)
+    .order("created_at", { ascending: false }); // Newest first
 
   if (error) {
     console.error("Error fetching collections with brands:", error);

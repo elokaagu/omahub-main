@@ -89,8 +89,15 @@ export default function CataloguesPage() {
           }),
         ]);
 
-        setCatalogues(catalogueData || []);
-        setFilteredCatalogues(catalogueData || []);
+        // Sort catalogues by creation date (newest first)
+        const sortedCatalogues = (catalogueData || []).sort((a, b) => {
+          const dateA = new Date(a.created_at || 0);
+          const dateB = new Date(b.created_at || 0);
+          return dateB.getTime() - dateA.getTime();
+        });
+
+        setCatalogues(sortedCatalogues);
+        setFilteredCatalogues(sortedCatalogues);
         setProducts(productData || []);
         setFilteredProducts(productData || []);
       } catch (err) {
@@ -355,9 +362,9 @@ export default function CataloguesPage() {
         {showAllProducts ? (
           // Products Grid/List
           <div
-            className={`grid gap-6 px-6 ${
+            className={`grid gap-6 ${
               viewMode === "grid"
-                ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+                ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
                 : "grid-cols-1"
             }`}
           >
@@ -422,11 +429,11 @@ export default function CataloguesPage() {
             ))}
           </div>
         ) : (
-          // Brands Grid/List - Full image coverage with text overlay
+          // Collections Grid/List - Full image coverage with text overlay
           <div
             className={`grid gap-6 ${
               viewMode === "grid"
-                ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+                ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
                 : "grid-cols-1"
             }`}
           >
@@ -442,7 +449,7 @@ export default function CataloguesPage() {
                       alt={catalogue.title}
                       fill
                       className={`object-cover ${getImageFocalPoint(catalogue.image, catalogue.title)} group-hover:scale-105 transition-transform duration-300`}
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                       priority={false}
                       aspectRatio="3/4"
                       quality={80}
