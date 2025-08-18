@@ -248,12 +248,12 @@ export default function CataloguePage() {
           </div>
         </div>
 
-        {/* Products in This Catalogue */}
+        {/* Products in This Collection */}
         <div className="mb-16">
           <div className="flex items-center gap-3 mb-8">
             <ShoppingBag className="w-6 h-6 text-black" />
             <h2 className="text-3xl font-canela text-black">
-              Products in This Catalogue
+              Products in This Collection
             </h2>
           </div>
 
@@ -264,7 +264,7 @@ export default function CataloguePage() {
                 No products yet
               </h3>
               <p className="text-black/60">
-                This catalogue doesn't have any products at the moment.
+                This collection doesn't have any products at the moment.
               </p>
             </div>
           ) : (
