@@ -356,11 +356,11 @@ export default function CataloguesPage() {
         {showAllProducts ? (
           // Products Grid/List
           <div
-            className={`grid gap-6 ${
+            className={
               viewMode === "grid"
-                ? "grid-cols-3 sm:grid-cols-2 lg:grid-cols-3"
-                : "grid-cols-1 lg:grid-cols-2 xl:grid-cols-3"
-            }`}
+                ? "grid gap-6 grid-cols-3 sm:grid-cols-2 lg:grid-cols-3"
+                : "flex flex-col gap-6"
+            }
           >
             {filteredProducts.map((product) => (
               <div
@@ -436,11 +436,11 @@ export default function CataloguesPage() {
         ) : (
           // Collections Grid/List - Full image coverage with text overlay
           <div
-            className={`grid gap-4 sm:gap-6 ${
+            className={
               viewMode === "grid"
-                ? "grid-cols-3 sm:grid-cols-2 lg:grid-cols-3"
-                : "grid-cols-1 lg:grid-cols-2 xl:grid-cols-3"
-            }`}
+                ? "grid gap-4 sm:gap-6 grid-cols-3 sm:grid-cols-2 lg:grid-cols-3"
+                : "flex flex-col gap-4 sm:gap-6"
+            }
           >
             {filteredCatalogues.map((catalogue) => (
               <div
