@@ -56,6 +56,7 @@ export async function getCollectionWithBrand(id: string): Promise<
         category: string;
         rating: number;
         long_description: string;
+        price_range?: string;
       };
     })
   | null
@@ -69,7 +70,7 @@ export async function getCollectionWithBrand(id: string): Promise<
     .select(
       `
       *,
-      brand:brands(id, name, location, is_verified, category, rating, long_description)
+      brand:brands(id, name, location, is_verified, category, rating, long_description, price_range)
     `
     )
     .eq("id", id)
@@ -96,6 +97,7 @@ export async function getCollectionsWithBrands(): Promise<
       category: string;
       rating: number;
       long_description: string;
+      price_range?: string;
     };
   })[]
 > {
@@ -108,7 +110,7 @@ export async function getCollectionsWithBrands(): Promise<
     .select(
       `
       *,
-      brand:brands(id, name, location, is_verified, category, rating, long_description)
+      brand:brands(id, name, location, is_verified, category, rating, long_description, price_range)
     `
     )
     .order("created_at", { ascending: false }); // Newest first
