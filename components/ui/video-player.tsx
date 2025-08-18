@@ -51,23 +51,35 @@ export function VideoPlayer({
   // Check if the image URL is actually a video file
   const isVideoFile = (url: string) => {
     if (!url) return false;
-    const videoExtensions = ['.mp4', '.mov', '.avi', '.webm', '.mkv', '.flv', '.wmv', '.m4v', '.3gp'];
+    const videoExtensions = [
+      ".mp4",
+      ".mov",
+      ".avi",
+      ".webm",
+      ".mkv",
+      ".flv",
+      ".wmv",
+      ".m4v",
+      ".3gp",
+    ];
     const lowerUrl = url.toLowerCase();
-    return videoExtensions.some(ext => lowerUrl.includes(ext)) || 
-           lowerUrl.includes('/video/') || 
-           lowerUrl.includes('video') ||
-           lowerUrl.includes('blob:');
+    return (
+      videoExtensions.some((ext) => lowerUrl.includes(ext)) ||
+      lowerUrl.includes("/video/") ||
+      lowerUrl.includes("video") ||
+      lowerUrl.includes("blob:")
+    );
   };
 
   // Debug logging for slow loading issues
   useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('VideoPlayer debug:', {
+    if (process.env.NODE_ENV === "development") {
+      console.log("VideoPlayer debug:", {
         videoUrl,
         thumbnailUrl,
         fallbackImageUrl,
         alt,
-        isVideoFile: isVideoFile(thumbnailUrl || fallbackImageUrl || '')
+        isVideoFile: isVideoFile(thumbnailUrl || fallbackImageUrl || ""),
       });
     }
   }, [videoUrl, thumbnailUrl, fallbackImageUrl, alt]);
@@ -151,8 +163,7 @@ export function VideoPlayer({
         )}
       >
         {/* Only use LazyImage for actual image files, not video URLs */}
-        {imageToShow &&
-        !isVideoFile(imageToShow) ? (
+        {imageToShow && !isVideoFile(imageToShow) ? (
           <LazyImage
             src={imageToShow}
             alt={alt}

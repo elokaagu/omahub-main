@@ -182,16 +182,16 @@ export function getBrandCurrency(
   brand: { location?: string; price_range?: string } | null
 ): Currency {
   // Debug logging for currency issues
-  if (process.env.NODE_ENV === 'development') {
-    console.log('getBrandCurrency debug:', {
+  if (process.env.NODE_ENV === "development") {
+    console.log("getBrandCurrency debug:", {
       brand,
       priceRange: brand?.price_range,
-      location: brand?.location
+      location: brand?.location,
     });
   }
 
   if (!brand) {
-    console.log('getBrandCurrency: No brand data, defaulting to NGN');
+    console.log("getBrandCurrency: No brand data, defaulting to NGN");
     return getCurrencyByCode("NGN")!; // Default to Nigerian Naira
   }
 
@@ -199,10 +199,16 @@ export function getBrandCurrency(
   if (brand.price_range) {
     const currencyFromPrice = extractCurrencyFromPriceRange(brand.price_range);
     if (currencyFromPrice) {
-      console.log('getBrandCurrency: Found currency from price_range:', currencyFromPrice);
+      console.log(
+        "getBrandCurrency: Found currency from price_range:",
+        currencyFromPrice
+      );
       return currencyFromPrice;
     } else {
-      console.log('getBrandCurrency: Could not extract currency from price_range:', brand.price_range);
+      console.log(
+        "getBrandCurrency: Could not extract currency from price_range:",
+        brand.price_range
+      );
     }
   }
 
@@ -210,15 +216,21 @@ export function getBrandCurrency(
   if (brand.location) {
     const currencyFromLocation = getCurrencyByLocation(brand.location);
     if (currencyFromLocation) {
-      console.log('getBrandCurrency: Found currency from location:', currencyFromLocation);
+      console.log(
+        "getBrandCurrency: Found currency from location:",
+        currencyFromLocation
+      );
       return currencyFromLocation;
     } else {
-      console.log('getBrandCurrency: Could not find currency for location:', brand.location);
+      console.log(
+        "getBrandCurrency: Could not find currency for location:",
+        brand.location
+      );
     }
   }
 
   // Default fallback to Nigerian Naira
-  console.log('getBrandCurrency: Defaulting to NGN');
+  console.log("getBrandCurrency: Defaulting to NGN");
   return getCurrencyByCode("NGN")!;
 }
 

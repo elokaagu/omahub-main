@@ -43,13 +43,13 @@ export function BrandCard({
 
   // Debug logging for slow loading issues
   useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('BrandCard debug:', {
+    if (process.env.NODE_ENV === "development") {
+      console.log("BrandCard debug:", {
         brandName: name,
         image,
         video_url,
         video_thumbnail,
-        hasVideo: !!video_url
+        hasVideo: !!video_url,
       });
     }
   }, [name, image, video_url, video_thumbnail]);

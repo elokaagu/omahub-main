@@ -7,7 +7,7 @@ The Studio Inbox deletion was failing because **Row Level Security (RLS) policie
 ## 🔍 **What Was Happening**
 
 1. ✅ Frontend sends DELETE request
-2. ✅ Backend processes deletion  
+2. ✅ Backend processes deletion
 3. ❌ **Supabase RLS silently blocks DELETE operation** (no policy exists)
 4. ❌ Backend thinks deletion succeeded (no error thrown)
 5. ❌ Verification shows inquiry still exists in database
@@ -16,27 +16,33 @@ The Studio Inbox deletion was failing because **Row Level Security (RLS) policie
 ## 🔧 **The Fix**
 
 ### **Option 1: Quick Fix (Recommended)**
+
 Run the comprehensive policy fix:
+
 ```sql
 -- Execute this in Supabase SQL Editor
 \i scripts/fix-all-inbox-policies.sql
 ```
 
 ### **Option 2: Manual Fix**
+
 Add only the missing DELETE policies:
+
 ```sql
--- Execute this in Supabase SQL Editor  
+-- Execute this in Supabase SQL Editor
 \i scripts/fix-inquiries-delete-policy.sql
 ```
 
 ## 📋 **What the Fix Does**
 
 The scripts add missing DELETE policies for:
+
 - `inquiries` table
-- `inquiry_replies` table  
+- `inquiry_replies` table
 - `inquiry_attachments` table
 
 For both:
+
 - **Brand Admins**: Can delete inquiries for their brands
 - **Super Admins**: Can delete all inquiries
 

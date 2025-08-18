@@ -309,17 +309,17 @@ export default function CataloguePage() {
                             <span className="text-lg font-semibold text-oma-plum">
                               {(() => {
                                 // Debug logging for currency issues
-                                if (process.env.NODE_ENV === 'development') {
-                                  console.log('Product price debug:', {
+                                if (process.env.NODE_ENV === "development") {
+                                  console.log("Product price debug:", {
                                     productTitle: product.title,
                                     productPrice: product.price,
                                     productSalePrice: product.sale_price,
                                     catalogueBrand: catalogue.brand,
                                     priceRange: catalogue.brand?.price_range,
-                                    location: catalogue.brand?.location
+                                    location: catalogue.brand?.location,
                                   });
                                 }
-                                
+
                                 return formatProductPrice(
                                   {
                                     price: product.price,
@@ -345,16 +345,16 @@ export default function CataloguePage() {
                           <span className="text-lg font-semibold text-black">
                             {(() => {
                               // Debug logging for currency issues
-                              if (process.env.NODE_ENV === 'development') {
-                                console.log('Product price debug:', {
+                              if (process.env.NODE_ENV === "development") {
+                                console.log("Product price debug:", {
                                   productTitle: product.title,
                                   productPrice: product.price,
                                   catalogueBrand: catalogue.brand,
                                   priceRange: catalogue.brand?.price_range,
-                                  location: catalogue.brand?.location
+                                  location: catalogue.brand?.location,
                                 });
                               }
-                              
+
                               return formatProductPrice(
                                 {
                                   price: product.price,

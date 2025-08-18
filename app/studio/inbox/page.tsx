@@ -59,7 +59,12 @@ export default function StudioInboxPage() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
-    if (!authLoading && user?.id && !hasLoadedInquiries.current && !isDeletingRef.current) {
+    if (
+      !authLoading &&
+      user?.id &&
+      !hasLoadedInquiries.current &&
+      !isDeletingRef.current
+    ) {
       // Only load if user ID has changed or we haven't loaded yet, and we're not currently deleting
       if (lastUserId.current !== user.id) {
         console.log("📧 User ID changed, loading inquiries for new user");
@@ -142,7 +147,7 @@ export default function StudioInboxPage() {
       console.log("📧 Skipping inquiry reload - currently deleting");
       return;
     }
-    
+
     if (hasLoadedInquiries.current && inquiries.length > 0) {
       console.log("📧 Skipping inquiry reload - already loaded");
       return;
@@ -453,23 +458,31 @@ export default function StudioInboxPage() {
       // Verify deletion from database after a short delay
       setTimeout(async () => {
         try {
-          const verifyResponse = await fetch(`/api/studio/inbox/${inquiry.id}`, {
-            method: "GET",
-            credentials: "include",
-          });
-          
+          const verifyResponse = await fetch(
+            `/api/studio/inbox/${inquiry.id}`,
+            {
+              method: "GET",
+              credentials: "include",
+            }
+          );
+
           if (verifyResponse.ok) {
-            console.warn(`⚠️ Inquiry ${inquiry.id} still exists in database after deletion`);
+            console.warn(
+              `⚠️ Inquiry ${inquiry.id} still exists in database after deletion`
+            );
             // If it still exists, we might need to refresh the list
             // But don't do it immediately to avoid race conditions
           } else if (verifyResponse.status === 404) {
-            console.log(`✅ Inquiry ${inquiry.id} confirmed deleted from database`);
+            console.log(
+              `✅ Inquiry ${inquiry.id} confirmed deleted from database`
+            );
           }
         } catch (error) {
-          console.log(`✅ Inquiry ${inquiry.id} verification completed (${error instanceof Error ? error.message : 'unknown error'})`);
+          console.log(
+            `✅ Inquiry ${inquiry.id} verification completed (${error instanceof Error ? error.message : "unknown error"})`
+          );
         }
       }, 1000);
-
     } catch (error) {
       console.error("Error deleting inquiry:", error);
       toast.error("Failed to delete inquiry");

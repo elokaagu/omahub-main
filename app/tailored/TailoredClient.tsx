@@ -236,19 +236,19 @@ export default function TailoredClient() {
               <div className="hidden sm:block absolute -right-4 top-1/2 -translate-y-1/2 z-10">
                 <div className="w-2 h-16 bg-gradient-to-b from-oma-gold/60 to-transparent rounded-full"></div>
               </div>
-              
+
               {/* Right edge fade indicator for mobile */}
               <div className="sm:hidden absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white/80 to-transparent pointer-events-none z-10"></div>
-              
+
               <div
                 ref={tailorsScrollRef}
                 className="flex gap-4 sm:gap-6 overflow-x-auto pb-6 scroll-smooth scrollbar-hide px-4 sm:px-6 lg:px-8 mobile-scroll-container"
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
                 style={{
-                  scrollbarWidth: 'none',
-                  msOverflowStyle: 'none',
-                  WebkitOverflowScrolling: 'touch'
+                  scrollbarWidth: "none",
+                  msOverflowStyle: "none",
+                  WebkitOverflowScrolling: "touch",
                 }}
               >
                 {tailors.map((tailor, index) => (
@@ -300,13 +300,13 @@ export default function TailoredClient() {
                     </div>
                   </Link>
                 ))}
-                
+
                 {/* Show preview of next item on mobile */}
                 {tailors.length > 1 && (
                   <div className="flex-shrink-0 w-8 sm:w-12 md:w-16"></div>
                 )}
               </div>
-              
+
               {/* Scroll hint for mobile */}
               <div className="sm:hidden text-center mt-4">
                 <div className="flex items-center justify-center gap-2 text-sm text-oma-cocoa/60">
