@@ -177,7 +177,9 @@ export async function DELETE(
       }
     } else {
       profile = profileData;
-      console.log(`👤 User profile: role=${profile.role}, brands=${JSON.stringify(profile.owned_brands)}`);
+      console.log(
+        `👤 User profile: role=${profile.role}, brands=${JSON.stringify(profile.owned_brands)}`
+      );
     }
 
     // Check permissions
@@ -202,7 +204,9 @@ export async function DELETE(
         );
       }
       verifyQuery = verifyQuery.in("brand_id", profile.owned_brands);
-      console.log(`🔍 Filtering by brand IDs: ${JSON.stringify(profile.owned_brands)}`);
+      console.log(
+        `🔍 Filtering by brand IDs: ${JSON.stringify(profile.owned_brands)}`
+      );
     }
 
     const { data: inquiry, error: verifyError } = await verifyQuery.single();
@@ -221,7 +225,9 @@ export async function DELETE(
         { status: 500 }
       );
     }
-    console.log(`✅ Inquiry verified: ${inquiry.customer_name} (brand: ${inquiry.brand_id})`);
+    console.log(
+      `✅ Inquiry verified: ${inquiry.customer_name} (brand: ${inquiry.brand_id})`
+    );
 
     // Delete inquiry replies first (cascade delete)
     console.log(`🗑️ Deleting inquiry replies for inquiry ID: ${inquiryId}`);
@@ -253,19 +259,21 @@ export async function DELETE(
         code: deleteError.code,
         message: deleteError.message,
         details: deleteError.details,
-        hint: deleteError.hint
+        hint: deleteError.hint,
       });
       return NextResponse.json(
         { error: "Failed to delete inquiry" },
         { status: 500 }
       );
     }
-    
+
     console.log(`✅ Inquiry delete result:`, deleteResult);
     console.log(`✅ Inquiry deleted successfully from database`);
 
     // Verify deletion by trying to fetch the inquiry again
-    console.log(`🔍 Verifying deletion by attempting to fetch inquiry again...`);
+    console.log(
+      `🔍 Verifying deletion by attempting to fetch inquiry again...`
+    );
     const { data: verifyDelete, error: verifyDeleteError } = await supabase
       .from("inquiries")
       .select("id")
@@ -274,10 +282,25 @@ export async function DELETE(
 
     if (verifyDeleteError && verifyDeleteError.code === "PGRST116") {
       console.log(`✅ Deletion verified: Inquiry no longer exists in database`);
-    } else if (verifyDelete) {
-      console.error(`⚠️ WARNING: Inquiry still exists after deletion!`, verifyDelete);
-      console.error(`⚠️ This suggests RLS policies or database constraints are preventing deletion`);
       
+      // Only return success if deletion was actually verified
+      console.log(
+        `✅ Deleted inquiry ${inquiryId} from ${inquiry.customer_name}`
+      );
+
+      return NextResponse.json({
+        success: true,
+        message: "Inquiry deleted successfully",
+      });
+    } else if (verifyDelete) {
+      console.error(
+        `⚠️ WARNING: Inquiry still exists after deletion!`,
+        verifyDelete
+      );
+      console.error(
+        `⚠️ This suggests RLS policies or database constraints are preventing deletion`
+      );
+
       // Let's check if there are any foreign key constraints or other issues
       console.log(`🔍 Checking for potential database constraints...`);
       try {
@@ -287,32 +310,54 @@ export async function DELETE(
           .select("id")
           .eq("inquiry_id", inquiryId)
           .limit(1);
-        
+
         if (refError) {
           console.log(`📊 Inquiry replies check error:`, refError);
         } else {
-          console.log(`📊 Remaining inquiry replies: ${references?.length || 0}`);
+          console.log(
+            `📊 Remaining inquiry replies: ${references?.length || 0}`
+          );
         }
-        
+
         // Check if there are any other potential references
-        console.log(`🔍 This might be an RLS policy issue. Checking user permissions...`);
+        console.log(
+          `🔍 This might be an RLS policy issue. Checking user permissions...`
+        );
         console.log(`🔍 Current user: ${user.id}, Role: ${profile.role}`);
         
+        // Return error since deletion failed
+        return NextResponse.json(
+          { 
+            error: "Inquiry deletion failed - inquiry still exists in database. This may be due to RLS policies or database constraints.",
+            details: "The DELETE operation appeared to succeed but the inquiry was not actually removed from the database."
+          },
+          { status: 500 }
+        );
       } catch (constraintError) {
         console.log(`📊 Constraint check error:`, constraintError);
+        
+        // Return error since deletion failed
+        return NextResponse.json(
+          { 
+            error: "Inquiry deletion failed - unable to verify deletion success",
+            details: "The DELETE operation appeared to succeed but verification failed."
+          },
+          { status: 500 }
+        );
       }
     } else {
       console.log(`✅ Deletion verification completed`);
+      
+      // Return success if verification passed
+      console.log(
+        `✅ Deleted inquiry ${inquiryId} from ${inquiry.customer_name}`
+      );
+
+      return NextResponse.json({
+        success: true,
+        message: "Inquiry deleted successfully",
+      });
     }
-
-    console.log(
-      `✅ Deleted inquiry ${inquiryId} from ${inquiry.customer_name}`
-    );
-
-    return NextResponse.json({
-      success: true,
-      message: "Inquiry deleted successfully",
-    });
   } catch (error) {
     console.error("Delete inquiry error:", error);
     return NextResponse.json(
