@@ -359,16 +359,18 @@ export default function CataloguesPage() {
             className={`grid gap-6 ${
               viewMode === "grid"
                 ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
-                : "grid-cols-1"
+                : "grid-cols-1 lg:grid-cols-2 xl:grid-cols-3"
             }`}
           >
             {filteredProducts.map((product) => (
               <div
                 key={product.id}
-                className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+                className={`bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow ${
+                  viewMode === "list" ? "flex" : ""
+                }`}
               >
-                <Link href={`/product/${product.id}`}>
-                  <div className="relative aspect-square">
+                <Link href={`/product/${product.id}`} className={viewMode === "list" ? "flex w-full" : ""}>
+                  <div className={`relative ${viewMode === "list" ? "w-1/3 aspect-square" : "aspect-square"}`}>
                     <LazyImage
                       src={getProductMainImage(product) || "/placeholder.png"}
                       alt={product.title}
@@ -376,10 +378,10 @@ export default function CataloguesPage() {
                       className="object-cover"
                       aspectRatio="square"
                       quality={80}
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      sizes={viewMode === "list" ? "(max-width: 1024px) 33vw, 25vw" : "(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"}
                     />
                   </div>
-                  <div className="p-4">
+                  <div className={`p-4 ${viewMode === "list" ? "flex-1" : ""}`}>
                     <h3 className="font-medium text-lg mb-1">
                       {product.title}
                     </h3>
@@ -428,28 +430,39 @@ export default function CataloguesPage() {
             className={`grid gap-6 ${
               viewMode === "grid"
                 ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-                : "grid-cols-1"
+                : "grid-cols-1 lg:grid-cols-2 xl:grid-cols-3"
             }`}
           >
             {filteredCatalogues.map((catalogue) => (
               <div
                 key={catalogue.id}
-                className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group"
+                className={`bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group ${
+                  viewMode === "list" ? "flex" : ""
+                }`}
               >
-                <Link href={`/collection/${catalogue.id}`}>
-                  <div className="relative aspect-[3/4] overflow-hidden">
+                <Link href={`/collection/${catalogue.id}`} className={viewMode === "list" ? "flex w-full" : ""}>
+                  <div className={`relative overflow-hidden ${
+                    viewMode === "list" 
+                      ? "w-1/2 aspect-[4/3]" 
+                      : "aspect-[3/4]"
+                  }`}>
                     <LazyImage
                       src={catalogue.image || "/placeholder-image.jpg"}
                       alt={catalogue.title}
                       fill
                       className={`object-cover ${getImageFocalPoint(catalogue.image, catalogue.title)} group-hover:scale-105 transition-transform duration-300`}
-                      sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                      sizes={viewMode === "list" 
+                        ? "(max-width: 1024px) 50vw, 33vw" 
+                        : "(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                      }
                       priority={false}
-                      aspectRatio="3/4"
+                      aspectRatio={viewMode === "list" ? "4/3" : "3/4"}
                       quality={80}
                     />
                     {/* Text overlay at bottom */}
-                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4">
+                    <div className={`absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 ${
+                      viewMode === "list" ? "lg:hidden" : ""
+                    }`}>
                       <h3 className="font-medium text-lg mb-1 text-white">
                         {catalogue.title}
                       </h3>
@@ -471,6 +484,30 @@ export default function CataloguesPage() {
                       </div>
                     </div>
                   </div>
+                  {/* List view text content for desktop */}
+                  {viewMode === "list" && (
+                    <div className="flex-1 p-4 flex flex-col justify-center">
+                      <h3 className="font-medium text-xl mb-2 text-black">
+                        {catalogue.title}
+                      </h3>
+                      <p className="text-oma-cocoa/70 text-base mb-3">
+                        {catalogue.brand.name}
+                      </p>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-oma-cocoa/60">
+                          {catalogue.brand.location}
+                        </span>
+                        {catalogue.brand.is_verified && (
+                          <Badge
+                            variant="secondary"
+                            className="bg-oma-gold/20 text-oma-cocoa border-oma-gold/30 text-xs"
+                          >
+                            Verified
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </Link>
               </div>
             ))}
