@@ -282,7 +282,7 @@ export async function DELETE(
 
     if (verifyDeleteError && verifyDeleteError.code === "PGRST116") {
       console.log(`✅ Deletion verified: Inquiry no longer exists in database`);
-      
+
       // Only return success if deletion was actually verified
       console.log(
         `✅ Deleted inquiry ${inquiryId} from ${inquiry.customer_name}`
@@ -324,30 +324,34 @@ export async function DELETE(
           `🔍 This might be an RLS policy issue. Checking user permissions...`
         );
         console.log(`🔍 Current user: ${user.id}, Role: ${profile.role}`);
-        
+
         // Return error since deletion failed
         return NextResponse.json(
-          { 
-            error: "Inquiry deletion failed - inquiry still exists in database. This may be due to RLS policies or database constraints.",
-            details: "The DELETE operation appeared to succeed but the inquiry was not actually removed from the database."
+          {
+            error:
+              "Inquiry deletion failed - inquiry still exists in database. This may be due to RLS policies or database constraints.",
+            details:
+              "The DELETE operation appeared to succeed but the inquiry was not actually removed from the database.",
           },
           { status: 500 }
         );
       } catch (constraintError) {
         console.log(`📊 Constraint check error:`, constraintError);
-        
+
         // Return error since deletion failed
         return NextResponse.json(
-          { 
-            error: "Inquiry deletion failed - unable to verify deletion success",
-            details: "The DELETE operation appeared to succeed but verification failed."
+          {
+            error:
+              "Inquiry deletion failed - unable to verify deletion success",
+            details:
+              "The DELETE operation appeared to succeed but verification failed.",
           },
           { status: 500 }
         );
       }
     } else {
       console.log(`✅ Deletion verification completed`);
-      
+
       // Return success if verification passed
       console.log(
         `✅ Deleted inquiry ${inquiryId} from ${inquiry.customer_name}`
