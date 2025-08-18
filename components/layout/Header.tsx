@@ -37,6 +37,7 @@ import { supabase } from "@/lib/supabase";
 import { getBrandsByCategory } from "@/lib/services/brandService";
 import { checkCategoryHasBrands } from "@/lib/services/categoryService";
 import { triggerSearchModal } from "@/components/ui/search-modal";
+import BasketItemCount from "@/components/ui/basket-item-count";
 
 const collectionItems = collections.map((category) => ({
   name: category,
@@ -379,6 +380,18 @@ export default function Header() {
             >
               <Search className="h-5 w-5" />
             </button>
+            <Link
+              href="/basket"
+              className={cn(
+                "p-2 rounded-full transition-all duration-200 hover:scale-105",
+                scrolled || !isHomePage
+                  ? "text-oma-black hover:text-oma-plum hover:bg-oma-beige/20"
+                  : "text-white hover:text-white/90 bg-white/10 hover:bg-white/20 backdrop-blur-sm"
+              )}
+              aria-label="View Basket"
+            >
+              <BasketItemCount />
+            </Link>
             <Button
               asChild
               variant="outline"
@@ -544,6 +557,23 @@ export default function Header() {
                       Search brands, collections...
                     </span>
                   </button>
+                </div>
+
+                {/* Basket */}
+                <div className="space-y-2">
+                  <h3 className="text-xs font-medium uppercase tracking-wider text-gray-500 mb-3">
+                    Basket
+                  </h3>
+                  <Link
+                    href="/basket"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center px-3 py-3 hover:bg-gray-50 transition-colors rounded-lg"
+                  >
+                    <BasketItemCount />
+                    <span className="ml-3 text-base font-semibold text-gray-900">
+                      View Basket
+                    </span>
+                  </Link>
                 </div>
 
                 {/* Main Navigation */}
