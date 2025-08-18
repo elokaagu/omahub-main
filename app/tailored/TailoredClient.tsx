@@ -242,22 +242,20 @@ export default function TailoredClient() {
               
               <div
                 ref={tailorsScrollRef}
-                className="flex gap-4 sm:gap-6 overflow-x-auto pb-6 scroll-smooth snap-x snap-mandatory scrollbar-hide px-4 sm:px-6 lg:px-8 mobile-scroll-container"
+                className="flex gap-4 sm:gap-6 overflow-x-auto pb-6 scroll-smooth scrollbar-hide px-4 sm:px-6 lg:px-8 mobile-scroll-container"
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
                 style={{
                   scrollbarWidth: 'none',
                   msOverflowStyle: 'none',
-                  WebkitOverflowScrolling: 'touch',
-                  scrollSnapType: 'x mandatory',
-                  scrollPadding: '0 1rem'
+                  WebkitOverflowScrolling: 'touch'
                 }}
               >
                 {tailors.map((tailor, index) => (
                   <Link
                     key={tailor.id}
                     href={tailor.brand ? `/brand/${tailor.brand.id}` : "#"}
-                    className="group block snap-center flex-shrink-0 w-[280px] sm:w-[320px] md:w-96 max-w-full bg-gradient-to-br from-white via-oma-beige/30 to-white rounded-2xl shadow-lg border border-oma-beige/40 hover:border-oma-gold/60 hover:shadow-2xl transition-all duration-300 overflow-hidden cursor-pointer focus:ring-2 focus:ring-oma-gold mobile-scroll-item"
+                    className="group block flex-shrink-0 w-[280px] sm:w-[320px] md:w-96 max-w-full bg-gradient-to-br from-white via-oma-beige/30 to-white rounded-2xl shadow-lg border border-oma-beige/40 hover:border-oma-gold/60 hover:shadow-2xl transition-all duration-300 overflow-hidden cursor-pointer focus:ring-2 focus:ring-oma-gold mobile-scroll-item"
                     tabIndex={0}
                   >
                     <div className="relative w-full aspect-[3/4] bg-oma-beige/20 overflow-hidden">
