@@ -105,10 +105,12 @@ export async function getCollectionsWithBrands(): Promise<
 
   const { data, error } = await supabase
     .from("catalogues")
-    .select(`
+    .select(
+      `
       *,
       brand:brands(id, name, location, is_verified, category, rating, long_description)
-    `)
+    `
+    )
     .order("created_at", { ascending: false }); // Newest first
 
   if (error) {
