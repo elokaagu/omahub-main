@@ -5,20 +5,41 @@ import { cookies } from "next/headers";
 // GET - Fetch user's baskets
 export async function GET() {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    // Create Supabase client with explicit cookie handling
+    const cookieStore = cookies();
+    const supabase = createRouteHandlerClient({ 
+      cookies: () => cookieStore 
+    });
     
-    // Check if user is authenticated
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    // Try to get the session instead of just the user
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
     
-    if (authError || !user) {
+    if (sessionError) {
+      console.error("Session error in basket API:", sessionError);
+      return NextResponse.json(
+        { error: "Session error" },
+        { status: 401 }
+      );
+    }
+    
+    if (!session || !session.user) {
+      console.log("No valid session found in basket API");
       return NextResponse.json(
         { error: "Authentication required" },
         { status: 401 }
       );
     }
 
+    console.log("Basket API: User authenticated:", session.user.id);
+
     // For now, return empty baskets until database is set up
-    return NextResponse.json({ baskets: [] });
+    return NextResponse.json({ 
+      baskets: [],
+      user: {
+        id: session.user.id,
+        email: session.user.email
+      }
+    });
   } catch (error) {
     console.error("Basket API error:", error);
     return NextResponse.json(
@@ -31,21 +52,40 @@ export async function GET() {
 // POST - Add item to basket
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    // Create Supabase client with explicit cookie handling
+    const cookieStore = cookies();
+    const supabase = createRouteHandlerClient({ 
+      cookies: () => cookieStore 
+    });
     
-    // Check if user is authenticated
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    // Try to get the session instead of just the user
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
     
-    if (authError || !user) {
+    if (sessionError) {
+      console.error("Session error in basket API POST:", sessionError);
+      return NextResponse.json(
+        { error: "Session error" },
+        { status: 401 }
+      );
+    }
+    
+    if (!session || !session.user) {
+      console.log("No valid session found in basket API POST");
       return NextResponse.json(
         { error: "Authentication required" },
         { status: 401 }
       );
     }
 
+    console.log("Basket API POST: User authenticated:", session.user.id);
+
     // For now, return success until database is set up
     return NextResponse.json({ 
-      message: "Item added to basket (demo mode)"
+      message: "Item added to basket (demo mode)",
+      user: {
+        id: session.user.id,
+        email: session.user.email
+      }
     });
   } catch (error) {
     console.error("Basket API error:", error);
