@@ -89,15 +89,9 @@ export default function CataloguesPage() {
           }),
         ]);
 
-        // Sort catalogues by creation date (newest first)
-        const sortedCatalogues = (catalogueData || []).sort((a, b) => {
-          const dateA = new Date(a.created_at || 0);
-          const dateB = new Date(b.created_at || 0);
-          return dateB.getTime() - dateA.getTime();
-        });
-
-        setCatalogues(sortedCatalogues);
-        setFilteredCatalogues(sortedCatalogues);
+        // Collections are already sorted by newest first from the service
+        setCatalogues(catalogueData || []);
+        setFilteredCatalogues(catalogueData || []);
         setProducts(productData || []);
         setFilteredProducts(productData || []);
       } catch (err) {
