@@ -457,7 +457,7 @@ export default function CataloguesPage() {
                     className={`relative overflow-hidden ${
                       viewMode === "list"
                         ? "w-1/2 aspect-[4/3]"
-                        : "aspect-square"
+                        : "aspect-[3/4]"
                     }`}
                   >
                     <LazyImage
@@ -471,36 +471,33 @@ export default function CataloguesPage() {
                           : "(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
                       }
                       priority={false}
-                      aspectRatio={viewMode === "list" ? "4/3" : "square"}
+                      aspectRatio={viewMode === "list" ? "4/3" : "3/4"}
                       quality={80}
                     />
-                    {/* Removed redundant text overlay - same info shown in caption below */}
-                  </div>
-                  {/* Grid view caption text below image */}
-                  {viewMode === "grid" && (
-                    <div className="p-3 sm:p-4">
-                      <h3 className="font-medium text-base sm:text-lg mb-1 text-black line-clamp-2">
+                    {/* Text overlay at bottom - restored for elegant styling */}
+                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4">
+                      <h3 className="font-medium text-lg mb-1 text-white">
                         {catalogue.title}
                       </h3>
-                      <p className="text-oma-cocoa/70 text-xs sm:text-sm mb-2 line-clamp-1">
+                      <p className="text-white/90 text-sm mb-2">
                         {catalogue.brand.name}
                       </p>
                       <div className="flex items-center justify-between">
-                        <span className="text-xs sm:text-sm text-oma-cocoa/60 line-clamp-1">
+                        <span className="text-sm text-white/80">
                           {catalogue.brand.location}
                         </span>
                         {catalogue.brand.is_verified && (
                           <Badge
                             variant="secondary"
-                            className="bg-oma-gold/20 text-oma-cocoa border-oma-gold/30 text-xs flex-shrink-0"
+                            className="bg-white/20 text-white border-white/30 text-xs"
                           >
                             Verified
                           </Badge>
                         )}
                       </div>
                     </div>
-                  )}
-                  {/* List view text content for desktop */}
+                  </div>
+                  {/* Grid view caption text below image - only for list view now */}
                   {viewMode === "list" && (
                     <div className="flex-1 p-4 flex flex-col justify-center">
                       <h3 className="font-medium text-xl mb-2 text-black">
