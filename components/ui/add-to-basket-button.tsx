@@ -3,7 +3,9 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useBasket } from "@/contexts/BasketContext";
-import { ShoppingBag, Loader2 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { ShoppingBag, Loader2, User } from "lucide-react";
+import Link from "next/link";
 
 interface AddToBasketButtonProps {
   productId: string;
@@ -25,7 +27,20 @@ export default function AddToBasketButton({
   className = "",
 }: AddToBasketButtonProps) {
   const { addToBasket, state } = useBasket();
+  const { user } = useAuth();
   const [isAdding, setIsAdding] = useState(false);
+
+  // If user is not authenticated, show sign-in button
+  if (!user) {
+    return (
+      <Button asChild className={`bg-oma-plum hover:bg-oma-plum/90 text-white ${className}`}>
+        <Link href="/login">
+          <User className="h-4 w-4 mr-2" />
+          Sign In to Add to Basket
+        </Link>
+      </Button>
+    );
+  }
 
   const handleAddToBasket = async () => {
     if (isAdding) return;

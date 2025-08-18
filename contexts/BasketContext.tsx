@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useReducer, useCallback, useEffect } from "react";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Types
 export interface BasketItem {
@@ -137,9 +138,16 @@ const BasketContext = createContext<{
 // Provider component
 export function BasketProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(basketReducer, initialState);
+  const { user } = useAuth();
 
   // Fetch baskets from API
   const fetchBaskets = useCallback(async () => {
+    // Only fetch if user is authenticated
+    if (!user) {
+      dispatch({ type: "SET_BASKETS", payload: [] });
+      return;
+    }
+
     try {
       dispatch({ type: "SET_LOADING", payload: true });
       dispatch({ type: "SET_ERROR", payload: null });
@@ -158,10 +166,15 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
     } finally {
       dispatch({ type: "SET_LOADING", payload: false });
     }
-  }, []);
+  }, [user]);
 
   // Add item to basket
   const addToBasket = useCallback(async (productId: string, quantity: number, size?: string, colour?: string) => {
+    if (!user) {
+      toast.error("Please sign in to add items to your basket");
+      return;
+    }
+
     try {
       dispatch({ type: "SET_LOADING", payload: true });
       dispatch({ type: "SET_ERROR", payload: null });
@@ -196,10 +209,15 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
     } finally {
       dispatch({ type: "SET_LOADING", payload: false });
     }
-  }, [fetchBaskets]);
+  }, [fetchBaskets, user]);
 
   // Remove item from basket
   const removeFromBasket = useCallback(async (itemId: string) => {
+    if (!user) {
+      toast.error("Please sign in to manage your basket");
+      return;
+    }
+
     try {
       dispatch({ type: "SET_LOADING", payload: true });
       dispatch({ type: "SET_ERROR", payload: null });
@@ -225,10 +243,15 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
     } finally {
       dispatch({ type: "SET_LOADING", payload: false });
     }
-  }, [fetchBaskets]);
+  }, [fetchBaskets, user]);
 
   // Update item quantity
   const updateQuantity = useCallback(async (itemId: string, quantity: number) => {
+    if (!user) {
+      toast.error("Please sign in to manage your basket");
+      return;
+    }
+
     try {
       dispatch({ type: "SET_LOADING", payload: true });
       dispatch({ type: "SET_ERROR", payload: null });
@@ -258,10 +281,15 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
     } finally {
       dispatch({ type: "SET_LOADING", payload: false });
     }
-  }, [fetchBaskets]);
+  }, [fetchBaskets, user]);
 
   // Clear basket
   const clearBasket = useCallback(async (basketId: string) => {
+    if (!user) {
+      toast.error("Please sign in to manage your basket");
+      return;
+    }
+
     try {
       dispatch({ type: "SET_LOADING", payload: true });
       dispatch({ type: "SET_ERROR", payload: null });
@@ -287,7 +315,7 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
     } finally {
       dispatch({ type: "SET_LOADING", payload: false });
     }
-  }, [fetchBaskets]);
+  }, [fetchBaskets, user]);
 
   // Get total items across all baskets
   const getTotalItems = useCallback(() => {
@@ -299,7 +327,7 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
     return state.baskets.reduce((total, basket) => total + basket.totalPrice, 0);
   }, [state.baskets]);
 
-  // Load baskets on mount
+  // Load baskets when user changes
   useEffect(() => {
     fetchBaskets();
   }, [fetchBaskets]);
