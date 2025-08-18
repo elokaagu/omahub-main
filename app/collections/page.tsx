@@ -436,9 +436,9 @@ export default function CataloguesPage() {
         ) : (
           // Collections Grid/List - Full image coverage with text overlay
           <div
-            className={`grid gap-6 ${
+            className={`grid gap-4 sm:gap-6 ${
               viewMode === "grid"
-                ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+                ? "grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
                 : "grid-cols-1 lg:grid-cols-2 xl:grid-cols-3"
             }`}
           >
@@ -457,7 +457,7 @@ export default function CataloguesPage() {
                     className={`relative overflow-hidden ${
                       viewMode === "list"
                         ? "w-1/2 aspect-[4/3]"
-                        : "aspect-[3/4]"
+                        : "aspect-square"
                     }`}
                   >
                     <LazyImage
@@ -468,31 +468,31 @@ export default function CataloguesPage() {
                       sizes={
                         viewMode === "list"
                           ? "(max-width: 1024px) 50vw, 33vw"
-                          : "(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                          : "(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
                       }
                       priority={false}
-                      aspectRatio={viewMode === "list" ? "4/3" : "3/4"}
+                      aspectRatio={viewMode === "list" ? "4/3" : "square"}
                       quality={80}
                     />
                     {/* Removed redundant text overlay - same info shown in caption below */}
                   </div>
                   {/* Grid view caption text below image */}
                   {viewMode === "grid" && (
-                    <div className="p-4">
-                      <h3 className="font-medium text-lg mb-1 text-black">
+                    <div className="p-3 sm:p-4">
+                      <h3 className="font-medium text-base sm:text-lg mb-1 text-black line-clamp-2">
                         {catalogue.title}
                       </h3>
-                      <p className="text-oma-cocoa/70 text-sm mb-2">
+                      <p className="text-oma-cocoa/70 text-xs sm:text-sm mb-2 line-clamp-1">
                         {catalogue.brand.name}
                       </p>
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-oma-cocoa/60">
+                        <span className="text-xs sm:text-sm text-oma-cocoa/60 line-clamp-1">
                           {catalogue.brand.location}
                         </span>
                         {catalogue.brand.is_verified && (
                           <Badge
                             variant="secondary"
-                            className="bg-oma-gold/20 text-oma-cocoa border-oma-gold/30 text-xs"
+                            className="bg-oma-gold/20 text-oma-cocoa border-oma-gold/30 text-xs flex-shrink-0"
                           >
                             Verified
                           </Badge>
