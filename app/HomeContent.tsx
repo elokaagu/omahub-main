@@ -840,8 +840,22 @@ export default function HomeContent() {
                         spotlightContent.video_url ||
                         "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
                       }
-                      thumbnailUrl={spotlightContent.video_thumbnail}
-                      fallbackImageUrl={spotlightContent.main_image}
+                      thumbnailUrl={
+                        spotlightContent.video_thumbnail && 
+                        !spotlightContent.video_thumbnail.includes('.mp4') && 
+                        !spotlightContent.video_thumbnail.includes('.mov') && 
+                        !spotlightContent.video_thumbnail.includes('.avi')
+                          ? spotlightContent.video_thumbnail
+                          : undefined
+                      }
+                      fallbackImageUrl={
+                        spotlightContent.main_image && 
+                        !spotlightContent.main_image.includes('.mp4') && 
+                        !spotlightContent.main_image.includes('.mov') && 
+                        !spotlightContent.main_image.includes('.avi')
+                          ? spotlightContent.main_image
+                          : "/placeholder.jpg"
+                      }
                       alt={`${spotlightContent.brand_name} collection`}
                       className="w-full h-[500px] transition-transform duration-700 group-hover:scale-105"
                       aspectRatio="3/4"

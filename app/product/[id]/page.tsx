@@ -185,8 +185,22 @@ export default function ProductPage() {
               (selectedImage === -1 || selectedImage === 0) ? (
                 <VideoPlayer
                   videoUrl={product.video_url}
-                  thumbnailUrl={product.video_thumbnail}
-                  fallbackImageUrl={product.image}
+                  thumbnailUrl={
+                    product.video_thumbnail && 
+                    !product.video_thumbnail.includes('.mp4') && 
+                    !product.video_thumbnail.includes('.mov') && 
+                    !product.video_thumbnail.includes('.avi')
+                      ? product.video_thumbnail
+                      : undefined
+                  }
+                  fallbackImageUrl={
+                    product.image && 
+                    !product.image.includes('.mp4') && 
+                    !product.image.includes('.mov') && 
+                    !product.image.includes('.avi')
+                      ? product.image
+                      : "/placeholder.jpg"
+                  }
                   alt={product.title}
                   className="w-full h-full"
                   aspectRatio="square"
@@ -207,8 +221,22 @@ export default function ProductPage() {
               ) : spotlightVideo?.url && selectedImage === -2 ? (
                 <VideoPlayer
                   videoUrl={spotlightVideo.url}
-                  thumbnailUrl={spotlightVideo.thumbnail || product.image}
-                  fallbackImageUrl={product.image}
+                  thumbnailUrl={
+                    spotlightVideo.thumbnail && 
+                    !spotlightVideo.thumbnail.includes('.mp4') && 
+                    !spotlightVideo.thumbnail.includes('.mov') && 
+                    !spotlightVideo.thumbnail.includes('.avi')
+                      ? spotlightVideo.thumbnail
+                      : undefined
+                  }
+                  fallbackImageUrl={
+                    product.image && 
+                    !product.image.includes('.mp4') && 
+                    !product.image.includes('.mov') && 
+                    !product.image.includes('.avi')
+                      ? product.image
+                      : "/placeholder.jpg"
+                  }
                   alt={product.title}
                   className="w-full h-full"
                   aspectRatio="square"
