@@ -223,87 +223,89 @@ export default function CataloguesPage() {
       <div className="max-w-7xl mx-auto px-4 lg:px-8 py-24">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-5xl font-canela text-black mb-6 text-left">
+          <h1 className="text-4xl sm:text-5xl font-canela text-black mb-4 sm:mb-6 text-left">
             {showAllProducts ? "All Products" : "Our Collections"}
           </h1>
-          <p className="text-xl text-oma-cocoa/80 max-w-3xl text-left">
+          <p className="text-lg sm:text-xl text-oma-cocoa/80 max-w-3xl text-left">
             {showAllProducts
               ? "Browse our complete collection of products"
               : "Explore curated collections from Africa's most talented designers"}
           </p>
         </div>
 
-        {/* Search and Filters */}
+        {/* Search and Filters - Mobile-first design */}
         <div className="mb-8 space-y-4">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
-              <Input
-                type="text"
-                placeholder={
-                  showAllProducts ? "Search products..." : "Search brands..."
-                }
-                value={showAllProducts ? productSearch : searchTerm}
-                onChange={(e) =>
-                  showAllProducts
-                    ? setProductSearch(e.target.value)
-                    : setSearchTerm(e.target.value)
-                }
-                className="w-full"
-              />
-            </div>
-            <div className="flex gap-4">
-              <Button
-                variant="outline"
-                onClick={() => setShowFilters(!showFilters)}
-                className="flex items-center gap-2"
-              >
-                <Filter className="h-4 w-4" />
-                Filters
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() =>
-                  setViewMode(viewMode === "grid" ? "list" : "grid")
-                }
-                className="flex items-center gap-2"
-              >
-                {viewMode === "grid" ? (
-                  <List className="h-4 w-4" />
-                ) : (
-                  <Grid className="h-4 w-4" />
-                )}
-                {viewMode === "grid" ? "List View" : "Grid View"}
-              </Button>
-              <Button
-                onClick={() => setShowAllProducts(!showAllProducts)}
-                className="bg-oma-plum text-white hover:bg-oma-plum/90"
-              >
-                {showAllProducts ? "View Brands" : "View All Products"}
-              </Button>
-            </div>
+          {/* Search bar - full width on mobile */}
+          <div className="w-full">
+            <Input
+              type="text"
+              placeholder={
+                showAllProducts ? "Search products..." : "Search brands..."
+              }
+              value={showAllProducts ? productSearch : searchTerm}
+              onChange={(e) =>
+                showAllProducts
+                  ? setProductSearch(e.target.value)
+                  : setSearchTerm(e.target.value)
+              }
+              className="w-full h-12 text-base"
+            />
+          </div>
+          
+          {/* Action buttons - responsive layout */}
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+            <Button
+              variant="outline"
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex items-center justify-center gap-2 h-12 px-6 bg-white hover:bg-gray-50"
+            >
+              <Filter className="h-4 w-4" />
+              Filters
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() =>
+                setViewMode(viewMode === "grid" ? "list" : "grid")
+              }
+              className="flex items-center justify-center gap-2 h-12 px-6 bg-white hover:bg-gray-50"
+            >
+              {viewMode === "grid" ? (
+                <List className="h-4 w-4" />
+              ) : (
+                <Grid className="h-4 w-4" />
+              )}
+              {viewMode === "grid" ? "List View" : "Grid View"}
+            </Button>
+            <Button
+              onClick={() => setShowAllProducts(!showAllProducts)}
+              className="flex-1 sm:flex-none h-12 px-6 bg-oma-plum text-white hover:bg-oma-plum/90 font-medium"
+            >
+              {showAllProducts ? "View Brands" : "View All Products"}
+            </Button>
           </div>
 
           {/* Filter Panel */}
           {showFilters && (
-            <div className="bg-white p-4 rounded-lg shadow-sm space-y-4">
+            <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm space-y-4 border border-gray-100">
               <div className="flex justify-between items-center">
-                <h3 className="font-medium">Filters</h3>
+                <h3 className="font-medium text-lg">Filters</h3>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowFilters(false)}
+                  className="text-gray-500 hover:text-gray-700"
                 >
                   <X className="h-4 w-4" />
                 </Button>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {showAllProducts ? (
                   <>
                     <Select
                       value={selectedBrand}
                       onValueChange={setSelectedBrand}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="h-12">
                         <SelectValue placeholder="Select Brand" />
                       </SelectTrigger>
                       <SelectContent>
@@ -318,7 +320,7 @@ export default function CataloguesPage() {
                       value={selectedProductCategory}
                       onValueChange={setSelectedProductCategory}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="h-12">
                         <SelectValue placeholder="Select Category" />
                       </SelectTrigger>
                       <SelectContent>
@@ -335,7 +337,7 @@ export default function CataloguesPage() {
                     value={selectedCategory}
                     onValueChange={setSelectedCategory}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="h-12">
                       <SelectValue placeholder="Select Category" />
                     </SelectTrigger>
                     <SelectContent>
@@ -358,15 +360,15 @@ export default function CataloguesPage() {
           <div
             className={
               viewMode === "grid"
-                ? "grid gap-6 grid-cols-3 sm:grid-cols-2 lg:grid-cols-3"
-                : "flex flex-col gap-6"
+                ? "grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+                : "flex flex-col gap-4"
             }
           >
             {filteredProducts.map((product) => (
               <div
                 key={product.id}
                 className={`bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow ${
-                  viewMode === "list" ? "flex" : ""
+                  viewMode === "list" ? "flex flex-col sm:flex-row" : ""
                 }`}
               >
                 <Link
@@ -374,7 +376,11 @@ export default function CataloguesPage() {
                   className={viewMode === "list" ? "flex w-full" : ""}
                 >
                   <div
-                    className={`relative ${viewMode === "list" ? "w-1/3 aspect-square" : "aspect-square"}`}
+                    className={`relative ${
+                      viewMode === "list" 
+                        ? "w-full sm:w-1/3 aspect-square sm:aspect-[4/3]" 
+                        : "aspect-square"
+                    }`}
                   >
                     <LazyImage
                       src={getProductMainImage(product) || "/placeholder.png"}
@@ -385,16 +391,16 @@ export default function CataloguesPage() {
                       quality={80}
                       sizes={
                         viewMode === "list"
-                          ? "(max-width: 1024px) 33vw, 25vw"
+                          ? "(max-width: 640px) 100vw, (max-width: 1024px) 33vw, 25vw"
                           : "(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                       }
                     />
                   </div>
-                  <div className={`p-4 ${viewMode === "list" ? "flex-1" : ""}`}>
-                    <h3 className="font-medium text-lg mb-1">
+                  <div className={`p-4 ${viewMode === "list" ? "flex-1 flex flex-col justify-center" : ""}`}>
+                    <h3 className="font-medium text-lg mb-2 text-black">
                       {product.title}
                     </h3>
-                    <p className="text-oma-cocoa/70 text-sm mb-2">
+                    <p className="text-oma-cocoa/70 text-sm mb-3">
                       {(() => {
                         try {
                           const catalogue = catalogues.find(
@@ -411,7 +417,7 @@ export default function CataloguesPage() {
                         }
                       })()}
                     </p>
-                    <p className="text-oma-plum font-medium">
+                    <p className="text-oma-plum font-semibold text-lg">
                       {(() => {
                         try {
                           if (product.service_type === "portfolio") {
@@ -434,19 +440,19 @@ export default function CataloguesPage() {
             ))}
           </div>
         ) : (
-          // Collections Grid/List - Full image coverage with text overlay
+          // Collections Grid/List - Improved mobile list view
           <div
             className={
               viewMode === "grid"
-                ? "grid gap-4 sm:gap-6 grid-cols-3 sm:grid-cols-2 lg:grid-cols-3"
-                : "flex flex-col gap-4 sm:gap-6"
+                ? "grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+                : "flex flex-col gap-4"
             }
           >
             {filteredCatalogues.map((catalogue) => (
               <div
                 key={catalogue.id}
                 className={`bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group ${
-                  viewMode === "list" ? "flex" : ""
+                  viewMode === "list" ? "flex flex-col sm:flex-row" : ""
                 }`}
               >
                 <Link
@@ -456,7 +462,7 @@ export default function CataloguesPage() {
                   <div
                     className={`relative overflow-hidden ${
                       viewMode === "list"
-                        ? "w-1/2 aspect-[4/3]"
+                        ? "w-full sm:w-1/2 aspect-[4/3]"
                         : "aspect-[3/4]"
                     }`}
                   >
@@ -467,57 +473,74 @@ export default function CataloguesPage() {
                       className={`object-cover ${getImageFocalPoint(catalogue.image, catalogue.title)} group-hover:scale-105 transition-transform duration-300`}
                       sizes={
                         viewMode === "list"
-                          ? "(max-width: 1024px) 50vw, 33vw"
+                          ? "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                           : "(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw"
                       }
                       priority={false}
                       aspectRatio={viewMode === "list" ? "4/3" : "3/4"}
                       quality={80}
                     />
-                    {/* Text overlay at bottom - restored for elegant styling */}
-                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4">
-                      <h3 className="font-medium text-lg mb-1 text-white">
+                    {/* Text overlay for grid view only */}
+                    {viewMode === "grid" && (
+                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4">
+                        <h3 className="font-medium text-lg mb-1 text-white">
+                          {catalogue.title}
+                        </h3>
+                        <p className="text-white/90 text-sm mb-2">
+                          {catalogue.brand.name}
+                        </p>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-white/80">
+                            {catalogue.brand.location}
+                          </span>
+                          {catalogue.brand.is_verified && (
+                            <Badge
+                              variant="secondary"
+                              className="bg-white/20 text-white border-white/30 text-xs"
+                            >
+                              Verified
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  {/* Enhanced list view content - more prominent and mobile-friendly */}
+                  {viewMode === "list" && (
+                    <div className="flex-1 p-4 sm:p-6 flex flex-col justify-center">
+                      <h3 className="font-medium text-xl sm:text-2xl mb-3 text-black">
                         {catalogue.title}
                       </h3>
-                      <p className="text-white/90 text-sm mb-2">
+                      <p className="text-oma-cocoa/70 text-base sm:text-lg mb-4 font-medium">
                         {catalogue.brand.name}
                       </p>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-white/80">
-                          {catalogue.brand.location}
+                      <div className="flex items-center justify-between mb-4">
+                        <span className="text-sm text-oma-cocoa/60 flex items-center">
+                          📍 {catalogue.brand.location}
                         </span>
                         {catalogue.brand.is_verified && (
                           <Badge
                             variant="secondary"
-                            className="bg-white/20 text-white border-white/30 text-xs"
+                            className="bg-oma-gold/20 text-oma-cocoa border-oma-gold/30 text-xs px-2 py-1"
                           >
-                            Verified
+                            ✓ Verified
                           </Badge>
                         )}
                       </div>
-                    </div>
-                  </div>
-                  {/* Grid view caption text below image - only for list view now */}
-                  {viewMode === "list" && (
-                    <div className="flex-1 p-4 flex flex-col justify-center">
-                      <h3 className="font-medium text-xl mb-2 text-black">
-                        {catalogue.title}
-                      </h3>
-                      <p className="text-oma-cocoa/70 text-base mb-3">
-                        {catalogue.brand.name}
-                      </p>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-oma-cocoa/60">
-                          {catalogue.brand.location}
+                      {/* Category tag if available */}
+                      {catalogue.brand.category && (
+                        <div className="mb-3">
+                          <CategoryTag
+                            category={catalogue.brand.category}
+                            className="text-xs px-3 py-1"
+                          />
+                        </div>
+                      )}
+                      {/* View collection button */}
+                      <div className="mt-auto">
+                        <span className="inline-flex items-center text-oma-plum text-sm font-medium hover:text-oma-plum/80 transition-colors">
+                          View Collection →
                         </span>
-                        {catalogue.brand.is_verified && (
-                          <Badge
-                            variant="secondary"
-                            className="bg-oma-gold/20 text-oma-cocoa border-oma-gold/30 text-xs"
-                          >
-                            Verified
-                          </Badge>
-                        )}
                       </div>
                     </div>
                   )}
