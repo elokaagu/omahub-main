@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { Search, Grid, List, Filter, X } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import { Search, Filter, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { getCollectionsWithBrands } from "@/lib/services/collectionService";
 import { getProductsWithBrandCurrency } from "@/lib/services/productService";
 import { Catalogue, Brand, Product } from "@/lib/supabase";
@@ -17,11 +17,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loading } from "@/components/ui/loading";
 import { formatProductPrice } from "@/lib/utils/priceFormatter";
 import { CategoryTag } from "@/components/ui/unified-tag";
 import { getProductMainImage } from "@/lib/utils/productImageUtils";
+import { cn } from "@/lib/utils";
 
 type CatalogueWithBrand = Catalogue & {
   brand: {
@@ -60,7 +60,6 @@ export default function CataloguesPage() {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [showAllProducts, setShowAllProducts] = useState(false);
   const [products, setProducts] = useState<ProductWithBrand[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<ProductWithBrand[]>(
@@ -105,7 +104,7 @@ export default function CataloguesPage() {
     fetchData();
   }, []);
 
-  // Filter catalogues
+  // Filter catalogues based on search and category
   useEffect(() => {
     let filtered = catalogues;
 
@@ -113,12 +112,7 @@ export default function CataloguesPage() {
       filtered = filtered.filter(
         (catalogue) =>
           catalogue.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          catalogue.brand.name
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase()) ||
-          catalogue.description
-            ?.toLowerCase()
-            .includes(searchTerm.toLowerCase())
+          catalogue.brand.name.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -131,7 +125,7 @@ export default function CataloguesPage() {
     setFilteredCatalogues(filtered);
   }, [catalogues, searchTerm, selectedCategory]);
 
-  // Filter products
+  // Filter products based on search and filters
   useEffect(() => {
     let filtered = products;
 
@@ -139,15 +133,13 @@ export default function CataloguesPage() {
       filtered = filtered.filter(
         (product) =>
           product.title.toLowerCase().includes(productSearch.toLowerCase()) ||
-          product.description
-            ?.toLowerCase()
-            .includes(productSearch.toLowerCase())
+          product.brand.name.toLowerCase().includes(productSearch.toLowerCase())
       );
     }
 
     if (selectedBrand !== "all") {
       filtered = filtered.filter(
-        (product) => product.brand_id === selectedBrand
+        (product) => product.brand.name === selectedBrand
       );
     }
 
@@ -160,41 +152,33 @@ export default function CataloguesPage() {
     setFilteredProducts(filtered);
   }, [products, productSearch, selectedBrand, selectedProductCategory]);
 
-  // Dynamic categories: all with at least 1 brand, sorted alphabetically, 'all' at top
-  const uniqueCategories = Array.from(
-    new Set(catalogues.map((c) => c.brand.category))
-  )
-    .filter(Boolean)
-    .sort((a, b) => a.localeCompare(b));
-  const categories = ["all", ...uniqueCategories];
-  const brands = [
-    "all",
-    ...Array.from(new Set(catalogues.map((c) => c.brand.name))),
-  ];
-  const productCategories = [
-    "all",
-    ...Array.from(new Set(products.map((p) => p.category))),
-  ];
+  // Get unique categories and brands for filters
+  const categories = ["all", ...Array.from(new Set(catalogues.map((c) => c.brand.category)))];
+  const brands = ["all", ...Array.from(new Set(products.map((p) => p.brand.name)))];
+  const productCategories = ["all", ...Array.from(new Set(products.map((p) => p.category)))];
+
+  // Group catalogues by category for carousel sections
+  const cataloguesByCategory = filteredCatalogues.reduce((acc, catalogue) => {
+    const category = catalogue.brand.category || "Other";
+    if (!acc[category]) {
+      acc[category] = [];
+    }
+    acc[category].push(catalogue);
+    return acc;
+  }, {} as Record<string, CatalogueWithBrand[]>);
+
+  // Group products by category for carousel sections
+  const productsByCategory = filteredProducts.reduce((acc, product) => {
+    const category = product.category || "Other";
+    if (!acc[category]) {
+      acc[category] = [];
+    }
+    acc[category].push(product);
+    return acc;
+  }, {} as Record<string, ProductWithBrand[]>);
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-oma-beige/30 to-white">
-        <div className="max-w-7xl mx-auto px-6 py-24">
-          <div className="animate-pulse">
-            <div className="h-12 bg-oma-cocoa/10 rounded-lg mb-8"></div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {[...Array(6)].map((_, i) => (
-                <div key={i} className="bg-white rounded-xl p-6 shadow-sm">
-                  <div className="h-48 bg-oma-cocoa/10 rounded-lg mb-4"></div>
-                  <div className="h-6 bg-oma-cocoa/10 rounded mb-2"></div>
-                  <div className="h-4 bg-oma-cocoa/10 rounded w-2/3"></div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+    return <Loading />;
   }
 
   if (error) {
@@ -261,20 +245,6 @@ export default function CataloguesPage() {
             >
               <Filter className="h-4 w-4" />
               Filters
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() =>
-                setViewMode(viewMode === "grid" ? "list" : "grid")
-              }
-              className="flex items-center justify-center gap-2 h-12 px-6 bg-white hover:bg-gray-50"
-            >
-              {viewMode === "grid" ? (
-                <List className="h-4 w-4" />
-              ) : (
-                <Grid className="h-4 w-4" />
-              )}
-              {viewMode === "grid" ? "List View" : "Grid View"}
             </Button>
             <Button
               onClick={() => setShowAllProducts(!showAllProducts)}
@@ -354,202 +324,324 @@ export default function CataloguesPage() {
           )}
         </div>
 
-        {/* Content */}
+        {/* Content - Carousel Sections */}
         {showAllProducts ? (
-          // Products Grid/List
-          <div
-            className={
-              viewMode === "grid"
-                ? "grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
-                : "flex flex-col gap-4"
-            }
-          >
-            {filteredProducts.map((product) => (
-              <div
-                key={product.id}
-                className={`bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow ${
-                  viewMode === "list" ? "flex flex-col sm:flex-row" : ""
-                }`}
-              >
-                <Link
-                  href={`/product/${product.id}`}
-                  className={viewMode === "list" ? "flex w-full" : ""}
-                >
-                  <div
-                    className={`relative ${
-                      viewMode === "list" 
-                        ? "w-full sm:w-1/3 aspect-square sm:aspect-[4/3]" 
-                        : "aspect-square"
-                    }`}
-                  >
-                    <LazyImage
-                      src={getProductMainImage(product) || "/placeholder.png"}
-                      alt={product.title}
-                      fill
-                      className="object-cover"
-                      aspectRatio="square"
-                      quality={80}
-                      sizes={
-                        viewMode === "list"
-                          ? "(max-width: 640px) 100vw, (max-width: 1024px) 33vw, 25vw"
-                          : "(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                      }
-                    />
-                  </div>
-                  <div className={`p-4 ${viewMode === "list" ? "flex-1 flex flex-col justify-center" : ""}`}>
-                    <h3 className="font-medium text-lg mb-2 text-black">
-                      {product.title}
-                    </h3>
-                    <p className="text-oma-cocoa/70 text-sm mb-3">
-                      {(() => {
-                        try {
-                          const catalogue = catalogues.find(
-                            (c) => c.brand_id === product.brand_id
-                          );
-                          return (
-                            catalogue?.brand?.name ||
-                            product.brand?.name ||
-                            "Unknown Brand"
-                          );
-                        } catch (error) {
-                          console.error("Error getting brand name:", error);
-                          return "Unknown Brand";
-                        }
-                      })()}
-                    </p>
-                    <p className="text-oma-plum font-semibold text-lg">
-                      {(() => {
-                        try {
-                          if (product.service_type === "portfolio") {
-                            return "";
-                          }
-                          return formatProductPrice(product, product.brand)
-                            .displayPrice;
-                        } catch (error) {
-                          console.error("Error formatting price:", error, {
-                            product,
-                            brand: product.brand,
-                          });
-                          return "Contact for pricing";
-                        }
-                      })()}
-                    </p>
-                  </div>
-                </Link>
-              </div>
+          // Products Carousels by Category
+          <div className="space-y-12">
+            {Object.entries(productsByCategory).map(([category, categoryProducts]) => (
+              <ProductCarouselSection
+                key={category}
+                title={category === "Other" ? "Other Products" : category}
+                subtitle={`Discover our ${category.toLowerCase()} collection`}
+                products={categoryProducts}
+              />
             ))}
           </div>
         ) : (
-          // Collections Grid/List - Improved mobile list view
-          <div
-            className={
-              viewMode === "grid"
-                ? "grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
-                : "flex flex-col gap-4"
-            }
-          >
-            {filteredCatalogues.map((catalogue) => (
-              <div
-                key={catalogue.id}
-                className={`bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group ${
-                  viewMode === "list" ? "flex flex-col sm:flex-row" : ""
-                }`}
-              >
-                <Link
-                  href={`/collection/${catalogue.id}`}
-                  className={viewMode === "list" ? "flex w-full" : ""}
-                >
-                  <div
-                    className={`relative overflow-hidden ${
-                      viewMode === "list"
-                        ? "w-full sm:w-1/2 aspect-[4/3]"
-                        : "aspect-[3/4]"
-                    }`}
-                  >
-                    <LazyImage
-                      src={catalogue.image || "/placeholder-image.jpg"}
-                      alt={catalogue.title}
-                      fill
-                      className={`object-cover ${getImageFocalPoint(catalogue.image, catalogue.title)} group-hover:scale-105 transition-transform duration-300`}
-                      sizes={
-                        viewMode === "list"
-                          ? "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                          : "(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw"
-                      }
-                      priority={false}
-                      aspectRatio={viewMode === "list" ? "4/3" : "3/4"}
-                      quality={80}
-                    />
-                    {/* Text overlay for grid view only */}
-                    {viewMode === "grid" && (
-                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4">
-                        <h3 className="font-medium text-lg mb-1 text-white">
-                          {catalogue.title}
-                        </h3>
-                        <p className="text-white/90 text-sm mb-2">
-                          {catalogue.brand.name}
-                        </p>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-white/80">
-                            {catalogue.brand.location}
-                          </span>
-                          {catalogue.brand.is_verified && (
-                            <Badge
-                              variant="secondary"
-                              className="bg-white/20 text-white border-white/30 text-xs"
-                            >
-                              Verified
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  {/* Enhanced list view content - more prominent and mobile-friendly */}
-                  {viewMode === "list" && (
-                    <div className="flex-1 p-4 sm:p-6 flex flex-col justify-center">
-                      <h3 className="font-medium text-xl sm:text-2xl mb-3 text-black">
-                        {catalogue.title}
-                      </h3>
-                      <p className="text-oma-cocoa/70 text-base sm:text-lg mb-4 font-medium">
-                        {catalogue.brand.name}
-                      </p>
-                      <div className="flex items-center justify-between mb-4">
-                        <span className="text-sm text-oma-cocoa/60 flex items-center">
-                          📍 {catalogue.brand.location}
-                        </span>
-                        {catalogue.brand.is_verified && (
-                          <Badge
-                            variant="secondary"
-                            className="bg-oma-gold/20 text-oma-cocoa border-oma-gold/30 text-xs px-2 py-1"
-                          >
-                            ✓ Verified
-                          </Badge>
-                        )}
-                      </div>
-                      {/* Category tag if available */}
-                      {catalogue.brand.category && (
-                        <div className="mb-3">
-                          <CategoryTag
-                            category={catalogue.brand.category}
-                            className="text-xs px-3 py-1"
-                          />
-                        </div>
-                      )}
-                      {/* View collection button */}
-                      <div className="mt-auto">
-                        <span className="inline-flex items-center text-oma-plum text-sm font-medium hover:text-oma-plum/80 transition-colors">
-                          View Collection →
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                </Link>
-              </div>
+          // Collections Carousels by Category
+          <div className="space-y-12">
+            {Object.entries(cataloguesByCategory).map(([category, categoryCatalogues]) => (
+              <CollectionCarouselSection
+                key={category}
+                title={category === "Other" ? "Other Collections" : category}
+                subtitle={`Explore ${category.toLowerCase()} designs`}
+                catalogues={categoryCatalogues}
+              />
             ))}
           </div>
         )}
       </div>
     </div>
+  );
+}
+
+// Product Carousel Section Component
+function ProductCarouselSection({ title, subtitle, products }: { 
+  title: string; 
+  subtitle: string; 
+  products: ProductWithBrand[] 
+}) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+
+  const updateScrollIndicators = () => {
+    if (!scrollRef.current) return;
+    const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+    setCanScrollLeft(scrollLeft > 0);
+    setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 1);
+  };
+
+  const scroll = (direction: "left" | "right") => {
+    if (!scrollRef.current) return;
+    const isMobile = window.innerWidth < 768;
+    const cardWidth = isMobile ? 280 : 320;
+    const cardsToScroll = isMobile ? 1.5 : 3;
+    const scrollAmount = cardWidth * cardsToScroll;
+
+    scrollRef.current.scrollBy({
+      left: direction === "left" ? -scrollAmount : scrollAmount,
+      behavior: "smooth",
+    });
+  };
+
+  if (products.length === 0) return null;
+
+  return (
+    <section className="w-full overflow-hidden">
+      {/* Section Header */}
+      <div className="mb-6">
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-canela text-oma-black mb-2">
+          {title}
+        </h2>
+        <p className="text-sm sm:text-base text-oma-cocoa/80 max-w-2xl">
+          {subtitle}
+        </p>
+      </div>
+
+      {/* Scrollable Product Row */}
+      <div className="relative">
+        <div
+          ref={scrollRef}
+          onScroll={updateScrollIndicators}
+          className="flex gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory scroll-smooth pb-4"
+        >
+          {products.map((product) => (
+            <div
+              key={product.id}
+              className="flex-none w-[280px] md:w-[300px] lg:w-[320px] snap-start"
+            >
+              <Link
+                href={`/product/${product.id}`}
+                className="block bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow h-full"
+              >
+                <div className="aspect-square relative">
+                  <LazyImage
+                    src={getProductMainImage(product) || "/placeholder.png"}
+                    alt={product.title}
+                    fill
+                    className="object-cover"
+                    aspectRatio="square"
+                    quality={80}
+                    sizes="(max-width: 768px) 280px, (max-width: 1200px) 300px, 320px"
+                  />
+                </div>
+                <div className="p-4">
+                  <h3 className="font-medium text-lg mb-2 text-black">
+                    {product.title}
+                  </h3>
+                  <p className="text-oma-cocoa/70 text-sm mb-3">
+                    {product.brand?.name || "Unknown Brand"}
+                  </p>
+                  <p className="text-oma-plum font-semibold text-lg">
+                    {(() => {
+                      try {
+                        if (product.service_type === "portfolio") {
+                          return "";
+                        }
+                        return formatProductPrice(product, product.brand)
+                          .displayPrice;
+                      } catch (error) {
+                        return "Contact for pricing";
+                      }
+                    })()}
+                  </p>
+                </div>
+              </Link>
+            </div>
+          ))}
+        </div>
+
+        {/* Navigation Arrows */}
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => scroll("left")}
+          disabled={!canScrollLeft}
+          className={cn(
+            "absolute left-2 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-white/90 backdrop-blur-sm border-oma-cocoa/20 hover:border-oma-plum shadow-lg transition-all duration-200",
+            !canScrollLeft && "opacity-50 cursor-not-allowed"
+          )}
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => scroll("right")}
+          disabled={!canScrollRight}
+          className={cn(
+            "absolute right-2 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-white/90 backdrop-blur-sm border-oma-cocoa/20 hover:border-oma-plum shadow-lg transition-all duration-200",
+            !canScrollRight && "opacity-50 cursor-not-allowed"
+          )}
+        >
+          <ChevronRight className="h-5 w-5" />
+        </Button>
+      </div>
+
+      {/* Scroll Indicators */}
+      <div className="flex justify-center mt-4">
+        <div className="flex gap-1">
+          <div
+            className={cn(
+              "h-1 rounded-full transition-all duration-200",
+              canScrollLeft ? "w-2 bg-oma-cocoa/30" : "w-6 bg-oma-plum"
+            )}
+          />
+          <div
+            className={cn(
+              "h-1 rounded-full transition-all duration-200",
+              canScrollRight ? "w-2 bg-oma-cocoa/30" : "w-6 bg-oma-plum"
+            )}
+          />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// Collection Carousel Section Component
+function CollectionCarouselSection({ title, subtitle, catalogues }: { 
+  title: string; 
+  subtitle: string; 
+  catalogues: CatalogueWithBrand[] 
+}) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+
+  const updateScrollIndicators = () => {
+    if (!scrollRef.current) return;
+    const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+    setCanScrollLeft(scrollLeft > 0);
+    setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 1);
+  };
+
+  const scroll = (direction: "left" | "right") => {
+    if (!scrollRef.current) return;
+    const isMobile = window.innerWidth < 768;
+    const cardWidth = isMobile ? 280 : 320;
+    const cardsToScroll = isMobile ? 1.5 : 3;
+    const scrollAmount = cardWidth * cardsToScroll;
+
+    scrollRef.current.scrollBy({
+      left: direction === "left" ? -scrollAmount : scrollAmount,
+      behavior: "smooth",
+    });
+  };
+
+  if (catalogues.length === 0) return null;
+
+  return (
+    <section className="w-full overflow-hidden">
+      {/* Section Header */}
+      <div className="mb-6">
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-canela text-oma-black mb-2">
+          {title}
+        </h2>
+        <p className="text-sm sm:text-base text-oma-cocoa/80 max-w-2xl">
+          {subtitle}
+        </p>
+      </div>
+
+      {/* Scrollable Collection Row */}
+      <div className="relative">
+        <div
+          ref={scrollRef}
+          onScroll={updateScrollIndicators}
+          className="flex gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory scroll-smooth pb-4"
+        >
+          {catalogues.map((catalogue) => (
+            <div
+              key={catalogue.id}
+              className="flex-none w-[280px] md:w-[300px] lg:w-[320px] snap-start"
+            >
+              <Link
+                href={`/collection/${catalogue.id}`}
+                className="block bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow h-full group"
+              >
+                <div className="aspect-[3/4] relative overflow-hidden">
+                  <LazyImage
+                    src={catalogue.image || "/placeholder-image.jpg"}
+                    alt={catalogue.title}
+                    fill
+                    className={`object-cover ${getImageFocalPoint(catalogue.image, catalogue.title)} group-hover:scale-105 transition-transform duration-300`}
+                    sizes="(max-width: 768px) 280px, (max-width: 1200px) 300px, 320px"
+                    aspectRatio="3/4"
+                    quality={80}
+                  />
+                  {/* Text overlay at bottom */}
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4">
+                    <h3 className="font-medium text-lg mb-1 text-white">
+                      {catalogue.title}
+                    </h3>
+                    <p className="text-white/90 text-sm mb-2">
+                      {catalogue.brand.name}
+                    </p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-white/80">
+                        {catalogue.brand.location}
+                      </span>
+                      {catalogue.brand.is_verified && (
+                        <Badge
+                          variant="secondary"
+                          className="bg-white/20 text-white border-white/30 text-xs"
+                        >
+                          Verified
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            </div>
+          ))}
+        </div>
+
+        {/* Navigation Arrows */}
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => scroll("left")}
+          disabled={!canScrollLeft}
+          className={cn(
+            "absolute left-2 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-white/90 backdrop-blur-sm border-oma-cocoa/20 hover:border-oma-plum shadow-lg transition-all duration-200",
+            !canScrollLeft && "opacity-50 cursor-not-allowed"
+          )}
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => scroll("right")}
+          disabled={!canScrollRight}
+          className={cn(
+            "absolute right-2 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-white/90 backdrop-blur-sm border-oma-cocoa/20 hover:border-oma-plum shadow-lg transition-all duration-200",
+            !canScrollRight && "opacity-50 cursor-not-allowed"
+          )}
+        >
+          <ChevronRight className="h-5 w-5" />
+        </Button>
+      </div>
+
+      {/* Scroll Indicators */}
+      <div className="flex justify-center mt-4">
+        <div className="flex gap-1">
+          <div
+            className={cn(
+              "h-1 rounded-full transition-all duration-200",
+              canScrollLeft ? "w-2 bg-oma-cocoa/30" : "w-6 bg-oma-plum"
+            )}
+          />
+          <div
+            className={cn(
+              "h-1 rounded-full transition-all duration-200",
+              canScrollRight ? "w-2 bg-oma-cocoa/30" : "w-6 bg-oma-plum"
+            )}
+          />
+        </div>
+      </div>
+    </section>
   );
 }
