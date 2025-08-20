@@ -259,6 +259,47 @@ export default function UsersPage() {
         });
       }
 
+      // Update the local state immediately instead of reloading
+      if (editingUser && result.action === "updated") {
+        // Update the user in the local state
+        setUsers((prevUsers) =>
+          prevUsers.map((user) =>
+            user.id === editingUser.id
+              ? {
+                  ...user,
+                  role: formData.role,
+                  owned_brands: formData.selectedBrands,
+                  brand_names: formData.selectedBrands
+                    .map((brandId) => {
+                      const brand = brands.find((b) => b.id === brandId);
+                      return brand?.name;
+                    })
+                    .filter(Boolean) as string[],
+                }
+              : user
+          )
+        );
+
+        // Update filtered users as well
+        setFilteredUsers((prevFiltered) =>
+          prevFiltered.map((user) =>
+            user.id === editingUser.id
+              ? {
+                  ...user,
+                  role: formData.role,
+                  owned_brands: formData.selectedBrands,
+                  brand_names: formData.selectedBrands
+                    .map((brandId) => {
+                      const brand = brands.find((b) => b.id === brandId);
+                      return brand?.name;
+                    })
+                    .filter(Boolean) as string[],
+                }
+              : user
+          )
+        );
+      }
+
       // Reset form and close dialog
       setFormData({
         email: "",
@@ -267,9 +308,6 @@ export default function UsersPage() {
       });
       setEditingUser(null);
       setIsDialogOpen(false);
-
-      // Refresh users list
-      window.location.reload();
     } catch (error) {
       console.error("Error submitting form:", error);
       toast.error("Failed to save user");
