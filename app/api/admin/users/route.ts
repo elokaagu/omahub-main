@@ -92,6 +92,13 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { email, role, owned_brands } = body;
 
+    console.log("🔄 POST /api/admin/users - Request received:", {
+      email,
+      role,
+      owned_brands,
+      owned_brands_length: owned_brands?.length || 0
+    });
+
     // Create authenticated client
     const supabase = createAuthenticatedClient();
 
@@ -101,7 +108,15 @@ export async function POST(request: NextRequest) {
       error: authError,
     } = await supabase.auth.getUser();
 
+    console.log("🔐 Authentication check:", {
+      hasUser: !!user,
+      userId: user?.id,
+      userEmail: user?.email,
+      authError: authError?.message || null
+    });
+
     if (authError || !user) {
+      console.error("❌ Authentication failed:", authError);
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
@@ -112,12 +127,25 @@ export async function POST(request: NextRequest) {
       .eq("id", user.id)
       .single();
 
+    console.log("👤 Profile check:", {
+      hasProfile: !!profile,
+      userRole: profile?.role,
+      profileError: profileError?.message || null
+    });
+
     if (profileError || profile?.role !== "super_admin") {
+      console.error("❌ Insufficient permissions:", {
+        profileError: profileError?.message,
+        userRole: profile?.role,
+        requiredRole: "super_admin"
+      });
       return NextResponse.json(
         { error: "Insufficient permissions" },
         { status: 403 }
       );
     }
+
+    console.log("✅ Authentication and permissions verified");
 
     // If the user is being assigned super_admin role, automatically assign all brands
     // IMPORTANT: For super_admin, we ALWAYS assign all brands regardless of form input
