@@ -80,28 +80,14 @@ export async function signIn(email: string, password: string) {
       throw new Error(data.error || "Login failed");
     }
 
-    // If we have session data from the API, set it in the client-side Supabase client
-    if (data.session && supabase) {
-      console.log("🔄 Setting session in client-side Supabase client...");
+    console.log("✅ Login successful, session data received");
 
-      const { data: setSessionData, error: setSessionError } =
-        await supabase.auth.setSession({
-          access_token: data.session.access_token,
-          refresh_token: data.session.refresh_token,
-        });
-
-      if (setSessionError) {
-        console.error("❌ Error setting session in client:", setSessionError);
-        // Don't throw here, still return the API response
-      } else {
-        console.log("✅ Session set successfully in client");
-        // Update the response to include the client session
-        data.clientSession = setSessionData.session;
-      }
-    }
-
+    // Don't manually manipulate the session - let Supabase handle it naturally
+    // The server-side login should have already set the proper cookies
+    
     // If the API signals to refresh the session, reload the page to ensure context is correct
     if (data.refreshSession) {
+      console.log("🔄 Refreshing page to sync session state...");
       window.location.reload();
     }
 

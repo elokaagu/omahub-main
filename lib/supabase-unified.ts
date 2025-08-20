@@ -19,40 +19,7 @@ const clientConfig = {
     detectSessionInUrl: true,
     flowType: "pkce" as const,
     debug: process.env.NODE_ENV === "development",
-    // Use consistent storage key for better session persistence
-    storageKey: `sb-${new URL(supabaseUrl).hostname.split(".")[0]}-auth-token`,
-    // Enhanced storage handling with error recovery
-    storage: {
-      getItem: (key: string) => {
-        try {
-          if (typeof window !== "undefined") {
-            return localStorage.getItem(key);
-          }
-          return null;
-        } catch (e) {
-          console.warn("Storage getItem failed:", e);
-          return null;
-        }
-      },
-      setItem: (key: string, value: string) => {
-        try {
-          if (typeof window !== "undefined") {
-            localStorage.setItem(key, value);
-          }
-        } catch (e) {
-          console.warn("Storage setItem failed:", e);
-        }
-      },
-      removeItem: (key: string) => {
-        try {
-          if (typeof window !== "undefined") {
-            localStorage.removeItem(key);
-          }
-        } catch (e) {
-          console.warn("Storage removeItem failed:", e);
-        }
-      }
-    }
+    // Remove custom storage to let Supabase handle cookies naturally
   },
   global: {
     headers: {

@@ -108,11 +108,24 @@ export async function POST(request: NextRequest) {
       userId: data.user.id
     });
 
-    return NextResponse.json({
+    // Create response with user data
+    const response = NextResponse.json({
       user: data.user,
       role: userRole,
       message: "Login successful",
+      session: data.session, // Include the session data
+      refreshSession: true, // Signal frontend to refresh session
     });
+
+    // Set additional headers to help with session sync
+    response.headers.set(
+      "Cache-Control",
+      "no-cache, no-store, must-revalidate"
+    );
+    response.headers.set("Pragma", "no-cache");
+    response.headers.set("Expires", "0");
+
+    return response;
   } catch (error) {
     console.error("❌ Login: Unexpected error:", error);
     return NextResponse.json(
