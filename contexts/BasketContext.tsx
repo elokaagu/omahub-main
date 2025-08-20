@@ -1,6 +1,12 @@
 "use client";
 
-import React, { createContext, useContext, useReducer, useCallback, useEffect } from "react";
+import React, {
+  createContext,
+  useContext,
+  useReducer,
+  useCallback,
+  useEffect,
+} from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -40,7 +46,10 @@ type BasketAction =
   | { type: "SET_BASKETS"; payload: Basket[] }
   | { type: "ADD_ITEM"; payload: { basketId: string; item: BasketItem } }
   | { type: "REMOVE_ITEM"; payload: { basketId: string; itemId: string } }
-  | { type: "UPDATE_QUANTITY"; payload: { basketId: string; itemId: string; quantity: number } }
+  | {
+      type: "UPDATE_QUANTITY";
+      payload: { basketId: string; itemId: string; quantity: number };
+    }
   | { type: "CLEAR_BASKET"; payload: string };
 
 // Initial state
@@ -68,7 +77,9 @@ function basketReducer(state: BasketState, action: BasketAction): BasketState {
                 ...basket,
                 items: [...basket.items, action.payload.item],
                 totalItems: basket.totalItems + action.payload.item.quantity,
-                totalPrice: basket.totalPrice + action.payload.item.price * action.payload.item.quantity,
+                totalPrice:
+                  basket.totalPrice +
+                  action.payload.item.price * action.payload.item.quantity,
               }
             : basket
         ),
@@ -80,7 +91,9 @@ function basketReducer(state: BasketState, action: BasketAction): BasketState {
           basket.id === action.payload.basketId
             ? {
                 ...basket,
-                items: basket.items.filter((item) => item.id !== action.payload.itemId),
+                items: basket.items.filter(
+                  (item) => item.id !== action.payload.itemId
+                ),
                 totalItems: basket.items
                   .filter((item) => item.id !== action.payload.itemId)
                   .reduce((sum, item) => sum + item.quantity, 0),
@@ -103,8 +116,23 @@ function basketReducer(state: BasketState, action: BasketAction): BasketState {
                     ? { ...item, quantity: action.payload.quantity }
                     : item
                 ),
-                totalItems: basket.items.reduce((sum, item) => sum + (item.id === action.payload.itemId ? action.payload.quantity : item.quantity), 0),
-                totalPrice: basket.items.reduce((sum, item) => sum + item.price * (item.id === action.payload.itemId ? action.payload.quantity : item.quantity), 0),
+                totalItems: basket.items.reduce(
+                  (sum, item) =>
+                    sum +
+                    (item.id === action.payload.itemId
+                      ? action.payload.quantity
+                      : item.quantity),
+                  0
+                ),
+                totalPrice: basket.items.reduce(
+                  (sum, item) =>
+                    sum +
+                    item.price *
+                      (item.id === action.payload.itemId
+                        ? action.payload.quantity
+                        : item.quantity),
+                  0
+                ),
               }
             : basket
         ),
@@ -126,7 +154,12 @@ function basketReducer(state: BasketState, action: BasketAction): BasketState {
 // Context
 const BasketContext = createContext<{
   state: BasketState;
-  addToBasket: (productId: string, quantity: number, size?: string, colour?: string) => Promise<void>;
+  addToBasket: (
+    productId: string,
+    quantity: number,
+    size?: string,
+    colour?: string
+  ) => Promise<void>;
   removeFromBasket: (itemId: string) => Promise<void>;
   updateQuantity: (itemId: string, quantity: number) => Promise<void>;
   clearBasket: (basketId: string) => Promise<void>;
@@ -168,172 +201,207 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
       dispatch({ type: "SET_BASKETS", payload: data.baskets || [] });
     } catch (error) {
       console.error("Error fetching baskets:", error);
-      dispatch({ type: "SET_ERROR", payload: error instanceof Error ? error.message : "Failed to fetch baskets" });
+      dispatch({
+        type: "SET_ERROR",
+        payload:
+          error instanceof Error ? error.message : "Failed to fetch baskets",
+      });
     } finally {
       dispatch({ type: "SET_LOADING", payload: false });
     }
   }, [user]);
 
   // Add item to basket
-  const addToBasket = useCallback(async (productId: string, quantity: number, size?: string, colour?: string) => {
-    if (!user) {
-      toast.error("Please sign in to add items to your basket");
-      return;
-    }
-
-    try {
-      dispatch({ type: "SET_LOADING", payload: true });
-      dispatch({ type: "SET_ERROR", payload: null });
-
-      const response = await fetch("/api/basket", {
-        method: "POST",
-        credentials: "include", // Include cookies for authentication
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          productId,
-          quantity,
-          size,
-          colour,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to add item to basket");
+  const addToBasket = useCallback(
+    async (
+      productId: string,
+      quantity: number,
+      size?: string,
+      colour?: string
+    ) => {
+      if (!user) {
+        toast.error("Please sign in to add items to your basket");
+        return;
       }
 
-      // Refresh baskets to get updated state
-      await fetchBaskets();
-      toast.success("Item added to basket");
-    } catch (error) {
-      console.error("Error adding to basket:", error);
-      const errorMessage = error instanceof Error ? error.message : "Failed to add item to basket";
-      dispatch({ type: "SET_ERROR", payload: errorMessage });
-      toast.error(errorMessage);
-    } finally {
-      dispatch({ type: "SET_LOADING", payload: false });
-    }
-  }, [fetchBaskets, user]);
+      try {
+        dispatch({ type: "SET_LOADING", payload: true });
+        dispatch({ type: "SET_ERROR", payload: null });
+
+        const response = await fetch("/api/basket", {
+          method: "POST",
+          credentials: "include", // Include cookies for authentication
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            productId,
+            quantity,
+            size,
+            colour,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "Failed to add item to basket");
+        }
+
+        // Refresh baskets to get updated state
+        await fetchBaskets();
+        toast.success("Item added to basket");
+      } catch (error) {
+        console.error("Error adding to basket:", error);
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : "Failed to add item to basket";
+        dispatch({ type: "SET_ERROR", payload: errorMessage });
+        toast.error(errorMessage);
+      } finally {
+        dispatch({ type: "SET_LOADING", payload: false });
+      }
+    },
+    [fetchBaskets, user]
+  );
 
   // Remove item from basket
-  const removeFromBasket = useCallback(async (itemId: string) => {
-    if (!user) {
-      toast.error("Please sign in to manage your basket");
-      return;
-    }
-
-    try {
-      dispatch({ type: "SET_LOADING", payload: true });
-      dispatch({ type: "SET_ERROR", payload: null });
-
-      const response = await fetch(`/api/basket?itemId=${itemId}`, {
-        method: "DELETE",
-        credentials: "include", // Include cookies for authentication
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to remove item from basket");
+  const removeFromBasket = useCallback(
+    async (itemId: string) => {
+      if (!user) {
+        toast.error("Please sign in to manage your basket");
+        return;
       }
 
-      // Refresh baskets to get updated state
-      await fetchBaskets();
-      toast.success("Item removed from basket");
-    } catch (error) {
-      console.error("Error removing from basket:", error);
-      const errorMessage = error instanceof Error ? error.message : "Failed to remove item from basket";
-      dispatch({ type: "SET_ERROR", payload: errorMessage });
-      toast.error(errorMessage);
-    } finally {
-      dispatch({ type: "SET_LOADING", payload: false });
-    }
-  }, [fetchBaskets, user]);
+      try {
+        dispatch({ type: "SET_LOADING", payload: true });
+        dispatch({ type: "SET_ERROR", payload: null });
+
+        const response = await fetch(`/api/basket?itemId=${itemId}`, {
+          method: "DELETE",
+          credentials: "include", // Include cookies for authentication
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "Failed to remove item from basket");
+        }
+
+        // Refresh baskets to get updated state
+        await fetchBaskets();
+        toast.success("Item removed from basket");
+      } catch (error) {
+        console.error("Error removing from basket:", error);
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : "Failed to remove item from basket";
+        dispatch({ type: "SET_ERROR", payload: errorMessage });
+        toast.error(errorMessage);
+      } finally {
+        dispatch({ type: "SET_LOADING", payload: false });
+      }
+    },
+    [fetchBaskets, user]
+  );
 
   // Update item quantity
-  const updateQuantity = useCallback(async (itemId: string, quantity: number) => {
-    if (!user) {
-      toast.error("Please sign in to manage your basket");
-      return;
-    }
-
-    try {
-      dispatch({ type: "SET_LOADING", payload: true });
-      dispatch({ type: "SET_ERROR", payload: null });
-
-      const response = await fetch(`/api/basket?itemId=${itemId}`, {
-        method: "PATCH",
-        credentials: "include", // Include cookies for authentication
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ quantity }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to update quantity");
+  const updateQuantity = useCallback(
+    async (itemId: string, quantity: number) => {
+      if (!user) {
+        toast.error("Please sign in to manage your basket");
+        return;
       }
 
-      // Refresh baskets to get updated state
-      await fetchBaskets();
-      toast.success("Quantity updated");
-    } catch (error) {
-      console.error("Error updating quantity:", error);
-      const errorMessage = error instanceof Error ? error.message : "Failed to update quantity";
-      dispatch({ type: "SET_ERROR", payload: errorMessage });
-      toast.error(errorMessage);
-    } finally {
-      dispatch({ type: "SET_LOADING", payload: false });
-    }
-  }, [fetchBaskets, user]);
+      try {
+        dispatch({ type: "SET_LOADING", payload: true });
+        dispatch({ type: "SET_ERROR", payload: null });
+
+        const response = await fetch(`/api/basket?itemId=${itemId}`, {
+          method: "PATCH",
+          credentials: "include", // Include cookies for authentication
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ quantity }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "Failed to update quantity");
+        }
+
+        // Refresh baskets to get updated state
+        await fetchBaskets();
+        toast.success("Quantity updated");
+      } catch (error) {
+        console.error("Error updating quantity:", error);
+        const errorMessage =
+          error instanceof Error ? error.message : "Failed to update quantity";
+        dispatch({ type: "SET_ERROR", payload: errorMessage });
+        toast.error(errorMessage);
+      } finally {
+        dispatch({ type: "SET_LOADING", payload: false });
+      }
+    },
+    [fetchBaskets, user]
+  );
 
   // Clear basket
-  const clearBasket = useCallback(async (basketId: string) => {
-    if (!user) {
-      toast.error("Please sign in to manage your basket");
-      return;
-    }
-
-    try {
-      dispatch({ type: "SET_LOADING", payload: true });
-      dispatch({ type: "SET_ERROR", payload: null });
-
-      const response = await fetch(`/api/basket/clear?basketId=${basketId}`, {
-        method: "DELETE",
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to clear basket");
+  const clearBasket = useCallback(
+    async (basketId: string) => {
+      if (!user) {
+        toast.error("Please sign in to manage your basket");
+        return;
       }
 
-      // Refresh baskets to get updated state
-      await fetchBaskets();
-      toast.success("Basket cleared");
-    } catch (error) {
-      console.error("Error clearing basket:", error);
-      const errorMessage = error instanceof Error ? error.message : "Failed to clear basket";
-      dispatch({ type: "SET_ERROR", payload: errorMessage });
-      toast.error(errorMessage);
-    } finally {
-      dispatch({ type: "SET_LOADING", payload: false });
-    }
-  }, [fetchBaskets, user]);
+      try {
+        dispatch({ type: "SET_LOADING", payload: true });
+        dispatch({ type: "SET_ERROR", payload: null });
+
+        const response = await fetch(`/api/basket/clear?basketId=${basketId}`, {
+          method: "DELETE",
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "Failed to clear basket");
+        }
+
+        // Refresh baskets to get updated state
+        await fetchBaskets();
+        toast.success("Basket cleared");
+      } catch (error) {
+        console.error("Error clearing basket:", error);
+        const errorMessage =
+          error instanceof Error ? error.message : "Failed to clear basket";
+        dispatch({ type: "SET_ERROR", payload: errorMessage });
+        toast.error(errorMessage);
+      } finally {
+        dispatch({ type: "SET_LOADING", payload: false });
+      }
+    },
+    [fetchBaskets, user]
+  );
 
   // Get total items across all baskets
   const getTotalItems = useCallback(() => {
-    return state.baskets.reduce((total, basket) => total + basket.totalItems, 0);
+    return state.baskets.reduce(
+      (total, basket) => total + basket.totalItems,
+      0
+    );
   }, [state.baskets]);
 
   // Get total price across all baskets
   const getTotalPrice = useCallback(() => {
-    return state.baskets.reduce((total, basket) => total + basket.totalPrice, 0);
+    return state.baskets.reduce(
+      (total, basket) => total + basket.totalPrice,
+      0
+    );
   }, [state.baskets]);
 
   // Load baskets when user changes
@@ -352,7 +420,9 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
     getTotalPrice,
   };
 
-  return <BasketContext.Provider value={value}>{children}</BasketContext.Provider>;
+  return (
+    <BasketContext.Provider value={value}>{children}</BasketContext.Provider>
+  );
 }
 
 // Hook to use basket context

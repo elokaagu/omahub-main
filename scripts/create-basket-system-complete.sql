@@ -32,7 +32,7 @@ DROP POLICY IF EXISTS "Brand admins can view brand order items" ON public.order_
 
 -- Step 1: Create baskets table
 CREATE TABLE public.baskets (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY, 
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     brand_id TEXT NOT NULL REFERENCES public.brands(id) ON DELETE 
     CASCADE,

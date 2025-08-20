@@ -153,29 +153,44 @@ export default function CataloguesPage() {
   }, [products, productSearch, selectedBrand, selectedProductCategory]);
 
   // Get unique categories and brands for filters
-  const categories = ["all", ...Array.from(new Set(catalogues.map((c) => c.brand.category)))];
-  const brands = ["all", ...Array.from(new Set(products.map((p) => p.brand.name)))];
-  const productCategories = ["all", ...Array.from(new Set(products.map((p) => p.category)))];
+  const categories = [
+    "all",
+    ...Array.from(new Set(catalogues.map((c) => c.brand.category))),
+  ];
+  const brands = [
+    "all",
+    ...Array.from(new Set(products.map((p) => p.brand.name))),
+  ];
+  const productCategories = [
+    "all",
+    ...Array.from(new Set(products.map((p) => p.category))),
+  ];
 
   // Group catalogues by category for carousel sections
-  const cataloguesByCategory = filteredCatalogues.reduce((acc, catalogue) => {
-    const category = catalogue.brand.category || "Other";
-    if (!acc[category]) {
-      acc[category] = [];
-    }
-    acc[category].push(catalogue);
-    return acc;
-  }, {} as Record<string, CatalogueWithBrand[]>);
+  const cataloguesByCategory = filteredCatalogues.reduce(
+    (acc, catalogue) => {
+      const category = catalogue.brand.category || "Other";
+      if (!acc[category]) {
+        acc[category] = [];
+      }
+      acc[category].push(catalogue);
+      return acc;
+    },
+    {} as Record<string, CatalogueWithBrand[]>
+  );
 
   // Group products by category for carousel sections
-  const productsByCategory = filteredProducts.reduce((acc, product) => {
-    const category = product.category || "Other";
-    if (!acc[category]) {
-      acc[category] = [];
-    }
-    acc[category].push(product);
-    return acc;
-  }, {} as Record<string, ProductWithBrand[]>);
+  const productsByCategory = filteredProducts.reduce(
+    (acc, product) => {
+      const category = product.category || "Other";
+      if (!acc[category]) {
+        acc[category] = [];
+      }
+      acc[category].push(product);
+      return acc;
+    },
+    {} as Record<string, ProductWithBrand[]>
+  );
 
   if (loading) {
     return <Loading />;
@@ -235,7 +250,7 @@ export default function CataloguesPage() {
               className="w-full h-12 text-base"
             />
           </div>
-          
+
           {/* Action buttons - responsive layout */}
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
             <Button
@@ -328,26 +343,30 @@ export default function CataloguesPage() {
         {showAllProducts ? (
           // Products Carousels by Category
           <div className="space-y-12">
-            {Object.entries(productsByCategory).map(([category, categoryProducts]) => (
-              <ProductCarouselSection
-                key={category}
-                title={category === "Other" ? "Other Products" : category}
-                subtitle={`Discover our ${category.toLowerCase()} collection`}
-                products={categoryProducts}
-              />
-            ))}
+            {Object.entries(productsByCategory).map(
+              ([category, categoryProducts]) => (
+                <ProductCarouselSection
+                  key={category}
+                  title={category === "Other" ? "Other Products" : category}
+                  subtitle={`Discover our ${category.toLowerCase()} collection`}
+                  products={categoryProducts}
+                />
+              )
+            )}
           </div>
         ) : (
           // Collections Carousels by Category
           <div className="space-y-12">
-            {Object.entries(cataloguesByCategory).map(([category, categoryCatalogues]) => (
-              <CollectionCarouselSection
-                key={category}
-                title={category === "Other" ? "Other Collections" : category}
-                subtitle={`Explore ${category.toLowerCase()} designs`}
-                catalogues={categoryCatalogues}
-              />
-            ))}
+            {Object.entries(cataloguesByCategory).map(
+              ([category, categoryCatalogues]) => (
+                <CollectionCarouselSection
+                  key={category}
+                  title={category === "Other" ? "Other Collections" : category}
+                  subtitle={`Explore ${category.toLowerCase()} designs`}
+                  catalogues={categoryCatalogues}
+                />
+              )
+            )}
           </div>
         )}
       </div>
@@ -356,10 +375,14 @@ export default function CataloguesPage() {
 }
 
 // Product Carousel Section Component
-function ProductCarouselSection({ title, subtitle, products }: { 
-  title: string; 
-  subtitle: string; 
-  products: ProductWithBrand[] 
+function ProductCarouselSection({
+  title,
+  subtitle,
+  products,
+}: {
+  title: string;
+  subtitle: string;
+  products: ProductWithBrand[];
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -501,10 +524,14 @@ function ProductCarouselSection({ title, subtitle, products }: {
 }
 
 // Collection Carousel Section Component
-function CollectionCarouselSection({ title, subtitle, catalogues }: { 
-  title: string; 
-  subtitle: string; 
-  catalogues: CatalogueWithBrand[] 
+function CollectionCarouselSection({
+  title,
+  subtitle,
+  catalogues,
+}: {
+  title: string;
+  subtitle: string;
+  catalogues: CatalogueWithBrand[];
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);

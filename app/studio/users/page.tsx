@@ -117,12 +117,6 @@ export default function UsersPage() {
         const { users: usersData } = await usersResponse.json();
         setBrands(brandsData); // Full brand data for form
 
-        console.log("📋 Loaded brands for form:", {
-          brandsCount: brandsData?.length || 0,
-          brandsData: brandsData?.slice(0, 3), // Show first 3 brands
-          allBrands: brandsData,
-        });
-
         // Map users with brand names using the pre-built Map for O(1) performance
         const usersWithBrands: UserWithBrands[] = usersData.map(
           (user: UserProfile) => ({
@@ -173,6 +167,30 @@ export default function UsersPage() {
     setFilteredUsers(filtered);
   }, [users, searchTerm, roleFilter]);
 
+  const handleEditUser = (userToEdit: UserWithBrands) => {
+    // Normalize the role to handle any legacy brand_owner roles
+    const normalizedRole =
+      userToEdit.role === "brand_owner" ? "brand_admin" : userToEdit.role;
+    
+    setEditingUser(userToEdit);
+    setFormData({
+      email: userToEdit.email,
+      role: normalizedRole,
+      selectedBrands: userToEdit.owned_brands || [],
+    });
+    setIsDialogOpen(true);
+  };
+
+  const handleAddUser = () => {
+    setEditingUser(null);
+    setFormData({
+      email: "",
+      role: "user",
+      selectedBrands: [],
+    });
+    setIsDialogOpen(true);
+  };
+
   const handleInputChange = (field: string, value: string | string[]) => {
     setFormData((prev) => ({
       ...prev,
@@ -181,24 +199,12 @@ export default function UsersPage() {
   };
 
   const handleBrandToggle = (brandId: string) => {
-    console.log("🔄 Toggling brand:", brandId);
-    console.log(
-      "📋 Current selectedBrands before toggle:",
-      formData.selectedBrands
-    );
-
-    setFormData((prev) => {
-      const newSelectedBrands = prev.selectedBrands.includes(brandId)
+    setFormData((prev) => ({
+      ...prev,
+      selectedBrands: prev.selectedBrands.includes(brandId)
         ? prev.selectedBrands.filter((id) => id !== brandId)
-        : [...prev.selectedBrands, brandId];
-
-      console.log("📋 New selectedBrands after toggle:", newSelectedBrands);
-
-      return {
-        ...prev,
-        selectedBrands: newSelectedBrands,
-      };
-    });
+        : [...prev.selectedBrands, brandId],
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -209,24 +215,8 @@ export default function UsersPage() {
       return;
     }
 
-    // Debug logging
-    console.log("🔄 Submitting form with data:", {
-      email: formData.email,
-      role: formData.role,
-      selectedBrands: formData.selectedBrands,
-      selectedBrandsLength: formData.selectedBrands.length,
-    });
-
     try {
       setIsLoading(true);
-
-      const requestBody = {
-        email: formData.email,
-        role: formData.role,
-        owned_brands: formData.selectedBrands,
-      };
-
-      console.log("📤 Sending request to API:", requestBody);
 
       const response = await fetch("/api/admin/users", {
         method: "POST",
@@ -234,16 +224,14 @@ export default function UsersPage() {
           "Content-Type": "application/json",
         },
         credentials: "include",
-        body: JSON.stringify(requestBody),
+        body: JSON.stringify({
+          email: formData.email,
+          role: formData.role,
+          owned_brands: formData.selectedBrands,
+        }),
       });
 
       const result = await response.json();
-
-      console.log("📥 API Response:", {
-        status: response.status,
-        ok: response.ok,
-        result: result,
-      });
 
       if (!response.ok) {
         console.error("Error submitting form:", result);
@@ -316,47 +304,6 @@ export default function UsersPage() {
       console.error("Error deleting user:", error);
       toast.error("Failed to delete user");
     }
-  };
-
-  const handleEditUser = (userToEdit: UserWithBrands) => {
-    console.log("🔄 Editing user:", {
-      email: userToEdit.email,
-      role: userToEdit.role,
-      owned_brands: userToEdit.owned_brands,
-      owned_brands_length: userToEdit.owned_brands?.length || 0
-    });
-    
-    // Normalize the role to handle any legacy brand_owner roles
-    const normalizedRole =
-      userToEdit.role === "brand_owner" ? "brand_admin" : userToEdit.role;
-    
-    console.log("🔄 Normalized role:", normalizedRole);
-    
-    setEditingUser(userToEdit);
-    setFormData({
-      email: userToEdit.email,
-      role: normalizedRole,
-      selectedBrands: userToEdit.owned_brands || [],
-    });
-    
-    console.log("🔄 Set form data:", {
-      email: userToEdit.email,
-      role: normalizedRole,
-      selectedBrands: userToEdit.owned_brands || [],
-      selectedBrandsLength: (userToEdit.owned_brands || []).length
-    });
-    
-    setIsDialogOpen(true);
-  };
-
-  const handleAddUser = () => {
-    setEditingUser(null);
-    setFormData({
-      email: "",
-      role: "user",
-      selectedBrands: [],
-    });
-    setIsDialogOpen(true);
   };
 
   const getRoleBadgeColor = (role: string) => {
@@ -662,29 +609,10 @@ export default function UsersPage() {
                       </label>
                     </div>
                   </div>
-
-                  {/* Debug info */}
-                  {process.env.NODE_ENV === "development" && (
-                    <p className="text-xs text-gray-500">
-                      Current role: {formData.role} | User role:{" "}
-                      {editingUser?.role}
-                    </p>
-                  )}
                 </div>
 
                 <div className="space-y-2">
                   <Label>Assign Brands</Label>
-                  
-                  {/* Debug display for troubleshooting */}
-                  {process.env.NODE_ENV === "development" && (
-                    <div className="p-2 bg-gray-100 rounded text-xs">
-                      <p><strong>Debug Info:</strong></p>
-                      <p>Selected Brands Count: {formData.selectedBrands.length}</p>
-                      <p>Selected Brand IDs: {formData.selectedBrands.join(", ") || "None"}</p>
-                      <p>Available Brands Count: {brands.length}</p>
-                    </div>
-                  )}
-                  
                   <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto border rounded-md p-3">
                     {brands.map((brand) => (
                       <div

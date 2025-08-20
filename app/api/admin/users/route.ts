@@ -92,13 +92,6 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { email, role, owned_brands } = body;
 
-    console.log("🔄 POST /api/admin/users - Request received:", {
-      email,
-      role,
-      owned_brands,
-      owned_brands_length: owned_brands?.length || 0
-    });
-
     // Create authenticated client
     const supabase = createAuthenticatedClient();
 
@@ -108,15 +101,7 @@ export async function POST(request: NextRequest) {
       error: authError,
     } = await supabase.auth.getUser();
 
-    console.log("🔐 Authentication check:", {
-      hasUser: !!user,
-      userId: user?.id,
-      userEmail: user?.email,
-      authError: authError?.message || null
-    });
-
     if (authError || !user) {
-      console.error("❌ Authentication failed:", authError);
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
@@ -127,33 +112,18 @@ export async function POST(request: NextRequest) {
       .eq("id", user.id)
       .single();
 
-    console.log("👤 Profile check:", {
-      hasProfile: !!profile,
-      userRole: profile?.role,
-      profileError: profileError?.message || null
-    });
-
     if (profileError || profile?.role !== "super_admin") {
-      console.error("❌ Insufficient permissions:", {
-        profileError: profileError?.message,
-        userRole: profile?.role,
-        requiredRole: "super_admin"
-      });
       return NextResponse.json(
         { error: "Insufficient permissions" },
         { status: 403 }
       );
     }
 
-    console.log("✅ Authentication and permissions verified");
-
     // If the user is being assigned super_admin role, automatically assign all brands
     // IMPORTANT: For super_admin, we ALWAYS assign all brands regardless of form input
     let finalOwnedBrands: string[] = [];
 
     if (role === "super_admin") {
-      console.log("🔄 Auto-assigning all brands to super admin:", email);
-
       // Fetch all brand IDs
       const { data: allBrands, error: brandsError } = await supabaseAdmin
         .from("brands")
@@ -171,9 +141,6 @@ export async function POST(request: NextRequest) {
       } else {
         const allBrandIds = allBrands.map((brand) => brand.id);
         finalOwnedBrands = allBrandIds;
-        console.log(
-          `✅ Auto-assigned ${allBrandIds.length} brands to super admin`
-        );
       }
     } else {
       // For non-super-admin roles, use the brands from the form
@@ -194,13 +161,6 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
-
-    // Log the final assignment details for debugging
-    console.log(`📋 Role assignment details for ${email}:`);
-    console.log(`  Requested role: ${role}`);
-    console.log(`  Form brands: ${owned_brands ? owned_brands.length : 0}`);
-    console.log(`  Final brands: ${finalOwnedBrands.length}`);
-    console.log(`  Is super admin: ${role === "super_admin"}`);
 
     if (existingUser) {
       // Update existing user
@@ -224,8 +184,6 @@ export async function POST(request: NextRequest) {
       }
 
       // Trigger real-time profile refresh for the updated user
-      console.log("🔄 Triggering profile refresh for updated user:", email);
-
       // Only send real-time notification if the updated user is not the current admin
       // This prevents the admin from logging themselves out when assigning roles
       if (updatedUser.id !== user.id) {
@@ -245,7 +203,6 @@ export async function POST(request: NextRequest) {
               },
             });
 
-          console.log("✅ Real-time profile update notification sent");
         } catch (realtimeError) {
           console.warn(
             "⚠️ Failed to send real-time profile update:",
@@ -253,10 +210,6 @@ export async function POST(request: NextRequest) {
           );
           // Don't fail the request if real-time notification fails
         }
-      } else {
-        console.log(
-          "🔄 Skipping real-time notification for self-update to prevent logout"
-        );
       }
 
       // Validate that super_admin users have all brands assigned
@@ -264,15 +217,20 @@ export async function POST(request: NextRequest) {
         const { data: totalBrands, error: countError } = await supabaseAdmin
           .from("brands")
           .select("id", { count: "exact" });
-        
-        if (!countError && totalBrands && finalOwnedBrands.length !== totalBrands.length) {
-          console.error(`🚨 Super admin validation failed: Expected ${totalBrands.length} brands, got ${finalOwnedBrands.length}`);
+
+        if (
+          !countError &&
+          totalBrands &&
+          finalOwnedBrands.length !== totalBrands.length
+        ) {
+          console.error(
+            `🚨 Super admin validation failed: Expected ${totalBrands.length} brands, got ${finalOwnedBrands.length}`
+          );
           return NextResponse.json(
             { error: "Super admin brand assignment validation failed" },
             { status: 500 }
           );
         }
-        console.log(`✅ Super admin validation passed: ${finalOwnedBrands.length} brands assigned`);
       }
 
       return NextResponse.json({
@@ -310,15 +268,20 @@ export async function POST(request: NextRequest) {
         const { data: totalBrands, error: countError } = await supabaseAdmin
           .from("brands")
           .select("id", { count: "exact" });
-        
-        if (!countError && totalBrands && finalOwnedBrands.length !== totalBrands.length) {
-          console.error(`🚨 Super admin validation failed: Expected ${totalBrands.length} brands, got ${finalOwnedBrands.length}`);
+
+        if (
+          !countError &&
+          totalBrands &&
+          finalOwnedBrands.length !== totalBrands.length
+        ) {
+          console.error(
+            `🚨 Super admin validation failed: Expected ${totalBrands.length} brands, got ${finalOwnedBrands.length}`
+          );
           return NextResponse.json(
             { error: "Super admin brand assignment validation failed" },
             { status: 500 }
           );
         }
-        console.log(`✅ Super admin validation passed: ${finalOwnedBrands.length} brands assigned`);
       }
 
       return NextResponse.json({
@@ -389,8 +352,6 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    console.log(`🗑️ Deleting user: ${userToDelete.email} (${userId})`);
-
     // Delete from auth.users table first (this will cascade to profiles due to foreign key)
     const { error: authDeleteError } =
       await supabaseAdmin.auth.admin.deleteUser(userId);
@@ -402,10 +363,6 @@ export async function DELETE(request: NextRequest) {
         { status: 500 }
       );
     }
-
-    console.log(
-      `✅ Successfully deleted user from auth: ${userToDelete.email}`
-    );
 
     // The profiles record should be automatically deleted due to CASCADE foreign key,
     // but let's ensure it's deleted just in case
@@ -420,10 +377,6 @@ export async function DELETE(request: NextRequest) {
         profileDeleteError
       );
       // Don't fail the request since the auth deletion succeeded
-    } else {
-      console.log(
-        `✅ Successfully deleted user profile: ${userToDelete.email}`
-      );
     }
 
     return NextResponse.json({
