@@ -1,6 +1,4 @@
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
-import type { Database } from "../types/supabase";
+import { supabaseAdmin } from "../supabase-admin";
 
 export type Permission =
   | "studio.access"
@@ -34,40 +32,25 @@ const rolePermissions: Record<Role, Permission[]> = {
   ],
 };
 
-const SUPER_ADMIN_EMAILS = [
-  "eloka.agu@icloud.com",
-  "shannonalisa@oma-hub.com",
-  "nnamdiohaka@gmail.com",
-];
-const BRAND_ADMIN_EMAILS = ["eloka@culturin.com", "eloka.agu96@gmail.com"];
+// Database-driven permission checking - no more hardcoded emails!
+async function getUserRoleFromDatabase(userId: string): Promise<Role | null> {
+  try {
+    const { data: profile, error } = await supabaseAdmin
+      .from("profiles")
+      .select("role")
+      .eq("id", userId)
+      .single();
 
-function isSuperAdminEmail(email: string): boolean {
-  return SUPER_ADMIN_EMAILS.includes(email);
-}
-
-function isBrandAdminEmail(email: string): boolean {
-  return BRAND_ADMIN_EMAILS.includes(email);
-}
-
-function createSupabaseClient() {
-  const cookieStore = cookies();
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value;
-        },
-        set(name: string, value: string, options: any) {
-          cookieStore.set({ name, value, ...options });
-        },
-        remove(name: string, options: any) {
-          cookieStore.set({ name, value: "", ...options });
-        },
-      },
+    if (error || !profile) {
+      console.warn("⚠️ Server Permissions: No profile found for user:", userId);
+      return null;
     }
-  );
+
+    return profile.role as Role;
+  } catch (error) {
+    console.error("❌ Server Permissions: Error fetching user role from database:", error);
+    return null;
+  }
 }
 
 export async function getUserPermissions(
@@ -77,81 +60,59 @@ export async function getUserPermissions(
   try {
     console.log("🔍 Server Permissions: Getting permissions for user:", userId);
 
-    // Auto-assign super admin role for specific emails
+    // First, try to get role from database (most reliable)
+    const dbRole = await getUserRoleFromDatabase(userId);
+    
+    if (dbRole) {
+      console.log("✅ Server Permissions: Found role in database:", dbRole);
+      return rolePermissions[dbRole] || [];
+    }
+
+    // Fallback: Check if user email indicates super_admin access (legacy support)
     if (userEmail && isSuperAdminEmail(userEmail)) {
-      console.log(
-        "✅ Server Permissions: Super admin email detected, returning super admin permissions"
-      );
+      console.log("✅ Server Permissions: Super admin email detected, returning super admin permissions");
       return rolePermissions.super_admin;
     }
 
-    // Auto-assign brand admin role for specific emails
+    // Fallback: Check if user email indicates brand admin access (legacy support)
     if (userEmail && isBrandAdminEmail(userEmail)) {
-      console.log(
-        "✅ Server Permissions: Brand admin email detected, returning brand admin permissions"
-      );
+      console.log("✅ Server Permissions: Brand admin email detected, returning brand admin permissions");
       return rolePermissions.brand_admin;
     }
 
-    const supabase = createSupabaseClient();
-
-    const { data: profile, error } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", userId)
-      .single();
-
-    if (error) {
-      console.error("❌ Error getting user permissions:", error);
-
-      // If profile doesn't exist, create it with default role
-      if (error.code === "PGRST116") {
-        console.log("⚠️ Profile not found, creating default profile");
-
-        // Get user email from auth
-        const {
-          data: { user },
-          error: userError,
-        } = await supabase.auth.getUser();
-
-        if (!userError && user && user.email) {
-          // Check if this is a super admin email
-          const role = isSuperAdminEmail(user.email)
-            ? "super_admin"
-            : isBrandAdminEmail(user.email)
-              ? "brand_admin"
-              : "user";
-
-          const { error: createError } = await supabase
-            .from("profiles")
-            .insert({
-              id: userId,
-              email: user.email,
-              role: role,
-              owned_brands: [],
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-            });
-
-          if (createError) {
-            console.error("❌ Error creating profile:", createError);
-            return [];
-          }
-
-          console.log(`✅ Created ${role} profile for user`);
-          return rolePermissions[role];
-        }
-      }
-
-      return [];
-    }
-
-    const role = (profile?.role as Role) || "user";
-    console.log("✅ User role:", role);
-    return rolePermissions[role] || [];
+    console.log("⚠️ Server Permissions: No role found, returning user permissions");
+    return rolePermissions.user;
   } catch (error) {
-    console.error("❌ Error getting user permissions:", error);
-    return [];
+    console.error("❌ Server Permissions: Error getting permissions:", error);
+    return rolePermissions.user; // Safe fallback
+  }
+}
+
+// Legacy fallback functions (kept for backward compatibility)
+function isSuperAdminEmail(email: string): boolean {
+  const legacySuperAdmins = [
+    "eloka.agu@icloud.com",
+    "shannonalisa@oma-hub.com",
+    "nnamdiohaka@gmail.com",
+  ];
+  return legacySuperAdmins.includes(email);
+}
+
+function isBrandAdminEmail(email: string): boolean {
+  const legacyBrandAdmins = [
+    "eloka@culturin.com",
+    "eloka.agu96@gmail.com",
+  ];
+  return legacyBrandAdmins.includes(email);
+}
+
+export async function getUserRole(userId: string): Promise<Role> {
+  try {
+    const dbRole = await getUserRoleFromDatabase(userId);
+    return dbRole || "user";
+  } catch (error) {
+    console.error("❌ Error getting user role:", error);
+    return "user";
   }
 }
 
@@ -159,10 +120,13 @@ export async function hasPermission(
   userId: string,
   permission: Permission
 ): Promise<boolean> {
-  const permissions = await getUserPermissions(userId);
-  const hasAccess = permissions.includes(permission);
-  console.log(`🔐 Permission check: ${permission} = ${hasAccess}`);
-  return hasAccess;
+  try {
+    const permissions = await getUserPermissions(userId);
+    return permissions.includes(permission);
+  } catch (error) {
+    console.error("❌ Error checking permission:", error);
+    return false;
+  }
 }
 
 export async function hasStudioAccess(userId: string): Promise<boolean> {

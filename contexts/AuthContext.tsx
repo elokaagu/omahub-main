@@ -37,19 +37,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const lastRefreshTimeRef = useRef(0);
   const REFRESH_DEBOUNCE_MS = 5000; // 5 seconds minimum between refreshes
 
-  // Helper function to determine role based on email
+  // Helper function to determine role based on email (legacy fallback only)
   const getRoleFromEmail = (email: string): UserRole => {
-    if (
-      email === "eloka.agu@icloud.com" ||
-      email === "shannonalisa@oma-hub.com" ||
-      email === "nnamdiohaka@gmail.com"
-    ) {
+    // This is now only used as a fallback when database lookup fails
+    const legacySuperAdmins = [
+      "eloka.agu@icloud.com",
+      "shannonalisa@oma-hub.com",
+      "nnamdiohaka@gmail.com",
+    ];
+    const legacyBrandAdmins = [
+      "eloka@culturin.com",
+      "eloka.agu96@gmail.com",
+    ];
+
+    if (legacySuperAdmins.includes(email)) {
       return "super_admin";
     }
-    if (email === "eloka@culturin.com" || email === "eloka.agu96@gmail.com") {
+    if (legacyBrandAdmins.includes(email)) {
       return "brand_admin";
     }
     return "user";
+  };
+
+  // Helper function to get owned brands based on email (legacy fallback only)
+  const getOwnedBrandsFromEmail = (email: string): string[] => {
+    // This is now only used as a fallback when database lookup fails
+    if (email === "eloka@culturin.com") {
+      return ["ehbs-couture"];
+    }
+    return [];
   };
 
   // Ensure we're on the client side

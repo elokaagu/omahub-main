@@ -183,14 +183,44 @@ export async function getProfile(userId: string): Promise<User | null> {
         console.log("⚠️ Profile not found, creating new profile");
         // Profile not found, create a new one with optimized role detection
         const userEmail = user?.email || "";
-        const role =
-          userEmail === "eloka.agu@icloud.com" ||
-          userEmail === "shannonalisa@oma-hub.com" ||
-          userEmail === "nnamdiohaka@gmail.com"
-            ? "super_admin"
-            : userEmail === "eloka@culturin.com" || userEmail === "eloka.agu96@gmail.com"
-              ? "brand_admin"
-              : "user";
+        
+        // Try to get role from database first
+        let role: string = "user";
+        
+        try {
+          // Check if there's a profile with this email (in case of mismatch)
+          const { data: emailProfile, error: emailError } = await supabase
+            .from("profiles")
+            .select("role")
+            .eq("email", userEmail)
+            .single();
+            
+          if (!emailError && emailProfile) {
+            role = emailProfile.role;
+            console.log("✅ Found existing profile by email, using role:", role);
+          } else {
+            // Fallback to legacy email-based role detection
+            const legacySuperAdmins = [
+              "eloka.agu@icloud.com",
+              "shannonalisa@oma-hub.com",
+              "nnamdiohaka@gmail.com",
+            ];
+            const legacyBrandAdmins = [
+              "eloka@culturin.com",
+              "eloka.agu96@gmail.com",
+            ];
+
+            if (legacySuperAdmins.includes(userEmail)) {
+              role = "super_admin";
+            } else if (legacyBrandAdmins.includes(userEmail)) {
+              role = "brand_admin";
+            }
+            
+            console.log("🔄 Using legacy role detection for:", userEmail, "role:", role);
+          }
+        } catch (error) {
+          console.warn("⚠️ Error in role detection, using default 'user' role");
+        }
 
         const { data: newProfile, error: createError } = await supabase
           .from("profiles")
