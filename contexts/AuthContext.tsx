@@ -46,7 +46,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     ) {
       return "super_admin";
     }
-    if (email === "eloka@culturin.com") {
+    if (email === "eloka@culturin.com" || email === "eloka.agu96@gmail.com") {
       return "brand_admin";
     }
     return "user";

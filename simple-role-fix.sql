@@ -13,7 +13,7 @@ WHERE role::text NOT IN ('user', 'brand_admin', 'admin', 'super_admin');
 UPDATE profiles 
 SET role = 'user'::user_role
 WHERE role::text NOT IN ('user', 'brand_admin', 'admin', 'super_admin');
-    
+
 -- Step 4: Find users who should be brand_admin (have owned_brands)
 SELECT id, email, role, owned_brands
 FROM profiles 

@@ -42,6 +42,17 @@ async function isSuperAdminEmail(email: string): Promise<boolean> {
 }
 
 async function isBrandAdminEmail(email: string): Promise<boolean> {
+  // Check hardcoded list first for immediate access
+  const hardcodedBrandAdmins = [
+    "eloka@culturin.com",
+    "eloka.agu96@gmail.com"  // Added this email
+  ];
+  
+  if (hardcodedBrandAdmins.includes(email)) {
+    return true;
+  }
+  
+  // Fallback to adminEmailService
   return await adminEmailService.isBrandAdmin(email);
 }
 

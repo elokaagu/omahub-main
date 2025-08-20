@@ -39,7 +39,7 @@ const SUPER_ADMIN_EMAILS = [
   "shannonalisa@oma-hub.com",
   "nnamdiohaka@gmail.com",
 ];
-const BRAND_ADMIN_EMAILS = ["eloka@culturin.com"];
+const BRAND_ADMIN_EMAILS = ["eloka@culturin.com", "eloka.agu96@gmail.com"];
 
 function isSuperAdminEmail(email: string): boolean {
   return SUPER_ADMIN_EMAILS.includes(email);

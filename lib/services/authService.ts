@@ -188,7 +188,7 @@ export async function getProfile(userId: string): Promise<User | null> {
           userEmail === "shannonalisa@oma-hub.com" ||
           userEmail === "nnamdiohaka@gmail.com"
             ? "super_admin"
-            : userEmail === "eloka@culturin.com"
+            : userEmail === "eloka@culturin.com" || userEmail === "eloka.agu96@gmail.com"
               ? "brand_admin"
               : "user";
 
