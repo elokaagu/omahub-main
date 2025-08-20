@@ -102,6 +102,7 @@ export default function StudioLayout({
   const router = useRouter();
   const pathname = usePathname();
   const pendingSidebarClose = useRef(false);
+  const [fadeIn, setFadeIn] = useState(false);
 
   const handleSidebarNav = () => {
     // No-op, just for compatibility
@@ -117,6 +118,17 @@ export default function StudioLayout({
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isCheckingAccess, setIsCheckingAccess] = useState(true);
+
+  // Trigger fade-in animation when content is ready
+  useEffect(() => {
+    if (!loading && !isCheckingAccess && permissions.includes("studio.access")) {
+      // Small delay to ensure smooth transition
+      const timer = setTimeout(() => {
+        setFadeIn(true);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, isCheckingAccess, permissions]);
 
   useEffect(() => {
     const checkAccess = async () => {
@@ -351,10 +363,14 @@ export default function StudioLayout({
           }}
         >
           {/* Studio Header */}
-          <header className="w-full bg-white border-b border-gray-200 shadow-sm fixed top-0 left-0 right-0 z-50 h-16 flex items-center">
+          <header className={`w-full bg-white border-b border-gray-200 shadow-sm fixed top-0 left-0 right-0 z-50 h-16 flex items-center transition-all duration-700 ease-out ${
+            fadeIn ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'
+          }`}>
             <div className="container mx-auto px-8 flex justify-between items-center">
               {/* Mobile sidebar toggle */}
-              <div className="lg:hidden flex items-center">
+              <div className={`lg:hidden flex items-center transition-all duration-700 ease-out ${
+                fadeIn ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'
+              }`}>
                 <Button
                   variant="outline"
                   size="icon"
@@ -370,7 +386,9 @@ export default function StudioLayout({
               </div>
 
               {/* Desktop: OmaHub logo */}
-              <div className="hidden lg:flex items-center">
+              <div className={`hidden lg:flex items-center transition-all duration-700 ease-out ${
+                fadeIn ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
+              }`}>
                 <button
                   onClick={handleBackToSite}
                   className="hover:opacity-80 transition-opacity"
@@ -387,7 +405,9 @@ export default function StudioLayout({
               </div>
 
               {/* Mobile: OmaHub logo */}
-              <div className="lg:hidden flex-1 flex justify-center">
+              <div className={`lg:hidden flex-1 flex justify-center transition-all duration-700 ease-out ${
+                fadeIn ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
+              }`}>
                 <button
                   onClick={handleBackToSite}
                   className="hover:opacity-80 transition-opacity"
@@ -403,7 +423,9 @@ export default function StudioLayout({
                 </button>
               </div>
 
-              <div className="hidden md:flex items-center space-x-4">
+              <div className={`hidden md:flex items-center space-x-4 transition-all duration-700 ease-out ${
+                fadeIn ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+              }`}>
                 <button
                   onClick={handleBackToSite}
                   className="text-sm text-gray-600 hover:text-oma-plum transition-colors"
@@ -414,7 +436,9 @@ export default function StudioLayout({
               </div>
 
               {/* Mobile user profile */}
-              <div className="md:hidden">
+              <div className={`md:hidden transition-all duration-700 ease-out ${
+                fadeIn ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+              }`}>
                 <UserProfile />
               </div>
             </div>
@@ -476,7 +500,9 @@ export default function StudioLayout({
 
           {/* Desktop Sidebar: Keep existing implementation */}
           <aside
-            className={`hidden lg:block bg-white w-64 border-r border-gray-200 fixed inset-y-0 left-0 z-40 transition-transform duration-300 ease-in-out lg:translate-x-0 mt-16 shadow-xl`}
+            className={`hidden lg:block bg-white w-64 border-r border-gray-200 fixed inset-y-0 left-0 z-40 transition-all duration-700 ease-in-out lg:translate-x-0 mt-16 shadow-xl ${
+              fadeIn ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'
+            }`}
             aria-modal="true"
             role="dialog"
           >
@@ -663,7 +689,9 @@ export default function StudioLayout({
           </aside>
 
           {/* Main Content */}
-          <main className="flex-1 lg:ml-64 mt-16">
+          <main className={`flex-1 lg:ml-64 mt-16 transition-all duration-700 ease-out ${
+            fadeIn ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+          }`}>
             <div className="min-h-screen relative">{children}</div>
           </main>
         </div>
