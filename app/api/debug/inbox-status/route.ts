@@ -43,11 +43,13 @@ export async function GET(request: NextRequest) {
       if (profileError) {
         debug.checks.profile = `❌ profile error: ${profileError.message}`;
 
-        // Check fallback for super admin
-        if (
-          session.user.email === "eloka.agu@icloud.com" ||
-          session.user.email === "shannonalisa@oma-hub.com"
-        ) {
+        // Fallback: Check if user email indicates super_admin access (legacy support)
+        const legacySuperAdmins = [
+          "eloka.agu@icloud.com",
+          "shannonalisa@oma-hub.com",
+        ];
+        
+        if (legacySuperAdmins.includes(session.user.email || "")) {
           debug.checks.profile += " (super admin fallback available)";
           debug.profile = { role: "super_admin", owned_brands: [] };
         }

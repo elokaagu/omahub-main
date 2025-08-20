@@ -40,11 +40,13 @@ export async function GET(request: NextRequest) {
         "⚠️ Profile not found, checking user email for super_admin access"
       );
 
-      // Fallback: Check if user email indicates super_admin access
-      if (
-        user.email === "eloka.agu@icloud.com" ||
-        user.email === "shannonalisa@oma-hub.com"
-      ) {
+      // Fallback: Check if user email indicates super_admin access (legacy support)
+      const legacySuperAdmins = [
+        "eloka.agu@icloud.com",
+        "shannonalisa@oma-hub.com",
+      ];
+      
+      if (legacySuperAdmins.includes(user.email || "")) {
         profile = {
           role: "super_admin",
           owned_brands: [],

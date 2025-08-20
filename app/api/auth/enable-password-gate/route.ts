@@ -16,16 +16,37 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user is super admin
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("role")
       .eq("id", user.id)
       .single();
 
-    const isSuperAdmin =
-      profile?.role === "super_admin" ||
-      user.email === "eloka.agu@icloud.com" ||
-      user.email === "shannonalisa@oma-hub.com";
+    let isSuperAdmin = false;
+
+    if (profileError || !profile) {
+      // Fallback: Check if user email indicates super_admin access (legacy support)
+      const legacySuperAdmins = [
+        "eloka.agu@icloud.com",
+        "shannonalisa@oma-hub.com",
+      ];
+      
+      if (legacySuperAdmins.includes(user.email || "")) {
+        isSuperAdmin = true;
+        console.log(
+          "✅ Granted super_admin access based on email:",
+          user.email
+        );
+      } else {
+        console.error("Profile error:", profileError);
+        return NextResponse.json(
+          { error: "Profile not found" },
+          { status: 404 }
+        );
+      }
+    } else {
+      isSuperAdmin = profile.role === "super_admin";
+    }
 
     if (!isSuperAdmin) {
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
