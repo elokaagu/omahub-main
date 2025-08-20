@@ -283,10 +283,14 @@ export default function UsersPage() {
   };
 
   const handleEditUser = (userToEdit: UserWithBrands) => {
+    // Normalize the role to handle any legacy brand_owner roles
+    const normalizedRole =
+      userToEdit.role === "brand_owner" ? "brand_admin" : userToEdit.role;
+
     setEditingUser(userToEdit);
     setFormData({
       email: userToEdit.email,
-      role: userToEdit.role,
+      role: normalizedRole,
       selectedBrands: userToEdit.owned_brands || [],
     });
     setIsDialogOpen(true);
@@ -523,20 +527,96 @@ export default function UsersPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="role">Role *</Label>
+                  {/* Primary Select component */}
                   <Select
                     value={formData.role}
-                    onValueChange={(value) => handleInputChange("role", value)}
+                    onValueChange={(value) => {
+                      console.log("Role changed to:", value);
+                      handleInputChange("role", value);
+                    }}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger
+                      className="w-full"
+                      onClick={() => console.log("SelectTrigger clicked")}
+                    >
                       <SelectValue placeholder="Select a role" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent side="bottom" sideOffset={4}>
                       <SelectItem value="user">User</SelectItem>
                       <SelectItem value="brand_admin">Brand Admin</SelectItem>
                       <SelectItem value="admin">Admin</SelectItem>
                       <SelectItem value="super_admin">Super Admin</SelectItem>
                     </SelectContent>
                   </Select>
+
+                  {/* Fallback radio buttons if Select fails */}
+                  <div className="mt-2 space-y-2">
+                    <p className="text-sm text-muted-foreground">
+                      Alternative selection:
+                    </p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <label className="flex items-center space-x-2">
+                        <input
+                          type="radio"
+                          name="role-fallback"
+                          value="user"
+                          checked={formData.role === "user"}
+                          onChange={(e) =>
+                            handleInputChange("role", e.target.value)
+                          }
+                          className="rounded border-gray-300"
+                        />
+                        <span className="text-sm">User</span>
+                      </label>
+                      <label className="flex items-center space-x-2">
+                        <input
+                          type="radio"
+                          name="role-fallback"
+                          value="brand_admin"
+                          checked={formData.role === "brand_admin"}
+                          onChange={(e) =>
+                            handleInputChange("role", e.target.value)
+                          }
+                          className="rounded border-gray-300"
+                        />
+                        <span className="text-sm">Brand Admin</span>
+                      </label>
+                      <label className="flex items-center space-x-2">
+                        <input
+                          type="radio"
+                          name="role-fallback"
+                          value="admin"
+                          checked={formData.role === "admin"}
+                          onChange={(e) =>
+                            handleInputChange("role", e.target.value)
+                          }
+                          className="rounded border-gray-300"
+                        />
+                        <span className="text-sm">Admin</span>
+                      </label>
+                      <label className="flex items-center space-x-2">
+                        <input
+                          type="radio"
+                          name="role-fallback"
+                          value="super_admin"
+                          checked={formData.role === "super_admin"}
+                          onChange={(e) =>
+                            handleInputChange("role", e.target.value)
+                          }
+                          className="rounded border-gray-300"
+                        />
+                        <span className="text-sm">Super Admin</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Debug info */}
+                  {process.env.NODE_ENV === "development" && (
+                    <p className="text-xs text-gray-500">
+                      Current role: {formData.role} | User role:{" "}
+                      {editingUser?.role}
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
