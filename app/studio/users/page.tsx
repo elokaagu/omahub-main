@@ -116,6 +116,12 @@ export default function UsersPage() {
 
         const { users: usersData } = await usersResponse.json();
         setBrands(brandsData); // Full brand data for form
+        
+        console.log("📋 Loaded brands for form:", {
+          brandsCount: brandsData?.length || 0,
+          brandsData: brandsData?.slice(0, 3), // Show first 3 brands
+          allBrands: brandsData
+        });
 
         // Map users with brand names using the pre-built Map for O(1) performance
         const usersWithBrands: UserWithBrands[] = usersData.map(
@@ -175,12 +181,21 @@ export default function UsersPage() {
   };
 
   const handleBrandToggle = (brandId: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      selectedBrands: prev.selectedBrands.includes(brandId)
+    console.log("🔄 Toggling brand:", brandId);
+    console.log("📋 Current selectedBrands before toggle:", formData.selectedBrands);
+    
+    setFormData((prev) => {
+      const newSelectedBrands = prev.selectedBrands.includes(brandId)
         ? prev.selectedBrands.filter((id) => id !== brandId)
-        : [...prev.selectedBrands, brandId],
-    }));
+        : [...prev.selectedBrands, brandId];
+      
+      console.log("📋 New selectedBrands after toggle:", newSelectedBrands);
+      
+      return {
+        ...prev,
+        selectedBrands: newSelectedBrands,
+      };
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -191,8 +206,24 @@ export default function UsersPage() {
       return;
     }
 
+    // Debug logging
+    console.log("🔄 Submitting form with data:", {
+      email: formData.email,
+      role: formData.role,
+      selectedBrands: formData.selectedBrands,
+      selectedBrandsLength: formData.selectedBrands.length
+    });
+
     try {
       setIsLoading(true);
+
+      const requestBody = {
+        email: formData.email,
+        role: formData.role,
+        owned_brands: formData.selectedBrands,
+      };
+
+      console.log("📤 Sending request to API:", requestBody);
 
       const response = await fetch("/api/admin/users", {
         method: "POST",
@@ -200,14 +231,16 @@ export default function UsersPage() {
           "Content-Type": "application/json",
         },
         credentials: "include",
-        body: JSON.stringify({
-          email: formData.email,
-          role: formData.role,
-          owned_brands: formData.selectedBrands,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       const result = await response.json();
+
+      console.log("📥 API Response:", {
+        status: response.status,
+        ok: response.ok,
+        result: result
+      });
 
       if (!response.ok) {
         console.error("Error submitting form:", result);
