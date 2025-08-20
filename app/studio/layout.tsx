@@ -334,22 +334,54 @@ export default function StudioLayout({
     );
   }
 
-  // Add this helper for mobile nav items
-  const mobileNavItems = [
-    { href: "/studio", label: "Dashboard", icon: Home },
-    { href: "/studio/brands", label: "Brands", icon: Package },
-    { href: "/studio/collections", label: "Collections", icon: ImageIcon },
-    { href: "/studio/products", label: "Products", icon: ShoppingBag },
-    { href: "/studio/services", label: "Services", icon: Scissors },
-    { href: "/studio/portfolio", label: "Portfolio", icon: ImageIcon },
-    { href: "/studio/hero", label: "Hero Carousel", icon: Monitor },
-    { href: "/studio/spotlight", label: "Spotlight", icon: ImageIcon },
-    { href: "/studio/users", label: "Users", icon: Users },
-    { href: "/studio/reviews", label: "Reviews", icon: MessageSquare },
-    { href: "/studio/inbox", label: "Inbox", icon: Inbox },
-    { href: "/studio/profile", label: "Profile", icon: User },
-    { href: "/studio/settings", label: "Settings", icon: Settings },
-  ];
+  // Create permission-based navigation items
+  const getNavigationItems = () => {
+    type NavigationItem = {
+      href: string;
+      label: string;
+      icon: any;
+      permission: string;
+      customLabel?: string;
+    };
+
+    const baseItems: NavigationItem[] = [
+      { href: "/studio", label: "Dashboard", icon: Home, permission: "studio.access" },
+    ];
+
+    const permissionItems: NavigationItem[] = [
+      { href: "/studio/brands", label: "Brands", icon: Package, permission: "studio.brands.manage", 
+        customLabel: user?.role === "brand_admin" ? "Your Brands" : "Brands" },
+      { href: "/studio/collections", label: "Collections", icon: ImageIcon, permission: "studio.catalogues.manage",
+        customLabel: user?.role === "brand_admin" ? "Your Collections" : "Collections" },
+      { href: "/studio/products", label: "Products", icon: ShoppingBag, permission: "studio.products.manage",
+        customLabel: user?.role === "brand_admin" ? "Your Products" : "Products" },
+      { href: "/studio/services", label: "Services", icon: Scissors, permission: "studio.products.manage",
+        customLabel: user?.role === "brand_admin" ? "Your Services" : "Services" },
+      { href: "/studio/portfolio", label: "Portfolio", icon: ImageIcon, permission: "studio.hero.manage" },
+      { href: "/studio/hero", label: "Hero Carousel", icon: Monitor, permission: "studio.hero.manage" },
+      { href: "/studio/spotlight", label: "Spotlight", icon: ImageIcon, permission: "studio.hero.manage" },
+      { href: "/studio/users", label: "Users", icon: Users, permission: "studio.users.manage" },
+      { href: "/studio/reviews", label: "Reviews", icon: MessageSquare, permission: "studio.products.manage",
+        customLabel: user?.role === "brand_admin" ? "Your Reviews" : "Reviews" },
+      { href: "/studio/inbox", label: "Inbox", icon: Inbox, permission: "studio.products.manage",
+        customLabel: user?.role === "brand_admin" ? "Your Inbox" : "Inbox" },
+      { href: "/studio/profile", label: "Profile", icon: User, permission: "studio.access" },
+      { href: "/studio/settings", label: "Settings", icon: Settings, permission: "studio.settings.manage" },
+    ];
+
+    // Filter items based on permissions
+    const filteredItems = permissionItems.filter(item => {
+      if (item.permission === "studio.access") return true;
+      return permissions.includes(item.permission as any);
+    });
+
+    return [...baseItems, ...filteredItems];
+  };
+
+  const navigationItems = getNavigationItems();
+
+  // Add this helper for mobile nav items - now uses the same permission system
+  const mobileNavItems = navigationItems;
 
   return (
     <ErrorBoundary>
@@ -488,12 +520,24 @@ export default function StudioLayout({
                       setSidebarOpen(false);
                     }}
                     className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100 w-full text-left transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-oma-plum focus:ring-offset-2"
-                    aria-label={`Navigate to ${item.label}`}
+                    aria-label={`Navigate to ${item.customLabel || item.label}`}
                   >
                     <item.icon className="h-5 w-5" aria-hidden="true" />
-                    <span>{item.label}</span>
+                    <span>{item.customLabel || item.label}</span>
                   </button>
                 ))}
+
+                {/* Mobile Back to Site in sidebar */}
+                <button
+                  onClick={() => {
+                    setSidebarOpen(false);
+                    handleBackToSite();
+                  }}
+                  className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100 w-full border-t border-gray-200 mt-4 pt-4"
+                >
+                  <Home className="h-5 w-5" />
+                  <span>Back to Site</span>
+                </button>
               </nav>
             </div>
           </aside>
@@ -512,156 +556,17 @@ export default function StudioLayout({
                 <h1 className="text-2xl font-canela text-oma-plum">Studio</h1>
               </div>
               <nav className="space-y-1 flex-1">
-                <NavigationLink
-                  href="/studio"
-                  className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
-                  onClick={handleSidebarNav}
-                >
-                  <Home className="h-5 w-5" />
-                  <span>Dashboard</span>
-                </NavigationLink>
-                {permissions.includes("studio.brands.manage") && (
+                {navigationItems.map((item) => (
                   <NavigationLink
-                    href="/studio/brands"
+                    key={item.href}
+                    href={item.href}
                     className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
                     onClick={handleSidebarNav}
                   >
-                    <Package className="h-5 w-5" />
-                    <span>
-                      {user?.role === "brand_admin" ? "Your Brands" : "Brands"}
-                    </span>
+                    <item.icon className="h-5 w-5" />
+                    <span>{item.customLabel || item.label}</span>
                   </NavigationLink>
-                )}
-                {permissions.includes("studio.catalogues.manage") && (
-                  <NavigationLink
-                    href="/studio/collections"
-                    className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
-                    onClick={handleSidebarNav}
-                  >
-                    <ImageIcon className="h-5 w-5" />
-                    <span>
-                      {user?.role === "brand_admin"
-                        ? "Your Collections"
-                        : "Collections"}
-                    </span>
-                  </NavigationLink>
-                )}
-                {(user?.role === "super_admin" ||
-                  user?.role === "brand_admin") && (
-                  <NavigationLink
-                    href="/studio/products"
-                    className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
-                    onClick={handleSidebarNav}
-                  >
-                    <ShoppingBag className="h-5 w-5" />
-                    <span>
-                      {user?.role === "brand_admin"
-                        ? "Your Products"
-                        : "Products"}
-                    </span>
-                  </NavigationLink>
-                )}
-                {(user?.role === "super_admin" ||
-                  user?.role === "brand_admin") && (
-                  <NavigationLink
-                    href="/studio/services"
-                    className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
-                    onClick={handleSidebarNav}
-                  >
-                    <Scissors className="h-5 w-5" />
-                    <span>
-                      {user?.role === "brand_admin"
-                        ? "Your Services"
-                        : "Services"}
-                    </span>
-                  </NavigationLink>
-                )}
-                {user?.role === "super_admin" && (
-                  <NavigationLink
-                    href="/studio/portfolio"
-                    className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
-                    onClick={handleSidebarNav}
-                  >
-                    <ImageIcon className="h-5 w-5" />
-                    <span>Portfolio</span>
-                  </NavigationLink>
-                )}
-                {user?.role === "super_admin" && (
-                  <NavigationLink
-                    href="/studio/hero"
-                    className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
-                    onClick={handleSidebarNav}
-                  >
-                    <Monitor className="h-5 w-5" />
-                    <span>Hero Carousel</span>
-                  </NavigationLink>
-                )}
-                {user?.role === "super_admin" && (
-                  <NavigationLink
-                    href="/studio/spotlight"
-                    className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
-                    onClick={handleSidebarNav}
-                  >
-                    <ImageIcon className="h-5 w-5" />
-                    <span>Spotlight</span>
-                  </NavigationLink>
-                )}
-                {user?.role === "super_admin" && (
-                  <NavigationLink
-                    href="/studio/users"
-                    className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
-                    onClick={handleSidebarNav}
-                  >
-                    <Users className="h-5 w-5" />
-                    <span>Users</span>
-                  </NavigationLink>
-                )}
-                {(user?.role === "super_admin" ||
-                  user?.role === "brand_admin") && (
-                  <NavigationLink
-                    href="/studio/reviews"
-                    className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
-                    onClick={handleSidebarNav}
-                  >
-                    <MessageSquare className="h-5 w-5" />
-                    <span>
-                      {user?.role === "brand_admin"
-                        ? "Your Reviews"
-                        : "Reviews"}
-                    </span>
-                  </NavigationLink>
-                )}
-                {(user?.role === "super_admin" ||
-                  user?.role === "brand_admin") && (
-                  <NavigationLink
-                    href="/studio/inbox"
-                    className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
-                    onClick={handleSidebarNav}
-                  >
-                    <Inbox className="h-5 w-5" />
-                    <span>
-                      {user?.role === "brand_admin" ? "Your Inbox" : "Inbox"}
-                    </span>
-                  </NavigationLink>
-                )}
-                <NavigationLink
-                  href="/studio/profile"
-                  className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
-                  onClick={handleSidebarNav}
-                >
-                  <User className="h-5 w-5" />
-                  <span>Profile</span>
-                </NavigationLink>
-                {permissions.includes("studio.settings.manage") && (
-                  <NavigationLink
-                    href="/studio/settings"
-                    className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
-                    onClick={handleSidebarNav}
-                  >
-                    <Settings className="h-5 w-5" />
-                    <span>Settings</span>
-                  </NavigationLink>
-                )}
+                ))}
 
                 {/* Mobile Back to Site in sidebar */}
                 <button
