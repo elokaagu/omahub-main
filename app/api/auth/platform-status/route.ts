@@ -22,33 +22,40 @@ export async function GET(request: NextRequest) {
       .eq("id", user.id)
       .single();
 
-    // Fallback: Check if user email indicates super_admin access (legacy support)
-    const legacySuperAdmins = [
-      "eloka.agu@icloud.com",
-      "shannonalisa@oma-hub.com",
-    ];
-    
-    if (legacySuperAdmins.includes(user.email || "")) {
-      profile = {
-        role: "super_admin",
-        owned_brands: [],
-      };
-      console.log(
-        "✅ Granted super_admin access based on email:",
-        user.email
-      );
+    let isSuperAdmin = false;
+
+    if (profileError || !profile) {
+      // Fallback: Check if user email indicates super_admin access (legacy support)
+      const legacySuperAdmins = [
+        "eloka.agu@icloud.com",
+        "shannonalisa@oma-hub.com",
+      ];
+
+      if (legacySuperAdmins.includes(user.email || "")) {
+        isSuperAdmin = true;
+        console.log(
+          "✅ Granted super_admin access based on email:",
+          user.email
+        );
+      } else {
+        console.error("Profile error:", profileError);
+        return NextResponse.json(
+          { error: "Profile not found" },
+          { status: 404 }
+        );
+      }
     } else {
-      console.error("Profile error:", profileError);
-      return NextResponse.json(
-        { error: "Profile not found" },
-        { status: 404 }
-      );
+      isSuperAdmin = profile.role === "super_admin";
     }
 
-    const isSuperAdmin =
-      profile?.role === "super_admin" ||
-      user.email === "eloka.agu@icloud.com" ||
-      user.email === "shannonalisa@oma-hub.com";
+    // Additional legacy email check for backward compatibility
+    if (!isSuperAdmin) {
+      const legacySuperAdmins = [
+        "eloka.agu@icloud.com",
+        "shannonalisa@oma-hub.com",
+      ];
+      isSuperAdmin = legacySuperAdmins.includes(user.email || "");
+    }
 
     if (!isSuperAdmin) {
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
