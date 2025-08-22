@@ -230,8 +230,8 @@ export function VideoPlayer({
         Your browser does not support the video tag.
       </video>
 
-      {/* Loading indicator */}
-      {isLoading && (
+      {/* Loading indicator - only show for non-autoplay videos */}
+      {isLoading && !autoPlay && (
         <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
         </div>
