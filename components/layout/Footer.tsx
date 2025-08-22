@@ -106,6 +106,14 @@ export default function Footer() {
                   FAQs
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/feedback"
+                  className="text-sm text-oma-cocoa hover:text-oma-plum expand-underline"
+                >
+                  Feedback
+                </Link>
+              </li>
             </ul>
           </div>
 
