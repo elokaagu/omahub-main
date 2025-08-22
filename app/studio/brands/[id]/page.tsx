@@ -657,9 +657,9 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
                       <>Current: {brand.price_range || "Contact for pricing"}</>
                     )}
                   </p>
-                  <p className="text-xs text-muted-foreground">
-                    💡 Tip: You can also use "Starting from $X" format in the min price field for flexible pricing
-                  </p>
+                          <p className="text-xs text-muted-foreground">
+          Tip: You can also use "Starting from X" format in the min price field for flexible pricing
+        </p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -1056,9 +1056,9 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
                         onChange={(e) => setTailorPriceRange(e.target.value)}
                         placeholder="e.g. Starting from $500 or $500 - $2,000"
                       />
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Use "Starting from $X" for minimum pricing, or provide a range like "$500 - $2,000"
-                      </p>
+                              <p className="text-xs text-muted-foreground mt-1">
+          Use "Starting from X" for minimum pricing, or provide a range like "500 - 2,000"
+        </p>
                     </div>
                     <div>
                       <Label>Consultation Fee</Label>
