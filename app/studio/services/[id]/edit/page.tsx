@@ -541,9 +541,12 @@ export default function EditServicePage() {
                   onChange={(e) =>
                     handleInputChange("price_range", e.target.value)
                   }
-                  placeholder="$500 - $2,000"
+                  placeholder="e.g., Starting from $500 or $500 - $2,000"
                   className="border-oma-cocoa/20 focus:border-oma-plum"
                 />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Use "Starting from $X" for minimum pricing, or provide a range like "$500 - $2,000"
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-2 mt-2">

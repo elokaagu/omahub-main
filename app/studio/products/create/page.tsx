@@ -917,11 +917,11 @@ export default function CreateProductPage() {
                     onChange={(e) =>
                       handleInputChange("price_range", e.target.value)
                     }
-                    placeholder="e.g., $500 - $2,000"
+                    placeholder="e.g., Starting from $500 or $500 - $2,000"
                     className="border-oma-cocoa/20 focus:border-oma-plum"
                   />
                   <p className="text-xs text-muted-foreground">
-                    Give customers an idea of your pricing range
+                    Use "Starting from $X" for minimum pricing, or provide a range like "$500 - $2,000"
                   </p>
                 </div>
               ) : (

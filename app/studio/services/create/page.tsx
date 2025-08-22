@@ -641,9 +641,12 @@ export default function CreateServicePage() {
                       onChange={(e) =>
                         handleInputChange("price_range", e.target.value)
                       }
-                      placeholder="e.g., $200 - $800"
+                      placeholder="e.g., Starting from $200 or $200 - $800"
                       className="border-oma-cocoa/20 focus:border-oma-plum"
                     />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Use "Starting from $X" for minimum pricing, or provide a range like "$200 - $800"
+                    </p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

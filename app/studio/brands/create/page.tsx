@@ -514,6 +514,9 @@ export default function CreateBrandPage() {
                         "Enter minimum and maximum prices to see preview"
                       )}
                     </p>
+                    <p className="text-xs text-muted-foreground">
+                      💡 Tip: You can also use "Starting from $X" format in the min price field for flexible pricing
+                    </p>
                   </div>
                 </div>
 
