@@ -33,11 +33,11 @@ export async function POST(request: NextRequest) {
 
     // Get admin emails for feedback notifications
     const adminConfig = await adminEmailServiceServer.getAdminEmailConfig();
-    
-    // Combine super admin emails with eloka@satellitelabs.xyz
+
+    // Combine super admin emails with info@oma-hub.com
     const feedbackEmails = [
       ...adminConfig.super_admin_emails,
-      "eloka@satellitelabs.xyz"
+      "info@oma-hub.com",
     ].filter((email, index, arr) => arr.indexOf(email) === index); // Remove duplicates
 
     console.log("📬 Sending feedback to:", feedbackEmails);
@@ -94,9 +94,12 @@ async function sendFeedbackEmail(feedbackData: {
     const { Resend } = await import("resend");
     const resend = new Resend(process.env.RESEND_API_KEY);
 
-    const { name, email, feedbackType, subject, message, adminEmails } = feedbackData;
+    const { name, email, feedbackType, subject, message, adminEmails } =
+      feedbackData;
     const timestamp = new Date().toLocaleString();
-    const feedbackTypeDisplay = feedbackType.replace("_", " ").replace(/\b\w/g, l => l.toUpperCase());
+    const feedbackTypeDisplay = feedbackType
+      .replace("_", " ")
+      .replace(/\b\w/g, (l) => l.toUpperCase());
 
     // Send email to each admin
     for (const adminEmail of adminEmails) {
@@ -207,7 +210,7 @@ async function storeFeedbackInDatabase(feedbackData: {
       ...feedbackData,
       timestamp: new Date().toISOString(),
     });
-    
+
     // TODO: Create feedback table and store submissions
     // Example SQL:
     // CREATE TABLE feedback (
@@ -220,7 +223,6 @@ async function storeFeedbackInDatabase(feedbackData: {
     //   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     //   status TEXT DEFAULT 'new'
     // );
-    
   } catch (error) {
     console.error("❌ Error storing feedback in database:", error);
   }

@@ -64,7 +64,7 @@ export default function FeedbackPage() {
       if (!response.ok) {
         throw new Error(result.error || "Failed to submit feedback");
       }
-      
+
       toast.success("Thank you for your feedback! We'll review it shortly.");
       setIsSubmitted(true);
       setFormData({
@@ -76,7 +76,11 @@ export default function FeedbackPage() {
       });
     } catch (error) {
       console.error("Feedback submission error:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to submit feedback. Please try again.");
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to submit feedback. Please try again."
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -94,7 +98,9 @@ export default function FeedbackPage() {
               Thank You for Your Feedback!
             </h1>
             <p className="text-xl text-oma-cocoa mb-8 max-w-2xl mx-auto">
-              We've received your feedback and will review it carefully. Your input helps us improve OmaHub and provide a better experience for our community.
+              We've received your feedback and will review it carefully. Your
+              input helps us improve OmaHub and provide a better experience for
+              our community.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button
@@ -132,8 +138,8 @@ export default function FeedbackPage() {
             Share Your Feedback
           </h1>
           <p className="text-xl text-oma-cocoa max-w-2xl mx-auto">
-            Help us improve OmaHub! We value your thoughts, suggestions, and feedback. 
-            Your input shapes the future of our platform.
+            Help us improve OmaHub! We value your thoughts, suggestions, and
+            feedback. Your input shapes the future of our platform.
           </p>
         </div>
 
@@ -182,7 +188,10 @@ export default function FeedbackPage() {
 
               {/* Feedback Type */}
               <div className="space-y-2">
-                <Label htmlFor="feedbackType" className="text-oma-cocoa font-medium">
+                <Label
+                  htmlFor="feedbackType"
+                  className="text-oma-cocoa font-medium"
+                >
                   Feedback Type *
                 </Label>
                 <Select
@@ -197,7 +206,9 @@ export default function FeedbackPage() {
                     <SelectItem value="general">General Feedback</SelectItem>
                     <SelectItem value="bug">Bug Report</SelectItem>
                     <SelectItem value="feature">Feature Request</SelectItem>
-                    <SelectItem value="improvement">Improvement Suggestion</SelectItem>
+                    <SelectItem value="improvement">
+                      Improvement Suggestion
+                    </SelectItem>
                     <SelectItem value="compliment">Compliment</SelectItem>
                     <SelectItem value="other">Other</SelectItem>
                   </SelectContent>
@@ -260,40 +271,9 @@ export default function FeedbackPage() {
           </CardContent>
         </Card>
 
-        {/* Additional Info */}
-        <div className="mt-12 text-center">
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 border border-oma-gold/20">
-            <h3 className="text-xl font-canela text-oma-plum mb-4">
-              Why Your Feedback Matters
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm text-oma-cocoa">
-              <div className="flex flex-col items-center">
-                <div className="w-12 h-12 bg-oma-plum/10 rounded-full flex items-center justify-center mb-3">
-                  <span className="text-oma-plum text-xl">🎯</span>
-                </div>
-                <p className="text-center">Helps us prioritize improvements</p>
-              </div>
-              <div className="flex flex-col items-center">
-                <div className="w-12 h-12 bg-oma-plum/10 rounded-full flex items-center justify-center mb-3">
-                  <span className="text-oma-plum text-xl">💡</span>
-                </div>
-                <p className="text-center">Drives innovation and new features</p>
-              </div>
-              <div className="flex flex-col items-center">
-                <div className="w-12 h-12 bg-oma-plum/10 rounded-full flex items-center justify-center mb-3">
-                  <span className="text-oma-plum text-xl">🤝</span>
-                </div>
-                <p className="text-center">Builds a better community</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Alternative Contact */}
         <div className="mt-12 text-center">
-          <p className="text-oma-cocoa mb-4">
-            Prefer to contact us directly?
-          </p>
+          <p className="text-oma-cocoa mb-4">Prefer to contact us directly?</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
               asChild
@@ -307,7 +287,7 @@ export default function FeedbackPage() {
               variant="outline"
               className="border-oma-plum text-oma-plum hover:bg-oma-plum/10"
             >
-              <a href="mailto:feedback@oma-hub.com">Email Us</a>
+              <a href="mailto:info@oma-hub.com">Email Us</a>
             </Button>
           </div>
         </div>
