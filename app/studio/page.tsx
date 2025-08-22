@@ -26,15 +26,7 @@ const LeadsTrackingDashboard = dynamic(
   }
 );
 
-const RecentAccountsWidget = dynamic(
-  () => import("./dashboard/RecentAccountsWidget"),
-  {
-    loading: () => (
-      <div className="h-32 bg-gray-200 rounded-lg animate-pulse" />
-    ),
-    ssr: false,
-  }
-);
+
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
@@ -211,21 +203,7 @@ export default function StudioPage() {
         </Card>
       </div>
 
-      {/* Recent Accounts */}
-      <Card className="border-omahub-accent shadow-omahub">
-        <CardHeader className="bg-gradient-to-r from-omahub-primary to-omahub-secondary text-white rounded-t-lg">
-          <CardTitle className="text-white">Recent Account Activity</CardTitle>
-        </CardHeader>
-        <CardContent className="bg-white">
-          <Suspense
-            fallback={
-              <div className="h-32 bg-omahub-light rounded-lg animate-pulse" />
-            }
-          >
-            <RecentAccountsWidget />
-          </Suspense>
-        </CardContent>
-      </Card>
+
     </div>
   );
 }
