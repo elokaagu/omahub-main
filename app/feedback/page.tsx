@@ -50,8 +50,20 @@ export default function FeedbackPage() {
     setIsSubmitting(true);
 
     try {
-      // Simulate API call - replace with actual feedback submission endpoint
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Submit feedback to API endpoint
+      const response = await fetch("/api/feedback", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to submit feedback");
+      }
       
       toast.success("Thank you for your feedback! We'll review it shortly.");
       setIsSubmitted(true);
@@ -63,7 +75,8 @@ export default function FeedbackPage() {
         message: "",
       });
     } catch (error) {
-      toast.error("Failed to submit feedback. Please try again.");
+      console.error("Feedback submission error:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to submit feedback. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
