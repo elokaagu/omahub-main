@@ -22,7 +22,7 @@ import { LazyImage } from "@/components/ui/lazy-image";
 import { Button } from "@/components/ui/button";
 import { FavouriteButton } from "@/components/ui/favourite-button";
 import { formatProductPrice } from "@/lib/utils/priceFormatter";
-import { getProductMainImage } from "@/lib/utils/productImageUtils";
+import { getProductBestImage } from "@/lib/utils/productImageUtils";
 
 type CatalogueWithBrand = Catalogue & {
   brand: {
@@ -281,11 +281,11 @@ export default function CataloguePage() {
                   <div className="bg-white/80 rounded-xl overflow-hidden border border-oma-gold/10 hover:border-oma-gold/30 transition-all duration-300 hover:shadow-lg group-hover:-translate-y-1">
                     <div className="aspect-square relative overflow-hidden">
                       <LazyImage
-                        src={getProductMainImage(product)}
+                        src={getProductBestImage(product)}
                         alt={product.title}
                         fill
                         className={`object-cover ${getImageFocalPoint(
-                          getProductMainImage(product),
+                          getProductBestImage(product),
                           product.title,
                           product.category
                         )} group-hover:scale-105 transition-transform duration-300`}
@@ -400,11 +400,11 @@ export default function CataloguePage() {
                   <div className="bg-white/80 rounded-xl overflow-hidden border border-oma-gold/10 hover:border-oma-gold/30 transition-all duration-300 hover:shadow-lg group-hover:-translate-y-1">
                     <div className="aspect-square relative overflow-hidden">
                       <LazyImage
-                        src={getProductMainImage(product)}
+                        src={getProductBestImage(product)}
                         alt={product.title}
                         fill
                         className={`object-cover ${getImageFocalPoint(
-                          getProductMainImage(product),
+                          getProductBestImage(product),
                           product.title,
                           product.category
                         )} group-hover:scale-105 transition-transform duration-300`}
