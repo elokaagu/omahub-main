@@ -6,6 +6,23 @@ import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
 import Link from "next/link";
 
 export default function BasketPage() {
+  // Basket temporarily hidden - working on preview branch
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="text-center">
+        <div className="text-gray-400 text-6xl mb-4">🛒</div>
+        <h1 className="text-xl font-semibold text-gray-900 mb-2">
+          Basket Temporarily Unavailable
+        </h1>
+        <p className="text-gray-600 mb-4">
+          We're working on improving the basket functionality. Please check back soon!
+        </p>
+      </div>
+    </div>
+  );
+
+  // Original basket code commented out
+  /*
   const { state, removeFromBasket, updateQuantity, getTotalPrice } =
     useBasket();
   const { baskets, isLoading, error } = state;
@@ -166,4 +183,5 @@ export default function BasketPage() {
       </div>
     </div>
   );
+  */
 }

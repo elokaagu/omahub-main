@@ -37,7 +37,7 @@ import { supabase } from "@/lib/supabase";
 import { getBrandsByCategory } from "@/lib/services/brandService";
 import { checkCategoryHasBrands } from "@/lib/services/categoryService";
 import { triggerSearchModal } from "@/components/ui/search-modal";
-import BasketItemCount from "@/components/ui/basket-item-count";
+// import BasketItemCount from "@/components/ui/basket-item-count"; // Temporarily hidden
 
 const collectionItems = collections.map((category) => ({
   name: category,
@@ -380,7 +380,8 @@ export default function Header() {
             >
               <Search className="h-5 w-5" />
             </button>
-            <Link
+            {/* Basket temporarily hidden - working on preview branch */}
+            {/* <Link
               href="/basket"
               className={cn(
                 "p-2 rounded-full transition-all duration-200 hover:scale-105",
@@ -391,7 +392,7 @@ export default function Header() {
               aria-label="View Basket"
             >
               <BasketItemCount />
-            </Link>
+            </Link> */}
             <Button
               asChild
               variant="outline"
@@ -559,8 +560,8 @@ export default function Header() {
                   </button>
                 </div>
 
-                {/* Basket */}
-                <div className="space-y-2">
+                {/* Basket temporarily hidden - working on preview branch */}
+                {/* <div className="space-y-2">
                   <h3 className="text-xs font-medium uppercase tracking-wider text-gray-500 mb-3">
                     Basket
                   </h3>
@@ -574,7 +575,7 @@ export default function Header() {
                       View Basket
                     </span>
                   </Link>
-                </div>
+                </div> */}
 
                 {/* Main Navigation */}
                 <div className="space-y-2">
