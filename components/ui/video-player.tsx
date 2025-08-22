@@ -41,7 +41,7 @@ export function VideoPlayer({
   priority = false,
   onVideoLoad,
   onVideoError,
-  showPlayButton = true,
+  showPlayButton = false,
 }: VideoPlayerProps) {
   const [hasError, setHasError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -237,19 +237,7 @@ export function VideoPlayer({
         </div>
       )}
 
-      {/* Play/Pause button overlay */}
-      {!controls && (
-        <div className="absolute inset-0 bg-black/0 hover:bg-black/20 flex items-center justify-center transition-colors cursor-pointer">
-          <Button
-            onClick={togglePlay}
-            variant="secondary"
-            size="lg"
-            className="bg-white/90 hover:bg-white text-black rounded-full p-4 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
-          >
-            <Play className="h-8 w-8 ml-1" />
-          </Button>
-        </div>
-      )}
+      {/* Play/Pause button overlay - removed to hide play buttons */}
 
       {/* Error indicator */}
       {hasError && (
