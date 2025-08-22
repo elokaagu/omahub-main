@@ -158,11 +158,15 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
             brandData.price_range &&
             brandData.price_range !== "Contact for pricing"
           ) {
-            const priceRangeMatch = brandData.price_range.match(
+            // Try to parse different price range formats
+            let parsed = false;
+            
+            // Format 1: "₦50,000 - ₦1,000,000" (range)
+            const rangeMatch = brandData.price_range.match(
               /^(.+?)(\d+(?:,\d+)*)\s*-\s*(.+?)(\d+(?:,\d+)*)$/
             );
-            if (priceRangeMatch) {
-              const [, symbol1, min, symbol2, max] = priceRangeMatch;
+            if (rangeMatch) {
+              const [, symbol1, min, symbol2, max] = rangeMatch;
               const foundCurrency = CURRENCIES.find(
                 (c) =>
                   c.symbol === symbol1.trim() || c.symbol === symbol2.trim()
@@ -171,6 +175,45 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
                 setCurrency(foundCurrency.code);
                 setPriceMin(min.replace(/,/g, ""));
                 setPriceMax(max.replace(/,/g, ""));
+                parsed = true;
+              }
+            }
+            
+            // Format 2: "Starting from ₦50,000" (min only)
+            if (!parsed) {
+              const startingFromMatch = brandData.price_range.match(
+                /^Starting from\s+(.+?)(\d+(?:,\d+)*)$/
+              );
+              if (startingFromMatch) {
+                const [, symbol, min] = startingFromMatch;
+                const foundCurrency = CURRENCIES.find(
+                  (c) => c.symbol === symbol.trim()
+                );
+                if (foundCurrency) {
+                  setCurrency(foundCurrency.code);
+                  setPriceMin(min.replace(/,/g, ""));
+                  setPriceMax(""); // Clear max
+                  parsed = true;
+                }
+              }
+            }
+            
+            // Format 3: "Up to ₦1,000,000" (max only)
+            if (!parsed) {
+              const upToMatch = brandData.price_range.match(
+                /^Up to\s+(.+?)(\d+(?:,\d+)*)$/
+              );
+              if (upToMatch) {
+                const [, symbol, max] = upToMatch;
+                const foundCurrency = CURRENCIES.find(
+                  (c) => c.symbol === symbol.trim()
+                );
+                if (foundCurrency) {
+                  setCurrency(foundCurrency.code);
+                  setPriceMin(""); // Clear min
+                  setPriceMax(max.replace(/,/g, ""));
+                  parsed = true;
+                }
               }
             }
           }
@@ -388,13 +431,22 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
       return;
     }
 
-    // Format price range if both min and max are provided
-    let priceRange = brand.price_range || "Contact for pricing";
+    // Format price range based on what's provided
+    let priceRange = "Contact for pricing";
+    const selectedCurrency = CURRENCIES.find((c) => c.code === currency);
+    const symbol = selectedCurrency?.symbol || "₦";
+    
     if (priceMin && priceMax) {
-      const selectedCurrency = CURRENCIES.find((c) => c.code === currency);
-      const symbol = selectedCurrency?.symbol || "$";
+      // Both min and max provided - create range
       priceRange = `${symbol}${priceMin} - ${symbol}${priceMax}`;
+    } else if (priceMin && !priceMax) {
+      // Only min provided - create "Starting from" format
+      priceRange = `Starting from ${symbol}${priceMin}`;
+    } else if (!priceMin && priceMax) {
+      // Only max provided - create "Up to" format
+      priceRange = `Up to ${symbol}${priceMax}`;
     }
+    // If neither is provided, keep "Contact for pricing"
 
     setSaving(true);
     try {
@@ -643,14 +695,21 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
                     />
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    {priceMin && priceMax && currency ? (
+                    {currency ? (
                       <>
                         Preview:{" "}
-                        {formatPriceRange(
-                          priceMin,
-                          priceMax,
-                          CURRENCIES.find((c) => c.code === currency)?.symbol ||
-                            "$"
+                        {priceMin && priceMax ? (
+                          // Both values - show range
+                          `${CURRENCIES.find((c) => c.code === currency)?.symbol || "₦"}${priceMin} - ${CURRENCIES.find((c) => c.code === currency)?.symbol || "₦"}${priceMax}`
+                        ) : priceMin ? (
+                          // Only min - show "Starting from"
+                          `Starting from ${CURRENCIES.find((c) => c.code === currency)?.symbol || "₦"}${priceMin}`
+                        ) : priceMax ? (
+                          // Only max - show "Up to"
+                          `Up to ${CURRENCIES.find((c) => c.code === currency)?.symbol || "₦"}${priceMax}`
+                        ) : (
+                          // Neither - show current or default
+                          brand.price_range || "Contact for pricing"
                         )}
                       </>
                     ) : (
@@ -658,7 +717,7 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
                     )}
                   </p>
                           <p className="text-xs text-muted-foreground">
-          Tip: You can also use "Starting from X" format in the min price field for flexible pricing
+          Tip: You can set just a minimum price, just a maximum price, or both for a range. Leave both empty for "Contact for pricing".
         </p>
                 </div>
 
