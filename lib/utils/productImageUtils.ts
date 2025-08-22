@@ -1,16 +1,16 @@
 import { Product } from "@/lib/supabase";
 
 /**
- * Normalize product images to ensure the first image from the images array
- * is always used as the main image for consistent display
+ * Normalize product images to ensure consistency between main image and images array
+ * Maintains the main image field as the primary display image
  */
 export function normalizeProductImage<T extends Product>(product: T): T {
   if (!product) return product;
 
-  // If product has multiple images, ensure the first one is the main image
-  if (product.images && product.images.length > 0) {
+  // If main image is not set but images array has content, use the first image
+  if (!product.image && product.images && product.images.length > 0) {
     const firstImage = product.images[0];
-    if (firstImage && firstImage !== product.image) {
+    if (firstImage) {
       return {
         ...product,
         image: firstImage,
@@ -23,12 +23,17 @@ export function normalizeProductImage<T extends Product>(product: T): T {
 
 /**
  * Get the main display image for a product
- * Always returns the first image from the images array if available
+ * Prioritizes the main image field for consistency with product page display
  */
 export function getProductMainImage(product: Product): string {
   if (!product) return "";
 
-  // If product has multiple images, use the first one
+  // Prioritize the main image field for consistency
+  if (product.image) {
+    return product.image;
+  }
+
+  // Fallback to the first image from images array if main image is not available
   if (product.images && product.images.length > 0) {
     const firstImage = product.images[0];
     if (firstImage) {
@@ -36,8 +41,7 @@ export function getProductMainImage(product: Product): string {
     }
   }
 
-  // Fallback to the main image field
-  return product.image || "";
+  return "";
 }
 
 /**
