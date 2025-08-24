@@ -176,11 +176,11 @@ export function extractCurrencyFromPriceRange(
 /**
  * Get brand currency from brand data
  * @param brand - Brand object with location and price_range
- * @returns Currency object or default (NGN)
+ * @returns Currency object or undefined if no currency can be determined
  */
 export function getBrandCurrency(
   brand: { location?: string; price_range?: string } | null
-): Currency {
+): Currency | undefined {
   // Debug logging for currency issues
   if (process.env.NODE_ENV === "development") {
     console.log("getBrandCurrency debug:", {
@@ -191,12 +191,12 @@ export function getBrandCurrency(
   }
 
   if (!brand) {
-    console.log("getBrandCurrency: No brand data, defaulting to NGN");
-    return getCurrencyByCode("NGN")!; // Default to Nigerian Naira
+    console.log("getBrandCurrency: No brand data provided");
+    return undefined;
   }
 
-  // First try to extract from price_range
-  if (brand.price_range) {
+  // First try to extract from price_range (highest priority)
+  if (brand.price_range && brand.price_range !== "Contact for pricing") {
     const currencyFromPrice = extractCurrencyFromPriceRange(brand.price_range);
     if (currencyFromPrice) {
       console.log(
@@ -229,9 +229,9 @@ export function getBrandCurrency(
     }
   }
 
-  // Default fallback to Nigerian Naira
-  console.log("getBrandCurrency: Defaulting to NGN");
-  return getCurrencyByCode("NGN")!;
+  // No currency could be determined - return undefined instead of forcing a default
+  console.log("getBrandCurrency: No currency could be determined");
+  return undefined;
 }
 
 /**
@@ -249,7 +249,7 @@ export function formatPriceWithBrandCurrency(
     typeof price === "string" ? parseFloat(price.replace(/,/g, "")) : price;
 
   if (isNaN(numericPrice)) {
-    return `${currency.symbol}0`;
+    return `${currency?.symbol || "₦"}0`;
   }
 
   // Format with commas for thousands
@@ -258,7 +258,7 @@ export function formatPriceWithBrandCurrency(
     maximumFractionDigits: 2,
   });
 
-  return `${currency.symbol}${formattedPrice}`;
+  return `${currency?.symbol || "₦"}${formattedPrice}`;
 }
 
 /**
@@ -298,7 +298,7 @@ export function formatPriceRangeWithBrandCurrency(
     maximumFractionDigits: 2,
   });
 
-  return `${currency.symbol}${formattedMin} - ${currency.symbol}${formattedMax}`;
+  return `${currency?.symbol || "₦"}${formattedMin} - ${currency?.symbol || "₦"}${formattedMax}`;
 }
 
 /**

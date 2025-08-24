@@ -1,4 +1,4 @@
-import { getBrandCurrency } from "./currencyUtils";
+import { getBrandCurrency, getCurrencyByLocation } from "./currencyUtils";
 
 /**
  * Format a number with commas for thousands
@@ -113,7 +113,20 @@ export function formatPriceWithBrand(
   brand: { location?: string; price_range?: string } | null
 ): string {
   const currency = getBrandCurrency(brand);
-  return formatPrice(price, currency.symbol);
+  
+  // If no currency can be determined, use a sensible fallback based on brand location
+  let currencySymbol = "₦"; // Default fallback
+  if (currency) {
+    currencySymbol = currency.symbol;
+  } else if (brand?.location) {
+    // Try to determine from location if no currency found
+    const locationCurrency = getCurrencyByLocation(brand.location);
+    if (locationCurrency) {
+      currencySymbol = locationCurrency.symbol;
+    }
+  }
+  
+  return formatPrice(price, currencySymbol);
 }
 
 /**
@@ -125,11 +138,24 @@ export function formatPriceWithBrand(
  */
 export function formatPriceRangeWithBrand(
   minPrice: string | number,
-  maxPrice: string | number,
+  maxPrice: number,
   brand: { location?: string; price_range?: string } | null
 ): string {
   const currency = getBrandCurrency(brand);
-  return formatPriceRange(minPrice, maxPrice, currency.symbol);
+  
+  // If no currency can be determined, use a sensible fallback based on brand location
+  let currencySymbol = "₦"; // Default fallback
+  if (currency) {
+    currencySymbol = currency.symbol;
+  } else if (brand?.location) {
+    // Try to determine from location if no currency found
+    const locationCurrency = getCurrencyByLocation(brand.location);
+    if (locationCurrency) {
+      currencySymbol = locationCurrency.symbol;
+    }
+  }
+  
+  return formatPriceRange(minPrice, maxPrice, currencySymbol);
 }
 
 /**
@@ -141,7 +167,19 @@ export function getBrandCurrencySymbol(
   brand: { location?: string; price_range?: string } | null
 ): string {
   const currency = getBrandCurrency(brand);
-  return currency.symbol;
+  
+  // If no currency can be determined, use a sensible fallback based on brand location
+  if (currency) {
+    return currency.symbol;
+  } else if (brand?.location) {
+    // Try to determine from location if no currency found
+    const locationCurrency = getCurrencyByLocation(brand.location);
+    if (locationCurrency) {
+      return locationCurrency.symbol;
+    }
+  }
+  
+  return "₦"; // Default fallback
 }
 
 /**
@@ -159,18 +197,31 @@ export function formatProductPrice(
   currency: string;
 } {
   const currency = getBrandCurrency(brand || null);
+  
+  // If no currency can be determined, use a sensible fallback based on brand location
+  let currencySymbol = "₦"; // Default fallback
+  if (currency) {
+    currencySymbol = currency.symbol;
+  } else if (brand?.location) {
+    // Try to determine from location if no currency found
+    const locationCurrency = getCurrencyByLocation(brand.location);
+    if (locationCurrency) {
+      currencySymbol = locationCurrency.symbol;
+    }
+  }
+  
   const displayPrice = formatPrice(
     product.sale_price || product.price,
-    currency.symbol
+    currencySymbol
   );
   const originalPrice = product.sale_price
-    ? formatPrice(product.price, currency.symbol)
+    ? formatPrice(product.price, currencySymbol)
     : undefined;
 
   return {
     displayPrice,
     originalPrice,
-    currency: currency.symbol,
+    currency: currencySymbol,
   };
 }
 
