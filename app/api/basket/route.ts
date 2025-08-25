@@ -7,15 +7,24 @@ export async function GET() {
   try {
     const cookieStore = cookies();
     console.log("Basket API: Cookie store available:", !!cookieStore);
-    
+
     // Log all cookies for debugging
     const allCookies = cookieStore.getAll();
-    console.log("Basket API: All cookies:", allCookies.map(c => c.name));
-    
+    console.log(
+      "Basket API: All cookies:",
+      allCookies.map((c) => c.name)
+    );
+
     // Check for Supabase auth cookies specifically
-    const supabaseCookies = allCookies.filter(c => c.name.includes('sb-'));
-    console.log("Basket API: Supabase cookies:", supabaseCookies.map(c => ({ name: c.name, value: c.value.substring(0, 20) + '...' })));
-    
+    const supabaseCookies = allCookies.filter((c) => c.name.includes("sb-"));
+    console.log(
+      "Basket API: Supabase cookies:",
+      supabaseCookies.map((c) => ({
+        name: c.name,
+        value: c.value.substring(0, 20) + "...",
+      }))
+    );
+
     const supabase = createRouteHandlerClient({
       cookies: () => cookieStore,
     });
@@ -31,7 +40,7 @@ export async function GET() {
       hasUser: !!session?.user,
       userId: session?.user?.id,
       userEmail: session?.user?.email,
-      sessionError: sessionError?.message
+      sessionError: sessionError?.message,
     });
 
     if (sessionError) {
@@ -41,7 +50,7 @@ export async function GET() {
 
     if (!session || !session.user) {
       console.log("No valid session found in basket API");
-      
+
       // For debugging, let's try to get user info from the request headers
       const authHeader = headers().get("authorization");
       if (authHeader) {
@@ -49,23 +58,29 @@ export async function GET() {
           "Basket API: Found Authorization header:",
           authHeader.substring(0, 20) + "..."
         );
-        
+
         // Try to validate the token and get user info
         try {
-          const token = authHeader.replace('Bearer ', '');
+          const token = authHeader.replace("Bearer ", "");
           const { createClient } = await import("@supabase/supabase-js");
           const clientSupabase = createClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
             process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
           );
-          
-          const { data: { user }, error: userError } = await clientSupabase.auth.getUser(token);
-          
+
+          const {
+            data: { user },
+            error: userError,
+          } = await clientSupabase.auth.getUser(token);
+
           if (user && !userError) {
-            console.log("Basket API: User authenticated via token:", user.email);
+            console.log(
+              "Basket API: User authenticated via token:",
+              user.email
+            );
             // Continue with the user found via token
             const fallbackSession = { user };
-            
+
             // Fetch user's baskets with items
             const { data: baskets, error: basketsError } = await supabase
               .from("baskets")
@@ -97,19 +112,22 @@ export async function GET() {
             }
 
             // Fetch products separately to avoid relationship issues
-            const productIds = baskets?.flatMap(basket => 
-              basket.basket_items?.map(item => item.product_id) || []
-            ) || [];
+            const productIds =
+              baskets?.flatMap(
+                (basket) =>
+                  basket.basket_items?.map((item) => item.product_id) || []
+              ) || [];
 
             let products: Record<string, any> = {};
             if (productIds.length > 0) {
-              const { data: productsData, error: productsError } = await supabase
-                .from("products")
-                .select("id, name, price, image, brand_id")
-                .in("id", productIds);
+              const { data: productsData, error: productsError } =
+                await supabase
+                  .from("products")
+                  .select("id, name, price, image, brand_id")
+                  .in("id", productIds);
 
               if (!productsError && productsData) {
-                productsData.forEach(product => {
+                productsData.forEach((product) => {
                   products[product.id] = product;
                 });
               }
@@ -138,8 +156,10 @@ export async function GET() {
                     };
                   }) || [],
                 totalItems:
-                  basket.basket_items?.reduce((sum, item) => sum + item.quantity, 0) ||
-                  0,
+                  basket.basket_items?.reduce(
+                    (sum, item) => sum + item.quantity,
+                    0
+                  ) || 0,
               })) || [];
 
             return NextResponse.json({
@@ -154,7 +174,7 @@ export async function GET() {
           console.error("Basket API: Token validation failed:", tokenError);
         }
       }
-      
+
       return NextResponse.json(
         { error: "Authentication required" },
         { status: 401 }
@@ -194,9 +214,10 @@ export async function GET() {
     }
 
     // Fetch products separately to avoid relationship issues
-    const productIds = baskets?.flatMap(basket => 
-      basket.basket_items?.map(item => item.product_id) || []
-    ) || [];
+    const productIds =
+      baskets?.flatMap(
+        (basket) => basket.basket_items?.map((item) => item.product_id) || []
+      ) || [];
 
     let products: Record<string, any> = {};
     if (productIds.length > 0) {
@@ -206,7 +227,7 @@ export async function GET() {
         .in("id", productIds);
 
       if (!productsError && productsData) {
-        productsData.forEach(product => {
+        productsData.forEach((product) => {
           products[product.id] = product;
         });
       }
@@ -379,22 +400,66 @@ export async function POST(request: NextRequest) {
       }
     } else {
       // Add new item to basket
-      const { error: insertError } = await supabase
+      const { data: basketItem, error: insertError } = await supabase
         .from("basket_items")
         .insert({
           basket_id: basketId,
           product_id: productId,
           quantity,
-          size: size || null,
-          color: color || null,
-        });
+          size,
+          color,
+          created_at: new Date().toISOString(),
+        })
+        .select()
+        .single();
 
       if (insertError) {
-        console.error("Error adding item to basket:", insertError);
+        console.error("Error creating basket item:", insertError);
         return NextResponse.json(
-          { error: "Failed to add item to basket" },
+          { error: "Failed to create basket item" },
           { status: 500 }
         );
+      }
+
+      // Get product details for notification
+      const { data: product, error: productError } = await supabase
+        .from("products")
+        .select("title, price")
+        .eq("id", productId)
+        .single();
+
+      // Create notification for brand owner
+      try {
+        const { error: notificationError } = await supabase
+          .from("notifications")
+          .insert({
+            brand_id: brandId,
+            user_id: session.user.id,
+            type: "basket_submission",
+            title: "New Basket Item Added",
+            message: `A customer added ${quantity}x ${product?.title || "product"} to their basket`,
+            data: {
+              basket_item_id: basketItem.id,
+              product_id: productId,
+              product_title: product?.title,
+              product_price: product?.price,
+              quantity,
+              size,
+              color,
+              customer_email: session.user.email,
+              customer_id: session.user.id,
+            },
+          });
+
+        if (notificationError) {
+          console.error("Error creating notification:", notificationError);
+          // Don't fail the basket operation if notification fails
+        } else {
+          console.log("Notification created for brand owner");
+        }
+      } catch (notificationError) {
+        console.error("Error in notification creation:", notificationError);
+        // Don't fail the basket operation if notification fails
       }
     }
 

@@ -36,6 +36,7 @@ import {
 } from "@/components/ui/table";
 import { getAllBrands, getBrandNamesMap } from "@/lib/services/brandService";
 import { Brand } from "@/lib/supabase";
+import { CompactBrandDisplay } from "@/components/ui/compact-brand-display";
 import {
   Users,
   Plus,
@@ -171,7 +172,7 @@ export default function UsersPage() {
     // Normalize the role to handle any legacy brand_owner roles
     const normalizedRole =
       userToEdit.role === "brand_owner" ? "brand_admin" : userToEdit.role;
-    
+
     setEditingUser(userToEdit);
     setFormData({
       email: userToEdit.email,
@@ -870,21 +871,12 @@ export default function UsersPage() {
                               <Building className="h-3 w-3 mr-1" />
                               All brands
                             </Badge>
-                          ) : user.brand_names.length > 0 ? (
-                            user.brand_names.map((brandName, index) => (
-                              <Badge
-                                key={index}
-                                variant="secondary"
-                                className="text-xs bg-oma-beige text-oma-plum"
-                              >
-                                <Building className="h-3 w-3 mr-1" />
-                                {brandName}
-                              </Badge>
-                            ))
                           ) : (
-                            <span className="text-oma-cocoa/60 text-sm">
-                              No brands assigned
-                            </span>
+                            <CompactBrandDisplay
+                              brands={user.brand_names}
+                              maxVisible={2}
+                              className="max-w-xs"
+                            />
                           )}
                         </div>
                       </TableCell>
@@ -943,21 +935,12 @@ export default function UsersPage() {
                           <Building className="h-3 w-3 mr-1" />
                           All brands
                         </Badge>
-                      ) : user.brand_names.length > 0 ? (
-                        user.brand_names.map((brandName, index) => (
-                          <Badge
-                            key={index}
-                            variant="secondary"
-                            className="text-xs bg-oma-beige text-oma-plum"
-                          >
-                            <Building className="h-3 w-3 mr-1" />
-                            {brandName}
-                          </Badge>
-                        ))
                       ) : (
-                        <span className="text-oma-cocoa/60 text-sm">
-                          No brands assigned
-                        </span>
+                        <CompactBrandDisplay
+                          brands={user.brand_names}
+                          maxVisible={3}
+                          className="max-w-full"
+                        />
                       )}
                     </div>
                     <div className="flex gap-2 mt-2">

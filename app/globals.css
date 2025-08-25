@@ -1,5 +1,6 @@
 @import url("https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;500;600;700&family=Source+Sans+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&display=swap");
 @import "../styles/animations.css";
+@import "../styles/safari-compatibility.css";
 
 @tailwind base;
 @tailwind components;
@@ -444,7 +445,7 @@ html::-webkit-scrollbar,
     min-height: 44px;
     font-size: 16px; /* Prevents zoom on iOS */
   }
-  
+
   /* Enhanced mobile horizontal scrolling */
   .mobile-scroll-container {
     -webkit-overflow-scrolling: touch;
@@ -452,12 +453,12 @@ html::-webkit-scrollbar,
     scroll-snap-type: x mandatory;
     scroll-padding: 0 1rem;
   }
-  
+
   .mobile-scroll-item {
     scroll-snap-align: start;
     scroll-snap-stop: always;
   }
-  
+
   /* Show partial next item on mobile */
   .mobile-scroll-preview {
     overflow-x: auto;

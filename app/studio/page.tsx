@@ -14,6 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart3 } from "@/lib/utils/iconImports";
 import Link from "next/link";
 import type { Database } from "@/lib/types/supabase";
+import NotificationsWidget from "@/components/studio/NotificationsWidget";
 
 // Dynamic imports for heavy components
 const LeadsTrackingDashboard = dynamic(
@@ -25,8 +26,6 @@ const LeadsTrackingDashboard = dynamic(
     ssr: false,
   }
 );
-
-
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
@@ -182,28 +181,36 @@ export default function StudioPage() {
       </div>
 
       {/* Main Dashboard Components */}
-      <div className="grid grid-cols-1 gap-8">
-        {/* Leads Dashboard */}
-        <Card className="border-omahub-accent shadow-omahub">
-          <CardHeader className="bg-gradient-to-r from-omahub-primary to-omahub-secondary text-white rounded-t-lg">
-            <CardTitle className="text-white">Leads & Conversions</CardTitle>
-          </CardHeader>
-          <CardContent className="bg-white">
-            <Suspense
-              fallback={
-                <div className="h-64 bg-omahub-light rounded-lg animate-pulse" />
-              }
-            >
-              <LeadsTrackingDashboard
-                userRole={userProfile?.role || "user"}
-                ownedBrandIds={userProfile?.owned_brands || []}
-              />
-            </Suspense>
-          </CardContent>
-        </Card>
+      <div
+        className="grid grid-cols-1 lg:grid-cols-3 gap-8"
+        style={{ minHeight: 0 }}
+      >
+        {/* Leads Dashboard - Full Width */}
+        <div className="lg:col-span-2" style={{ minWidth: 0 }}>
+          <Card className="border-omahub-accent shadow-omahub">
+            <CardHeader className="bg-gradient-to-r from-omahub-primary to-omahub-secondary text-white rounded-t-lg">
+              <CardTitle className="text-white">Leads & Conversions</CardTitle>
+            </CardHeader>
+            <CardContent className="bg-white">
+              <Suspense
+                fallback={
+                  <div className="h-64 bg-omahub-light rounded-lg animate-pulse" />
+                }
+              >
+                <LeadsTrackingDashboard
+                  userRole={userProfile?.role || "user"}
+                  ownedBrandIds={userProfile?.owned_brands || []}
+                />
+              </Suspense>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Notifications Widget - Sidebar */}
+        <div className="lg:col-span-1" style={{ minWidth: 0 }}>
+          <NotificationsWidget />
+        </div>
       </div>
-
-
     </div>
   );
 }

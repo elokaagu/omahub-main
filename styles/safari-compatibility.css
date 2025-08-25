@@ -1,0 +1,80 @@
+/* Safari Compatibility Fixes for OmaHub Notifications */
+
+/* Fix Safari flexbox issues */
+@supports (-webkit-appearance: none) {
+  .safari-flex-fix {
+    min-height: 0;
+    min-width: 0;
+  }
+
+  /* Fix Safari grid layout issues */
+  .safari-grid-fix {
+    display: -ms-grid;
+    display: grid;
+    -ms-grid-columns: 1fr 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+}
+
+/* Safari-specific scrollbar styling */
+@supports (-webkit-appearance: none) {
+  .safari-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .safari-scrollbar::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+  }
+
+  .safari-scrollbar::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+  }
+
+  .safari-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+  }
+}
+
+/* Fix Safari button appearance */
+@supports (-webkit-appearance: none) {
+  .safari-button-fix {
+    -webkit-appearance: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+  }
+}
+
+/* Safari touch feedback */
+@supports (-webkit-appearance: none) {
+  .safari-touch-feedback {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+  }
+}
+
+/* Fix Safari date input issues */
+@supports (-webkit-appearance: none) {
+  input[type="date"] {
+    -webkit-appearance: none;
+  }
+}
+
+/* Safari-safe transitions */
+@supports (-webkit-appearance: none) {
+  .safari-transition {
+    -webkit-transition: all 0.2s ease;
+    transition: all 0.2s ease;
+  }
+}
+
+/* Fix Safari backdrop-filter issues */
+@supports (-webkit-appearance: none) {
+  .safari-backdrop {
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+  }
+}
