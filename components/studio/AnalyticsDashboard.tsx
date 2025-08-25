@@ -21,6 +21,11 @@ import {
   Clock,
 } from "lucide-react";
 import { toast } from "sonner";
+import { 
+  fetchRealGoogleAnalyticsData, 
+  isGoogleAnalyticsConfigured,
+  getConfigurationStatus 
+} from "@/lib/services/googleAnalyticsService";
 
 interface GoogleAnalyticsData {
   pageViews: number;
@@ -49,38 +54,18 @@ export default function AnalyticsDashboard({
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<string>("");
 
-  // Mock Google Analytics data for demonstration
+
+
+  // Mock Google Analytics data for demonstration (fallback)
   const mockGoogleAnalyticsData: GoogleAnalyticsData = {
-    pageViews: 7580,
-    uniqueVisitors: 3247,
-    bounceRate: 42.3,
-    avgSessionDuration: 185,
-    topPages: [
-      { page: "/", views: 2156 },
-      { page: "/directory", views: 1892 },
-      { page: "/brands", views: 1247 },
-      { page: "/collections", views: 987 },
-      { page: "/about", views: 298 },
-    ],
-    topSources: [
-      { source: "Direct", sessions: 2156 },
-      { source: "Google Search", sessions: 1892 },
-      { source: "Social Media", sessions: 1247 },
-      { source: "Referral", sessions: 987 },
-      { source: "Email", sessions: 298 },
-    ],
-    deviceBreakdown: [
-      { device: "Desktop", percentage: 58.2 },
-      { device: "Mobile", percentage: 38.7 },
-      { device: "Tablet", percentage: 3.1 },
-    ],
-    recentActivity: [
-      { action: "Page View", timestamp: "2 minutes ago", value: "/studio" },
-      { action: "User Login", timestamp: "5 minutes ago", value: "user@example.com" },
-      { action: "Product View", timestamp: "8 minutes ago", value: "Designer Dress" },
-      { action: "Add to Cart", timestamp: "12 minutes ago", value: "£299.99" },
-      { action: "Search Query", timestamp: "15 minutes ago", value: "evening wear" },
-    ],
+    pageViews: 0,
+    uniqueVisitors: 0,
+    bounceRate: 0,
+    avgSessionDuration: 0,
+    topPages: [],
+    topSources: [],
+    deviceBreakdown: [],
+    recentActivity: [],
   };
 
   const fetchGoogleAnalyticsData = async () => {
@@ -88,17 +73,27 @@ export default function AnalyticsDashboard({
       setLoading(true);
       setError(null);
       
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Check if Google Analytics is properly configured
+      const isConfigured = isGoogleAnalyticsConfigured();
       
-      // For now, use mock data - in production this would fetch from Google Analytics API
-      setAnalyticsData(mockGoogleAnalyticsData);
-      setLastUpdated(new Date().toLocaleTimeString());
-      
-      toast.success("Google Analytics data refreshed successfully!");
+      if (isConfigured) {
+        // Try to fetch real data from Google Analytics API
+        const realData = await fetchRealGoogleAnalyticsData();
+        setAnalyticsData(realData);
+        setLastUpdated(new Date().toLocaleTimeString());
+        toast.success("Real Google Analytics data fetched successfully!");
+      } else {
+        // Use mock data when API is not configured
+        setAnalyticsData(mockGoogleAnalyticsData);
+        setLastUpdated(new Date().toLocaleTimeString());
+        toast.info("Using demo data - Google Analytics API not configured");
+      }
     } catch (err) {
+      console.error("Error fetching analytics data:", err);
       setError("Failed to fetch Google Analytics data");
       toast.error("Failed to fetch analytics data");
+      // Fallback to mock data on error
+      setAnalyticsData(mockGoogleAnalyticsData);
     } finally {
       setLoading(false);
     }
@@ -337,15 +332,30 @@ export default function AnalyticsDashboard({
       </div>
 
       {/* Google Analytics Integration Status */}
-      <Card className="border-green-200 bg-green-50">
+      <Card className={`${isGoogleAnalyticsConfigured() ? 'border-green-200 bg-green-50' : 'border-yellow-200 bg-yellow-50'}`}>
         <CardContent className="p-6">
           <div className="flex items-center gap-3">
-            <CheckCircle className="h-6 w-6 text-green-600" />
+            {isGoogleAnalyticsConfigured() ? (
+              <CheckCircle className="h-6 w-6 text-green-600" />
+            ) : (
+              <AlertTriangle className="h-6 w-6 text-yellow-600" />
+            )}
             <div>
-              <h3 className="font-semibold text-green-800">Google Analytics Active</h3>
-              <p className="text-sm text-green-600">
-                Tracking page views, user behavior, and conversion events across the platform
+              <h3 className={`font-semibold ${isGoogleAnalyticsConfigured() ? 'text-green-800' : 'text-yellow-800'}`}>
+                {isGoogleAnalyticsConfigured() ? 'Google Analytics Active' : 'Google Analytics Setup Required'}
+              </h3>
+              <p className={`text-sm ${isGoogleAnalyticsConfigured() ? 'text-green-600' : 'text-yellow-600'}`}>
+                {isGoogleAnalyticsConfigured() 
+                  ? 'Tracking page views, user behavior, and conversion events across the platform'
+                  : 'Service account setup required to fetch real data from Google Analytics 4'
+                }
               </p>
+              {!isGoogleAnalyticsConfigured() && (
+                <div className="mt-2 text-xs text-yellow-700">
+                  <p>Current GA ID: {getConfigurationStatus().gaMeasurementId}</p>
+                  <p>Status: Demo mode - showing sample data</p>
+                </div>
+              )}
             </div>
           </div>
         </CardContent>
