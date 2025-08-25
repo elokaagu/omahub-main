@@ -1,20 +1,32 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
+import { createServerSupabaseClient } from "@/lib/supabase-unified";
 import { cookies } from "next/headers";
 
 // GET - Fetch user's baskets
 export async function GET() {
   try {
     const cookieStore = cookies();
-    const supabase = createRouteHandlerClient({
-      cookies: () => cookieStore,
-    });
+    console.log("Basket API: Cookie store available:", !!cookieStore);
+    
+    // Log all cookies for debugging
+    const allCookies = cookieStore.getAll();
+    console.log("Basket API: All cookies:", allCookies.map(c => c.name));
+    
+    const supabase = await createServerSupabaseClient();
 
     // Get the current session
     const {
       data: { session },
       error: sessionError,
     } = await supabase.auth.getSession();
+
+    console.log("Basket API: Session check result:", {
+      hasSession: !!session,
+      hasUser: !!session?.user,
+      userId: session?.user?.id,
+      userEmail: session?.user?.email,
+      sessionError: sessionError?.message
+    });
 
     if (sessionError) {
       console.error("Session error in basket API:", sessionError);
@@ -127,9 +139,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const cookieStore = cookies();
-    const supabase = createRouteHandlerClient({
-      cookies: () => cookieStore,
-    });
+    const supabase = await createServerSupabaseClient();
 
     // Get the current session
     const {
@@ -286,9 +296,7 @@ export async function POST(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     const cookieStore = cookies();
-    const supabase = createRouteHandlerClient({
-      cookies: () => cookieStore,
-    });
+    const supabase = await createServerSupabaseClient();
 
     // Get the current session
     const {
@@ -376,9 +384,7 @@ export async function PATCH(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     const cookieStore = cookies();
-    const supabase = createRouteHandlerClient({
-      cookies: () => cookieStore,
-    });
+    const supabase = await createServerSupabaseClient();
 
     // Get the current session
     const {
