@@ -15,6 +15,8 @@ import { BarChart3 } from "@/lib/utils/iconImports";
 import Link from "next/link";
 import type { Database } from "@/lib/types/supabase";
 import NotificationsWidget from "@/components/studio/NotificationsWidget";
+import GoogleAnalyticsDashboard from "@/components/studio/GoogleAnalyticsDashboard";
+import { engagement } from "@/lib/config/analytics";
 
 // Dynamic imports for heavy components
 const LeadsTrackingDashboard = dynamic(
@@ -79,6 +81,11 @@ export default function StudioPage() {
             ownedBrands: profile?.owned_brands,
           });
           setUserProfile(profile);
+        }
+
+        // Track Studio access in Google Analytics
+        if (profile?.role) {
+          engagement.studioAccess(profile.role);
         }
       } catch (error) {
         console.error("❌ Studio Page: Error in fetchData:", error);
@@ -178,6 +185,14 @@ export default function StudioPage() {
         <p className="text-lg text-omahub-secondary">
           Manage your brands, products, and business operations
         </p>
+        {userProfile?.role === "super_admin" && (
+          <div className="mt-3 flex items-center justify-center gap-2">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+            <span className="text-sm text-green-700 font-medium">
+              Analytics Dashboard Available - Super Admin Access
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Main Dashboard Components */}
@@ -203,6 +218,9 @@ export default function StudioPage() {
 
         {/* Notifications Widget - Full Width Below */}
         <NotificationsWidget />
+
+        {/* Google Analytics Dashboard - Super Admin Only */}
+        {userProfile?.role === "super_admin" && <GoogleAnalyticsDashboard />}
       </div>
     </div>
   );

@@ -10,6 +10,7 @@ import React, {
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { createClient } from "@/lib/supabase-unified";
+import { ecommerce } from "@/lib/config/analytics";
 
 // Types
 export interface BasketItem {
@@ -237,6 +238,19 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
       try {
         dispatch({ type: "SET_LOADING", payload: true });
         dispatch({ type: "SET_ERROR", payload: null });
+
+        // Track add to cart event in Google Analytics
+        if (productId && quantity) {
+          ecommerce.addToCart({
+            item_id: productId,
+            item_name: `Product ${productId}`, // You can enhance this with actual product name
+            price: 0, // You can enhance this with actual price
+            quantity: quantity,
+            currency: 'USD', // You can enhance this with actual currency
+            brand: brandId,
+            category: 'Fashion',
+          });
+        }
 
         const response = await fetch("/api/basket", {
           method: "POST",

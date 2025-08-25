@@ -5,6 +5,7 @@ import { Preloader } from "@/components/ui/preloader";
 import { suisseIntl, canela } from "./fonts";
 import { Toaster } from "sonner";
 import { Analytics } from "@vercel/analytics/react";
+import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
 import Head from "next/head";
 
 export const metadata: Metadata = {
@@ -30,6 +31,7 @@ export default function RootLayout({
         </Preloader>
         <Toaster position="top-right" duration={2000} />
         <Analytics />
+        <GoogleAnalytics />
       </body>
     </html>
   );

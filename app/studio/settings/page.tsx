@@ -270,6 +270,19 @@ export default function SettingsPage() {
     }
   };
 
+  // ========================================
+  // ACCESS CONTROL: Studio Settings
+  // ========================================
+  // Only super administrators can access studio settings
+  // This includes:
+  // - Platform visibility control (public/private)
+  // - About Us and Our Story content editing
+  // - FAQ management
+  // - Legal documents management
+  // - Platform-wide configuration
+  // ========================================
+
+  // Check if user is authenticated and has super admin role
   if (!user) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -281,6 +294,32 @@ export default function SettingsPage() {
           <p className="mt-2 text-oma-cocoa">
             Please sign in to access studio settings.
           </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Check if user has super admin role
+  if (user.role !== "super_admin") {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <Shield className="mx-auto h-12 w-12 text-red-500/50" />
+          <h3 className="mt-4 text-lg font-canela text-oma-plum">
+            Access Denied
+          </h3>
+          <p className="mt-2 text-oma-cocoa">
+            Only super administrators can access studio settings.
+          </p>
+          <p className="mt-1 text-sm text-oma-cocoa/70">
+            Your current role: {user.role}
+          </p>
+          <Button
+            asChild
+            className="mt-4 bg-oma-plum hover:bg-oma-plum/90 text-white"
+          >
+            <Link href="/studio">Return to Studio</Link>
+          </Button>
         </div>
       </div>
     );

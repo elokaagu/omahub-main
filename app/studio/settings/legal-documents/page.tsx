@@ -32,6 +32,8 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import Link from "next/link";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "next/navigation";
 
 interface LegalDocument {
   id: string;
@@ -46,6 +48,8 @@ interface LegalDocument {
 }
 
 export default function LegalDocumentsPage() {
+  const { user } = useAuth();
+  const router = useRouter();
   const [documents, setDocuments] = useState<LegalDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -63,9 +67,31 @@ export default function LegalDocumentsPage() {
     effective_date: "",
   });
 
+  // Check if user is super admin
   useEffect(() => {
-    fetchDocuments();
-  }, []);
+    if (user && user.role !== "super_admin") {
+      router.push("/studio");
+      return;
+    }
+  }, [user, router]);
+
+  useEffect(() => {
+    if (user?.role === "super_admin") {
+      fetchDocuments();
+    }
+  }, [user]);
+
+  // Show loading while checking authentication
+  if (!user) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-oma-cocoa">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   const fetchDocuments = async () => {
     try {
