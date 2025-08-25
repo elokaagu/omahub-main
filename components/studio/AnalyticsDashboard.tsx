@@ -177,50 +177,50 @@ export default function AnalyticsDashboard({
 
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="border-blue-200 bg-blue-50">
+        <Card className="border-omahub-primary bg-omahub-light">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-blue-600">Page Views</p>
-                <p className="text-2xl font-bold text-blue-900">{analyticsData.pageViews.toLocaleString()}</p>
+                <p className="text-sm font-medium text-omahub-primary">Page Views</p>
+                <p className="text-2xl font-bold text-omahub-primary">{analyticsData.pageViews.toLocaleString()}</p>
               </div>
-              <Eye className="h-8 w-8 text-blue-600" />
+              <Eye className="h-8 w-8 text-omahub-primary" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-green-200 bg-green-50">
+        <Card className="border-omahub-secondary bg-omahub-light">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-green-600">Unique Visitors</p>
-                <p className="text-2xl font-bold text-green-900">{analyticsData.uniqueVisitors.toLocaleString()}</p>
+                <p className="text-sm font-medium text-omahub-secondary">Unique Visitors</p>
+                <p className="text-2xl font-bold text-omahub-secondary">{analyticsData.uniqueVisitors.toLocaleString()}</p>
               </div>
-              <Users className="h-8 w-8 text-green-600" />
+              <Users className="h-8 w-8 text-omahub-secondary" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-purple-200 bg-purple-50">
+        <Card className="border-omahub-accent bg-omahub-light">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-purple-600">Bounce Rate</p>
-                <p className="text-2xl font-bold text-purple-900">{analyticsData.bounceRate}%</p>
+                <p className="text-sm font-medium text-omahub-accent">Bounce Rate</p>
+                <p className="text-2xl font-bold text-omahub-accent">{analyticsData.bounceRate}%</p>
               </div>
-              <TrendingUp className="h-8 w-8 text-purple-600" />
+              <TrendingUp className="h-8 w-8 text-omahub-accent" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-orange-200 bg-orange-50">
+        <Card className="border-omahub-gold bg-omahub-light">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-orange-600">Avg Session</p>
-                <p className="text-2xl font-bold text-orange-900">{formatDuration(analyticsData.avgSessionDuration)}</p>
+                <p className="text-sm font-medium text-omahub-gold">Avg Session</p>
+                <p className="text-2xl font-bold text-omahub-gold">{formatDuration(analyticsData.avgSessionDuration)}</p>
               </div>
-              <Clock className="h-8 w-8 text-orange-600" />
+              <Clock className="h-8 w-8 text-omahub-gold" />
             </div>
           </CardContent>
         </Card>
@@ -294,12 +294,12 @@ export default function AnalyticsDashboard({
                     <span className="font-medium">{device.device}</span>
                     <span className="text-gray-600">{device.percentage}%</span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${device.percentage}%` }}
-                    />
-                  </div>
+                                     <div className="w-full bg-gray-200 rounded-full h-2">
+                     <div
+                       className="bg-omahub-primary h-2 rounded-full transition-all duration-300"
+                       style={{ width: `${device.percentage}%` }}
+                     />
+                   </div>
                 </div>
               ))}
             </div>
@@ -332,26 +332,26 @@ export default function AnalyticsDashboard({
       </div>
 
       {/* Google Analytics Integration Status */}
-      <Card className={`${isGoogleAnalyticsConfigured() ? 'border-green-200 bg-green-50' : 'border-yellow-200 bg-yellow-50'}`}>
+      <Card className={`${isGoogleAnalyticsConfigured() ? 'border-omahub-primary bg-omahub-light' : 'border-omahub-gold bg-omahub-light'}`}>
         <CardContent className="p-6">
           <div className="flex items-center gap-3">
             {isGoogleAnalyticsConfigured() ? (
-              <CheckCircle className="h-6 w-6 text-green-600" />
+              <CheckCircle className="h-6 w-6 text-omahub-primary" />
             ) : (
-              <AlertTriangle className="h-6 w-6 text-yellow-600" />
+              <AlertTriangle className="h-6 w-6 text-omahub-gold" />
             )}
             <div>
-              <h3 className={`font-semibold ${isGoogleAnalyticsConfigured() ? 'text-green-800' : 'text-yellow-800'}`}>
+              <h3 className={`font-semibold ${isGoogleAnalyticsConfigured() ? 'text-omahub-primary' : 'text-omahub-gold'}`}>
                 {isGoogleAnalyticsConfigured() ? 'Google Analytics Active' : 'Google Analytics Setup Required'}
               </h3>
-              <p className={`text-sm ${isGoogleAnalyticsConfigured() ? 'text-green-600' : 'text-yellow-600'}`}>
+              <p className={`text-sm ${isGoogleAnalyticsConfigured() ? 'text-omahub-primary' : 'text-omahub-gold'}`}>
                 {isGoogleAnalyticsConfigured() 
                   ? 'Tracking page views, user behavior, and conversion events across the platform'
                   : 'Service account setup required to fetch real data from Google Analytics 4'
                 }
               </p>
               {!isGoogleAnalyticsConfigured() && (
-                <div className="mt-2 text-xs text-yellow-700">
+                <div className="mt-2 text-xs text-omahub-gold">
                   <p>Current GA ID: {getConfigurationStatus().gaMeasurementId}</p>
                   <p>Status: Demo mode - showing sample data</p>
                 </div>

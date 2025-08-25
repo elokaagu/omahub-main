@@ -12,11 +12,13 @@ This guide will help you set up real Google Analytics data fetching for your Oma
 ## 🚀 **Step 1: Google Cloud Console Setup**
 
 ### 1.1 Create a Google Cloud Project
+
 1. Go to [Google Cloud Console](https://console.cloud.google.com/)
 2. Create a new project or select existing project
 3. Enable the **Google Analytics Data API**
 
 ### 1.2 Create Service Account
+
 1. Go to **IAM & Admin** > **Service Accounts**
 2. Click **Create Service Account**
 3. Name: `omahub-analytics`
@@ -24,11 +26,13 @@ This guide will help you set up real Google Analytics data fetching for your Oma
 5. Click **Create and Continue**
 
 ### 1.3 Grant Permissions
+
 1. Role: **Viewer** (for Google Analytics)
 2. Click **Continue**
 3. Click **Done**
 
 ### 1.4 Create and Download Key
+
 1. Click on your service account
 2. Go to **Keys** tab
 3. Click **Add Key** > **Create New Key**
@@ -60,9 +64,9 @@ export const GA_PROPERTY_ID = process.env.GOOGLE_ANALYTICS_PROPERTY_ID;
 
 // Check if API is fully configured
 export const GA_API_ENABLED = !!(
-  GA_PRIVATE_KEY && 
-  GA_CLIENT_EMAIL && 
-  GA_PROJECT_ID && 
+  GA_PRIVATE_KEY &&
+  GA_CLIENT_EMAIL &&
+  GA_PROJECT_ID &&
   GA_PROPERTY_ID
 );
 ```
@@ -78,31 +82,31 @@ npm install google-auth-library
 Replace the mock data in `lib/services/googleAnalyticsService.ts` with real API calls:
 
 ```typescript
-import { GoogleAuth } from 'google-auth-library';
-import { analyticsdata_v1beta, analyticsdata } from 'googleapis';
+import { GoogleAuth } from "google-auth-library";
+import { analyticsdata_v1beta, analyticsdata } from "googleapis";
 
 // Initialize Google Auth
 const auth = new GoogleAuth({
   keyFile: process.env.GOOGLE_ANALYTICS_PRIVATE_KEY,
-  scopes: ['https://www.googleapis.com/auth/analytics.readonly'],
+  scopes: ["https://www.googleapis.com/auth/analytics.readonly"],
 });
 
 // Initialize Analytics Data API
 const analyticsData = analyticsdata({
-  version: 'v1beta',
+  version: "v1beta",
   auth,
 });
 
 export async function fetchRealGoogleAnalyticsData(): Promise<GoogleAnalyticsData> {
   try {
     const authClient = await auth.getClient();
-    
+
     // Fetch page views
     const pageViewsResponse = await analyticsData.properties.runReport({
       property: `properties/${GA_PROPERTY_ID}`,
       requestBody: {
-        dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
-        metrics: [{ name: 'screenPageViews' }],
+        dateRanges: [{ startDate: "30daysAgo", endDate: "today" }],
+        metrics: [{ name: "screenPageViews" }],
       },
     });
 
@@ -110,8 +114,8 @@ export async function fetchRealGoogleAnalyticsData(): Promise<GoogleAnalyticsDat
     const usersResponse = await analyticsData.properties.runReport({
       property: `properties/${GA_PROPERTY_ID}`,
       requestBody: {
-        dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
-        metrics: [{ name: 'activeUsers' }],
+        dateRanges: [{ startDate: "30daysAgo", endDate: "today" }],
+        metrics: [{ name: "activeUsers" }],
       },
     });
 
@@ -119,30 +123,35 @@ export async function fetchRealGoogleAnalyticsData(): Promise<GoogleAnalyticsDat
     const pagesResponse = await analyticsData.properties.runReport({
       property: `properties/${GA_PROPERTY_ID}`,
       requestBody: {
-        dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
-        dimensions: [{ name: 'pagePath' }],
-        metrics: [{ name: 'screenPageViews' }],
-        orderBys: [{ metric: { metricName: 'screenPageViews' }, desc: true }],
+        dateRanges: [{ startDate: "30daysAgo", endDate: "today" }],
+        dimensions: [{ name: "pagePath" }],
+        metrics: [{ name: "screenPageViews" }],
+        orderBys: [{ metric: { metricName: "screenPageViews" }, desc: true }],
         limit: 10,
       },
     });
 
     // Process and return real data
     return {
-      pageViews: parseInt(pageViewsResponse.data.rows?.[0]?.metricValues?.[0]?.value || '0'),
-      uniqueVisitors: parseInt(usersResponse.data.rows?.[0]?.metricValues?.[0]?.value || '0'),
+      pageViews: parseInt(
+        pageViewsResponse.data.rows?.[0]?.metricValues?.[0]?.value || "0"
+      ),
+      uniqueVisitors: parseInt(
+        usersResponse.data.rows?.[0]?.metricValues?.[0]?.value || "0"
+      ),
       bounceRate: 0, // Calculate from sessions data
       avgSessionDuration: 0, // Calculate from session data
-      topPages: pagesResponse.data.rows?.map(row => ({
-        page: row.dimensionValues?.[0]?.value || '',
-        views: parseInt(row.metricValues?.[0]?.value || '0'),
-      })) || [],
+      topPages:
+        pagesResponse.data.rows?.map((row) => ({
+          page: row.dimensionValues?.[0]?.value || "",
+          views: parseInt(row.metricValues?.[0]?.value || "0"),
+        })) || [],
       topSources: [], // Fetch from traffic source data
       deviceBreakdown: [], // Fetch from device data
       recentActivity: [], // Real-time API for live data
     };
   } catch (error) {
-    console.error('Error fetching real GA data:', error);
+    console.error("Error fetching real GA data:", error);
     throw error;
   }
 }
@@ -160,11 +169,13 @@ export async function fetchRealGoogleAnalyticsData(): Promise<GoogleAnalyticsDat
 ### Common Issues:
 
 1. **"Service account setup required"**
+
    - Check environment variables
    - Verify service account permissions
    - Ensure API is enabled
 
 2. **"Authentication failed"**
+
    - Check private key format
    - Verify client email
    - Check project ID

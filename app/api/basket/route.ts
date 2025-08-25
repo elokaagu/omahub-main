@@ -36,26 +36,52 @@ export async function GET() {
       }
     );
 
-    // Try to get the session instead of just the user
-    const {
-      data: { session },
-      error: sessionError,
-    } = await supabase.auth.getSession();
-
-    if (sessionError) {
-      console.error("Session error in basket API:", sessionError);
-      return NextResponse.json({ error: "Session error" }, { status: 401 });
+    // Try multiple authentication methods
+    let session = null;
+    let user = null;
+    
+    // First try to get session
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    if (sessionData?.session) {
+      session = sessionData.session;
+      user = sessionData.session.user;
+    }
+    
+    // If no session, try to get user directly
+    if (!user) {
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userData?.user) {
+        user = userData.user;
+      }
+    }
+    
+    // If still no user, try to get from cookies manually
+    if (!user) {
+      const authCookie = cookieStore.get('sb-access-token') || cookieStore.get('supabase-auth-token');
+      if (authCookie) {
+        try {
+          // Try to decode the JWT token to get user info
+          const token = authCookie.value;
+          if (token && !token.startsWith('base64-')) {
+            // For now, return a more helpful error
+            console.log("Auth cookie found but user not authenticated");
+          }
+        } catch (error) {
+          console.error("Error parsing auth cookie:", error);
+        }
+      }
     }
 
-    if (!session || !session.user) {
-      console.log("No valid session found in basket API");
+    if (!user) {
+      console.log("No valid user found in basket API");
+      console.log("Available cookies:", Array.from(cookieStore.getAll()).map(c => c.name));
       return NextResponse.json(
-        { error: "Authentication required" },
+        { error: "Authentication required - please log in again" },
         { status: 401 }
       );
     }
 
-    console.log("Basket API: User authenticated:", session.user.id);
+    console.log("Basket API: User authenticated:", user.id);
 
     // Fetch user's baskets from the database
     const { data: baskets, error: basketsError } = await supabase
@@ -74,7 +100,7 @@ export async function GET() {
           )
         )
       `)
-      .eq("user_id", session.user.id)
+      .eq("user_id", user.id)
       .order("created_at", { ascending: false });
 
     if (basketsError) {
@@ -85,13 +111,13 @@ export async function GET() {
       );
     }
 
-    return NextResponse.json({
-      baskets: baskets || [],
-      user: {
-        id: session.user.id,
-        email: session.user.email,
-      },
-    });
+          return NextResponse.json({
+        baskets: baskets || [],
+        user: {
+          id: user.id,
+          email: user.email,
+        },
+      });
   } catch (error) {
     console.error("Basket API error:", error);
     return NextResponse.json(
@@ -135,26 +161,51 @@ export async function POST(request: NextRequest) {
       }
     );
 
-    // Try to get the session instead of just the user
-    const {
-      data: { session },
-      error: sessionError,
-    } = await supabase.auth.getSession();
-
-    if (sessionError) {
-      console.error("Session error in basket API POST:", sessionError);
-      return NextResponse.json({ error: "Session error" }, { status: 401 });
+    // Try multiple authentication methods
+    let session = null;
+    let user = null;
+    
+    // First try to get session
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    if (sessionData?.session) {
+      session = sessionData.session;
+      user = sessionData.session.user;
+    }
+    
+    // If no session, try to get user directly
+    if (!user) {
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userData?.user) {
+        user = userData.user;
+      }
+    }
+    
+    // If still no user, try to get from cookies manually
+    if (!user) {
+      const authCookie = cookieStore.get('sb-access-token') || cookieStore.get('supabase-auth-token');
+      if (authCookie) {
+        try {
+          // Try to decode the JWT token to get user info
+          const token = authCookie.value;
+          if (token && !token.startsWith('base64-')) {
+            // For now, return a more helpful error
+            console.log("Auth cookie found but user not authenticated");
+          }
+        } catch (error) {
+          console.error("Error parsing auth cookie:", error);
+        }
+      }
     }
 
-    if (!session || !session.user) {
-      console.log("No valid session found in basket API POST");
+    if (!user) {
+      console.log("No valid user found in basket API POST");
       return NextResponse.json(
-        { error: "Authentication required" },
-        { status: 500 }
+        { error: "Authentication required - please log in again" },
+        { status: 401 }
       );
     }
 
-    console.log("Basket API POST: User authenticated:", session.user.id);
+    console.log("Basket API POST: User authenticated:", user.id);
 
     // Parse request body
     const { productId, quantity, size, colour } = await request.json();
@@ -188,7 +239,7 @@ export async function POST(request: NextRequest) {
     let { data: basket, error: basketError } = await supabase
       .from("baskets")
       .select("*")
-      .eq("user_id", session.user.id)
+      .eq("user_id", user.id)
       .single();
 
     if (basketError && basketError.code !== "PGRST116") {
@@ -204,7 +255,7 @@ export async function POST(request: NextRequest) {
       const { data: newBasket, error: createBasketError } = await supabase
         .from("baskets")
         .insert({
-          user_id: session.user.id,
+          user_id: user.id,
           total_items: 0,
           total_price: 0,
         })
@@ -262,7 +313,7 @@ export async function POST(request: NextRequest) {
       try {
         await supabase.from("notifications").insert({
           brand_id: product.brand.id,
-          user_id: session.user.id,
+          user_id: user.id,
           type: "basket_submission",
           title: "New Basket Item",
           message: `${product.title} added to basket`,
@@ -274,8 +325,8 @@ export async function POST(request: NextRequest) {
             quantity: quantity,
             size: size,
             colour: colour,
-            customer_email: session.user.email,
-            customer_id: session.user.id,
+            customer_email: user.email,
+            customer_id: user.id,
           },
         });
       } catch (notificationError) {
@@ -291,8 +342,8 @@ export async function POST(request: NextRequest) {
         product: product,
       },
       user: {
-        id: session.user.id,
-        email: session.user.email,
+        id: user.id,
+        email: user.email,
       },
     });
   } catch (error) {
@@ -338,21 +389,46 @@ export async function PATCH(request: NextRequest) {
       }
     );
 
-    // Try to get the session instead of just the user
-    const {
-      data: { session },
-      error: sessionError,
-    } = await supabase.auth.getSession();
-
-    if (sessionError) {
-      console.error("Session error in basket API PATCH:", sessionError);
-      return NextResponse.json({ error: "Session error" }, { status: 401 });
+    // Try multiple authentication methods
+    let session = null;
+    let user = null;
+    
+    // First try to get session
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    if (sessionData?.session) {
+      session = sessionData.session;
+      user = sessionData.session.user;
+    }
+    
+    // If no session, try to get user directly
+    if (!user) {
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userData?.user) {
+        user = userData.user;
+      }
+    }
+    
+    // If still no user, try to get from cookies manually
+    if (!user) {
+      const authCookie = cookieStore.get('sb-access-token') || cookieStore.get('supabase-auth-token');
+      if (authCookie) {
+        try {
+          // Try to decode the JWT token to get user info
+          const token = authCookie.value;
+          if (token && !token.startsWith('base64-')) {
+            // For now, return a more helpful error
+            console.log("Auth cookie found but user not authenticated");
+          }
+        } catch (error) {
+          console.error("Error parsing auth cookie:", error);
+        }
+      }
     }
 
-    if (!session || !session.user) {
-      console.log("No valid session found in basket API PATCH");
+    if (!user) {
+      console.log("No valid user found in basket API PATCH");
       return NextResponse.json(
-        { error: "Authentication required" },
+        { error: "Authentication required - please log in again" },
         { status: 401 }
       );
     }
@@ -368,7 +444,7 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    console.log("Basket API PATCH: User authenticated:", session.user.id);
+    console.log("Basket API PATCH: User authenticated:", user.id);
 
     // Get basket item details
     const { data: basketItem, error: itemError } = await supabase
@@ -388,7 +464,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Verify user owns this basket
-    if (basketItem.basket.user_id !== session.user.id) {
+    if (basketItem.basket.user_id !== user.id) {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 403 }
@@ -434,8 +510,8 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({
       message: "Item updated successfully",
       user: {
-        id: session.user.id,
-        email: session.user.email,
+        id: user.id,
+        email: user.email,
       },
     });
   } catch (error) {
@@ -481,21 +557,46 @@ export async function DELETE(request: NextRequest) {
       }
     );
 
-    // Try to get the session instead of just the user
-    const {
-      data: { session },
-      error: sessionError,
-    } = await supabase.auth.getSession();
-
-    if (sessionError) {
-      console.error("Session error in basket API DELETE:", sessionError);
-      return NextResponse.json({ error: "Session error" }, { status: 401 });
+    // Try multiple authentication methods
+    let session = null;
+    let user = null;
+    
+    // First try to get session
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    if (sessionData?.session) {
+      session = sessionData.session;
+      user = sessionData.session.user;
+    }
+    
+    // If no session, try to get user directly
+    if (!user) {
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userData?.user) {
+        user = userData.user;
+      }
+    }
+    
+    // If still no user, try to get from cookies manually
+    if (!user) {
+      const authCookie = cookieStore.get('sb-access-token') || cookieStore.get('supabase-auth-token');
+      if (authCookie) {
+        try {
+          // Try to decode the JWT token to get user info
+          const token = authCookie.value;
+          if (token && !token.startsWith('base64-')) {
+            // For now, return a more helpful error
+            console.log("Auth cookie found but user not authenticated");
+          }
+        } catch (error) {
+          console.error("Error parsing auth cookie:", error);
+        }
+      }
     }
 
-    if (!session || !session.user) {
-      console.log("No valid session found in basket API DELETE");
+    if (!user) {
+      console.log("No valid user found in basket API DELETE");
       return NextResponse.json(
-        { error: "Authentication required" },
+        { error: "Authentication required - please log in again" },
         { status: 401 }
       );
     }
@@ -510,7 +611,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    console.log("Basket API DELETE: User authenticated:", session.user.id);
+    console.log("Basket API DELETE: User authenticated:", user.id);
 
     // Get basket item details
     const { data: basketItem, error: itemError } = await supabase
@@ -530,7 +631,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Verify user owns this basket
-    if (basketItem.basket.user_id !== session.user.id) {
+    if (basketItem.basket.user_id !== user.id) {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 403 }
@@ -571,8 +672,8 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({
       message: "Item removed successfully",
       user: {
-        id: session.user.id,
-        email: session.user.email,
+        id: user.id,
+        email: user.email,
       },
     });
   } catch (error) {
