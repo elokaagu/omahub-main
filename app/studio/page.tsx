@@ -1,6 +1,5 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { Suspense, useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -18,16 +17,8 @@ import NotificationsWidget from "@/components/studio/NotificationsWidget";
 import GoogleAnalyticsDashboard from "@/components/studio/GoogleAnalyticsDashboard";
 import { engagement } from "@/lib/config/analytics";
 
-// Dynamic imports for heavy components
-const LeadsTrackingDashboard = dynamic(
-  () => import("@/components/studio/LeadsTrackingDashboard"),
-  {
-    loading: () => (
-      <div className="h-64 bg-gray-200 rounded-lg animate-pulse" />
-    ),
-    ssr: false,
-  }
-);
+// Import LeadsTrackingDashboard directly
+import LeadsTrackingDashboard from "@/components/studio/LeadsTrackingDashboard";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 

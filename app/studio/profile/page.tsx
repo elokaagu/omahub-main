@@ -1,5 +1,7 @@
 "use client";
 
+
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { getProfile, updateProfile, User } from "@/lib/services/authService";

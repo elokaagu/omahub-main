@@ -68,7 +68,7 @@ export default function GoogleAnalyticsDashboard() {
     // In a real implementation, you would fetch data from GA4 API
     // For now, we'll use mock data
     setAnalyticsData(mockAnalyticsData);
-  }, [timeRange]);
+  }, [timeRange, mockAnalyticsData]);
 
   // Check if user is super admin - must be after all hooks
   if (!user || user.role !== "super_admin") {

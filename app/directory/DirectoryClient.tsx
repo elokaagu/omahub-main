@@ -128,6 +128,8 @@ export default function DirectoryClient() {
 
   // Handle URL parameters on component mount
   useEffect(() => {
+    if (!searchParams) return;
+
     const categoryParam = searchParams.get("category");
     const subcategoryParam = searchParams.get("subcategory");
     const occasionParam = searchParams.get("occasion");

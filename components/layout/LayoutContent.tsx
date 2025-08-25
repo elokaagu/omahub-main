@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigation } from "@/contexts/NavigationContext";
 import Header from "./Header";
 import Footer from "./Footer";
-import LoadingSpinner from "@/components/ui/loading-spinner";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Toaster } from "sonner";
 import { SearchModal } from "@/components/ui/search-modal";
 

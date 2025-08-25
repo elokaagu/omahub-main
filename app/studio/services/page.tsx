@@ -1,5 +1,7 @@
 "use client";
 
+
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -171,7 +173,7 @@ export default function ServicesPage() {
 
   useEffect(() => {
     // Only fetch data on mount or when user/pathname changes
-    if (searchParams.get("refresh") === "1") {
+    if (searchParams && searchParams.get("refresh") === "1") {
       fetchData();
       nextRouter.replace(pathname);
     } else {
@@ -182,7 +184,7 @@ export default function ServicesPage() {
       fetchData();
     });
     return () => unsubscribe();
-  }, [user, pathname]);
+  }, [user, pathname, searchParams]);
 
   useEffect(() => {
     filterServices();

@@ -2,15 +2,16 @@
 export const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID || "GTM-55JQB28Z";
 
 // Google Analytics 4 Measurement ID (as fallback)
-export const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_ID || "G-94EE1362LB";
+export const GA_MEASUREMENT_ID =
+  process.env.NEXT_PUBLIC_GA_ID || "G-94EE1362LB";
 
 // Check if GTM is enabled
 export const GTM_ENABLED = !!GTM_ID;
 
 // Page view tracking via GTM
 export const pageview = (url: string) => {
-  if (typeof window !== "undefined" && window.dataLayer) {
-    window.dataLayer.push({
+  if (typeof window !== "undefined" && (window as any).dataLayer) {
+    (window as any).dataLayer.push({
       event: "page_view",
       page_location: url,
       page_title: document.title,
@@ -30,8 +31,8 @@ export const event = ({
   label?: string;
   value?: number;
 }) => {
-  if (typeof window !== "undefined" && window.dataLayer) {
-    window.dataLayer.push({
+  if (typeof window !== "undefined" && (window as any).dataLayer) {
+    (window as any).dataLayer.push({
       event: "custom_event",
       event_category: category,
       event_action: action,
@@ -53,8 +54,8 @@ export const ecommerce = {
     brand?: string;
     category?: string;
   }) => {
-    if (typeof window !== "undefined" && window.dataLayer) {
-      window.dataLayer.push({
+    if (typeof window !== "undefined" && (window as any).dataLayer) {
+      (window as any).dataLayer.push({
         event: "add_to_cart",
         ecommerce: {
           currency: item.currency,
@@ -87,12 +88,12 @@ export const ecommerce = {
       category?: string;
     }>
   ) => {
-    if (typeof window !== "undefined" && window.dataLayer) {
+    if (typeof window !== "undefined" && (window as any).dataLayer) {
       const totalValue = items.reduce(
         (sum, item) => sum + item.price * item.quantity,
         0
       );
-      window.dataLayer.push({
+      (window as any).dataLayer.push({
         event: "begin_checkout",
         ecommerce: {
           currency: items[0]?.currency || "USD",
@@ -127,8 +128,8 @@ export const ecommerce = {
       category?: string;
     }>;
   }) => {
-    if (typeof window !== "undefined" && window.dataLayer) {
-      window.dataLayer.push({
+    if (typeof window !== "undefined" && (window as any).dataLayer) {
+      (window as any).dataLayer.push({
         event: "purchase",
         ecommerce: {
           transaction_id: transaction.transaction_id,
@@ -158,8 +159,8 @@ export const ecommerce = {
     brand?: string;
     category?: string;
   }) => {
-    if (typeof window !== "undefined" && window.dataLayer) {
-      window.dataLayer.push({
+    if (typeof window !== "undefined" && (window as any).dataLayer) {
+      (window as any).dataLayer.push({
         event: "view_item",
         ecommerce: {
           currency: item.currency,
@@ -191,8 +192,8 @@ export const ecommerce = {
     }>,
     list_name?: string
   ) => {
-    if (typeof window !== "undefined" && window.dataLayer) {
-      window.dataLayer.push({
+    if (typeof window !== "undefined" && (window as any).dataLayer) {
+      (window as any).dataLayer.push({
         event: "view_item_list",
         ecommerce: {
           item_list_name: list_name || "Product List",

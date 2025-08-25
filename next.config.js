@@ -114,6 +114,26 @@ const withPWA = require("next-pwa")({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  experimental: {
+    turbo: {
+      rules: {
+        "*.svg": {
+          loaders: ["@svgr/webpack"],
+          as: "*.js",
+        },
+      },
+    },
+    optimizeCss: true,
+  },
+  images: {
+    domains: ["localhost", "omahub.com", "omahub.co.uk"],
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "**",
+      },
+    ],
+  },
   // Phase 2C: Advanced webpack optimizations
   webpack: (config, { dev, isServer }) => {
     if (!dev && !isServer) {

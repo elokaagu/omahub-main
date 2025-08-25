@@ -1,5 +1,7 @@
 "use client";
 
+
+
 import React, { useState, useEffect, useRef } from "react";
 import { Search, Filter, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { getCollectionsWithBrands } from "@/lib/services/collectionService";

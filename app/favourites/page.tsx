@@ -1,5 +1,7 @@
 "use client";
 
+
+
 import useFavourites from "@/lib/hooks/useFavourites";
 import { Loading } from "@/components/ui/loading";
 import Link from "next/link";

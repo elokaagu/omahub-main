@@ -1,5 +1,7 @@
 "use client";
 
+
+
 import React, { useState, useEffect } from "react";
 import {
   Search,
@@ -110,6 +112,8 @@ export default function TailorsPage() {
 
   // Sync selectedCategory with specialty query param
   useEffect(() => {
+    if (!searchParams) return;
+
     const specialty = searchParams.get("specialty");
     if (specialty && tailoredCategories.some((cat) => cat.name === specialty)) {
       setSelectedCategory(specialty);
@@ -147,37 +151,39 @@ export default function TailorsPage() {
     }
 
     // Filter by specialty query param
-    const specialty = searchParams.get("specialty");
-    if (specialty) {
-      // Get the mapped specialties for this category
-      const mappedSpecialties = categoryToSpecialtiesMap[specialty] || [
-        specialty,
-      ];
+    if (searchParams) {
+      const specialty = searchParams.get("specialty");
+      if (specialty) {
+        // Get the mapped specialties for this category
+        const mappedSpecialties = categoryToSpecialtiesMap[specialty] || [
+          specialty,
+        ];
 
-      filtered = filtered.filter((tailor) => {
-        if (!tailor.specialties) return false;
-        let specialtiesArr: string[] = [];
-        if (Array.isArray(tailor.specialties)) {
-          specialtiesArr = tailor.specialties as string[];
-        } else if (typeof tailor.specialties === "string") {
-          specialtiesArr = (tailor.specialties as string)
-            .split(",")
-            .map((s: string) => s.trim());
-        }
+        filtered = filtered.filter((tailor) => {
+          if (!tailor.specialties) return false;
+          let specialtiesArr: string[] = [];
+          if (Array.isArray(tailor.specialties)) {
+            specialtiesArr = tailor.specialties as string[];
+          } else if (typeof tailor.specialties === "string") {
+            specialtiesArr = (tailor.specialties as string)
+              .split(",")
+              .map((s: string) => s.trim());
+          }
 
-        // Check if any of the mapped specialties match the tailor's specialties
-        return specialtiesArr.some((tailorSpecialty) =>
-          mappedSpecialties.some(
-            (mappedSpecialty) =>
-              tailorSpecialty
-                .toLowerCase()
-                .includes(mappedSpecialty.toLowerCase()) ||
-              mappedSpecialty
-                .toLowerCase()
-                .includes(tailorSpecialty.toLowerCase())
-          )
-        );
-      });
+          // Check if any of the mapped specialties match the tailor's specialties
+          return specialtiesArr.some((tailorSpecialty) =>
+            mappedSpecialties.some(
+              (mappedSpecialty) =>
+                tailorSpecialty
+                  .toLowerCase()
+                  .includes(mappedSpecialty.toLowerCase()) ||
+                mappedSpecialty
+                  .toLowerCase()
+                  .includes(tailorSpecialty.toLowerCase())
+            )
+          );
+        });
+      }
     }
 
     // Filter by search term
