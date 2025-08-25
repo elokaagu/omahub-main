@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -38,39 +38,42 @@ export default function GoogleAnalyticsDashboard() {
   const [error, setError] = useState<string | null>(null);
   const [timeRange, setTimeRange] = useState<"7d" | "30d" | "90d">("7d");
 
-  // Check if user is super admin
-  if (!user || user.role !== "super_admin") {
-    return null; // Don't render for non-super admins
-  }
-
   // Mock data for demonstration - replace with actual GA4 API calls
-  const mockAnalyticsData: AnalyticsData = {
-    pageViews: 1247,
-    uniqueVisitors: 892,
-    addToCartEvents: 156,
-    customOrders: 23,
-    studioAccess: 89,
-    topPages: [
-      { page: "/", views: 456 },
-      { page: "/directory", views: 234 },
-      { page: "/brand/omahub", views: 123 },
-      { page: "/collections", views: 98 },
-      { page: "/studio", views: 67 },
-    ],
-    topEvents: [
-      { event: "add_to_cart", count: 156 },
-      { event: "view_item", count: 89 },
-      { event: "submit_custom_order", count: 23 },
-      { event: "studio_access", count: 89 },
-      { event: "search", count: 45 },
-    ],
-  };
+  const mockAnalyticsData: AnalyticsData = useMemo(
+    () => ({
+      pageViews: 1247,
+      uniqueVisitors: 892,
+      addToCartEvents: 156,
+      customOrders: 23,
+      studioAccess: 89,
+      topPages: [
+        { page: "/", views: 456 },
+        { page: "/directory", views: 234 },
+        { page: "/brand/omahub", views: 123 },
+        { page: "/collections", views: 98 },
+        { page: "/studio", views: 67 },
+      ],
+      topEvents: [
+        { event: "add_to_cart", count: 156 },
+        { event: "view_item", count: 89 },
+        { event: "submit_custom_order", count: 23 },
+        { event: "studio_access", count: 89 },
+        { event: "search", count: 45 },
+      ],
+    }),
+    []
+  );
 
   useEffect(() => {
     // In a real implementation, you would fetch data from GA4 API
     // For now, we'll use mock data
     setAnalyticsData(mockAnalyticsData);
   }, [timeRange]);
+
+  // Check if user is super admin - must be after all hooks
+  if (!user || user.role !== "super_admin") {
+    return null; // Don't render for non-super admins
+  }
 
   const refreshData = async () => {
     setLoading(true);
