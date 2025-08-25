@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServerSupabaseClient } from "@/lib/supabase-unified";
+import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 
 // GET - Fetch user's baskets
@@ -12,7 +12,13 @@ export async function GET() {
     const allCookies = cookieStore.getAll();
     console.log("Basket API: All cookies:", allCookies.map(c => c.name));
     
-    const supabase = await createServerSupabaseClient();
+    // Check for Supabase auth cookies specifically
+    const supabaseCookies = allCookies.filter(c => c.name.includes('sb-'));
+    console.log("Basket API: Supabase cookies:", supabaseCookies.map(c => ({ name: c.name, value: c.value.substring(0, 20) + '...' })));
+    
+    const supabase = createRouteHandlerClient({
+      cookies: () => cookieStore,
+    });
 
     // Get the current session
     const {
@@ -139,7 +145,9 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const cookieStore = cookies();
-    const supabase = await createServerSupabaseClient();
+    const supabase = createRouteHandlerClient({
+      cookies: () => cookieStore,
+    });
 
     // Get the current session
     const {
@@ -296,7 +304,9 @@ export async function POST(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     const cookieStore = cookies();
-    const supabase = await createServerSupabaseClient();
+    const supabase = createRouteHandlerClient({
+      cookies: () => cookieStore,
+    });
 
     // Get the current session
     const {
@@ -384,7 +394,9 @@ export async function PATCH(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     const cookieStore = cookies();
-    const supabase = await createServerSupabaseClient();
+    const supabase = createRouteHandlerClient({
+      cookies: () => cookieStore,
+    });
 
     // Get the current session
     const {
