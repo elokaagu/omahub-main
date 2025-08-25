@@ -194,23 +194,27 @@ export default function NotificationsWidget() {
   }
 
   return (
-    <Card>
-      <CardHeader>
+    <Card className="border-omahub-accent shadow-omahub">
+      <CardHeader className="bg-gradient-to-r from-omahub-primary to-omahub-secondary text-white rounded-t-lg">
         <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="text-white flex items-center gap-2">
             <Bell className="h-5 w-5" />
             Notifications
             {unreadCount > 0 && (
-              <Badge variant="destructive" className="ml-2">
+              <Badge
+                variant="secondary"
+                className="ml-2 bg-white text-omahub-primary"
+              >
                 {unreadCount}
               </Badge>
             )}
           </CardTitle>
           {unreadCount > 0 && (
             <Button
-              variant="outline"
+              variant="secondary"
               size="sm"
               onClick={markAllAsRead}
+              className="bg-white text-omahub-primary hover:bg-gray-50"
               style={{
                 WebkitAppearance: "none",
                 WebkitTapHighlightColor: "transparent",
@@ -221,22 +225,23 @@ export default function NotificationsWidget() {
           )}
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="bg-white">
         {notifications.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            <Bell className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-            <p>No notifications yet</p>
-            <p className="text-sm">
-              You'll see basket submissions and other updates here
+          <div className="text-center py-12 text-gray-500">
+            <Bell className="h-16 w-16 mx-auto mb-6 text-gray-300" />
+            <p className="text-lg font-medium mb-2">No notifications yet</p>
+            <p className="text-sm text-gray-400 max-w-md mx-auto">
+              You'll see basket submissions, custom orders, and other brand
+              updates here
             </p>
           </div>
         ) : (
           <ScrollArea
-            className={`h-64 ${isSafari ? "safari-scrollbar" : ""}`}
+            className={`h-80 ${isSafari ? "safari-scrollbar" : ""}`}
             style={{ WebkitOverflowScrolling: "touch" }}
           >
             <div
-              className={`space-y-3 ${isSafari ? "safari-flex-fix" : ""}`}
+              className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${isSafari ? "safari-flex-fix" : ""}`}
               style={{ minHeight: "min-content" }}
             >
               {notifications.map((notification) => (

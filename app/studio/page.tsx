@@ -181,35 +181,28 @@ export default function StudioPage() {
       </div>
 
       {/* Main Dashboard Components */}
-      <div
-        className="grid grid-cols-1 lg:grid-cols-3 gap-8"
-        style={{ minHeight: 0 }}
-      >
+      <div className="space-y-8">
         {/* Leads Dashboard - Full Width */}
-        <div className="lg:col-span-2" style={{ minWidth: 0 }}>
-          <Card className="border-omahub-accent shadow-omahub">
-            <CardHeader className="bg-gradient-to-r from-omahub-primary to-omahub-secondary text-white rounded-t-lg">
-              <CardTitle className="text-white">Leads & Conversions</CardTitle>
-            </CardHeader>
-            <CardContent className="bg-white">
-              <Suspense
-                fallback={
-                  <div className="h-64 bg-omahub-light rounded-lg animate-pulse" />
-                }
-              >
-                <LeadsTrackingDashboard
-                  userRole={userProfile?.role || "user"}
-                  ownedBrandIds={userProfile?.owned_brands || []}
-                />
-              </Suspense>
-            </CardContent>
-          </Card>
-        </div>
+        <Card className="border-omahub-accent shadow-omahub">
+          <CardHeader className="bg-gradient-to-r from-omahub-primary to-omahub-secondary text-white rounded-t-lg">
+            <CardTitle className="text-white">Leads & Conversions</CardTitle>
+          </CardHeader>
+          <CardContent className="bg-white">
+            <Suspense
+              fallback={
+                <div className="h-64 bg-omahub-light rounded-lg animate-pulse" />
+              }
+            >
+              <LeadsTrackingDashboard
+                userRole={userProfile?.role || "user"}
+                ownedBrandIds={userProfile?.owned_brands || []}
+              />
+            </Suspense>
+          </CardContent>
+        </Card>
 
-        {/* Notifications Widget - Sidebar */}
-        <div className="lg:col-span-1" style={{ minWidth: 0 }}>
-          <NotificationsWidget />
-        </div>
+        {/* Notifications Widget - Full Width Below */}
+        <NotificationsWidget />
       </div>
     </div>
   );
