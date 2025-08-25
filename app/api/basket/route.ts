@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
+import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
 // GET - Fetch user's baskets
@@ -7,9 +7,19 @@ export async function GET() {
   try {
     // Create Supabase client with explicit cookie handling
     const cookieStore = cookies();
-    const supabase = createRouteHandlerClient({
-      cookies: () => cookieStore,
-    });
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return cookieStore.get(name)?.value;
+          },
+          set() {},
+          remove() {},
+        },
+      }
+    );
 
     // Try to get the session instead of just the user
     const {
@@ -81,9 +91,19 @@ export async function POST(request: NextRequest) {
   try {
     // Create Supabase client with explicit cookie handling
     const cookieStore = cookies();
-    const supabase = createRouteHandlerClient({
-      cookies: () => cookieStore,
-    });
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return cookieStore.get(name)?.value;
+          },
+          set() {},
+          remove() {},
+        },
+      }
+    );
 
     // Try to get the session instead of just the user
     const {
@@ -259,9 +279,19 @@ export async function PATCH(request: NextRequest) {
   try {
     // Create Supabase client with explicit cookie handling
     const cookieStore = cookies();
-    const supabase = createRouteHandlerClient({
-      cookies: () => cookieStore,
-    });
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return cookieStore.get(name)?.value;
+          },
+          set() {},
+          remove() {},
+        },
+      }
+    );
 
     // Try to get the session instead of just the user
     const {
@@ -377,9 +407,19 @@ export async function DELETE(request: NextRequest) {
   try {
     // Create Supabase client with explicit cookie handling
     const cookieStore = cookies();
-    const supabase = createRouteHandlerClient({
-      cookies: () => cookieStore,
-    });
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return cookieStore.get(name)?.value;
+          },
+          set() {},
+          remove() {},
+        },
+      }
+    );
 
     // Try to get the session instead of just the user
     const {
