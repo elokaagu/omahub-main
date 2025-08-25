@@ -2,79 +2,80 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
-// GET - Fetch user's baskets
-export async function GET() {
-  try {
-    // Create Supabase client with explicit cookie handling
-    const cookieStore = cookies();
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          get(name: string) {
-            try {
-              const cookie = cookieStore.get(name);
-              if (!cookie) return undefined;
-              
-              // Handle base64 encoded cookies properly
-              const value = cookie.value;
-              if (value && value.startsWith('base64-')) {
-                // Skip base64 cookies that might cause parsing issues
-                return undefined;
-              }
-              
-              return value;
-            } catch (error) {
-              console.error(`Error parsing cookie ${name}:`, error);
-              return undefined;
-            }
-          },
-          set() {},
-          remove() {},
+// Helper function to create authenticated Supabase client
+async function createAuthenticatedClient() {
+  const cookieStore = cookies();
+  
+  // Create Supabase client with proper cookie handling
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          try {
+            const cookie = cookieStore.get(name);
+            return cookie?.value;
+          } catch (error) {
+            console.error(`Error getting cookie ${name}:`, error);
+            return undefined;
+          }
         },
-      }
-    );
+        set() {},
+        remove() {},
+      },
+    }
+  );
 
-    // Try multiple authentication methods
-    let session = null;
-    let user = null;
+  return supabase;
+}
+
+// Helper function to get authenticated user
+async function getAuthenticatedUser() {
+  const supabase = await createAuthenticatedClient();
+  
+  try {
+    // Try to get the current session
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
     
-    // First try to get session
-    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-    if (sessionData?.session) {
-      session = sessionData.session;
-      user = sessionData.session.user;
+    if (sessionError) {
+      console.error("Session error:", sessionError);
+      return null;
+    }
+    
+    if (session?.user) {
+      console.log("User authenticated via session:", session.user.id);
+      return session.user;
     }
     
     // If no session, try to get user directly
-    if (!user) {
-      const { data: userData, error: userError } = await supabase.auth.getUser();
-      if (userData?.user) {
-        user = userData.user;
-      }
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError) {
+      console.error("User error:", userError);
+      return null;
     }
     
-    // If still no user, try to get from cookies manually
-    if (!user) {
-      const authCookie = cookieStore.get('sb-access-token') || cookieStore.get('supabase-auth-token');
-      if (authCookie) {
-        try {
-          // Try to decode the JWT token to get user info
-          const token = authCookie.value;
-          if (token && !token.startsWith('base64-')) {
-            // For now, return a more helpful error
-            console.log("Auth cookie found but user not authenticated");
-          }
-        } catch (error) {
-          console.error("Error parsing auth cookie:", error);
-        }
-      }
+    if (user) {
+      console.log("User authenticated via direct lookup:", user.id);
+      return user;
     }
+    
+    console.log("No authenticated user found");
+    return null;
+  } catch (error) {
+    console.error("Authentication error:", error);
+    return null;
+  }
+}
 
+// GET - Fetch user's baskets
+export async function GET() {
+  try {
+    const user = await getAuthenticatedUser();
+    
     if (!user) {
-      console.log("No valid user found in basket API");
-      console.log("Available cookies:", Array.from(cookieStore.getAll()).map(c => c.name));
+      console.log("Authentication failed - no valid user");
       return NextResponse.json(
         { error: "Authentication required - please log in again" },
         { status: 401 }
@@ -83,6 +84,8 @@ export async function GET() {
 
     console.log("Basket API: User authenticated:", user.id);
 
+    const supabase = await createAuthenticatedClient();
+    
     // Fetch user's baskets from the database
     const { data: baskets, error: basketsError } = await supabase
       .from("baskets")
@@ -111,13 +114,13 @@ export async function GET() {
       );
     }
 
-          return NextResponse.json({
-        baskets: baskets || [],
-        user: {
-          id: user.id,
-          email: user.email,
-        },
-      });
+    return NextResponse.json({
+      baskets: baskets || [],
+      user: {
+        id: user.id,
+        email: user.email,
+      },
+    });
   } catch (error) {
     console.error("Basket API error:", error);
     return NextResponse.json(
@@ -130,75 +133,10 @@ export async function GET() {
 // POST - Add item to basket
 export async function POST(request: NextRequest) {
   try {
-    // Create Supabase client with explicit cookie handling
-    const cookieStore = cookies();
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          get(name: string) {
-            try {
-              const cookie = cookieStore.get(name);
-              if (!cookie) return undefined;
-              
-              // Handle base64 encoded cookies properly
-              const value = cookie.value;
-              if (value && value.startsWith('base64-')) {
-                // Skip base64 cookies that might cause parsing issues
-                return undefined;
-              }
-              
-              return value;
-            } catch (error) {
-              console.error(`Error parsing cookie ${name}:`, error);
-              return undefined;
-            }
-          },
-          set() {},
-          remove() {},
-        },
-      }
-    );
-
-    // Try multiple authentication methods
-    let session = null;
-    let user = null;
+    const user = await getAuthenticatedUser();
     
-    // First try to get session
-    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-    if (sessionData?.session) {
-      session = sessionData.session;
-      user = sessionData.session.user;
-    }
-    
-    // If no session, try to get user directly
     if (!user) {
-      const { data: userData, error: userError } = await supabase.auth.getUser();
-      if (userData?.user) {
-        user = userData.user;
-      }
-    }
-    
-    // If still no user, try to get from cookies manually
-    if (!user) {
-      const authCookie = cookieStore.get('sb-access-token') || cookieStore.get('supabase-auth-token');
-      if (authCookie) {
-        try {
-          // Try to decode the JWT token to get user info
-          const token = authCookie.value;
-          if (token && !token.startsWith('base64-')) {
-            // For now, return a more helpful error
-            console.log("Auth cookie found but user not authenticated");
-          }
-        } catch (error) {
-          console.error("Error parsing auth cookie:", error);
-        }
-      }
-    }
-
-    if (!user) {
-      console.log("No valid user found in basket API POST");
+      console.log("Authentication failed - no valid user");
       return NextResponse.json(
         { error: "Authentication required - please log in again" },
         { status: 401 }
@@ -207,6 +145,8 @@ export async function POST(request: NextRequest) {
 
     console.log("Basket API POST: User authenticated:", user.id);
 
+    const supabase = await createAuthenticatedClient();
+    
     // Parse request body
     const { productId, quantity, size, colour } = await request.json();
 
@@ -358,75 +298,10 @@ export async function POST(request: NextRequest) {
 // PATCH - Update item quantity
 export async function PATCH(request: NextRequest) {
   try {
-    // Create Supabase client with explicit cookie handling
-    const cookieStore = cookies();
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          get(name: string) {
-            try {
-              const cookie = cookieStore.get(name);
-              if (!cookie) return undefined;
-              
-              // Handle base64 encoded cookies properly
-              const value = cookie.value;
-              if (value && value.startsWith('base64-')) {
-                // Skip base64 cookies that might cause parsing issues
-                return undefined;
-              }
-              
-              return value;
-            } catch (error) {
-              console.error(`Error parsing cookie ${name}:`, error);
-              return undefined;
-            }
-          },
-          set() {},
-          remove() {},
-        },
-      }
-    );
-
-    // Try multiple authentication methods
-    let session = null;
-    let user = null;
+    const user = await getAuthenticatedUser();
     
-    // First try to get session
-    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-    if (sessionData?.session) {
-      session = sessionData.session;
-      user = sessionData.session.user;
-    }
-    
-    // If no session, try to get user directly
     if (!user) {
-      const { data: userData, error: userError } = await supabase.auth.getUser();
-      if (userData?.user) {
-        user = userData.user;
-      }
-    }
-    
-    // If still no user, try to get from cookies manually
-    if (!user) {
-      const authCookie = cookieStore.get('sb-access-token') || cookieStore.get('supabase-auth-token');
-      if (authCookie) {
-        try {
-          // Try to decode the JWT token to get user info
-          const token = authCookie.value;
-          if (token && !token.startsWith('base64-')) {
-            // For now, return a more helpful error
-            console.log("Auth cookie found but user not authenticated");
-          }
-        } catch (error) {
-          console.error("Error parsing auth cookie:", error);
-        }
-      }
-    }
-
-    if (!user) {
-      console.log("No valid user found in basket API PATCH");
+      console.log("Authentication failed - no valid user");
       return NextResponse.json(
         { error: "Authentication required - please log in again" },
         { status: 401 }
@@ -446,6 +321,8 @@ export async function PATCH(request: NextRequest) {
 
     console.log("Basket API PATCH: User authenticated:", user.id);
 
+    const supabase = await createAuthenticatedClient();
+    
     // Get basket item details
     const { data: basketItem, error: itemError } = await supabase
       .from("basket_items")
@@ -526,75 +403,10 @@ export async function PATCH(request: NextRequest) {
 // DELETE - Remove item from basket
 export async function DELETE(request: NextRequest) {
   try {
-    // Create Supabase client with explicit cookie handling
-    const cookieStore = cookies();
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          get(name: string) {
-            try {
-              const cookie = cookieStore.get(name);
-              if (!cookie) return undefined;
-              
-              // Handle base64 encoded cookies properly
-              const value = cookie.value;
-              if (value && value.startsWith('base64-')) {
-                // Skip base64 cookies that might cause parsing issues
-                return undefined;
-              }
-              
-              return value;
-            } catch (error) {
-              console.error(`Error parsing cookie ${name}:`, error);
-              return undefined;
-            }
-          },
-          set() {},
-          remove() {},
-        },
-      }
-    );
-
-    // Try multiple authentication methods
-    let session = null;
-    let user = null;
+    const user = await getAuthenticatedUser();
     
-    // First try to get session
-    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-    if (sessionData?.session) {
-      session = sessionData.session;
-      user = sessionData.session.user;
-    }
-    
-    // If no session, try to get user directly
     if (!user) {
-      const { data: userData, error: userError } = await supabase.auth.getUser();
-      if (userData?.user) {
-        user = userData.user;
-      }
-    }
-    
-    // If still no user, try to get from cookies manually
-    if (!user) {
-      const authCookie = cookieStore.get('sb-access-token') || cookieStore.get('supabase-auth-token');
-      if (authCookie) {
-        try {
-          // Try to decode the JWT token to get user info
-          const token = authCookie.value;
-          if (token && !token.startsWith('base64-')) {
-            // For now, return a more helpful error
-            console.log("Auth cookie found but user not authenticated");
-          }
-        } catch (error) {
-          console.error("Error parsing auth cookie:", error);
-        }
-      }
-    }
-
-    if (!user) {
-      console.log("No valid user found in basket API DELETE");
+      console.log("Authentication failed - no valid user");
       return NextResponse.json(
         { error: "Authentication required - please log in again" },
         { status: 401 }
@@ -613,6 +425,8 @@ export async function DELETE(request: NextRequest) {
 
     console.log("Basket API DELETE: User authenticated:", user.id);
 
+    const supabase = await createAuthenticatedClient();
+    
     // Get basket item details
     const { data: basketItem, error: itemError } = await supabase
       .from("basket_items")
