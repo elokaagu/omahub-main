@@ -213,27 +213,29 @@ export default function StudioPage() {
         </Card>
 
         {/* Google Analytics Dashboard - Super Admin Only */}
-        <Card className="border-omahub-accent shadow-omahub">
-          <CardHeader className="bg-gradient-to-r from-omahub-primary to-omahub-secondary text-white rounded-t-lg">
-            <CardTitle className="text-white">Google Analytics Overview</CardTitle>
-            <div className="text-sm text-white/80">
-              {userProfile?.role ? `User Role: ${userProfile.role}` : 'Loading user role...'}
-            </div>
-          </CardHeader>
-          <CardContent className="bg-white">
-            <Suspense
-              fallback={
-                <div className="h-64 bg-omahub-light rounded-lg animate-pulse" />
-              }
-            >
-              <AnalyticsDashboard
-                isBrandOwner={false}
-                ownedBrandIds={[]}
-                brandNames={[]}
-              />
-            </Suspense>
-          </CardContent>
-        </Card>
+        {userProfile?.role === "super_admin" && (
+          <Card className="border-omahub-accent shadow-omahub">
+            <CardHeader className="bg-gradient-to-r from-omahub-primary to-omahub-secondary text-white rounded-t-lg">
+              <CardTitle className="text-white">Google Analytics Overview</CardTitle>
+              <div className="text-sm text-white/80">
+                {userProfile?.role ? `User Role: ${userProfile.role}` : 'Loading user role...'}
+              </div>
+            </CardHeader>
+            <CardContent className="bg-white">
+              <Suspense
+                fallback={
+                  <div className="h-64 bg-omahub-light rounded-lg animate-pulse" />
+                }
+              >
+                <AnalyticsDashboard
+                  isBrandOwner={false}
+                  ownedBrandIds={[]}
+                  brandNames={[]}
+                />
+              </Suspense>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
 

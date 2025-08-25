@@ -1,11 +1,38 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createServerSupabaseClient } from "@/lib/supabase-unified";
 
 /**
  * API route to fetch page views from Vercel Analytics
  * Requires VERCEL_ACCESS_TOKEN and VERCEL_TEAM_ID environment variables
+ * SUPER ADMIN ACCESS ONLY
  */
 export async function GET(request: NextRequest) {
   try {
+    // Authenticate user and check if they are a super admin
+    const supabase = await createServerSupabaseClient();
+    
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Check if user is a super admin
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    if (profileError || profile?.role !== "super_admin") {
+      return NextResponse.json({ error: "Access denied - Super admin only" }, { status: 403 });
+    }
+
+    console.log("✅ Pageviews Analytics API: Super admin access granted for user:", user.email);
+
     const accessToken = process.env.VERCEL_ACCESS_TOKEN;
     const teamId = process.env.VERCEL_TEAM_ID;
     const projectId = process.env.VERCEL_PROJECT_ID;
