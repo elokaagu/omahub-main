@@ -31,8 +31,7 @@ export async function GET(request: NextRequest) {
     if (legacySuperAdmins.includes(user.email || "")) {
       profile = {
         role: "super_admin",
-        owned_brands: [],
-      };
+      } as any;
       console.log(
         "✅ Granted super_admin access based on email:",
         user.email

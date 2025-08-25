@@ -9,6 +9,7 @@ import React, {
 } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { ecommerce } from "@/lib/config/analytics";
 
 // Types
 export interface BasketItem {
@@ -247,6 +248,17 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
         if (!response.ok) {
           throw new Error(data.error || "Failed to add item to basket");
         }
+
+        // Track add to cart in Google Analytics
+        ecommerce.addToCart({
+          item_id: productId,
+          item_name: data.product?.title || "Product",
+          price: data.product?.price || 0,
+          quantity: quantity,
+          currency: "GBP", // Default to GBP for OmaHub
+          brand: data.product?.brand?.name,
+          category: data.product?.category,
+        });
 
         // Refresh baskets to get updated state
         await fetchBaskets();

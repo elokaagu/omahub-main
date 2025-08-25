@@ -38,6 +38,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatProductPrice } from "@/lib/utils/priceFormatter";
+import { engagement } from "@/lib/config/analytics";
 
 interface TailoredOrderModalProps {
   product: Product;
@@ -131,6 +132,9 @@ export function TailoredOrderModal({
       if (!response.ok) {
         throw new Error(result.error || "Failed to submit order");
       }
+
+      // Track custom order submission in Google Analytics
+      engagement.submitCustomOrder(`${product.title} - ${brand.name}`);
 
       setOrderComplete(true);
     } catch (error) {
