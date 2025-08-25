@@ -62,21 +62,25 @@ export async function getNavigationItems(): Promise<NavigationItem[]> {
     console.log("📋 Dynamic items received:", dynamicItems);
 
     // Debug each category and its items
-    dynamicItems.forEach((category, index) => {
-      console.log(`🔍 Navigation: Category ${index + 1} - ${category.title}:`);
-      category.items.forEach((item, itemIndex) => {
-        console.log(
-          `  Item ${itemIndex + 1}: ${item.title} -> ${item.href} (count: ${item.count})`
-        );
+    if (dynamicItems && Array.isArray(dynamicItems)) {
+      dynamicItems.forEach((category, index) => {
+        console.log(`🔍 Navigation: Category ${index + 1} - ${category.title}:`);
+        if (category.items && Array.isArray(category.items)) {
+          category.items.forEach((item, itemIndex) => {
+            console.log(
+              `  Item ${itemIndex + 1}: ${item.title} -> ${item.href} (count: ${item.count})`
+            );
+          });
+        }
       });
-    });
+    }
 
     // Convert NavigationCategory to NavigationItem format
-    const navigationItems: NavigationItem[] = dynamicItems.map((category) => ({
+    const navigationItems: NavigationItem[] = (dynamicItems && Array.isArray(dynamicItems) ? dynamicItems : []).map((category) => ({
       title: category.title,
       href: category.href,
       description: category.description,
-      items: category.items.map((item) => ({
+      items: (category.items && Array.isArray(category.items) ? category.items : []).map((item) => ({
         title: item.title,
         href: item.href,
         count: item.count,

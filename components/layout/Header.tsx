@@ -39,11 +39,6 @@ import { checkCategoryHasBrands } from "@/lib/services/categoryService";
 import { triggerSearchModal } from "@/components/ui/search-modal";
 import BasketItemCount from "@/components/ui/basket-item-count";
 
-const collectionItems = collections.map((category) => ({
-  name: category,
-  href: `/directory?category=${category.replace(/ /g, "+")}`,
-}));
-
 const navigation = [
   { name: "Home", href: "/" },
   { name: "How It Works", href: "/how-it-works" },
@@ -191,14 +186,14 @@ export default function Header() {
         setTailoredHasBrands(tailoredHasBrands);
 
         console.log("✅ Header: Dynamic navigation loaded successfully", {
-          itemsCount: dynamicItems.length,
+          itemsCount: dynamicItems?.length || 0,
           collectionsHasBrands,
           tailoredHasBrands,
-          items: dynamicItems.map((item) => ({
+          items: dynamicItems?.map((item) => ({
             title: item.title,
-            itemCount: item.items.length,
-            items: item.items.map((subItem) => subItem.title),
-          })),
+            itemCount: item.items?.length || 0,
+            items: item.items?.map((subItem) => subItem.title) || [],
+          })) || [],
         });
       } catch (error) {
         console.error("❌ Header: Error loading dynamic navigation:", error);
@@ -317,10 +312,10 @@ export default function Header() {
         {/* Desktop navigation */}
         <div className="hidden lg:flex lg:items-center lg:gap-x-8">
           {/* Direct category rendering like mobile */}
-          {dynamicNavigationItems.map((category) => {
+          {dynamicNavigationItems && dynamicNavigationItems.length > 0 && dynamicNavigationItems.map((category) => {
             console.log(
               `🔍 Header: Rendering desktop dropdown for ${category.title}:`,
-              category.items.map((item) => `${item.title} (${item.count})`)
+              category.items?.map((item) => `${item.title} (${item.count})`) || []
             );
             return (
               <div key={category.title} className="relative group">
@@ -349,7 +344,7 @@ export default function Header() {
                       </h3>
                     </div>
                     <div className="grid grid-cols-2 gap-x-8 gap-y-2">
-                      {category.items.map((item) => (
+                      {category.items && category.items.map((item) => (
                         <NavigationLink
                           key={item.title}
                           href={item.href}
@@ -380,7 +375,6 @@ export default function Header() {
             >
               <Search className="h-5 w-5" />
             </button>
-            {/* Basket temporarily hidden - working on preview branch */}
             <Link
               href="/basket"
               className={cn(
@@ -560,7 +554,7 @@ export default function Header() {
                   </button>
                 </div>
 
-                {/* Basket temporarily hidden - working on preview branch */}
+                {/* Basket */}
                 <div className="space-y-2">
                   <h3 className="text-xs font-medium uppercase tracking-wider text-gray-500 mb-3">
                     Basket
@@ -617,7 +611,7 @@ export default function Header() {
                   <h3 className="text-xs font-medium uppercase tracking-wider text-gray-500 mb-3">
                     Categories
                   </h3>
-                  {dynamicNavigationItems
+                  {dynamicNavigationItems && dynamicNavigationItems
                     .filter((category) => {
                       if (category.title === "Collections")
                         return collectionsHasBrands;
@@ -655,7 +649,7 @@ export default function Header() {
                             id={`category-items-${category.title}`}
                             className="flex flex-col gap-y-1 pl-4 mt-1"
                           >
-                            {category.items.map((item) => (
+                            {category.items && category.items.map((item) => (
                               <NavigationLink
                                 key={item.title}
                                 href={item.href}
