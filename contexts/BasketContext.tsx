@@ -6,7 +6,6 @@ import React, {
   useReducer,
   useCallback,
   useEffect,
-  useState,
 } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
@@ -173,31 +172,12 @@ const BasketContext = createContext<{
 // Provider component
 export function BasketProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(basketReducer, initialState);
-  const [mounted, setMounted] = useState(false);
-  
-  // Only use useAuth after component is mounted to avoid context errors
-  let authContext = null;
-  let user = null;
-  
-  try {
-    if (mounted) {
-      authContext = useAuth();
-      user = authContext?.user;
-    }
-  } catch (error) {
-    console.warn("BasketProvider: Auth context not ready yet:", error);
-    // Don't crash, just continue without user context
-  }
-
-  // Set mounted state after component mounts
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const { user } = useAuth();
 
   // Fetch baskets from API
   const fetchBaskets = useCallback(async () => {
-    // Only fetch if user is authenticated and component is mounted
-    if (!mounted || !user) {
+    // Only fetch if user is authenticated
+    if (!user) {
       dispatch({ type: "SET_BASKETS", payload: [] });
       return;
     }
@@ -230,7 +210,7 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
     } finally {
       dispatch({ type: "SET_LOADING", payload: false });
     }
-  }, [mounted, user]);
+  }, [user]);
 
   // Add item to basket
   const addToBasket = useCallback(

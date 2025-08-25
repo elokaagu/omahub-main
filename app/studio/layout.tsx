@@ -7,7 +7,10 @@ import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { useAuth } from "@/contexts/AuthContext";
-import { getUserPermissions, Permission } from "@/lib/services/permissionsService";
+import {
+  getUserPermissions,
+  Permission,
+} from "@/lib/services/permissionsService";
 import { supabaseHelpers } from "@/lib/utils/supabase-helpers";
 import { Button } from "@/components/ui/button";
 import { NavigationLink } from "@/components/ui/navigation-link";
@@ -35,62 +38,62 @@ import ErrorBoundary from "../components/ErrorBoundary";
 // Dynamic imports for heavy Studio pages
 const StudioBrandsPage = dynamic(() => import("./brands/page"), {
   loading: () => <div className="h-64 bg-gray-200 rounded-lg animate-pulse" />,
-  ssr: false
+  ssr: false,
 });
 
 const StudioCollectionsPage = dynamic(() => import("./collections/page"), {
   loading: () => <div className="h-64 bg-gray-200 rounded-lg animate-pulse" />,
-  ssr: false
+  ssr: false,
 });
 
 const StudioProductsPage = dynamic(() => import("./products/page"), {
   loading: () => <div className="h-64 bg-gray-200 rounded-lg animate-pulse" />,
-  ssr: false
+  ssr: false,
 });
 
 const StudioServicesPage = dynamic(() => import("./services/page"), {
   loading: () => <div className="h-64 bg-gray-200 rounded-lg animate-pulse" />,
-  ssr: false
+  ssr: false,
 });
 
 const StudioPortfolioPage = dynamic(() => import("./portfolio/page"), {
   loading: () => <div className="h-64 bg-gray-200 rounded-lg animate-pulse" />,
-  ssr: false
+  ssr: false,
 });
 
 const StudioHeroPage = dynamic(() => import("./hero/page"), {
   loading: () => <div className="h-64 bg-gray-200 rounded-lg animate-pulse" />,
-  ssr: false
+  ssr: false,
 });
 
 const StudioSpotlightPage = dynamic(() => import("./spotlight/page"), {
   loading: () => <div className="h-64 bg-gray-200 rounded-lg animate-pulse" />,
-  ssr: false
+  ssr: false,
 });
 
 const StudioUsersPage = dynamic(() => import("./users/page"), {
   loading: () => <div className="h-64 bg-gray-200 rounded-lg animate-pulse" />,
-  ssr: false
+  ssr: false,
 });
 
 const StudioReviewsPage = dynamic(() => import("./reviews/page"), {
   loading: () => <div className="h-64 bg-gray-200 rounded-lg animate-pulse" />,
-  ssr: false
+  ssr: false,
 });
 
 const StudioInboxPage = dynamic(() => import("./inbox/page"), {
   loading: () => <div className="h-64 bg-gray-200 rounded-lg animate-pulse" />,
-  ssr: false
+  ssr: false,
 });
 
 const StudioProfilePage = dynamic(() => import("./profile/page"), {
   loading: () => <div className="h-64 bg-gray-200 rounded-lg animate-pulse" />,
-  ssr: false
+  ssr: false,
 });
 
 const StudioSettingsPage = dynamic(() => import("./settings/page"), {
   loading: () => <div className="h-64 bg-gray-200 rounded-lg animate-pulse" />,
-  ssr: false
+  ssr: false,
 });
 
 export default function StudioLayout({
@@ -121,7 +124,11 @@ export default function StudioLayout({
 
   // Trigger fade-in animation when content is ready
   useEffect(() => {
-    if (!loading && !isCheckingAccess && permissions.includes("studio.access")) {
+    if (
+      !loading &&
+      !isCheckingAccess &&
+      permissions.includes("studio.access")
+    ) {
       // Small delay to ensure smooth transition
       const timer = setTimeout(() => {
         setFadeIn(true);
@@ -288,14 +295,29 @@ export default function StudioLayout({
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white flex items-center justify-center">
         <div className="text-center space-y-6">
-          <div className="flex justify-center">
-            <div className="animate-spin h-12 w-12 border-4 border-oma-plum border-t-transparent rounded-full"></div>
+          <div className="relative">
+            <div className="animate-spin h-12 w-12 border-4 border-oma-plum border-t-transparent rounded-full mx-auto"></div>
+            <div className="absolute inset-0 rounded-full border-4 border-oma-gold/20"></div>
           </div>
           <div className="space-y-2">
             <p className="text-lg font-medium text-gray-700">
               Loading Studio...
             </p>
             <p className="text-sm text-gray-500">Preparing your workspace</p>
+          </div>
+          <div className="flex justify-center space-x-1">
+            <div
+              className="w-2 h-2 bg-oma-plum rounded-full animate-bounce"
+              style={{ animationDelay: "0ms" }}
+            ></div>
+            <div
+              className="w-2 h-2 bg-oma-plum rounded-full animate-bounce"
+              style={{ animationDelay: "150ms" }}
+            ></div>
+            <div
+              className="w-2 h-2 bg-oma-plum rounded-full animate-bounce"
+              style={{ animationDelay: "300ms" }}
+            ></div>
           </div>
         </div>
       </div>
@@ -330,32 +352,100 @@ export default function StudioLayout({
     };
 
     const baseItems: NavigationItem[] = [
-      { href: "/studio", label: "Dashboard", icon: Home, permission: "studio.access" },
+      {
+        href: "/studio",
+        label: "Dashboard",
+        icon: Home,
+        permission: "studio.access",
+      },
     ];
 
     const permissionItems: NavigationItem[] = [
-      { href: "/studio/brands", label: "Brands", icon: Package, permission: "studio.brands.manage", 
-        customLabel: user?.role === "brand_admin" ? "Your Brands" : "Brands" },
-      { href: "/studio/collections", label: "Collections", icon: ImageIcon, permission: "studio.catalogues.manage",
-        customLabel: user?.role === "brand_admin" ? "Your Collections" : "Collections" },
-      { href: "/studio/products", label: "Products", icon: ShoppingBag, permission: "studio.products.manage",
-        customLabel: user?.role === "brand_admin" ? "Your Products" : "Products" },
-      { href: "/studio/services", label: "Services", icon: Scissors, permission: "studio.products.manage",
-        customLabel: user?.role === "brand_admin" ? "Your Services" : "Services" },
-      { href: "/studio/portfolio", label: "Portfolio", icon: ImageIcon, permission: "studio.hero.manage" },
-      { href: "/studio/hero", label: "Hero Carousel", icon: Monitor, permission: "studio.hero.manage" },
-      { href: "/studio/spotlight", label: "Spotlight", icon: ImageIcon, permission: "studio.hero.manage" },
-      { href: "/studio/users", label: "Users", icon: Users, permission: "studio.users.manage" },
-      { href: "/studio/reviews", label: "Reviews", icon: MessageSquare, permission: "studio.products.manage",
-        customLabel: user?.role === "brand_admin" ? "Your Reviews" : "Reviews" },
-      { href: "/studio/inbox", label: "Inbox", icon: Inbox, permission: "studio.products.manage",
-        customLabel: user?.role === "brand_admin" ? "Your Inbox" : "Inbox" },
-      { href: "/studio/profile", label: "Profile", icon: User, permission: "studio.access" },
-      { href: "/studio/settings", label: "Settings", icon: Settings, permission: "studio.settings.manage" },
+      {
+        href: "/studio/brands",
+        label: "Brands",
+        icon: Package,
+        permission: "studio.brands.manage",
+        customLabel: user?.role === "brand_admin" ? "Your Brands" : "Brands",
+      },
+      {
+        href: "/studio/collections",
+        label: "Collections",
+        icon: ImageIcon,
+        permission: "studio.catalogues.manage",
+        customLabel:
+          user?.role === "brand_admin" ? "Your Collections" : "Collections",
+      },
+      {
+        href: "/studio/products",
+        label: "Products",
+        icon: ShoppingBag,
+        permission: "studio.products.manage",
+        customLabel:
+          user?.role === "brand_admin" ? "Your Products" : "Products",
+      },
+      {
+        href: "/studio/services",
+        label: "Services",
+        icon: Scissors,
+        permission: "studio.products.manage",
+        customLabel:
+          user?.role === "brand_admin" ? "Your Services" : "Services",
+      },
+      {
+        href: "/studio/portfolio",
+        label: "Portfolio",
+        icon: ImageIcon,
+        permission: "studio.hero.manage",
+      },
+      {
+        href: "/studio/hero",
+        label: "Hero Carousel",
+        icon: Monitor,
+        permission: "studio.hero.manage",
+      },
+      {
+        href: "/studio/spotlight",
+        label: "Spotlight",
+        icon: ImageIcon,
+        permission: "studio.hero.manage",
+      },
+      {
+        href: "/studio/users",
+        label: "Users",
+        icon: Users,
+        permission: "studio.users.manage",
+      },
+      {
+        href: "/studio/reviews",
+        label: "Reviews",
+        icon: MessageSquare,
+        permission: "studio.products.manage",
+        customLabel: user?.role === "brand_admin" ? "Your Reviews" : "Reviews",
+      },
+      {
+        href: "/studio/inbox",
+        label: "Inbox",
+        icon: Inbox,
+        permission: "studio.products.manage",
+        customLabel: user?.role === "brand_admin" ? "Your Inbox" : "Inbox",
+      },
+      {
+        href: "/studio/profile",
+        label: "Profile",
+        icon: User,
+        permission: "studio.access",
+      },
+      {
+        href: "/studio/settings",
+        label: "Settings",
+        icon: Settings,
+        permission: "studio.settings.manage",
+      },
     ];
 
     // Filter items based on permissions
-    const filteredItems = permissionItems.filter(item => {
+    const filteredItems = permissionItems.filter((item) => {
       if (item.permission === "studio.access") return true;
       return permissions.includes(item.permission as any);
     });
@@ -380,14 +470,20 @@ export default function StudioLayout({
           }}
         >
           {/* Studio Header */}
-          <header className={`w-full bg-white border-b border-gray-200 shadow-sm fixed top-0 left-0 right-0 z-50 h-16 flex items-center transition-all duration-700 ease-out ${
-            fadeIn ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'
-          }`}>
+          <header
+            className={`w-full bg-white border-b border-gray-200 shadow-sm fixed top-0 left-0 right-0 z-50 h-16 flex items-center transition-all duration-700 ease-out ${
+              fadeIn ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4"
+            }`}
+          >
             <div className="container mx-auto px-8 flex justify-between items-center">
               {/* Mobile sidebar toggle */}
-              <div className={`lg:hidden flex items-center transition-all duration-700 ease-out ${
-                fadeIn ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'
-              }`}>
+              <div
+                className={`lg:hidden flex items-center transition-all duration-700 ease-out ${
+                  fadeIn
+                    ? "opacity-100 translate-x-0"
+                    : "opacity-0 translate-x-4"
+                }`}
+              >
                 <Button
                   variant="outline"
                   size="icon"
@@ -403,9 +499,11 @@ export default function StudioLayout({
               </div>
 
               {/* Desktop: OmaHub logo */}
-              <div className={`hidden lg:flex items-center transition-all duration-700 ease-out ${
-                fadeIn ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
-              }`}>
+              <div
+                className={`hidden lg:flex items-center transition-all duration-700 ease-out ${
+                  fadeIn ? "opacity-100 scale-100" : "opacity-0 scale-95"
+                }`}
+              >
                 <button
                   onClick={handleBackToSite}
                   className="hover:opacity-80 transition-opacity"
@@ -422,9 +520,11 @@ export default function StudioLayout({
               </div>
 
               {/* Mobile: OmaHub logo */}
-              <div className={`lg:hidden flex-1 flex justify-center transition-all duration-700 ease-out ${
-                fadeIn ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
-              }`}>
+              <div
+                className={`lg:hidden flex-1 flex justify-center transition-all duration-700 ease-out ${
+                  fadeIn ? "opacity-100 scale-100" : "opacity-0 scale-95"
+                }`}
+              >
                 <button
                   onClick={handleBackToSite}
                   className="hover:opacity-80 transition-opacity"
@@ -440,9 +540,13 @@ export default function StudioLayout({
                 </button>
               </div>
 
-              <div className={`hidden md:flex items-center space-x-4 transition-all duration-700 ease-out ${
-                fadeIn ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-              }`}>
+              <div
+                className={`hidden md:flex items-center space-x-4 transition-all duration-700 ease-out ${
+                  fadeIn
+                    ? "opacity-100 translate-y-0"
+                    : "opacity-0 translate-y-4"
+                }`}
+              >
                 <button
                   onClick={handleBackToSite}
                   className="text-sm text-gray-600 hover:text-oma-plum transition-colors"
@@ -453,9 +557,13 @@ export default function StudioLayout({
               </div>
 
               {/* Mobile user profile */}
-              <div className={`md:hidden transition-all duration-700 ease-out ${
-                fadeIn ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-              }`}>
+              <div
+                className={`md:hidden transition-all duration-700 ease-out ${
+                  fadeIn
+                    ? "opacity-100 translate-y-0"
+                    : "opacity-0 translate-y-4"
+                }`}
+              >
                 <UserProfile />
               </div>
             </div>
@@ -530,7 +638,7 @@ export default function StudioLayout({
           {/* Desktop Sidebar: Keep existing implementation */}
           <aside
             className={`hidden lg:block bg-white w-64 border-r border-gray-200 fixed inset-y-0 left-0 z-40 transition-all duration-700 ease-in-out lg:translate-x-0 mt-16 shadow-xl ${
-              fadeIn ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'
+              fadeIn ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4"
             }`}
             aria-modal="true"
             role="dialog"
@@ -579,9 +687,11 @@ export default function StudioLayout({
           </aside>
 
           {/* Main Content */}
-          <main className={`flex-1 lg:ml-64 mt-16 transition-all duration-700 ease-out ${
-            fadeIn ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-          }`}>
+          <main
+            className={`flex-1 lg:ml-64 mt-16 transition-all duration-700 ease-out ${
+              fadeIn ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+            }`}
+          >
             <div className="min-h-screen relative">{children}</div>
           </main>
         </div>

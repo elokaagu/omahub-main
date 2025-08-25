@@ -5,7 +5,7 @@ import { cookies } from "next/headers";
 // Helper function to create authenticated Supabase client
 async function createAuthenticatedClient() {
   const cookieStore = cookies();
-  
+
   // Create Supabase client with proper cookie handling
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -33,34 +33,40 @@ async function createAuthenticatedClient() {
 // Helper function to get authenticated user
 async function getAuthenticatedUser() {
   const supabase = await createAuthenticatedClient();
-  
+
   try {
     // Try to get the current session
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession();
+
     if (sessionError) {
       console.error("Session error:", sessionError);
       return null;
     }
-    
+
     if (session?.user) {
       console.log("User authenticated via session:", session.user.id);
       return session.user;
     }
-    
+
     // If no session, try to get user directly
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
     if (userError) {
       console.error("User error:", userError);
       return null;
     }
-    
+
     if (user) {
       console.log("User authenticated via direct lookup:", user.id);
       return user;
     }
-    
+
     console.log("No authenticated user found");
     return null;
   } catch (error) {
@@ -73,7 +79,7 @@ async function getAuthenticatedUser() {
 export async function GET() {
   try {
     const user = await getAuthenticatedUser();
-    
+
     if (!user) {
       console.log("Authentication failed - no valid user");
       return NextResponse.json(
@@ -85,11 +91,12 @@ export async function GET() {
     console.log("Basket API: User authenticated:", user.id);
 
     const supabase = await createAuthenticatedClient();
-    
+
     // Fetch user's baskets from the database
     const { data: baskets, error: basketsError } = await supabase
       .from("baskets")
-      .select(`
+      .select(
+        `
         *,
         basket_items (
           *,
@@ -102,7 +109,8 @@ export async function GET() {
             brand:brands(name)
           )
         )
-      `)
+      `
+      )
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
 
@@ -134,7 +142,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const user = await getAuthenticatedUser();
-    
+
     if (!user) {
       console.log("Authentication failed - no valid user");
       return NextResponse.json(
@@ -146,7 +154,7 @@ export async function POST(request: NextRequest) {
     console.log("Basket API POST: User authenticated:", user.id);
 
     const supabase = await createAuthenticatedClient();
-    
+
     // Parse request body
     const { productId, quantity, size, colour } = await request.json();
 
@@ -160,19 +168,18 @@ export async function POST(request: NextRequest) {
     // Fetch product details
     const { data: product, error: productError } = await supabase
       .from("products")
-      .select(`
+      .select(
+        `
         *,
         brand:brands(id, name)
-      `)
+      `
+      )
       .eq("id", productId)
       .single();
 
     if (productError || !product) {
       console.error("Error fetching product:", productError);
-      return NextResponse.json(
-        { error: "Product not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
     // Get or create user's basket
@@ -239,7 +246,8 @@ export async function POST(request: NextRequest) {
       .from("baskets")
       .update({
         total_items: basket.total_items + quantity,
-        total_price: basket.total_price + (product.sale_price || product.price) * quantity,
+        total_price:
+          basket.total_price + (product.sale_price || product.price) * quantity,
         updated_at: new Date().toISOString(),
       })
       .eq("id", basket.id);
@@ -299,7 +307,7 @@ export async function POST(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     const user = await getAuthenticatedUser();
-    
+
     if (!user) {
       console.log("Authentication failed - no valid user");
       return NextResponse.json(
@@ -322,14 +330,16 @@ export async function PATCH(request: NextRequest) {
     console.log("Basket API PATCH: User authenticated:", user.id);
 
     const supabase = await createAuthenticatedClient();
-    
+
     // Get basket item details
     const { data: basketItem, error: itemError } = await supabase
       .from("basket_items")
-      .select(`
+      .select(
+        `
         *,
         basket:baskets(user_id, total_items, total_price)
-      `)
+      `
+      )
       .eq("id", itemId)
       .single();
 
@@ -342,10 +352,7 @@ export async function PATCH(request: NextRequest) {
 
     // Verify user owns this basket
     if (basketItem.basket.user_id !== user.id) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
     // Calculate price difference
@@ -374,7 +381,8 @@ export async function PATCH(request: NextRequest) {
     const { error: updateBasketError } = await supabase
       .from("baskets")
       .update({
-        total_items: basketItem.basket.total_items - basketItem.quantity + quantity,
+        total_items:
+          basketItem.basket.total_items - basketItem.quantity + quantity,
         total_price: basketItem.basket.total_price + priceDifference,
         updated_at: new Date().toISOString(),
       })
@@ -404,7 +412,7 @@ export async function PATCH(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     const user = await getAuthenticatedUser();
-    
+
     if (!user) {
       console.log("Authentication failed - no valid user");
       return NextResponse.json(
@@ -426,14 +434,16 @@ export async function DELETE(request: NextRequest) {
     console.log("Basket API DELETE: User authenticated:", user.id);
 
     const supabase = await createAuthenticatedClient();
-    
+
     // Get basket item details
     const { data: basketItem, error: itemError } = await supabase
       .from("basket_items")
-      .select(`
+      .select(
+        `
         *,
         basket:baskets(user_id, total_items, total_price)
-      `)
+      `
+      )
       .eq("id", itemId)
       .single();
 
@@ -446,10 +456,7 @@ export async function DELETE(request: NextRequest) {
 
     // Verify user owns this basket
     if (basketItem.basket.user_id !== user.id) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
     // Calculate price to subtract

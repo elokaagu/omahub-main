@@ -1,38 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServerSupabaseClient } from "@/lib/supabase-unified";
 
 /**
  * API route to fetch page views from Google Analytics 4
  * Requires GOOGLE_ANALYTICS_PROPERTY_ID and GOOGLE_SERVICE_ACCOUNT_KEY environment variables
- * SUPER ADMIN ACCESS ONLY
  */
 export async function GET(request: NextRequest) {
   try {
-    // Authenticate user and check if they are a super admin
-    const supabase = await createServerSupabaseClient();
-    
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Check if user is a super admin
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-
-    if (profileError || profile?.role !== "super_admin") {
-      return NextResponse.json({ error: "Access denied - Super admin only" }, { status: 403 });
-    }
-
-    console.log("✅ Google Analytics API: Super admin access granted for user:", user.email);
-
     const propertyId = process.env.GOOGLE_ANALYTICS_PROPERTY_ID;
     const serviceAccountKey = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
 
