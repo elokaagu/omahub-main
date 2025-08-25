@@ -37,7 +37,7 @@ import { supabase } from "@/lib/supabase";
 import { getBrandsByCategory } from "@/lib/services/brandService";
 import { checkCategoryHasBrands } from "@/lib/services/categoryService";
 import { triggerSearchModal } from "@/components/ui/search-modal";
-// import BasketItemCount from "@/components/ui/basket-item-count"; // Temporarily hidden
+import BasketItemCount from "@/components/ui/basket-item-count";
 
 const collectionItems = collections.map((category) => ({
   name: category,

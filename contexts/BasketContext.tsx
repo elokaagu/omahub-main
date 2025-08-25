@@ -158,7 +158,8 @@ const BasketContext = createContext<{
     productId: string,
     quantity: number,
     size?: string,
-    colour?: string
+    colour?: string,
+    brandId?: string
   ) => Promise<void>;
   removeFromBasket: (itemId: string) => Promise<void>;
   updateQuantity: (itemId: string, quantity: number) => Promise<void>;
@@ -217,7 +218,8 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
       productId: string,
       quantity: number,
       size?: string,
-      colour?: string
+      colour?: string,
+      brandId?: string
     ) => {
       if (!user) {
         toast.error("Please sign in to add items to your basket");
@@ -239,6 +241,7 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
             quantity,
             size,
             colour,
+            brandId,
           }),
         });
 
