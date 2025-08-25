@@ -199,7 +199,11 @@ export function TailoredOrderModal({
               </div>
               <div className="text-right">
                 <p className="text-2xl font-bold text-oma-plum">
-                  {formatProductPrice(product, { price_range: brand.price_range }).displayPrice}
+                  {
+                    formatProductPrice(product, {
+                      price_range: brand.price_range,
+                    }).displayPrice
+                  }
                 </p>
                 <Badge variant="secondary" className="mt-1">
                   Custom Order
@@ -242,9 +246,7 @@ export function TailoredOrderModal({
                 <Input
                   id="phone"
                   value={deliveryAddress.phone}
-                  onChange={(e) =>
-                    handleAddressChange("phone", e.target.value)
-                  }
+                  onChange={(e) => handleAddressChange("phone", e.target.value)}
                   placeholder="Your phone number"
                   className="mt-1"
                 />
@@ -257,9 +259,7 @@ export function TailoredOrderModal({
                 <Input
                   id="email"
                   value={deliveryAddress.email}
-                  onChange={(e) =>
-                    handleAddressChange("email", e.target.value)
-                  }
+                  onChange={(e) => handleAddressChange("email", e.target.value)}
                   placeholder="Your email address"
                   className="mt-1"
                   type="email"
@@ -274,9 +274,7 @@ export function TailoredOrderModal({
               <div className="h-8 w-8 bg-oma-plum/10 rounded-full flex items-center justify-center">
                 <span className="text-oma-plum font-semibold text-sm">2</span>
               </div>
-              <h4 className="font-semibold text-gray-900">
-                Delivery Address
-              </h4>
+              <h4 className="font-semibold text-gray-900">Delivery Address</h4>
             </div>
 
             <div className="space-y-4">
@@ -360,9 +358,7 @@ export function TailoredOrderModal({
                     <SelectItem value="Ghana">Ghana</SelectItem>
                     <SelectItem value="Kenya">Kenya</SelectItem>
                     <SelectItem value="South Africa">South Africa</SelectItem>
-                    <SelectItem value="United States">
-                      United States
-                    </SelectItem>
+                    <SelectItem value="United States">United States</SelectItem>
                     <SelectItem value="United Kingdom">
                       United Kingdom
                     </SelectItem>
@@ -379,9 +375,7 @@ export function TailoredOrderModal({
               <div className="h-8 w-8 bg-oma-plum/10 rounded-full flex items-center justify-center">
                 <span className="text-oma-plum font-semibold text-sm">3</span>
               </div>
-              <h4 className="font-semibold text-gray-900">
-                Special Requests
-              </h4>
+              <h4 className="font-semibold text-gray-900">Special Requests</h4>
             </div>
 
             <div className="space-y-2">

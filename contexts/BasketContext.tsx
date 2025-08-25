@@ -9,6 +9,7 @@ import React, {
 } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { createClient } from "@/lib/supabase-unified";
 
 // Types
 export interface BasketItem {
@@ -186,11 +187,18 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
       dispatch({ type: "SET_LOADING", payload: true });
       dispatch({ type: "SET_ERROR", payload: null });
 
+      // Get the current session token
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      
       const response = await fetch("/api/basket", {
         method: "GET",
         credentials: "include", // Include cookies for authentication
         headers: {
           "Content-Type": "application/json",
+          ...(session?.access_token && {
+            "Authorization": `Bearer ${session.access_token}`
+          })
         },
       });
       const data = await response.json();
@@ -281,9 +289,18 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
         dispatch({ type: "SET_LOADING", payload: true });
         dispatch({ type: "SET_ERROR", payload: null });
 
+        // Get the current session token
+        const supabase = createClient();
+        const { data: { session } } = await supabase.auth.getSession();
+        
         const response = await fetch(`/api/basket?itemId=${itemId}`, {
           method: "DELETE",
           credentials: "include", // Include cookies for authentication
+          headers: {
+            ...(session?.access_token && {
+              "Authorization": `Bearer ${session.access_token}`
+            })
+          },
         });
 
         const data = await response.json();

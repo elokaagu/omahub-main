@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 
 // GET - Fetch user's baskets
 export async function GET() {
@@ -41,6 +41,120 @@ export async function GET() {
 
     if (!session || !session.user) {
       console.log("No valid session found in basket API");
+      
+      // For debugging, let's try to get user info from the request headers
+      const authHeader = headers().get("authorization");
+      if (authHeader) {
+        console.log(
+          "Basket API: Found Authorization header:",
+          authHeader.substring(0, 20) + "..."
+        );
+        
+        // Try to validate the token and get user info
+        try {
+          const token = authHeader.replace('Bearer ', '');
+          const { createClient } = await import("@supabase/supabase-js");
+          const clientSupabase = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+          );
+          
+          const { data: { user }, error: userError } = await clientSupabase.auth.getUser(token);
+          
+          if (user && !userError) {
+            console.log("Basket API: User authenticated via token:", user.email);
+            // Continue with the user found via token
+            const fallbackSession = { user };
+            
+            // Fetch user's baskets with items
+            const { data: baskets, error: basketsError } = await supabase
+              .from("baskets")
+              .select(
+                `
+                id,
+                brand_id,
+                created_at,
+                updated_at,
+                basket_items (
+                  id,
+                  product_id,
+                  quantity,
+                  size,
+                  color,
+                  created_at
+                )
+              `
+              )
+              .eq("user_id", fallbackSession.user.id)
+              .order("created_at", { ascending: false });
+
+            if (basketsError) {
+              console.error("Error fetching baskets:", basketsError);
+              return NextResponse.json(
+                { error: "Failed to fetch baskets" },
+                { status: 500 }
+              );
+            }
+
+            // Fetch products separately to avoid relationship issues
+            const productIds = baskets?.flatMap(basket => 
+              basket.basket_items?.map(item => item.product_id) || []
+            ) || [];
+
+            let products: Record<string, any> = {};
+            if (productIds.length > 0) {
+              const { data: productsData, error: productsError } = await supabase
+                .from("products")
+                .select("id, name, price, image, brand_id")
+                .in("id", productIds);
+
+              if (!productsError && productsData) {
+                productsData.forEach(product => {
+                  products[product.id] = product;
+                });
+              }
+            }
+
+            // Transform the data to match the expected format
+            const transformedBaskets =
+              baskets?.map((basket) => ({
+                id: basket.id,
+                brandId: basket.brand_id,
+                createdAt: basket.created_at,
+                updatedAt: basket.updated_at,
+                items:
+                  basket.basket_items?.map((item) => {
+                    const product = products[item.product_id];
+                    return {
+                      id: item.id,
+                      productId: item.product_id,
+                      productName: product?.name || "Unknown Product",
+                      price: product?.price || 0,
+                      productImage: product?.image || "",
+                      quantity: item.quantity,
+                      size: item.size,
+                      colour: item.color,
+                      createdAt: item.created_at,
+                    };
+                  }) || [],
+                totalItems:
+                  basket.basket_items?.reduce((sum, item) => sum + item.quantity, 0) ||
+                  0,
+              })) || [];
+
+            return NextResponse.json({
+              baskets: transformedBaskets,
+              user: {
+                id: fallbackSession.user.id,
+                email: fallbackSession.user.email,
+              },
+            });
+          }
+        } catch (tokenError) {
+          console.error("Basket API: Token validation failed:", tokenError);
+        }
+      }
+      
       return NextResponse.json(
         { error: "Authentication required" },
         { status: 401 }
