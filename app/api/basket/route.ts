@@ -13,7 +13,22 @@ export async function GET() {
       {
         cookies: {
           get(name: string) {
-            return cookieStore.get(name)?.value;
+            try {
+              const cookie = cookieStore.get(name);
+              if (!cookie) return undefined;
+              
+              // Handle base64 encoded cookies properly
+              const value = cookie.value;
+              if (value && value.startsWith('base64-')) {
+                // Skip base64 cookies that might cause parsing issues
+                return undefined;
+              }
+              
+              return value;
+            } catch (error) {
+              console.error(`Error parsing cookie ${name}:`, error);
+              return undefined;
+            }
           },
           set() {},
           remove() {},
@@ -97,7 +112,22 @@ export async function POST(request: NextRequest) {
       {
         cookies: {
           get(name: string) {
-            return cookieStore.get(name)?.value;
+            try {
+              const cookie = cookieStore.get(name);
+              if (!cookie) return undefined;
+              
+              // Handle base64 encoded cookies properly
+              const value = cookie.value;
+              if (value && value.startsWith('base64-')) {
+                // Skip base64 cookies that might cause parsing issues
+                return undefined;
+              }
+              
+              return value;
+            } catch (error) {
+              console.error(`Error parsing cookie ${name}:`, error);
+              return undefined;
+            }
           },
           set() {},
           remove() {},
@@ -285,7 +315,22 @@ export async function PATCH(request: NextRequest) {
       {
         cookies: {
           get(name: string) {
-            return cookieStore.get(name)?.value;
+            try {
+              const cookie = cookieStore.get(name);
+              if (!cookie) return undefined;
+              
+              // Handle base64 encoded cookies properly
+              const value = cookie.value;
+              if (value && value.startsWith('base64-')) {
+                // Skip base64 cookies that might cause parsing issues
+                return undefined;
+              }
+              
+              return value;
+            } catch (error) {
+              console.error(`Error parsing cookie ${name}:`, error);
+              return undefined;
+            }
           },
           set() {},
           remove() {},
@@ -413,7 +458,22 @@ export async function DELETE(request: NextRequest) {
       {
         cookies: {
           get(name: string) {
-            return cookieStore.get(name)?.value;
+            try {
+              const cookie = cookieStore.get(name);
+              if (!cookie) return undefined;
+              
+              // Handle base64 encoded cookies properly
+              const value = cookie.value;
+              if (value && value.startsWith('base64-')) {
+                // Skip base64 cookies that might cause parsing issues
+                return undefined;
+              }
+              
+              return value;
+            } catch (error) {
+              console.error(`Error parsing cookie ${name}:`, error);
+              return undefined;
+            }
           },
           set() {},
           remove() {},
