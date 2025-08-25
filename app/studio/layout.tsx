@@ -288,29 +288,14 @@ export default function StudioLayout({
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white flex items-center justify-center">
         <div className="text-center space-y-6">
-          <div className="relative">
-            <div className="animate-spin h-12 w-12 border-4 border-oma-plum border-t-transparent rounded-full mx-auto"></div>
-            <div className="absolute inset-0 rounded-full border-4 border-oma-gold/20"></div>
+          <div className="flex justify-center">
+            <div className="animate-spin h-12 w-12 border-4 border-oma-plum border-t-transparent rounded-full"></div>
           </div>
           <div className="space-y-2">
             <p className="text-lg font-medium text-gray-700">
               Loading Studio...
             </p>
             <p className="text-sm text-gray-500">Preparing your workspace</p>
-          </div>
-          <div className="flex justify-center space-x-1">
-            <div
-              className="w-2 h-2 bg-oma-plum rounded-full animate-bounce"
-              style={{ animationDelay: "0ms" }}
-            ></div>
-            <div
-              className="w-2 h-2 bg-oma-plum rounded-full animate-bounce"
-              style={{ animationDelay: "150ms" }}
-            ></div>
-            <div
-              className="w-2 h-2 bg-oma-plum rounded-full animate-bounce"
-              style={{ animationDelay: "300ms" }}
-            ></div>
           </div>
         </div>
       </div>
