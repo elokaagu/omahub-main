@@ -381,7 +381,7 @@ export default function Header() {
               <Search className="h-5 w-5" />
             </button>
             {/* Basket temporarily hidden - working on preview branch */}
-            {/* <Link
+            <Link
               href="/basket"
               className={cn(
                 "p-2 rounded-full transition-all duration-200 hover:scale-105",
@@ -392,7 +392,7 @@ export default function Header() {
               aria-label="View Basket"
             >
               <BasketItemCount />
-            </Link> */}
+            </Link>
             <Button
               asChild
               variant="outline"
@@ -561,7 +561,7 @@ export default function Header() {
                 </div>
 
                 {/* Basket temporarily hidden - working on preview branch */}
-                {/* <div className="space-y-2">
+                <div className="space-y-2">
                   <h3 className="text-xs font-medium uppercase tracking-wider text-gray-500 mb-3">
                     Basket
                   </h3>
@@ -575,7 +575,7 @@ export default function Header() {
                       View Basket
                     </span>
                   </Link>
-                </div> */}
+                </div>
 
                 {/* Main Navigation */}
                 <div className="space-y-2">
