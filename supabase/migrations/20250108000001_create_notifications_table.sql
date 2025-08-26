@@ -21,13 +21,13 @@ CREATE INDEX IF NOT EXISTS idx_notifications_created_at ON public.notifications(
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 
 -- Create RLS policies
-CREATE POLICY "Users can view their own notifications" ON public.notifications
+CREATE POLICY IF NOT EXISTS "Users can view their own notifications" ON public.notifications
   FOR SELECT USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can update their own notifications" ON public.notifications
+CREATE POLICY IF NOT EXISTS "Users can update their own notifications" ON public.notifications
   FOR UPDATE USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can insert their own notifications" ON public.notifications
+CREATE POLICY IF NOT EXISTS "Users can insert their own notifications" ON public.notifications
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 -- Create function to update updated_at timestamp
@@ -40,7 +40,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Create trigger to automatically update updated_at
-CREATE TRIGGER update_notifications_updated_at
+CREATE TRIGGER IF NOT EXISTS update_notifications_updated_at
   BEFORE UPDATE ON public.notifications
   FOR EACH ROW EXECUTE FUNCTION update_notifications_updated_at();
 
