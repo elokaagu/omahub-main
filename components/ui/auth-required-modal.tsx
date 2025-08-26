@@ -77,7 +77,9 @@ export function AuthRequiredModal({
 
     try {
       await signUp(email, password);
-      toast.success("Account created successfully! Please check your email to verify your account.");
+      toast.success(
+        "Account created successfully! Please check your email to verify your account."
+      );
       handleClose();
     } catch (error: any) {
       setError(error.message || "Account creation failed. Please try again.");
@@ -99,57 +101,57 @@ export function AuthRequiredModal({
           </DialogDescription>
         </DialogHeader>
 
-                     <div className="mt-6">
-               {error && (
-                 <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-700 text-sm">
-                   <AlertCircle className="h-4 w-4" />
-                   {error}
-                 </div>
-               )}
-               
-               {isSignIn ? (
-                 <form onSubmit={handleSignIn} className="space-y-4">
-                   <div className="space-y-2">
-                     <Label
-                       htmlFor="email"
-                       className="text-sm font-medium text-oma-cocoa"
-                     >
-                       Email Address
-                     </Label>
-                     <div className="relative">
-                       <Mail className="absolute left-3 top-3 h-4 w-4 text-oma-cocoa/50" />
-                       <Input
-                         id="email"
-                         type="email"
-                         placeholder="your.email@example.com"
-                         className="pl-10 border-oma-beige focus:border-oma-plum focus:ring-oma-plum"
-                         value={email}
-                         onChange={(e) => setEmail(e.target.value)}
-                         required
-                       />
-                     </div>
-                   </div>
+        <div className="mt-6">
+          {error && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-700 text-sm">
+              <AlertCircle className="h-4 w-4" />
+              {error}
+            </div>
+          )}
 
-                   <div className="space-y-2">
-                     <Label
-                       htmlFor="password"
-                       className="text-sm font-medium text-oma-cocoa"
-                     >
-                       Password
-                     </Label>
-                     <div className="relative">
-                       <Lock className="absolute left-3 top-3 h-4 w-4 text-oma-cocoa/50" />
-                       <Input
-                         id="password"
-                         type="password"
-                         placeholder="Enter your password"
-                         className="pl-10 border-oma-beige focus:border-oma-plum focus:ring-oma-plum"
-                         value={password}
-                         onChange={(e) => setPassword(e.target.value)}
-                         required
-                       />
-                     </div>
-                   </div>
+          {isSignIn ? (
+            <form onSubmit={handleSignIn} className="space-y-4">
+              <div className="space-y-2">
+                <Label
+                  htmlFor="email"
+                  className="text-sm font-medium text-oma-cocoa"
+                >
+                  Email Address
+                </Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-oma-cocoa/50" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="your.email@example.com"
+                    className="pl-10 border-oma-beige focus:border-oma-plum focus:ring-oma-plum"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label
+                  htmlFor="password"
+                  className="text-sm font-medium text-oma-cocoa"
+                >
+                  Password
+                </Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-oma-cocoa/50" />
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Enter your password"
+                    className="pl-10 border-oma-beige focus:border-oma-plum focus:ring-oma-plum"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
 
               <Button
                 type="submit"
