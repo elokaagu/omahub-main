@@ -62,5 +62,5 @@ WHERE p.role = 'user'
 LIMIT 1
 ON CONFLICT DO NOTHING;
 
--- Log the creation
-RAISE NOTICE 'Notifications table created successfully with RLS policies';
+-- Migration completed successfully
+-- Notifications table created with RLS policies
