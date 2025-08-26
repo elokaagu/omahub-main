@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { Play, Pause, AlertCircle } from "lucide-react";
-import { Button } from "./button";
+import { AlertCircle } from "lucide-react";
+
 import { LazyImage } from "./lazy-image";
 import { cn } from "@/lib/utils";
 
@@ -41,7 +41,7 @@ export function VideoPlayer({
   priority = false,
   onVideoLoad,
   onVideoError,
-  showPlayButton = true,
+  showPlayButton = false,
 }: VideoPlayerProps) {
   const [hasError, setHasError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -144,13 +144,7 @@ export function VideoPlayer({
     }
   };
 
-  const handlePlayButtonClick = () => {
-    if (videoUrl) {
-      setShowVideo(true);
-    } else {
-      togglePlay();
-    }
-  };
+
 
   // Show image if no video or error, or if video hasn't been activated yet
   if (shouldShowImage || (!showVideo && imageToShow)) {
@@ -183,19 +177,7 @@ export function VideoPlayer({
           </div>
         )}
 
-        {/* Play button overlay if video is available */}
-        {videoUrl && showPlayButton && !showVideo && (
-          <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/40 transition-colors">
-            <Button
-              onClick={handlePlayButtonClick}
-              variant="secondary"
-              size="lg"
-              className="bg-white/90 hover:bg-white text-black rounded-full p-4 shadow-lg"
-            >
-              <Play className="h-8 w-8 ml-1" />
-            </Button>
-          </div>
-        )}
+        {/* Play button overlay removed */}
 
         {/* Error indicator */}
         {hasError && (
@@ -237,19 +219,7 @@ export function VideoPlayer({
         </div>
       )}
 
-      {/* Play/Pause button overlay */}
-      {!controls && (
-        <div className="absolute inset-0 bg-black/0 hover:bg-black/20 flex items-center justify-center transition-colors cursor-pointer">
-          <Button
-            onClick={togglePlay}
-            variant="secondary"
-            size="lg"
-            className="bg-white/90 hover:bg-white text-black rounded-full p-4 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
-          >
-            <Play className="h-8 w-8 ml-1" />
-          </Button>
-        </div>
-      )}
+      {/* Play/Pause button overlay removed */}
 
       {/* Error indicator */}
       {hasError && (
