@@ -24,8 +24,25 @@ export async function POST(request: NextRequest) {
       quantity,
     } = orderData;
 
+    console.log("Parsed order data:", {
+      user_id,
+      product_id,
+      brand_id,
+      customer_notes,
+      delivery_address,
+      total_amount,
+      size,
+      color,
+      quantity,
+    });
+
     // Validate required fields (user_id is now optional)
     if (!product_id || !brand_id || !delivery_address) {
+      console.error("Missing required fields:", {
+        product_id,
+        brand_id,
+        delivery_address,
+      });
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
@@ -63,7 +80,8 @@ export async function POST(request: NextRequest) {
         .insert({
           email: delivery_address.email,
           first_name: delivery_address.full_name.split(" ")[0] || "",
-          last_name: delivery_address.full_name.split(" ").slice(1).join(" ") || "",
+          last_name:
+            delivery_address.full_name.split(" ").slice(1).join(" ") || "",
           role: "user",
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
@@ -282,7 +300,7 @@ export async function POST(request: NextRequest) {
                 <p><strong>Email:</strong> ${delivery_address.email}</p>
                 <p><strong>Phone:</strong> ${delivery_address.phone}</p>
                 <p><strong>Address:</strong> ${delivery_address.city}, ${delivery_address.state} ${delivery_address.postal_code}, ${delivery_address.country}</p>
-                ${customer_notes ? `<p><strong>Special Notes:</strong> ${customer_notes}</p>` : ''}
+                ${customer_notes ? `<p><strong>Special Notes:</strong> ${customer_notes}</p>` : ""}
               </div>
 
               <div style="background-color: #fff3cd; padding: 20px; border-radius: 8px; margin: 20px 0;">
@@ -301,7 +319,9 @@ export async function POST(request: NextRequest) {
         // Don't fail the order creation if email fails
       }
     } else {
-      console.log("RESEND_API_KEY not configured, skipping customer confirmation email");
+      console.log(
+        "RESEND_API_KEY not configured, skipping customer confirmation email"
+      );
     }
 
     // Log the order details for manual processing if email fails

@@ -12,8 +12,22 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, ShoppingBag, User, Mail, Phone, MapPin, MessageSquare } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Loader2,
+  ShoppingBag,
+  User,
+  Mail,
+  Phone,
+  MapPin,
+  MessageSquare,
+} from "lucide-react";
 import { toast } from "sonner";
 
 interface BrandRequestModalProps {
@@ -58,12 +72,34 @@ export function BrandRequestModal({
   });
 
   const handleInputChange = (field: string, value: string | number) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
+
+    const requestData = {
+      product_id: productId,
+      brand_id: brandId,
+      customer_notes: formData.customer_notes,
+      delivery_address: {
+        full_name: formData.full_name,
+        email: formData.email,
+        phone: formData.phone,
+        address_line_1: formData.address_line_1,
+        city: formData.city,
+        state: formData.state,
+        postal_code: formData.postal_code,
+        country: formData.country,
+      },
+      total_amount: price * formData.quantity,
+      size: formData.preferred_size,
+      color: formData.preferred_color,
+      quantity: formData.quantity,
+    };
+
+    console.log("Submitting brand request:", requestData);
 
     try {
       const response = await fetch("/api/orders/custom", {
@@ -71,35 +107,26 @@ export function BrandRequestModal({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          product_id: productId,
-          brand_id: brandId,
-          customer_notes: formData.customer_notes,
-          delivery_address: {
-            full_name: formData.full_name,
-            email: formData.email,
-            phone: formData.phone,
-            address_line_1: formData.address_line_1,
-            city: formData.city,
-            state: formData.state,
-            postal_code: formData.postal_code,
-            country: formData.country,
-          },
-          total_amount: price * formData.quantity,
-          size: formData.preferred_size,
-          color: formData.preferred_color,
-          quantity: formData.quantity,
-        }),
+        body: JSON.stringify(requestData),
       });
+
+      console.log("API response status:", response.status);
+      console.log("API response headers:", response.headers);
 
       if (!response.ok) {
         const errorData = await response.json();
+        console.error("API error response:", errorData);
         throw new Error(errorData.error || "Failed to submit request");
       }
 
-      toast.success("Request submitted successfully! The brand will contact you soon.");
+      const successData = await response.json();
+      console.log("API success response:", successData);
+
+      toast.success(
+        "Request submitted successfully! The brand will contact you soon."
+      );
       onClose();
-      
+
       // Reset form
       setFormData({
         full_name: "",
@@ -116,7 +143,10 @@ export function BrandRequestModal({
         preferred_color: color || "",
       });
     } catch (error: any) {
-      toast.error(error.message || "Failed to submit request. Please try again.");
+      console.error("Error submitting request:", error);
+      toast.error(
+        error.message || "Failed to submit request. Please try again."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -130,7 +160,8 @@ export function BrandRequestModal({
             Request from {brandName}
           </DialogTitle>
           <DialogDescription className="text-oma-cocoa">
-            Submit your request for {productName} and we'll connect you with the brand
+            Submit your request for {productName} and we'll connect you with the
+            brand
           </DialogDescription>
         </DialogHeader>
 
@@ -138,11 +169,13 @@ export function BrandRequestModal({
           {/* Product Information */}
           <div className="space-y-4">
             <div className="bg-gray-50 p-4 rounded-lg">
-              <h3 className="font-semibold text-oma-plum mb-3">Product Details</h3>
+              <h3 className="font-semibold text-oma-plum mb-3">
+                Product Details
+              </h3>
               <div className="flex items-center space-x-3">
                 <div className="w-16 h-16 bg-gray-200 rounded-lg overflow-hidden">
-                  <img 
-                    src={productImage} 
+                  <img
+                    src={productImage}
                     alt={productName}
                     className="w-full h-full object-cover"
                   />
@@ -150,34 +183,48 @@ export function BrandRequestModal({
                 <div>
                   <p className="font-medium text-gray-900">{productName}</p>
                   <p className="text-sm text-gray-600">£{price.toFixed(2)}</p>
-                  {size && <p className="text-sm text-gray-600">Size: {size}</p>}
-                  {color && <p className="text-sm text-gray-600">Color: {color}</p>}
+                  {size && (
+                    <p className="text-sm text-gray-600">Size: {size}</p>
+                  )}
+                  {color && (
+                    <p className="text-sm text-gray-600">Color: {color}</p>
+                  )}
                 </div>
               </div>
             </div>
 
             <div className="space-y-3">
               <div>
-                <Label htmlFor="quantity" className="text-sm font-medium text-oma-cocoa">
+                <Label
+                  htmlFor="quantity"
+                  className="text-sm font-medium text-oma-cocoa"
+                >
                   Quantity
                 </Label>
-                <Select 
-                  value={formData.quantity.toString()} 
-                  onValueChange={(value) => handleInputChange("quantity", parseInt(value))}
+                <Select
+                  value={formData.quantity.toString()}
+                  onValueChange={(value) =>
+                    handleInputChange("quantity", parseInt(value))
+                  }
                 >
                   <SelectTrigger className="border-oma-beige focus:border-oma-plum focus:ring-oma-plum">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {[1, 2, 3, 4, 5].map(num => (
-                      <SelectItem key={num} value={num.toString()}>{num}</SelectItem>
+                    {[1, 2, 3, 4, 5].map((num) => (
+                      <SelectItem key={num} value={num.toString()}>
+                        {num}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
 
               <div>
-                <Label htmlFor="preferred_size" className="text-sm font-medium text-oma-cocoa">
+                <Label
+                  htmlFor="preferred_size"
+                  className="text-sm font-medium text-oma-cocoa"
+                >
                   Preferred Size
                 </Label>
                 <Input
@@ -185,12 +232,17 @@ export function BrandRequestModal({
                   placeholder="e.g., M, L, XL, or custom measurements"
                   className="border-oma-beige focus:border-oma-plum focus:ring-oma-plum"
                   value={formData.preferred_size}
-                  onChange={(e) => handleInputChange("preferred_size", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("preferred_size", e.target.value)
+                  }
                 />
               </div>
 
               <div>
-                <Label htmlFor="preferred_color" className="text-sm font-medium text-oma-cocoa">
+                <Label
+                  htmlFor="preferred_color"
+                  className="text-sm font-medium text-oma-cocoa"
+                >
                   Preferred Color
                 </Label>
                 <Input
@@ -198,7 +250,9 @@ export function BrandRequestModal({
                   placeholder="e.g., Navy, Black, or specific color preference"
                   className="border-oma-beige focus:border-oma-plum focus:ring-oma-plum"
                   value={formData.preferred_color}
-                  onChange={(e) => handleInputChange("preferred_color", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("preferred_color", e.target.value)
+                  }
                 />
               </div>
             </div>
@@ -207,7 +261,10 @@ export function BrandRequestModal({
           {/* Customer Information Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="full_name" className="text-sm font-medium text-oma-cocoa">
+              <Label
+                htmlFor="full_name"
+                className="text-sm font-medium text-oma-cocoa"
+              >
                 Full Name *
               </Label>
               <div className="relative">
@@ -217,14 +274,19 @@ export function BrandRequestModal({
                   placeholder="Your full name"
                   className="pl-10 border-oma-beige focus:border-oma-plum focus:ring-oma-plum"
                   value={formData.full_name}
-                  onChange={(e) => handleInputChange("full_name", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("full_name", e.target.value)
+                  }
                   required
                 />
               </div>
             </div>
 
             <div>
-              <Label htmlFor="email" className="text-sm font-medium text-oma-cocoa">
+              <Label
+                htmlFor="email"
+                className="text-sm font-medium text-oma-cocoa"
+              >
                 Email Address *
               </Label>
               <div className="relative">
@@ -242,7 +304,10 @@ export function BrandRequestModal({
             </div>
 
             <div>
-              <Label htmlFor="phone" className="text-sm font-medium text-oma-cocoa">
+              <Label
+                htmlFor="phone"
+                className="text-sm font-medium text-oma-cocoa"
+              >
                 Phone Number
               </Label>
               <div className="relative">
@@ -259,7 +324,10 @@ export function BrandRequestModal({
             </div>
 
             <div>
-              <Label htmlFor="address_line_1" className="text-sm font-medium text-oma-cocoa">
+              <Label
+                htmlFor="address_line_1"
+                className="text-sm font-medium text-oma-cocoa"
+              >
                 Address Line 1 *
               </Label>
               <div className="relative">
@@ -269,7 +337,9 @@ export function BrandRequestModal({
                   placeholder="Street address, P.O. box, company name"
                   className="pl-10 border-oma-beige focus:border-oma-plum focus:ring-oma-plum"
                   value={formData.address_line_1}
-                  onChange={(e) => handleInputChange("address_line_1", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("address_line_1", e.target.value)
+                  }
                   required
                 />
               </div>
@@ -277,7 +347,10 @@ export function BrandRequestModal({
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label htmlFor="city" className="text-sm font-medium text-oma-cocoa">
+                <Label
+                  htmlFor="city"
+                  className="text-sm font-medium text-oma-cocoa"
+                >
                   City *
                 </Label>
                 <Input
@@ -290,7 +363,10 @@ export function BrandRequestModal({
                 />
               </div>
               <div>
-                <Label htmlFor="state" className="text-sm font-medium text-oma-cocoa">
+                <Label
+                  htmlFor="state"
+                  className="text-sm font-medium text-oma-cocoa"
+                >
                   State/Province
                 </Label>
                 <Input
@@ -305,7 +381,10 @@ export function BrandRequestModal({
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label htmlFor="postal_code" className="text-sm font-medium text-oma-cocoa">
+                <Label
+                  htmlFor="postal_code"
+                  className="text-sm font-medium text-oma-cocoa"
+                >
                   Postal Code *
                 </Label>
                 <Input
@@ -313,12 +392,17 @@ export function BrandRequestModal({
                   placeholder="Postal code"
                   className="border-oma-beige focus:border-oma-plum focus:ring-oma-plum"
                   value={formData.postal_code}
-                  onChange={(e) => handleInputChange("postal_code", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("postal_code", e.target.value)
+                  }
                   required
                 />
               </div>
               <div>
-                <Label htmlFor="country" className="text-sm font-medium text-oma-cocoa">
+                <Label
+                  htmlFor="country"
+                  className="text-sm font-medium text-oma-cocoa"
+                >
                   Country *
                 </Label>
                 <Input
@@ -333,7 +417,10 @@ export function BrandRequestModal({
             </div>
 
             <div>
-              <Label htmlFor="customer_notes" className="text-sm font-medium text-oma-cocoa">
+              <Label
+                htmlFor="customer_notes"
+                className="text-sm font-medium text-oma-cocoa"
+              >
                 Additional Notes
               </Label>
               <div className="relative">
@@ -343,7 +430,9 @@ export function BrandRequestModal({
                   placeholder="Any special requirements, measurements, or questions for the brand..."
                   className="pl-10 border-oma-beige focus:border-oma-plum focus:ring-oma-plum min-h-[80px]"
                   value={formData.customer_notes}
-                  onChange={(e) => handleInputChange("customer_notes", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("customer_notes", e.target.value)
+                  }
                 />
               </div>
             </div>
