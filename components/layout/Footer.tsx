@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Instagram, MessageCircle } from "lucide-react";
+import { Instagram } from "lucide-react";
 
 export default function Footer() {
   return (
@@ -118,6 +118,8 @@ export default function Footer() {
               <li>
                 <a
                   href="https://www.instagram.com/_omahub/"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="text-sm text-oma-cocoa hover:text-oma-plum flex items-center gap-2 group"
                 >
                   <Instagram className="h-4 w-4 transition group-hover:text-oma-plum" />
@@ -127,6 +129,8 @@ export default function Footer() {
               <li>
                 <a
                   href="https://www.tiktok.com/@_omahub"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="text-sm text-oma-cocoa hover:text-oma-plum flex items-center gap-2 group"
                 >
                   <svg
@@ -137,15 +141,6 @@ export default function Footer() {
                     <path d="M19.321 5.562a5.122 5.122 0 01-.443-.258 6.228 6.228 0 01-1.137-.966c-.849-.849-1.377-2.016-1.377-3.338h-3.159v13.8c0 2.748-2.241 4.986-4.986 4.986-2.748 0-4.986-2.241-4.986-4.986s2.241-4.986 4.986-4.986c.516 0 1.014.084 1.479.237v-3.286c-.465-.069-.942-.105-1.479-.105C4.037 6.66 0 10.697 0 15.78s4.037 9.12 9.12 9.12 9.12-4.037 9.12-9.12V9.042a9.158 9.158 0 005.16 1.563V7.446c-1.398 0-2.688-.564-3.616-1.471-.316-.316-.591-.669-.82-1.056-.229-.384-.409-.804-.523-1.257z" />
                   </svg>
                   <span className="expand-underline">TikTok</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://wa.me/message/YOUR_WHATSAPP_NUMBER"
-                  className="text-sm text-oma-cocoa hover:text-oma-plum flex items-center gap-2 group"
-                >
-                  <MessageCircle className="h-4 w-4 transition group-hover:text-oma-plum" />
-                  <span className="expand-underline">Whatsapp</span>
                 </a>
               </li>
             </ul>

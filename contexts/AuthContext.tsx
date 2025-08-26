@@ -45,10 +45,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       "shannonalisa@oma-hub.com",
       "nnamdiohaka@gmail.com",
     ];
-    const legacyBrandAdmins = [
-      "eloka@culturin.com",
-      "eloka.agu96@gmail.com",
-    ];
+    const legacyBrandAdmins = ["eloka@culturin.com", "eloka.agu96@gmail.com"];
 
     if (legacySuperAdmins.includes(email)) {
       return "super_admin";
