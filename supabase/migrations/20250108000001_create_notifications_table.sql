@@ -2,7 +2,8 @@
 CREATE TABLE IF NOT EXISTS public.notifications (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  type TEXT NOT NULL CHECK (type IN ('new_order', 'order_update', 'message', 'system', 'new_account')),
+  brand_id UUID REFERENCES public.brands(id) ON DELETE CASCADE,
+  type TEXT NOT NULL CHECK (type IN ('new_order', 'order_update', 'message', 'system', 'new_account', 'basket_submission', 'new_basket_item')),
   title TEXT NOT NULL,
   message TEXT NOT NULL,
   data JSONB DEFAULT '{}',
@@ -13,6 +14,7 @@ CREATE TABLE IF NOT EXISTS public.notifications (
 
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON public.notifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_brand_id ON public.notifications(brand_id);
 CREATE INDEX IF NOT EXISTS idx_notifications_type ON public.notifications(type);
 CREATE INDEX IF NOT EXISTS idx_notifications_is_read ON public.notifications(is_read);
 CREATE INDEX IF NOT EXISTS idx_notifications_created_at ON public.notifications(created_at);
@@ -24,11 +26,32 @@ ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can view their own notifications" ON public.notifications
   FOR SELECT USING (auth.uid() = user_id);
 
+CREATE POLICY "Brand owners can view brand notifications" ON public.notifications
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM public.brands 
+      WHERE brands.id = notifications.brand_id 
+      AND brands.user_id = auth.uid()
+    )
+  );
+
 CREATE POLICY "Users can update their own notifications" ON public.notifications
   FOR UPDATE USING (auth.uid() = user_id);
 
+CREATE POLICY "Brand owners can update brand notifications" ON public.notifications
+  FOR UPDATE USING (
+    EXISTS (
+      SELECT 1 FROM public.brands 
+      WHERE brands.id = notifications.brand_id 
+      AND brands.user_id = auth.uid()
+    )
+  );
+
 CREATE POLICY "Users can insert their own notifications" ON public.notifications
   FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "System can insert brand notifications" ON public.notifications
+  FOR INSERT WITH CHECK (true);
 
 -- Create function to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_notifications_updated_at()

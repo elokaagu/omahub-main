@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
+import Link from "next/link";
 import { getProductById } from "@/lib/services/productService";
 import { getBrandById } from "@/lib/services/brandService";
 import {
@@ -29,6 +30,7 @@ import {
 import { cn } from "@/lib/utils";
 import { FavouriteButton } from "@/components/ui/favourite-button";
 import { formatProductPrice } from "@/lib/utils/priceFormatter";
+import AddToBasketButton from "@/components/ui/add-to-basket-button";
 
 export default function ProductPage() {
   const params = useParams();
@@ -529,21 +531,42 @@ export default function ProductPage() {
 
             {/* Action Buttons */}
             <div className="space-y-3">
-              <Button
-                onClick={handleOrderClick}
-                disabled={!product.in_stock}
-                className="w-full bg-oma-plum hover:bg-oma-plum/90 text-white py-3"
-                size="lg"
-              >
-                <ShoppingBag className="h-5 w-5 mr-2" />
-                {product.is_custom ? "Order Custom Piece" : "Add to Basket"}
-              </Button>
+              {product.is_custom ? (
+                <Button
+                  onClick={handleOrderClick}
+                  disabled={!product.in_stock}
+                  className="w-full bg-oma-plum hover:bg-oma-plum/90 text-white py-3"
+                  size="lg"
+                >
+                  <Ruler className="h-5 w-5 mr-2" />
+                  Order Custom Piece
+                </Button>
+              ) : (
+                <AddToBasketButton
+                  productId={product.id}
+                  productName={product.title}
+                  productImage={product.image}
+                  price={product.sale_price || product.price}
+                  className="w-full py-3"
+                />
+              )}
 
               <FavouriteButton
                 itemId={product.id}
                 itemType="product"
                 className="w-full"
               />
+              
+              <Button
+                variant="outline"
+                asChild
+                className="w-full"
+              >
+                <Link href="/basket">
+                  <ShoppingBag className="h-5 w-5 mr-2" />
+                  View Basket
+                </Link>
+              </Button>
             </div>
 
             {/* Brand Rating */}

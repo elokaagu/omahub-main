@@ -91,6 +91,42 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Create notification for brand owner
+    try {
+      const { data: brandOwner, error: brandOwnerError } = await supabase
+        .from("brands")
+        .select("user_id")
+        .eq("id", brand_id)
+        .single();
+
+      if (brandOwnerError || !brandOwner?.user_id) {
+        console.error("Error fetching brand owner:", brandOwnerError);
+      } else {
+        await supabase.from("notifications").insert({
+          user_id: brandOwner.user_id,
+          brand_id: brand_id,
+          type: "new_order",
+          title: "New Custom Order Request",
+          message: `New custom order request for ${product.title} from ${delivery_address.full_name}`,
+          data: {
+            order_id: order.id,
+            product_id: product_id,
+            product_title: product.title,
+            customer_name: delivery_address.full_name,
+            customer_email: delivery_address.email,
+            customer_phone: delivery_address.phone,
+            total_amount: total_amount || product.sale_price || product.price,
+            customer_notes: customer_notes,
+          },
+          is_read: false,
+          created_at: new Date().toISOString(),
+        });
+      }
+    } catch (notificationError) {
+      console.error("Error creating notification:", notificationError);
+      // Don't fail the order creation if notification fails
+    }
+
     // Generate order number
     const orderNumber = `OMH-${order.id.slice(-8).toUpperCase()}`;
 

@@ -259,24 +259,36 @@ export async function POST(request: NextRequest) {
     // Create notification for brand owner
     if (product.brand?.id) {
       try {
-        await supabase.from("notifications").insert({
-          brand_id: product.brand.id,
-          user_id: user.id,
-          type: "basket_submission",
-          title: "New Basket Item",
-          message: `${product.title} added to basket`,
-          data: {
-            basket_item_id: basketItem.id,
-            product_id: productId,
-            product_title: product.title,
-            product_price: product.sale_price || product.price,
-            quantity: quantity,
-            size: size,
-            colour: colour,
-            customer_email: user.email,
-            customer_id: user.id,
-          },
-        });
+        // Get the brand owner's user ID
+        const { data: brandOwner, error: brandOwnerError } = await supabase
+          .from("brands")
+          .select("user_id")
+          .eq("id", product.brand.id)
+          .single();
+
+        if (brandOwnerError || !brandOwner?.user_id) {
+          console.error("Error fetching brand owner:", brandOwnerError);
+        } else {
+          // Create notification for the brand owner
+          await supabase.from("notifications").insert({
+            user_id: brandOwner.user_id,
+            brand_id: product.brand.id,
+            type: "new_basket_item",
+            title: "New Basket Item",
+            message: `${product.title} added to basket`,
+            data: {
+              basket_item_id: basketItem.id,
+              product_id: productId,
+              product_title: product.title,
+              product_price: product.sale_price || product.price,
+              quantity: quantity,
+              size: size,
+              colour: colour,
+              customer_email: user.email,
+              customer_id: user.id,
+            },
+          });
+        }
       } catch (notificationError) {
         console.error("Error creating notification:", notificationError);
         // Don't fail the basket operation if notification fails

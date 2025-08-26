@@ -227,6 +227,7 @@ export async function POST(request: NextRequest) {
               .from("notifications")
               .insert({
                 user_id: brandData.brand.user_id,
+                brand_id: brandId,
                 type: "new_order",
                 title: "New Order Received",
                 message: `You have received a new order for £${brandData.total.toFixed(2)} from ${profile?.full_name || user.email?.split("@")[0] || "Customer"}`,
@@ -235,6 +236,9 @@ export async function POST(request: NextRequest) {
                   brand_id: brandId,
                   customer_name: profile?.full_name || user.email?.split("@")[0] || "Customer",
                   total_amount: brandData.total,
+                  items_count: brandData.items.length,
+                  customer_email: user.email,
+                  customer_phone: profile?.phone,
                 },
                 is_read: false,
                 created_at: new Date().toISOString(),
