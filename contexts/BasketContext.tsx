@@ -19,7 +19,6 @@ export interface BasketItem {
   quantity: number;
   size?: string;
   colour?: string;
-  price: number;
   created_at: string;
   updated_at: string;
   products: {
@@ -423,7 +422,10 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
       if (!basket.basket_items || !Array.isArray(basket.basket_items)) {
         return total;
       }
-      return total + basket.basket_items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      return total + basket.basket_items.reduce((sum, item) => {
+        const itemPrice = item.products?.sale_price || item.products?.price || 0;
+        return sum + (itemPrice * item.quantity);
+      }, 0);
     }, 0);
   }, [state.baskets]);
 

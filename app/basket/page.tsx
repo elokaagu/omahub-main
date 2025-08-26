@@ -120,73 +120,81 @@ export default function BasketPage() {
 
           <div className="divide-y divide-gray-200">
             {baskets.map((basket) =>
-              basket.basket_items?.map((item) => (
-                <div
-                  key={item.id}
-                  className="px-6 py-4 flex items-center space-x-4"
-                >
-                  <div className="flex-shrink-0">
-                    <img
-                      src={
-                        item.products?.images?.[0] || "/placeholder-image.jpg"
-                      }
-                      alt={item.products?.title || "Product"}
-                      className="h-20 w-20 object-cover rounded-lg"
-                    />
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-medium text-gray-900 truncate">
-                      {item.products?.title || "Product"}
-                    </h3>
-                    <p className="text-gray-500">
-                      £{item.price?.toFixed(2) || "0.00"}
-                      {item.size && ` • Size: ${item.size}`}
-                      {item.colour && ` • Colour: ${item.colour}`}
-                    </p>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        if (item.quantity > 1) {
-                          updateQuantity(item.id, item.quantity - 1);
-                        }
-                      }}
-                      disabled={item.quantity <= 1}
-                    >
-                      <Minus className="h-4 w-4" />
-                    </Button>
-                    <span className="w-12 text-center text-gray-900 font-medium">
-                      {item.quantity}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-
-                  <div className="text-right">
-                    <p className="text-lg font-semibold text-gray-900">
-                      £{(item.price * item.quantity).toFixed(2)}
-                    </p>
-                  </div>
-
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => removeFromBasket(item.id)}
-                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+              basket.basket_items?.map((item) => {
+                // Skip items that don't have valid product data
+                if (!item.products || !item.products.title) {
+                  console.warn("Basket item missing product data:", item);
+                  return null;
+                }
+                
+                return (
+                  <div
+                    key={item.id}
+                    className="px-6 py-4 flex items-center space-x-4"
                   >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))
+                    <div className="flex-shrink-0">
+                      <img
+                        src={
+                          item.products?.images?.[0] || "/placeholder-image.jpg"
+                        }
+                        alt={item.products?.title || "Product"}
+                        className="h-20 w-20 object-cover rounded-lg"
+                      />
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-lg font-medium text-gray-900 truncate">
+                        {item.products?.title || "Product"}
+                      </h3>
+                      <p className="text-gray-500">
+                        £{(item.products?.sale_price || item.products?.price || 0).toFixed(2)}
+                        {item.size && ` • Size: ${item.size}`}
+                        {item.colour && ` • Colour: ${item.colour}`}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          if (item.quantity > 1) {
+                            updateQuantity(item.id, item.quantity - 1);
+                          }
+                        }}
+                        disabled={item.quantity <= 1}
+                      >
+                        <Minus className="h-4 w-4" />
+                      </Button>
+                      <span className="w-12 text-center text-gray-900 font-medium">
+                        {item.quantity}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+
+                    <div className="text-right">
+                      <p className="text-lg font-semibold text-gray-900">
+                        £{((item.products?.sale_price || item.products?.price || 0) * item.quantity).toFixed(2)}
+                      </p>
+                    </div>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => removeFromBasket(item.id)}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                );
+              }).filter(Boolean) // Remove null items
             )}
           </div>
 
