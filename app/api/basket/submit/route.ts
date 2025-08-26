@@ -165,7 +165,9 @@ export async function POST(request: NextRequest) {
             };
           }
           acc[brandId].items.push(item);
-          acc[brandId].total += item.price * item.quantity;
+          // Use the correct price field from products
+          const itemPrice = item.products?.sale_price || item.products?.price || 0;
+          acc[brandId].total += itemPrice * item.quantity;
         }
         return acc;
       }, {});
@@ -184,13 +186,10 @@ export async function POST(request: NextRequest) {
               user_id: user.id,
               brand_id: brandId,
               status: "pending",
-              total_amount: brandData.total,
-              currency: "GBP",
-              order_type: "basket_submission",
-              customer_name: profile?.full_name || user.email?.split("@")[0] || "Customer",
-              customer_email: user.email,
-              customer_phone: profile?.phone,
-              customer_address: profile?.address,
+              total: brandData.total, // Database uses 'total', not 'total_amount'
+              currency: "GBP", // Database uses 'GBP' instead of 'NGN'
+              delivery_address: profile?.address || {}, // Database expects JSONB
+              customer_notes: `Order submitted from basket`,
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString(),
             })
@@ -207,10 +206,10 @@ export async function POST(request: NextRequest) {
             order_id: order.id,
             product_id: item.product_id,
             quantity: item.quantity,
-            price: item.price,
+            price: item.products?.sale_price || item.products?.price || 0, // Use correct price field
             size: item.size,
-            colour: item.colour,
-            notes: item.notes,
+            color: item.color, // Database uses 'color', not 'colour'
+            // Remove notes field as it doesn't exist in database schema
           }));
 
           const { error: orderItemsError } = await supabase

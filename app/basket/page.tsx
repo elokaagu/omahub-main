@@ -149,7 +149,7 @@ export default function BasketPage() {
                       <p className="text-gray-500">
                         £{(item.products?.sale_price || item.products?.price || 0).toFixed(2)}
                         {item.size && ` • Size: ${item.size}`}
-                        {item.colour && ` • Colour: ${item.colour}`}
+                        {item.color && ` • Colour: ${item.color}`}
                       </p>
                     </div>
 

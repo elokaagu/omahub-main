@@ -161,7 +161,7 @@ export async function POST(request: NextRequest) {
     const supabase = await createAuthenticatedClient();
 
     // Parse request body
-    const { productId, quantity, size, colour } = await request.json();
+    const { productId, quantity, size, color } = await request.json();
 
     if (!productId || !quantity) {
       return NextResponse.json(
@@ -240,7 +240,7 @@ export async function POST(request: NextRequest) {
         product_id: productId,
         quantity: quantity,
         size: size,
-        color: colour, // Database uses 'color', not 'colour'
+        color: color, // Database uses 'color', not 'colour'
       })
       .select()
       .single();
@@ -292,7 +292,7 @@ export async function POST(request: NextRequest) {
               product_price: product.sale_price || product.price,
               quantity: quantity,
               size: size,
-              colour: colour,
+              color: color,
               customer_email: user.email,
               customer_id: user.id,
             },

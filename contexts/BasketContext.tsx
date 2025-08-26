@@ -11,14 +11,14 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { ecommerce } from "@/lib/config/analytics";
 
-// Types - Updated to match actual API response structure
+// Types - Updated to match actual database schema exactly
 export interface BasketItem {
   id: string;
   basket_id: string;
   product_id: string;
   quantity: number;
   size?: string;
-  colour?: string;
+  color?: string; // Database uses 'color', not 'colour'
   created_at: string;
   updated_at: string;
   products: {
@@ -206,12 +206,12 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
   const addToBasket = useCallback(
     async (
       productId: string,
-      quantity: number,
+      quantity: number = 1,
       size?: string,
-      colour?: string
+      color?: string
     ) => {
       if (!user) {
-        toast.error("Please sign in to add items to your basket");
+        toast.error("Please sign in to add items to basket");
         return;
       }
 
@@ -221,7 +221,6 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
 
         const response = await fetch("/api/basket", {
           method: "POST",
-          credentials: "include", // Include cookies for authentication
           headers: {
             "Content-Type": "application/json",
           },
@@ -229,7 +228,7 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
             productId,
             quantity,
             size,
-            colour,
+            color,
           }),
         });
 
@@ -240,35 +239,38 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
         }
 
         // Track add to cart in Google Analytics
-        ecommerce.addToCart({
-          item_id: productId,
-          item_name: data.product?.title || "Product",
-          price: data.product?.price || 0,
-          quantity: quantity,
-          currency: "GBP", // Default to GBP for OmaHub
-          brand: data.product?.brand?.name,
-          category: data.product?.category,
-        });
+        if (typeof window !== "undefined" && (window as any).gtag) {
+          (window as any).gtag("event", "add_to_cart", {
+            currency: "GBP",
+            value: data.basketItem?.products?.price || 0,
+            items: [
+              {
+                item_id: productId,
+                item_name: data.basketItem?.products?.title || "Product",
+                quantity: quantity,
+                price: data.basketItem?.products?.price || 0,
+              },
+            ],
+          });
+        }
 
         // Update basket state with the returned data if available
         if (data.updatedBasket) {
           // Update the specific basket in the state
-          dispatch({ 
-            type: "UPDATE_BASKET", 
-            payload: { basketId: data.updatedBasket.id, basket: data.updatedBasket } 
+          dispatch({
+            type: "UPDATE_BASKET",
+            payload: { basketId: data.updatedBasket.id, basket: data.updatedBasket }
           });
         } else {
           // Fallback: refresh baskets to get updated state
           await fetchBaskets();
         }
-        
+
         toast.success("Item added to basket");
       } catch (error) {
-        console.error("Error adding to basket:", error);
+        console.error("Error adding item to basket:", error);
         const errorMessage =
-          error instanceof Error
-            ? error.message
-            : "Failed to add item to basket";
+          error instanceof Error ? error.message : "Failed to add item to basket";
         dispatch({ type: "SET_ERROR", payload: errorMessage });
         toast.error(errorMessage);
       } finally {

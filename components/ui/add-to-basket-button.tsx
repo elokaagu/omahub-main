@@ -14,8 +14,10 @@ interface AddToBasketButtonProps {
   productImage: string;
   price: number;
   size?: string;
-  colour?: string;
+  color?: string;
   className?: string;
+  variant?: "default" | "outline" | "secondary" | "ghost" | "link" | "destructive";
+  disabled?: boolean;
 }
 
 export default function AddToBasketButton({
@@ -24,8 +26,10 @@ export default function AddToBasketButton({
   productImage,
   price,
   size,
-  colour,
-  className = "",
+  color,
+  className,
+  variant = "default",
+  disabled = false,
 }: AddToBasketButtonProps) {
   
   const { user } = useAuth();
@@ -55,7 +59,7 @@ export default function AddToBasketButton({
     
     setIsAdding(true);
     try {
-      await addToBasket(productId, 1, size, colour);
+      await addToBasket(productId, 1, size, color);
     } finally {
       setIsAdding(false);
     }
