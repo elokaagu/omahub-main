@@ -37,8 +37,7 @@ export interface BasketItem {
 export interface Basket {
   id: string;
   user_id: string;
-  total_items: number;
-  total_price: number;
+  brand_id: string;
   created_at: string;
   updated_at: string;
   basket_items: BasketItem[];
@@ -86,10 +85,6 @@ function basketReducer(state: BasketState, action: BasketAction): BasketState {
             ? {
                 ...basket,
                 basket_items: [...basket.basket_items, action.payload.item],
-                total_items: basket.total_items + action.payload.item.quantity,
-                total_price:
-                  basket.total_price +
-                  action.payload.item.price * action.payload.item.quantity,
               }
             : basket
         ),
@@ -104,19 +99,6 @@ function basketReducer(state: BasketState, action: BasketAction): BasketState {
                 basket_items: basket.basket_items.filter(
                   (item) => item.id !== action.payload.itemId
                 ),
-                total_items: basket.basket_items
-                  .filter((item) => item.id !== action.payload.itemId)
-                  .reduce(
-                    (sum: number, item: BasketItem) => sum + item.quantity,
-                    0
-                  ),
-                total_price: basket.basket_items
-                  .filter((item) => item.id !== action.payload.itemId)
-                  .reduce(
-                    (sum: number, item: BasketItem) =>
-                      sum + item.price * item.quantity,
-                    0
-                  ),
               }
             : basket
         ),
@@ -133,23 +115,6 @@ function basketReducer(state: BasketState, action: BasketAction): BasketState {
                     ? { ...item, quantity: action.payload.quantity }
                     : item
                 ),
-                total_items: basket.basket_items.reduce(
-                  (sum: number, item: BasketItem) =>
-                    sum +
-                    (item.id === action.payload.itemId
-                      ? action.payload.quantity
-                      : item.quantity),
-                  0
-                ),
-                total_price: basket.basket_items.reduce(
-                  (sum: number, item: BasketItem) =>
-                    sum +
-                    item.price *
-                      (item.id === action.payload.itemId
-                        ? action.payload.quantity
-                        : item.quantity),
-                  0
-                ),
               }
             : basket
         ),
@@ -159,7 +124,7 @@ function basketReducer(state: BasketState, action: BasketAction): BasketState {
         ...state,
         baskets: state.baskets.map((basket) =>
           basket.id === action.payload
-            ? { ...basket, basket_items: [], total_items: 0, total_price: 0 }
+            ? { ...basket, basket_items: [] }
             : basket
         ),
       };
@@ -422,13 +387,10 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
       return 0;
     }
     return state.baskets.reduce((total, basket) => {
-      const basketTotal = basket?.total_items;
-      return (
-        total +
-        (typeof basketTotal === "number" && !isNaN(basketTotal)
-          ? basketTotal
-          : 0)
-      );
+      if (!basket.basket_items || !Array.isArray(basket.basket_items)) {
+        return total;
+      }
+      return total + basket.basket_items.reduce((sum, item) => sum + item.quantity, 0);
     }, 0);
   }, [state.baskets]);
 
@@ -438,13 +400,10 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
       return 0;
     }
     return state.baskets.reduce((total, basket) => {
-      const basketPrice = basket?.total_price;
-      return (
-        total +
-        (typeof basketPrice === "number" && !isNaN(basketPrice)
-          ? basketPrice
-          : 0)
-      );
+      if (!basket.basket_items || !Array.isArray(basket.basket_items)) {
+        return total;
+      }
+      return total + basket.basket_items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     }, 0);
   }, [state.baskets]);
 

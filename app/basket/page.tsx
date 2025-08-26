@@ -76,11 +76,10 @@ export default function BasketPage() {
   }
 
   const totalItems = baskets.reduce((sum, basket) => {
-    const basketTotal = basket?.total_items;
-    return (
-      sum +
-      (typeof basketTotal === "number" && !isNaN(basketTotal) ? basketTotal : 0)
-    );
+    if (!basket.basket_items || !Array.isArray(basket.basket_items)) {
+      return sum;
+    }
+    return sum + basket.basket_items.reduce((itemSum, item) => itemSum + item.quantity, 0);
   }, 0);
   const totalPrice = getTotalPrice();
 
