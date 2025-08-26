@@ -3,11 +3,8 @@ import { CheckCircle, Star } from "@/components/ui/icons";
 import { cn } from "@/lib/utils";
 import { AuthImage } from "./auth-image";
 import { VideoPlayer } from "./video-player";
-import { Heart } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import useFavourites from "@/lib/hooks/useFavourites";
-import { useState, useEffect } from "react";
-import { useToast } from "@/components/ui/use-toast";
+import { useEffect } from "react";
 
 interface BrandCardProps {
   id: string;
@@ -37,9 +34,6 @@ export function BrandCard({
   video_thumbnail,
 }: BrandCardProps) {
   const { user } = useAuth();
-  const { isFavourite, toggleFavourite } = useFavourites();
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
 
   // Debug logging for slow loading issues
   useEffect(() => {
@@ -53,43 +47,6 @@ export function BrandCard({
       });
     }
   }, [name, image, video_url, video_thumbnail]);
-
-  const isFavourited = isFavourite(id, "brand");
-
-  const handleToggleFavourite = async (e: React.MouseEvent) => {
-    e.preventDefault(); // Prevent navigation
-    e.stopPropagation();
-
-    if (!user) {
-      toast({
-        title: "Please sign in",
-        description: "You need to sign in to save favourites.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-      await toggleFavourite(id, "brand");
-
-      toast({
-        title: isFavourited ? "Removed from favourites" : "Added to favourites",
-        description: isFavourited
-          ? "Brand has been removed from your favourites."
-          : "Brand has been added to your favourites.",
-      });
-    } catch (error) {
-      console.error("Error toggling favourite:", error);
-      toast({
-        title: "Error",
-        description: "Failed to update favourites. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   return (
     <NavigationLink
@@ -146,28 +103,6 @@ export function BrandCard({
         )}
         {/* Smooth dark overlay on hover */}
         <div className="absolute inset-0 pointer-events-none transition-all duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] bg-black/0 group-hover:bg-black/40 group-hover:backdrop-blur-sm z-10" />
-
-        {/* Favourite button - positioned in top right */}
-        <div className="absolute top-3 right-3 z-30">
-          <button
-            onClick={handleToggleFavourite}
-            disabled={isLoading}
-            className={cn(
-              "p-2 rounded-full transition-all duration-200",
-              isFavourited
-                ? "bg-oma-plum text-white shadow-lg"
-                : "bg-white/90 text-gray-700 hover:bg-white hover:shadow-md"
-            )}
-          >
-            <Heart
-              className={cn(
-                "h-5 w-5 transition-all duration-200",
-                isFavourited ? "fill-current" : ""
-              )}
-              fill={isFavourited ? "currentColor" : "none"}
-            />
-          </button>
-        </div>
 
         {/* Overlay content at the bottom (always visible) */}
         <div className="absolute bottom-0 left-0 w-full z-20 p-4 bg-gradient-to-t from-black/60 via-black/30 to-transparent flex flex-col gap-1">

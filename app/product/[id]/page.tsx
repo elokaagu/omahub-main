@@ -30,6 +30,7 @@ import {
 import { cn } from "@/lib/utils";
 import { formatProductPrice } from "@/lib/utils/priceFormatter";
 import AddToBasketButton from "@/components/ui/add-to-basket-button";
+import { FavouriteButton } from "@/components/ui/favourite-button";
 
 export default function ProductPage() {
   const params = useParams();
@@ -549,6 +550,12 @@ export default function ProductPage() {
                   className="w-full py-3"
                 />
               )}
+
+              <FavouriteButton
+                itemId={product.id}
+                itemType="product"
+                className="w-full"
+              />
               
               <Button
                 variant="outline"
