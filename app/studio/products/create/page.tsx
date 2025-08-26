@@ -105,6 +105,7 @@ export default function CreateProductPage() {
     care_instructions: "",
     is_custom: false,
     lead_time: "",
+    currency: "USD", // Add currency field
     // Tailor-specific fields
     consultation_fee: "",
     specialties: [] as string[],
@@ -188,27 +189,40 @@ export default function CreateProductPage() {
     }
   }, [formData.brand_id, catalogues]);
 
-  // Function to extract currency symbol from brand price range
-  const extractCurrencyFromBrand = (brandId: string): string => {
+  // Function to get currency from brand (using the actual currency field)
+  const getBrandCurrency = (brandId: string): string => {
     const selectedBrand = brands.find((brand) => brand.id === brandId);
-    if (!selectedBrand || !selectedBrand.price_range) {
-      return "USD"; // Default to USD instead of Naira
+    if (!selectedBrand) {
+      return "USD"; // Default fallback
     }
+    
+    // Use the dedicated currency field if available, otherwise fallback to parsing price_range
+    if (selectedBrand.currency) {
+      return selectedBrand.currency;
+    }
+    
+    // Fallback: try to extract from price_range (legacy support)
+    if (selectedBrand.price_range) {
+      const priceRangeMatch = selectedBrand.price_range.match(
+        /^(.+?)(\d+(?:,\d+)*)\s*-\s*(.+?)(\d+(?:,\d+)*)$/
+      );
 
-    // Parse price range to extract currency symbol (e.g., "₦15,000 - ₦120,000")
-    const priceRangeMatch = selectedBrand.price_range.match(
-      /^(.+?)(\d+(?:,\d+)*)\s*-\s*(.+?)(\d+(?:,\d+)*)$/
-    );
-
-    if (priceRangeMatch) {
-      const [, symbol1] = priceRangeMatch;
-      const foundCurrency = CURRENCIES.find((c) => c.symbol === symbol1.trim());
-      if (foundCurrency) {
-        return foundCurrency.symbol;
+      if (priceRangeMatch) {
+        const [, symbol1] = priceRangeMatch;
+        const foundCurrency = CURRENCIES.find((c) => c.symbol === symbol1.trim());
+        if (foundCurrency) {
+          return foundCurrency.code; // Return currency code, not symbol
+        }
       }
     }
 
     return "USD"; // Default fallback
+  };
+
+  // Function to get currency symbol from currency code
+  const getCurrencySymbol = (currencyCode: string): string => {
+    const currency = CURRENCIES.find((c) => c.code === currencyCode);
+    return currency ? currency.symbol : "$";
   };
 
   // Tailor-specific categories
@@ -284,8 +298,14 @@ export default function CreateProductPage() {
       }));
 
       // Update currency symbol based on selected brand
-      const newCurrency = extractCurrencyFromBrand(value as string);
+      const newCurrency = getBrandCurrency(value as string);
       setSelectedBrandCurrency(newCurrency);
+      
+      // Automatically set the product currency to match the brand
+      setFormData((prev) => ({
+        ...prev,
+        currency: newCurrency,
+      }));
     }
   };
 
@@ -452,6 +472,7 @@ export default function CreateProductPage() {
         in_stock: formData.in_stock,
         sizes: formData.sizes.length > 0 ? formData.sizes : [],
         colors: formData.colors.length > 0 ? formData.colors : [],
+        currency: formData.currency, // Add currency field
         // Only include these fields if they exist in the database schema
         ...(formData.materials.length > 0 && { materials: formData.materials }),
         ...(formData.care_instructions && {
@@ -746,7 +767,7 @@ export default function CreateProductPage() {
               <CardTitle className="text-black">Brand & Collection</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="brand" className="text-black">
                     Brand *
@@ -778,6 +799,38 @@ export default function CreateProductPage() {
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="currency" className="text-black">
+                    Currency *
+                  </Label>
+                  <Select
+                    value={formData.currency}
+                    onValueChange={(value) =>
+                      handleInputChange("currency", value)
+                    }
+                  >
+                    <SelectTrigger className="border-oma-cocoa/20 focus:border-oma-plum">
+                      <SelectValue placeholder="Select currency" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CURRENCIES.map((currency) => (
+                        <SelectItem key={currency.code} value={currency.code}>
+                          <div className="flex items-center gap-2">
+                            <span>{currency.symbol}</span>
+                            <span>{currency.code}</span>
+                            <span className="text-gray-500">({currency.name})</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {formData.brand_id && (
+                    <p className="text-xs text-muted-foreground">
+                      Auto-synced with {brands.find(b => b.id === formData.brand_id)?.name} ({getCurrencySymbol(formData.currency)})
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-2">

@@ -339,6 +339,7 @@ export async function createProduct(
       in_stock: productData.in_stock ?? true,
       sizes: productData.sizes || [],
       colors: productData.colors || [],
+      currency: productData.currency || "USD", // Add currency field
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
