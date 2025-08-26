@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAuthModalContext } from "@/contexts/AuthModalContext";
 import {
   Product,
   Brand,
@@ -39,6 +40,7 @@ import {
 import { cn } from "@/lib/utils";
 import { formatProductPrice } from "@/lib/utils/priceFormatter";
 import { engagement } from "@/lib/config/analytics";
+import { toast } from "sonner";
 
 interface TailoredOrderModalProps {
   product: Product;
@@ -54,6 +56,7 @@ export function TailoredOrderModal({
   onClose,
 }: TailoredOrderModalProps) {
   const { user } = useAuth();
+  const { openAuthModal } = useAuthModalContext();
   const [currentTab, setCurrentTab] = useState("measurements");
   const [loading, setLoading] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
@@ -98,12 +101,16 @@ export function TailoredOrderModal({
 
   const handleSubmitOrder = async () => {
     if (!user) {
-      alert("Please sign in to submit an order.");
+      openAuthModal({
+        title: "Sign In Required",
+        message: "Please sign in to submit your custom order request.",
+        showSignUp: true
+      });
       return;
     }
 
     if (!isFormValid()) {
-      alert("Please fill in all required delivery information.");
+      toast.error("Please fill in all required delivery information.");
       return;
     }
 
@@ -139,7 +146,7 @@ export function TailoredOrderModal({
       setOrderComplete(true);
     } catch (error) {
       console.error("Error creating order:", error);
-      alert("Failed to create order. Please try again.");
+      toast.error("Failed to create order. Please try again.");
     } finally {
       setLoading(false);
     }
