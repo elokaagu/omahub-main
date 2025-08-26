@@ -86,6 +86,15 @@ export async function safeDbOperation<T>(
 }
 
 // Types based on your current data model
+export type BrandImage = {
+  id: string;
+  brand_id: string;
+  role: string;
+  storage_path: string;
+  created_at: string;
+  updated_at: string;
+};
+
 export type Brand = {
   id: string;
   name: string;
