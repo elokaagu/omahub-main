@@ -181,9 +181,10 @@ export default function LeadsTrackingDashboard({
   const [leadsError, setLeadsError] = useState<string | null>(null);
   const [analyticsError, setAnalyticsError] = useState<string | null>(null);
   const [platformError, setPlatformError] = useState<string | null>(null);
-  const [vercelAnalytics, setVercelAnalytics] = useState<any>(null);
-  const [vercelLoading, setVercelLoading] = useState(true);
-  const [vercelError, setVercelError] = useState<string | null>(null);
+  // Google Analytics state variables - commented out for future use
+  // const [vercelAnalytics, setVercelAnalytics] = useState<any>(null);
+  // const [vercelLoading, setVercelLoading] = useState(true);
+  // const [vercelError, setVercelError] = useState<string | null>(null);
 
   // Inline editing states
   const [updatingLead, setUpdatingLead] = useState<string | null>(null);
@@ -345,29 +346,29 @@ export default function LeadsTrackingDashboard({
       fetchLeads();
       fetchAnalytics();
       fetchPlatformAnalytics();
-      // Fetch Vercel Analytics
-      async function fetchVercelAnalytics() {
-        setVercelLoading(true);
-        setVercelError(null);
-        try {
-          // Call the actual Vercel Analytics API endpoint
-          const res = await fetch("/api/analytics/pageviews");
-          if (!res.ok) {
-            const err = await res.json();
-            setVercelError(err.error || "Failed to fetch Vercel analytics");
-            setVercelAnalytics(null);
-          } else {
-            const data = await res.json();
-            setVercelAnalytics(data);
-          }
-        } catch (error) {
-          setVercelError("Failed to fetch Vercel analytics");
-          setVercelAnalytics(null);
-        } finally {
-          setVercelLoading(false);
-        }
-      }
-      fetchVercelAnalytics();
+      // Google Analytics function - commented out for future use
+      // async function fetchVercelAnalytics() {
+      //   setVercelLoading(true);
+      //   setVercelError(null);
+      //   try {
+      //     // Call the actual Vercel Analytics API endpoint
+      //     const res = await fetch("/api/analytics/pageviews");
+      //     if (!res.ok) {
+      //       const err = await res.json();
+      //       setVercelError(err.error || "Failed to fetch Vercel analytics");
+      //       setVercelAnalytics(null);
+      //   } else {
+      //       const data = await res.json();
+      //       setVercelAnalytics(data);
+      //   }
+      // } catch (error) {
+      //   setVercelError("Failed to fetch Vercel analytics");
+      //   setVercelAnalytics(null);
+      // } finally {
+      //   setVercelLoading(false);
+      // }
+      // }
+      // fetchVercelAnalytics();
     }
   }, [user, currentPage, filters]);
 
@@ -1064,8 +1065,8 @@ export default function LeadsTrackingDashboard({
         </CardContent>
       </Card>
 
-      {/* Google Analytics Section - Super Admin Only */}
-      {isSuperAdmin && (
+      {/* Google Analytics Section - Super Admin Only - Commented out for future use */}
+      {/* {isSuperAdmin && (
         <Card className="border-oma-beige mt-6">
           <CardHeader className="bg-oma-cream/30">
             <div className="flex justify-between items-center">
@@ -1100,7 +1101,7 @@ export default function LeadsTrackingDashboard({
           </CardHeader>
           <CardContent className="p-6">
             {/* Data Source Info */}
-            {vercelAnalytics?.source !== "vercel" && (
+            {/* {vercelAnalytics?.source !== "vercel" && (
               <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                 <div className="flex items-center gap-2 text-yellow-800">
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -1118,7 +1119,7 @@ export default function LeadsTrackingDashboard({
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {/* Page Views */}
-              <div className="text-center p-4 bg-oma-cream/20 rounded-lg border border-oma-beige">
+              {/* <div className="text-center p-4 bg-oma-cream/20 rounded-lg border border-oma-beige">
                 <div className="text-2xl font-bold text-oma-plum">
                   {vercelAnalytics?.pageviews?.toLocaleString() ||
                     platformAnalytics?.totalPageViews?.toLocaleString() ||
@@ -1133,7 +1134,7 @@ export default function LeadsTrackingDashboard({
               </div>
 
               {/* Unique Visitors */}
-              <div className="text-center p-4 bg-oma-cream/20 rounded-lg border border-oma-beige">
+              {/* <div className="text-center p-4 bg-oma-cream/20 rounded-lg border border-oma-beige">
                 <div className="text-2xl font-bold text-oma-plum">
                   {vercelAnalytics?.visitors?.toLocaleString() || "342"}
                 </div>
@@ -1146,7 +1147,7 @@ export default function LeadsTrackingDashboard({
               </div>
 
               {/* Conversion Rate */}
-              <div className="text-center p-4 bg-oma-cream/20 rounded-lg border border-oma-beige">
+              {/* <div className="text-center p-4 bg-oma-cream/20 rounded-lg border border-oma-beige">
                 <div className="text-2xl font-bold text-oma-plum">
                   {analytics?.conversion_rate
                     ? `${(analytics.conversion_rate * 100).toFixed(1)}%`
@@ -1161,7 +1162,7 @@ export default function LeadsTrackingDashboard({
               </div>
 
               {/* Top Performing Page */}
-              <div className="text-center p-4 bg-oma-cream/20 rounded-lg border border-oma-beige">
+              {/* <div className="text-center p-4 bg-oma-cream/20 rounded-lg border border-oma-beige">
                 <div className="text-lg font-bold text-oma-plum truncate">
                   {vercelAnalytics?.top_page || "Directory"}
                 </div>
@@ -1175,11 +1176,11 @@ export default function LeadsTrackingDashboard({
             </div>
 
             {/* Traffic Sources */}
-            <div className="mt-6">
+            {/* <div className="mt-6">
               <h4 className="font-medium text-oma-plum mb-3">
                 Traffic Sources
               </h4>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {vercelAnalytics?.sources &&
                 Object.keys(vercelAnalytics.sources).length > 0 ? (
                   Object.entries(vercelAnalytics.sources).map(
@@ -1233,7 +1234,7 @@ export default function LeadsTrackingDashboard({
             </div>
 
             {/* Recent Activity */}
-            <div className="mt-6">
+            {/* <div className="mt-6">
               <h4 className="font-medium text-oma-plum mb-3">
                 Recent Activity
               </h4>
@@ -1266,7 +1267,7 @@ export default function LeadsTrackingDashboard({
             </div>
           </CardContent>
         </Card>
-      )}
+      )} */}
     </div>
   );
 }
