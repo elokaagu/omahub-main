@@ -180,7 +180,7 @@ export default function ProductPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Product Images and Video */}
           <div className="space-y-4">
-            <div className="aspect-square relative overflow-hidden rounded-lg bg-gray-100">
+            <div className="aspect-[3/4] relative overflow-hidden rounded-lg bg-gray-100">
               {product.video_url &&
               (selectedImage === -1 || selectedImage === 0) ? (
                 <VideoPlayer
@@ -203,7 +203,7 @@ export default function ProductPage() {
                   }
                   alt={product.title}
                   className="w-full h-full"
-                  aspectRatio="square"
+                  aspectRatio="3/4"
                   autoPlay={true}
                   muted={true}
                   loop={true}
@@ -239,7 +239,7 @@ export default function ProductPage() {
                   }
                   alt={product.title}
                   className="w-full h-full"
-                  aspectRatio="square"
+                  aspectRatio="3/4"
                   autoPlay={true}
                   muted={true}
                   loop={true}
@@ -261,6 +261,7 @@ export default function ProductPage() {
                   width={600}
                   height={600}
                   className="w-full h-full object-cover"
+                  aspectRatio="portrait"
                 />
               )}
             </div>
@@ -273,7 +274,7 @@ export default function ProductPage() {
                   <button
                     onClick={() => setSelectedImage(-1)}
                     className={cn(
-                      "flex-shrink-0 w-20 h-20 rounded-md overflow-hidden border-2 relative",
+                      "flex-shrink-0 w-20 h-28 rounded-md overflow-hidden border-2 relative",
                       selectedImage === -1
                         ? "border-oma-plum ring-2 ring-oma-plum/20"
                         : "border-gray-200 hover:border-gray-300"
@@ -285,6 +286,7 @@ export default function ProductPage() {
                       width={80}
                       height={80}
                       className="w-full h-full object-cover"
+                      aspectRatio="portrait"
                     />
                     <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
                       <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
@@ -300,7 +302,7 @@ export default function ProductPage() {
                   <button
                     onClick={() => setSelectedImage(-2)}
                     className={cn(
-                      "flex-shrink-0 w-20 h-20 rounded-md overflow-hidden border-2 relative",
+                      "flex-shrink-0 w-20 h-28 rounded-md overflow-hidden border-2 relative",
                       selectedImage === -2
                         ? "border-oma-plum ring-2 ring-oma-plum/20"
                         : "border-gray-200 hover:border-gray-300"
@@ -316,6 +318,7 @@ export default function ProductPage() {
                       width={80}
                       height={80}
                       className="w-full h-full object-cover"
+                      aspectRatio="portrait"
                     />
                     <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
                       <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
@@ -332,10 +335,10 @@ export default function ProductPage() {
                     key={index}
                     onClick={() => setSelectedImage(index)}
                     className={cn(
-                      "flex-shrink-0 w-20 h-20 rounded-md overflow-hidden border-2",
+                      "flex-shrink-0 w-20 h-28 rounded-md overflow-hidden border-2",
                       selectedImage === index
                         ? "border-oma-plum ring-2 ring-oma-plum/20"
-                        : "border-gray-200 hover:border-gray-300"
+                        : "border-gray-300 hover:border-gray-400"
                     )}
                   >
                     <AuthImage
@@ -344,6 +347,7 @@ export default function ProductPage() {
                       width={80}
                       height={80}
                       className="w-full h-full object-cover"
+                      aspectRatio="portrait"
                     />
                     {selectedImage === index && (
                       <div className="absolute -top-1 -right-1 w-3 h-3 bg-oma-plum rounded-full"></div>
