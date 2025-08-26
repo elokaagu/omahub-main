@@ -283,30 +283,6 @@ export function AuthRequiredModal({
             </Button>
           </div>
         </div>
-
-        {/* Quick Action Links */}
-        <div className="mt-6 pt-4 border-t border-oma-beige">
-          <div className="grid grid-cols-2 gap-3">
-            <Link href="/login">
-              <Button
-                variant="outline"
-                className="w-full text-xs py-2 border-oma-beige text-oma-cocoa hover:bg-oma-beige/10"
-              >
-                <User className="h-3 w-3 mr-1" />
-                Sign In
-              </Button>
-            </Link>
-            <Link href="/signup">
-              <Button
-                variant="outline"
-                className="w-full text-xs py-2 border-oma-beige text-oma-cocoa hover:bg-oma-beige/10"
-              >
-                <User className="h-3 w-3 mr-1" />
-                Sign Up
-              </Button>
-            </Link>
-          </div>
-        </div>
       </DialogContent>
     </Dialog>
   );
