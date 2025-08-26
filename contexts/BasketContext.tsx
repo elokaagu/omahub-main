@@ -59,7 +59,8 @@ type BasketAction =
       type: "UPDATE_QUANTITY";
       payload: { basketId: string; itemId: string; quantity: number };
     }
-  | { type: "CLEAR_BASKET"; payload: string };
+  | { type: "CLEAR_BASKET"; payload: string }
+  | { type: "UPDATE_BASKET"; payload: { basketId: string; basket: Basket } };
 
 // Initial state
 const initialState: BasketState = {
@@ -125,6 +126,15 @@ function basketReducer(state: BasketState, action: BasketAction): BasketState {
         baskets: state.baskets.map((basket) =>
           basket.id === action.payload
             ? { ...basket, basket_items: [] }
+            : basket
+        ),
+      };
+    case "UPDATE_BASKET":
+      return {
+        ...state,
+        baskets: state.baskets.map((basket) =>
+          basket.id === action.payload.basketId
+            ? action.payload.basket
             : basket
         ),
       };
@@ -241,8 +251,18 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
           category: data.product?.category,
         });
 
-        // Refresh baskets to get updated state
-        await fetchBaskets();
+        // Update basket state with the returned data if available
+        if (data.updatedBasket) {
+          // Update the specific basket in the state
+          dispatch({ 
+            type: "UPDATE_BASKET", 
+            payload: { basketId: data.updatedBasket.id, basket: data.updatedBasket } 
+          });
+        } else {
+          // Fallback: refresh baskets to get updated state
+          await fetchBaskets();
+        }
+        
         toast.success("Item added to basket");
       } catch (error) {
         console.error("Error adding to basket:", error);

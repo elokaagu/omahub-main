@@ -88,7 +88,7 @@ export async function GET() {
       );
     }
 
-    console.log("Basket API: User authenticated:", user.id);
+    console.log("Basket API GET: User authenticated:", user.id);
 
     const supabase = await createAuthenticatedClient();
 
@@ -120,6 +120,11 @@ export async function GET() {
         { error: "Failed to fetch baskets" },
         { status: 500 }
       );
+    }
+
+    console.log("Basket API GET: Found baskets:", baskets?.length || 0, "baskets");
+    if (baskets && baskets.length > 0) {
+      console.log("Basket API GET: First basket items:", baskets[0].basket_items?.length || 0, "items");
     }
 
     return NextResponse.json({
@@ -299,12 +304,53 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Fetch the complete updated basket data to return to frontend
+    const { data: updatedBasket, error: fetchBasketError } = await supabase
+      .from("baskets")
+      .select(
+        `
+        *,
+        basket_items (
+          *,
+          products (
+            id,
+            title,
+            price,
+            sale_price,
+            images,
+            brand:brands(name)
+          )
+        )
+      `
+      )
+      .eq("id", basket.id)
+      .single();
+
+    if (fetchBasketError) {
+      console.error("Error fetching updated basket:", fetchBasketError);
+      // Still return success, but without the updated basket data
+      return NextResponse.json({
+        message: "Item added to basket successfully",
+        basketItem: {
+          ...basketItem,
+          product: product,
+        },
+        user: {
+          id: user.id,
+          email: user.email,
+        },
+      });
+    }
+
+    console.log("Basket API POST: Successfully added item, updated basket has", updatedBasket?.basket_items?.length || 0, "items");
+
     return NextResponse.json({
       message: "Item added to basket successfully",
       basketItem: {
         ...basketItem,
         product: product,
       },
+      updatedBasket: updatedBasket,
       user: {
         id: user.id,
         email: user.email,
