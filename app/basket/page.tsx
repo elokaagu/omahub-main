@@ -37,7 +37,7 @@ export default function BasketPage() {
   }
 
   const totalItems = baskets.reduce(
-    (sum, basket) => sum + basket.totalItems,
+    (sum, basket) => sum + basket.total_items,
     0
   );
   const totalPrice = getTotalPrice();
@@ -79,25 +79,25 @@ export default function BasketPage() {
 
           <div className="divide-y divide-gray-200">
             {baskets.map((basket) =>
-              basket.items.map((item) => (
+              basket.basket_items?.map((item) => (
                 <div
                   key={item.id}
                   className="px-6 py-4 flex items-center space-x-4"
                 >
                   <div className="flex-shrink-0">
                     <img
-                      src={item.productImage}
-                      alt={item.productName}
+                      src={item.products?.images?.[0] || "/placeholder-image.jpg"}
+                      alt={item.products?.title || "Product"}
                       className="h-20 w-20 object-cover rounded-lg"
                     />
                   </div>
 
                   <div className="flex-1 min-w-0">
                     <h3 className="text-lg font-medium text-gray-900 truncate">
-                      {item.productName}
+                      {item.products?.title || "Product"}
                     </h3>
                     <p className="text-gray-500">
-                      £{item.price.toFixed(2)}
+                      £{item.price?.toFixed(2) || "0.00"}
                       {item.size && ` • Size: ${item.size}`}
                       {item.colour && ` • Colour: ${item.colour}`}
                     </p>

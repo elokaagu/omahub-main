@@ -11,28 +11,37 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { ecommerce } from "@/lib/config/analytics";
 
-// Types
+// Types - Updated to match actual API response structure
 export interface BasketItem {
   id: string;
-  productId: string;
-  productName: string;
-  productImage: string;
-  price: number;
+  basket_id: string;
+  product_id: string;
   quantity: number;
   size?: string;
   colour?: string;
-  createdAt: string;
-  updatedAt: string;
+  price: number;
+  created_at: string;
+  updated_at: string;
+  products: {
+    id: string;
+    title: string;
+    price: number;
+    sale_price?: number;
+    images: string[];
+    brand: {
+      name: string;
+    };
+  };
 }
 
 export interface Basket {
   id: string;
-  userId: string;
-  items: BasketItem[];
-  totalItems: number;
-  totalPrice: number;
-  createdAt: string;
-  updatedAt: string;
+  user_id: string;
+  total_items: number;
+  total_price: number;
+  created_at: string;
+  updated_at: string;
+  basket_items: BasketItem[];
 }
 
 interface BasketState {
@@ -76,10 +85,10 @@ function basketReducer(state: BasketState, action: BasketAction): BasketState {
           basket.id === action.payload.basketId
             ? {
                 ...basket,
-                items: [...basket.items, action.payload.item],
-                totalItems: basket.totalItems + action.payload.item.quantity,
-                totalPrice:
-                  basket.totalPrice +
+                basket_items: [...basket.basket_items, action.payload.item],
+                total_items: basket.total_items + action.payload.item.quantity,
+                total_price:
+                  basket.total_price +
                   action.payload.item.price * action.payload.item.quantity,
               }
             : basket
@@ -92,15 +101,15 @@ function basketReducer(state: BasketState, action: BasketAction): BasketState {
           basket.id === action.payload.basketId
             ? {
                 ...basket,
-                items: basket.items.filter(
+                basket_items: basket.basket_items.filter(
                   (item) => item.id !== action.payload.itemId
                 ),
-                totalItems: basket.items
+                total_items: basket.basket_items
                   .filter((item) => item.id !== action.payload.itemId)
-                  .reduce((sum, item) => sum + item.quantity, 0),
-                totalPrice: basket.items
+                  .reduce((sum: number, item: BasketItem) => sum + item.quantity, 0),
+                total_price: basket.basket_items
                   .filter((item) => item.id !== action.payload.itemId)
-                  .reduce((sum, item) => sum + item.price * item.quantity, 0),
+                  .reduce((sum: number, item: BasketItem) => sum + item.price * item.quantity, 0),
               }
             : basket
         ),
@@ -112,21 +121,21 @@ function basketReducer(state: BasketState, action: BasketAction): BasketState {
           basket.id === action.payload.basketId
             ? {
                 ...basket,
-                items: basket.items.map((item) =>
+                basket_items: basket.basket_items.map((item) =>
                   item.id === action.payload.itemId
                     ? { ...item, quantity: action.payload.quantity }
                     : item
                 ),
-                totalItems: basket.items.reduce(
-                  (sum, item) =>
+                total_items: basket.basket_items.reduce(
+                  (sum: number, item: BasketItem) =>
                     sum +
                     (item.id === action.payload.itemId
                       ? action.payload.quantity
                       : item.quantity),
                   0
                 ),
-                totalPrice: basket.items.reduce(
-                  (sum, item) =>
+                total_price: basket.basket_items.reduce(
+                  (sum: number, item: BasketItem) =>
                     sum +
                     item.price *
                       (item.id === action.payload.itemId
@@ -143,7 +152,7 @@ function basketReducer(state: BasketState, action: BasketAction): BasketState {
         ...state,
         baskets: state.baskets.map((basket) =>
           basket.id === action.payload
-            ? { ...basket, items: [], totalItems: 0, totalPrice: 0 }
+            ? { ...basket, basket_items: [], total_items: 0, total_price: 0 }
             : basket
         ),
       };
@@ -403,7 +412,7 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
   // Get total items across all baskets
   const getTotalItems = useCallback(() => {
     return state.baskets.reduce(
-      (total, basket) => total + basket.totalItems,
+      (total, basket) => total + basket.total_items,
       0
     );
   }, [state.baskets]);
@@ -411,7 +420,7 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
   // Get total price across all baskets
   const getTotalPrice = useCallback(() => {
     return state.baskets.reduce(
-      (total, basket) => total + basket.totalPrice,
+      (total, basket) => total + basket.total_price,
       0
     );
   }, [state.baskets]);
