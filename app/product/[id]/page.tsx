@@ -18,7 +18,6 @@ import { Loading } from "@/components/ui/loading";
 import { NavigationLink } from "@/components/ui/navigation-link";
 import { TailoredOrderModal } from "@/components/product/TailoredOrderModal";
 import {
-  ShoppingBag,
   Ruler,
   Clock,
   MapPin,
@@ -559,16 +558,7 @@ export default function ProductPage() {
                 className="w-full"
               />
               
-              <Button
-                variant="outline"
-                asChild
-                className="w-full"
-              >
-                <Link href="/basket">
-                  <ShoppingBag className="h-5 w-4 mr-2" />
-                  View Basket
-                </Link>
-              </Button>
+
             </div>
 
             {/* Brand Rating */}

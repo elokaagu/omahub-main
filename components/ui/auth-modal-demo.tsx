@@ -2,18 +2,12 @@
 
 import { Button } from "@/components/ui/button";
 import { useAuthModalContext } from "@/contexts/AuthModalContext";
-import { ShoppingBag, Heart, User, Lock } from "lucide-react";
+import { Heart, User, Lock } from "lucide-react";
 
 export function AuthModalDemo() {
   const { openAuthModal } = useAuthModalContext();
 
-  const showBasketAuth = () => {
-    openAuthModal({
-      title: "Sign In to Add to Basket",
-      message: "Please sign in to add this item to your basket and continue shopping.",
-      showSignUp: true
-    });
-  };
+
 
   const showFavouritesAuth = () => {
     openAuthModal({
@@ -50,13 +44,7 @@ export function AuthModalDemo() {
       </p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Button
-          onClick={showBasketAuth}
-          className="bg-oma-plum hover:bg-oma-plum/90 text-white p-4 h-auto flex-col gap-2"
-        >
-          <ShoppingBag className="h-6 w-6" />
-          <span>Add to Basket</span>
-        </Button>
+
 
         <Button
           onClick={showFavouritesAuth}

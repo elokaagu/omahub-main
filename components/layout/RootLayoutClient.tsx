@@ -15,7 +15,7 @@ import { Toaster } from "sonner";
 import { LoadingPage } from "@/components/ui/loading";
 import { AuthDebug } from "@/lib/utils/debug";
 import { SearchModal } from "@/components/ui/search-modal";
-import { BasketProvider } from "@/contexts/BasketContext";
+
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AuthModalProvider } from "@/contexts/AuthModalContext";
 import LayoutContent from "./LayoutContent";
@@ -39,13 +39,11 @@ export default function RootLayoutClient({ children }: RootLayoutClientProps) {
   return (
     <ErrorBoundary>
       <AuthProvider>
-        <BasketProvider>
-          <NavigationProvider>
-            <AuthModalProvider>
-              <LayoutContent>{children}</LayoutContent>
-            </AuthModalProvider>
-          </NavigationProvider>
-        </BasketProvider>
+        <NavigationProvider>
+          <AuthModalProvider>
+            <LayoutContent>{children}</LayoutContent>
+          </AuthModalProvider>
+        </NavigationProvider>
       </AuthProvider>
     </ErrorBoundary>
   );
