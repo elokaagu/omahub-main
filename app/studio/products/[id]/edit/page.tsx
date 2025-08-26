@@ -280,7 +280,7 @@ export default function EditProductPage() {
       if (selectedBrand) {
         const currency = getBrandCurrency(selectedBrand);
         setSelectedBrandCurrency(currency);
-        
+
         // Automatically set the product currency to match the brand
         setFormData((prev) => ({
           ...prev,
@@ -302,12 +302,12 @@ export default function EditProductPage() {
     if (!brand) {
       return "USD"; // Default fallback
     }
-    
+
     // Use the dedicated currency field if available
     if (brand.currency) {
       return brand.currency;
     }
-    
+
     // Fallback: try to extract from price_range (legacy support)
     if (brand.price_range) {
       const currencyMatch = brand.price_range.match(/^([^\d,]+)/);
@@ -316,15 +316,15 @@ export default function EditProductPage() {
         // Map common symbols to currency codes
         const symbolToCode: { [key: string]: string } = {
           "₦": "NGN",
-          "GHS": "GHS",
-          "KSh": "KES",
-          "R": "ZAR",
-          "EGP": "EGP",
-          "MAD": "MAD",
-          "TND": "TND",
-          "XOF": "XOF",
-          "DA": "DZD",
-          "$": "USD",
+          GHS: "GHS",
+          KSh: "KES",
+          R: "ZAR",
+          EGP: "EGP",
+          MAD: "MAD",
+          TND: "TND",
+          XOF: "XOF",
+          DA: "DZD",
+          $: "USD",
           "€": "EUR",
           "£": "GBP",
         };
@@ -761,11 +761,19 @@ export default function EditProductPage() {
                         { code: "NGN", symbol: "₦", name: "Nigerian Naira" },
                         { code: "KES", symbol: "KSh", name: "Kenyan Shilling" },
                         { code: "GHS", symbol: "GHS", name: "Ghanaian Cedi" },
-                        { code: "ZAR", symbol: "R", name: "South African Rand" },
+                        {
+                          code: "ZAR",
+                          symbol: "R",
+                          name: "South African Rand",
+                        },
                         { code: "EGP", symbol: "EGP", name: "Egyptian Pound" },
                         { code: "MAD", symbol: "MAD", name: "Moroccan Dirham" },
                         { code: "TND", symbol: "TND", name: "Tunisian Dinar" },
-                        { code: "XOF", symbol: "XOF", name: "West African CFA Franc" },
+                        {
+                          code: "XOF",
+                          symbol: "XOF",
+                          name: "West African CFA Franc",
+                        },
                         { code: "DZD", symbol: "DA", name: "Algerian Dinar" },
                         { code: "USD", symbol: "$", name: "US Dollar" },
                         { code: "EUR", symbol: "€", name: "Euro" },
@@ -775,7 +783,9 @@ export default function EditProductPage() {
                           <div className="flex items-center gap-2">
                             <span>{currency.symbol}</span>
                             <span>{currency.code}</span>
-                            <span className="text-gray-500">({currency.name})</span>
+                            <span className="text-gray-500">
+                              ({currency.name})
+                            </span>
                           </div>
                         </SelectItem>
                       ))}
@@ -783,7 +793,13 @@ export default function EditProductPage() {
                   </Select>
                   {formData.brand_id && (
                     <p className="text-xs text-muted-foreground">
-                      Auto-synced with {brands.find(b => b.id === formData.brand_id)?.name} ({getBrandCurrency(brands.find(b => b.id === formData.brand_id) || {} as Brand)})
+                      Auto-synced with{" "}
+                      {brands.find((b) => b.id === formData.brand_id)?.name} (
+                      {getBrandCurrency(
+                        brands.find((b) => b.id === formData.brand_id) ||
+                          ({} as Brand)
+                      )}
+                      )
                     </p>
                   )}
                 </div>

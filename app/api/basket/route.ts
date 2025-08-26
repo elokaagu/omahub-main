@@ -399,7 +399,7 @@ export async function PATCH(request: NextRequest) {
       .select(
         `
         *,
-        basket:baskets(user_id, total_items, total_price)
+        basket:baskets(user_id)
       `
       )
       .eq("id", itemId)
@@ -417,9 +417,24 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    // Calculate price difference
-    const oldTotal = basketItem.price * basketItem.quantity;
-    const newTotal = basketItem.price * quantity;
+    // Calculate price difference from products table
+    const { data: product, error: productError } = await supabase
+      .from("products")
+      .select("price, sale_price")
+      .eq("id", basketItem.product_id)
+      .single();
+
+    if (productError || !product) {
+      console.error("Product not found for basket item:", productError);
+      return NextResponse.json(
+        { error: "Product not found" },
+        { status: 404 }
+      );
+    }
+
+    const itemPrice = product.sale_price || product.price || 0;
+    const oldTotal = itemPrice * basketItem.quantity;
+    const newTotal = itemPrice * quantity;
     const priceDifference = newTotal - oldTotal;
 
     // Update basket item
@@ -439,19 +454,16 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    // Update basket totals
+    // Update basket timestamp
     const { error: updateBasketError } = await supabase
       .from("baskets")
       .update({
-        total_items:
-          basketItem.basket.total_items - basketItem.quantity + quantity,
-        total_price: basketItem.basket.total_price + priceDifference,
         updated_at: new Date().toISOString(),
       })
       .eq("id", basketItem.basket_id);
 
     if (updateBasketError) {
-      console.error("Error updating basket totals:", updateBasketError);
+      console.error("Error updating basket timestamp:", updateBasketError);
     }
 
     return NextResponse.json({
@@ -503,7 +515,7 @@ export async function DELETE(request: NextRequest) {
       .select(
         `
         *,
-        basket:baskets(user_id, total_items, total_price)
+        basket:baskets(user_id)
       `
       )
       .eq("id", itemId)
@@ -521,8 +533,23 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    // Calculate price to subtract
-    const itemTotal = basketItem.price * basketItem.quantity;
+    // Calculate price to subtract from products table
+    const { data: product, error: productError } = await supabase
+      .from("products")
+      .select("price, sale_price")
+      .eq("id", basketItem.product_id)
+      .single();
+
+    if (productError || !product) {
+      console.error("Product not found for basket item:", productError);
+      return NextResponse.json(
+        { error: "Product not found" },
+        { status: 404 }
+      );
+    }
+
+    const itemPrice = product.sale_price || product.price || 0;
+    const itemTotal = itemPrice * basketItem.quantity;
 
     // Delete basket item
     const { error: deleteItemError } = await supabase
@@ -538,18 +565,16 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Update basket totals
+    // Update basket timestamp
     const { error: updateBasketError } = await supabase
       .from("baskets")
       .update({
-        total_items: basketItem.basket.total_items - basketItem.quantity,
-        total_price: basketItem.basket.total_price - itemTotal,
         updated_at: new Date().toISOString(),
       })
       .eq("id", basketItem.basket_id);
 
     if (updateBasketError) {
-      console.error("Error updating basket totals:", updateBasketError);
+      console.error("Error updating basket timestamp:", updateBasketError);
     }
 
     return NextResponse.json({
