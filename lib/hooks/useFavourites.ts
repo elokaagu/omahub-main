@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "@/components/ui/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 
 interface Brand {
   id: string;
@@ -44,6 +44,7 @@ type FavouriteItem = Brand | Catalogue | Product;
 
 const useFavourites = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [favourites, setFavourites] = useState<FavouriteItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -58,7 +59,7 @@ const useFavourites = () => {
 
     setLoading(true);
     try {
-      const response = await fetch(`/api/favourites?userId=${user.id}`);
+      const response = await fetch(`/api/favourites`);
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -81,25 +82,18 @@ const useFavourites = () => {
 
   // Add to favourites
   const addFavourite = useCallback(
-    async (
-      userId: string,
-      itemId: string,
-      itemType: "brand" | "catalogue" | "product"
-    ) => {
+    async (itemId: string, itemType: "brand" | "catalogue" | "product") => {
       try {
         // Add debugging
         console.log("🔍 addFavourite called with:", {
-          userId,
           itemId,
           itemType,
-          userIdType: typeof userId,
-          userIdLength: userId?.length,
         });
 
         const res = await fetch("/api/favourites", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId, itemId, itemType }),
+          body: JSON.stringify({ itemId, itemType }),
         });
 
         console.log("🔍 API response status:", res.status);
@@ -129,14 +123,10 @@ const useFavourites = () => {
 
   // Remove from favourites
   const removeFavourite = useCallback(
-    async (
-      userId: string,
-      itemId: string,
-      itemType: "brand" | "catalogue" | "product"
-    ) => {
+    async (itemId: string, itemType: "brand" | "catalogue" | "product") => {
       try {
         const res = await fetch(
-          `/api/favourites?userId=${userId}&itemId=${itemId}&itemType=${itemType}`,
+          `/api/favourites?itemId=${itemId}&itemType=${itemType}`,
           {
             method: "DELETE",
           }
@@ -180,12 +170,12 @@ const useFavourites = () => {
       itemType: "brand" | "catalogue" | "product"
     ): Promise<void> => {
       if (isFavourite(itemId, itemType)) {
-        await removeFavourite(user?.id || "", itemId, itemType);
+        await removeFavourite(itemId, itemType);
       } else {
-        await addFavourite(user?.id || "", itemId, itemType);
+        await addFavourite(itemId, itemType);
       }
     },
-    [isFavourite, removeFavourite, addFavourite, user]
+    [isFavourite, removeFavourite, addFavourite]
   );
 
   // Fetch favourites on component mount or user change

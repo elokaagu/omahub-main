@@ -22,19 +22,44 @@ const getSupabaseClient = () => {
   return createClient(supabaseUrl, supabaseServiceKey);
 };
 
+// Function to get authenticated user from cookies
+const getAuthenticatedUser = async () => {
+  try {
+    const cookieStore = await import('next/headers').then(m => m.cookies());
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      cookies: {
+        get(name) {
+          return cookieStore.get(name)?.value;
+        },
+        set() {},
+        remove() {},
+      },
+    });
+
+    const { data: { user }, error } = await supabase.auth.getUser();
+    if (error || !user) {
+      return null;
+    }
+    return user;
+  } catch (error) {
+    console.error("Error getting authenticated user:", error);
+    return null;
+  }
+};
+
 // GET endpoint to retrieve user favourites
 export async function GET(request) {
   try {
-    const supabase = getSupabaseClient();
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get("userId");
-
-    if (!userId) {
+    const user = await getAuthenticatedUser();
+    if (!user) {
       return NextResponse.json(
-        { error: "User ID is required" },
-        { status: 400 }
+        { error: "Authentication required" },
+        { status: 401 }
       );
     }
+
+    const supabase = getSupabaseClient();
+    const userId = user.id;
 
     // Get user favourites
     const { data, error } = await supabase
@@ -134,8 +159,17 @@ export async function POST(request) {
       );
     }
 
+    const user = await getAuthenticatedUser();
+    if (!user) {
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
-    const { userId, itemId, itemType } = body;
+    const { itemId, itemType } = body;
+    const userId = user.id;
 
     // Add debugging
     console.log("🔍 POST /api/favourites received:", {
@@ -146,10 +180,10 @@ export async function POST(request) {
       userIdLength: userId?.length,
     });
 
-    if (!userId || !itemId || !itemType) {
-      console.log("❌ Missing required fields:", { userId, itemId, itemType });
+    if (!itemId || !itemType) {
+      console.log("❌ Missing required fields:", { itemId, itemType });
       return NextResponse.json(
-        { error: "User ID, Item ID, and Item Type are required" },
+        { error: "Item ID and Item Type are required" },
         { status: 400 }
       );
     }
@@ -223,15 +257,23 @@ export async function POST(request) {
 // DELETE endpoint to remove a favourite
 export async function DELETE(request) {
   try {
+    const user = await getAuthenticatedUser();
+    if (!user) {
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+
     const supabase = getSupabaseClient();
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get("userId");
+    const userId = user.id;
     const itemId = searchParams.get("itemId");
     const itemType = searchParams.get("itemType");
 
-    if (!userId || !itemId || !itemType) {
+    if (!itemId || !itemType) {
       return NextResponse.json(
-        { error: "User ID, Item ID, and Item Type are required" },
+        { error: "Item ID and Item Type are required" },
         { status: 400 }
       );
     }

@@ -74,7 +74,7 @@ export function TailoredOrderModal({
     city: "",
     state: "",
     postal_code: "",
-    country: "Nigeria",
+    country: "",
   });
 
   const [customerNotes, setCustomerNotes] = useState("");
@@ -104,7 +104,7 @@ export function TailoredOrderModal({
       openAuthModal({
         title: "Sign In Required",
         message: "Please sign in to submit your custom order request.",
-        showSignUp: true
+        showSignUp: true,
       });
       return;
     }
@@ -160,7 +160,8 @@ export function TailoredOrderModal({
       deliveryAddress.address_line_1 &&
       deliveryAddress.city &&
       deliveryAddress.state &&
-      deliveryAddress.postal_code
+      deliveryAddress.postal_code &&
+      deliveryAddress.country
     );
   };
 
@@ -211,7 +212,11 @@ export function TailoredOrderModal({
                 </div>
                 <div className="text-right">
                   <p className="text-2xl font-bold text-oma-plum">
-                    {formatProductPrice(product, { price_range: brand.price_range }).displayPrice}
+                    {
+                      formatProductPrice(product, {
+                        price_range: brand.price_range,
+                      }).displayPrice
+                    }
                   </p>
                   <Badge variant="secondary" className="mt-1">
                     Custom Order
