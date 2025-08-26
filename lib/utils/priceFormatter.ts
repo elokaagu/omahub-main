@@ -1,4 +1,4 @@
-import { getBrandCurrency } from "./currencyUtils";
+import { getBrandCurrency, getCurrencyByCode } from "./currencyUtils";
 
 /**
  * Format a number with commas for thousands
@@ -19,7 +19,7 @@ export function formatNumberWithCommas(value: number): string {
 export function formatPriceRange(
   minPrice: string | number,
   maxPrice: string | number,
-  currencySymbol: string = "₦"
+  currencySymbol: string = "$"
 ): string {
   const min = typeof minPrice === "string" ? parseFloat(minPrice) : minPrice;
   const max = typeof maxPrice === "string" ? parseFloat(maxPrice) : maxPrice;
@@ -42,7 +42,7 @@ export function formatPriceRange(
  */
 export function formatPrice(
   price: string | number,
-  currencySymbol: string = "₦"
+  currencySymbol: string = "$"
 ): string {
   const numericPrice = typeof price === "string" ? parseFloat(price) : price;
 
@@ -71,7 +71,7 @@ export function parseFormattedNumber(formattedValue: string): number {
  */
 export function extractCurrencyFromPriceRange(priceRange: string): string {
   if (!priceRange || priceRange === "Contact for pricing") {
-    return "₦"; // Default to Naira for Nigerian market
+    return "USD"; // Default to USD instead of Naira
   }
 
   // Parse price range to extract currency symbol (e.g., "₦15,000 - ₦120,000")
@@ -84,7 +84,7 @@ export function extractCurrencyFromPriceRange(priceRange: string): string {
     return symbol1.trim();
   }
 
-  return "₦"; // Default fallback
+  return "USD"; // Default fallback
 }
 
 /**
@@ -138,7 +138,7 @@ export function formatPriceRangeWithBrand(
  * @returns Currency symbol
  */
 export function getBrandCurrencySymbol(
-  brand: { location?: string; price_range?: string } | null
+  brand: { location?: string; price_range?: string; currency?: string } | null
 ): string {
   const currency = getBrandCurrency(brand);
   return currency.symbol;
@@ -151,13 +151,34 @@ export function getBrandCurrencySymbol(
  * @returns Formatted price object with displayPrice, originalPrice, and currency
  */
 export function formatProductPrice(
-  product: { price: number; sale_price?: number },
-  brand?: { price_range?: string; location?: string } | null
+  product: { price: number; sale_price?: number; currency?: string },
+  brand?: { price_range?: string; location?: string; currency?: string } | null
 ): {
   displayPrice: string;
   originalPrice?: string;
   currency: string;
 } {
+  // First priority: use product's currency if available
+  if (product.currency) {
+    const productCurrency = getCurrencyByCode(product.currency);
+    if (productCurrency) {
+      const displayPrice = formatPrice(
+        product.sale_price || product.price,
+        productCurrency.symbol
+      );
+      const originalPrice = product.sale_price
+        ? formatPrice(product.price, productCurrency.symbol)
+        : undefined;
+
+      return {
+        displayPrice,
+        originalPrice,
+        currency: productCurrency.symbol,
+      };
+    }
+  }
+
+  // Fallback to brand currency
   const currency = getBrandCurrency(brand || null);
   const displayPrice = formatPrice(
     product.sale_price || product.price,

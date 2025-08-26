@@ -175,11 +175,11 @@ export function extractCurrencyFromPriceRange(
 
 /**
  * Get brand currency from brand data
- * @param brand - Brand object with location and price_range
- * @returns Currency object or default (NGN)
+ * @param brand - Brand object with location, price_range, and currency
+ * @returns Currency object or fallback based on location
  */
 export function getBrandCurrency(
-  brand: { location?: string; price_range?: string } | null
+  brand: { location?: string; price_range?: string; currency?: string } | null
 ): Currency {
   // Debug logging for currency issues
   if (process.env.NODE_ENV === "development") {
@@ -187,15 +187,33 @@ export function getBrandCurrency(
       brand,
       priceRange: brand?.price_range,
       location: brand?.location,
+      currency: brand?.currency,
     });
   }
 
   if (!brand) {
-    console.log("getBrandCurrency: No brand data, defaulting to NGN");
-    return getCurrencyByCode("NGN")!; // Default to Nigerian Naira
+    console.log("getBrandCurrency: No brand data, using USD fallback");
+    return getCurrencyByCode("USD")!; // Default to USD instead of NGN
   }
 
-  // First try to extract from price_range
+  // First priority: use the brand's explicit currency field
+  if (brand.currency) {
+    const currencyFromField = getCurrencyByCode(brand.currency);
+    if (currencyFromField) {
+      console.log(
+        "getBrandCurrency: Found currency from currency field:",
+        currencyFromField
+      );
+      return currencyFromField;
+    } else {
+      console.log(
+        "getBrandCurrency: Invalid currency code in field:",
+        brand.currency
+      );
+    }
+  }
+
+  // Second priority: try to extract from price_range
   if (brand.price_range) {
     const currencyFromPrice = extractCurrencyFromPriceRange(brand.price_range);
     if (currencyFromPrice) {
@@ -212,7 +230,7 @@ export function getBrandCurrency(
     }
   }
 
-  // Then try to determine from location
+  // Third priority: determine from location
   if (brand.location) {
     const currencyFromLocation = getCurrencyByLocation(brand.location);
     if (currencyFromLocation) {
@@ -229,9 +247,9 @@ export function getBrandCurrency(
     }
   }
 
-  // Default fallback to Nigerian Naira
-  console.log("getBrandCurrency: Defaulting to NGN");
-  return getCurrencyByCode("NGN")!;
+  // Final fallback to USD (more international than NGN)
+  console.log("getBrandCurrency: Using USD fallback");
+  return getCurrencyByCode("USD")!;
 }
 
 /**

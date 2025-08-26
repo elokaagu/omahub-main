@@ -78,7 +78,7 @@ export default function CreateProductPage() {
   const [filteredCatalogues, setFilteredCatalogues] = useState<Catalogue[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [selectedBrandCurrency, setSelectedBrandCurrency] = useState("₦"); // Default to Naira for Nigerian market
+  const [selectedBrandCurrency, setSelectedBrandCurrency] = useState("USD"); // Default to USD instead of Naira
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -192,7 +192,7 @@ export default function CreateProductPage() {
   const extractCurrencyFromBrand = (brandId: string): string => {
     const selectedBrand = brands.find((brand) => brand.id === brandId);
     if (!selectedBrand || !selectedBrand.price_range) {
-      return "₦"; // Default to Naira for Nigerian market
+      return "USD"; // Default to USD instead of Naira
     }
 
     // Parse price range to extract currency symbol (e.g., "₦15,000 - ₦120,000")
@@ -208,7 +208,7 @@ export default function CreateProductPage() {
       }
     }
 
-    return "₦"; // Default fallback
+    return "USD"; // Default fallback
   };
 
   // Tailor-specific categories

@@ -94,6 +94,7 @@ export type Brand = {
   long_description: string;
   location: string;
   price_range: string;
+  currency: string; // Added currency field
   category: string;
   categories?: string[];
   rating: number;
@@ -169,6 +170,7 @@ export type Product = {
   care_instructions?: string;
   is_custom?: boolean; // For tailored/custom pieces
   lead_time?: string; // e.g., "2-3 weeks"
+  currency?: string; // Added currency field to inherit from brand
   // Tailor-specific fields
   service_type?: "product" | "service" | "consultation" | "portfolio";
   consultation_fee?: number;
