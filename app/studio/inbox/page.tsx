@@ -46,11 +46,29 @@ interface Inquiry {
   };
 }
 
+interface Notification {
+  id: string;
+  brand_id: string;
+  type: string;
+  title: string;
+  message: string;
+  data: any;
+  is_read: boolean;
+  created_at: string;
+  brand?: {
+    name: string;
+  };
+}
+
+type InboxItem = Inquiry | Notification;
+
 export default function StudioInboxPage() {
   const { user, loading: authLoading } = useAuth();
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedInquiry, setSelectedInquiry] = useState<Inquiry | null>(null);
+  const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
   const [replyMessage, setReplyMessage] = useState("");
   const [isReplying, setIsReplying] = useState(false);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
@@ -72,9 +90,11 @@ export default function StudioInboxPage() {
         hasLoadedInquiries.current = false;
         deletedInquiryIds.current.clear(); // Clear deleted set for new user
         loadInquiries();
+        loadNotifications();
       } else if (!hasLoadedInquiries.current) {
         console.log("📧 Initial load for current user");
         loadInquiries();
+        loadNotifications();
       }
     }
   }, [user?.id, authLoading]); // Only depend on user.id, not the entire user object
@@ -233,6 +253,34 @@ export default function StudioInboxPage() {
     }
   };
 
+  const loadNotifications = useCallback(async () => {
+    if (!user?.id) return;
+
+    try {
+      console.log("🔔 Loading notifications for user:", user.id);
+
+      const supabase = createClient();
+      const { data: notificationsData, error } = await supabase
+        .from("notifications")
+        .select(`
+          *,
+          brand:brands(name)
+        `)
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Error fetching notifications:", error);
+        return;
+      }
+
+      console.log("🔔 Notifications loaded:", notificationsData?.length || 0);
+      setNotifications(notificationsData || []);
+    } catch (error) {
+      console.error("Error loading notifications:", error);
+    }
+  }, [user?.id]);
+
   const markAsRead = async (inquiryId: string) => {
     try {
       const supabase = createClient();
@@ -260,6 +308,36 @@ export default function StudioInboxPage() {
     }
   };
 
+  const markNotificationAsRead = async (notificationId: string) => {
+    try {
+      const supabase = createClient();
+      const { error } = await supabase
+        .from("notifications")
+        .update({ is_read: true })
+        .eq("id", notificationId);
+
+      if (error) {
+        console.error("Error marking notification as read:", error);
+        toast.error("Failed to mark as read");
+        return;
+      }
+
+      // Update local state
+      setNotifications((prev) =>
+        prev.map((notification) =>
+          notification.id === notificationId
+            ? { ...notification, is_read: true }
+            : notification
+        )
+      );
+
+      toast.success("Marked as read");
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+      toast.error("Failed to mark as read");
+    }
+  };
+
   const refreshInquiries = async () => {
     console.log(
       "🔄 Manual refresh requested - clearing deleted set and reloading"
@@ -276,6 +354,7 @@ export default function StudioInboxPage() {
     setInquiries([]); // Clear current inquiries to show loading state
     setLoading(true); // Show loading state
     await loadInquiries();
+    await loadNotifications();
   };
 
   const handleReply = async () => {
@@ -359,8 +438,17 @@ export default function StudioInboxPage() {
 
   const openInquiry = (inquiry: Inquiry) => {
     setSelectedInquiry(inquiry);
+    setSelectedNotification(null);
     if (inquiry.status === "unread") {
       markAsRead(inquiry.id);
+    }
+  };
+
+  const openNotification = (notification: Notification) => {
+    setSelectedNotification(notification);
+    setSelectedInquiry(null);
+    if (!notification.is_read) {
+      markNotificationAsRead(notification.id);
     }
   };
 
@@ -387,6 +475,27 @@ export default function StudioInboxPage() {
         return "bg-yellow-100 text-yellow-800";
       case "low":
         return "bg-green-100 text-green-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const getNotificationTypeColor = (type: string) => {
+    switch (type) {
+      case "new_order":
+        return "bg-green-100 text-green-800";
+      case "order_update":
+        return "bg-blue-100 text-blue-800";
+      case "message":
+        return "bg-purple-100 text-purple-800";
+      case "system":
+        return "bg-gray-100 text-gray-800";
+      case "new_account":
+        return "bg-indigo-100 text-indigo-800";
+      case "basket_submission":
+        return "bg-orange-100 text-orange-800";
+      case "new_basket_item":
+        return "bg-yellow-100 text-yellow-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
@@ -575,19 +684,19 @@ export default function StudioInboxPage() {
           </Button>
         </div>
 
-        {inquiries.length === 0 ? (
+        {inquiries.length === 0 && notifications.length === 0 ? (
           <Card>
             <CardContent className="pt-6">
               <div className="text-center py-8">
                 <h3 className="text-lg font-canela text-oma-plum mb-2">
                   {isSuperAdmin
-                    ? "No inquiries on the platform yet"
-                    : "No messages yet"}
+                    ? "No inquiries or notifications on the platform yet"
+                    : "No messages or notifications yet"}
                 </h3>
                 <p className="text-oma-cocoa">
                   {isSuperAdmin
-                    ? "When customers contact any brand on the platform, their messages will appear here."
-                    : "When customers contact you through your brand pages, their messages will appear here."}
+                    ? "When customers contact any brand or submit orders, their messages and notifications will appear here."
+                    : "When customers contact you through your brand pages or submit custom orders, their messages and notifications will appear here."}
                 </p>
               </div>
             </CardContent>
@@ -650,6 +759,82 @@ export default function StudioInboxPage() {
                 </CardContent>
               </Card>
             ))}
+
+            {/* Notifications Section */}
+            {notifications.length > 0 && (
+              <div className="mt-8">
+                <h2 className="text-2xl font-canela text-oma-plum mb-4">
+                  Notifications
+                </h2>
+                <div className="space-y-4">
+                  {notifications.map((notification) => (
+                    <Card
+                      key={notification.id}
+                      className={`cursor-pointer transition-colors hover:bg-oma-beige/20 ${
+                        !notification.is_read ? "border-oma-plum" : ""
+                      }`}
+                      onClick={() => openNotification(notification)}
+                    >
+                      <CardHeader>
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <CardTitle className="text-lg font-canela text-oma-plum">
+                              {notification.title}
+                            </CardTitle>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-sm text-oma-cocoa">
+                                {notification.message}
+                              </span>
+                              {notification.brand && (
+                                <span className="text-sm text-oma-cocoa">
+                                  • Brand: {notification.brand.name}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge className={getNotificationTypeColor(notification.type)}>
+                              {notification.type.replace('_', ' ')}
+                            </Badge>
+                            <Badge className={notification.is_read ? "bg-gray-100 text-gray-800" : "bg-red-100 text-red-800"}>
+                              {notification.is_read ? "read" : "unread"}
+                            </Badge>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        {notification.data && Object.keys(notification.data).length > 0 && (
+                          <div className="bg-oma-beige/20 p-3 rounded-lg mb-3">
+                            <h4 className="font-medium text-oma-plum mb-2">Order Details:</h4>
+                            <div className="text-sm text-oma-cocoa space-y-1">
+                              {notification.data.customer_name && (
+                                <p><strong>Customer:</strong> {notification.data.customer_name}</p>
+                              )}
+                              {notification.data.customer_email && (
+                                <p><strong>Email:</strong> {notification.data.customer_email}</p>
+                              )}
+                              {notification.data.customer_phone && (
+                                <p><strong>Phone:</strong> {notification.data.customer_phone}</p>
+                              )}
+                              {notification.data.total_amount && (
+                                <p><strong>Amount:</strong> ${notification.data.total_amount}</p>
+                              )}
+                              {notification.data.customer_notes && (
+                                <p><strong>Notes:</strong> {notification.data.customer_notes}</p>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                        <p className="text-sm text-oma-cocoa/70">
+                          {new Date(notification.created_at).toLocaleDateString()} at{" "}
+                          {new Date(notification.created_at).toLocaleTimeString()}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -707,6 +892,85 @@ export default function StudioInboxPage() {
                     className="bg-oma-plum hover:bg-oma-plum/90"
                   >
                     {isReplying ? "Sending..." : "Send Reply"}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Notification Detail Modal */}
+        <Dialog
+          open={!!selectedNotification}
+          onOpenChange={() => setSelectedNotification(null)}
+        >
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>{selectedNotification?.title}</DialogTitle>
+              <DialogDescription>
+                {selectedNotification?.message}
+              </DialogDescription>
+            </DialogHeader>
+
+            {selectedNotification && (
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-medium text-oma-plum mb-2">
+                    Notification Details:
+                  </h4>
+                  <div className="bg-oma-beige/20 p-4 rounded-lg">
+                    <div className="space-y-2">
+                      <p className="text-oma-cocoa">
+                        <strong>Type:</strong> {selectedNotification.type.replace('_', ' ')}
+                      </p>
+                      <p className="text-oma-cocoa">
+                        <strong>Status:</strong> {selectedNotification.is_read ? 'Read' : 'Unread'}
+                      </p>
+                      {selectedNotification.brand && (
+                        <p className="text-oma-cocoa">
+                          <strong>Brand:</strong> {selectedNotification.brand.name}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {selectedNotification.data && Object.keys(selectedNotification.data).length > 0 && (
+                  <div>
+                    <h4 className="font-medium text-oma-plum mb-2">
+                      Order Information:
+                    </h4>
+                    <div className="bg-oma-beige/20 p-4 rounded-lg">
+                      <div className="space-y-2 text-oma-cocoa">
+                        {selectedNotification.data.customer_name && (
+                          <p><strong>Customer:</strong> {selectedNotification.data.customer_name}</p>
+                        )}
+                        {selectedNotification.data.customer_email && (
+                          <p><strong>Email:</strong> {selectedNotification.data.customer_email}</p>
+                        )}
+                        {selectedNotification.data.customer_phone && (
+                          <p><strong>Phone:</strong> {selectedNotification.data.customer_phone}</p>
+                        )}
+                        {selectedNotification.data.total_amount && (
+                          <p><strong>Amount:</strong> ${selectedNotification.data.total_amount}</p>
+                        )}
+                        {selectedNotification.data.customer_notes && (
+                          <p><strong>Notes:</strong> {selectedNotification.data.customer_notes}</p>
+                        )}
+                        {selectedNotification.data.product_title && (
+                          <p><strong>Product:</strong> {selectedNotification.data.product_title}</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex justify-end">
+                  <Button
+                    variant="outline"
+                    onClick={() => setSelectedNotification(null)}
+                  >
+                    Close
                   </Button>
                 </div>
               </div>
