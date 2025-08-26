@@ -76,7 +76,8 @@ export default function CreateBrandPage() {
     price_range: "",
     price_min: "",
     price_max: "",
-    currency: "NGN", // Default to Nigerian Naira
+    contact_for_pricing: false,
+    currency: "USD", // Default to USD instead of NGN
     categories: [] as string[],
     image: "",
     is_verified: false,
@@ -208,6 +209,12 @@ export default function CreateBrandPage() {
       return;
     }
 
+    // Validate price range - either set a range or explicitly mark as contact for pricing
+    if (!formData.price_min && !formData.price_max && !formData.contact_for_pricing) {
+      toast.error("Please set a price range or mark as 'Contact for pricing'");
+      return;
+    }
+
     // Email is optional - only validate format if provided
     if (formData.contact_email) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -219,7 +226,7 @@ export default function CreateBrandPage() {
 
     // Format price range if both min and max are provided
     let priceRange = "";
-    if (formData.price_min && formData.price_max) {
+    if (formData.price_min && formData.price_max && !formData.contact_for_pricing) {
       const currency = CURRENCIES.find((c) => c.code === formData.currency);
       const symbol = currency?.symbol || "$";
       priceRange = formatPriceRange(
@@ -229,12 +236,18 @@ export default function CreateBrandPage() {
       );
     }
 
+    // If contact for pricing is checked, override any price range
+    if (formData.contact_for_pricing) {
+      priceRange = "Contact for pricing";
+    }
+
     const payload = {
       name: formData.name,
       description: formData.description,
       long_description: formData.long_description || formData.description,
       location: formData.location,
       price_range: priceRange || "Contact for pricing",
+      currency: formData.currency,
       category: formData.categories[0],
       categories: formData.categories,
       image: formData.image,
@@ -514,6 +527,26 @@ export default function CreateBrandPage() {
                         "Enter minimum and maximum prices to see preview"
                       )}
                     </p>
+                    
+                    {/* Contact for Pricing Option */}
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="contact_for_pricing"
+                        name="contact_for_pricing"
+                        checked={formData.contact_for_pricing}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            contact_for_pricing: e.target.checked,
+                          })
+                        }
+                        className="rounded border-gray-300 text-oma-plum focus:ring-oma-plum"
+                      />
+                      <Label htmlFor="contact_for_pricing" className="text-sm">
+                        Contact for pricing (if you prefer not to show specific prices)
+                      </Label>
+                    </div>
                   </div>
                 </div>
 
