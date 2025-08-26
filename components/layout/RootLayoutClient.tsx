@@ -17,6 +17,7 @@ import { AuthDebug } from "@/lib/utils/debug";
 import { SearchModal } from "@/components/ui/search-modal";
 import { BasketProvider } from "@/contexts/BasketContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { AuthModalProvider } from "@/contexts/AuthModalContext";
 import LayoutContent from "./LayoutContent";
 
 interface RootLayoutClientProps {
@@ -40,7 +41,9 @@ export default function RootLayoutClient({ children }: RootLayoutClientProps) {
       <AuthProvider>
         <BasketProvider>
           <NavigationProvider>
-            <LayoutContent>{children}</LayoutContent>
+            <AuthModalProvider>
+              <LayoutContent>{children}</LayoutContent>
+            </AuthModalProvider>
           </NavigationProvider>
         </BasketProvider>
       </AuthProvider>
