@@ -1,14 +1,53 @@
 "use client";
 
+import { useState } from "react";
 import { useBasket } from "@/contexts/BasketContext";
 import { Button } from "@/components/ui/button";
-import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
+import { Minus, Plus, Trash2, ShoppingBag, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { toast } from "sonner";
 
 export default function BasketPage() {
-  const { state, removeFromBasket, updateQuantity, getTotalPrice } =
+  const { state, removeFromBasket, updateQuantity, getTotalPrice, refreshBaskets } =
     useBasket();
   const { baskets, isLoading, error } = state;
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmitBasket = async () => {
+    if (isSubmitting) return;
+
+    try {
+      setIsSubmitting(true);
+      
+      const response = await fetch("/api/basket/submit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to submit basket");
+      }
+
+      // Refresh baskets to reflect the cleared state
+      await refreshBaskets();
+      
+      // Show success message
+      toast.success("Basket submitted successfully! Brands will contact you soon.");
+      
+      // Redirect to confirmation or home page
+      window.location.href = "/";
+      
+    } catch (error) {
+      console.error("Error submitting basket:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to submit basket");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -161,8 +200,19 @@ export default function BasketPage() {
                 <Button variant="outline" asChild>
                   <Link href="/directory">Continue Shopping</Link>
                 </Button>
-                <Button className="bg-oma-plum hover:bg-oma-plum/90">
-                  Checkout
+                <Button 
+                  onClick={handleSubmitBasket}
+                  disabled={isSubmitting}
+                  className="bg-oma-plum hover:bg-oma-plum/90"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Submitting...
+                    </>
+                  ) : (
+                    "Submit to Brands"
+                  )}
                 </Button>
               </div>
             </div>
