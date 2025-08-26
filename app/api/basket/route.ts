@@ -182,11 +182,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
-    // Get or create user's basket
+    // Get or create user's basket for this specific brand
+    const brandId = product.brand?.id;
+    if (!brandId) {
+      return NextResponse.json(
+        { error: "Product must belong to a brand" },
+        { status: 400 }
+      );
+    }
+
     let { data: basket, error: basketError } = await supabase
       .from("baskets")
       .select("*")
       .eq("user_id", user.id)
+      .eq("brand_id", brandId)
       .single();
 
     if (basketError && basketError.code !== "PGRST116") {
@@ -197,14 +206,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create basket if it doesn't exist
+    // Create basket if it doesn't exist for this brand
     if (!basket) {
       const { data: newBasket, error: createBasketError } = await supabase
         .from("baskets")
         .insert({
           user_id: user.id,
-          total_items: 0,
-          total_price: 0,
+          brand_id: brandId,
         })
         .select()
         .single();
@@ -227,8 +235,7 @@ export async function POST(request: NextRequest) {
         product_id: productId,
         quantity: quantity,
         size: size,
-        colour: colour,
-        price: product.sale_price || product.price,
+        color: colour, // Database uses 'color', not 'colour'
       })
       .select()
       .single();
@@ -241,19 +248,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Update basket totals
+    // Update basket timestamp
     const { error: updateBasketError } = await supabase
       .from("baskets")
       .update({
-        total_items: basket.total_items + quantity,
-        total_price:
-          basket.total_price + (product.sale_price || product.price) * quantity,
         updated_at: new Date().toISOString(),
       })
       .eq("id", basket.id);
 
     if (updateBasketError) {
-      console.error("Error updating basket totals:", updateBasketError);
+      console.error("Error updating basket timestamp:", updateBasketError);
     }
 
     // Create notification for brand owner
