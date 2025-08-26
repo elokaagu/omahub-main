@@ -203,6 +203,69 @@ export async function POST(request: NextRequest) {
       console.log("RESEND_API_KEY not configured, skipping email notification");
     }
 
+    // Send confirmation email to customer
+    let customerEmailSent = false;
+    if (process.env.RESEND_API_KEY) {
+      try {
+        const { Resend } = await import("resend");
+        const resend = new Resend(process.env.RESEND_API_KEY);
+
+        await resend.emails.send({
+          from: "OmaHub <info@oma-hub.com>",
+          to: [delivery_address.email],
+          subject: `Order Confirmation - ${product.title} from ${brand.name}`,
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #8B4513;">Order Confirmation</h2>
+              <p style="color: #666; font-size: 16px;">Thank you for your custom order request!</p>
+              
+              <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <h3 style="color: #8B4513;">Order Details</h3>
+                <p><strong>Order Number:</strong> ${orderNumber}</p>
+                <p><strong>Product:</strong> ${product.title}</p>
+                <p><strong>Brand:</strong> ${brand.name}</p>
+                <p><strong>Price:</strong> ${extractCurrencyFromPriceRange(brand.price_range)} ${total_amount || product.sale_price || product.price}</p>
+                <p><strong>Order Date:</strong> ${new Date().toLocaleDateString()}</p>
+              </div>
+
+              <div style="background-color: #e8f4f8; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <h3 style="color: #8B4513;">What Happens Next?</h3>
+                <ul>
+                  <li>The brand will contact you within 24-48 hours to discuss your order</li>
+                  <li>You'll discuss measurements, customization details, and final pricing</li>
+                  <li>The brand will provide an estimated completion timeline</li>
+                  <li>You'll receive updates on your order progress</li>
+                </ul>
+              </div>
+
+              <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <h3 style="color: #8B4513;">Order Summary</h3>
+                <p><strong>Customer:</strong> ${delivery_address.full_name}</p>
+                <p><strong>Email:</strong> ${delivery_address.email}</p>
+                <p><strong>Phone:</strong> ${delivery_address.phone}</p>
+                <p><strong>Address:</strong> ${delivery_address.city}, ${delivery_address.state} ${delivery_address.postal_code}, ${delivery_address.country}</p>
+                ${customer_notes ? `<p><strong>Special Notes:</strong> ${customer_notes}</p>` : ''}
+              </div>
+
+              <div style="background-color: #fff3cd; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <h3 style="color: #8B4513;">Need Help?</h3>
+                <p>If you have any questions about your order, please contact us at <a href="mailto:support@oma-hub.com">support@oma-hub.com</a></p>
+                <p>Thank you for choosing OmaHub for your custom fashion needs!</p>
+              </div>
+            </div>
+          `,
+        });
+
+        customerEmailSent = true;
+        console.log("Customer confirmation email sent successfully");
+      } catch (emailError) {
+        console.error("Error sending customer confirmation email:", emailError);
+        // Don't fail the order creation if email fails
+      }
+    } else {
+      console.log("RESEND_API_KEY not configured, skipping customer confirmation email");
+    }
+
     // Log the order details for manual processing if email fails
     console.log("=== NEW CUSTOM ORDER ===");
     console.log(`Order Number: ${orderNumber}`);
@@ -227,6 +290,7 @@ export async function POST(request: NextRequest) {
       order,
       orderNumber,
       emailSent,
+      customerEmailSent,
       message: "Order submitted successfully",
     });
   } catch (error) {

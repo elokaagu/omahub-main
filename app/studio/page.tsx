@@ -43,7 +43,29 @@ export default function StudioPage() {
           return;
         }
 
-        // Get user permissions and profile directly without refreshing
+        // Wait for user profile to be fully loaded with brands
+        if (!user.owned_brands || user.owned_brands.length === 0) {
+          console.log("🔄 Studio Page: Waiting for user profile to load brands...");
+          // Wait a bit for the profile to load
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          // Try to refresh the user profile to get the latest data
+          if (user.id) {
+            try {
+              const profileResult = await supabaseHelpers.getProfileById(user.id);
+              if (profileResult.data && profileResult.data.owned_brands && profileResult.data.owned_brands.length > 0) {
+                console.log("✅ Studio Page: Profile refreshed with brands:", profileResult.data.owned_brands);
+                setUserProfile(profileResult.data);
+                setLoading(false);
+                return;
+              }
+            } catch (error) {
+              console.log("⚠️ Studio Page: Could not refresh profile, continuing with current data");
+            }
+          }
+        }
+
+        // Get user permissions and profile
         const [permissions, profileResult] = await Promise.all([
           getUserPermissions(user.id, user.email),
           supabaseHelpers.getProfileById(user.id),
@@ -93,6 +115,28 @@ export default function StudioPage() {
       setLoading(false);
     }
   }, [user]);
+
+  // Additional effect to wait for brands to load
+  useEffect(() => {
+    if (user && userProfile && (!userProfile.owned_brands || userProfile.owned_brands.length === 0)) {
+      console.log("🔄 Studio Page: Waiting for brands to load...");
+      const timer = setTimeout(async () => {
+        if (user.id) {
+          try {
+            const profileResult = await supabaseHelpers.getProfileById(user.id);
+            if (profileResult.data && profileResult.data.owned_brands && profileResult.data.owned_brands.length > 0) {
+              console.log("✅ Studio Page: Brands loaded after delay:", profileResult.data.owned_brands);
+              setUserProfile(profileResult.data);
+            }
+          } catch (error) {
+            console.log("⚠️ Studio Page: Could not load brands after delay");
+          }
+        }
+      }, 2000); // Wait 2 seconds for brands to load
+
+      return () => clearTimeout(timer);
+    }
+  }, [user, userProfile]);
 
   if (loading) {
     return (

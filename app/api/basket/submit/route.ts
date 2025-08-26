@@ -284,11 +284,78 @@ export async function POST(request: NextRequest) {
       console.error("Error clearing baskets:", clearBasketsError);
     }
 
+    // Send confirmation email to customer
+    let customerEmailSent = false;
+    if (process.env.RESEND_API_KEY) {
+      try {
+        const { Resend } = await import("resend");
+        const resend = new Resend(process.env.RESEND_API_KEY);
+
+        // Prepare order summary for email
+        const orderSummary = createdOrders.map(order => 
+          `• ${order.brand_name}: ${order.items_count} item(s) - £${order.total.toFixed(2)}`
+        ).join('\n');
+
+        const totalAmount = createdOrders.reduce((sum, order) => sum + order.total, 0);
+
+        await resend.emails.send({
+          from: "OmaHub <info@oma-hub.com>",
+          to: [user.email!],
+          subject: `Order Confirmation - ${createdOrders.length} Order(s) Submitted`,
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #8B4513;">Order Confirmation</h2>
+              <p style="color: #666; font-size: 16px;">Thank you for your order(s)!</p>
+              
+              <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <h3 style="color: #8B4513;">Order Summary</h3>
+                <p><strong>Total Orders:</strong> ${createdOrders.length}</p>
+                <p><strong>Total Amount:</strong> £${totalAmount.toFixed(2)}</p>
+                <p><strong>Order Date:</strong> ${new Date().toLocaleDateString()}</p>
+              </div>
+
+              <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <h3 style="color: #8B4513;">Order Details</h3>
+                <div style="white-space: pre-line; font-family: monospace; background: white; padding: 10px; border-radius: 4px;">
+${orderSummary}
+                </div>
+              </div>
+
+              <div style="background-color: #e8f4f8; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <h3 style="color: #8B4513;">What Happens Next?</h3>
+                <ul>
+                  <li>Each brand will contact you within 24-48 hours to confirm your order</li>
+                  <li>You'll discuss any customization details, measurements, and final pricing</li>
+                  <li>The brands will provide estimated completion timelines</li>
+                  <li>You'll receive updates on your order progress</li>
+                </ul>
+              </div>
+
+              <div style="background-color: #fff3cd; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <h3 style="color: #8B4513;">Need Help?</h3>
+                <p>If you have any questions about your orders, please contact us at <a href="mailto:support@oma-hub.com">support@oma-hub.com</a></p>
+                <p>Thank you for choosing OmaHub!</p>
+              </div>
+            </div>
+          `,
+        });
+
+        customerEmailSent = true;
+        console.log("Customer confirmation email sent successfully");
+      } catch (emailError) {
+        console.error("Error sending customer confirmation email:", emailError);
+        // Don't fail the order creation if email fails
+      }
+    } else {
+      console.log("RESEND_API_KEY not configured, skipping customer confirmation email");
+    }
+
     return NextResponse.json({
       success: true,
       message: "Basket submitted successfully",
       orders: createdOrders,
       notifications_sent: notifications.length,
+      customerEmailSent,
       user: {
         id: user.id,
         email: user.email,
