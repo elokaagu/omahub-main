@@ -126,7 +126,7 @@ export default function Footer() {
               </li>
               <li>
                 <a
-                  href="https://www.tiktok.com/@omahub"
+                  href="https://www.tiktok.com/@_omahub"
                   className="text-sm text-oma-cocoa hover:text-oma-plum flex items-center gap-2 group"
                 >
                   <svg
