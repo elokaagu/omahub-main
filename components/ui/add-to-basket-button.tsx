@@ -26,8 +26,9 @@ export default function AddToBasketButton({
   colour,
   className = "",
 }: AddToBasketButtonProps) {
-  const { addToBasket, state } = useBasket();
+  
   const { user } = useAuth();
+  const { addToBasket, state } = useBasket();
   const [isAdding, setIsAdding] = useState(false);
 
   // If user is not authenticated, show sign-in button

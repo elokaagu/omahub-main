@@ -350,17 +350,18 @@ export default function LeadsTrackingDashboard({
         setVercelLoading(true);
         setVercelError(null);
         try {
-          const res = await fetch("/api/analytics");
+          // Call the actual Vercel Analytics API endpoint
+          const res = await fetch("/api/analytics/pageviews");
           if (!res.ok) {
             const err = await res.json();
-            setVercelError(err.error || "Failed to fetch analytics");
+            setVercelError(err.error || "Failed to fetch Vercel analytics");
             setVercelAnalytics(null);
           } else {
             const data = await res.json();
             setVercelAnalytics(data);
           }
         } catch (error) {
-          setVercelError("Failed to fetch analytics");
+          setVercelError("Failed to fetch Vercel analytics");
           setVercelAnalytics(null);
         } finally {
           setVercelLoading(false);
@@ -1071,19 +1072,61 @@ export default function LeadsTrackingDashboard({
               <CardTitle className="font-canela text-oma-plum">
                 Google Analytics Overview
               </CardTitle>
-              <Badge variant="outline" className="border-oma-beige text-oma-cocoa">
-                Super Admin Only
-              </Badge>
+              <div className="flex items-center gap-2">
+                <Badge
+                  variant="outline"
+                  className="border-oma-beige text-oma-cocoa"
+                >
+                  Super Admin Only
+                </Badge>
+                <Badge
+                  variant={
+                    vercelAnalytics?.source === "vercel"
+                      ? "default"
+                      : "secondary"
+                  }
+                  className={
+                    vercelAnalytics?.source === "vercel"
+                      ? "bg-green-100 text-green-800"
+                      : "bg-gray-100 text-gray-800"
+                  }
+                >
+                  {vercelAnalytics?.source === "vercel"
+                    ? "Real Data"
+                    : "Estimated Data"}
+                </Badge>
+              </div>
             </div>
           </CardHeader>
           <CardContent className="p-6">
+            {/* Data Source Info */}
+            {vercelAnalytics?.source !== "vercel" && (
+              <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <div className="flex items-center gap-2 text-yellow-800">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  <span className="text-sm font-medium">
+                    {vercelAnalytics?.message || "Analytics not configured. Showing estimated data based on platform metrics."}
+                  </span>
+                </div>
+                <p className="text-xs text-yellow-700 mt-1 ml-6">
+                  To see real analytics data, enable Vercel Analytics in your project dashboard.
+                </p>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {/* Page Views */}
               <div className="text-center p-4 bg-oma-cream/20 rounded-lg border border-oma-beige">
                 <div className="text-2xl font-bold text-oma-plum">
-                  {vercelAnalytics?.pageviews?.toLocaleString() || platformAnalytics?.totalPageViews?.toLocaleString() || "1,247"}
+                  {vercelAnalytics?.pageviews?.toLocaleString() ||
+                    platformAnalytics?.totalPageViews?.toLocaleString() ||
+                    "1,247"}
                 </div>
-                <div className="text-sm text-oma-cocoa font-medium">Total Page Views</div>
+                <div className="text-sm text-oma-cocoa font-medium">
+                  Total Page Views
+                </div>
                 <div className="text-xs text-oma-cocoa/70 mt-1">
                   Last 30 days
                 </div>
@@ -1094,7 +1137,9 @@ export default function LeadsTrackingDashboard({
                 <div className="text-2xl font-bold text-oma-plum">
                   {vercelAnalytics?.visitors?.toLocaleString() || "342"}
                 </div>
-                <div className="text-sm text-oma-cocoa font-medium">Unique Visitors</div>
+                <div className="text-sm text-oma-cocoa font-medium">
+                  Unique Visitors
+                </div>
                 <div className="text-xs text-oma-cocoa/70 mt-1">
                   Last 30 days
                 </div>
@@ -1103,12 +1148,13 @@ export default function LeadsTrackingDashboard({
               {/* Conversion Rate */}
               <div className="text-center p-4 bg-oma-cream/20 rounded-lg border border-oma-beige">
                 <div className="text-2xl font-bold text-oma-plum">
-                  {analytics?.conversion_rate 
+                  {analytics?.conversion_rate
                     ? `${(analytics.conversion_rate * 100).toFixed(1)}%`
-                    : "0%"
-                  }
+                    : "0%"}
                 </div>
-                <div className="text-sm text-oma-cocoa font-medium">Conversion Rate</div>
+                <div className="text-sm text-oma-cocoa font-medium">
+                  Conversion Rate
+                </div>
                 <div className="text-xs text-oma-cocoa/70 mt-1">
                   Leads to Conversion
                 </div>
@@ -1119,7 +1165,9 @@ export default function LeadsTrackingDashboard({
                 <div className="text-lg font-bold text-oma-plum truncate">
                   {vercelAnalytics?.top_page || "Directory"}
                 </div>
-                <div className="text-sm text-oma-cocoa font-medium">Top Page</div>
+                <div className="text-sm text-oma-cocoa font-medium">
+                  Top Page
+                </div>
                 <div className="text-xs text-oma-cocoa/70 mt-1">
                   Most Visited
                 </div>
@@ -1128,35 +1176,55 @@ export default function LeadsTrackingDashboard({
 
             {/* Traffic Sources */}
             <div className="mt-6">
-              <h4 className="font-medium text-oma-plum mb-3">Traffic Sources</h4>
+              <h4 className="font-medium text-oma-plum mb-3">
+                Traffic Sources
+              </h4>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {vercelAnalytics?.sources && Object.keys(vercelAnalytics.sources).length > 0 ? (
-                  Object.entries(vercelAnalytics.sources).map(([source, count]) => (
-                    <div key={source} className="text-center p-3 bg-oma-cream/10 rounded-lg border border-oma-beige">
-                      <div className="text-lg font-semibold text-oma-cocoa">
-                        {count?.toLocaleString() || "0"}
+                {vercelAnalytics?.sources &&
+                Object.keys(vercelAnalytics.sources).length > 0 ? (
+                  Object.entries(vercelAnalytics.sources).map(
+                    ([source, count]) => (
+                      <div
+                        key={source}
+                        className="text-center p-3 bg-oma-cream/10 rounded-lg border border-oma-beige"
+                      >
+                        <div className="text-lg font-semibold text-oma-cocoa">
+                          {count?.toLocaleString() || "0"}
+                        </div>
+                        <div className="text-xs text-oma-cocoa/70 capitalize">
+                          {source.replace(/_/g, " ")}
+                        </div>
                       </div>
-                      <div className="text-xs text-oma-cocoa/70 capitalize">
-                        {source.replace(/_/g, " ")}
-                      </div>
-                    </div>
-                  ))
+                    )
+                  )
                 ) : (
                   <>
                     <div className="text-center p-3 bg-oma-cream/10 rounded-lg border border-oma-beige">
-                      <div className="text-lg font-semibold text-oma-cocoa">456</div>
+                      <div className="text-lg font-semibold text-oma-cocoa">
+                        456
+                      </div>
                       <div className="text-xs text-oma-cocoa/70">Direct</div>
                     </div>
                     <div className="text-center p-3 bg-oma-cream/10 rounded-lg border border-oma-beige">
-                      <div className="text-lg font-semibold text-oma-cocoa">234</div>
-                      <div className="text-xs text-oma-cocoa/70">Organic Search</div>
+                      <div className="text-lg font-semibold text-oma-cocoa">
+                        234
+                      </div>
+                      <div className="text-xs text-oma-cocoa/70">
+                        Organic Search
+                      </div>
                     </div>
                     <div className="text-center p-3 bg-oma-cream/10 rounded-lg border border-oma-beige">
-                      <div className="text-lg font-semibold text-oma-cocoa">189</div>
-                      <div className="text-xs text-oma-cocoa/70">Social Media</div>
+                      <div className="text-lg font-semibold text-oma-cocoa">
+                        189
+                      </div>
+                      <div className="text-xs text-oma-cocoa/70">
+                        Social Media
+                      </div>
                     </div>
                     <div className="text-center p-3 bg-oma-cream/10 rounded-lg border border-oma-beige">
-                      <div className="text-lg font-semibold text-oma-cocoa">123</div>
+                      <div className="text-lg font-semibold text-oma-cocoa">
+                        123
+                      </div>
                       <div className="text-xs text-oma-cocoa/70">Referral</div>
                     </div>
                   </>
@@ -1166,19 +1234,30 @@ export default function LeadsTrackingDashboard({
 
             {/* Recent Activity */}
             <div className="mt-6">
-              <h4 className="font-medium text-oma-plum mb-3">Recent Activity</h4>
+              <h4 className="font-medium text-oma-plum mb-3">
+                Recent Activity
+              </h4>
               <div className="space-y-2">
                 <div className="flex items-center justify-between p-3 bg-oma-cream/10 rounded-lg border border-oma-beige">
-                  <span className="text-sm text-oma-cocoa">Last lead submission</span>
+                  <span className="text-sm text-oma-cocoa">
+                    Last lead submission
+                  </span>
                   <span className="text-sm font-medium text-oma-plum">
-                    {analytics?.monthly_trends?.[analytics.monthly_trends.length - 1]?.month 
-                      ? new Date(analytics.monthly_trends[analytics.monthly_trends.length - 1].month).toLocaleDateString()
-                      : "2 days ago"
-                    }
+                    {analytics?.monthly_trends?.[
+                      analytics.monthly_trends.length - 1
+                    ]?.month
+                      ? new Date(
+                          analytics.monthly_trends[
+                            analytics.monthly_trends.length - 1
+                          ].month
+                        ).toLocaleDateString()
+                      : "2 days ago"}
                   </span>
                 </div>
                 <div className="flex items-center justify-between p-3 bg-oma-cream/10 rounded-lg border border-oma-beige">
-                  <span className="text-sm text-oma-cocoa">Total leads this month</span>
+                  <span className="text-sm text-oma-cocoa">
+                    Total leads this month
+                  </span>
                   <span className="text-sm font-medium text-oma-plum">
                     {analytics?.this_month_leads || "23"}
                   </span>
