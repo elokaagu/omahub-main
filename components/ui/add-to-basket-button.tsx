@@ -17,7 +17,13 @@ interface AddToBasketButtonProps {
   size?: string;
   color?: string;
   className?: string;
-  variant?: "default" | "outline" | "secondary" | "ghost" | "link" | "destructive";
+  variant?:
+    | "default"
+    | "outline"
+    | "secondary"
+    | "ghost"
+    | "link"
+    | "destructive";
   disabled?: boolean;
 }
 
@@ -34,7 +40,6 @@ export default function AddToBasketButton({
   variant = "default",
   disabled = false,
 }: AddToBasketButtonProps) {
-  
   const { user } = useAuth();
   const { openAuthModal } = useAuthModalContext();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -42,12 +47,14 @@ export default function AddToBasketButton({
   // If user is not authenticated, show sign-in modal
   if (!user) {
     return (
-      <Button 
-        onClick={() => openAuthModal({
-          title: "Sign In to Request from Brand",
-          message: `Please sign in to submit your request for ${productName} to ${brandName}.`,
-          showSignUp: true
-        })}
+      <Button
+        onClick={() =>
+          openAuthModal({
+            title: "Sign In to Request from Brand",
+            message: `Please sign in to submit your request for ${productName} to ${brandName}.`,
+            showSignUp: true,
+          })
+        }
         className={`bg-oma-plum hover:bg-oma-plum/90 text-white ${className}`}
       >
         <User className="h-4 w-4 mr-2" />
