@@ -15,6 +15,8 @@ import { Separator } from "@/components/ui/separator";
 import { User, Lock, Mail, ArrowRight, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { signIn, signUp } from "@/lib/services/authService";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface AuthRequiredModalProps {
   isOpen: boolean;
@@ -35,43 +37,60 @@ export function AuthRequiredModal({
 }: AuthRequiredModalProps) {
   const [isSignIn, setIsSignIn] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const { user, refreshUserProfile } = useAuth();
 
   const handleClose = () => {
     setIsLoading(false);
+    setError(null);
+    setEmail("");
+    setPassword("");
+    setName("");
     onClose();
   };
 
   const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null);
 
-    // Simulate sign in process
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      await signIn(email, password);
       toast.success("Sign in successful!");
+      await refreshUserProfile();
       handleClose();
-    }, 1000);
+    } catch (error: any) {
+      setError(error.message || "Sign in failed. Please try again.");
+      toast.error("Sign in failed");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null);
 
-    // Simulate sign up process
-    setTimeout(() => {
-      setIsLoading(false);
-      toast.success("Account created successfully!");
+    try {
+      await signUp(email, password);
+      toast.success("Account created successfully! Please check your email to verify your account.");
       handleClose();
-    }, 1000);
+    } catch (error: any) {
+      setError(error.message || "Account creation failed. Please try again.");
+      toast.error("Account creation failed");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader className="text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-oma-gold to-oma-plum">
-            <User className="h-8 w-8 text-white" />
-          </div>
           <DialogTitle className="text-xl font-semibold text-oma-plum">
             {title}
           </DialogTitle>
@@ -80,46 +99,57 @@ export function AuthRequiredModal({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="mt-6">
-          {isSignIn ? (
-            <form onSubmit={handleSignIn} className="space-y-4">
-              <div className="space-y-2">
-                <Label
-                  htmlFor="email"
-                  className="text-sm font-medium text-oma-cocoa"
-                >
-                  Email Address
-                </Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-oma-cocoa/50" />
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="your.email@example.com"
-                    className="pl-10 border-oma-beige focus:border-oma-plum focus:ring-oma-plum"
-                    required
-                  />
-                </div>
-              </div>
+                     <div className="mt-6">
+               {error && (
+                 <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-700 text-sm">
+                   <AlertCircle className="h-4 w-4" />
+                   {error}
+                 </div>
+               )}
+               
+               {isSignIn ? (
+                 <form onSubmit={handleSignIn} className="space-y-4">
+                   <div className="space-y-2">
+                     <Label
+                       htmlFor="email"
+                       className="text-sm font-medium text-oma-cocoa"
+                     >
+                       Email Address
+                     </Label>
+                     <div className="relative">
+                       <Mail className="absolute left-3 top-3 h-4 w-4 text-oma-cocoa/50" />
+                       <Input
+                         id="email"
+                         type="email"
+                         placeholder="your.email@example.com"
+                         className="pl-10 border-oma-beige focus:border-oma-plum focus:ring-oma-plum"
+                         value={email}
+                         onChange={(e) => setEmail(e.target.value)}
+                         required
+                       />
+                     </div>
+                   </div>
 
-              <div className="space-y-2">
-                <Label
-                  htmlFor="password"
-                  className="text-sm font-medium text-oma-cocoa"
-                >
-                  Password
-                </Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-oma-cocoa/50" />
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="Enter your password"
-                    className="pl-10 border-oma-beige focus:border-oma-plum focus:ring-oma-plum"
-                    required
-                  />
-                </div>
-              </div>
+                   <div className="space-y-2">
+                     <Label
+                       htmlFor="password"
+                       className="text-sm font-medium text-oma-cocoa"
+                     >
+                       Password
+                     </Label>
+                     <div className="relative">
+                       <Lock className="absolute left-3 top-3 h-4 w-4 text-oma-cocoa/50" />
+                       <Input
+                         id="password"
+                         type="password"
+                         placeholder="Enter your password"
+                         className="pl-10 border-oma-beige focus:border-oma-plum focus:ring-oma-plum"
+                         value={password}
+                         onChange={(e) => setPassword(e.target.value)}
+                         required
+                       />
+                     </div>
+                   </div>
 
               <Button
                 type="submit"
@@ -161,6 +191,8 @@ export function AuthRequiredModal({
                   id="signup-name"
                   placeholder="Enter your full name"
                   className="border-oma-beige focus:border-oma-plum focus:ring-oma-plum"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
                   required
                 />
               </div>
@@ -177,6 +209,8 @@ export function AuthRequiredModal({
                   type="email"
                   placeholder="your.email@example.com"
                   className="border-oma-beige focus:border-oma-plum focus:ring-oma-plum"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   required
                 />
               </div>
@@ -193,6 +227,8 @@ export function AuthRequiredModal({
                   type="password"
                   placeholder="Create a password"
                   className="border-oma-beige focus:border-oma-plum focus:ring-oma-plum"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   required
                 />
               </div>
