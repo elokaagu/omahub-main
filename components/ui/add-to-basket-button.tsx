@@ -2,17 +2,18 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { useBasket } from "@/contexts/BasketContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAuthModalContext } from "@/contexts/AuthModalContext";
-import { ShoppingBag, Loader2, User } from "lucide-react";
-import Link from "next/link";
+import { ShoppingBag, Loader2, User, MessageSquare } from "lucide-react";
+import { BrandRequestModal } from "./brand-request-modal";
 
 interface AddToBasketButtonProps {
   productId: string;
   productName: string;
   productImage: string;
   price: number;
+  brandId: string;
+  brandName: string;
   size?: string;
   color?: string;
   className?: string;
@@ -25,6 +26,8 @@ export default function AddToBasketButton({
   productName,
   productImage,
   price,
+  brandId,
+  brandName,
   size,
   color,
   className,
@@ -33,50 +36,53 @@ export default function AddToBasketButton({
 }: AddToBasketButtonProps) {
   
   const { user } = useAuth();
-  const { addToBasket, state } = useBasket();
   const { openAuthModal } = useAuthModalContext();
-  const [isAdding, setIsAdding] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // If user is not authenticated, show sign-in modal
   if (!user) {
     return (
       <Button 
         onClick={() => openAuthModal({
-          title: "Sign In to Add to Basket",
-          message: `Please sign in to add "${productName}" to your basket.`,
+          title: "Sign In to Request from Brand",
+          message: `Please sign in to submit your request for ${productName} to ${brandName}.`,
           showSignUp: true
         })}
         className={`bg-oma-plum hover:bg-oma-plum/90 text-white ${className}`}
       >
         <User className="h-4 w-4 mr-2" />
-        Sign In to Add to Basket
+        Sign In to Request
       </Button>
     );
   }
 
-  const handleAddToBasket = async () => {
-    if (isAdding) return;
-    
-    setIsAdding(true);
-    try {
-      await addToBasket(productId, 1, size, color);
-    } finally {
-      setIsAdding(false);
-    }
+  const handleRequestClick = () => {
+    setIsModalOpen(true);
   };
 
   return (
-    <Button
-      onClick={handleAddToBasket}
-      disabled={isAdding || state.isLoading}
-      className={`bg-oma-plum hover:bg-oma-plum/90 text-white ${className}`}
-    >
-      {isAdding || state.isLoading ? (
-        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-      ) : (
-        <ShoppingBag className="h-4 w-4 mr-2" />
-      )}
-      {isAdding || state.isLoading ? "Adding..." : "Add to Basket"}
-    </Button>
+    <>
+      <Button
+        onClick={handleRequestClick}
+        disabled={disabled}
+        className={`bg-oma-plum hover:bg-oma-plum/90 text-white ${className}`}
+      >
+        <MessageSquare className="h-4 w-4 mr-2" />
+        Request from {brandName}
+      </Button>
+
+      <BrandRequestModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        productId={productId}
+        productName={productName}
+        productImage={productImage}
+        price={price}
+        brandId={brandId}
+        brandName={brandName}
+        size={size}
+        color={color}
+      />
+    </>
   );
 }

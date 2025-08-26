@@ -547,6 +547,8 @@ export default function ProductPage() {
                   productName={product.title}
                   productImage={product.image}
                   price={product.sale_price || product.price}
+                  brandId={product.brand_id}
+                  brandName={brand.name}
                   className="w-full py-3"
                 />
               )}

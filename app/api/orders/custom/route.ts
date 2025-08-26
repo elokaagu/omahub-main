@@ -19,21 +19,23 @@ export async function POST(request: NextRequest) {
       customer_notes,
       delivery_address,
       total_amount,
+      size,
+      color,
+      quantity,
     } = orderData;
 
-    // Validate required fields
-    if (!user_id || !product_id || !brand_id || !delivery_address) {
+    // Validate required fields (user_id is now optional)
+    if (!product_id || !brand_id || !delivery_address) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
       );
     }
 
-    // Get product and brand details for the email
-    const [productResult, brandResult, userResult] = await Promise.all([
+    // Get product and brand details
+    const [productResult, brandResult] = await Promise.all([
       supabase.from("products").select("*").eq("id", product_id).single(),
       supabase.from("brands").select("*").eq("id", brand_id).single(),
-      supabase.from("profiles").select("*").eq("id", user_id).single(),
     ]);
 
     if (productResult.error || brandResult.error) {
@@ -47,28 +49,64 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Handle profile fetch error gracefully
-    let userProfile = userResult.data;
-    if (userResult.error) {
-      console.log("⚠️ Profile fetch failed, using fallback:", userResult.error);
-      // Use fallback profile data
-      userProfile = {
-        id: user_id,
-        email: "customer@example.com", // Fallback email
-        role: "user",
-        owned_brands: [],
-      };
-    }
-
     const product = productResult.data;
     const brand = brandResult.data;
-    const user = userProfile;
+
+    // Handle user_id - create guest user if not provided
+    let finalUserId = user_id;
+    let userProfile = null;
+
+    if (!user_id) {
+      // Create a guest user profile for unauthenticated users
+      const { data: guestUser, error: guestUserError } = await supabase
+        .from("profiles")
+        .insert({
+          email: delivery_address.email,
+          first_name: delivery_address.full_name.split(" ")[0] || "",
+          last_name: delivery_address.full_name.split(" ").slice(1).join(" ") || "",
+          role: "user",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .select()
+        .single();
+
+      if (guestUserError) {
+        console.error("Error creating guest user:", guestUserError);
+        return NextResponse.json(
+          { error: "Failed to create guest user profile" },
+          { status: 500 }
+        );
+      }
+
+      finalUserId = guestUser.id;
+      userProfile = guestUser;
+    } else {
+      // Fetch existing user profile
+      const { data: existingUser, error: userError } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user_id)
+        .single();
+
+      if (userError) {
+        console.log("⚠️ Profile fetch failed, using fallback:", userError);
+        userProfile = {
+          id: user_id,
+          email: delivery_address.email,
+          role: "user",
+          owned_brands: [],
+        };
+      } else {
+        userProfile = existingUser;
+      }
+    }
 
     // Create the order in the database
     const { data: order, error: orderError } = await supabase
       .from("tailored_orders")
       .insert({
-        user_id,
+        user_id: finalUserId,
         product_id,
         brand_id,
         status: "pending",
