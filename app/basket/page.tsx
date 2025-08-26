@@ -36,10 +36,13 @@ export default function BasketPage() {
     );
   }
 
-  const totalItems = baskets.reduce(
-    (sum, basket) => sum + basket.total_items,
-    0
-  );
+  const totalItems = baskets.reduce((sum, basket) => {
+    const basketTotal = basket?.total_items;
+    return (
+      sum +
+      (typeof basketTotal === "number" && !isNaN(basketTotal) ? basketTotal : 0)
+    );
+  }, 0);
   const totalPrice = getTotalPrice();
 
   if (totalItems === 0) {
@@ -86,7 +89,9 @@ export default function BasketPage() {
                 >
                   <div className="flex-shrink-0">
                     <img
-                      src={item.products?.images?.[0] || "/placeholder-image.jpg"}
+                      src={
+                        item.products?.images?.[0] || "/placeholder-image.jpg"
+                      }
                       alt={item.products?.title || "Product"}
                       className="h-20 w-20 object-cover rounded-lg"
                     />

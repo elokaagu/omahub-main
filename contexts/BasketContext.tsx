@@ -106,10 +106,17 @@ function basketReducer(state: BasketState, action: BasketAction): BasketState {
                 ),
                 total_items: basket.basket_items
                   .filter((item) => item.id !== action.payload.itemId)
-                  .reduce((sum: number, item: BasketItem) => sum + item.quantity, 0),
+                  .reduce(
+                    (sum: number, item: BasketItem) => sum + item.quantity,
+                    0
+                  ),
                 total_price: basket.basket_items
                   .filter((item) => item.id !== action.payload.itemId)
-                  .reduce((sum: number, item: BasketItem) => sum + item.price * item.quantity, 0),
+                  .reduce(
+                    (sum: number, item: BasketItem) =>
+                      sum + item.price * item.quantity,
+                    0
+                  ),
               }
             : basket
         ),
@@ -411,18 +418,34 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
 
   // Get total items across all baskets
   const getTotalItems = useCallback(() => {
-    return state.baskets.reduce(
-      (total, basket) => total + basket.total_items,
-      0
-    );
+    if (!state.baskets || !Array.isArray(state.baskets)) {
+      return 0;
+    }
+    return state.baskets.reduce((total, basket) => {
+      const basketTotal = basket?.total_items;
+      return (
+        total +
+        (typeof basketTotal === "number" && !isNaN(basketTotal)
+          ? basketTotal
+          : 0)
+      );
+    }, 0);
   }, [state.baskets]);
 
   // Get total price across all baskets
   const getTotalPrice = useCallback(() => {
-    return state.baskets.reduce(
-      (total, basket) => total + basket.total_price,
-      0
-    );
+    if (!state.baskets || !Array.isArray(state.baskets)) {
+      return 0;
+    }
+    return state.baskets.reduce((total, basket) => {
+      const basketPrice = basket?.total_price;
+      return (
+        total +
+        (typeof basketPrice === "number" && !isNaN(basketPrice)
+          ? basketPrice
+          : 0)
+      );
+    }, 0);
   }, [state.baskets]);
 
   // Load baskets when user changes
