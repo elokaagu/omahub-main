@@ -1062,6 +1062,113 @@ export default function LeadsTrackingDashboard({
           )}
         </CardContent>
       </Card>
+
+      {/* Google Analytics Section - Super Admin Only */}
+      {isSuperAdmin && (
+        <Card className="border-oma-beige mt-6">
+          <CardHeader className="bg-gradient-to-r from-oma-plum to-oma-cocoa text-white">
+            <div className="flex justify-between items-center">
+              <CardTitle className="font-canela text-white">
+                📊 Google Analytics Overview
+              </CardTitle>
+              <Badge variant="outline" className="border-white/30 text-white">
+                Super Admin Only
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {/* Page Views */}
+              <div className="text-center p-4 bg-oma-cream/20 rounded-lg">
+                <div className="text-2xl font-bold text-oma-plum">
+                  {vercelAnalytics?.pageviews?.toLocaleString() || "0"}
+                </div>
+                <div className="text-sm text-oma-cocoa">Total Page Views</div>
+                <div className="text-xs text-oma-cocoa/70 mt-1">
+                  Last 30 days
+                </div>
+              </div>
+
+              {/* Unique Visitors */}
+              <div className="text-center p-4 bg-oma-cream/20 rounded-lg">
+                <div className="text-2xl font-bold text-oma-plum">
+                  {vercelAnalytics?.visitors?.toLocaleString() || "0"}
+                </div>
+                <div className="text-sm text-oma-cocoa">Unique Visitors</div>
+                <div className="text-xs text-oma-cocoa/70 mt-1">
+                  Last 30 days
+                </div>
+              </div>
+
+              {/* Conversion Rate */}
+              <div className="text-center p-4 bg-oma-cream/20 rounded-lg">
+                <div className="text-2xl font-bold text-oma-plum">
+                  {analytics?.conversion_rate 
+                    ? `${(analytics.conversion_rate * 100).toFixed(1)}%`
+                    : "0%"
+                  }
+                </div>
+                <div className="text-sm text-oma-cocoa">Conversion Rate</div>
+                <div className="text-xs text-oma-cocoa/70 mt-1">
+                  Leads to Conversion
+                </div>
+              </div>
+
+              {/* Top Performing Page */}
+              <div className="text-center p-4 bg-oma-cream/20 rounded-lg">
+                <div className="text-lg font-bold text-oma-plum truncate">
+                  {vercelAnalytics?.top_page || "Home"}
+                </div>
+                <div className="text-sm text-oma-cocoa">Top Page</div>
+                <div className="text-xs text-oma-cocoa/70 mt-1">
+                  Most Visited
+                </div>
+              </div>
+            </div>
+
+            {/* Traffic Sources */}
+            {vercelAnalytics?.sources && Object.keys(vercelAnalytics.sources).length > 0 && (
+              <div className="mt-6">
+                <h4 className="font-medium text-oma-plum mb-3">Traffic Sources</h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {Object.entries(vercelAnalytics.sources).map(([source, count]) => (
+                    <div key={source} className="text-center p-3 bg-oma-cream/10 rounded-lg">
+                      <div className="text-lg font-semibold text-oma-cocoa">
+                        {count?.toLocaleString() || "0"}
+                      </div>
+                      <div className="text-xs text-oma-cocoa/70 capitalize">
+                        {source.replace(/_/g, " ")}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Recent Activity */}
+            <div className="mt-6">
+              <h4 className="font-medium text-oma-plum mb-3">Recent Activity</h4>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between p-3 bg-oma-cream/10 rounded-lg">
+                  <span className="text-sm text-oma-cocoa">Last lead submission</span>
+                  <span className="text-sm font-medium text-oma-plum">
+                    {analytics?.monthly_trends?.[analytics.monthly_trends.length - 1]?.month 
+                      ? new Date(analytics.monthly_trends[analytics.monthly_trends.length - 1].month).toLocaleDateString()
+                      : "No data"
+                    }
+                  </span>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-oma-cream/10 rounded-lg">
+                  <span className="text-sm text-oma-cocoa">Total leads this month</span>
+                  <span className="text-sm font-medium text-oma-plum">
+                    {analytics?.this_month_leads || "0"}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
