@@ -29,7 +29,6 @@ import {
   isValidWhatsAppNumber,
   formatPhoneForDisplay,
 } from "@/lib/utils/phoneUtils";
-import { FavouriteButton } from "@/components/ui/favourite-button";
 import { formatProductPrice } from "@/lib/utils/priceFormatter";
 import { getProductMainImage } from "@/lib/utils/productImageUtils";
 
@@ -207,13 +206,6 @@ export default function ClientBrandProfile({
                   className="w-full sm:w-auto min-h-[44px] text-sm sm:text-base"
                 />
               )}
-            {user && (
-              <FavouriteButton
-                itemId={brandData.id}
-                itemType="brand"
-                className="w-full sm:w-auto min-h-[44px] text-sm sm:text-base"
-              />
-            )}
             <Button
               onClick={handleOpenContactModal}
               variant="outline"

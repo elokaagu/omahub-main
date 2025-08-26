@@ -456,7 +456,7 @@ function ProductCarouselSection({
                   <p className="text-oma-cocoa/70 text-sm mb-3">
                     {product.brand?.name || "Unknown Brand"}
                   </p>
-                  <p className="text-oma-plum font-semibold text-lg">
+                  <p className="text-oma-plum font-medium text-sm sm:text-base">
                     {(() => {
                       try {
                         if (product.service_type === "portfolio") {
@@ -465,7 +465,12 @@ function ProductCarouselSection({
                         return formatProductPrice(product, product.brand)
                           .displayPrice;
                       } catch (error) {
-                        return "Contact for pricing";
+                        // Show actual price if available, otherwise show a more appropriate fallback
+                        if (product.price || product.sale_price) {
+                          const price = product.sale_price || product.price;
+                          return `£${price}`;
+                        }
+                        return "Price on request";
                       }
                     })()}
                   </p>

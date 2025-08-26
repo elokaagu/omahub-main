@@ -28,7 +28,6 @@ import {
   Heart,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { FavouriteButton } from "@/components/ui/favourite-button";
 import { formatProductPrice } from "@/lib/utils/priceFormatter";
 import AddToBasketButton from "@/components/ui/add-to-basket-button";
 
@@ -550,12 +549,6 @@ export default function ProductPage() {
                   className="w-full py-3"
                 />
               )}
-
-              <FavouriteButton
-                itemId={product.id}
-                itemType="product"
-                className="w-full"
-              />
               
               <Button
                 variant="outline"
@@ -563,7 +556,7 @@ export default function ProductPage() {
                 className="w-full"
               >
                 <Link href="/basket">
-                  <ShoppingBag className="h-5 w-5 mr-2" />
+                  <ShoppingBag className="h-5 w-4 mr-2" />
                   View Basket
                 </Link>
               </Button>
