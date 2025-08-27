@@ -404,14 +404,20 @@ export default function ClientBrandProfile({
               About {brandData.name}
             </h2>
             <div className="prose text-oma-black max-w-none">
-              {brandData.longDescription.split("\n\n").map((paragraph, i) => (
-                <p
-                  key={i}
-                  className="mb-3 sm:mb-4 text-sm sm:text-base leading-relaxed"
-                >
-                  {paragraph}
+              {brandData.longDescription ? (
+                brandData.longDescription.split("\n\n").map((paragraph, i) => (
+                  <p
+                    key={i}
+                    className="mb-3 sm:mb-4 text-sm sm:text-base leading-relaxed"
+                  >
+                    {paragraph}
+                  </p>
+                ))
+              ) : (
+                <p className="mb-3 sm:mb-4 text-sm sm:text-base leading-relaxed">
+                  {brandData.description}
                 </p>
-              ))}
+              )}
             </div>
           </div>
 
