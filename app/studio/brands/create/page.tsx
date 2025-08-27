@@ -227,14 +227,14 @@ export default function CreateBrandPage() {
     }
 
     // Validate price range - either set a range or explicitly mark as contact for pricing
-    if (
-      !formData.price_min &&
-      !formData.price_max &&
-      !formData.contact_for_pricing
-    ) {
-      toast.error("Please set a price range or mark as 'Contact for pricing'");
-      return;
-    }
+          if (
+        !formData.price_min &&
+        !formData.price_max &&
+        !formData.contact_for_pricing
+      ) {
+        toast.error("Please set a price range or mark as 'explore brand for prices'");
+        return;
+      }
 
     // Email is optional - only validate format if provided
     if (formData.contact_email) {
@@ -263,7 +263,7 @@ export default function CreateBrandPage() {
 
     // If contact for pricing is checked, override any price range
     if (formData.contact_for_pricing) {
-      priceRange = "Contact for pricing";
+      priceRange = "explore brand for prices";
     }
 
     const payload = {
@@ -271,7 +271,7 @@ export default function CreateBrandPage() {
       description: formData.description,
       long_description: formData.long_description || formData.description,
       location: formData.location,
-      price_range: priceRange || "Contact for pricing",
+      price_range: priceRange || "explore brand for prices",
       currency: formData.currency,
       category: formData.categories[0],
       categories: formData.categories,
@@ -568,10 +568,10 @@ export default function CreateBrandPage() {
                         }
                         className="rounded border-gray-300 text-oma-plum focus:ring-oma-plum"
                       />
-                      <Label htmlFor="contact_for_pricing" className="text-sm">
-                        Contact for pricing (if you prefer not to show specific
-                        prices)
-                      </Label>
+                                              <Label htmlFor="contact_for_pricing" className="text-sm">
+                          explore brand for prices (if you prefer not to show specific
+                          prices)
+                        </Label>
                     </div>
                   </div>
                 </div>

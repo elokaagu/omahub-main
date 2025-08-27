@@ -389,7 +389,7 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
     }
 
     // Format price range if both min and max are provided
-    let priceRange = brand.price_range || "Contact for pricing";
+    let priceRange = brand.price_range || "explore brand for prices";
     if (priceMin && priceMax) {
       const selectedCurrency = CURRENCIES.find((c) => c.code === currency);
       const symbol = selectedCurrency?.symbol || "$";
@@ -654,7 +654,7 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
                         )}
                       </>
                     ) : (
-                      <>Current: {brand.price_range || "Contact for pricing"}</>
+                      <>Current: {brand.price_range || "explore brand for prices"}</>
                     )}
                   </p>
                 </div>
