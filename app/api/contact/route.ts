@@ -456,6 +456,7 @@ View all inquiries in your Studio: [Studio Inbox Link]
 
 Best regards,
 OmaHub Team`,
+          to: contactEmail, // Send to brand's contact email
         });
 
         if (emailResult.success) {

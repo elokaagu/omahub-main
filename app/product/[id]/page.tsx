@@ -126,6 +126,11 @@ export default function ProductPage() {
   };
 
   const handleOrderClick = () => {
+    console.log("🔍 Opening modal with product:", {
+      id: product?.id,
+      title: product?.title,
+      description: product?.description
+    });
     setShowOrderModal(true);
   };
 
@@ -593,15 +598,12 @@ export default function ProductPage() {
 
       {/* Tailored Order Modal */}
       {showOrderModal && product && brand && (
-        <>
-          {console.log("Opening modal with:", { product, brand })}
-          <TailoredOrderModal
-            product={product}
-            brand={brand}
-            isOpen={showOrderModal}
-            onClose={() => setShowOrderModal(false)}
-          />
-        </>
+        <TailoredOrderModal
+          product={product}
+          brand={brand}
+          isOpen={showOrderModal}
+          onClose={() => setShowOrderModal(false)}
+        />
       )}
     </div>
   );

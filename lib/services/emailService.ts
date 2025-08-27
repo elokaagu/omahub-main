@@ -10,6 +10,7 @@ export async function sendContactEmail(formData: {
   email: string;
   subject: string;
   message: string;
+  to?: string; // Optional recipient email
 }) {
   try {
     // Check if Resend is properly configured
@@ -30,10 +31,13 @@ export async function sendContactEmail(formData: {
       };
     }
 
-    console.log("📧 Sending contact email via Resend...");
+    // Determine recipient - use provided 'to' email or fallback to admin
+    const recipientEmail = formData.to || "eloka@satellitelabs.xyz";
+    
+    console.log("📧 Sending contact email via Resend to:", recipientEmail);
     const { data, error } = await resend.emails.send({
       from: "OmaHub <info@oma-hub.com>",
-      to: ["eloka@satellitelabs.xyz"],
+      to: [recipientEmail],
       subject: `New Contact Form Submission: ${formData.subject}`,
       text: `
 Name: ${formData.name}
