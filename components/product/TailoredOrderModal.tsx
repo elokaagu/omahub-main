@@ -190,13 +190,11 @@ export function TailoredOrderModal({
     );
   }
 
-  console.log("🎯 Modal render - isOpen:", isOpen, "product:", product?.title);
-  
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[95vh] flex flex-col relative bg-red-500">
+      <DialogContent className="max-w-4xl max-h-[95vh] flex flex-col relative">
         <DialogHeader className="pb-4">
-          <DialogTitle className="text-xl font-semibold text-white">
+          <DialogTitle className="text-xl font-semibold">
             Custom Order: {product.title}
           </DialogTitle>
         </DialogHeader>
