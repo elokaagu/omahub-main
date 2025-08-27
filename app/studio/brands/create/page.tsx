@@ -107,12 +107,12 @@ export default function CreateBrandPage() {
       return; // Don't update if exceeding limit
     }
 
-    // Auto-detect currency from price range if it's being entered
-    if (name === "price_range" && value) {
+    // Auto-detect currency from price range ONLY if no currency is explicitly selected
+    if (name === "price_range" && value && !formData.currency) {
       const detectedCurrency = extractCurrencyFromPriceRange(value);
       if (detectedCurrency) {
         console.log(
-          `🔄 Auto-detected currency: ${detectedCurrency} from price range`
+          `🔄 Auto-detected currency: ${detectedCurrency} from price range (no explicit currency set)`
         );
         setFormData((prev) => ({
           ...prev,

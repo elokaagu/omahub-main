@@ -196,7 +196,7 @@ export function getBrandCurrency(
     return null;
   }
 
-  // First priority: use the brand's explicit currency field
+  // First priority: use the brand's explicit currency field (ALWAYS respect this)
   if (brand.currency) {
     const currencyFromField = getCurrencyByCode(brand.currency);
     if (currencyFromField) {
@@ -213,12 +213,12 @@ export function getBrandCurrency(
     }
   }
 
-  // Second priority: try to extract from price_range
-  if (brand.price_range) {
+  // Only fall back to price_range if no explicit currency is set
+  if (!brand.currency && brand.price_range) {
     const currencyFromPrice = extractCurrencyFromPriceRange(brand.price_range);
     if (currencyFromPrice) {
       console.log(
-        "getBrandCurrency: Found currency from price_range:",
+        "getBrandCurrency: Found currency from price_range (fallback):",
         currencyFromPrice
       );
       return currencyFromPrice;
