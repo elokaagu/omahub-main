@@ -118,6 +118,8 @@ export type Brand = {
   updated_at?: string;
   video_url?: string;
   video_thumbnail?: string;
+  // New normalized image structure
+  brand_images?: BrandImage[];
 };
 
 export type Review = {

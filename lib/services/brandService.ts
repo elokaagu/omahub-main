@@ -205,10 +205,21 @@ export async function getAllBrands(
 
     console.log(`📊 Found ${count} brands in database`);
 
-    // Fetch all brand data
+    // Fetch all brand data with their normalized images
     const { data, error } = await supabase
       .from("brands")
-      .select("*, video_url, video_thumbnail")
+      .select(`
+        *,
+        video_url,
+        video_thumbnail,
+        brand_images (
+          id,
+          role,
+          storage_path,
+          created_at,
+          updated_at
+        )
+      `)
       .order("name");
 
     if (error) {
@@ -245,6 +256,8 @@ export async function getAllBrands(
       image: item.image || "/placeholder-image.jpg",
       video_url: item.video_url || undefined,
       video_thumbnail: item.video_thumbnail || undefined,
+      // Include the new normalized images
+      brand_images: item.brand_images || [],
     }));
 
     // Update cache

@@ -18,6 +18,13 @@ interface Brand {
   isVerified: boolean;
   video_url?: string;
   video_thumbnail?: string;
+  brand_images?: Array<{
+    id: string;
+    role: string;
+    storage_path: string;
+    created_at: string;
+    updated_at: string;
+  }>;
 }
 
 interface FullWidthBrandRowProps {
@@ -117,6 +124,7 @@ export function FullWidthBrandRow({
                   rating={brand.rating}
                   video_url={brand.video_url}
                   video_thumbnail={brand.video_thumbnail}
+                  brand_images={brand.brand_images}
                 />
               </div>
             </FadeIn>

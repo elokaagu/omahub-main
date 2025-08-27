@@ -4,12 +4,13 @@ import { cn } from "@/lib/utils";
 import { AuthImage } from "./auth-image";
 import { VideoPlayer } from "./video-player";
 import { useAuth } from "@/contexts/AuthContext";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { brandImageService } from "@/lib/services/brandImageService";
 
 interface BrandCardProps {
   id: string;
   name: string;
-  image: string;
+  image: string; // Keep for backward compatibility
   category: string;
   location: string;
   isVerified: boolean;
@@ -18,6 +19,12 @@ interface BrandCardProps {
   className?: string;
   video_url?: string;
   video_thumbnail?: string;
+  // New props for the normalized system
+  brand_images?: Array<{
+    id: string;
+    role: string;
+    storage_path: string;
+  }>;
 }
 
 export function BrandCard({
@@ -32,21 +39,48 @@ export function BrandCard({
   className,
   video_url,
   video_thumbnail,
+  brand_images,
 }: BrandCardProps) {
   const { user } = useAuth();
+  const [imageUrl, setImageUrl] = useState<string>(image || "/placeholder.svg");
+
+  // Use new image service if brand_images are provided
+  useEffect(() => {
+    async function loadImageUrl() {
+      if (brand_images && brand_images.length > 0) {
+        // Find cover image or use first available
+        const coverImage = brand_images.find(img => img.role === 'cover') || brand_images[0];
+        if (coverImage) {
+          try {
+            const url = await brandImageService.getBrandImageUrl(coverImage.storage_path);
+            if (url) {
+              setImageUrl(url);
+            }
+          } catch (error) {
+            console.warn(`Failed to load image for ${name}:`, error);
+            // Fallback to old image prop
+            setImageUrl(image || "/placeholder.svg");
+          }
+        }
+      }
+    }
+
+    loadImageUrl();
+  }, [brand_images, image, name]);
 
   // Debug logging for slow loading issues
   useEffect(() => {
     if (process.env.NODE_ENV === "development") {
       console.log("BrandCard debug:", {
         brandName: name,
-        image,
+        image: imageUrl,
         video_url,
         video_thumbnail,
         hasVideo: !!video_url,
+        brand_images: brand_images?.length || 0,
       });
     }
-  }, [name, image, video_url, video_thumbnail]);
+  }, [name, imageUrl, video_url, video_thumbnail, brand_images]);
 
   return (
     <NavigationLink
@@ -69,8 +103,8 @@ export function BrandCard({
         {video_url ? (
           <VideoPlayer
             videoUrl={video_url}
-            thumbnailUrl={image} // Use the main image as thumbnail, not video_thumbnail
-            fallbackImageUrl={image}
+            thumbnailUrl={imageUrl} // Use the main image as thumbnail, not video_thumbnail
+            fallbackImageUrl={imageUrl}
             alt={name}
             className={cn(
               "absolute inset-0 w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105",
@@ -91,7 +125,7 @@ export function BrandCard({
           />
         ) : (
           <AuthImage
-            src={image || "/placeholder.svg"}
+            src={imageUrl}
             alt={name}
             width={800}
             height={1000}
