@@ -33,6 +33,7 @@ type CatalogueWithBrand = Catalogue & {
     rating: number;
     long_description: string;
     price_range?: string;
+    currency?: string;
   };
   created_at?: string;
 };
@@ -57,7 +58,9 @@ export default function CataloguePage() {
   const [catalogue, setCatalogue] = useState<CatalogueWithBrand | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [recommendedProducts, setRecommendedProducts] = useState<
-    (Product & { brand: { price_range?: string; currency?: string; location?: string } })[]
+    (Product & {
+      brand: { price_range?: string; currency?: string; location?: string };
+    })[]
   >([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -325,7 +328,7 @@ export default function CataloguePage() {
                                     price: product.price,
                                     sale_price: product.sale_price,
                                   },
-                                  { price_range: catalogue.brand.price_range }
+                                  catalogue.brand
                                 ).displayPrice;
                               })()}
                             </span>
@@ -336,7 +339,7 @@ export default function CataloguePage() {
                                     price: product.price,
                                     sale_price: product.sale_price,
                                   },
-                                  { price_range: catalogue.brand.price_range }
+                                  catalogue.brand
                                 ).originalPrice;
                               })()}
                             </span>
@@ -360,7 +363,7 @@ export default function CataloguePage() {
                                   price: product.price,
                                   sale_price: product.sale_price,
                                 },
-                                { price_range: catalogue.brand.price_range }
+                                catalogue.brand
                               ).displayPrice;
                             })()}
                           </span>

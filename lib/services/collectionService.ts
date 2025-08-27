@@ -57,6 +57,7 @@ export async function getCollectionWithBrand(id: string): Promise<
         rating: number;
         long_description: string;
         price_range?: string;
+        currency?: string;
       };
     })
   | null
@@ -70,7 +71,7 @@ export async function getCollectionWithBrand(id: string): Promise<
     .select(
       `
       *,
-      brand:brands(id, name, location, is_verified, category, rating, long_description, price_range)
+      brand:brands(id, name, location, is_verified, category, rating, long_description, price_range, currency)
     `
     )
     .eq("id", id)

@@ -46,8 +46,8 @@ export function formatPrice(
 ): string {
   const numericPrice = typeof price === "string" ? parseFloat(price) : price;
 
-  if (isNaN(numericPrice)) {
-    return `${currencySymbol}0`;
+  if (isNaN(numericPrice) || numericPrice <= 0) {
+    return "Contact designer for pricing";
   }
 
   const formattedPrice = formatNumberWithCommas(numericPrice);
@@ -195,11 +195,13 @@ export function formatProductPrice(
   if (product.currency) {
     const productCurrency = getCurrencyByCode(product.currency);
     if (productCurrency) {
+      // Only use sale_price if it's greater than 0
+      const hasValidSalePrice = product.sale_price && product.sale_price > 0;
       const displayPrice = formatPrice(
-        product.sale_price || product.price,
+        hasValidSalePrice ? product.sale_price : product.price,
         productCurrency.symbol
       );
-      const originalPrice = product.sale_price
+      const originalPrice = hasValidSalePrice
         ? formatPrice(product.price, productCurrency.symbol)
         : undefined;
 
@@ -215,11 +217,13 @@ export function formatProductPrice(
   if (brand?.currency) {
     const brandCurrency = getCurrencyByCode(brand.currency);
     if (brandCurrency) {
+      // Only use sale_price if it's greater than 0
+      const hasValidSalePrice = product.sale_price && product.sale_price > 0;
       const displayPrice = formatPrice(
-        product.sale_price || product.price,
+        hasValidSalePrice ? product.sale_price : product.price,
         brandCurrency.symbol
       );
-      const originalPrice = product.sale_price
+      const originalPrice = hasValidSalePrice
         ? formatPrice(product.price, brandCurrency.symbol)
         : undefined;
 
@@ -235,11 +239,13 @@ export function formatProductPrice(
   if (brand?.location) {
     const locationCurrency = getCurrencyByLocation(brand.location);
     if (locationCurrency) {
+      // Only use sale_price if it's greater than 0
+      const hasValidSalePrice = product.sale_price && product.sale_price > 0;
       const displayPrice = formatPrice(
-        product.sale_price || product.price,
+        hasValidSalePrice ? product.sale_price : product.price,
         locationCurrency.symbol
       );
-      const originalPrice = product.sale_price
+      const originalPrice = hasValidSalePrice
         ? formatPrice(product.price, locationCurrency.symbol)
         : undefined;
 
@@ -254,11 +260,13 @@ export function formatProductPrice(
   // Last resort: use USD as default currency
   const defaultCurrency = getCurrencyByCode("USD");
   if (defaultCurrency) {
+    // Only use sale_price if it's greater than 0
+    const hasValidSalePrice = product.sale_price && product.sale_price > 0;
     const displayPrice = formatPrice(
-      product.sale_price || product.price,
+      hasValidSalePrice ? product.sale_price : product.price,
       defaultCurrency.symbol
     );
-    const originalPrice = product.sale_price
+    const originalPrice = hasValidSalePrice
       ? formatPrice(product.price, defaultCurrency.symbol)
       : undefined;
 
