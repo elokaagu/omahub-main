@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { getCollectionWithBrand } from "@/lib/services/collectionService";
 import {
-  getProductsByCatalogue,
+  getProductsByCatalogueWithBrand,
   getIntelligentRecommendationsWithBrand,
 } from "@/lib/services/productService";
 import { Catalogue, Brand, Product } from "@/lib/supabase";
@@ -56,7 +56,18 @@ export default function CataloguePage() {
   const catalogueId = params.id as string;
 
   const [catalogue, setCatalogue] = useState<CatalogueWithBrand | null>(null);
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<
+    (Product & {
+      brand: {
+        name: string;
+        id: string;
+        location: string;
+        is_verified: boolean;
+        price_range?: string;
+        currency?: string;
+      };
+    })[]
+  >([]);
   const [recommendedProducts, setRecommendedProducts] = useState<
     (Product & {
       brand: { price_range?: string; currency?: string; location?: string };
@@ -78,8 +89,8 @@ export default function CataloguePage() {
         }
         setCatalogue(collectionData);
 
-        // Fetch products in this collection
-        const productsData = await getProductsByCatalogue(catalogueId);
+        // Fetch products in this collection with brand information
+        const productsData = await getProductsByCatalogueWithBrand(catalogueId);
         setProducts(productsData);
 
         // Fetch intelligent recommendations
@@ -328,19 +339,19 @@ export default function CataloguePage() {
                                     price: product.price,
                                     sale_price: product.sale_price,
                                   },
-                                  catalogue.brand
+                                  product.brand
                                 ).displayPrice;
                               })()}
                             </span>
                             <span className="text-sm text-black/60 line-through">
                               {(() => {
-                                return formatProductPrice(
-                                  {
-                                    price: product.price,
-                                    sale_price: product.sale_price,
-                                  },
-                                  catalogue.brand
-                                ).originalPrice;
+                                                              return formatProductPrice(
+                                {
+                                  price: product.price,
+                                  sale_price: product.sale_price,
+                                },
+                                product.brand
+                              ).originalPrice;
                               })()}
                             </span>
                           </>
@@ -363,7 +374,7 @@ export default function CataloguePage() {
                                   price: product.price,
                                   sale_price: product.sale_price,
                                 },
-                                catalogue.brand
+                                product.brand
                               ).displayPrice;
                             })()}
                           </span>

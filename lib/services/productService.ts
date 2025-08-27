@@ -121,6 +121,45 @@ export async function getProductsByCatalogue(
 }
 
 /**
+ * Fetch products by catalogue ID with brand information including currency
+ */
+export async function getProductsByCatalogueWithBrand(
+  catalogueId: string
+): Promise<
+  (Product & {
+    brand: {
+      name: string;
+      id: string;
+      location: string;
+      is_verified: boolean;
+      price_range?: string;
+      currency?: string;
+    };
+  })[]
+> {
+  if (!supabase) {
+    throw new Error("Supabase client not available");
+  }
+
+  const { data, error } = await supabase
+    .from("products")
+    .select(`
+      *,
+      brand:brands(id, name, location, is_verified, price_range, currency)
+    `)
+    .eq("catalogue_id", catalogueId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching products by catalogue with brand:", error);
+    throw error;
+  }
+
+  // Normalize product images to ensure first image is always the main image
+  return normalizeProductImages(data || []);
+}
+
+/**
  * Fetch products with brand and catalogue information
  */
 export async function getProductsWithDetails(): Promise<
