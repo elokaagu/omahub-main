@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { getAdminClient } from "@/lib/supabase-admin";
 import { sendContactEmail } from "@/lib/services/emailService";
 
 // Helper function to extract project details from message
@@ -349,7 +349,15 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const supabase = createAdminClient();
+      const supabase = await getAdminClient();
+      
+      if (!supabase) {
+        console.error("❌ Failed to get admin client");
+        return NextResponse.json(
+          { error: "Internal server error" },
+          { status: 500 }
+        );
+      }
 
       // Verify brand exists and get contact information
       console.log("🔍 Checking if brand exists:", brandId);
