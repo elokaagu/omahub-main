@@ -267,11 +267,11 @@ export default function CreateBrandPage() {
       priceRange = "explore brand for prices";
     }
 
-    // Format descriptions to remove contractions and make them more professional
-    const payload = {
-      name: formData.name,
-      description: formatBrandDescription(formData.description),
-      long_description: formatBrandDescription(formData.long_description || formData.description),
+          // Format descriptions to remove contractions and make them more professional
+      const payload = {
+        name: formData.name,
+        description: formatBrandDescription(formData.description || ""),
+        long_description: formatBrandDescription(formData.long_description || formData.description || ""),
       location: formData.location,
       price_range: priceRange || "explore brand for prices",
       currency: formData.currency,

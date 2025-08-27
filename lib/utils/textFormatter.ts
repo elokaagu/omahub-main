@@ -93,8 +93,8 @@ export function removeContractions(text: string): string {
  * - Ensures proper capitalization
  * - Adds proper spacing
  */
-export function formatBrandDescription(description: string): string {
-  if (!description) return description;
+export function formatBrandDescription(description: string | undefined): string {
+  if (!description) return "";
 
   let formatted = description;
 

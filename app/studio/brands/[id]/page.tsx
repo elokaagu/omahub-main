@@ -417,8 +417,8 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
       // Prepare the update data
       const updateData = {
         name: brand.name,
-        description: formatBrandDescription(brand.description),
-        long_description: formatBrandDescription(brand.long_description),
+        description: formatBrandDescription(brand.description || ""),
+        long_description: formatBrandDescription(brand.long_description || ""),
         category: brand.category,
         categories: brand.categories,
         location: brand.location,
