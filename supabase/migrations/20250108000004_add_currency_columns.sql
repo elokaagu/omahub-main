@@ -22,18 +22,49 @@ WHERE brand_id IN (
   SELECT id FROM public.brands WHERE currency = 'USD'
 ) AND (currency IS NULL OR currency = '');
 
--- Step 5: Add indexes for better performance
-CREATE INDEX IF NOT EXISTS idx_products_currency ON public.products(currency);
-CREATE INDEX IF NOT EXISTS idx_brands_currency ON public.brands(currency);
+-- Step 5: Add indexes for better performance (only if they don't exist)
+DO $$ 
+BEGIN
+    -- Add products currency index if it doesn't exist
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_indexes 
+        WHERE indexname = 'idx_products_currency'
+    ) THEN
+        CREATE INDEX idx_products_currency ON public.products(currency);
+    END IF;
+    
+    -- Add brands currency index if it doesn't exist
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_indexes 
+        WHERE indexname = 'idx_brands_currency'
+    ) THEN
+        CREATE INDEX idx_brands_currency ON public.brands(currency);
+    END IF;
+END $$;
 
--- Step 6: Add constraints to ensure valid currency values
-ALTER TABLE public.products 
-ADD CONSTRAINT products_currency_check 
-CHECK (currency IN ('USD', 'GBP', 'EUR', 'NGN', 'CAD', 'AUD'));
-
-ALTER TABLE public.brands 
-ADD CONSTRAINT brands_currency_check 
-CHECK (currency IN ('USD', 'GBP', 'EUR', 'NGN', 'CAD', 'AUD'));
+-- Step 6: Add constraints to ensure valid currency values (only if they don't exist)
+DO $$ 
+BEGIN
+    -- Add products currency constraint if it doesn't exist
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint 
+        WHERE conname = 'products_currency_check'
+    ) THEN
+        ALTER TABLE public.products 
+        ADD CONSTRAINT products_currency_check 
+        CHECK (currency IN ('USD', 'GBP', 'EUR', 'NGN', 'CAD', 'AUD'));
+    END IF;
+    
+    -- Add brands currency constraint if it doesn't exist
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint 
+        WHERE conname = 'brands_currency_check'
+    ) THEN
+        ALTER TABLE public.brands 
+        ADD CONSTRAINT brands_currency_check 
+        CHECK (currency IN ('USD', 'GBP', 'EUR', 'NGN', 'CAD', 'AUD'));
+    END IF;
+END $$;
 
 -- Step 7: Update specific brands that should be in USD
 UPDATE public.brands 
