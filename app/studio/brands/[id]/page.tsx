@@ -85,7 +85,7 @@ const BRAND_NAME_LIMIT = 50;
 
 // Common currencies used across Africa
 const CURRENCIES = [
-  { code: "NONE", symbol: "—", name: "No Currency (explore brand for prices)" },
+  { code: "NONE", symbol: "—", name: "No Currency (Explore brand for prices)" },
   { code: "NGN", symbol: "₦", name: "Nigerian Naira" },
   { code: "KES", symbol: "KSh", name: "Kenyan Shilling" },
   { code: "GHS", symbol: "GHS", name: "Ghanaian Cedi" },
@@ -158,7 +158,7 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
           if (
             brandData.price_range &&
             brandData.price_range !== "Contact for pricing" &&
-            brandData.price_range !== "explore brand for prices"
+            brandData.price_range !== "Explore brand for prices"
           ) {
             const priceRangeMatch = brandData.price_range.match(
               /^(.+?)(\d+(?:,\d+)*)\s*-\s*(.+?)(\d+(?:,\d+)*)$/
@@ -181,7 +181,7 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
               setPriceMax("");
             }
           } else {
-            // If no price range or it's "explore brand for prices", set to NONE
+            // If no price range or it's "Explore brand for prices", set to NONE
             setCurrency("NONE");
             setPriceMin("");
             setPriceMax("");
@@ -407,8 +407,8 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
       const symbol = selectedCurrency?.symbol || "$";
       priceRange = `${symbol}${priceMin} - ${symbol}${priceMax}`;
     } else {
-      // If no min/max prices specified or currency is NONE, set to "explore brand for prices"
-      priceRange = "explore brand for prices";
+      // If no min/max prices specified or currency is NONE, set to "Explore brand for prices"
+      priceRange = "Explore brand for prices";
     }
 
     setSaving(true);
@@ -695,7 +695,7 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
                     ) : (
                       <>Current: {(() => {
                         // Check if price range is essentially empty (like "$75 - $75" or similar)
-                        if (!brand.price_range) return "explore brand for prices";
+                        if (!brand.price_range) return "Explore brand for prices";
                         
                         // Check for patterns like "$X - $X" where min = max (likely placeholder)
                         const priceMatch = brand.price_range.match(/^(.+?)(\d+(?:,\d+)*)\s*-\s*(.+?)(\d+(?:,\d+)*)$/);
@@ -706,7 +706,7 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
                           
                           // If min and max are the same (like $75 - $75), treat as unspecified
                           if (minNum === maxNum && minNum <= 100) {
-                            return "explore brand for prices";
+                            return "Explore brand for prices";
                           }
                         }
                         
