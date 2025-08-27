@@ -61,6 +61,7 @@ import {
 } from "@/lib/utils/priceFormatter";
 import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
+import { formatBrandDescription } from "@/lib/utils/textFormatter";
 import { getAllCategoryNames } from "@/lib/data/unified-categories";
 import {
   Dialog,
@@ -416,8 +417,8 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
       // Prepare the update data
       const updateData = {
         name: brand.name,
-        description: brand.description,
-        long_description: brand.long_description,
+        description: formatBrandDescription(brand.description),
+        long_description: formatBrandDescription(brand.long_description),
         category: brand.category,
         categories: brand.categories,
         location: brand.location,
@@ -626,6 +627,22 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
                     placeholder="Detailed description of the brand, its history, values, etc."
                     className="min-h-[200px]"
                   />
+                  <div className="text-xs text-muted-foreground">
+                    <p className="mb-1">💡 Tip: Contractions (isn't, it's, don't) will be automatically converted to formal language.</p>
+                    {brand.long_description && (
+                      <details className="mt-2">
+                        <summary className="cursor-pointer text-oma-plum hover:text-oma-plum/80">
+                          Preview formatted description
+                        </summary>
+                        <div className="mt-2 p-3 bg-gray-50 rounded-md text-sm">
+                          <p className="font-medium mb-2">Formatted version:</p>
+                          <p className="text-gray-700 whitespace-pre-wrap">
+                            {formatBrandDescription(brand.long_description)}
+                          </p>
+                        </div>
+                      </details>
+                    )}
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

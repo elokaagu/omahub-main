@@ -34,6 +34,7 @@ import {
 import { extractCurrencyFromPriceRange } from "@/lib/utils/currencySync";
 import { LazyImage } from "@/components/ui/lazy-image";
 import { getAllCategoryNames } from "@/lib/data/unified-categories";
+import { formatBrandDescription } from "@/lib/utils/textFormatter";
 import { VideoUpload } from "@/components/ui/video-upload";
 
 // Brand categories - now using unified categories (same as product)
@@ -266,10 +267,11 @@ export default function CreateBrandPage() {
       priceRange = "explore brand for prices";
     }
 
+    // Format descriptions to remove contractions and make them more professional
     const payload = {
       name: formData.name,
-      description: formData.description,
-      long_description: formData.long_description || formData.description,
+      description: formatBrandDescription(formData.description),
+      long_description: formatBrandDescription(formData.long_description || formData.description),
       location: formData.location,
       price_range: priceRange || "explore brand for prices",
       currency: formData.currency,
@@ -472,6 +474,22 @@ export default function CreateBrandPage() {
                     placeholder="Detailed description of the brand, its history, values, etc."
                     className="min-h-[200px]"
                   />
+                  <div className="text-xs text-muted-foreground">
+                    <p className="mb-1">💡 Tip: Contractions (isn't, it's, don't) will be automatically converted to formal language.</p>
+                    {formData.long_description && (
+                      <details className="mt-2">
+                        <summary className="cursor-pointer text-oma-plum hover:text-oma-plum/80">
+                          Preview formatted description
+                        </summary>
+                        <div className="mt-2 p-3 bg-gray-50 rounded-md text-sm">
+                          <p className="font-medium mb-2">Formatted version:</p>
+                          <p className="text-gray-700 whitespace-pre-wrap">
+                            {formatBrandDescription(formData.long_description)}
+                          </p>
+                        </div>
+                      </details>
+                    )}
+                  </div>
                 </div>
               </CardContent>
             </Card>
