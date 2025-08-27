@@ -38,12 +38,12 @@ interface BrandProfileData {
   name: string;
   description: string;
   longDescription?: string | null;
-  location: string;
-  priceRange: string;
-  category: string;
-  rating: number;
-  isVerified: boolean;
-  image: string;
+  location?: string;
+  priceRange?: string;
+  category?: string;
+  rating?: number;
+  isVerified?: boolean;
+  image?: string;
   collections: Array<{
     id: string | number;
     title: string;
@@ -495,20 +495,26 @@ export default function ClientBrandProfile({
               </div>
             </div>
 
-            <div className="mb-4">
-              <h4 className="text-sm font-semibold mb-1">Price Range</h4>
-              <p>{brandData.priceRange}</p>
-            </div>
+            {brandData.priceRange && (
+              <div className="mb-4">
+                <h4 className="text-sm font-semibold mb-1">Price Range</h4>
+                <p>{brandData.priceRange}</p>
+              </div>
+            )}
 
-            <div className="mb-4">
-              <h4 className="text-sm font-semibold mb-1">Location</h4>
-              <p>{brandData.location}</p>
-            </div>
+            {brandData.location && (
+              <div className="mb-4">
+                <h4 className="text-sm font-semibold mb-1">Location</h4>
+                <p>{brandData.location}</p>
+              </div>
+            )}
 
-            <div className="mb-6">
-              <h4 className="text-sm font-semibold mb-1">Category</h4>
-              <p>{brandData.category}</p>
-            </div>
+            {brandData.category && (
+              <div className="mb-6">
+                <h4 className="text-sm font-semibold mb-1">Category</h4>
+                <p>{brandData.category}</p>
+              </div>
+            )}
 
             <Button
               onClick={handleOpenContactModal}
