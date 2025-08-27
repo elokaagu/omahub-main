@@ -8,11 +8,26 @@ import {
   getBrandCollections,
 } from "@/lib/services/brandService";
 import { Brand, Review, Catalogue } from "@/lib/supabase";
+
+// Extended brand interface to include currency and other fields
+interface ExtendedBrand extends Brand {
+  currency?: string;
+  price_range?: string;
+  location?: string;
+  category?: string;
+  rating?: number;
+  is_verified?: boolean;
+  image?: string;
+  website?: string;
+  instagram?: string;
+  whatsapp?: string;
+  contact_email?: string;
+}
 import ClientBrandProfile from "./ClientBrandProfile";
 
 export default function BrandPage() {
   const { id } = useParams();
-  const [brand, setBrand] = useState<Brand | null>(null);
+  const [brand, setBrand] = useState<ExtendedBrand | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [catalogues, setCatalogues] = useState<Catalogue[]>([]);
   const [loading, setLoading] = useState(true);
@@ -91,6 +106,7 @@ export default function BrandPage() {
     longDescription: brand.long_description,
     location: brand.location,
     priceRange: brand.price_range,
+    currency: brand.currency,
     category: brand.category,
     rating: brand.rating,
     isVerified: brand.is_verified,

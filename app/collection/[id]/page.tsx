@@ -57,7 +57,7 @@ export default function CataloguePage() {
   const [catalogue, setCatalogue] = useState<CatalogueWithBrand | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [recommendedProducts, setRecommendedProducts] = useState<
-    (Product & { brand: { price_range?: string } })[]
+    (Product & { brand: { price_range?: string; currency?: string; location?: string } })[]
   >([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -432,7 +432,7 @@ export default function CataloguePage() {
                                     price: product.price,
                                     sale_price: product.sale_price,
                                   },
-                                  { price_range: product.brand?.price_range }
+                                  product.brand
                                 ).displayPrice
                               }
                             </span>
@@ -443,7 +443,7 @@ export default function CataloguePage() {
                                     price: product.price,
                                     sale_price: product.sale_price,
                                   },
-                                  { price_range: product.brand?.price_range }
+                                  product.brand
                                 ).originalPrice
                               }
                             </span>
@@ -456,7 +456,7 @@ export default function CataloguePage() {
                                   price: product.price,
                                   sale_price: product.sale_price,
                                 },
-                                { price_range: product.brand?.price_range }
+                                product.brand
                               ).displayPrice
                             }
                           </span>

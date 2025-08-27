@@ -761,7 +761,7 @@ export async function getIntelligentRecommendationsWithBrand(
   catalogueId?: string,
   brandId?: string,
   limit: number = 4
-): Promise<(Product & { brand: { price_range?: string } })[]> {
+): Promise<(Product & { brand: { price_range?: string; currency?: string; location?: string } })[]> {
   if (!supabase) {
     throw new Error("Supabase client not available");
   }
@@ -799,7 +799,7 @@ export async function getIntelligentRecommendationsWithBrand(
             .select(
               `
               *,
-              brand:brands(price_range)
+              brand:brands(price_range, currency, location)
             `
             )
             .in("brand_id", favouriteBrandIds)
@@ -821,7 +821,7 @@ export async function getIntelligentRecommendationsWithBrand(
         .select(
           `
           *,
-          brand:brands(price_range)
+          brand:brands(price_range, currency, location)
         `
         )
         .eq("catalogue_id", catalogueId)
@@ -842,7 +842,7 @@ export async function getIntelligentRecommendationsWithBrand(
         .select(
           `
           *,
-          brand:brands(price_range)
+          brand:brands(price_range, currency, location)
         `
         )
         .eq("brand_id", brandId)
@@ -878,7 +878,7 @@ export async function getCatalogueRecommendationsWithBrand(
   catalogueId: string,
   excludeProductId?: string,
   limit: number = 4
-): Promise<(Product & { brand: { price_range?: string } })[]> {
+): Promise<(Product & { brand: { price_range?: string; currency?: string; location?: string } })[]> {
   if (!supabase) {
     throw new Error("Supabase client not available");
   }
@@ -889,7 +889,7 @@ export async function getCatalogueRecommendationsWithBrand(
       .select(
         `
         *,
-        brand:brands(price_range)
+        brand:brands(price_range, currency, location)
       `
       )
       .eq("catalogue_id", catalogueId)

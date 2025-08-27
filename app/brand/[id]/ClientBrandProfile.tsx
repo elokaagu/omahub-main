@@ -285,6 +285,8 @@ export default function ClientBrandProfile({
                               {
                                 formatProductPrice(product, {
                                   price_range: brandData.priceRange,
+                                  currency: brandData.currency,
+                                  location: brandData.location,
                                 }).displayPrice
                               }
                             </p>
