@@ -321,6 +321,10 @@ export function formatPriceRangeWithBrandCurrency(
     maximumFractionDigits: 2,
   });
 
+  if (!currency) {
+    return "Contact designer for pricing";
+  }
+  
   return `${currency.symbol}${formattedMin} - ${currency.symbol}${formattedMax}`;
 }
 
