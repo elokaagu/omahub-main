@@ -32,8 +32,13 @@ import {
 import { formatProductPrice } from "@/lib/utils/priceFormatter";
 import { getProductMainImage } from "@/lib/utils/productImageUtils";
 
+// Extended interface for brand profile data that includes currency
+interface BrandProfileData extends BrandData {
+  currency?: string;
+}
+
 interface ClientBrandProfileProps {
-  brandData: BrandData;
+  brandData: BrandProfileData;
 }
 
 export default function ClientBrandProfile({
