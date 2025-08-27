@@ -188,12 +188,20 @@ export function TailoredOrderModal({
     );
   }
 
+  // Debug logging
+  console.log("TailoredOrderModal - Product data:", {
+    productId: product.id,
+    productTitle: product.title,
+    productDescription: product.description,
+    brandName: brand.name
+  });
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[95vh] flex flex-col relative">
         <DialogHeader className="pb-4">
           <DialogTitle className="text-xl font-semibold">
-            Custom Order: {product.title}
+            Custom Order: {product.title || "Product"}
           </DialogTitle>
         </DialogHeader>
 

@@ -593,12 +593,15 @@ export default function ProductPage() {
 
       {/* Tailored Order Modal */}
       {showOrderModal && product && brand && (
-        <TailoredOrderModal
-          product={product}
-          brand={brand}
-          isOpen={showOrderModal}
-          onClose={() => setShowOrderModal(false)}
-        />
+        <>
+          {console.log("Opening modal with:", { product, brand })}
+          <TailoredOrderModal
+            product={product}
+            brand={brand}
+            isOpen={showOrderModal}
+            onClose={() => setShowOrderModal(false)}
+          />
+        </>
       )}
     </div>
   );
