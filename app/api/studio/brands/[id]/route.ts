@@ -166,10 +166,19 @@ export async function PUT(
 
     // Update the brand
     console.log("💾 Updating brand in database...");
+    console.log("📝 Full update data:", updateData);
+    
+    // Filter out undefined/null values to avoid overwriting with null
+    const cleanUpdateData = Object.fromEntries(
+      Object.entries(updateData).filter(([_, value]) => value !== undefined && value !== null)
+    );
+    
+    console.log("🧹 Cleaned update data:", cleanUpdateData);
+    
     const { data: updatedBrand, error: updateError } = await supabase
       .from("brands")
       .update({
-        ...updateData,
+        ...cleanUpdateData,
         updated_at: new Date().toISOString(),
       })
       .eq("id", brandId)
@@ -178,6 +187,12 @@ export async function PUT(
 
     if (updateError) {
       console.error("❌ Error updating brand:", updateError);
+      console.error("❌ Update error details:", {
+        code: updateError.code,
+        message: updateError.message,
+        details: updateError.details,
+        hint: updateError.hint
+      });
       return NextResponse.json(
         { error: "Failed to update brand", details: updateError.message },
         { status: 500 }

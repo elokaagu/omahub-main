@@ -398,43 +398,67 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
 
     setSaving(true);
     try {
+      // Prepare the update data
+      const updateData = {
+        name: brand.name,
+        description: brand.description,
+        long_description: brand.long_description,
+        category: brand.category,
+        categories: brand.categories,
+        location: brand.location,
+        price_range: priceRange,
+        website: brand.website,
+        instagram: brand.instagram,
+        whatsapp: brand.whatsapp,
+        founded_year: brand.founded_year,
+        is_verified: brand.is_verified,
+        contact_email: brand.contact_email,
+        image: imageUrl,
+        video_url: brand.video_url,
+        video_thumbnail: brand.video_thumbnail,
+      };
+      
+      console.log("🔄 Submitting brand update:", updateData);
+      console.log("🔄 Brand ID:", brand.id);
+      
       // Use the new API endpoint that handles name propagation
       const response = await fetch(`/api/studio/brands/${brand.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          name: brand.name,
-          description: brand.description,
-          long_description: brand.long_description,
-          category: brand.category,
-          categories: brand.categories,
-          location: brand.location,
-          price_range: priceRange,
-          website: brand.website,
-          instagram: brand.instagram,
-          whatsapp: brand.whatsapp,
-          founded_year: brand.founded_year,
-          is_verified: brand.is_verified,
-          image: imageUrl,
-          video_url: brand.video_url,
-          video_thumbnail: brand.video_thumbnail,
-        }),
+        body: JSON.stringify(updateData),
       });
 
+      console.log("📡 Response status:", response.status);
+      console.log("📡 Response headers:", Object.fromEntries(response.headers.entries()));
+      
       const result = await response.json();
+      console.log("📡 Response data:", result);
 
       if (!response.ok) {
-        throw new Error(result.error || "Failed to update brand");
+        console.error("❌ API error response:", {
+          status: response.status,
+          statusText: response.statusText,
+          result: result
+        });
+        throw new Error(result.error || `Failed to update brand (${response.status})`);
       }
 
+      console.log("✅ Brand update successful:", result);
+      
       if (result.nameChanged) {
         toast.success(
           "Brand updated successfully! Name changes have been propagated across all connections."
         );
       } else {
         toast.success("Brand updated successfully");
+      }
+      
+      // Refresh the brand data to show updated values
+      if (result.brand) {
+        setBrand(result.brand);
+        console.log("🔄 Updated local brand state:", result.brand);
       }
     } catch (error) {
       console.error("Error updating brand:", error);
