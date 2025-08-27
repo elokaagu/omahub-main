@@ -194,11 +194,12 @@ export default function CreateProductPage() {
     if (formData.brand_id) {
       const selectedBrand = brands.find(b => b.id === formData.brand_id);
       if (selectedBrand) {
-        if (selectedBrand.currency) {
-          setSelectedBrandCurrency(selectedBrand.currency);
+        const brandCurrency = getBrandCurrency(selectedBrand);
+        if (brandCurrency) {
+          setSelectedBrandCurrency(brandCurrency.code);
           setFormData(prev => ({
             ...prev,
-            currency: selectedBrand.currency
+            currency: brandCurrency.code
           }));
         } else {
           // No currency specified - clear the currency
@@ -211,36 +212,6 @@ export default function CreateProductPage() {
       }
     }
   }, [formData.brand_id, brands]);
-
-  // Function to get currency from brand (using the actual currency field)
-  const getBrandCurrency = (brandId: string): string => {
-    const selectedBrand = brands.find((brand) => brand.id === brandId);
-    if (!selectedBrand) {
-      return "USD"; // Default fallback
-    }
-    
-    // Use the dedicated currency field if available, otherwise fallback to parsing price_range
-    if (selectedBrand.currency) {
-      return selectedBrand.currency;
-    }
-    
-    // Fallback: try to extract from price_range (legacy support)
-    if (selectedBrand.price_range) {
-      const priceRangeMatch = selectedBrand.price_range.match(
-        /^(.+?)(\d+(?:,\d+)*)\s*-\s*(.+?)(\d+(?:,\d+)*)$/
-      );
-
-      if (priceRangeMatch) {
-        const [, symbol1] = priceRangeMatch;
-        const foundCurrency = CURRENCIES.find((c) => c.symbol === symbol1.trim());
-        if (foundCurrency) {
-          return foundCurrency.code; // Return currency code, not symbol
-        }
-      }
-    }
-
-    return "USD"; // Default fallback
-  };
 
   // Function to get currency symbol from currency code
   const getCurrencySymbol = (currencyCode: string): string => {
@@ -321,14 +292,19 @@ export default function CreateProductPage() {
       }));
 
       // Update currency symbol based on selected brand
-      const newCurrency = getBrandCurrency(value as string);
-      setSelectedBrandCurrency(newCurrency);
-      
-      // Automatically set the product currency to match the brand
-      setFormData((prev) => ({
-        ...prev,
-        currency: newCurrency,
-      }));
+      const selectedBrand = brands.find(brand => brand.id === value);
+      if (selectedBrand) {
+        const brandCurrency = getBrandCurrency(selectedBrand);
+        if (brandCurrency) {
+          setSelectedBrandCurrency(brandCurrency.code);
+          
+          // Automatically set the product currency to match the brand
+          setFormData((prev) => ({
+            ...prev,
+            currency: brandCurrency.code,
+          }));
+        }
+      }
     }
   };
 

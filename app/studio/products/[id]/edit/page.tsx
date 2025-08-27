@@ -241,7 +241,9 @@ export default function EditProductPage() {
           );
           if (selectedBrand) {
             const currency = getBrandCurrency(selectedBrand);
-            setSelectedBrandCurrency(currency);
+            if (currency) {
+              setSelectedBrandCurrency(currency.code);
+            }
           }
         }
       } catch (error) {
@@ -301,14 +303,16 @@ export default function EditProductPage() {
     if (name === "brand_id" && typeof value === "string") {
       const selectedBrand = brands.find((brand) => brand.id === value);
       if (selectedBrand) {
-        const currency = getBrandCurrency(selectedBrand);
-        setSelectedBrandCurrency(currency);
+        const brandCurrency = getBrandCurrency(selectedBrand);
+        if (brandCurrency) {
+          setSelectedBrandCurrency(brandCurrency.code);
 
-        // Automatically set the product currency to match the brand
-        setFormData((prev) => ({
-          ...prev,
-          currency: currency,
-        }));
+          // Automatically set the product currency to match the brand
+          setFormData((prev) => ({
+            ...prev,
+            currency: brandCurrency.code,
+          }));
+        }
       }
     }
   };
@@ -320,43 +324,7 @@ export default function EditProductPage() {
     return formatNumberWithCommas(numericPrice);
   };
 
-  // Get brand currency from currency field or price_range field
-  const getBrandCurrency = (brand: Brand): string => {
-    if (!brand) {
-      return "USD"; // Default fallback
-    }
 
-    // Use the dedicated currency field if available
-    if (brand.currency) {
-      return brand.currency;
-    }
-
-    // Fallback: try to extract from price_range (legacy support)
-    if (brand.price_range) {
-      const currencyMatch = brand.price_range.match(/^([^\d,]+)/);
-      if (currencyMatch) {
-        const symbol = currencyMatch[1].trim();
-        // Map common symbols to currency codes
-        const symbolToCode: { [key: string]: string } = {
-          "₦": "NGN",
-          GHS: "GHS",
-          KSh: "KES",
-          R: "ZAR",
-          EGP: "EGP",
-          MAD: "MAD",
-          TND: "TND",
-          XOF: "XOF",
-          DA: "DZD",
-          $: "USD",
-          "€": "EUR",
-          "£": "GBP",
-        };
-        return symbolToCode[symbol] || "USD";
-      }
-    }
-
-    return "USD"; // Default fallback
-  };
 
   const handleImageUpload = (url: string, index?: number) => {
     if (index !== undefined) {
