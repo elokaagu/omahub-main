@@ -158,7 +158,7 @@ export default function CataloguePage() {
         {/* Catalogue Header */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
           {/* Catalogue Image */}
-          <div className="relative aspect-[4/3] rounded-xl overflow-hidden">
+          <div className="relative aspect-[4/5] rounded-xl overflow-hidden">
             <LazyImage
               src={catalogue.image}
               alt={catalogue.title}
@@ -166,7 +166,7 @@ export default function CataloguePage() {
               className={`object-cover ${getImageFocalPoint(catalogue.image, catalogue.title, catalogue.brand.category)}`}
               sizes="(max-width: 1024px) 100vw, 50vw"
               priority={true}
-              aspectRatio="4/3"
+              aspectRatio="4/5"
               quality={85}
             />
           </div>

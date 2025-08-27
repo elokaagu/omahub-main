@@ -592,14 +592,14 @@ function CollectionCarouselSection({
                 href={`/collection/${catalogue.id}`}
                 className="block bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow h-full group"
               >
-                <div className="aspect-[3/4] relative overflow-hidden">
+                <div className="aspect-[4/5] relative overflow-hidden">
                   <LazyImage
                     src={catalogue.image || "/placeholder-image.jpg"}
                     alt={catalogue.title}
                     fill
                     className={`object-cover ${getImageFocalPoint(catalogue.image, catalogue.title)} group-hover:scale-105 transition-transform duration-300`}
                     sizes="(max-width: 768px) 280px, (max-width: 1200px) 300px, 320px"
-                    aspectRatio="3/4"
+                    aspectRatio="4/5"
                     quality={80}
                   />
                   {/* Text overlay at bottom */}

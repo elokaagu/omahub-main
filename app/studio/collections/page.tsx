@@ -588,11 +588,11 @@ export default function CollectionsPage() {
                 key={catalogue.id}
                 className="border-oma-gold/20 bg-white/80 hover:border-oma-gold/40 transition-all duration-300 hover:shadow-lg"
               >
-                <div className="aspect-[4/3] relative overflow-hidden rounded-t-lg">
+                <div className="aspect-[4/5] relative overflow-hidden rounded-t-lg">
                   <AuthImage
                     src={catalogue.image || "/placeholder-image.jpg"}
                     alt={catalogue.title}
-                    aspectRatio="4/3"
+                    aspectRatio="4/5"
                     className="w-full h-full"
                     sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     quality={80}
