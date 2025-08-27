@@ -1,5 +1,6 @@
 import { supabase, Product } from "../supabase";
 import { normalizeProductImages } from "../utils/productImageUtils";
+import { getBrandCurrency } from "../utils/currencyUtils";
 
 /**
  * Fetch all products from the database
