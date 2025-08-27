@@ -61,8 +61,6 @@ export function TailoredOrderModal({
   const [loading, setLoading] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
 
-
-
   // Form state
   const [measurements, setMeasurements] = useState<CustomerMeasurements>({
     fit_preference: "regular",
@@ -192,7 +190,7 @@ export function TailoredOrderModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[95vh] flex flex-col relative">
+      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col relative">
         <DialogHeader className="pb-4">
           <DialogTitle className="text-xl font-semibold">
             Custom Order: {product.title}
@@ -200,7 +198,7 @@ export function TailoredOrderModal({
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto pr-2">
-          <div className="space-y-6 pb-24">
+          <div className="space-y-6 pb-6">
             {/* Order Summary - Sticky at top */}
             <div className="bg-gradient-to-r from-oma-beige/50 to-oma-gold/10 rounded-lg p-4 border border-oma-gold/20">
               <div className="flex items-center justify-between">
@@ -455,8 +453,8 @@ export function TailoredOrderModal({
           </div>
         </div>
 
-        {/* Fixed bottom action buttons - Always visible */}
-        <div className="sticky bottom-0 left-0 right-0 border-t border-gray-200 pt-4 mt-6 bg-white z-10 px-6 pb-6">
+        {/* Bottom action buttons */}
+        <div className="border-t border-gray-200 pt-4 mt-6 bg-white px-6 pb-6">
           <div className="flex flex-col sm:flex-row gap-3">
             <Button
               variant="outline"
