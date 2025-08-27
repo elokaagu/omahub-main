@@ -115,7 +115,16 @@ export function formatPriceWithBrand(
   const currency = getBrandCurrency(brand);
   
   if (!currency) {
-    return "Contact designer for pricing";
+    // Try to use brand location to determine currency
+    if (brand?.location) {
+      const locationCurrency = getCurrencyByLocation(brand.location);
+      if (locationCurrency) {
+        return formatPrice(price, locationCurrency.symbol);
+      }
+    }
+    
+    // Last resort: use USD as default currency
+    return formatPrice(price, "$");
   }
   
   return formatPrice(price, currency.symbol);
@@ -136,7 +145,16 @@ export function formatPriceRangeWithBrand(
   const currency = getBrandCurrency(brand);
   
   if (!currency) {
-    return "Contact designer for pricing";
+    // Try to use brand location to determine currency
+    if (brand?.location) {
+      const locationCurrency = getCurrencyByLocation(brand.location);
+      if (locationCurrency) {
+        return formatPriceRange(minPrice, maxPrice, locationCurrency.symbol);
+      }
+    }
+    
+    // Last resort: use USD as default currency
+    return formatPriceRange(minPrice, maxPrice, "$");
   }
   
   return formatPriceRange(minPrice, maxPrice, currency.symbol);
@@ -213,7 +231,45 @@ export function formatProductPrice(
     }
   }
 
-  // No currency specified - show "Contact designer for pricing"
+  // No currency specified - try to use brand location to determine currency
+  if (brand?.location) {
+    const locationCurrency = getCurrencyByLocation(brand.location);
+    if (locationCurrency) {
+      const displayPrice = formatPrice(
+        product.sale_price || product.price,
+        locationCurrency.symbol
+      );
+      const originalPrice = product.sale_price
+        ? formatPrice(product.price, locationCurrency.symbol)
+        : undefined;
+
+      return {
+        displayPrice,
+        originalPrice,
+        currency: locationCurrency.symbol,
+      };
+    }
+  }
+
+  // Last resort: use USD as default currency
+  const defaultCurrency = getCurrencyByCode("USD");
+  if (defaultCurrency) {
+    const displayPrice = formatPrice(
+      product.sale_price || product.price,
+      defaultCurrency.symbol
+    );
+    const originalPrice = product.sale_price
+      ? formatPrice(product.price, defaultCurrency.symbol)
+      : undefined;
+
+    return {
+      displayPrice,
+      originalPrice,
+      currency: defaultCurrency.symbol,
+    };
+  }
+
+  // If all else fails, show "Contact designer for pricing"
   return {
     displayPrice: "Contact designer for pricing",
     originalPrice: undefined,

@@ -265,7 +265,42 @@ export function formatPriceWithBrandCurrency(
   const currency = getBrandCurrency(brand);
   
   if (!currency) {
-    return "Contact designer for pricing";
+    // Try to use brand location to determine currency
+    if (brand?.location) {
+      const locationCurrency = getCurrencyByLocation(brand.location);
+      if (locationCurrency) {
+        const numericPrice =
+          typeof price === "string" ? parseFloat(price.replace(/,/g, "")) : price;
+
+        if (isNaN(numericPrice)) {
+          return `${locationCurrency.symbol}0`;
+        }
+
+        // Format with commas for thousands
+        const formattedPrice = numericPrice.toLocaleString("en-US", {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 2,
+        });
+
+        return `${locationCurrency.symbol}${formattedPrice}`;
+      }
+    }
+    
+    // Last resort: use USD as default currency
+    const numericPrice =
+      typeof price === "string" ? parseFloat(price.replace(/,/g, "")) : price;
+
+    if (isNaN(numericPrice)) {
+      return "$0";
+    }
+
+    // Format with commas for thousands
+    const formattedPrice = numericPrice.toLocaleString("en-US", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    });
+
+    return `$${formattedPrice}`;
   }
   
   const numericPrice =
@@ -322,7 +357,16 @@ export function formatPriceRangeWithBrandCurrency(
   });
 
   if (!currency) {
-    return "Contact designer for pricing";
+    // Try to use brand location to determine currency
+    if (brand?.location) {
+      const locationCurrency = getCurrencyByLocation(brand.location);
+      if (locationCurrency) {
+        return `${locationCurrency.symbol}${formattedMin} - ${locationCurrency.symbol}${formattedMax}`;
+      }
+    }
+    
+    // Last resort: use USD as default currency
+    return `$${formattedMin} - $${formattedMax}`;
   }
   
   return `${currency.symbol}${formattedMin} - ${currency.symbol}${formattedMax}`;
