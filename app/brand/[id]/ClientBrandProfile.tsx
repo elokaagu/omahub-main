@@ -29,7 +29,7 @@ import {
   isValidWhatsAppNumber,
   formatPhoneForDisplay,
 } from "@/lib/utils/phoneUtils";
-import { formatProductPrice } from "@/lib/utils/priceFormatter";
+import { formatProductPrice, formatPriceRangeWithCommas } from "@/lib/utils/priceFormatter";
 import { getProductMainImage } from "@/lib/utils/productImageUtils";
 
 // Extended interface for brand profile data that includes currency and matches actual data structure
@@ -504,7 +504,7 @@ export default function ClientBrandProfile({
             {brandData.priceRange && (
               <div className="mb-4">
                 <h4 className="text-sm font-semibold mb-1">Price Range</h4>
-                <p>{brandData.priceRange}</p>
+                <p>{formatPriceRangeWithCommas(brandData.priceRange)}</p>
               </div>
             )}
 

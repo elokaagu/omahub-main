@@ -35,6 +35,40 @@ export function formatPriceRange(
 }
 
 /**
+ * Format an existing price range string by adding commas to numbers
+ * @param priceRange - Price range string (e.g., "₦80000 - ₦250000")
+ * @returns Formatted price range string with commas (e.g., "₦80,000 - ₦250,000")
+ */
+export function formatPriceRangeWithCommas(priceRange: string): string {
+  if (!priceRange || priceRange === "Contact for pricing" || priceRange === "Explore brand for prices") {
+    return priceRange;
+  }
+
+  // Parse price range to extract currency symbol and numbers
+  // Format: "₦80000 - ₦250000" -> "₦80,000 - ₦250,000"
+  const priceRangeMatch = priceRange.match(
+    /^([^\d,]+)(\d+(?:,\d+)*)\s*-\s*([^\d,]+)(\d+(?:,\d+)*)$/
+  );
+
+  if (priceRangeMatch) {
+    const [, symbol1, minPrice, symbol2, maxPrice] = priceRangeMatch;
+    
+    // Parse and format the numbers
+    const min = parseFloat(minPrice.replace(/,/g, ""));
+    const max = parseFloat(maxPrice.replace(/,/g, ""));
+    
+    if (!isNaN(min) && !isNaN(max)) {
+      const formattedMin = formatNumberWithCommas(min);
+      const formattedMax = formatNumberWithCommas(max);
+      return `${symbol1.trim()}${formattedMin} - ${symbol2.trim()}${formattedMax}`;
+    }
+  }
+
+  // If parsing fails, return the original string
+  return priceRange;
+}
+
+/**
  * Format a single price with currency
  * @param price - The price to format
  * @param currencySymbol - Currency symbol to use
@@ -198,7 +232,7 @@ export function formatProductPrice(
       // Only use sale_price if it's greater than 0
       const hasValidSalePrice = product.sale_price && product.sale_price > 0;
       const displayPrice = formatPrice(
-        hasValidSalePrice ? product.sale_price : product.price,
+        hasValidSalePrice ? product.sale_price! : product.price,
         productCurrency.symbol
       );
       const originalPrice = hasValidSalePrice
@@ -220,7 +254,7 @@ export function formatProductPrice(
       // Only use sale_price if it's greater than 0
       const hasValidSalePrice = product.sale_price && product.sale_price > 0;
       const displayPrice = formatPrice(
-        hasValidSalePrice ? product.sale_price : product.price,
+        hasValidSalePrice ? product.sale_price! : product.price,
         brandCurrency.symbol
       );
       const originalPrice = hasValidSalePrice
@@ -242,7 +276,7 @@ export function formatProductPrice(
       // Only use sale_price if it's greater than 0
       const hasValidSalePrice = product.sale_price && product.sale_price > 0;
       const displayPrice = formatPrice(
-        hasValidSalePrice ? product.sale_price : product.price,
+        hasValidSalePrice ? product.sale_price! : product.price,
         locationCurrency.symbol
       );
       const originalPrice = hasValidSalePrice
@@ -263,7 +297,7 @@ export function formatProductPrice(
     // Only use sale_price if it's greater than 0
     const hasValidSalePrice = product.sale_price && product.sale_price > 0;
     const displayPrice = formatPrice(
-      hasValidSalePrice ? product.sale_price : product.price,
+      hasValidSalePrice ? product.sale_price! : product.price,
       defaultCurrency.symbol
     );
     const originalPrice = hasValidSalePrice
@@ -322,6 +356,7 @@ export function convertPrice(
 export default {
   formatNumberWithCommas,
   formatPriceRange,
+  formatPriceRangeWithCommas,
   formatPrice,
   parseFormattedNumber,
   extractCurrencyFromPriceRange,
