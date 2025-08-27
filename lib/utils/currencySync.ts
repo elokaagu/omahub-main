@@ -16,14 +16,20 @@ export async function syncProductCurrencies(
     console.log(`🔄 Syncing product currencies for brand ${brandId} to ${newCurrency}`);
     
     // Update all products for this brand to use the new currency
-    const { data, error, count } = await supabase
+    const { data, error } = await supabase
       .from("products")
       .update({ 
         currency: newCurrency,
         updated_at: new Date().toISOString()
       })
       .eq("brand_id", brandId)
-      .select("id", { count: "exact" });
+      .select("id");
+    
+    // Get the count of updated products
+    const { count } = await supabase
+      .from("products")
+      .select("*", { count: "exact", head: true })
+      .eq("brand_id", brandId);
     
     if (error) {
       console.error("❌ Error syncing product currencies:", error);
