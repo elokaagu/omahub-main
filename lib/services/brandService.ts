@@ -140,8 +140,8 @@ export async function getAllBrands(
       if (!data || data.length === 0)
         throw new Error("No brands found in the database");
       return data.map((item) => {
-        // Clean location data - remove trailing 'O' characters that might be data entry errors
-        const cleanLocation = item.location ? item.location.replace(/O+$/, '') : undefined;
+        // Clean location data - remove trailing 'O' and '0' characters that might be data entry errors
+        const cleanLocation = item.location ? item.location.replace(/[O0]+$/, '') : undefined;
         if (item.location && cleanLocation !== item.location) {
           console.log(`🧹 Cleaned location for ${item.name}: '${item.location}' → '${cleanLocation}'`);
         }
@@ -255,8 +255,8 @@ export async function getAllBrands(
       // Debug: Log the raw currency value from database
       console.log(`🔍 Brand ${item.name}: raw currency from DB = '${item.currency}'`);
       
-      // Clean location data - remove trailing 'O' characters that might be data entry errors
-      const cleanLocation = item.location ? item.location.replace(/O+$/, '') : undefined;
+              // Clean location data - remove trailing 'O' and '0' characters that might be data entry errors
+        const cleanLocation = item.location ? item.location.replace(/[O0]+$/, '') : undefined;
       if (item.location && cleanLocation !== item.location) {
         console.log(`🧹 Cleaned location for ${item.name}: '${item.location}' → '${cleanLocation}'`);
       }
@@ -412,9 +412,9 @@ export async function getBrandById(id: string): Promise<Brand | null> {
     .single();
 
   if (!error && data) {
-    // Clean location data - remove trailing 'O' characters that might be data entry errors
+    // Clean location data - remove trailing 'O' and '0' characters that might be data entry errors
     if (data.location) {
-      const cleanLocation = data.location.replace(/O+$/, '');
+      const cleanLocation = data.location.replace(/[O0]+$/, '');
       if (cleanLocation !== data.location) {
         console.log(`🧹 Cleaned location for ${data.name}: '${data.location}' → '${cleanLocation}'`);
         data.location = cleanLocation;
@@ -456,9 +456,9 @@ export async function getBrandById(id: string): Promise<Brand | null> {
     return null;
   }
 
-  // Clean location data - remove trailing 'O' characters that might be data entry errors
+  // Clean location data - remove trailing 'O' and '0' characters that might be data entry errors
   if (data.location) {
-    const cleanLocation = data.location.replace(/O+$/, '');
+    const cleanLocation = data.location.replace(/[O0]+$/, '');
     if (cleanLocation !== data.location) {
       console.log(`🧹 Cleaned location for ${data.name}: '${data.location}' → '${cleanLocation}'`);
       data.location = cleanLocation;
