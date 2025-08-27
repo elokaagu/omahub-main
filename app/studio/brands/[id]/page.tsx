@@ -389,11 +389,14 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
     }
 
     // Format price range if both min and max are provided
-    let priceRange = brand.price_range || "explore brand for prices";
+    let priceRange;
     if (priceMin && priceMax) {
       const selectedCurrency = CURRENCIES.find((c) => c.code === currency);
       const symbol = selectedCurrency?.symbol || "$";
       priceRange = `${symbol}${priceMin} - ${symbol}${priceMax}`;
+    } else {
+      // If no min/max prices specified, set to "explore brand for prices"
+      priceRange = "explore brand for prices";
     }
 
     setSaving(true);
@@ -678,7 +681,25 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
                         )}
                       </>
                     ) : (
-                      <>Current: {brand.price_range || "explore brand for prices"}</>
+                      <>Current: {(() => {
+                        // Check if price range is essentially empty (like "$75 - $75" or similar)
+                        if (!brand.price_range) return "explore brand for prices";
+                        
+                        // Check for patterns like "$X - $X" where min = max (likely placeholder)
+                        const priceMatch = brand.price_range.match(/^(.+?)(\d+(?:,\d+)*)\s*-\s*(.+?)(\d+(?:,\d+)*)$/);
+                        if (priceMatch) {
+                          const [, symbol1, min, symbol2, max] = priceMatch;
+                          const minNum = parseFloat(min.replace(/,/g, ""));
+                          const maxNum = parseFloat(max.replace(/,/g, ""));
+                          
+                          // If min and max are the same (like $75 - $75), treat as unspecified
+                          if (minNum === maxNum && minNum <= 100) {
+                            return "explore brand for prices";
+                          }
+                        }
+                        
+                        return brand.price_range;
+                      })()}</>
                     )}
                   </p>
                 </div>
