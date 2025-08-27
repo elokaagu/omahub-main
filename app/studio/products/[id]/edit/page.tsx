@@ -108,6 +108,20 @@ export default function EditProductPage() {
     currency: "USD", // Add currency field
   });
 
+  // Auto-sync currency when brand changes
+  useEffect(() => {
+    if (formData.brand_id) {
+      const selectedBrand = brands.find(b => b.id === formData.brand_id);
+      if (selectedBrand && selectedBrand.currency) {
+        setSelectedBrandCurrency(selectedBrand.currency);
+        setFormData(prev => ({
+          ...prev,
+          currency: selectedBrand.currency
+        }));
+      }
+    }
+  }, [formData.brand_id, brands]);
+
   // Check if user is super admin or brand owner
   // useEffect(() => {
   //   if (user && user.role !== "super_admin" && user.role !== "brand_admin") {

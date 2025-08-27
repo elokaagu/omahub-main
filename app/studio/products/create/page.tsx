@@ -78,7 +78,7 @@ export default function CreateProductPage() {
   const [filteredCatalogues, setFilteredCatalogues] = useState<Catalogue[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [selectedBrandCurrency, setSelectedBrandCurrency] = useState("USD"); // Default to USD instead of Naira
+  const [selectedBrandCurrency, setSelectedBrandCurrency] = useState("USD");
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -188,6 +188,20 @@ export default function CreateProductPage() {
       setFilteredCatalogues([]);
     }
   }, [formData.brand_id, catalogues]);
+
+  // Auto-sync currency when brand changes
+  useEffect(() => {
+    if (formData.brand_id) {
+      const selectedBrand = brands.find(b => b.id === formData.brand_id);
+      if (selectedBrand && selectedBrand.currency) {
+        setSelectedBrandCurrency(selectedBrand.currency);
+        setFormData(prev => ({
+          ...prev,
+          currency: selectedBrand.currency
+        }));
+      }
+    }
+  }, [formData.brand_id, brands]);
 
   // Function to get currency from brand (using the actual currency field)
   const getBrandCurrency = (brandId: string): string => {
@@ -828,7 +842,7 @@ export default function CreateProductPage() {
                   </Select>
                   {formData.brand_id && (
                     <p className="text-xs text-muted-foreground">
-                      Auto-synced with {brands.find(b => b.id === formData.brand_id)?.name} ({getCurrencySymbol(formData.currency)})
+                      Auto-synced with {brands.find(b => b.id === formData.brand_id)?.name} ({getCurrencySymbol(selectedBrandCurrency)})
                     </p>
                   )}
                 </div>
