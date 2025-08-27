@@ -121,6 +121,11 @@ export default function StudioLayout({
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isCheckingAccess, setIsCheckingAccess] = useState(true);
+  
+  // Add refs to prevent multiple simultaneous access checks
+  const isCheckingAccessRef = useRef(false);
+  const lastAccessCheckRef = useRef(0);
+  const ACCESS_CHECK_DEBOUNCE_MS = 2000; // 2 seconds minimum between access checks
 
   // Trigger fade-in animation when content is ready
   useEffect(() => {
@@ -139,7 +144,23 @@ export default function StudioLayout({
 
   useEffect(() => {
     const checkAccess = async () => {
+      // Prevent multiple simultaneous access checks
+      if (isCheckingAccessRef.current) {
+        console.log("⏳ Studio Layout: Access check already in progress, skipping...");
+        return;
+      }
+
+      // Debounce access checks to prevent excessive calls
+      const now = Date.now();
+      if (now - lastAccessCheckRef.current < ACCESS_CHECK_DEBOUNCE_MS) {
+        console.log("⏳ Studio Layout: Access check debounced, skipping...");
+        return;
+      }
+
       try {
+        isCheckingAccessRef.current = true;
+        lastAccessCheckRef.current = now;
+        
         console.log("🔒 Studio Layout: Access check starting...");
         console.log("Studio Layout: Current auth state:", {
           userId: user?.id,
@@ -209,8 +230,15 @@ export default function StudioLayout({
       } finally {
         console.log("🏁 Studio Layout: Setting isCheckingAccess to false");
         setIsCheckingAccess(false);
+        isCheckingAccessRef.current = false;
       }
     };
+
+    // Skip access check if already completed and permissions are set
+    if (permissions.includes("studio.access") && !isCheckingAccess) {
+      console.log("✅ Studio Layout: Access already verified, skipping check");
+      return;
+    }
 
     console.log("🚀 Studio Layout: useEffect triggered with:", {
       user: !!user,
@@ -218,7 +246,7 @@ export default function StudioLayout({
       isCheckingAccess,
     });
     checkAccess();
-  }, [user, loading, router]);
+  }, [user, loading, permissions, isCheckingAccess]);
 
   // Enhanced error handling and performance monitoring
   useEffect(() => {
