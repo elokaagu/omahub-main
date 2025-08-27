@@ -189,7 +189,7 @@ export default function CreateProductPage() {
     }
   }, [formData.brand_id, catalogues]);
 
-  // Auto-sync currency when brand changes
+  // Set selected brand currency for display purposes only (no auto-sync)
   useEffect(() => {
     if (formData.brand_id) {
       const selectedBrand = brands.find(b => b.id === formData.brand_id);
@@ -197,17 +197,8 @@ export default function CreateProductPage() {
         const brandCurrency = getBrandCurrency(selectedBrand);
         if (brandCurrency) {
           setSelectedBrandCurrency(brandCurrency.code);
-          setFormData(prev => ({
-            ...prev,
-            currency: brandCurrency.code
-          }));
         } else {
-          // No currency specified - clear the currency
           setSelectedBrandCurrency("");
-          setFormData(prev => ({
-            ...prev,
-            currency: ""
-          }));
         }
       }
     }
@@ -291,18 +282,12 @@ export default function CreateProductPage() {
         catalogue_id: "",
       }));
 
-      // Update currency symbol based on selected brand
+      // Update selected brand currency for display purposes only
       const selectedBrand = brands.find(brand => brand.id === value);
       if (selectedBrand) {
         const brandCurrency = getBrandCurrency(selectedBrand);
         if (brandCurrency) {
           setSelectedBrandCurrency(brandCurrency.code);
-          
-          // Automatically set the product currency to match the brand
-          setFormData((prev) => ({
-            ...prev,
-            currency: brandCurrency.code,
-          }));
         }
       }
     }
@@ -442,18 +427,7 @@ export default function CreateProductPage() {
       return;
     }
 
-    // 🔒 ENFORCE CURRENCY VALIDATION
-    const selectedBrand = brands.find(brand => brand.id === formData.brand_id);
-    if (selectedBrand) {
-      const brandCurrency = getBrandCurrency(selectedBrand);
-      if (brandCurrency && formData.currency !== brandCurrency.code) {
-        toast.error(
-          `Currency mismatch! This brand uses ${brandCurrency.symbol}${brandCurrency.code}. ` +
-          `Please change the product currency to ${brandCurrency.code} or contact support if you need to use a different currency.`
-        );
-        return;
-      }
-    }
+    // Note: Currency is now user-selectable and not enforced to match brand currency
 
     try {
       setIsLoading(true);
@@ -816,11 +790,6 @@ export default function CreateProductPage() {
                 <div className="space-y-2">
                   <Label htmlFor="currency" className="text-black">
                     Currency *
-                    {selectedBrandCurrency && formData.currency === selectedBrandCurrency && (
-                      <span className="ml-2 text-xs text-green-600 font-medium">
-                        ✓ Synced with brand
-                      </span>
-                    )}
                   </Label>
                   <Select
                     value={formData.currency}
@@ -828,13 +797,7 @@ export default function CreateProductPage() {
                       handleInputChange("currency", value)
                     }
                   >
-                    <SelectTrigger className={`border-oma-cocoa/20 focus:border-oma-plum ${
-                      selectedBrandCurrency && formData.currency === selectedBrandCurrency 
-                        ? 'border-green-500 bg-green-50' 
-                        : selectedBrandCurrency && formData.currency !== selectedBrandCurrency
-                        ? 'border-amber-500 bg-amber-50'
-                        : ''
-                    }`}>
+                    <SelectTrigger className="border-oma-cocoa/20 focus:border-oma-plum">
                       <SelectValue placeholder="Select currency" />
                     </SelectTrigger>
                     <SelectContent>
@@ -857,17 +820,13 @@ export default function CreateProductPage() {
                   </Select>
                   {formData.brand_id && (
                     <div className="space-y-1">
-                      {selectedBrandCurrency && formData.currency === selectedBrandCurrency ? (
-                        <p className="text-xs text-green-600 font-medium">
-                          ✅ Automatically synced with {brands.find(b => b.id === formData.brand_id)?.name} ({selectedBrandCurrency})
-                        </p>
-                      ) : selectedBrandCurrency && formData.currency !== selectedBrandCurrency ? (
-                        <p className="text-xs text-amber-600 font-medium">
-                          ⚠️ Currency mismatch! This brand uses {selectedBrandCurrency}. Please change to match or contact support.
+                      {selectedBrandCurrency ? (
+                        <p className="text-xs text-muted-foreground">
+                          Brand currency: {selectedBrandCurrency}
                         </p>
                       ) : (
                         <p className="text-xs text-muted-foreground">
-                          Auto-synced with {brands.find(b => b.id === formData.brand_id)?.name} {selectedBrandCurrency ? `(${getCurrencySymbol(selectedBrandCurrency)})` : '(Contact designer for pricing)'}
+                          No currency specified for this brand
                         </p>
                       )}
                     </div>
