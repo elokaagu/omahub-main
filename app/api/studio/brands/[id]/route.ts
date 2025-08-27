@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase-unified";
 import { syncProductCurrencies } from "@/lib/utils/currencySync";
+import { clearBrandsCache } from "@/lib/services/brandService";
 
 export async function GET(
   request: NextRequest,
@@ -239,6 +240,15 @@ export async function PUT(
       }
 
       console.log("✅ Brand name propagation completed");
+    }
+
+    // Clear the brands cache to ensure fresh data after update
+    try {
+      clearBrandsCache();
+      console.log("🔄 Brands cache cleared after brand update");
+    } catch (cacheError) {
+      console.warn("⚠️ Warning: Failed to clear brands cache:", cacheError);
+      // Don't fail the entire operation for this
     }
 
     console.log("🎉 Brand update operation completed successfully");

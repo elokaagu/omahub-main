@@ -13,7 +13,7 @@ let brandsCache: {
 };
 
 // Cache expiration time (reduced for better tab switching experience)
-const CACHE_EXPIRY = 30 * 1000; // 30 seconds instead of 5 seconds
+const CACHE_EXPIRY = 5 * 1000; // 5 seconds for immediate currency updates
 
 // Define essential fields to reduce payload size
 const ESSENTIAL_BRAND_FIELDS = "*";
@@ -93,7 +93,7 @@ export async function getAllBrandsWithProductCounts(): Promise<
         long_description: item.long_description || "Long brand description",
         location: item.location || "Unknown location",
         price_range: item.price_range || "$",
-        currency: item.currency || "USD",
+        currency: item.currency,
         category: item.category || "Other",
         categories: item.categories || [],
         rating: item.rating || 4.5,
@@ -146,7 +146,7 @@ export async function getAllBrands(
         long_description: item.long_description || "Long brand description",
         location: item.location || "Unknown location",
         price_range: item.price_range || "$",
-        currency: item.currency || "USD",
+        currency: item.currency,
         category: item.category || "Other",
         categories: item.categories || [],
         rating: item.rating || 4.5,
@@ -240,25 +240,30 @@ export async function getAllBrands(
       throw new Error("No brands found in the database");
     }
 
-    // Map the data to Brand objects
-    const fullBrands: Brand[] = data.map((item) => ({
-      id: item.id || `temp-id-${Math.random().toString(36).substring(2, 9)}`,
-      name: item.name || "Brand Name",
-      description: item.description || "Brand description",
-      long_description: item.long_description || "Long brand description",
-      location: item.location || "Unknown location",
-      price_range: item.price_range || "$",
-      currency: item.currency || "USD",
-      category: item.category || "Other",
-      categories: item.categories || [],
-      rating: item.rating || 4.5,
-      is_verified: item.is_verified || false,
-      image: item.image || "/placeholder-image.jpg",
-      video_url: item.video_url || undefined,
-      video_thumbnail: item.video_thumbnail || undefined,
-      // Include the new normalized images
-      brand_images: item.brand_images || [],
-    }));
+        // Map the data to Brand objects
+    const fullBrands: Brand[] = data.map((item) => {
+      // Debug: Log the raw currency value from database
+      console.log(`🔍 Brand ${item.name}: raw currency from DB = '${item.currency}'`);
+      
+      return {
+        id: item.id || `temp-id-${Math.random().toString(36).substring(2, 9)}`,
+        name: item.name || "Brand Name",
+        description: item.description || "Brand description",
+        long_description: item.long_description || "Long brand description",
+        location: item.location || "Unknown location",
+        price_range: item.price_range || "$",
+        currency: item.currency,
+        category: item.category || "Other",
+        categories: item.categories || [],
+        rating: item.rating || 4.5,
+        is_verified: item.is_verified || false,
+        image: item.image || "/placeholder-image.jpg",
+        video_url: item.video_url || undefined,
+        video_thumbnail: item.video_thumbnail || undefined,
+        // Include the new normalized images
+        brand_images: item.brand_images || [],
+      };
+    });
 
     // Update cache
     brandsCache = {
@@ -469,6 +474,10 @@ export async function updateBrand(
     console.error("Error updating brand:", error);
     return null;
   }
+
+  // Clear the brands cache to ensure fresh data after update
+  clearBrandsCache();
+  console.log("🔄 Brands cache cleared after brand update");
 
   return data;
 }

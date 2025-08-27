@@ -5,6 +5,7 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { refreshNavigationCache } from "@/lib/services/categoryService";
 import { syncProductCurrencies } from "@/lib/utils/currencySync";
+import { clearBrandsCache } from "@/lib/services/brandService";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -195,6 +196,15 @@ export async function POST(request: NextRequest) {
       } catch (syncError) {
         console.warn("⚠️ Warning: Product currency sync failed:", syncError);
       }
+    }
+
+    // Clear the brands cache to ensure fresh data after creation
+    try {
+      clearBrandsCache();
+      console.log("🔄 Brands cache cleared after brand creation");
+    } catch (cacheError) {
+      console.warn("⚠️ Warning: Failed to clear brands cache:", cacheError);
+      // Don't fail the entire operation for this
     }
 
     console.log("✅ Brand created successfully:", newBrand.name);
