@@ -85,6 +85,7 @@ const BRAND_NAME_LIMIT = 50;
 
 // Common currencies used across Africa
 const CURRENCIES = [
+  { code: "NONE", symbol: "—", name: "No Currency (explore brand for prices)" },
   { code: "NGN", symbol: "₦", name: "Nigerian Naira" },
   { code: "KES", symbol: "KSh", name: "Kenyan Shilling" },
   { code: "GHS", symbol: "GHS", name: "Ghanaian Cedi" },
@@ -125,7 +126,7 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
   // Price range state
   const [priceMin, setPriceMin] = useState("");
   const [priceMax, setPriceMax] = useState("");
-  const [currency, setCurrency] = useState("NGN");
+  const [currency, setCurrency] = useState("NONE");
 
   // Categories for the dropdown
   const categories = getAllCategoryNames();
@@ -156,7 +157,8 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
           // Parse existing price range if it exists
           if (
             brandData.price_range &&
-            brandData.price_range !== "Contact for pricing"
+            brandData.price_range !== "Contact for pricing" &&
+            brandData.price_range !== "explore brand for prices"
           ) {
             const priceRangeMatch = brandData.price_range.match(
               /^(.+?)(\d+(?:,\d+)*)\s*-\s*(.+?)(\d+(?:,\d+)*)$/
@@ -172,7 +174,17 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
                 setPriceMin(min.replace(/,/g, ""));
                 setPriceMax(max.replace(/,/g, ""));
               }
+            } else {
+              // If price range is not a valid format, set to NONE
+              setCurrency("NONE");
+              setPriceMin("");
+              setPriceMax("");
             }
+          } else {
+            // If no price range or it's "explore brand for prices", set to NONE
+            setCurrency("NONE");
+            setPriceMin("");
+            setPriceMax("");
           }
         } else {
           console.error("Brand not found in database");
@@ -390,12 +402,12 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
 
     // Format price range if both min and max are provided
     let priceRange;
-    if (priceMin && priceMax) {
+    if (priceMin && priceMax && currency && currency !== "NONE") {
       const selectedCurrency = CURRENCIES.find((c) => c.code === currency);
       const symbol = selectedCurrency?.symbol || "$";
       priceRange = `${symbol}${priceMin} - ${symbol}${priceMax}`;
     } else {
-      // If no min/max prices specified, set to "explore brand for prices"
+      // If no min/max prices specified or currency is NONE, set to "explore brand for prices"
       priceRange = "explore brand for prices";
     }
 
@@ -670,7 +682,7 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
                     />
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    {priceMin && priceMax && currency ? (
+                    {priceMin && priceMax && currency && currency !== "NONE" ? (
                       <>
                         Preview:{" "}
                         {formatPriceRange(
