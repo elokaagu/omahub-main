@@ -139,22 +139,30 @@ export async function getAllBrands(
       if (error) throw new Error(`Failed to fetch brands: ${error.message}`);
       if (!data || data.length === 0)
         throw new Error("No brands found in the database");
-      return data.map((item) => ({
-        id: item.id || `temp-id-${Math.random().toString(36).substring(2, 9)}`,
-        name: item.name || "Brand Name",
-        description: item.description || "Brand description",
-        long_description: item.long_description || "Long brand description",
-        location: item.location || "Unknown location",
-        price_range: item.price_range || "$",
-        currency: item.currency,
-        category: item.category || "Other",
-        categories: item.categories || [],
-        rating: item.rating || 4.5,
-        is_verified: item.is_verified || false,
-        image: item.image || "/placeholder-image.jpg",
-        video_url: item.video_url || undefined,
-        video_thumbnail: item.video_thumbnail || undefined,
-      }));
+      return data.map((item) => {
+        // Clean location data - remove trailing 'O' characters that might be data entry errors
+        const cleanLocation = item.location ? item.location.replace(/O+$/, '') : undefined;
+        if (item.location && cleanLocation !== item.location) {
+          console.log(`🧹 Cleaned location for ${item.name}: '${item.location}' → '${cleanLocation}'`);
+        }
+        
+        return {
+          id: item.id || `temp-id-${Math.random().toString(36).substring(2, 9)}`,
+          name: item.name || "Brand Name",
+          description: item.description || "Brand description",
+          long_description: item.long_description || "Long brand description",
+          location: cleanLocation || "Unknown location",
+          price_range: item.price_range || "$",
+          currency: item.currency,
+          category: item.category || "Other",
+          categories: item.categories || [],
+          rating: item.rating || 4.5,
+          is_verified: item.is_verified || false,
+          image: item.image || "/placeholder-image.jpg",
+          video_url: item.video_url || undefined,
+          video_thumbnail: item.video_thumbnail || undefined,
+        };
+      });
     }
 
     // Check if we're already loading brands
@@ -245,12 +253,18 @@ export async function getAllBrands(
       // Debug: Log the raw currency value from database
       console.log(`🔍 Brand ${item.name}: raw currency from DB = '${item.currency}'`);
       
+      // Clean location data - remove trailing 'O' characters that might be data entry errors
+      const cleanLocation = item.location ? item.location.replace(/O+$/, '') : undefined;
+      if (item.location && cleanLocation !== item.location) {
+        console.log(`🧹 Cleaned location for ${item.name}: '${item.location}' → '${cleanLocation}'`);
+      }
+      
       return {
         id: item.id || `temp-id-${Math.random().toString(36).substring(2, 9)}`,
         name: item.name || "Brand Name",
         description: item.description || "Brand description",
         long_description: item.long_description || "Long brand description",
-        location: item.location || "Unknown location",
+        location: cleanLocation || "Unknown location",
         price_range: item.price_range || "$",
         currency: item.currency,
         category: item.category || "Other",
@@ -396,6 +410,15 @@ export async function getBrandById(id: string): Promise<Brand | null> {
     .single();
 
   if (!error && data) {
+    // Clean location data - remove trailing 'O' characters that might be data entry errors
+    if (data.location) {
+      const cleanLocation = data.location.replace(/O+$/, '');
+      if (cleanLocation !== data.location) {
+        console.log(`🧹 Cleaned location for ${data.name}: '${data.location}' → '${cleanLocation}'`);
+        data.location = cleanLocation;
+      }
+    }
+    
     console.log(`Successfully fetched brand: ${data.name} (${data.id})`);
     return data;
   }
@@ -429,6 +452,15 @@ export async function getBrandById(id: string): Promise<Brand | null> {
       `No brand found with ID: "${id}" or normalized: "${normalizedId}"`
     );
     return null;
+  }
+
+  // Clean location data - remove trailing 'O' characters that might be data entry errors
+  if (data.location) {
+    const cleanLocation = data.location.replace(/O+$/, '');
+    if (cleanLocation !== data.location) {
+      console.log(`🧹 Cleaned location for ${data.name}: '${data.location}' → '${cleanLocation}'`);
+      data.location = cleanLocation;
+    }
   }
 
   console.log(`Successfully fetched brand: ${data.name} (${data.id})`);
