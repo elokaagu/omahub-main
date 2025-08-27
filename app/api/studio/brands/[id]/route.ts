@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase-unified";
+import { syncProductCurrencies } from "@/lib/utils/currencySync";
 
 export async function GET(
   request: NextRequest,
@@ -145,11 +146,11 @@ export async function PUT(
       );
     }
 
-    // Get the current brand data to check if name is changing
+    // Get the current brand data to check if name or currency is changing
     console.log("🔍 Fetching current brand data...");
     const { data: currentBrand, error: fetchError } = await supabase
       .from("brands")
-      .select("name")
+      .select("name, currency")
       .eq("id", brandId)
       .single();
 
@@ -184,6 +185,24 @@ export async function PUT(
     }
 
     console.log("✅ Brand updated successfully");
+
+    // If the brand currency changed, sync product currencies
+    if (updateData.currency && updateData.currency !== currentBrand.currency) {
+      console.log(`🔄 Brand currency changed to ${updateData.currency}, syncing product currencies...`);
+      
+      try {
+        const syncResult = await syncProductCurrencies(brandId, updateData.currency);
+        if (syncResult.success) {
+          console.log(`✅ Successfully synced ${syncResult.updatedCount} products to currency ${updateData.currency}`);
+        } else {
+          console.warn(`⚠️ Warning: Product currency sync failed: ${syncResult.error}`);
+          // Don't fail the entire operation for this
+        }
+      } catch (syncError) {
+        console.warn("⚠️ Warning: Product currency sync failed:", syncError);
+        // Don't fail the entire operation for this
+      }
+    }
 
     // If the brand name changed, update related tables
     if (isNameChanging) {

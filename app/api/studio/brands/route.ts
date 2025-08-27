@@ -4,6 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { refreshNavigationCache } from "@/lib/services/categoryService";
+import { syncProductCurrencies } from "@/lib/utils/currencySync";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -179,6 +180,22 @@ export async function POST(request: NextRequest) {
       newBrand.category
     );
     await refreshNavigationCache();
+
+    // If the brand has a currency, sync any existing products to use it
+    if (newBrand.currency) {
+      console.log(`🔄 Brand created with currency ${newBrand.currency}, syncing any existing products...`);
+      
+      try {
+        const syncResult = await syncProductCurrencies(newBrand.id, newBrand.currency);
+        if (syncResult.success) {
+          console.log(`✅ Successfully synced ${syncResult.updatedCount} existing products to currency ${newBrand.currency}`);
+        } else {
+          console.warn(`⚠️ Warning: Product currency sync failed: ${syncResult.error}`);
+        }
+      } catch (syncError) {
+        console.warn("⚠️ Warning: Product currency sync failed:", syncError);
+      }
+    }
 
     console.log("✅ Brand created successfully:", newBrand.name);
     return NextResponse.json({ brand: newBrand }, { status: 201 });

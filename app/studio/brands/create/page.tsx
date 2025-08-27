@@ -31,6 +31,7 @@ import {
   formatPriceRange,
   formatNumberWithCommas,
 } from "@/lib/utils/priceFormatter";
+import { extractCurrencyFromPriceRange } from "@/lib/utils/currencySync";
 import { LazyImage } from "@/components/ui/lazy-image";
 import { getAllCategoryNames } from "@/lib/data/unified-categories";
 import { VideoUpload } from "@/components/ui/video-upload";
@@ -103,6 +104,20 @@ export default function CreateBrandPage() {
     // Handle character limit for short description
     if (name === "description" && value.length > SHORT_DESCRIPTION_LIMIT) {
       return; // Don't update if exceeding limit
+    }
+
+    // Auto-detect currency from price range if it's being entered
+    if (name === "price_range" && value) {
+      const detectedCurrency = extractCurrencyFromPriceRange(value);
+      if (detectedCurrency) {
+        console.log(`🔄 Auto-detected currency: ${detectedCurrency} from price range`);
+        setFormData(prev => ({
+          ...prev,
+          [name]: value,
+          currency: detectedCurrency
+        }));
+        return;
+      }
     }
 
     setFormData({
