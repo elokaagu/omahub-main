@@ -32,8 +32,30 @@ import {
 import { formatProductPrice } from "@/lib/utils/priceFormatter";
 import { getProductMainImage } from "@/lib/utils/productImageUtils";
 
-// Extended interface for brand profile data that includes currency
-interface BrandProfileData extends BrandData {
+// Extended interface for brand profile data that includes currency and matches actual data structure
+interface BrandProfileData {
+  id: string;
+  name: string;
+  description: string;
+  longDescription?: string | null;
+  location: string;
+  priceRange: string;
+  category: string;
+  rating: number;
+  isVerified: boolean;
+  image: string;
+  collections: Array<{
+    id: string | number;
+    title: string;
+    image: string;
+    description?: string;
+  }>;
+  // Contact information
+  website?: string | null;
+  instagram?: string;
+  whatsapp?: string;
+  contact_email?: string;
+  // Additional fields
   currency?: string;
 }
 
