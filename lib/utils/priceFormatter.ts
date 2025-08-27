@@ -1,4 +1,4 @@
-import { getBrandCurrency, getCurrencyByCode } from "./currencyUtils";
+import { getBrandCurrency, getCurrencyByCode, getCurrencyByLocation } from "./currencyUtils";
 
 /**
  * Format a number with commas for thousands
