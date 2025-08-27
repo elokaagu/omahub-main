@@ -466,29 +466,39 @@ export default function CreateBrandPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="long_description">Full Description</Label>
-                  <Textarea
-                    id="long_description"
-                    name="long_description"
-                    value={formData.long_description}
-                    onChange={handleInputChange}
-                    placeholder="Detailed description of the brand, its history, values, etc."
-                    className="min-h-[200px]"
-                  />
-                  <div className="text-xs text-muted-foreground">
-                    <p className="mb-1">💡 Tip: Contractions (isn't, it's, don't) will be automatically converted to formal language.</p>
-                    {formData.long_description && (
-                      <details className="mt-2">
-                        <summary className="cursor-pointer text-oma-plum hover:text-oma-plum/80">
-                          Preview formatted description
-                        </summary>
-                        <div className="mt-2 p-3 bg-gray-50 rounded-md text-sm">
-                          <p className="font-medium mb-2">Formatted version:</p>
-                          <p className="text-gray-700 whitespace-pre-wrap">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div>
+                      <Textarea
+                        id="long_description"
+                        name="long_description"
+                        value={formData.long_description}
+                        onChange={handleInputChange}
+                        placeholder="Detailed description of the brand, its history, values, etc."
+                        className="min-h-[200px]"
+                      />
+                      <div className="text-xs text-muted-foreground mt-1">
+                        💡 Tip: Contractions (isn't, it's, don't) will be automatically converted to formal language.
+                      </div>
+                    </div>
+                    
+                    {/* Live Preview */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-700">Live Preview</Label>
+                      <div className="min-h-[200px] p-4 bg-gray-50 rounded-md border border-gray-200">
+                        {formData.long_description ? (
+                          <div className="text-sm text-gray-700 whitespace-pre-wrap">
                             {formatBrandDescription(formData.long_description)}
-                          </p>
-                        </div>
-                      </details>
-                    )}
+                          </div>
+                        ) : (
+                          <div className="text-sm text-gray-400 italic">
+                            Start typing to see the formatted preview...
+                          </div>
+                        )}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        This shows how your description will appear on the frontend
+                      </div>
+                    </div>
                   </div>
                 </div>
               </CardContent>
