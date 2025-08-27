@@ -141,6 +141,50 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
     brand?.categories || []
   );
 
+  // Function to update form state from brand data
+  const updateFormStateFromBrand = (brandData: Brand) => {
+    setImageUrl(brandData.image || "");
+    
+    // First, check if the brand has an explicit currency set
+    if (brandData.currency && brandData.currency !== "NONE") {
+      setCurrency(brandData.currency);
+      console.log("🔄 Setting currency from brand data:", brandData.currency);
+    } else {
+      // Fall back to parsing price range if no explicit currency
+      if (
+        brandData.price_range &&
+        brandData.price_range !== "Contact for pricing" &&
+        brandData.price_range !== "Explore brand for prices"
+      ) {
+        const priceRangeMatch = brandData.price_range.match(
+          /^(.+?)(\d+(?:,\d+)*)\s*-\s*(.+?)(\d+(?:,\d+)*)$/
+        );
+        if (priceRangeMatch) {
+          const [, symbol1, min, symbol2, max] = priceRangeMatch;
+          const foundCurrency = CURRENCIES.find(
+            (c) =>
+              c.symbol === symbol1.trim() || c.symbol === symbol2.trim()
+          );
+          if (foundCurrency) {
+            setCurrency(foundCurrency.code);
+            setPriceMin(min.replace(/,/g, ""));
+            setPriceMax(max.replace(/,/g, ""));
+          }
+        } else {
+          // If price range is not a valid format, set to NONE
+          setCurrency("NONE");
+          setPriceMin("");
+          setPriceMax("");
+        }
+      } else {
+        // If no price range or it's "Explore brand for prices", set to NONE
+        setCurrency("NONE");
+        setPriceMin("");
+        setPriceMax("");
+      }
+    }
+  };
+
   useEffect(() => {
     const fetchBrand = async () => {
       setLoading(true);
@@ -153,40 +197,7 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
         if (brandData) {
           console.log("Brand data found:", brandData.name);
           setBrand(brandData);
-          setImageUrl(brandData.image || "");
-
-          // Parse existing price range if it exists
-          if (
-            brandData.price_range &&
-            brandData.price_range !== "Contact for pricing" &&
-            brandData.price_range !== "Explore brand for prices"
-          ) {
-            const priceRangeMatch = brandData.price_range.match(
-              /^(.+?)(\d+(?:,\d+)*)\s*-\s*(.+?)(\d+(?:,\d+)*)$/
-            );
-            if (priceRangeMatch) {
-              const [, symbol1, min, symbol2, max] = priceRangeMatch;
-              const foundCurrency = CURRENCIES.find(
-                (c) =>
-                  c.symbol === symbol1.trim() || c.symbol === symbol2.trim()
-              );
-              if (foundCurrency) {
-                setCurrency(foundCurrency.code);
-                setPriceMin(min.replace(/,/g, ""));
-                setPriceMax(max.replace(/,/g, ""));
-              }
-            } else {
-              // If price range is not a valid format, set to NONE
-              setCurrency("NONE");
-              setPriceMin("");
-              setPriceMax("");
-            }
-          } else {
-            // If no price range or it's "Explore brand for prices", set to NONE
-            setCurrency("NONE");
-            setPriceMin("");
-            setPriceMax("");
-          }
+          updateFormStateFromBrand(brandData);
         } else {
           console.error("Brand not found in database");
           setBrand(null);
@@ -213,6 +224,15 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
 
     fetchBrand();
   }, [params.id, router]);
+
+  // Update form state whenever brand data changes
+  useEffect(() => {
+    if (brand) {
+      updateFormStateFromBrand(brand);
+      setSelectedCategory(brand.category || "");
+      setSelectedCategories(brand.categories || []);
+    }
+  }, [brand]);
 
   useEffect(() => {
     // Fetch tailor profile for this brand (if exists)
