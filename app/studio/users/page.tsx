@@ -62,6 +62,7 @@ interface UserProfile {
 
 interface UserWithBrands extends UserProfile {
   brand_names: string[];
+  expanded?: boolean;
 }
 
 export default function UsersPage() {
@@ -861,7 +862,7 @@ export default function UsersPage() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <div className="flex flex-wrap gap-1">
+                        <div className="space-y-1">
                           {user.role === "super_admin" ? (
                             <Badge
                               variant="secondary"
@@ -871,16 +872,62 @@ export default function UsersPage() {
                               All brands
                             </Badge>
                           ) : user.brand_names.length > 0 ? (
-                            user.brand_names.map((brandName, index) => (
-                              <Badge
-                                key={index}
-                                variant="secondary"
-                                className="text-xs bg-oma-beige text-oma-plum"
-                              >
-                                <Building className="h-3 w-3 mr-1" />
-                                {brandName}
-                              </Badge>
-                            ))
+                            <div className="space-y-1">
+                              {/* Show first 2 brands always */}
+                              <div className="flex flex-wrap gap-1">
+                                {user.brand_names.slice(0, 2).map((brandName, index) => (
+                                  <Badge
+                                    key={index}
+                                    variant="secondary"
+                                    className="text-xs bg-oma-beige text-oma-plum max-w-[120px] truncate"
+                                  >
+                                    <Building className="h-3 w-3 mr-1 flex-shrink-0" />
+                                    <span className="truncate">{brandName}</span>
+                                  </Badge>
+                                ))}
+                              </div>
+                              
+                              {/* Show count and expand option if more than 2 brands */}
+                              {user.brand_names.length > 2 && (
+                                <div className="flex items-center gap-2">
+                                  <Badge
+                                    variant="outline"
+                                    className="text-xs text-oma-cocoa/60 border-oma-cocoa/20"
+                                  >
+                                    +{user.brand_names.length - 2} more
+                                  </Badge>
+                                  <button
+                                    onClick={() => {
+                                      // Toggle expanded state for this user
+                                      setUsers(prev => prev.map(u => 
+                                        u.id === user.id 
+                                          ? { ...u, expanded: !u.expanded }
+                                          : u
+                                      ));
+                                    }}
+                                    className="text-xs text-oma-plum hover:text-oma-plum/80 underline cursor-pointer"
+                                  >
+                                    {user.expanded ? 'Show less' : 'Show all'}
+                                  </button>
+                                </div>
+                              )}
+                              
+                              {/* Show remaining brands when expanded */}
+                              {user.expanded && user.brand_names.length > 2 && (
+                                <div className="flex flex-wrap gap-1 pt-1 border-t border-oma-cocoa/10">
+                                  {user.brand_names.slice(2).map((brandName, index) => (
+                                    <Badge
+                                      key={index + 2}
+                                      variant="secondary"
+                                      className="text-xs bg-oma-beige/50 text-oma-plum max-w-[120px] truncate"
+                                    >
+                                      <Building className="h-3 w-3 mr-1 flex-shrink-0" />
+                                      <span className="truncate">{brandName}</span>
+                                    </Badge>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
                           ) : (
                             <span className="text-oma-cocoa/60 text-sm">
                               No brands assigned
@@ -934,7 +981,7 @@ export default function UsersPage() {
                         {new Date(user.created_at).toLocaleDateString()}
                       </span>
                     </div>
-                    <div className="flex flex-wrap gap-1">
+                    <div className="space-y-2">
                       {user.role === "super_admin" ? (
                         <Badge
                           variant="secondary"
@@ -944,16 +991,62 @@ export default function UsersPage() {
                           All brands
                         </Badge>
                       ) : user.brand_names.length > 0 ? (
-                        user.brand_names.map((brandName, index) => (
-                          <Badge
-                            key={index}
-                            variant="secondary"
-                            className="text-xs bg-oma-beige text-oma-plum"
-                          >
-                            <Building className="h-3 w-3 mr-1" />
-                            {brandName}
-                          </Badge>
-                        ))
+                        <div className="space-y-2">
+                          {/* Show first 2 brands always */}
+                          <div className="flex flex-wrap gap-1">
+                            {user.brand_names.slice(0, 2).map((brandName, index) => (
+                              <Badge
+                                key={index}
+                                variant="secondary"
+                                className="text-xs bg-oma-beige text-oma-plum max-w-[120px] truncate"
+                              >
+                                <Building className="h-3 w-3 mr-1 flex-shrink-0" />
+                                <span className="truncate">{brandName}</span>
+                              </Badge>
+                            ))}
+                          </div>
+                          
+                          {/* Show count and expand option if more than 2 brands */}
+                          {user.brand_names.length > 2 && (
+                            <div className="flex items-center gap-2">
+                              <Badge
+                                variant="outline"
+                                className="text-xs text-oma-cocoa/60 border-oma-cocoa/20"
+                              >
+                                +{user.brand_names.length - 2} more
+                              </Badge>
+                              <button
+                                onClick={() => {
+                                  // Toggle expanded state for this user
+                                  setUsers(prev => prev.map(u => 
+                                    u.id === user.id 
+                                      ? { ...u, expanded: !u.expanded }
+                                      : u
+                                  ));
+                                }}
+                                className="text-xs text-oma-plum hover:text-oma-plum/80 underline cursor-pointer"
+                              >
+                                {user.expanded ? 'Show less' : 'Show all'}
+                              </button>
+                            </div>
+                          )}
+                          
+                          {/* Show remaining brands when expanded */}
+                          {user.expanded && user.brand_names.length > 2 && (
+                            <div className="flex flex-wrap gap-1 pt-1 border-t border-oma-cocoa/10">
+                              {user.brand_names.slice(2).map((brandName, index) => (
+                                <Badge
+                                  key={index + 2}
+                                  variant="secondary"
+                                  className="text-xs bg-oma-beige/50 text-oma-plum max-w-[120px] truncate"
+                                >
+                                  <Building className="h-3 w-3 mr-1 flex-shrink-0" />
+                                  <span className="truncate">{brandName}</span>
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       ) : (
                         <span className="text-oma-cocoa/60 text-sm">
                           No brands assigned
