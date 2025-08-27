@@ -427,6 +427,78 @@ export function validateBrandCurrency(brand: {
   };
 }
 
+/**
+ * 🔒 ENFORCE CURRENCY CONSISTENCY
+ * Validates that a product's currency matches its brand's currency
+ * This prevents currency mismatches that confuse customers
+ */
+export function validateProductCurrency(
+  productCurrency: string,
+  brand: { location?: string; price_range?: string; currency?: string } | null
+): { isValid: boolean; errorMessage?: string; brandCurrency?: string } {
+  if (!brand) {
+    return {
+      isValid: false,
+      errorMessage: "Brand information not available for currency validation"
+    };
+  }
+
+  const brandCurrency = getBrandCurrency(brand);
+  
+  if (!brandCurrency) {
+    return {
+      isValid: false,
+      errorMessage: "Brand currency could not be determined"
+    };
+  }
+
+  if (productCurrency !== brandCurrency.code) {
+    return {
+      isValid: false,
+      errorMessage: `Currency mismatch! Product uses ${productCurrency} but brand uses ${brandCurrency.code} (${brandCurrency.symbol})`,
+      brandCurrency: brandCurrency.code
+    };
+  }
+
+  return {
+    isValid: true,
+    brandCurrency: brandCurrency.code
+  };
+}
+
+/**
+ * 🔒 ENFORCE CURRENCY CONSISTENCY - Bulk Validation
+ * Validates multiple products for currency consistency
+ * Returns products with currency issues for review
+ */
+export function validateProductsCurrency(
+  products: Array<{ id: string; currency: string; brand_id: string }>,
+  brands: Array<{ id: string; location?: string; price_range?: string; currency?: string }>
+): {
+  valid: Array<{ id: string; currency: string; brand_id: string }>;
+  invalid: Array<{ id: string; currency: string; brand_id: string; errorMessage: string; expectedCurrency: string }>;
+} {
+  const valid: Array<{ id: string; currency: string; brand_id: string }> = [];
+  const invalid: Array<{ id: string; currency: string; brand_id: string; errorMessage: string; expectedCurrency: string }> = [];
+
+  products.forEach(product => {
+    const brand = brands.find(b => b.id === product.brand_id);
+    const validation = validateProductCurrency(product.currency, brand);
+    
+    if (validation.isValid) {
+      valid.push(product);
+    } else {
+      invalid.push({
+        ...product,
+        errorMessage: validation.errorMessage || "Unknown currency validation error",
+        expectedCurrency: validation.brandCurrency || "Unknown"
+      });
+    }
+  });
+
+  return { valid, invalid };
+}
+
 export default {
   CURRENCIES,
   getCurrencyByCode,
@@ -438,4 +510,6 @@ export default {
   formatPriceRangeWithBrandCurrency,
   getDefaultCurrencyForLocation,
   validateBrandCurrency,
+  validateProductCurrency,
+  validateProductsCurrency,
 };

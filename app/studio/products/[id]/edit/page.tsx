@@ -433,6 +433,19 @@ export default function EditProductPage() {
       return;
     }
 
+    // 🔒 ENFORCE CURRENCY VALIDATION
+    const selectedBrand = brands.find(brand => brand.id === formData.brand_id);
+    if (selectedBrand) {
+      const brandCurrency = getBrandCurrency(selectedBrand);
+      if (brandCurrency && formData.currency !== brandCurrency.code) {
+        toast.error(
+          `Currency mismatch! This brand uses ${brandCurrency.symbol}${brandCurrency.code}. ` +
+          `Please change the product currency to ${brandCurrency.code} or contact support if you need to use a different currency.`
+        );
+        return;
+      }
+    }
+
     try {
       setIsLoading(true);
 

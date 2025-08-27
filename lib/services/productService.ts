@@ -325,6 +325,29 @@ export async function createProduct(
   }
 
   try {
+    // 🔒 ENFORCE CURRENCY VALIDATION - Backend Check
+    if (productData.brand_id && productData.currency) {
+      const { data: brand, error: brandError } = await supabase
+        .from("brands")
+        .select("currency, price_range, location")
+        .eq("id", productData.brand_id)
+        .single();
+
+      if (brandError) {
+        console.error("Error fetching brand for currency validation:", brandError);
+        throw new Error("Failed to validate brand currency");
+      }
+
+      if (brand) {
+        const brandCurrency = getBrandCurrency(brand);
+        if (brandCurrency && productData.currency !== brandCurrency.code) {
+          throw new Error(
+            `Currency mismatch! Product currency (${productData.currency}) does not match brand currency (${brandCurrency.code}). ` +
+            `Products must use the same currency as their brand.`
+          );
+        }
+      }
+    }
     // Prepare the data with only core required fields first
     const coreData = {
       title: productData.title,
@@ -438,6 +461,30 @@ export async function updateProduct(
 ): Promise<Product | null> {
   if (!supabase) {
     throw new Error("Supabase client not available");
+  }
+
+  // 🔒 ENFORCE CURRENCY VALIDATION - Backend Check for Updates
+  if (productData.brand_id && productData.currency) {
+    const { data: brand, error: brandError } = await supabase
+      .from("brands")
+      .select("currency, price_range, location")
+      .eq("id", productData.brand_id)
+      .single();
+
+    if (brandError) {
+      console.error("Error fetching brand for currency validation:", brandError);
+      throw new Error("Failed to validate brand currency");
+    }
+
+    if (brand) {
+      const brandCurrency = getBrandCurrency(brand);
+      if (brandCurrency && productData.currency !== brandCurrency.code) {
+        throw new Error(
+          `Currency mismatch! Product currency (${productData.currency}) does not match brand currency (${brandCurrency.code}). ` +
+          `Products must use the same currency as their brand.`
+        );
+      }
+    }
   }
 
   const { data, error } = await supabase
