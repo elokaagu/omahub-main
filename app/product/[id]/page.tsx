@@ -87,17 +87,33 @@ export default function ProductPage() {
       setLoading(true);
       setError(null);
 
+      // Add cache-busting timestamp to ensure fresh data
+      const timestamp = Date.now();
+      console.log(`🔄 Fetching product data at ${new Date(timestamp).toISOString()}`);
+
       const productData = await getProductById(productId);
       if (!productData) {
         setError("Product not found");
         return;
       }
 
+      console.log('📦 Product data fetched:', {
+        title: productData.title,
+        price: productData.price,
+        currency: productData.currency
+      });
+
       const brandData = await getBrandById(productData.brand_id);
       if (!brandData) {
         setError("Brand information not found");
         return;
       }
+
+      console.log('🏷️ Brand data fetched:', {
+        name: brandData.name,
+        currency: brandData.currency,
+        price_range: brandData.price_range
+      });
 
       setProduct(productData);
       setBrand(brandData);
