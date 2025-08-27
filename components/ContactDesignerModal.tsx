@@ -125,7 +125,8 @@ export default function ContactDesignerModal({
           <DialogTitle>Contact {brandName}</DialogTitle>
           <DialogDescription>
             Send a message directly to this designer. They will receive your
-            inquiry in their studio inbox and can respond to your email address.
+            inquiry in their Studio inbox and respond directly to your email
+            address. This ensures you get a personal response from the designer.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">

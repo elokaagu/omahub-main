@@ -124,6 +124,10 @@ export function BrandContactSection({
         <Mail className="h-4 w-4 mr-2" />
         Contact Designer
       </Button>
+      <p className="text-xs text-muted-foreground mt-2 text-center">
+        Your message will be sent to their Studio inbox and they'll respond
+        directly to your email
+      </p>
     </div>
   );
 }

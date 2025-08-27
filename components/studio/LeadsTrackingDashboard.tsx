@@ -1101,7 +1101,7 @@ export default function LeadsTrackingDashboard({
           </CardHeader>
           <CardContent className="p-6">
             {/* Data Source Info */}
-            {/* {vercelAnalytics?.source !== "vercel" && (
+      {/* {vercelAnalytics?.source !== "vercel" && (
               <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                 <div className="flex items-center gap-2 text-yellow-800">
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -1119,7 +1119,7 @@ export default function LeadsTrackingDashboard({
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {/* Page Views */}
-              {/* <div className="text-center p-4 bg-oma-cream/20 rounded-lg border border-oma-beige">
+      {/* <div className="text-center p-4 bg-oma-cream/20 rounded-lg border border-oma-beige">
                 <div className="text-2xl font-bold text-oma-plum">
                   {vercelAnalytics?.pageviews?.toLocaleString() ||
                     platformAnalytics?.totalPageViews?.toLocaleString() ||
@@ -1134,7 +1134,7 @@ export default function LeadsTrackingDashboard({
               </div>
 
               {/* Unique Visitors */}
-              {/* <div className="text-center p-4 bg-oma-cream/20 rounded-lg border border-oma-beige">
+      {/* <div className="text-center p-4 bg-oma-cream/20 rounded-lg border border-oma-beige">
                 <div className="text-2xl font-bold text-oma-plum">
                   {vercelAnalytics?.visitors?.toLocaleString() || "342"}
                 </div>
@@ -1147,7 +1147,7 @@ export default function LeadsTrackingDashboard({
               </div>
 
               {/* Conversion Rate */}
-              {/* <div className="text-center p-4 bg-oma-cream/20 rounded-lg border border-oma-beige">
+      {/* <div className="text-center p-4 bg-oma-cream/20 rounded-lg border border-oma-beige">
                 <div className="text-2xl font-bold text-oma-plum">
                   {analytics?.conversion_rate
                     ? `${(analytics.conversion_rate * 100).toFixed(1)}%`
@@ -1162,7 +1162,7 @@ export default function LeadsTrackingDashboard({
               </div>
 
               {/* Top Performing Page */}
-              {/* <div className="text-center p-4 bg-oma-cream/20 rounded-lg border border-oma-beige">
+      {/* <div className="text-center p-4 bg-oma-cream/20 rounded-lg border border-oma-beige">
                 <div className="text-lg font-bold text-oma-plum truncate">
                   {vercelAnalytics?.top_page || "Directory"}
                 </div>
@@ -1176,7 +1176,7 @@ export default function LeadsTrackingDashboard({
             </div>
 
             {/* Traffic Sources */}
-            {/* <div className="mt-6">
+      {/* <div className="mt-6">
               <h4 className="font-medium text-oma-plum mb-3">
                 Traffic Sources
               </h4>
@@ -1234,7 +1234,7 @@ export default function LeadsTrackingDashboard({
             </div>
 
             {/* Recent Activity */}
-            {/* <div className="mt-6">
+      {/* <div className="mt-6">
               <h4 className="font-medium text-oma-plum mb-3">
                 Recent Activity
               </h4>

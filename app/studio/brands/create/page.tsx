@@ -110,11 +110,13 @@ export default function CreateBrandPage() {
     if (name === "price_range" && value) {
       const detectedCurrency = extractCurrencyFromPriceRange(value);
       if (detectedCurrency) {
-        console.log(`🔄 Auto-detected currency: ${detectedCurrency} from price range`);
-        setFormData(prev => ({
+        console.log(
+          `🔄 Auto-detected currency: ${detectedCurrency} from price range`
+        );
+        setFormData((prev) => ({
           ...prev,
           [name]: value,
-          currency: detectedCurrency
+          currency: detectedCurrency,
         }));
         return;
       }
@@ -225,7 +227,11 @@ export default function CreateBrandPage() {
     }
 
     // Validate price range - either set a range or explicitly mark as contact for pricing
-    if (!formData.price_min && !formData.price_max && !formData.contact_for_pricing) {
+    if (
+      !formData.price_min &&
+      !formData.price_max &&
+      !formData.contact_for_pricing
+    ) {
       toast.error("Please set a price range or mark as 'Contact for pricing'");
       return;
     }
@@ -241,7 +247,11 @@ export default function CreateBrandPage() {
 
     // Format price range if both min and max are provided
     let priceRange = "";
-    if (formData.price_min && formData.price_max && !formData.contact_for_pricing) {
+    if (
+      formData.price_min &&
+      formData.price_max &&
+      !formData.contact_for_pricing
+    ) {
       const currency = CURRENCIES.find((c) => c.code === formData.currency);
       const symbol = currency?.symbol || "$";
       priceRange = formatPriceRange(
@@ -542,7 +552,7 @@ export default function CreateBrandPage() {
                         "Enter minimum and maximum prices to see preview"
                       )}
                     </p>
-                    
+
                     {/* Contact for Pricing Option */}
                     <div className="flex items-center space-x-2">
                       <input
@@ -559,7 +569,8 @@ export default function CreateBrandPage() {
                         className="rounded border-gray-300 text-oma-plum focus:ring-oma-plum"
                       />
                       <Label htmlFor="contact_for_pricing" className="text-sm">
-                        Contact for pricing (if you prefer not to show specific prices)
+                        Contact for pricing (if you prefer not to show specific
+                        prices)
                       </Label>
                     </div>
                   </div>
@@ -626,7 +637,7 @@ export default function CreateBrandPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="contact_email">Contact Email</Label>
+                    <Label htmlFor="contact_email">Contact Email *</Label>
                     <Input
                       id="contact_email"
                       name="contact_email"
@@ -634,7 +645,13 @@ export default function CreateBrandPage() {
                       value={formData.contact_email}
                       onChange={handleInputChange}
                       placeholder="hello@brand.com"
+                      required
                     />
+                    <p className="text-xs text-muted-foreground">
+                      This email will receive notifications when customers
+                      contact you. If left empty, inquiries will be sent to
+                      info@oma-hub.com
+                    </p>
                   </div>
                 </div>
 

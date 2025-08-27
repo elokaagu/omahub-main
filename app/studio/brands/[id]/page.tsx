@@ -699,6 +699,22 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
                   </div>
 
                   <div className="space-y-2">
+                    <Label htmlFor="contact_email">Contact Email</Label>
+                    <Input
+                      id="contact_email"
+                      name="contact_email"
+                      type="email"
+                      value={brand.contact_email || ""}
+                      onChange={handleChange}
+                      placeholder="hello@brand.com"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      This email receives customer inquiry notifications. If
+                      empty, inquiries go to info@oma-hub.com
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
                     <Label htmlFor="founded_year">Founded Year</Label>
                     <Input
                       id="founded_year"

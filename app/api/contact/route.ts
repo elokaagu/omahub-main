@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase-unified";
-import { estimateLeadRevenue } from "@/lib/services/revenueEstimationService";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { sendContactEmail } from "@/lib/services/emailService";
 
 // Helper function to extract project details from message
 function analyzeInquiryMessage(
@@ -351,11 +351,11 @@ export async function POST(request: NextRequest) {
 
       const supabase = createAdminClient();
 
-      // Verify brand exists
+      // Verify brand exists and get contact information
       console.log("🔍 Checking if brand exists:", brandId);
       const { data: brand, error: brandError } = await supabase
         .from("brands")
-        .select("id, name, category")
+        .select("id, name, category, contact_email")
         .eq("id", brandId)
         .single();
 
@@ -366,181 +366,81 @@ export async function POST(request: NextRequest) {
 
       console.log("✅ Brand found:", brand);
 
-      // Use enhanced revenue estimation service with real product pricing data
-      let revenueAnalysis;
-      try {
-        console.log(
-          "🧠 Using enhanced revenue estimation with real product pricing..."
-        );
-        revenueAnalysis = await estimateLeadRevenue(
-          brandId,
-          message,
-          "general",
-          {
-            company_name:
-              name.includes("Company") || name.includes("Corp")
-                ? name
-                : undefined,
-          }
-        );
-        console.log("✅ Enhanced revenue analysis completed:", revenueAnalysis);
-      } catch (error) {
-        console.error(
-          "⚠️ Enhanced revenue estimation failed, using fallback:",
-          error
-        );
-        // Fallback to legacy analysis
-        const legacyAnalysis = analyzeInquiryMessage(
-          message,
-          "general",
-          brand.category
-        );
-        revenueAnalysis = {
-          estimated_value: legacyAnalysis.estimatedValue,
-          confidence_score: 50,
-          pricing_source: "industry_fallback" as const,
-          breakdown: {
-            base_value: legacyAnalysis.estimatedValue,
-            project_multiplier: 1,
-            quantity_multiplier: 1,
-            urgency_multiplier: 1,
-            luxury_multiplier: 1,
-            final_value: legacyAnalysis.estimatedValue,
-          },
-          recommended_follow_up: "Standard follow-up recommended",
-        };
-      }
+      // Determine contact email (use brand's email or fallback to OmaHub)
+      const contactEmail = brand.contact_email || "info@oma-hub.com";
+      const isOmaHubFallback = !brand.contact_email;
 
-      // Determine priority based on estimated value and confidence
-      let priority = "normal";
-      if (revenueAnalysis.estimated_value > 10000) {
-        priority = "urgent";
-      } else if (
-        revenueAnalysis.estimated_value > 5000 ||
-        revenueAnalysis.confidence_score > 80
-      ) {
-        priority = "high";
-      } else if (
-        message.toLowerCase().includes("urgent") ||
-        message.toLowerCase().includes("asap")
-      ) {
-        priority = "urgent";
-      }
-
-      // Determine lead type based on message content and value
-      let leadType = "inquiry";
-      if (revenueAnalysis.estimated_value > 8000) {
-        leadType = "booking_intent";
-      } else if (
-        message.toLowerCase().includes("quote") ||
-        message.toLowerCase().includes("price")
-      ) {
-        leadType = "quote_request";
-      } else if (message.toLowerCase().includes("consultation")) {
-        leadType = "consultation";
-      }
-
-      try {
-        // Create inquiry for Studio Inbox
-        console.log("📝 Creating inquiry...");
-        const inquiryData = {
+      // Create inquiry in the database (Studio inbox)
+      console.log("📝 Creating inquiry in Studio inbox...");
+      const { data: inquiry, error: inquiryError } = await supabase
+        .from("inquiries")
+        .insert({
           brand_id: brandId,
           customer_name: name,
           customer_email: email,
-          subject: `New Contact from ${name}`,
+          subject: `Inquiry from ${name}`,
           message: message,
-          inquiry_type: "general",
-          priority: priority,
-          status: "unread",
-          source: "website",
-        };
-
-        const { data: inquiry, error: inquiryError } = await supabase
-          .from("inquiries")
-          .insert(inquiryData)
-          .select()
-          .single();
-
-        if (inquiryError) {
-          console.error("❌ Failed to create inquiry:", inquiryError);
-          throw new Error("Failed to create inquiry");
-        }
-
-        console.log("✅ Inquiry created:", inquiry.id);
-
-        // Create lead with enhanced intelligent analysis
-        const leadData = {
-          brand_id: brandId,
-          customer_name: name,
-          customer_email: email,
-          source: "website",
+          inquiry_type: "customer_inquiry",
+          priority: "normal",
+          source: "website_contact_form",
           status: "new",
-          priority: priority,
-          lead_type: leadType,
-          estimated_value: revenueAnalysis.estimated_value,
-          notes: `Enhanced Analysis - Confidence: ${revenueAnalysis.confidence_score}%, Source: ${revenueAnalysis.pricing_source}, Follow-up: ${revenueAnalysis.recommended_follow_up}\n\nBreakdown:\n- Base Value: $${revenueAnalysis.breakdown.base_value}\n- Project Multiplier: ${revenueAnalysis.breakdown.project_multiplier}x\n- Quantity Multiplier: ${revenueAnalysis.breakdown.quantity_multiplier}x\n- Urgency Multiplier: ${revenueAnalysis.breakdown.urgency_multiplier}x\n- Luxury Multiplier: ${revenueAnalysis.breakdown.luxury_multiplier}x\n\nOriginal message: ${message}`,
-        };
+        })
+        .select()
+        .single();
 
-        const { data: lead, error: leadError } = await supabase
-          .from("leads")
-          .insert(leadData)
-          .select()
-          .single();
-
-        if (leadError) {
-          console.error("❌ Failed to create lead:", leadError);
-          // Don't fail the whole request if lead creation fails
-          console.log("⚠️ Continuing without lead creation");
-        } else {
-          console.log("✅ Lead created with enhanced analysis:", lead.id);
-
-          // Create initial lead interaction
-          const interactionData = {
-            lead_id: lead.id,
-            interaction_type: "email",
-            description: `Initial contact: ${message.substring(0, 100)}${message.length > 100 ? "..." : ""}\n\nRevenue Analysis: $${revenueAnalysis.estimated_value} (${revenueAnalysis.confidence_score}% confidence)\nRecommended Action: ${revenueAnalysis.recommended_follow_up}`,
-            interaction_date: new Date().toISOString(),
-          };
-
-          const { error: interactionError } = await supabase
-            .from("lead_interactions")
-            .insert(interactionData);
-
-          if (interactionError) {
-            console.error(
-              "⚠️ Failed to create lead interaction:",
-              interactionError
-            );
-          } else {
-            console.log("✅ Lead interaction created with enhanced analysis");
-          }
-        }
-
-        console.log(
-          "🎉 Brand contact processed successfully with enhanced revenue estimation"
-        );
-        return NextResponse.json({
-          success: true,
-          message:
-            "Your message has been sent successfully! We'll get back to you soon.",
-          data: {
-            inquiryId: inquiry.id,
-            leadId: lead?.id,
-            brand: brand.name,
-            estimatedValue: revenueAnalysis.estimated_value,
-            confidenceScore: revenueAnalysis.confidence_score,
-            pricingSource: revenueAnalysis.pricing_source,
-            priority: priority,
-            recommendedFollowUp: revenueAnalysis.recommended_follow_up,
-          },
-        });
-      } catch (error) {
-        console.error("❌ Error processing brand contact:", error);
+      if (inquiryError) {
+        console.error("❌ Failed to create inquiry:", inquiryError);
         return NextResponse.json(
-          { error: "Failed to save your message" },
+          { error: "Failed to save your inquiry" },
           { status: 500 }
         );
       }
+
+      console.log("✅ Inquiry created successfully:", inquiry.id);
+
+      // Send email notification to brand contact email
+      console.log("📧 Sending email notification to:", contactEmail);
+      try {
+        const emailResult = await sendContactEmail({
+          name: name,
+          email: email,
+          subject: `New Customer Inquiry - ${name}`,
+          message: `You have a new inquiry from ${name} about your designs.
+
+Customer Email: ${email}
+Message: ${message}
+
+This inquiry has been saved to your Studio inbox. You can respond directly to the customer at ${email}.
+
+View all inquiries in your Studio: [Studio Inbox Link]
+
+Best regards,
+OmaHub Team`,
+        });
+
+        if (emailResult.success) {
+          console.log("✅ Email notification sent successfully");
+        } else {
+          console.error(
+            "❌ Failed to send email notification:",
+            emailResult.error
+          );
+        }
+      } catch (emailError) {
+        console.error("❌ Email sending error:", emailError);
+        // Don't fail the entire request if email fails
+      }
+
+      // Return success response
+      return NextResponse.json({
+        success: true,
+        message: isOmaHubFallback
+          ? "Your message has been sent! We'll forward it to the designer and get back to you soon."
+          : "Your message has been sent! The designer will receive it in their inbox and respond to you directly.",
+        inquiry: inquiry,
+        type: "brand_contact",
+        notification_sent: true,
+      });
     } else {
       // Handle general platform contact form
       const { name, email, subject, message } = body;
@@ -559,15 +459,35 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // For general platform contact, you might want to:
-      // 1. Send an email to admin
-      // 2. Store in a general inquiries table
-      // 3. Create a support ticket
-
+      // For general platform contact, send to OmaHub admin
       console.log("📧 General platform contact:", { name, email, subject });
 
-      // For now, just return success
-      // You can implement email sending or admin notification here
+      try {
+        const emailResult = await sendContactEmail({
+          name: name,
+          email: email,
+          subject: `Platform Contact: ${subject}`,
+          message: `New general platform contact form submission:
+
+Name: ${name}
+Email: ${email}
+Subject: ${subject}
+Message: ${message}`,
+        });
+
+        if (emailResult.success) {
+          console.log("✅ General contact email sent successfully");
+        } else {
+          console.error(
+            "❌ Failed to send general contact email:",
+            emailResult.error
+          );
+        }
+      } catch (emailError) {
+        console.error("❌ Email sending error:", emailError);
+      }
+
+      // Return success response
       return NextResponse.json({
         success: true,
         message: "Thank you for contacting us! We'll get back to you soon.",
