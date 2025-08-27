@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Loading } from "@/components/ui/loading";
 import { NavigationLink } from "@/components/ui/navigation-link";
 import { TailoredOrderModal } from "@/components/product/TailoredOrderModal";
+
 import {
   Ruler,
   Clock,

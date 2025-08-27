@@ -61,6 +61,8 @@ export function TailoredOrderModal({
   const [loading, setLoading] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
 
+
+
   // Form state
   const [measurements, setMeasurements] = useState<CustomerMeasurements>({
     fit_preference: "regular",
@@ -188,11 +190,13 @@ export function TailoredOrderModal({
     );
   }
 
+  console.log("🎯 Modal render - isOpen:", isOpen, "product:", product?.title);
+  
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[95vh] flex flex-col relative">
+      <DialogContent className="max-w-4xl max-h-[95vh] flex flex-col relative bg-red-500">
         <DialogHeader className="pb-4">
-          <DialogTitle className="text-xl font-semibold">
+          <DialogTitle className="text-xl font-semibold text-white">
             Custom Order: {product.title}
           </DialogTitle>
         </DialogHeader>
