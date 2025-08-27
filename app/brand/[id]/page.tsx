@@ -9,8 +9,17 @@ import {
 } from "@/lib/services/brandService";
 import { Brand, Review, Catalogue } from "@/lib/supabase";
 
-// Extended brand interface to include currency and other fields
-interface ExtendedBrand extends Brand {
+// Extended brand interface to include all the fields that the database actually returns
+interface ExtendedBrand {
+  id: string;
+  name: string;
+  description?: string | null;
+  long_description?: string | null;
+  logo_url?: string | null;
+  website?: string | null;
+  created_at?: string;
+  updated_at?: string;
+  // Additional fields that exist in the database but aren't in the basic Brand type
   currency?: string;
   price_range?: string;
   location?: string;
@@ -18,7 +27,6 @@ interface ExtendedBrand extends Brand {
   rating?: number;
   is_verified?: boolean;
   image?: string;
-  website?: string;
   instagram?: string;
   whatsapp?: string;
   contact_email?: string;
