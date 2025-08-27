@@ -897,6 +897,8 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
                 defaultValue={brand.image}
                 bucket="brand-assets"
                 path="brands"
+                // Note: This component needs to be updated to support the new naming convention
+                // For now, it will use legacy naming
               />
             </CardContent>
           </Card>

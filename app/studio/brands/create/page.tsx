@@ -713,6 +713,10 @@ export default function CreateBrandPage() {
                   bucket="brand-assets"
                   accept="image/png,image/jpeg,image/jpg,image/webp"
                   maxSize={5}
+                  imageType="brand"
+                  imageRole="cover"
+                  // Note: brandId and brandName will be set after brand creation
+                  // For now, this will use legacy naming, but can be updated later
                 />
                 {/* Always show brand video and thumbnail upload fields */}
                 <div className="mt-6 space-y-4">

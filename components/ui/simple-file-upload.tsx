@@ -6,6 +6,11 @@ import { Upload, X, Image as ImageIcon, AlertCircle } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { AuthImage } from "./auth-image";
+import { 
+  generateBrandImageFilename, 
+  generateBrandImagePath,
+  ImageNamingConfig 
+} from "@/lib/services/imageNamingService";
 
 interface SimpleFileUploadProps {
   onUploadComplete: (url: string) => void;
@@ -15,6 +20,11 @@ interface SimpleFileUploadProps {
   accept?: string;
   maxSize?: number;
   className?: string;
+  // Brand-specific props for proper naming
+  brandId?: string;
+  brandName?: string;
+  imageRole?: 'logo' | 'cover' | 'gallery' | 'thumbnail' | 'hero' | 'banner';
+  imageType?: 'brand' | 'product' | 'collection' | 'user';
 }
 
 export function SimpleFileUpload({
@@ -25,6 +35,10 @@ export function SimpleFileUpload({
   accept = "image/jpeg,image/png,image/webp",
   maxSize = 5,
   className = "",
+  brandId,
+  brandName,
+  imageRole = "cover",
+  imageType = "brand",
 }: SimpleFileUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState<string | null>(defaultValue || null);
@@ -56,13 +70,46 @@ export function SimpleFileUpload({
         throw new Error("Please log in to upload files");
       }
 
-      // Create unique filename
-      const fileExtension = file.name.split(".").pop() || "jpg";
-      const uniqueFileName = `${user.id.substring(0, 8)}_${Date.now()}.${fileExtension}`;
-      const filePath = path ? `${path}/${uniqueFileName}` : uniqueFileName;
+      // Create filename using naming convention if brand info is provided
+      let filename: string;
+      let filePath: string;
+      
+      if (brandId && brandName && imageType === 'brand') {
+        // Use structured naming convention for brand images
+        const namingConfig: ImageNamingConfig = {
+          brandId,
+          brandName,
+          imageRole,
+          imageType,
+          userId: user.id
+        };
+        
+        filename = generateBrandImageFilename(namingConfig, file);
+        filePath = generateBrandImagePath(namingConfig, filename);
+        
+        console.log("🏷️ Using structured naming:", {
+          originalName: file.name,
+          newFilename: filename,
+          storagePath: filePath,
+          brandId,
+          brandName,
+          imageRole
+        });
+      } else {
+        // Fallback to legacy naming for non-brand images
+        const fileExtension = file.name.split(".").pop() || "jpg";
+        filename = `${user.id.substring(0, 8)}_${Date.now()}.${fileExtension}`;
+        filePath = path ? `${path}/${filename}` : filename;
+        
+        console.log("📁 Using legacy naming:", {
+          originalName: file.name,
+          newFilename: filename,
+          storagePath: filePath
+        });
+      }
 
       console.log("🔄 Starting upload:", {
-        fileName: uniqueFileName,
+        fileName: filename,
         fileSize: `${(file.size / 1024 / 1024).toFixed(2)} MB`,
         fileType: file.type,
         bucket: bucket,
