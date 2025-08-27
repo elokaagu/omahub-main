@@ -434,7 +434,7 @@ export function validateBrandCurrency(brand: {
  */
 export function validateProductCurrency(
   productCurrency: string,
-  brand: { location?: string; price_range?: string; currency?: string } | null
+  brand: { location?: string; price_range?: string; currency?: string } | null | undefined
 ): { isValid: boolean; errorMessage?: string; brandCurrency?: string } {
   if (!brand) {
     return {

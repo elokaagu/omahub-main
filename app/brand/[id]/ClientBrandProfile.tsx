@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -102,7 +102,7 @@ export default function ClientBrandProfile({
   };
 
   // Fetch products for this brand
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     if (!id) return;
 
     try {
@@ -114,7 +114,7 @@ export default function ClientBrandProfile({
     } finally {
       setProductsLoading(false);
     }
-  };
+  }, [id]);
 
   // Fetch reviews when component mounts
   useEffect(() => {
@@ -136,7 +136,7 @@ export default function ClientBrandProfile({
     if (showAllProducts && products.length === 0) {
       fetchProducts();
     }
-  }, [showAllProducts]);
+  }, [showAllProducts, products.length, fetchProducts]);
 
   const handleReviewSubmitted = () => {
     // Hide the review form and refresh reviews
@@ -167,9 +167,11 @@ export default function ClientBrandProfile({
       <div className="max-w-7xl mx-auto">
         <div className="mb-6 sm:mb-8 slide-up">
           <div className="flex flex-wrap items-center gap-2 mb-3 sm:mb-2">
-            <Badge className="bg-oma-beige text-oma-cocoa border-oma-gold/20 text-xs sm:text-sm">
-              {brandData.category}
-            </Badge>
+            {brandData.category && (
+              <Badge className="bg-oma-beige text-oma-cocoa border-oma-gold/20 text-xs sm:text-sm">
+                {brandData.category}
+              </Badge>
+            )}
             {brandData.isVerified && (
               <div className="flex items-center text-oma-gold text-xs sm:text-sm">
                 <CheckCircle size={14} className="mr-1 sm:mr-1" />
@@ -183,16 +185,20 @@ export default function ClientBrandProfile({
           </h1>
 
           <div className="flex flex-col sm:flex-row sm:items-center text-oma-cocoa mb-4 sm:mb-6 gap-2 sm:gap-0">
-            <div className="flex items-center">
-              <MapPin size={14} className="mr-1 flex-shrink-0" />
-              <span className="text-sm sm:text-base">{brandData.location}</span>
-            </div>
-            <div className="flex items-center sm:ml-6">
-              <Star size={14} className="mr-1 text-oma-gold flex-shrink-0" />
-              <span className="text-sm sm:text-base">
-                {brandData.rating} ({reviews.length} reviews)
-              </span>
-            </div>
+            {brandData.location && (
+              <div className="flex items-center">
+                <MapPin size={14} className="mr-1 flex-shrink-0" />
+                <span className="text-sm sm:text-base">{brandData.location}</span>
+              </div>
+            )}
+            {brandData.rating && (
+              <div className="flex items-center sm:ml-6">
+                <Star size={14} className="mr-1 text-oma-gold flex-shrink-0" />
+                <span className="text-sm sm:text-base">
+                  {brandData.rating} ({reviews.length} reviews)
+                </span>
+              </div>
+            )}
           </div>
 
           <div className="prose text-oma-black max-w-none mb-6">
