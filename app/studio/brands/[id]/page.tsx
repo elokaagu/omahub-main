@@ -423,6 +423,7 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
         categories: brand.categories,
         location: brand.location,
         price_range: priceRange,
+        currency: currency, // Add currency field to update data
         website: brand.website,
         instagram: brand.instagram,
         whatsapp: brand.whatsapp,
