@@ -12,8 +12,8 @@ let brandsCache: {
   isLoading: false,
 };
 
-// Cache expiration time (temporarily set to 0 to force refresh)
-const CACHE_EXPIRY = 0; // 0 seconds to force immediate refresh
+// Cache expiration time (restored to reasonable value)
+const CACHE_EXPIRY = 30 * 1000; // 30 seconds for stable performance
 
 // Define essential fields to reduce payload size
 const ESSENTIAL_BRAND_FIELDS = "*";
@@ -146,13 +146,7 @@ export async function getAllBrands(
           console.log(`🧹 Cleaned location for ${item.name}: '${item.location}' → '${cleanLocation}'`);
         }
         
-        // Debug: Log all location data for troubleshooting
-        console.log(`🔍 Location data for ${item.name}:`, {
-          original: item.location,
-          cleaned: cleanLocation,
-          hasTrailingO: item.location?.endsWith('O'),
-          length: item.location?.length
-        });
+
         
         return {
           id: item.id || `temp-id-${Math.random().toString(36).substring(2, 9)}`,
