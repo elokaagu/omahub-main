@@ -60,7 +60,6 @@ export function removeContractions(text: string): string {
     "sorta": "sort of",
     "outta": "out of",
     "lotsa": "lots of",
-    "lotsa": "lots of",
     "cuppa": "cup of",
     "dunno": "do not know",
     "gimme": "give me",
