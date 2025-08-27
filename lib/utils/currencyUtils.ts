@@ -180,7 +180,7 @@ export function extractCurrencyFromPriceRange(
  */
 export function getBrandCurrency(
   brand: { location?: string; price_range?: string; currency?: string } | null
-): Currency {
+): Currency | null {
   // Debug logging for currency issues
   if (process.env.NODE_ENV === "development") {
     console.log("getBrandCurrency debug:", {
@@ -192,8 +192,8 @@ export function getBrandCurrency(
   }
 
   if (!brand) {
-    console.log("getBrandCurrency: No brand data, using USD fallback");
-    return getCurrencyByCode("USD")!; // Default to USD instead of NGN
+    console.log("getBrandCurrency: No brand data");
+    return null;
   }
 
   // First priority: use the brand's explicit currency field
@@ -247,9 +247,9 @@ export function getBrandCurrency(
     }
   }
 
-  // Final fallback to USD (more international than NGN)
-  console.log("getBrandCurrency: Using USD fallback");
-  return getCurrencyByCode("USD")!;
+  // No currency found
+  console.log("getBrandCurrency: No currency found for brand");
+  return null;
 }
 
 /**
@@ -263,6 +263,11 @@ export function formatPriceWithBrandCurrency(
   brand: { location?: string; price_range?: string } | null
 ): string {
   const currency = getBrandCurrency(brand);
+  
+  if (!currency) {
+    return "Contact designer for pricing";
+  }
+  
   const numericPrice =
     typeof price === "string" ? parseFloat(price.replace(/,/g, "")) : price;
 

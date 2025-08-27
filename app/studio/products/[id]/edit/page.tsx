@@ -112,12 +112,21 @@ export default function EditProductPage() {
   useEffect(() => {
     if (formData.brand_id) {
       const selectedBrand = brands.find(b => b.id === formData.brand_id);
-      if (selectedBrand && selectedBrand.currency) {
-        setSelectedBrandCurrency(selectedBrand.currency);
-        setFormData(prev => ({
-          ...prev,
-          currency: selectedBrand.currency
-        }));
+      if (selectedBrand) {
+        if (selectedBrand.currency) {
+          setSelectedBrandCurrency(selectedBrand.currency);
+          setFormData(prev => ({
+            ...prev,
+            currency: selectedBrand.currency
+          }));
+        } else {
+          // No currency specified - clear the currency
+          setSelectedBrandCurrency("");
+          setFormData(prev => ({
+            ...prev,
+            currency: ""
+          }));
+        }
       }
     }
   }, [formData.brand_id, brands]);
@@ -808,12 +817,8 @@ export default function EditProductPage() {
                   {formData.brand_id && (
                     <p className="text-xs text-muted-foreground">
                       Auto-synced with{" "}
-                      {brands.find((b) => b.id === formData.brand_id)?.name} (
-                      {getBrandCurrency(
-                        brands.find((b) => b.id === formData.brand_id) ||
-                          ({} as Brand)
-                      )}
-                      )
+                      {brands.find((b) => b.id === formData.brand_id)?.name}{" "}
+                      {selectedBrandCurrency ? `(${selectedBrandCurrency})` : '(Contact designer for pricing)'}
                     </p>
                   )}
                 </div>

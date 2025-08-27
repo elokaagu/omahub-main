@@ -3,21 +3,24 @@
 
 -- Step 1: Add currency column to products table
 ALTER TABLE public.products 
-ADD COLUMN IF NOT EXISTS currency text DEFAULT 'USD';
+ADD COLUMN IF NOT EXISTS currency text;
 
 -- Step 2: Add currency column to brands table  
 ALTER TABLE public.brands 
-ADD COLUMN IF NOT EXISTS currency text DEFAULT 'USD';
+ADD COLUMN IF NOT EXISTS currency text;
 
--- Step 3: Update existing products to use USD as default currency
-UPDATE public.products 
-SET currency = 'USD' 
-WHERE currency IS NULL;
-
--- Step 4: Update existing brands to use USD as default currency
+-- Step 3: Only set USD for brands that should explicitly have it
 UPDATE public.brands 
 SET currency = 'USD' 
-WHERE currency IS NULL;
+WHERE name IN ('PITH AFRICA', '54 Stitches', 'Burgundy Atelier', 'Style Envie') 
+  AND (currency IS NULL OR currency = '');
+
+-- Step 4: Only set USD for products of brands that have USD currency
+UPDATE public.products 
+SET currency = 'USD' 
+WHERE brand_id IN (
+  SELECT id FROM public.brands WHERE currency = 'USD'
+) AND (currency IS NULL OR currency = '');
 
 -- Step 5: Add indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_products_currency ON public.products(currency);

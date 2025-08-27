@@ -193,12 +193,21 @@ export default function CreateProductPage() {
   useEffect(() => {
     if (formData.brand_id) {
       const selectedBrand = brands.find(b => b.id === formData.brand_id);
-      if (selectedBrand && selectedBrand.currency) {
-        setSelectedBrandCurrency(selectedBrand.currency);
-        setFormData(prev => ({
-          ...prev,
-          currency: selectedBrand.currency
-        }));
+      if (selectedBrand) {
+        if (selectedBrand.currency) {
+          setSelectedBrandCurrency(selectedBrand.currency);
+          setFormData(prev => ({
+            ...prev,
+            currency: selectedBrand.currency
+          }));
+        } else {
+          // No currency specified - clear the currency
+          setSelectedBrandCurrency("");
+          setFormData(prev => ({
+            ...prev,
+            currency: ""
+          }));
+        }
       }
     }
   }, [formData.brand_id, brands]);
@@ -829,6 +838,12 @@ export default function CreateProductPage() {
                       <SelectValue placeholder="Select currency" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="">
+                        <div className="flex items-center gap-2">
+                          <span className="text-gray-500">No currency specified</span>
+                          <span className="text-xs text-gray-400">(Contact designer for pricing)</span>
+                        </div>
+                      </SelectItem>
                       {CURRENCIES.map((currency) => (
                         <SelectItem key={currency.code} value={currency.code}>
                           <div className="flex items-center gap-2">
@@ -842,7 +857,7 @@ export default function CreateProductPage() {
                   </Select>
                   {formData.brand_id && (
                     <p className="text-xs text-muted-foreground">
-                      Auto-synced with {brands.find(b => b.id === formData.brand_id)?.name} ({getCurrencySymbol(selectedBrandCurrency)})
+                      Auto-synced with {brands.find(b => b.id === formData.brand_id)?.name} {selectedBrandCurrency ? `(${getCurrencySymbol(selectedBrandCurrency)})` : '(Contact designer for pricing)'}
                     </p>
                   )}
                 </div>

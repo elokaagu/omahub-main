@@ -113,6 +113,11 @@ export function formatPriceWithBrand(
   brand: { location?: string; price_range?: string } | null
 ): string {
   const currency = getBrandCurrency(brand);
+  
+  if (!currency) {
+    return "Contact designer for pricing";
+  }
+  
   return formatPrice(price, currency.symbol);
 }
 
@@ -129,6 +134,11 @@ export function formatPriceRangeWithBrand(
   brand: { location?: string; price_range?: string } | null
 ): string {
   const currency = getBrandCurrency(brand);
+  
+  if (!currency) {
+    return "Contact designer for pricing";
+  }
+  
   return formatPriceRange(minPrice, maxPrice, currency.symbol);
 }
 
@@ -141,6 +151,11 @@ export function getBrandCurrencySymbol(
   brand: { location?: string; price_range?: string; currency?: string } | null
 ): string {
   const currency = getBrandCurrency(brand);
+  
+  if (!currency) {
+    return "";
+  }
+  
   return currency.symbol;
 }
 
@@ -178,20 +193,31 @@ export function formatProductPrice(
     }
   }
 
-  // Fallback to brand currency
-  const currency = getBrandCurrency(brand || null);
-  const displayPrice = formatPrice(
-    product.sale_price || product.price,
-    currency.symbol
-  );
-  const originalPrice = product.sale_price
-    ? formatPrice(product.price, currency.symbol)
-    : undefined;
+  // Check if brand has a currency
+  if (brand?.currency) {
+    const brandCurrency = getCurrencyByCode(brand.currency);
+    if (brandCurrency) {
+      const displayPrice = formatPrice(
+        product.sale_price || product.price,
+        brandCurrency.symbol
+      );
+      const originalPrice = product.sale_price
+        ? formatPrice(product.price, brandCurrency.symbol)
+        : undefined;
 
+      return {
+        displayPrice,
+        originalPrice,
+        currency: brandCurrency.symbol,
+      };
+    }
+  }
+
+  // No currency specified - show "Contact designer for pricing"
   return {
-    displayPrice,
-    originalPrice,
-    currency: currency.symbol,
+    displayPrice: "Contact designer for pricing",
+    originalPrice: undefined,
+    currency: "",
   };
 }
 
