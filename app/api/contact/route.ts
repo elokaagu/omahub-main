@@ -380,26 +380,58 @@ export async function POST(request: NextRequest) {
 
       // Create inquiry in the database (Studio inbox)
       console.log("📝 Creating inquiry in Studio inbox...");
-      const { data: inquiry, error: inquiryError } = await supabase
-        .from("inquiries")
-        .insert({
-          brand_id: brandId,
-          customer_name: name,
-          customer_email: email,
-          subject: `Inquiry from ${name}`,
-          message: message,
-          inquiry_type: "customer_inquiry",
-          priority: "normal",
-          source: "website_contact_form",
-          status: "new",
-        })
-        .select()
-        .single();
+      
+      let inquiry;
+      try {
+        const { data: inquiryData, error: inquiryError } = await supabase
+          .from("inquiries")
+          .insert({
+            brand_id: brandId,
+            customer_name: name,
+            customer_email: email,
+            subject: `Inquiry from ${name}`,
+            message: message,
+            inquiry_type: "customer_inquiry",
+            priority: "normal",
+            source: "website_contact_form",
+            status: "new",
+          })
+          .select()
+          .single();
 
-      if (inquiryError) {
-        console.error("❌ Failed to create inquiry:", inquiryError);
+        if (inquiryError) {
+          console.error("❌ Failed to create inquiry:", inquiryError);
+          
+          // Check if it's a table not found error
+          if (inquiryError.code === '42P01') {
+            console.error("❌ Inquiries table does not exist - please run the database migration");
+            return NextResponse.json(
+              { error: "Contact system is being set up. Please try again in a few minutes." },
+              { status: 503 }
+            );
+          }
+          
+          return NextResponse.json(
+            { error: "Failed to save your inquiry. Please try again." },
+            { status: 500 }
+          );
+        }
+        
+        inquiry = inquiryData;
+      } catch (dbError) {
+        console.error("❌ Database error creating inquiry:", dbError);
+        
+        // Check if it's a table not found error
+        if (dbError instanceof Error && dbError.message.includes('relation "inquiries" does not exist')) {
+          console.error("❌ Inquiries table does not exist - please run the database migration");
+          return NextResponse.json(
+            { error: "Contact system is being set up. Please try again in a few minutes." },
+            { status: 503 }
+          );
+        }
+        
         return NextResponse.json(
-          { error: "Failed to save your inquiry" },
+          { error: "Failed to save your inquiry. Please try again." },
           { status: 500 }
         );
       }
