@@ -9,8 +9,17 @@ export interface Currency {
   defaultLocation?: string[];
 }
 
-// Centralized currency definitions
+// Centralized currency definitions - ALL currencies available in Studio
 export const CURRENCIES: Currency[] = [
+  // Special option for no currency
+  {
+    code: "NONE",
+    symbol: "—",
+    name: "No Currency (Explore brand for prices)",
+    country: "None",
+    defaultLocation: [],
+  },
+  // African currencies
   {
     code: "NGN",
     symbol: "₦",
@@ -74,6 +83,7 @@ export const CURRENCIES: Currency[] = [
     country: "Algeria",
     defaultLocation: ["Algeria", "Algiers", "Oran", "Constantine"],
   },
+  // Major international currencies
   {
     code: "USD",
     symbol: "$",
@@ -94,6 +104,21 @@ export const CURRENCIES: Currency[] = [
     name: "British Pound",
     country: "United Kingdom",
     defaultLocation: ["United Kingdom", "UK", "England", "Scotland", "Wales"],
+  },
+  // Additional international currencies
+  {
+    code: "CAD",
+    symbol: "C$",
+    name: "Canadian Dollar",
+    country: "Canada",
+    defaultLocation: ["Canada"],
+  },
+  {
+    code: "AUD",
+    symbol: "A$",
+    name: "Australian Dollar",
+    country: "Australia",
+    defaultLocation: ["Australia"],
   },
 ];
 
