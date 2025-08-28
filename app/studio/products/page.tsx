@@ -140,7 +140,7 @@ export default function ProductsPage() {
 
       // Count favourites per product
       const productFavouritesMap = favouritesCountData.reduce(
-        (acc: Record<string, number>, fav) => {
+        (acc: Record<string, number>, fav: { item_id: string }) => {
           acc[fav.item_id] = (acc[fav.item_id] || 0) + 1;
           return acc;
         },
