@@ -84,7 +84,7 @@ const useFavourites = () => {
 
   // Add to favourites
   const addFavourite = useCallback(
-    async (itemId: string, itemType: "brand" | "catalogue" | "product") => {
+    async (itemId: string, itemType: "brand" | "catalogue" | "product"): Promise<boolean> => {
       try {
         // Add debugging
         console.log("🔍 addFavourite called with:", {
@@ -108,7 +108,8 @@ const useFavourites = () => {
             // Item is already favourited, just refresh the list
             console.log("✅ Item already in favourites, refreshing list");
             await fetchFavourites();
-            return; // Don't show error, just return
+            // Return false to indicate this was not a successful addition
+            return false;
           }
           
           throw new Error(
@@ -120,6 +121,9 @@ const useFavourites = () => {
         
         // Refresh from server to get the updated list
         await fetchFavourites();
+        
+        // Return true to indicate successful addition
+        return true;
       } catch (err: any) {
         console.error("❌ Error in addFavourite:", err);
         toast({
@@ -127,6 +131,8 @@ const useFavourites = () => {
           description: err.message || "Failed to add favourite",
           variant: "destructive",
         });
+        // Return false on error
+        return false;
       }
     },
     [fetchFavourites, toast]
@@ -198,11 +204,13 @@ const useFavourites = () => {
     async (
       itemId: string,
       itemType: "brand" | "catalogue" | "product"
-    ): Promise<void> => {
+    ): Promise<boolean> => {
       if (isFavourite(itemId, itemType)) {
         await removeFavourite(itemId, itemType);
+        return true; // Successfully removed
       } else {
-        await addFavourite(itemId, itemType);
+        const success = await addFavourite(itemId, itemType);
+        return success; // Return the success status from addFavourite
       }
     },
     [isFavourite, removeFavourite, addFavourite]

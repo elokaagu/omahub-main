@@ -37,13 +37,23 @@ export function FavouriteButton({
     try {
       setIsLoading(true);
       const wasFavourited = isFavourited; // Capture current state before toggle
-      await toggleFavourite(itemId, itemType);
+      const success = await toggleFavourite(itemId, itemType);
 
       // Show appropriate feedback based on the action that was performed
       if (!wasFavourited) {
-        // We just added to favourites
-        setShowModal(true);
-        // Don't show toast when showing modal - modal is more prominent
+        // We just attempted to add to favourites
+        if (success) {
+          // Successfully added
+          setShowModal(true);
+          // Don't show toast when showing modal - modal is more prominent
+        } else {
+          // Failed to add (e.g., already in favourites)
+          toast({
+            title: "Already in favourites",
+            description: "This item is already in your favourites.",
+            variant: "default",
+          });
+        }
       } else {
         // We just removed from favourites
         toast({
