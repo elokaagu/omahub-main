@@ -251,7 +251,7 @@ const useFavourites = () => {
         itemType,
         result,
         favouritesCount: favourites.length,
-        favourites: favourites.map((f) => ({
+        favourites: favourites.map((f: { id: string; item_type: string }) => ({
           id: f.id,
           item_type: f.item_type,
         })),

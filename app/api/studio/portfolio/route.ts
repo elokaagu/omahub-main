@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Ensure portfolio items have correct image structure
-    const normalizedPortfolioItems = (portfolioItems || []).map((item) => {
+    const normalizedPortfolioItems = (portfolioItems || []).map((item: any) => {
       // For portfolio items, ensure the first image from images array is always the main image
       if (item.images && item.images.length > 0) {
         const firstImage = item.images[0];

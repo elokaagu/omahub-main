@@ -568,7 +568,7 @@ export async function GET(request: NextRequest) {
 
     // Map database field names to frontend field names
     const mappedLeads =
-      leads?.map((lead) => {
+      leads?.map((lead: any) => {
         const mappedLead = { ...lead };
         if (mappedLead.project_timeline) {
           mappedLead.timeline = mappedLead.project_timeline;

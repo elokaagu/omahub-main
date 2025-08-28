@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
           { status: 500 }
         );
       } else {
-        const allBrandIds = allBrands.map((brand) => brand.id);
+        const allBrandIds = allBrands.map((brand: { id: string }) => brand.id);
         finalOwnedBrands = allBrandIds;
       }
     } else {

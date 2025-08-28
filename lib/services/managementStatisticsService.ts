@@ -187,7 +187,7 @@ export async function getFormattedStatistics(): Promise<
       total_products: "Total Products",
     };
 
-    return statistics.map((stat) => ({
+    return statistics.map((stat: { metric_name: string; metric_value: number; last_updated: string }) => ({
       label: labelMap[stat.metric_name] || stat.metric_name,
       value: stat.metric_value,
       lastUpdated: stat.last_updated,

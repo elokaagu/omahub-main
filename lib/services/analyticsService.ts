@@ -278,7 +278,7 @@ export async function getAnalyticsData(): Promise<AnalyticsData> {
 
     // Calculate average rating from brands
     const brandRatings = brands
-      .map((brand) => brand.rating)
+      .map((brand: { rating?: number }) => brand.rating)
       .filter((rating) => rating !== null && rating !== undefined);
     const averageRating =
       brandRatings.length > 0
@@ -317,7 +317,7 @@ export async function getAnalyticsData(): Promise<AnalyticsData> {
         return bScore - aScore;
       })
       .slice(0, 5)
-      .map((brand) => ({
+      .map((brand: { name: string; rating?: number; reviews: any[] }) => ({
         name: brand.name,
         rating: brand.rating || 0,
         reviewCount: brand.reviews.length,
@@ -741,7 +741,7 @@ export async function getBrandOwnerGrowthData(
 
     // Convert to cumulative count (total products up to each month)
     let cumulative = 0;
-    return months.map((month) => {
+    return months.map((month: { month: string; products: number }) => {
       cumulative += month.products;
       return {
         month: month.month,
@@ -808,7 +808,7 @@ export async function getBrandOwnerReviewTrends(
     });
 
     // Calculate monthly stats
-    return months.map((month) => ({
+    return months.map((month: { month: string; reviews: number[] }) => ({
       month: month.month,
       reviews: month.reviews.length,
       avgRating:

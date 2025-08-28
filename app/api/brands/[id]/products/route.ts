@@ -86,7 +86,7 @@ function calculatePricingStats(products: Product[]) {
   }
 
   const prices = products
-    .map((p) => p.sale_price || p.price)
+    .map((p: Product) => p.sale_price || p.price)
     .filter((price) => price > 0)
     .sort((a, b) => a - b);
 

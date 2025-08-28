@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const allBrandIds = allBrands.map((brand) => brand.id);
+    const allBrandIds = allBrands.map((brand: { id: string }) => brand.id);
     console.log(`📦 Found ${allBrandIds.length} brands to assign`);
 
     // Get all super admins
