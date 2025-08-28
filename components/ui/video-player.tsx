@@ -43,9 +43,8 @@ export function VideoPlayer({
   onVideoError,
   showPlayButton = false,
 }: VideoPlayerProps) {
-  const [hasError, setHasError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [showVideo, setShowVideo] = useState(false);
+  const [hasError, setHasError] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   // Check if the image URL is actually a video file
@@ -71,29 +70,18 @@ export function VideoPlayer({
     );
   };
 
-  // Debug logging for slow loading issues
+  // Debug logging
   useEffect(() => {
     if (process.env.NODE_ENV === "development") {
-      console.log("VideoPlayer debug:", {
+      console.log("🎬 VideoPlayer:", {
         videoUrl,
         thumbnailUrl,
         fallbackImageUrl,
         alt,
-        isVideoFile: isVideoFile(thumbnailUrl || fallbackImageUrl || ""),
+        hasVideo: !!videoUrl,
       });
     }
   }, [videoUrl, thumbnailUrl, fallbackImageUrl, alt]);
-
-  // If no video URL is provided, show image fallback
-  const shouldShowImage = !videoUrl || hasError;
-  const imageToShow = thumbnailUrl || fallbackImageUrl;
-
-  // Auto-show video if autoplay is enabled
-  useEffect(() => {
-    if (autoPlay && videoUrl && !hasError) {
-      setShowVideo(true);
-    }
-  }, [autoPlay, videoUrl, hasError]);
 
   // Aspect ratio classes
   const aspectRatioClasses = {
@@ -109,6 +97,7 @@ export function VideoPlayer({
 
       const handleLoadStart = () => {
         setIsLoading(true);
+        setHasError(false);
       };
 
       const handleCanPlay = () => {
@@ -134,20 +123,8 @@ export function VideoPlayer({
     }
   }, [onVideoLoad, onVideoError]);
 
-  const togglePlay = () => {
-    if (videoRef.current) {
-      if (videoRef.current.paused) {
-        videoRef.current.play();
-      } else {
-        videoRef.current.pause();
-      }
-    }
-  };
-
-
-
-  // Show image if no video or error, or if video hasn't been activated yet
-  if (shouldShowImage || (!showVideo && imageToShow)) {
+  // If we have a video URL, show the video player
+  if (videoUrl) {
     return (
       <div
         className={cn(
@@ -156,28 +133,26 @@ export function VideoPlayer({
           className
         )}
       >
-        {/* Only use LazyImage for actual image files, not video URLs */}
-        {imageToShow && !isVideoFile(imageToShow) ? (
-          <LazyImage
-            src={imageToShow}
-            alt={alt}
-            fill
-            className="object-cover"
-            sizes={sizes}
-            quality={quality}
-            priority={priority}
-          />
-        ) : (
-          // Fallback for video files or missing images
-          <div className="absolute inset-0 bg-gray-200 flex items-center justify-center">
-            <div className="text-gray-500 text-center">
-              <div className="text-2xl mb-2">🎬</div>
-              <div className="text-sm">Video Content</div>
-            </div>
+        <video
+          ref={videoRef}
+          className="w-full h-full object-cover"
+          autoPlay={autoPlay}
+          muted={muted}
+          loop={loop}
+          controls={controls}
+          playsInline
+          preload="metadata"
+        >
+          <source src={videoUrl} type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
+
+        {/* Loading indicator */}
+        {isLoading && (
+          <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
           </div>
         )}
-
-        {/* Play button overlay removed */}
 
         {/* Error indicator */}
         {hasError && (
@@ -189,7 +164,26 @@ export function VideoPlayer({
     );
   }
 
-  // Show video player
+  // If no video, show image fallback
+  const imageToShow = thumbnailUrl || fallbackImageUrl;
+  
+  if (!imageToShow) {
+    return (
+      <div
+        className={cn(
+          "relative group overflow-hidden bg-gray-200 flex items-center justify-center",
+          aspectRatioClasses[aspectRatio],
+          className
+        )}
+      >
+        <div className="text-gray-500 text-center">
+          <div className="text-2xl mb-2">📷</div>
+          <div className="text-sm">No Image</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       className={cn(
@@ -198,35 +192,15 @@ export function VideoPlayer({
         className
       )}
     >
-      <video
-        ref={videoRef}
-        className="w-full h-full object-cover"
-        autoPlay={autoPlay}
-        muted={muted}
-        loop={loop}
-        controls={controls}
-        playsInline
-        preload="metadata"
-      >
-        {videoUrl && <source src={videoUrl} type="video/mp4" />}
-        Your browser does not support the video tag.
-      </video>
-
-      {/* Loading indicator */}
-      {isLoading && (
-        <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
-        </div>
-      )}
-
-      {/* Play/Pause button overlay removed */}
-
-      {/* Error indicator */}
-      {hasError && (
-        <div className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full">
-          <AlertCircle className="h-4 w-4" />
-        </div>
-      )}
+      <LazyImage
+        src={imageToShow}
+        alt={alt}
+        fill
+        className="object-cover"
+        sizes={sizes}
+        quality={quality}
+        priority={priority}
+      />
     </div>
   );
 }
