@@ -549,31 +549,44 @@ export default function HomeContent() {
             })
           )
             .slice(0, 8) // Limit all categories to 8 brands for consistent display
-            .map((brand: any) => ({
-              id: brand.id,
-              name: brand.name,
-              image: brand.brand_images?.[0]?.storage_path
-                ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${brand.brand_images[0].storage_path}`
-                : "/placeholder-image.jpg",
-              location: brand.location?.split(",")[0] || "Unknown", // Take just the city name
-              rating: brand.rating,
-              isVerified: brand.is_verified || false,
-              category: brand.category,
-              // Always pass video fields if present, so BrandCard can prefer video over image
-              video_url: brand.video_url || undefined,
-              video_thumbnail: brand.video_thumbnail || undefined,
-            }));
+            .map((brand: any) => {
+              // Debug: Log raw brand data for brands with videos
+              if (brand.video_url && process.env.NODE_ENV === "development") {
+                console.log("🎬 Raw brand data with video:", {
+                  name: brand.name,
+                  video_url: brand.video_url,
+                  video_thumbnail: brand.video_thumbnail,
+                  category: brand.category,
+                });
+              }
+
+              return {
+                id: brand.id,
+                name: brand.name,
+                image: brand.brand_images?.[0]?.storage_path
+                  ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${brand.brand_images[0].storage_path}`
+                  : "/placeholder-image.jpg",
+                location: brand.location?.split(",")[0] || "Unknown", // Take just the city name
+                rating: brand.rating,
+                isVerified: brand.is_verified || false,
+                category: brand.category,
+                // Always pass video fields if present, so BrandCard can prefer video over image
+                video_url: brand.video_url || undefined,
+                video_thumbnail: brand.video_thumbnail || undefined,
+              };
+            });
 
           // Debug: Log brands with videos for this category
           const brandsWithVideos = categoryBrands.filter(
-            (brand: any) => brand.video_url
+            (brand) => brand.video_url
           );
           if (brandsWithVideos.length > 0) {
             console.log(
               `🎬 Category "${category.displayName}" has ${brandsWithVideos.length} brands with videos:`,
-              brandsWithVideos.map((b: any) => ({
+              brandsWithVideos.map((b) => ({
                 name: b.name,
                 video_url: b.video_url,
+                video_thumbnail: b.video_thumbnail,
               }))
             );
           }

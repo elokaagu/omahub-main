@@ -191,6 +191,14 @@ export default function FavouritesClient() {
                       {catalogue.description}
                     </p>
                   )}
+                  {/* Debug info in development */}
+                  {process.env.NODE_ENV === "development" && (
+                    <div className="mt-2 text-xs text-gray-400">
+                      <p>ID: {catalogue.id}</p>
+                      <p>Brand ID: {catalogue.brand_id}</p>
+                      <p>Type: {catalogue.item_type}</p>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
