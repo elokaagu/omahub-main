@@ -116,7 +116,7 @@ export async function GET() {
           case "brand":
             const { data: brand } = await supabase
               .from("brands")
-              .select("id, name, image, category, location, is_verified, rating")
+              .select("id, name, image, category, location, is_verified, rating, brand_images(*)")
               .eq("id", favourite.item_id)
               .single();
             if (brand) {

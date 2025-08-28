@@ -24,7 +24,13 @@ interface BrandCardProps {
     id: string;
     role: string;
     storage_path: string;
+    created_at: string;
+    updated_at: string;
   }>;
+  // Add favourite-related props
+  isFavourited?: boolean;
+  onUnfavourite?: (brandId: string) => void;
+  showUnfavouriteButton?: boolean;
 }
 
 export function BrandCard({
@@ -40,6 +46,9 @@ export function BrandCard({
   video_url,
   video_thumbnail,
   brand_images,
+  isFavourited,
+  onUnfavourite,
+  showUnfavouriteButton,
 }: BrandCardProps) {
   const { user } = useAuth();
   const [imageUrl, setImageUrl] = useState<string>(image || "/placeholder.svg");
@@ -49,10 +58,13 @@ export function BrandCard({
     async function loadImageUrl() {
       if (brand_images && brand_images.length > 0) {
         // Find cover image or use first available
-        const coverImage = brand_images.find(img => img.role === 'cover') || brand_images[0];
+        const coverImage =
+          brand_images.find((img) => img.role === "cover") || brand_images[0];
         if (coverImage) {
           try {
-            const url = await brandImageService.getBrandImageUrl(coverImage.storage_path);
+            const url = await brandImageService.getBrandImageUrl(
+              coverImage.storage_path
+            );
             if (url) {
               setImageUrl(url);
             }
@@ -137,6 +149,23 @@ export function BrandCard({
         )}
         {/* Smooth dark overlay on hover */}
         <div className="absolute inset-0 pointer-events-none transition-all duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] bg-black/0 group-hover:bg-black/40 group-hover:backdrop-blur-sm z-10" />
+
+        {/* Unfavourite button - only show if showUnfavouriteButton is true */}
+        {showUnfavouriteButton && onUnfavourite && (
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onUnfavourite(id);
+            }}
+            className="absolute top-3 right-3 z-20 bg-white/90 hover:bg-white p-2 rounded-full shadow-md transition-all duration-200 hover:scale-110"
+            aria-label="Remove from favourites"
+          >
+            <svg className="h-4 w-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
+            </svg>
+          </button>
+        )}
 
         {/* Overlay content at the bottom (always visible) */}
         <div className="absolute bottom-0 left-0 w-full z-20 p-4 bg-gradient-to-t from-black/60 via-black/30 to-transparent flex flex-col gap-1">

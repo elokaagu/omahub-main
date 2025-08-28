@@ -152,12 +152,40 @@ export default function FavouritesClient() {
                 image={
                   brand.brand_images?.[0]?.storage_path
                     ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${brand.brand_images[0].storage_path}`
-                    : "/placeholder-brand.jpg"
+                    : brand.image || "/placeholder-brand.jpg"
                 }
                 category={brand.category}
                 location={brand.location}
                 isVerified={brand.is_verified}
                 rating={brand.rating}
+                // Pass brand_images data so BrandCard can handle both old and new image systems
+                brand_images={brand.brand_images}
+                // Add unfavourite functionality
+                isFavourited={true}
+                showUnfavouriteButton={true}
+                onUnfavourite={async (brandId) => {
+                  try {
+                    const response = await fetch('/api/favourites', {
+                      method: 'DELETE',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify({
+                        item_id: brandId,
+                        item_type: 'brand'
+                      })
+                    });
+                    
+                    if (response.ok) {
+                      // Refresh favourites after successful unfavourite
+                      window.location.reload();
+                    } else {
+                      console.error('Failed to unfavourite brand');
+                    }
+                  } catch (error) {
+                    console.error('Error unfavouriting brand:', error);
+                  }
+                }}
               />
             ))}
           </div>
