@@ -87,6 +87,22 @@
   body {
     @apply bg-background text-foreground font-sans;
   }
+
+  /* Chrome-specific modal fixes */
+  [data-radix-dialog-content] {
+    transform: translate(-50%, -50%) !important;
+    -webkit-transform: translate(-50%, -50%) !important;
+    will-change: transform;
+  }
+
+  /* Ensure modal stacking context works in Chrome */
+  [data-radix-dialog-overlay] {
+    z-index: 9999 !important;
+  }
+
+  [data-radix-dialog-content] {
+    z-index: 10000 !important;
+  }
 }
 
 /* Custom Typography Classes */
