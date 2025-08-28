@@ -86,7 +86,7 @@ export async function getCollectionWithBrand(id: string): Promise<
     .select(
       `
       *,
-      brand:brands(id, name, location, is_verified, category, rating, long_description, price_range, currency)
+      brand:brands(id, name, location, is_verified, category, rating, long_description, price_range, currency, image, brand_images(*))
     `
     )
     .eq("id", id)
@@ -136,7 +136,7 @@ export async function getCollectionsWithBrands(forceRefresh: boolean = false): P
     .select(
       `
       *,
-      brand:brands(id, name, location, is_verified, category, rating, long_description, price_range)
+      brand:brands(id, name, location, is_verified, category, rating, long_description, price_range, image, brand_images(*))
     `
     )
     .order("created_at", { ascending: false }); // Newest first
@@ -146,13 +146,24 @@ export async function getCollectionsWithBrands(forceRefresh: boolean = false): P
     throw error;
   }
 
+  // Process the data to construct proper image URLs from brand_images
+  const processedData = (data || []).map(collection => {
+    if (collection.brand && collection.brand.brand_images && collection.brand.brand_images.length > 0) {
+      // Use the new brand_images relationship
+      const storagePath = collection.brand.brand_images[0].storage_path;
+      collection.brand.image = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${storagePath}`;
+    }
+    // If no brand_images, keep the existing brands.image field as fallback
+    return collection;
+  });
+
   // Update cache
   collectionsCache = {
-    data: data || [],
+    data: processedData,
     timestamp: Date.now(),
   };
 
-  return data || [];
+  return processedData;
 }
 
 /**
