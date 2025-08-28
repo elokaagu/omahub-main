@@ -36,13 +36,16 @@ export function FavouriteButton({
   const handleToggleFavourite = async () => {
     try {
       setIsLoading(true);
+      const wasFavourited = isFavourited; // Capture current state before toggle
       await toggleFavourite(itemId, itemType);
 
-      // Only show modal if we successfully added to favourites
-      if (!isFavourited) {
+      // Show appropriate feedback based on the action that was performed
+      if (!wasFavourited) {
+        // We just added to favourites
         setShowModal(true);
         // Don't show toast when showing modal - modal is more prominent
       } else {
+        // We just removed from favourites
         toast({
           title: "Removed from favourites",
           description: "Item has been removed from your favourites.",

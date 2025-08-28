@@ -70,6 +70,7 @@ const useFavourites = () => {
 
       const data = await response.json();
       console.log("📧 Fetched favourites:", data.favourites?.length || 0);
+      console.log("📧 Fetched favourites data:", data.favourites);
       setFavourites(data.favourites || []);
       setError(null);
     } catch (err) {
@@ -162,10 +163,18 @@ const useFavourites = () => {
   // Check if an item is favourited
   const isFavourite = useCallback(
     (itemId: string, itemType: "brand" | "catalogue" | "product"): boolean => {
-      return favourites.some(
+      const result = favourites.some(
         (favourite) =>
           favourite.id === itemId && favourite.item_type === itemType
       );
+      console.log("🔍 isFavourite check:", { 
+        itemId, 
+        itemType, 
+        result, 
+        favouritesCount: favourites.length,
+        favourites: favourites.map(f => ({ id: f.id, item_type: f.item_type }))
+      });
+      return result;
     },
     [favourites]
   );
