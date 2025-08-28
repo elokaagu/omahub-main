@@ -437,10 +437,10 @@ export async function getBrandById(id: string): Promise<Brand | null> {
 
   console.log(`Attempting to fetch brand with ID: "${id}"`);
 
-  // First try with the original ID as-is
+  // First try with the original ID as-is, including brand_images relationship
   let { data, error } = await supabase
     .from("brands")
-    .select("*")
+    .select("*, brand_images(*)")
     .eq("id", id)
     .single();
 
@@ -472,7 +472,7 @@ export async function getBrandById(id: string): Promise<Brand | null> {
 
   ({ data, error } = await supabase
     .from("brands")
-    .select("*")
+    .select("*, brand_images(*)")
     .eq("id", normalizedId)
     .single());
 

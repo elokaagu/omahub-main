@@ -944,16 +944,22 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
                 onUploadComplete={handleImageUpload}
                 onUploadStart={handleImageUploadStart}
                 onUploadProgress={handleImageUploadProgress}
-                defaultValue={
-                  brand.brand_images?.[0]?.storage_path
-                    ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${brand.brand_images[0].storage_path}`
-                    : ""
-                }
+                defaultValue={imageUrl}
                 bucket="brand-assets"
                 path="brands"
                 // Note: This component needs to be updated to support the new naming convention
                 // For now, it will use legacy naming
               />
+              {/* Debug info */}
+              {process.env.NODE_ENV === "development" && (
+                <div className="mt-2 text-xs text-gray-500">
+                  Debug: imageUrl = {imageUrl || "empty"}
+                  <br />
+                  brand.brand_images = {brand?.brand_images?.length || 0} items
+                  <br />
+                  storage_path = {brand?.brand_images?.[0]?.storage_path || "none"}
+                </div>
+              )}
             </CardContent>
           </Card>
 
