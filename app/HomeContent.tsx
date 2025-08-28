@@ -357,21 +357,12 @@ export default function HomeContent() {
         )
           .slice(0, 8)
           .map((brand: any) => {
-            const imageUrl = brand.brand_images?.[0]?.storage_path
-              ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${brand.brand_images[0].storage_path}`
-              : "/placeholder-image.jpg";
-            
-            console.log(`🖼️ Brand ${brand.name}:`, {
-              hasBrandImages: !!brand.brand_images,
-              brandImagesCount: brand.brand_images?.length || 0,
-              storagePath: brand.brand_images?.[0]?.storage_path,
-              finalImageUrl: imageUrl
-            });
-            
-            return {
+                        return {
               id: brand.id,
               name: brand.name,
-              image: imageUrl,
+              image: brand.brand_images?.[0]?.storage_path
+                ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${brand.brand_images[0].storage_path}`
+                : "/placeholder-image.jpg",
               location: brand.location?.split(",")[0] || "Unknown",
               rating: brand.rating,
               isVerified: brand.is_verified || false,
@@ -751,21 +742,12 @@ export default function HomeContent() {
         )
           .slice(0, 8)
           .map((brand: any) => {
-            const imageUrl = brand.brand_images?.[0]?.storage_path
-              ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${brand.brand_images[0].storage_path}`
-              : "/placeholder-image.jpg";
-            
-            console.log(`🖼️ Refresh Brand ${brand.name}:`, {
-              hasBrandImages: !!brand.brand_images,
-              brandImagesCount: brand.brand_images?.length || 0,
-              storagePath: brand.brand_images?.[0]?.storage_path,
-              finalImageUrl: imageUrl
-            });
-            
-            return {
+                        return {
               id: brand.id,
               name: brand.name,
-              image: imageUrl,
+              image: brand.brand_images?.[0]?.storage_path
+                ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${brand.brand_images[0].storage_path}`
+                : "/placeholder-image.jpg",
               location: brand.location?.split(",")[0] || "Unknown",
               rating: brand.rating,
               isVerified: brand.is_verified || false,
