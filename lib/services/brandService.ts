@@ -1,6 +1,7 @@
 import { supabase, Brand, Review, Catalogue, Product } from "../supabase";
 import { getProfile, isAdmin } from "./authService";
 import { clearTailorsCache } from "./tailorService";
+import { clearCollectionsCache } from "./collectionService";
 
 // Cache configuration
 let brandsCache: {
@@ -386,6 +387,16 @@ export function clearBrandsCache(): void {
   };
 }
 
+/**
+ * Clear all caches that depend on brand data
+ */
+export function clearAllBrandDependentCaches(): void {
+  clearBrandsCache();
+  clearTailorsCache();
+  clearCollectionsCache();
+  console.log("🧹 All brand-dependent caches cleared");
+}
+
 export async function forceRefreshBrands(
   filterEmptyBrands: boolean = false
 ): Promise<Brand[]> {
@@ -512,9 +523,10 @@ export async function updateBrand(
 
   // Clear the brands cache to ensure fresh data after update
   clearBrandsCache();
-  // Also clear tailors cache since they depend on brand data
+  // Also clear tailors and collections cache since they depend on brand data
   clearTailorsCache();
-  console.log("🔄 Brands and tailors cache cleared after brand update");
+  clearCollectionsCache();
+  console.log("🔄 Brands, tailors, and collections cache cleared after brand update");
 
   return data;
 }

@@ -1,5 +1,20 @@
 import { supabase, Catalogue, Brand } from "../supabase";
 
+// Cache for collections data
+let collectionsCache: {
+  data: any[] | null;
+  timestamp: number;
+} | null = null;
+
+const COLLECTIONS_CACHE_EXPIRY = 10 * 1000; // 10 seconds for fresh data
+
+/**
+ * Clear the collections cache
+ */
+export function clearCollectionsCache(): void {
+  collectionsCache = null;
+}
+
 /**
  * Fetch all collections from the database
  */
@@ -88,7 +103,7 @@ export async function getCollectionWithBrand(id: string): Promise<
 /**
  * Fetch collections with brand information
  */
-export async function getCollectionsWithBrands(): Promise<
+export async function getCollectionsWithBrands(forceRefresh: boolean = false): Promise<
   (Catalogue & {
     brand: {
       name: string;
@@ -106,6 +121,16 @@ export async function getCollectionsWithBrands(): Promise<
     throw new Error("Supabase client not available");
   }
 
+  // Check cache first (unless force refresh is requested)
+  if (!forceRefresh && collectionsCache && collectionsCache.data) {
+    const now = Date.now();
+    if (now - collectionsCache.timestamp < COLLECTIONS_CACHE_EXPIRY) {
+      console.log("📦 Using cached collections data");
+      return collectionsCache.data;
+    }
+  }
+
+  console.log("🔄 Fetching fresh collections data from database");
   const { data, error } = await supabase
     .from("catalogues")
     .select(
@@ -120,6 +145,12 @@ export async function getCollectionsWithBrands(): Promise<
     console.error("Error fetching collections with brands:", error);
     throw error;
   }
+
+  // Update cache
+  collectionsCache = {
+    data: data || [],
+    timestamp: Date.now(),
+  };
 
   return data || [];
 }

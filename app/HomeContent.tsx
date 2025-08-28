@@ -318,6 +318,76 @@ export default function HomeContent() {
   }>({});
   const [occasionLoading, setOccasionLoading] = useState(true);
 
+  // Function to refresh all data and clear caches
+  const refreshAllData = async () => {
+    try {
+      console.log("🔄 Refreshing all homepage data...");
+      setIsLoading(true);
+      
+      // Clear all caches that depend on brand data
+      const { clearAllBrandDependentCaches } = await import("@/lib/services/brandService");
+      clearAllBrandDependentCaches();
+      
+      // Refetch all data
+      const [brandsData, heroData, spotlightData, dynamicItems] = await Promise.all([
+        getAllBrands(false, true),
+        getActiveHeroSlides(),
+        getActiveSpotlightContent(),
+        generateDynamicFallbackItems(),
+      ]);
+
+      // Process brands data and update state
+      const updatedCategories = UNIFIED_CATEGORIES.map((category) => {
+        const categoryBrands = shuffleArray(
+          brandsData.filter((brand: any) => {
+            const allCategories = [
+              brand.category,
+              ...(brand.categories || []),
+            ].filter(Boolean);
+
+            const brandMatchesCategory = allCategories.some(
+              (cat) => mapLegacyToUnified(cat) === category.id
+            );
+
+            return brandMatchesCategory;
+          })
+        )
+          .slice(0, 8)
+          .map((brand: any) => ({
+            id: brand.id,
+            name: brand.name,
+            image: brand.image || "/placeholder-image.jpg",
+            location: brand.location?.split(",")[0] || "Unknown",
+            rating: brand.rating,
+            isVerified: brand.is_verified || false,
+            category: brand.category,
+            video_url: brand.video_url || undefined,
+            video_thumbnail: brand.video_thumbnail || undefined,
+          }));
+
+        return {
+          title: category.displayName,
+          image: category.homepageImage!,
+          href: `/directory?category=${encodeURIComponent(category.displayName)}`,
+          customCta: category.homepageCta,
+          brands: categoryBrands,
+        };
+      });
+
+      setCategories(updatedCategories);
+      setHeroSlides(heroData);
+      setSpotlightContent(spotlightData);
+      setDynamicFallbackItems(dynamicItems);
+      
+      console.log("✅ Homepage data refreshed successfully");
+    } catch (error) {
+      console.error("❌ Error refreshing homepage data:", error);
+      setError("Failed to refresh data");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Load dynamic category images - run only once
   useEffect(() => {
     let isMounted = true;
@@ -723,9 +793,24 @@ export default function HomeContent() {
       {/* Categories Section */}
       <section className="py-8 px-2 sm:px-4 lg:px-6 bg-white">
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl font-canela text-center mb-8">
-            Browse by Category
-          </h2>
+          <div className="flex items-center justify-center gap-4 mb-8">
+            <h2 className="text-3xl font-canela text-center">
+              Browse by Category
+            </h2>
+            <Button
+              onClick={refreshAllData}
+              variant="outline"
+              size="sm"
+              className="text-oma-plum border-oma-plum hover:bg-oma-plum/10"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-oma-plum" />
+              ) : (
+                "🔄"
+              )}
+            </Button>
+          </div>
           {/* Debug info */}
           {process.env.NODE_ENV === "development" && (
             <div className="text-xs text-gray-500 text-center mb-4">
