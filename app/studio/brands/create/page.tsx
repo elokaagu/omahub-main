@@ -44,14 +44,7 @@ function handleCriticalError(error: Error) {
 }
 
 // Brand categories - now using unified categories (same as product)
-const CATEGORIES = (() => {
-  try {
-    return getAllCategoryNames();
-  } catch (error) {
-    console.error("Failed to load categories:", error);
-    return ["Ready to Wear", "Accessories", "Footwear", "Jewelry", "Bags"];
-  }
-})();
+const CATEGORIES = getAllCategoryNames();
 
 // Common currencies used across Africa
 const CURRENCIES = [
@@ -70,17 +63,10 @@ const CURRENCIES = [
 ];
 
 // Generate founding year options from current year backwards to 1950
-const FOUNDING_YEARS = (() => {
-  try {
-    return Array.from(
-      { length: new Date().getFullYear() - 1950 + 1 },
-      (_, i) => (new Date().getFullYear() - i).toString()
-    );
-  } catch (error) {
-    console.error("Failed to generate founding years:", error);
-    return ["2024", "2023", "2022", "2021", "2020"];
-  }
-})();
+const FOUNDING_YEARS = Array.from(
+  { length: new Date().getFullYear() - 1950 + 1 },
+  (_, i) => (new Date().getFullYear() - i).toString()
+);
 
 // Character limits
 const SHORT_DESCRIPTION_LIMIT = 150;
