@@ -48,7 +48,7 @@ export async function getAllBrandCategories(): Promise<string[]> {
   }
 
   // Get unique categories and sort them
-  const categories = [...new Set(data.map((item) => item.category))].sort();
+  const categories = [...new Set(data.map((item: { category: string }) => item.category))].sort();
   return categories;
 }
 
