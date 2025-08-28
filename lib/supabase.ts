@@ -24,14 +24,11 @@ const createClient = () => {
   if (!supabaseUrl || !supabaseAnonKey) {
     console.error("❌ Missing Supabase environment variables:", {
       hasUrl: !!supabaseUrl,
-      hasKey: !!supabaseAnonKey,
+      hasKey: !!supabaseAnonKey
     });
-
+    
     // Return a mock client for development/build time
-    if (
-      typeof window === "undefined" ||
-      process.env.NODE_ENV === "development"
-    ) {
+    if (typeof window === "undefined" || process.env.NODE_ENV === "development") {
       console.warn("⚠️ Returning mock Supabase client");
       return {
         auth: {
@@ -40,32 +37,14 @@ const createClient = () => {
           onAuthStateChange: () => ({ data: { subscription: null } }),
         },
         from: () => ({
-          select: () => ({
-            eq: () => ({ single: async () => ({ data: null, error: null }) }),
-          }),
-          insert: () => ({
-            select: () => ({
-              single: async () => ({ data: null, error: null }),
-            }),
-          }),
-          update: () => ({
-            eq: () => ({
-              select: () => ({
-                single: async () => ({ data: null, error: null }),
-              }),
-            }),
-          }),
-          delete: () => ({
-            eq: () => ({
-              select: () => ({
-                single: async () => ({ data: null, error: null }),
-              }),
-            }),
-          }),
+          select: () => ({ eq: () => ({ single: async () => ({ data: null, error: null }) }) }),
+          insert: () => ({ select: () => ({ single: async () => ({ data: null, error: null }) }) }),
+          update: () => ({ eq: () => ({ select: () => ({ single: async () => ({ data: null, error: null }) }) }) }),
+          delete: () => ({ eq: () => ({ select: () => ({ single: async () => ({ data: null, error: null }) }) }) }),
         }),
       } as any;
     }
-
+    
     throw new Error("Supabase environment variables are not configured");
   }
 
@@ -109,35 +88,17 @@ export const supabase = new Proxy({} as ReturnType<typeof createClient>, {
             onAuthStateChange: () => ({ data: { subscription: null } }),
           },
           from: () => ({
-            select: () => ({
-              eq: () => ({ single: async () => ({ data: null, error: null }) }),
-            }),
-            insert: () => ({
-              select: () => ({
-                single: async () => ({ data: null, error: null }),
-              }),
-            }),
-            update: () => ({
-              eq: () => ({
-                select: () => ({
-                  single: async () => ({ data: null, error: null }),
-                }),
-              }),
-            }),
-            delete: () => ({
-              eq: () => ({
-                select: () => ({
-                  single: async () => ({ data: null, error: null }),
-                }),
-              }),
-            }),
+            select: () => ({ eq: () => ({ single: async () => ({ data: null, error: null }) }) }),
+            insert: () => ({ select: () => ({ single: async () => ({ data: null, error: null }) }) }),
+            update: () => ({ eq: () => ({ select: () => ({ single: async () => ({ data: null, error: null }) }) }) }),
+            delete: () => ({ eq: () => ({ select: () => ({ single: async () => ({ data: null, error: null }) }) }) }),
           }),
         };
         return (mockClient as any)[prop];
       }
     }
     return _supabase[prop as keyof typeof _supabase];
-  },
+  }
 });
 
 // Export a function to get a fresh client instance if needed
@@ -156,15 +117,15 @@ if (process.env.NODE_ENV === "development") {
   console.log("🔧 Supabase client initialized");
 }
 
-// Set up auth state change listener if in browser environment
-if (supabase && typeof window !== "undefined") {
-  // Set up auth state change listener
-  supabase.auth.onAuthStateChange((event: any, session: any) => {
-    if (process.env.NODE_ENV === "development") {
-      console.log("Auth state changed:", event, !!session);
-    }
-  });
-}
+  // Set up auth state change listener if in browser environment
+  if (supabase && typeof window !== "undefined") {
+    // Set up auth state change listener
+    supabase.auth.onAuthStateChange((event: any, session: any) => {
+      if (process.env.NODE_ENV === "development") {
+        console.log("Auth state changed:", event, !!session);
+      }
+    });
+  }
 
 // Helper function to safely execute database operations
 export async function safeDbOperation<T>(
