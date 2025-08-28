@@ -27,6 +27,11 @@ export function FavouriteButton({
   const { isFavourite, toggleFavourite } = useFavourites();
   const { user } = useAuth();
 
+  // Force re-render when favourites state changes
+  useEffect(() => {
+    console.log("🔄 FavouriteButton useEffect - favourites state changed:", { itemId, itemType, isFavourited: isFavourite(itemId, itemType) });
+  }, [isFavourite, itemId, itemType]);
+
   // Don't render the button if user is not signed in
   if (!user) {
     return null;
@@ -36,11 +41,6 @@ export function FavouriteButton({
 
   // Debug logging to see state changes
   console.log("🔍 FavouriteButton render:", { itemId, itemType, isFavourited });
-
-  // Force re-render when favourites state changes
-  useEffect(() => {
-    console.log("🔄 FavouriteButton useEffect - favourites state changed:", { itemId, itemType, isFavourited });
-  }, [isFavourited, itemId, itemType]);
 
   const handleToggleFavourite = async () => {
     try {
