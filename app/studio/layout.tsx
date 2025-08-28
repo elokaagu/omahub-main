@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { Suspense } from "react";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -34,6 +34,7 @@ import {
 } from "@/lib/utils/iconImports";
 import { TailoringEventProvider } from "@/contexts/NavigationContext";
 import ErrorBoundary from "../components/ErrorBoundary";
+import { useStudioOptimization } from "@/lib/hooks/useStudioOptimization";
 
 // Dynamic imports for heavy Studio pages
 const StudioBrandsPage = dynamic(() => import("./brands/page"), {
@@ -121,11 +122,19 @@ export default function StudioLayout({
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isCheckingAccess, setIsCheckingAccess] = useState(true);
-  
+
+  // Use optimization hook to prevent constant reloading
+  const { debouncedFetch, controlledRefresh, forceRefresh, trackFetch } =
+    useStudioOptimization({
+      debounceMs: 1000, // 1 second debounce
+      maxRefreshIntervalMs: 30000, // 30 seconds max between checks
+      enableRealTimeUpdates: true,
+    });
+
   // Add refs to prevent multiple simultaneous access checks
   const isCheckingAccessRef = useRef(false);
   const lastAccessCheckRef = useRef(0);
-  const ACCESS_CHECK_DEBOUNCE_MS = 2000; // 2 seconds minimum between access checks
+  const ACCESS_CHECK_DEBOUNCE_MS = 10000; // Increased to 10 seconds debounce
 
   // Trigger fade-in animation when content is ready
   useEffect(() => {
@@ -146,7 +155,9 @@ export default function StudioLayout({
     const checkAccess = async () => {
       // Prevent multiple simultaneous access checks
       if (isCheckingAccessRef.current) {
-        console.log("⏳ Studio Layout: Access check already in progress, skipping...");
+        console.log(
+          "⏳ Studio Layout: Access check already in progress, skipping..."
+        );
         return;
       }
 
@@ -160,7 +171,7 @@ export default function StudioLayout({
       try {
         isCheckingAccessRef.current = true;
         lastAccessCheckRef.current = now;
-        
+
         console.log("🔒 Studio Layout: Access check starting...");
         console.log("Studio Layout: Current auth state:", {
           userId: user?.id,

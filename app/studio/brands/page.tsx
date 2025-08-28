@@ -42,6 +42,7 @@ import { AuthImage } from "@/components/ui/auth-image";
 import { Loading } from "@/components/ui/loading";
 import { RefreshCw } from "lucide-react";
 import { toast } from "sonner";
+import { useStudioOptimization } from "@/lib/hooks/useStudioOptimization";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
@@ -55,6 +56,13 @@ export default function BrandsPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
+
+  // Use optimization hook to prevent constant reloading
+  const { debouncedFetch, controlledRefresh, forceRefresh } = useStudioOptimization({
+    debounceMs: 1000, // 1 second debounce
+    maxRefreshIntervalMs: 30000, // 30 seconds max between checks
+    enableRealTimeUpdates: true,
+  });
 
   const fetchData = useCallback(async () => {
     if (!user) {
@@ -104,19 +112,19 @@ export default function BrandsPage() {
         const ownedBrandIds = effectiveProfile.owned_brands || [];
 
         if (isAdmin) {
-          // Admins see all brands
+          // Admins see all brands with brand_images relationship
           const { data: fetchedBrands, error } = await supabase
             .from("brands")
-            .select("*")
+            .select("*, brand_images(*)")
             .order("name");
 
           if (error) throw error;
           setBrands(fetchedBrands || []);
         } else if (isBrandOwner && ownedBrandIds.length > 0) {
-          // Brand owners see only their brands
+          // Brand owners see only their brands with brand_images relationship
           const { data: fetchedBrands, error } = await supabase
             .from("brands")
-            .select("*")
+            .select("*, brand_images(*)")
             .in("id", ownedBrandIds)
             .order("name");
 
@@ -135,8 +143,9 @@ export default function BrandsPage() {
   }, [user, supabase]); // Only depend on user and supabase
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]); // Now safe to depend on fetchData since it's memoized
+    // Use controlled refresh to prevent excessive calls
+    controlledRefresh(fetchData);
+  }, [fetchData, controlledRefresh]); // Now safe to depend on fetchData since it's memoized
 
   useEffect(() => {
     if (searchQuery.trim() === "") {
@@ -214,7 +223,7 @@ export default function BrandsPage() {
         </div>
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <Button
-            onClick={fetchData}
+            onClick={() => forceRefresh(fetchData)}
             variant="outline"
             size="sm"
             className="flex items-center gap-2 w-full sm:w-auto"
