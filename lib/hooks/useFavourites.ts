@@ -72,6 +72,7 @@ const useFavourites = () => {
       console.log("📧 Fetched favourites:", data.favourites?.length || 0);
       console.log("📧 Fetched favourites data:", data.favourites);
       setFavourites(data.favourites || []);
+      console.log("📧 State updated with favourites count:", data.favourites?.length || 0);
       setError(null);
     } catch (err) {
       console.error("❌ Error fetching favourites:", err);
@@ -116,7 +117,9 @@ const useFavourites = () => {
         }
 
         console.log("✅ Favourite added successfully to database");
-        await fetchFavourites(); // Refresh the favourites list
+        
+        // Refresh from server to get the updated list
+        await fetchFavourites();
       } catch (err: any) {
         console.error("❌ Error in addFavourite:", err);
         toast({
@@ -133,12 +136,15 @@ const useFavourites = () => {
   const removeFavourite = useCallback(
     async (itemId: string, itemType: "brand" | "catalogue" | "product") => {
       try {
+        console.log("🔄 Removing favourite:", { itemId, itemType });
+        
         const res = await fetch(
           `/api/favourites?itemId=${itemId}&itemType=${itemType}`,
           {
             method: "DELETE",
           }
         );
+        
         if (!res.ok) {
           const errorData = await res.json().catch(() => ({}));
           throw new Error(
@@ -147,7 +153,14 @@ const useFavourites = () => {
         }
 
         console.log("✅ Favourite removed successfully from database");
-        await fetchFavourites(); // Refresh the favourites list
+        
+        // Immediately update local state to reflect the removal
+        setFavourites(prev => prev.filter(fav => 
+          !(fav.id === itemId && fav.item_type === itemType)
+        ));
+        
+        // Also refresh from server to ensure consistency
+        await fetchFavourites();
       } catch (err: any) {
         console.error("❌ Error in removeFavourite:", err);
         toast({
@@ -172,7 +185,8 @@ const useFavourites = () => {
         itemType, 
         result, 
         favouritesCount: favourites.length,
-        favourites: favourites.map(f => ({ id: f.id, item_type: f.item_type }))
+        favourites: favourites.map(f => ({ id: f.id, item_type: f.item_type })),
+        currentFavourites: favourites
       });
       return result;
     },
