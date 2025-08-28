@@ -92,6 +92,10 @@
   [data-radix-dialog-content] {
     transform: translate(-50%, -50%) !important;
     -webkit-transform: translate(-50%, -50%) !important;
+    -ms-transform: translate(-50%, -50%) !important;
+    left: 50% !important;
+    top: 50% !important;
+    position: fixed !important;
     will-change: transform;
   }
 
@@ -102,6 +106,16 @@
 
   [data-radix-dialog-content] {
     z-index: 10000 !important;
+  }
+
+  /* Force Chrome to respect positioning */
+  @supports (-webkit-appearance: none) {
+    [data-radix-dialog-content] {
+      left: 50% !important;
+      top: 50% !important;
+      transform: translate(-50%, -50%) !important;
+      -webkit-transform: translate(-50%, -50%) !important;
+    }
   }
 }
 

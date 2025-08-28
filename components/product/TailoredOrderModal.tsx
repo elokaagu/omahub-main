@@ -55,6 +55,12 @@ export function TailoredOrderModal({
   isOpen,
   onClose,
 }: TailoredOrderModalProps) {
+  console.log("🔍 TailoredOrderModal render:", {
+    isOpen,
+    product: product?.title,
+    brand: brand?.name,
+  });
+
   const { user } = useAuth();
   const { openAuthModal } = useAuthModalContext();
   const [currentTab, setCurrentTab] = useState("measurements");
@@ -190,7 +196,10 @@ export function TailoredOrderModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col relative">
+      <DialogContent
+        className="max-w-4xl max-h-[90vh] flex flex-col relative"
+        style={{ backgroundColor: "red", border: "5px solid blue" }}
+      >
         <DialogHeader className="pb-4">
           <DialogTitle className="text-xl font-semibold">
             Custom Order: {product.title}
