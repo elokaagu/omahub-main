@@ -20,7 +20,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
   });
 }
 
-console.log("🔄 Initializing Supabase client:", {
+console.log("🔄 Supabase module loaded:", {
   hasUrl: !!supabaseUrl,
   hasKey: supabaseAnonKey ? supabaseAnonKey.substring(0, 10) + "..." : false,
   env: process.env.NODE_ENV,
@@ -56,54 +56,43 @@ const createClient = () => {
   });
 };
 
-// Lazy client initialization - only create when actually needed
+// Lazy client instance - only created when first accessed
 let _supabase: ReturnType<typeof createClient> | null = null;
 
 // Get the Supabase client instance (lazy initialization)
 export const getSupabaseClient = () => {
   if (!_supabase) {
     try {
+      // Only create client in browser environment
+      if (typeof window === "undefined") {
+        console.log("🖥️ Server-side rendering, skipping client creation");
+        return null;
+      }
+      
+      // Check if environment variables are available
+      if (!supabaseUrl || !supabaseAnonKey) {
+        console.error("❌ Missing Supabase environment variables");
+        return null;
+      }
+      
       _supabase = createClient();
+      console.log("✅ Supabase client created successfully");
     } catch (error) {
-      console.error("Failed to create Supabase client:", error);
+      console.error("❌ Failed to create Supabase client:", error);
       return null;
     }
   }
   return _supabase;
 };
 
-// Export the client instance (lazy)
-export const supabase = new Proxy({} as ReturnType<typeof createClient>, {
-  get(target, prop) {
-    const client = getSupabaseClient();
-    if (!client) {
-      console.error("Supabase client not available");
-      return undefined;
-    }
-    return client[prop as keyof typeof client];
-  }
-});
+// Export the client instance directly (for backward compatibility)
+export const supabase = getSupabaseClient() || (() => {
+  console.error("Supabase client not available");
+  return null;
+})();
 
 // Helper function to check if client is available
 export const isSupabaseAvailable = () => !!getSupabaseClient();
-
-// Debug logging for development
-if (process.env.NODE_ENV === "development") {
-  console.log("🔧 Supabase client initialized");
-}
-
-// Set up auth state change listener if in browser environment
-if (typeof window !== "undefined") {
-  // Set up auth state change listener when client is first accessed
-  const client = getSupabaseClient();
-  if (client) {
-    client.auth.onAuthStateChange((event: any, session: any) => {
-      if (process.env.NODE_ENV === "development") {
-        console.log("Auth state changed:", event, !!session);
-      }
-    });
-  }
-}
 
 // Helper function to safely execute database operations
 export async function safeDbOperation<T>(
@@ -137,202 +126,165 @@ export type BrandImage = {
 export type Brand = {
   id: string;
   name: string;
-  description?: string;
-  logo_url?: string;
-  long_description: string;
+  description: string;
+  long_description?: string;
   location: string;
   price_range: string;
-  currency: string; // Added currency field
+  currency: string;
   category: string;
-  categories?: string[];
-  rating: number;
+  categories: string[];
+  rating?: number;
   is_verified: boolean;
-  // image: string; // DEPRECATED: Use brand_images table instead
-  website?: string;
-  instagram?: string;
-  whatsapp?: string;
-  contact_email?: string;
-  founded_year?: string;
-  created_at?: string;
-  updated_at?: string;
+  image?: string;
+  brand_images?: BrandImage[];
+  products?: any[];
   video_url?: string;
   video_thumbnail?: string;
-  // New normalized image structure
-  brand_images?: BrandImage[];
-};
-
-export type Review = {
-  id: string;
-  brand_id: string;
-  user_id?: string | null;
-  author: string;
-  comment: string;
-  rating: number;
-  date: string;
-  created_at?: string;
-  updated_at?: string;
-};
-
-export type Catalogue = {
-  id: string;
-  brand_id: string;
-  title: string;
-  image: string;
-  description?: string;
-  created_at?: string;
-  updated_at?: string;
-};
-
-export type Tailor = {
-  id: string;
-  brand_id: string;
-  title: string;
-  image: string;
-  description?: string;
-  specialties?: string[];
-  price_range?: string;
-  lead_time?: string;
-  consultation_fee?: number;
-  created_at?: string;
-  updated_at?: string;
+  created_at: string;
+  updated_at: string;
 };
 
 export type Product = {
   id: string;
-  title: string;
+  name: string;
   description: string;
   price: number;
   sale_price?: number;
-  image: string;
-  images?: string[]; // Multiple product images
-  video_url?: string;
-  video_thumbnail?: string;
-  video_type?: "product_demo" | "styling_guide" | "behind_scenes" | "campaign";
-  video_description?: string;
+  currency: string;
+  category: string;
+  categories: string[];
   brand_id: string;
-  catalogue_id?: string;
-  category: string; // Legacy single category (kept for backward compatibility)
-  categories: string[]; // New array of product-specific categories
-  in_stock: boolean;
-  sizes?: string[];
-  colors?: string[];
-  materials?: string[];
-  care_instructions?: string;
-  is_custom?: boolean; // For tailored/custom pieces
-  lead_time?: string; // e.g., "2-3 weeks"
-  currency?: string; // Added currency field to inherit from brand
-  // Tailor-specific fields
-  service_type?: "product" | "service" | "consultation" | "portfolio";
-  consultation_fee?: number;
-  hourly_rate?: number;
-  fixed_price?: number;
-  specialties?: string[];
-  fitting_sessions?: string;
-  measurement_guide?: string;
-  price_range?: string;
-  contact_for_pricing?: boolean;
-  sessions_included?: string;
-  requirements?: string;
-  delivery_method?: string;
-  includes?: string[];
-  // Portfolio-specific fields
-  techniques?: string[];
-  inspiration?: string;
-  created_at?: string;
-  updated_at?: string;
+  brand?: Brand;
+  images?: string[];
+  is_custom: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type Collection = {
+  id: string;
+  name: string;
+  description: string;
+  brand_id: string;
+  brand?: Brand;
+  products?: Product[];
+  created_at: string;
+  updated_at: string;
+};
+
+export type Tailor = {
+  id: string;
+  user_id: string;
+  brand_id: string;
+  brand?: Brand;
+  created_at: string;
+  updated_at: string;
+};
+
+export type User = {
+  id: string;
+  email: string;
+  role: string;
+  created_at: string;
+  updated_at: string;
 };
 
 export type Profile = {
   id: string;
+  user_id: string;
+  full_name?: string;
+  avatar_url?: string;
+  created_at: string;
   updated_at: string;
-  username: string;
-  avatar_url: string;
-  first_name: string;
-  last_name: string;
-  bio: string;
-  location: string;
-  website: string;
-  role: string; // 'user', 'designer', 'admin'
-  owned_brands?: string[];
 };
 
-export type TailoredOrder = {
+export type Inquiry = {
   id: string;
-  user_id: string;
-  product_id: string;
   brand_id: string;
-  status: "pending" | "confirmed" | "in_progress" | "completed" | "cancelled";
-  total_amount: number;
-  currency: string;
-  customer_notes?: string;
-  brand_notes?: string;
-  measurements: CustomerMeasurements;
-  delivery_address: DeliveryAddress;
-  estimated_completion?: string;
-  created_at: string;
-  updated_at?: string;
-};
-
-export type CustomerMeasurements = {
-  // General measurements
-  height?: string;
-  weight?: string;
-
-  // Upper body
-  chest?: string;
-  bust?: string;
-  waist?: string;
-  hips?: string;
-  shoulder_width?: string;
-  arm_length?: string;
-  neck?: string;
-
-  // Lower body
-  inseam?: string;
-  outseam?: string;
-  thigh?: string;
-  knee?: string;
-  calf?: string;
-  ankle?: string;
-
-  // Additional notes
-  fit_preference?: "slim" | "regular" | "loose";
-  special_requirements?: string;
-};
-
-export type DeliveryAddress = {
-  full_name: string;
-  phone: string;
-  email: string;
-  address_line_1: string;
-  address_line_2?: string;
-  city: string;
-  state: string;
-  postal_code: string;
-  country: string;
-};
-
-export type Order = {
-  id: string;
-  user_id: string;
+  brand?: Brand;
+  inquiry_type: string;
+  priority: string;
   status: string;
-  total: number;
+  message: string;
+  contact_email: string;
+  contact_name: string;
   created_at: string;
+  updated_at: string;
 };
 
-export type OrderItem = {
+export type Review = {
   id: string;
-  order_id: string;
   product_id: string;
-  quantity: number;
-  price: number;
-  size?: string;
-  color?: string;
+  product?: Product;
+  user_id: string;
+  user?: User;
+  rating: number;
+  comment?: string;
+  created_at: string;
+  updated_at: string;
 };
 
 export type Favourite = {
   id: string;
   user_id: string;
-  product_id: string;
+  item_id: string;
+  item_type: string;
   created_at: string;
+};
+
+export type Database = {
+  public: {
+    Tables: {
+      brands: {
+        Row: Brand;
+        Insert: Omit<Brand, "id" | "created_at" | "updated_at">;
+        Update: Partial<Omit<Brand, "id" | "created_at" | "updated_at">>;
+      };
+      products: {
+        Row: Product;
+        Insert: Omit<Product, "id" | "created_at" | "updated_at">;
+        Update: Partial<Omit<Product, "id" | "created_at" | "updated_at">>;
+      };
+      collections: {
+        Row: Collection;
+        Insert: Omit<Collection, "id" | "created_at" | "updated_at">;
+        Update: Partial<Omit<Collection, "id" | "created_at" | "updated_at">>;
+      };
+      tailors: {
+        Row: Tailor;
+        Insert: Omit<Tailor, "id" | "created_at" | "updated_at">;
+        Update: Partial<Omit<Tailor, "id" | "created_at" | "updated_at">>;
+      };
+      users: {
+        Row: User;
+        Insert: Omit<User, "id" | "created_at" | "updated_at">;
+        Update: Partial<Omit<User, "id" | "created_at" | "updated_at">>;
+      };
+      profiles: {
+        Row: Profile;
+        Insert: Omit<Profile, "id" | "created_at" | "updated_at">;
+        Update: Partial<Omit<Profile, "id" | "created_at" | "updated_at">>;
+      };
+      inquiries: {
+        Row: Inquiry;
+        Insert: Omit<Inquiry, "id" | "created_at" | "updated_at">;
+        Update: Partial<Omit<Inquiry, "id" | "created_at" | "updated_at">>;
+      };
+      reviews: {
+        Row: Review;
+        Insert: Omit<Review, "id" | "created_at" | "updated_at">;
+        Update: Partial<Omit<Review, "id" | "created_at" | "updated_at">>;
+      };
+      favourites: {
+        Row: Favourite;
+        Insert: Omit<Favourite, "id" | "created_at">;
+        Update: Partial<Omit<Favourite, "id" | "created_at">>;
+      };
+      brand_images: {
+        Row: BrandImage;
+        Insert: Omit<BrandImage, "id" | "created_at" | "updated_at">;
+        Update: Partial<Omit<BrandImage, "id" | "created_at" | "updated_at">>;
+      };
+    };
+  };
 };

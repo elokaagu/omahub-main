@@ -6,10 +6,10 @@ import { Upload, X, Image as ImageIcon, AlertCircle } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { AuthImage } from "./auth-image";
-import { 
-  generateBrandImageFilename, 
+import {
+  generateBrandImageFilename,
   generateBrandImagePath,
-  ImageNamingConfig 
+  ImageNamingConfig,
 } from "@/lib/services/imageNamingService";
 
 interface SimpleFileUploadProps {
@@ -23,8 +23,8 @@ interface SimpleFileUploadProps {
   // Brand-specific props for proper naming
   brandId?: string;
   brandName?: string;
-  imageRole?: 'logo' | 'cover' | 'gallery' | 'thumbnail' | 'hero' | 'banner';
-  imageType?: 'brand' | 'product' | 'collection' | 'user';
+  imageRole?: "logo" | "cover" | "gallery" | "thumbnail" | "hero" | "banner";
+  imageType?: "brand" | "product" | "collection" | "user";
 }
 
 export function SimpleFileUpload({
@@ -64,7 +64,7 @@ export function SimpleFileUpload({
       const {
         data: { user },
         error: authError,
-      } = await supabase().auth.getUser();
+      } = await supabase.auth.getUser();
 
       if (authError || !user) {
         throw new Error("Please log in to upload files");
@@ -73,38 +73,38 @@ export function SimpleFileUpload({
       // Create filename using naming convention if brand info is provided
       let filename: string;
       let filePath: string;
-      
-      if (brandId && brandName && imageType === 'brand') {
+
+      if (brandId && brandName && imageType === "brand") {
         // Use structured naming convention for brand images
         const namingConfig: ImageNamingConfig = {
           brandId,
           brandName,
           imageRole,
           imageType,
-          userId: user.id
+          userId: user.id,
         };
-        
+
         filename = generateBrandImageFilename(namingConfig, file);
         filePath = generateBrandImagePath(namingConfig, filename);
-        
+
         console.log("🏷️ Using structured naming:", {
           originalName: file.name,
           newFilename: filename,
           storagePath: filePath,
           brandId,
           brandName,
-          imageRole
+          imageRole,
         });
       } else {
         // Fallback to legacy naming for non-brand images
         const fileExtension = file.name.split(".").pop() || "jpg";
         filename = `${user.id.substring(0, 8)}_${Date.now()}.${fileExtension}`;
         filePath = path ? `${path}/${filename}` : filename;
-        
+
         console.log("📁 Using legacy naming:", {
           originalName: file.name,
           newFilename: filename,
-          storagePath: filePath
+          storagePath: filePath,
         });
       }
 
@@ -117,8 +117,8 @@ export function SimpleFileUpload({
       });
 
       // Upload file
-      const { data, error } = await supabase().storage
-        .from(bucket)
+          const { data, error } = await supabase.storage
+      .from(bucket)
         .upload(filePath, file, {
           cacheControl: "3600",
           upsert: false,
@@ -158,8 +158,8 @@ export function SimpleFileUpload({
       }
 
       // Get the public URL
-      const { data: urlData } = supabase().storage
-        .from(bucket)
+          const { data: urlData } = supabase.storage
+      .from(bucket)
         .getPublicUrl(data.path);
 
       if (!urlData?.publicUrl) {

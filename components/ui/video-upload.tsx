@@ -50,7 +50,7 @@ export function VideoUpload({
       const {
         data: { user },
         error: authError,
-      } = await supabase().auth.getUser();
+      } = await supabase.auth.getUser();
 
       if (authError || !user) {
         throw new Error("Please log in to upload videos");
@@ -104,8 +104,8 @@ export function VideoUpload({
       });
 
       // Upload file with progress tracking
-      const { data, error } = await supabase().storage
-        .from(bucket)
+          const { data, error } = await supabase.storage
+      .from(bucket)
         .upload(filePath, file, {
           cacheControl: "3600",
           upsert: false,
@@ -145,8 +145,8 @@ export function VideoUpload({
       }
 
       // Get the public URL
-      const { data: urlData } = supabase().storage
-        .from(bucket)
+          const { data: urlData } = supabase.storage
+      .from(bucket)
         .getPublicUrl(data.path);
 
       if (!urlData?.publicUrl) {
