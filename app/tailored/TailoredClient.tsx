@@ -117,14 +117,14 @@ export default function TailoredClient() {
     try {
       setLoading(true);
       const data = await getTailorsWithBrands();
-      console.log("🔍 Tailors data fetched:", data.map(t => ({
-        id: t.id,
-        title: t.title,
-        brandName: t.brand?.name,
-        brandImage: t.brand?.image,
-        hasBrandImages: t.brand?.brand_images?.length > 0,
-        brandImageCount: t.brand?.brand_images?.length || 0
-      })));
+              console.log("🔍 Tailors data fetched:", data.map(t => ({
+          id: t.id,
+          title: t.title,
+          brandName: t.brand?.name,
+          brandImage: t.brand?.image,
+          hasBrandImages: (t.brand?.brand_images?.length || 0) > 0,
+          brandImageCount: t.brand?.brand_images?.length || 0
+        })));
       setTailors(data);
 
       // Always use the static tailored hero image
