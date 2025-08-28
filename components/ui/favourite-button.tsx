@@ -18,9 +18,10 @@ export function FavouriteButton({
   itemType,
   className = "",
 }: FavouriteButtonProps) {
-  const [isLoading, setIsLoading] = useState(false);
+  
   const [showModal, setShowModal] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { isFavourite, toggleFavourite } = useFavourites();
   const { user } = useAuth();

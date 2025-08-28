@@ -1,11 +1,12 @@
+import { useAuth } from "@/contexts/AuthContext";
 import { NavigationLink } from "./navigation-link";
 import { CheckCircle, Star } from "@/components/ui/icons";
 import { cn } from "@/lib/utils";
-import { AuthImage } from "./auth-image";
 import { VideoPlayer } from "./video-player";
-import { useAuth } from "@/contexts/AuthContext";
+import { AuthImage } from "./auth-image";
 import { useEffect, useState } from "react";
 import { brandImageService } from "@/lib/services/brandImageService";
+import { FavouriteButton } from "./favourite-button";
 
 interface BrandCardProps {
   id: string;
@@ -153,8 +154,9 @@ export function BrandCard({
         {/* Smooth dark overlay on hover */}
         <div className="absolute inset-0 pointer-events-none transition-all duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] bg-black/0 group-hover:bg-black/40 group-hover:backdrop-blur-sm z-10" />
 
-        {/* Unfavourite button - only show if showUnfavouriteButton is true */}
-        {showUnfavouriteButton && onUnfavourite && (
+        {/* Favourite button - show appropriate button based on context */}
+        {showUnfavouriteButton && onUnfavourite ? (
+          // Show unfavourite button when in favourites page
           <button
             onClick={(e) => {
               e.preventDefault();
@@ -176,6 +178,15 @@ export function BrandCard({
               />
             </svg>
           </button>
+        ) : (
+          // Show regular favourite button for adding/removing favourites
+          <div className="absolute top-3 right-3 z-20">
+            <FavouriteButton
+              itemId={id}
+              itemType="brand"
+              className="bg-white/90 hover:bg-white p-2 rounded-full shadow-md transition-all duration-200 hover:scale-110"
+            />
+          </div>
         )}
 
         {/* Overlay content at the bottom (always visible) */}
