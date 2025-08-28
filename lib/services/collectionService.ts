@@ -147,7 +147,7 @@ export async function getCollectionsWithBrands(forceRefresh: boolean = false): P
   }
 
   // Process the data to construct proper image URLs from brand_images
-  const processedData = (data || []).map(collection => {
+  const processedData = (data || []).map((collection: any) => {
     if (collection.brand && collection.brand.brand_images && collection.brand.brand_images.length > 0) {
       // Use the new brand_images relationship
       const storagePath = collection.brand.brand_images[0].storage_path;
