@@ -99,32 +99,41 @@ export function VideoPlayer({
       const video = videoRef.current;
 
       const handleLoadStart = () => {
+        console.log("🎬 Video load started for:", videoUrl);
         setIsLoading(true);
         setHasError(false);
       };
 
       const handleCanPlay = () => {
+        console.log("🎬 Video can play for:", videoUrl);
         setIsLoading(false);
         onVideoLoad?.();
       };
 
-      const handleError = () => {
+      const handleError = (e: Event) => {
+        console.error("🎬 Video error for:", videoUrl, e);
         setIsLoading(false);
         setHasError(true);
         onVideoError?.();
       };
 
+      const handleLoadedData = () => {
+        console.log("🎬 Video data loaded for:", videoUrl);
+      };
+
       video.addEventListener("loadstart", handleLoadStart);
       video.addEventListener("canplay", handleCanPlay);
       video.addEventListener("error", handleError);
+      video.addEventListener("loadeddata", handleLoadedData);
 
       return () => {
         video.removeEventListener("loadstart", handleLoadStart);
         video.removeEventListener("canplay", handleCanPlay);
         video.removeEventListener("error", handleError);
+        video.removeEventListener("loadeddata", handleLoadedData);
       };
     }
-  }, [onVideoLoad, onVideoError]);
+  }, [onVideoLoad, onVideoError, videoUrl]);
 
   // If we have a video URL, show the video player
   if (videoUrl) {
@@ -145,8 +154,11 @@ export function VideoPlayer({
           controls={controls}
           playsInline
           preload="metadata"
+          style={{ display: 'block' }} // Ensure video is visible
         >
           <source src={videoUrl} type="video/mp4" />
+          <source src={videoUrl} type="video/webm" />
+          <source src={videoUrl} type="video/quicktime" />
           Your browser does not support the video tag.
         </video>
 
@@ -161,6 +173,13 @@ export function VideoPlayer({
         {hasError && (
           <div className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full">
             <AlertCircle className="h-4 w-4" />
+          </div>
+        )}
+
+        {/* Debug info in development */}
+        {process.env.NODE_ENV === "development" && (
+          <div className="absolute top-2 left-2 bg-black/80 text-white text-xs p-2 rounded">
+            Video: {videoUrl ? "Loading..." : "No URL"}
           </div>
         )}
       </div>
