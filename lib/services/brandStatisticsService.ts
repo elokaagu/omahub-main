@@ -45,10 +45,10 @@ export async function calculateBrandStatistics(): Promise<BrandStatistics> {
       .not("brand_id", "is", null);
 
     const uniqueBrandsWithReviews = new Set(
-      brandsWithReviews?.map((r) => r.brand_id) || []
+      brandsWithReviews?.map((r: { brand_id: string }) => r.brand_id) || []
     );
 
-    const recentBrands = new Set(activeBrandsData?.map((b) => b.id) || []);
+    const recentBrands = new Set(activeBrandsData?.map((b: { id: string }) => b.id) || []);
 
     const activeBrandsSet = new Set([
       ...uniqueBrandsWithReviews,

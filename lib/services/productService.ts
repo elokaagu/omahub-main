@@ -755,7 +755,7 @@ export async function getIntelligentRecommendations(
         .from("products")
         .select("*")
         .eq("catalogue_id", catalogueId)
-        .not("id", "in", `(${recommendations.map((r) => r.id).join(",")})`)
+        .not("id", "in", `(${recommendations.map((r: { id: string }) => r.id).join(",")})`)
         .limit(remainingLimit)
         .order("created_at", { ascending: false });
 
@@ -771,7 +771,7 @@ export async function getIntelligentRecommendations(
         .from("products")
         .select("*")
         .eq("brand_id", brandId)
-        .not("id", "in", `(${recommendations.map((r) => r.id).join(",")})`)
+        .not("id", "in", `(${recommendations.map((r: { id: string }) => r.id).join(",")})`)
         .limit(stillNeedMore)
         .order("created_at", { ascending: false });
 
@@ -823,12 +823,12 @@ export async function getIntelligentRecommendationsWithBrand(
           .select("brand_id")
           .in(
             "id",
-            favourites.map((f: any) => f.product_id)
+            favourites.map((f: { product_id: string }) => f.product_id)
           );
 
         if (favouritedProducts && favouritedProducts.length > 0) {
           const favouriteBrandIds = [
-            ...new Set(favouritedProducts.map((p: any) => p.brand_id)),
+            ...new Set(favouritedProducts.map((p: { brand_id: string }) => p.brand_id)),
           ];
 
           // Get products from favourite brands with brand info (up to half of the limit)
@@ -864,7 +864,7 @@ export async function getIntelligentRecommendationsWithBrand(
         `
         )
         .eq("catalogue_id", catalogueId)
-        .not("id", "in", `(${recommendations.map((r) => r.id).join(",")})`)
+        .not("id", "in", `(${recommendations.map((r: { id: string }) => r.id).join(",")})`)
         .limit(remainingLimit)
         .order("created_at", { ascending: false });
 
@@ -885,7 +885,7 @@ export async function getIntelligentRecommendationsWithBrand(
         `
         )
         .eq("brand_id", brandId)
-        .not("id", "in", `(${recommendations.map((r) => r.id).join(",")})`)
+        .not("id", "in", `(${recommendations.map((r: { id: string }) => r.id).join(",")})`)
         .limit(stillNeedMore)
         .order("created_at", { ascending: false });
 
