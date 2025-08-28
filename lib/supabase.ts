@@ -8,12 +8,21 @@ const isBuildTime =
   !process.env.NEXT_PUBLIC_SUPABASE_URL;
 
 // Safely access environment variables with fallbacks
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+// Validate environment variables
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error("❌ Missing Supabase environment variables:", {
+    hasUrl: !!supabaseUrl,
+    hasKey: !!supabaseAnonKey,
+    env: process.env.NODE_ENV,
+  });
+}
 
 console.log("🔄 Initializing Supabase client:", {
   hasUrl: !!supabaseUrl,
-  hasKey: !!supabaseAnonKey.substring(0, 10) + "...",
+  hasKey: supabaseAnonKey ? supabaseAnonKey.substring(0, 10) + "..." : false,
   env: process.env.NODE_ENV,
   isBuildTime,
 });
@@ -22,6 +31,11 @@ console.log("🔄 Initializing Supabase client:", {
 const createClient = () => {
   if (typeof window === "undefined") {
     console.log("🖥️ Server-side rendering, creating client for hydration");
+  }
+
+  // Check if environment variables are available
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error("Supabase environment variables not available");
   }
 
   return createBrowserClient(supabaseUrl, supabaseAnonKey, {
@@ -42,14 +56,36 @@ const createClient = () => {
   });
 };
 
-// Create the client instance
-export const supabase = createClient();
+// Lazy client initialization - only create when actually needed
+let _supabase: ReturnType<typeof createClient> | null = null;
 
-// Export a function to get a fresh client instance if needed
-export const getSupabaseClient = () => createClient();
+// Get the Supabase client instance (lazy initialization)
+export const getSupabaseClient = () => {
+  if (!_supabase) {
+    try {
+      _supabase = createClient();
+    } catch (error) {
+      console.error("Failed to create Supabase client:", error);
+      return null;
+    }
+  }
+  return _supabase;
+};
+
+// Export the client instance (lazy)
+export const supabase = new Proxy({} as ReturnType<typeof createClient>, {
+  get(target, prop) {
+    const client = getSupabaseClient();
+    if (!client) {
+      console.error("Supabase client not available");
+      return undefined;
+    }
+    return client[prop as keyof typeof client];
+  }
+});
 
 // Helper function to check if client is available
-export const isSupabaseAvailable = () => !!supabase;
+export const isSupabaseAvailable = () => !!getSupabaseClient();
 
 // Debug logging for development
 if (process.env.NODE_ENV === "development") {
@@ -57,13 +93,16 @@ if (process.env.NODE_ENV === "development") {
 }
 
 // Set up auth state change listener if in browser environment
-if (supabase && typeof window !== "undefined") {
-  // Set up auth state change listener
-  supabase.auth.onAuthStateChange((event, session) => {
-    if (process.env.NODE_ENV === "development") {
-      console.log("Auth state changed:", event, !!session);
-    }
-  });
+if (typeof window !== "undefined") {
+  // Set up auth state change listener when client is first accessed
+  const client = getSupabaseClient();
+  if (client) {
+    client.auth.onAuthStateChange((event: any, session: any) => {
+      if (process.env.NODE_ENV === "development") {
+        console.log("Auth state changed:", event, !!session);
+      }
+    });
+  }
 }
 
 // Helper function to safely execute database operations
