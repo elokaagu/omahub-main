@@ -318,7 +318,7 @@ export default function CreateBrandPage() {
         name: formData.name,
         description: formatBrandDescription(formData.description || ""),
         long_description: formatBrandDescription(formData.long_description || formData.description || ""),
-      location: formData.location,
+        location: formData.location,
       price_range: priceRange || "explore brand for prices",
       currency: formData.currency,
       category: formData.categories[0],
