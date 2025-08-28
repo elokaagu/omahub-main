@@ -218,26 +218,10 @@ export default function TailoredClient() {
       >
         <div className="w-full">
           <div className="text-center mb-8 sm:mb-12 px-4 sm:px-6">
-            <div className="flex items-center justify-center gap-4 mb-4">
+            <div className="flex items-center justify-center mb-4">
               <h2 className="text-3xl sm:text-4xl md:text-5xl font-canela text-black">
                 Featured Tailors
               </h2>
-              <Button
-                onClick={() => {
-                  console.log("🔄 Manually refreshing tailors data...");
-                  fetchTailors(true);
-                }}
-                variant="outline"
-                size="sm"
-                className="text-oma-plum border-oma-plum hover:bg-oma-plum/10"
-                disabled={loading}
-              >
-                {loading ? (
-                  <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-oma-plum" />
-                ) : (
-                  "🔄"
-                )}
-              </Button>
             </div>
             <p className="text-lg sm:text-xl text-black/70 max-w-2xl mx-auto">
               Explore our curated selection of Africa's most skilled tailors

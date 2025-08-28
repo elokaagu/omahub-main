@@ -54,9 +54,6 @@ export default function FavouritesClient() {
     return (
       <div className="text-center py-10">
         <p className="text-red-500 mb-4">{error}</p>
-        <Button onClick={() => router.refresh()} variant="outline">
-          Try Again
-        </Button>
       </div>
     );
   }

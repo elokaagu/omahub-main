@@ -780,7 +780,6 @@ export default function HomeContent() {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen px-4">
         <div className="text-red-500 mb-4">{error}</div>
-        <Button onClick={() => window.location.reload()}>Refresh Page</Button>
       </div>
     );
   }
@@ -812,23 +811,10 @@ export default function HomeContent() {
       {/* Categories Section */}
       <section className="py-8 px-2 sm:px-4 lg:px-6 bg-white">
         <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-center gap-4 mb-8">
+          <div className="flex items-center justify-center mb-8">
             <h2 className="text-3xl font-canela text-center">
               Browse by Category
             </h2>
-            <Button
-              onClick={refreshAllData}
-              variant="outline"
-              size="sm"
-              className="text-oma-plum border-oma-plum hover:bg-oma-plum/10"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-oma-plum" />
-              ) : (
-                "🔄"
-              )}
-            </Button>
           </div>
           {/* Debug info */}
           {process.env.NODE_ENV === "development" && (
