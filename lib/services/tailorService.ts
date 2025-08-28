@@ -1,20 +1,5 @@
 import { supabase, Tailor, Brand } from "../supabase";
 
-// Cache for tailors data
-let tailorsCache: {
-  data: any[] | null;
-  timestamp: number;
-} | null = null;
-
-const TAILORS_CACHE_EXPIRY = 10 * 1000; // 10 seconds for fresh data
-
-/**
- * Clear the tailors cache
- */
-export function clearTailorsCache(): void {
-  tailorsCache = null;
-}
-
 /**
  * Fetch all tailors from the database
  */
@@ -93,7 +78,7 @@ export async function getTailorWithBrand(id: string): Promise<
 /**
  * Fetch tailors with brand information
  */
-export async function getTailorsWithBrands(forceRefresh: boolean = false): Promise<
+export async function getTailorsWithBrands(): Promise<
   (Tailor & {
     brand: {
       name: string;
@@ -110,15 +95,6 @@ export async function getTailorsWithBrands(forceRefresh: boolean = false): Promi
 > {
   if (!supabase) {
     throw new Error("Supabase client not available");
-  }
-
-  // Check cache first (unless force refresh is requested)
-  if (!forceRefresh && tailorsCache && tailorsCache.data) {
-    const now = Date.now();
-    if (now - tailorsCache.timestamp < TAILORS_CACHE_EXPIRY) {
-      console.log("📦 Using cached tailors data");
-      return tailorsCache.data;
-    }
   }
 
   console.log("🔄 Fetching fresh tailors data from database");
@@ -141,20 +117,12 @@ export async function getTailorsWithBrands(forceRefresh: boolean = false): Promi
   // Process the data to construct proper image URLs from brand_images
   const processedData = (data || []).map(tailor => {
     if (tailor.brand && tailor.brand.brand_images && tailor.brand.brand_images.length > 0) {
-      // Use the new brand_images relationship
+      // Use the new brand_images relationship - this ensures we get the current studio images
       const storagePath = tailor.brand.brand_images[0].storage_path;
       tailor.brand.image = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${storagePath}`;
-      // Ensure brand_images are preserved for BrandCard component
-      tailor.brand.brand_images = tailor.brand.brand_images;
     }
     // If no brand_images, keep the existing brands.image field as fallback
     return tailor;
-  });
-
-  // Update cache
-  tailorsCache = {
-    data: processedData,
-    timestamp: Date.now(),
   };
 
   return processedData;

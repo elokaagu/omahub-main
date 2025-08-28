@@ -113,10 +113,10 @@ export default function TailoredClient() {
     return () => observer.disconnect();
   }, []);
 
-  const fetchTailors = async (forceRefresh: boolean = false) => {
+  const fetchTailors = async () => {
     try {
       setLoading(true);
-      const data = await getTailorsWithBrands(forceRefresh);
+      const data = await getTailorsWithBrands();
       console.log("🔍 Tailors data fetched:", data.map(t => ({
         id: t.id,
         title: t.title,
@@ -279,7 +279,6 @@ export default function TailoredClient() {
                           isVerified={tailor.brand.is_verified}
                           video_url={tailor.brand.video_url}
                           video_thumbnail={tailor.brand.video_thumbnail}
-                          brand_images={tailor.brand.brand_images}
                           className="h-full"
                         />
                       ) : (
