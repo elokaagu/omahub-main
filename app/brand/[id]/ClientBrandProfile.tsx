@@ -10,6 +10,20 @@ import {
   Globe,
   MessageCircle,
   Mail,
+  Calendar,
+  Users,
+  Award,
+  Play,
+  Pause,
+  Volume2,
+  VolumeX,
+  Heart,
+  MessageSquare,
+  Phone,
+  Clock,
+  Tag,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import ContactDesignerModal from "@/components/ContactDesignerModal";
 import { ReviewForm } from "@/components/ui/review-form";
@@ -18,6 +32,7 @@ import useReviews from "@/lib/hooks/useReviews";
 import type { BrandData } from "@/lib/data/brands";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
+import useFavourites from "@/lib/hooks/useFavourites";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { NavigationLink } from "@/components/ui/navigation-link";
@@ -31,6 +46,8 @@ import {
 } from "@/lib/utils/phoneUtils";
 import { formatProductPrice, formatPriceRangeWithCommas } from "@/lib/utils/priceFormatter";
 import { getProductMainImage } from "@/lib/utils/productImageUtils";
+import { FavouriteButton } from "@/components/ui/favourite-button";
+import { cn } from "@/lib/utils";
 
 // Extended interface for brand profile data that includes currency and matches actual data structure
 interface BrandProfileData {
@@ -67,6 +84,7 @@ export default function ClientBrandProfile({
   brandData,
 }: ClientBrandProfileProps) {
   const { user } = useAuth();
+  const { isFavourite, toggleFavourite } = useFavourites();
   const params = useParams();
   const id =
     typeof params.id === "string"
@@ -499,6 +517,15 @@ export default function ClientBrandProfile({
                   </button>
                 )}
               </div>
+            </div>
+
+            {/* Favourite Button */}
+            <div className="mb-6">
+              <FavouriteButton
+                itemId={brandData.id}
+                itemType="brand"
+                className="w-full bg-oma-plum hover:bg-oma-plum/90 text-white min-h-[44px] text-sm sm:text-base transition-all duration-200"
+              />
             </div>
 
             {brandData.priceRange && (
