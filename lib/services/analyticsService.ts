@@ -443,7 +443,7 @@ export async function getBrandGrowthData(): Promise<BrandGrowthData[]> {
     // Group by month
     const monthlyData: { [key: string]: number } = {};
 
-    (brands || []).forEach((brand) => {
+    (brands || []).forEach((brand: { created_at: string }) => {
       const month = new Date(brand.created_at).toLocaleDateString("en-US", {
         year: "numeric",
         month: "short",
@@ -501,7 +501,7 @@ export async function getReviewTrendsData(): Promise<ReviewTrendsData[]> {
     const monthlyData: { [key: string]: { total: number; ratings: number[] } } =
       {};
 
-    (reviews || []).forEach((review) => {
+    (reviews || []).forEach((review: { created_at: string; rating: number }) => {
       const month = new Date(review.created_at).toLocaleDateString("en-US", {
         year: "numeric",
         month: "short",
@@ -727,7 +727,7 @@ export async function getBrandOwnerGrowthData(
     }
 
     // Count products by month
-    (data || []).forEach((product) => {
+    (data || []).forEach((product: { created_at: string }) => {
       const createdDate = new Date(product.created_at);
       const monthIndex = months.findIndex(
         (m) =>
@@ -795,7 +795,7 @@ export async function getBrandOwnerReviewTrends(
     }
 
     // Group reviews by month
-    (data || []).forEach((review) => {
+    (data || []).forEach((review: { created_at: string; rating: number }) => {
       const createdDate = new Date(review.created_at);
       const monthIndex = months.findIndex(
         (m) =>

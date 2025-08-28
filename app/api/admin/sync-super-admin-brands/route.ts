@@ -137,7 +137,7 @@ export async function POST(request: NextRequest) {
       details: [] as any[],
     };
 
-    results.forEach((result, index) => {
+    results.forEach((result: PromiseSettledResult<any>, index: number) => {
       if (result.status === "fulfilled") {
         const value = result.value;
         summary.details.push(value);

@@ -369,7 +369,7 @@ export async function GET(request: NextRequest) {
           });
 
           // Update monthly trends with real booking data
-          monthlyTrends.forEach((trend) => {
+          monthlyTrends.forEach((trend: any) => {
             const trendDate = new Date(trend.month + "-01");
             const monthStart = new Date(
               trendDate.getFullYear(),
@@ -382,18 +382,18 @@ export async function GET(request: NextRequest) {
               0
             );
 
-            const monthBookings = validBookings.filter((b) => {
+            const monthBookings = validBookings.filter((b: any) => {
               const bookingDate = new Date(b.booking_date || b.created_at);
               return bookingDate >= monthStart && bookingDate <= monthEnd;
             });
 
             trend.bookings = monthBookings.length;
             trend.revenue = monthBookings.reduce(
-              (sum, b) => sum + (b.booking_value || 0),
+              (sum: number, b: any) => sum + (b.booking_value || 0),
               0
             );
             trend.commission = monthBookings.reduce(
-              (sum, b) => sum + (b.commission_amount || 0),
+              (sum: number, b: any) => sum + (b.booking_amount || 0),
               0
             );
           });
