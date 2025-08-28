@@ -101,7 +101,10 @@ export async function getAllBrandsWithProductCounts(): Promise<
         categories: item.categories || [],
         rating: item.rating || 4.5,
         is_verified: item.is_verified || false,
-        // image: item.image || "/placeholder-image.jpg", // DEPRECATED: Use brand_images instead
+        // Construct image URL from brand_images relationship
+        image: item.brand_images?.[0]?.storage_path
+          ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${item.brand_images[0].storage_path}`
+          : item.image || "/placeholder-image.jpg", // Fallback to old image field for backward compatibility
         product_count: item.products?.[0]?.count || 0,
         // Include video fields
         video_url: item.video_url || undefined,
@@ -166,7 +169,10 @@ export async function getAllBrands(
           categories: item.categories || [],
           rating: item.rating || 4.5,
           is_verified: item.is_verified || false,
-          // image: item.image || "/placeholder-image.jpg", // DEPRECATED: Use brand_images instead
+          // Construct image URL from brand_images relationship
+          image: item.brand_images?.[0]?.storage_path
+            ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${item.brand_images[0].storage_path}`
+            : item.image || "/placeholder-image.jpg", // Fallback to old image field for backward compatibility
           video_url: item.video_url || undefined,
           video_thumbnail: item.video_thumbnail || undefined,
         };
@@ -287,7 +293,10 @@ export async function getAllBrands(
         categories: item.categories || [],
         rating: item.rating || 4.5,
         is_verified: item.is_verified || false,
-        // image: item.image || "/placeholder-image.jpg", // DEPRECATED: Use brand_images instead
+        // Construct image URL from brand_images relationship
+        image: item.brand_images?.[0]?.storage_path
+          ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${item.brand_images[0].storage_path}`
+          : item.image || "/placeholder-image.jpg", // Fallback to old image field for backward compatibility
         video_url: item.video_url || undefined,
         video_thumbnail: item.video_thumbnail || undefined,
         // Include the new normalized images

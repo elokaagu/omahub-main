@@ -10,7 +10,11 @@ import {
   StaggerContainer,
   StaggerItem,
 } from "@/app/components/ui/animations";
-import { getAllBrands, getBrandsByCategory, forceRefreshBrands } from "@/lib/services/brandService";
+import {
+  getAllBrands,
+  getBrandsByCategory,
+  forceRefreshBrands,
+} from "@/lib/services/brandService";
 import { getCollectionsWithBrands } from "@/lib/services/collectionService";
 import { getTailorsWithBrands } from "@/lib/services/tailorService";
 import { getProductsByCategories } from "@/lib/services/productSearchService";
@@ -498,8 +502,6 @@ export default function HomeContent() {
             getActiveSpotlightContent(),
             generateDynamicFallbackItems(),
           ]);
-
-
 
         // Fetch products for each category to enhance filtering
         const categoryProducts = await Promise.all(
