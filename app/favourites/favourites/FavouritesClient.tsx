@@ -37,6 +37,7 @@ interface Product {
   sale_price?: number;
   category: string;
   item_type: "product";
+  brand_id: string; // Add this missing property
   brand?: {
     name: string;
     location?: string;
