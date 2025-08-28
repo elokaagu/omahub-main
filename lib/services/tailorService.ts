@@ -104,6 +104,7 @@ export async function getTailorsWithBrands(forceRefresh: boolean = false): Promi
       image: string;
       video_url?: string;
       video_thumbnail?: string;
+      brand_images?: any[];
     };
   })[]
 > {
@@ -143,6 +144,8 @@ export async function getTailorsWithBrands(forceRefresh: boolean = false): Promi
       // Use the new brand_images relationship
       const storagePath = tailor.brand.brand_images[0].storage_path;
       tailor.brand.image = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${storagePath}`;
+      // Ensure brand_images are preserved for BrandCard component
+      tailor.brand.brand_images = tailor.brand.brand_images;
     }
     // If no brand_images, keep the existing brands.image field as fallback
     return tailor;

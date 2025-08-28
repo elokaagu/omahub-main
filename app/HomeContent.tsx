@@ -571,8 +571,14 @@ export default function HomeContent() {
                 isVerified: brand.is_verified || false,
                 category: brand.category,
                 // Always pass video fields if present, so BrandCard can prefer video over image
-                video_url: brand.video_url && brand.video_url.trim() !== "" ? brand.video_url : undefined,
-                video_thumbnail: brand.video_thumbnail && brand.video_thumbnail.trim() !== "" ? brand.video_thumbnail : undefined,
+                video_url:
+                  brand.video_url && brand.video_url.trim() !== ""
+                    ? brand.video_url
+                    : undefined,
+                video_thumbnail:
+                  brand.video_thumbnail && brand.video_thumbnail.trim() !== ""
+                    ? brand.video_thumbnail
+                    : undefined,
               };
             });
 

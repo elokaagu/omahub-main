@@ -117,7 +117,14 @@ export default function TailoredClient() {
     try {
       setLoading(true);
       const data = await getTailorsWithBrands(forceRefresh);
-      console.log("Fetched tailors data:", data);
+      console.log("🔍 Tailors data fetched:", data.map(t => ({
+        id: t.id,
+        title: t.title,
+        brandName: t.brand?.name,
+        brandImage: t.brand?.image,
+        hasBrandImages: t.brand?.brand_images?.length > 0,
+        brandImageCount: t.brand?.brand_images?.length || 0
+      })));
       setTailors(data);
 
       // Always use the static tailored hero image
@@ -266,21 +273,20 @@ export default function TailoredClient() {
                         <BrandCard
                           id={tailor.brand.id}
                           name={tailor.brand.name}
-                          image={tailor.image || (tailor.brand?.brand_images?.[0]?.storage_path ? 
-                            `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${tailor.brand.brand_images[0].storage_path}` : 
-                            "/placeholder-image.jpg")}
+                          image={tailor.brand.image || "/placeholder-image.jpg"}
                           category={tailor.brand.category}
                           location={tailor.brand.location}
                           isVerified={tailor.brand.is_verified}
                           video_url={tailor.brand.video_url}
                           video_thumbnail={tailor.brand.video_thumbnail}
+                          brand_images={tailor.brand.brand_images}
                           className="h-full"
                         />
                       ) : (
                         <OptimizedImage
                           src={
                             tailor.image ||
-                            "/lovable-uploads/020cb90b-2fee-4db4-a7ee-538515580ef2.png"
+                            "/placeholder-image.jpg"
                           }
                           alt={tailor.brand?.name || tailor.title || "Tailor"}
                           aspectRatio="3/4"
