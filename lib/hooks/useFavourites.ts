@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
+import { clearMalformedCookies } from "@/lib/utils/cookieUtils";
 
 interface Brand {
   id: string;
@@ -128,26 +129,47 @@ const useFavourites = () => {
 
         console.log("✅ Favourite added successfully to database");
         
-        // Fetch the complete item data and add to local state
-        try {
-          const response = await fetch(`/api/favourites`);
-          if (response.ok) {
-            const data = await response.json();
-            if (data.favourites) {
-              setFavourites(data.favourites);
-              console.log("🔄 Local state updated with fresh data from server:", {
-                newCount: data.favourites.length,
-                newFavourites: data.favourites.map((f: any) => ({ id: f.id, item_type: f.item_type }))
-              });
-            } else {
-              console.log("⚠️ No favourites array in response:", data);
+        // Optimistically update local state immediately for better UX
+        setFavourites((prev) => {
+          // Create a temporary favourite item for immediate UI update
+          const tempFavourite = {
+            id: itemId,
+            item_type: itemType,
+            // Add minimal required fields to prevent TypeScript errors
+            name: `Loading...`, // Will be replaced with real data
+            image: "/placeholder.png",
+            category: "Loading...",
+            location: "Loading...",
+            favourite_id: `temp-${Date.now()}`,
+          } as any;
+          
+          const updated = [...prev, tempFavourite];
+          console.log("🚀 Optimistic update - item added to local state:", {
+            beforeCount: prev.length,
+            afterCount: updated.length,
+            addedItem: { itemId, itemType }
+          });
+          return updated;
+        });
+        
+        // Then fetch fresh data from server in background
+        setTimeout(async () => {
+          try {
+            const response = await fetch(`/api/favourites`);
+            if (response.ok) {
+              const data = await response.json();
+              if (data.favourites) {
+                setFavourites(data.favourites);
+                console.log("🔄 Background refresh - local state updated with fresh data:", {
+                  newCount: data.favourites.length,
+                  newFavourites: data.favourites.map((f: any) => ({ id: f.id, item_type: f.item_type }))
+                });
+              }
             }
-          } else {
-            console.log("⚠️ Failed to fetch favourites after adding:", response.status);
+          } catch (error) {
+            console.log("⚠️ Background refresh failed, but optimistic update is active");
           }
-        } catch (error) {
-          console.log("⚠️ Could not refresh favourites from server, but item was added successfully:", error);
-        }
+        }, 100); // Small delay to ensure optimistic update renders first
         
         // Return true to indicate successful addition
         return true;
@@ -262,6 +284,8 @@ const useFavourites = () => {
   // Fetch favourites on component mount or user change
   useEffect(() => {
     if (user) {
+      // Clear any malformed cookies that might be causing parsing errors
+      clearMalformedCookies();
       fetchFavourites();
     }
   }, [user?.id]); // Only depend on user ID, not the entire fetchFavourites function
