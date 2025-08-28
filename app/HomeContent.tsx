@@ -357,7 +357,7 @@ export default function HomeContent() {
         )
           .slice(0, 8)
           .map((brand: any) => {
-                        return {
+            return {
               id: brand.id,
               name: brand.name,
               image: brand.brand_images?.[0]?.storage_path
@@ -742,7 +742,7 @@ export default function HomeContent() {
         )
           .slice(0, 8)
           .map((brand: any) => {
-                        return {
+            return {
               id: brand.id,
               name: brand.name,
               image: brand.brand_images?.[0]?.storage_path
@@ -1149,6 +1149,16 @@ export default function HomeContent() {
             }`}
           >
             <FadeIn delay={0.1}>
+              {process.env.NODE_ENV === "development" && (
+                <div className="text-xs text-gray-500 text-center mb-4">
+                  Debug: {category.title} has {category.brands.length} brands
+                  {category.brands.length > 0 && (
+                    <div>
+                      Sample brand: {category.brands[0].name} - Image: {category.brands[0].image}
+                    </div>
+                  )}
+                </div>
+              )}
               <FullWidthBrandRow
                 title={category.title}
                 subtitle={category.customCta}
