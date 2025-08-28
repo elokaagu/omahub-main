@@ -27,7 +27,7 @@ export class PipelineService {
       LEADS_CONFIG;
 
     if (!USE_INTELLIGENT_CALCULATION) {
-      return leads.reduce((sum, lead) => sum + (lead.estimated_value || 0), 0);
+      return leads.reduce((sum: number, lead: any) => sum + (lead.estimated_value || 0), 0);
     }
 
     let totalValue = 0;
@@ -92,7 +92,7 @@ export class PipelineService {
    * Calculate simple pipeline value (sum of estimated_value fields)
    */
   static calculateSimplePipelineValue(leads: Lead[]): number {
-    return leads.reduce((sum, lead) => sum + (lead.estimated_value || 0), 0);
+    return leads.reduce((sum: number, lead: any) => sum + (lead.estimated_value || 0), 0);
   }
 
   /**
@@ -105,7 +105,7 @@ export class PipelineService {
 
     // Group leads by status
     const leadsByStatus = leads.reduce(
-      (acc, lead) => {
+      (acc: Record<string, Lead[]>, lead: any) => {
         if (!acc[lead.status]) acc[lead.status] = [];
         acc[lead.status].push(lead);
         return acc;

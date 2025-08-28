@@ -61,7 +61,7 @@ export async function getPlatformStatistics(): Promise<PlatformStatistics> {
     );
 
     // Get the most recent update time
-    const lastUpdated = statistics.reduce((latest, stat) => {
+    const lastUpdated = statistics.reduce((latest: any, stat: any) => {
       return new Date(stat.last_updated) > new Date(latest)
         ? stat.last_updated
         : latest;

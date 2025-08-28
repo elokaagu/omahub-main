@@ -140,7 +140,7 @@ export class AdminEmailService {
     try {
       const supabase = createClient<Database>(supabaseUrl, supabaseKey);
       
-      const updates = Object.entries(config).map(([key, emails]) => ({
+      const updates = Object.entries(config).map(([key, emails]: [string, any]) => ({
         key: key,
         value: JSON.stringify(emails),
         updated_at: new Date().toISOString()

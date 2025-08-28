@@ -133,7 +133,7 @@ export async function GET(request: NextRequest) {
     const inquiriesByStatus: Record<string, number> = {};
 
     if (breakdownData) {
-      breakdownData.forEach((inquiry) => {
+      breakdownData.forEach((inquiry: any) => {
         // Count by type
         inquiriesByType[inquiry.inquiry_type] =
           (inquiriesByType[inquiry.inquiry_type] || 0) + 1;

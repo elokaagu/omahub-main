@@ -73,7 +73,7 @@ export function removeContractions(text: string): string {
   let formattedText = text;
 
   // Replace contractions with their full forms
-  Object.entries(contractions).forEach(([contraction, fullForm]) => {
+      Object.entries(contractions).forEach(([contraction, fullForm]: [string, string]) => {
     // Use word boundaries to avoid partial matches
     const regex = new RegExp(`\\b${contraction}\\b`, 'gi');
     formattedText = formattedText.replace(regex, fullForm);

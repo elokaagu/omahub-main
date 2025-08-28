@@ -134,7 +134,7 @@ export class AdminEmailServiceServer {
     try {
       const supabase = await createServerSupabaseClient();
       
-      const updates = Object.entries(config).map(([key, emails]) => ({
+      const updates = Object.entries(config).map(([key, emails]: [string, any]) => ({
         key: key,
         value: JSON.stringify(emails),
         updated_at: new Date().toISOString()

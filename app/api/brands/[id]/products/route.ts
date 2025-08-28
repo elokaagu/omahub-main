@@ -114,9 +114,9 @@ function calculatePricingStats(products: Product[]) {
     {} as Record<string, number[]>
   );
 
-  Object.entries(categoryGroups).forEach(([category, categoryPrices]) => {
+  Object.entries(categoryGroups).forEach(([category, categoryPrices]: [string, number[]]) => {
     categoryAverages[category] =
-      categoryPrices.reduce((sum: number, price: number) => sum + price, 0) /
+      categoryPrices.reduce((sum: number, price: any) => sum + price, 0) /
       categoryPrices.length;
   });
 
@@ -130,13 +130,13 @@ function calculatePricingStats(products: Product[]) {
 
   const customAvg =
     customProducts.length > 0
-      ? customProducts.reduce((sum, p) => sum + (p.sale_price || p.price), 0) /
+      ? customProducts.reduce((sum: number, p: any) => sum + (p.sale_price || p.price), 0) /
         customProducts.length
       : 0;
 
   const readyAvg =
     readyProducts.length > 0
-      ? readyProducts.reduce((sum, p) => sum + (p.sale_price || p.price), 0) /
+      ? readyProducts.reduce((sum: number, p: any) => sum + (p.sale_price || p.price), 0) /
         readyProducts.length
       : 0;
 
@@ -145,7 +145,7 @@ function calculatePricingStats(products: Product[]) {
     price_range: {
       min: prices[0],
       max: prices[prices.length - 1],
-      average: prices.reduce((sum, price) => sum + price, 0) / prices.length,
+      average: prices.reduce((sum: number, price: any) => sum + price, 0) / prices.length,
     },
     category_averages: categoryAverages,
     custom_vs_ready: {

@@ -43,7 +43,7 @@ export async function GET() {
     const allFields = new Set<string>();
     data.records?.forEach((record: any) => {
       if (record.fields) {
-        Object.keys(record.fields).forEach((field) => allFields.add(field));
+        Object.keys(record.fields).forEach((field: any) => allFields.add(field));
       }
     });
 

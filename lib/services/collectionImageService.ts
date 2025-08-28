@@ -143,7 +143,7 @@ export async function reorderCollectionImages(
   }
 
   // Update each image's display order
-  const updatePromises = imageOrders.map(({ id, display_order }) =>
+  const updatePromises = imageOrders.map(({ id, display_order }: { id: string; display_order: number }) =>
     supabase
       .from("catalogue_images")
       .update({ display_order })

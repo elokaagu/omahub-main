@@ -282,7 +282,7 @@ export async function getAnalyticsData(): Promise<AnalyticsData> {
       .filter((rating): rating is number => rating !== null && rating !== undefined);
     const averageRating =
       brandRatings.length > 0
-        ? brandRatings.reduce((acc, rating) => acc + rating, 0) /
+        ? brandRatings.reduce((acc: number, rating: any) => acc + rating, 0) /
           brandRatings.length
         : 0;
 
@@ -525,7 +525,7 @@ export async function getReviewTrendsData(): Promise<ReviewTrendsData[]> {
       const data = monthlyData[month] || { total: 0, ratings: [] };
       const averageRating =
         data.ratings.length > 0
-          ? data.ratings.reduce((acc, rating) => acc + rating, 0) /
+          ? data.ratings.reduce((acc: number, rating: any) => acc + rating, 0) /
             data.ratings.length
           : 0;
 
@@ -643,7 +643,7 @@ export async function getBrandOwnerAnalyticsData(
     // Calculate average rating from all reviews for owned brands
     const averageRating =
       reviews.length > 0
-        ? reviews.reduce((sum, review) => sum + (review.rating || 0), 0) /
+        ? reviews.reduce((sum: number, review: any) => sum + (review.rating || 0), 0) /
           reviews.length
         : 0;
 
@@ -813,7 +813,7 @@ export async function getBrandOwnerReviewTrends(
       reviews: month.reviews.length,
       avgRating:
         month.reviews.length > 0
-          ? month.reviews.reduce((sum, rating) => sum + rating, 0) /
+          ? month.reviews.reduce((sum: number, rating: any) => sum + rating, 0) /
             month.reviews.length
           : 0,
     }));

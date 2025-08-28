@@ -100,7 +100,7 @@ export const ecommerce = {
         ecommerce: {
           currency: items[0]?.currency || "USD",
           value: totalValue,
-          items: items.map((item) => ({
+          items: items.map((item: any) => ({
             item_id: item.item_id,
             item_name: item.item_name,
             price: item.price,
@@ -139,7 +139,7 @@ export const ecommerce = {
           currency: transaction.currency,
           tax: transaction.tax,
           shipping: transaction.shipping,
-          items: transaction.items.map((item) => ({
+          items: transaction.items.map((item: any) => ({
             item_id: item.item_id,
             item_name: item.item_name,
             price: item.price,
@@ -199,7 +199,7 @@ export const ecommerce = {
         event: "view_item_list",
         ecommerce: {
           item_list_name: list_name || "Product List",
-          items: items.map((item) => ({
+          items: items.map((item: any) => ({
             item_id: item.item_id,
             item_name: item.item_name,
             price: item.price,

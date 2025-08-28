@@ -79,7 +79,7 @@ export const supabaseHelpers = {
 
       // Apply filters
       if (options.filters) {
-        options.filters.forEach((filter) => {
+        options.filters.forEach((filter: any) => {
           query = query.filter(filter.column, filter.operator, filter.value);
         });
       }
