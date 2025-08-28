@@ -296,14 +296,14 @@ export default function TailoredClient() {
                             tailor.image ||
                             "/lovable-uploads/020cb90b-2fee-4db4-a7ee-538515580ef2.png"
                           }
-                          alt={tailor.title || "Tailor"}
+                          alt={tailor.brand?.name || tailor.title || "Tailor"}
                           aspectRatio="3/4"
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                           quality={90}
                           fill
                           onError={() => {
                             console.log(
-                              `Image failed to load for tailor: ${tailor.title}`
+                              `Image failed to load for tailor: ${tailor.brand?.name || tailor.title}`
                             );
                           }}
                         />
@@ -311,7 +311,7 @@ export default function TailoredClient() {
                     </div>
                     <div className="p-4 sm:p-6 text-center">
                       <h3 className="text-xl sm:text-2xl font-semibold text-black mb-1 group-hover:text-oma-plum transition-colors">
-                        {tailor.title || tailor.brand?.name}
+                        {tailor.brand?.name || tailor.title}
                       </h3>
                       <div className="text-oma-cocoa/70 text-sm sm:text-base mb-2">
                         {tailor.brand?.location}

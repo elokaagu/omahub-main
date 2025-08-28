@@ -349,7 +349,7 @@ export default function TailorsPage() {
                           </div>
                           <div className="flex-1 flex flex-col p-4">
                             <div className="font-canela text-xl text-black mb-1">
-                              {tailor.title}
+                              {tailor.brand.name || tailor.title}
                             </div>
                             <div className="text-sm text-black mb-1">
                               {tailor.brand.category}
@@ -407,7 +407,7 @@ export default function TailorsPage() {
                             <div className="flex-1 flex flex-col justify-between p-4">
                               <div>
                                 <div className="font-canela text-xl text-black mb-1">
-                                  {tailor.title}
+                                  {tailor.brand.name || tailor.title}
                                 </div>
                                 <div className="text-sm text-black mb-1">
                                   {tailor.brand.category}

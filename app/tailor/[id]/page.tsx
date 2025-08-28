@@ -134,7 +134,7 @@ export default function TailorPage() {
           <div className="relative aspect-[4/3] rounded-xl overflow-hidden">
             <LazyImage
               src={tailor.image}
-              alt={tailor.title}
+              alt={tailor.brand.name || tailor.title}
               fill
               className="object-cover"
               sizes="(max-width: 1024px) 100vw, 50vw"
@@ -148,7 +148,7 @@ export default function TailorPage() {
           <div className="space-y-6">
             <div>
               <h1 className="text-4xl font-canela text-black mb-2">
-                {tailor.title}
+                {tailor.brand.name || tailor.title}
               </h1>
               <div className="flex items-center gap-2 text-oma-cocoa/70 mb-4">
                 <MapPin className="w-4 h-4" />
