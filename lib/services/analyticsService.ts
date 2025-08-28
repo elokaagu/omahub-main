@@ -279,7 +279,7 @@ export async function getAnalyticsData(): Promise<AnalyticsData> {
     // Calculate average rating from brands
     const brandRatings = brands
       .map((brand: { rating?: number }) => brand.rating)
-      .filter((rating) => rating !== null && rating !== undefined);
+      .filter((rating): rating is number => rating !== null && rating !== undefined);
     const averageRating =
       brandRatings.length > 0
         ? brandRatings.reduce((acc, rating) => acc + rating, 0) /
