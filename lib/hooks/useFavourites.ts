@@ -135,11 +135,18 @@ const useFavourites = () => {
             const data = await response.json();
             if (data.favourites) {
               setFavourites(data.favourites);
-              console.log("🔄 Local state updated with fresh data from server");
+              console.log("🔄 Local state updated with fresh data from server:", {
+                newCount: data.favourites.length,
+                newFavourites: data.favourites.map((f: any) => ({ id: f.id, item_type: f.item_type }))
+              });
+            } else {
+              console.log("⚠️ No favourites array in response:", data);
             }
+          } else {
+            console.log("⚠️ Failed to fetch favourites after adding:", response.status);
           }
         } catch (error) {
-          console.log("⚠️ Could not refresh favourites from server, but item was added successfully");
+          console.log("⚠️ Could not refresh favourites from server, but item was added successfully:", error);
         }
         
         // Return true to indicate successful addition
@@ -227,6 +234,8 @@ const useFavourites = () => {
           item_type: f.item_type,
         })),
         currentFavourites: favourites,
+        searchingFor: { itemId, itemType },
+        foundMatch: favourites.find(f => f.id === itemId && f.item_type === itemType)
       });
       return result;
     },
