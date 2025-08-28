@@ -757,7 +757,10 @@ export async function getBrandNamesMap(): Promise<Map<string, string>> {
     }
 
     // Create and return the Map directly
-    const brandMap = new Map(data.map((brand: { id: string; name: string }) => [brand.id, brand.name]));
+    const brandMap = new Map<string, string>();
+    data.forEach((brand: { id: string; name: string }) => {
+      brandMap.set(brand.id, brand.name);
+    });
 
     return brandMap;
   } catch (err) {
