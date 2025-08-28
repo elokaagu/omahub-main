@@ -127,10 +127,7 @@ const useFavourites = () => {
         }
 
         console.log("✅ Favourite added successfully to database");
-
-        // Refresh from server to get the updated list
-        await fetchFavourites();
-
+        
         // Return true to indicate successful addition
         return true;
       } catch (err: any) {
@@ -170,14 +167,17 @@ const useFavourites = () => {
         console.log("✅ Favourite removed successfully from database");
 
         // Immediately update local state to reflect the removal
-        setFavourites((prev) =>
-          prev.filter(
+        setFavourites((prev) => {
+          const updated = prev.filter(
             (fav) => !(fav.id === itemId && fav.item_type === itemType)
-          )
-        );
-
-        // Also refresh from server to ensure consistency
-        await fetchFavourites();
+          );
+          console.log("🔄 Local state updated:", { 
+            beforeCount: prev.length, 
+            afterCount: updated.length,
+            removedItem: { itemId, itemType }
+          });
+          return updated;
+        });
         
         // Return true to indicate successful removal
         return true;

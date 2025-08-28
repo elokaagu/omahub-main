@@ -37,6 +37,11 @@ export function FavouriteButton({
   // Debug logging to see state changes
   console.log("🔍 FavouriteButton render:", { itemId, itemType, isFavourited });
 
+  // Force re-render when favourites state changes
+  useEffect(() => {
+    console.log("🔄 FavouriteButton useEffect - favourites state changed:", { itemId, itemType, isFavourited });
+  }, [isFavourited, itemId, itemType]);
+
   const handleToggleFavourite = async () => {
     try {
       setIsLoading(true);
