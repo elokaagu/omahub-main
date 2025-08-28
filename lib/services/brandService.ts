@@ -59,7 +59,8 @@ export async function getAllBrandsWithProductCounts(): Promise<
       .select(
         `
         *,
-        products(count)
+        products(count),
+        brand_images(*)
       `
       )
       .order("name");
@@ -136,7 +137,7 @@ export async function getAllBrands(
       }
       const { data, error } = await supabase
         .from("brands")
-        .select("*, video_url, video_thumbnail")
+        .select("*, video_url, video_thumbnail, brand_images(*)")
         .order("name");
       if (error) throw new Error(`Failed to fetch brands: ${error.message}`);
       if (!data || data.length === 0)
