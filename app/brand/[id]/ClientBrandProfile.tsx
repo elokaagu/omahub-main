@@ -519,15 +519,6 @@ export default function ClientBrandProfile({
               </div>
             </div>
 
-            {/* Favourite Button */}
-            <div className="mb-6">
-              <FavouriteButton
-                itemId={brandData.id}
-                itemType="brand"
-                className="w-full bg-oma-plum hover:bg-oma-plum/90 text-white min-h-[44px] text-sm sm:text-base transition-all duration-200"
-              />
-            </div>
-
             {brandData.priceRange && (
               <div className="mb-4">
                 <h4 className="text-sm font-semibold mb-1">Price Range</h4>
@@ -548,6 +539,15 @@ export default function ClientBrandProfile({
                 <p>{brandData.category}</p>
               </div>
             )}
+
+            {/* Favourite Button - moved to just above Contact Designer */}
+            <div className="mb-4">
+              <FavouriteButton
+                itemId={brandData.id}
+                itemType="brand"
+                className="w-full bg-oma-plum hover:bg-oma-plum/90 text-white min-h-[44px] text-sm sm:text-base transition-all duration-200"
+              />
+            </div>
 
             <Button
               onClick={handleOpenContactModal}
