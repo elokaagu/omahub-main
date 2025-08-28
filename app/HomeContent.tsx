@@ -356,19 +356,30 @@ export default function HomeContent() {
           })
         )
           .slice(0, 8)
-          .map((brand: any) => ({
-            id: brand.id,
-            name: brand.name,
-            image: brand.brand_images?.[0]?.storage_path
+          .map((brand: any) => {
+            const imageUrl = brand.brand_images?.[0]?.storage_path
               ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${brand.brand_images[0].storage_path}`
-              : "/placeholder-image.jpg",
-            location: brand.location?.split(",")[0] || "Unknown",
-            rating: brand.rating,
-            isVerified: brand.is_verified || false,
-            category: brand.category,
-            video_url: brand.video_url || undefined,
-            video_thumbnail: brand.video_thumbnail || undefined,
-          }));
+              : "/placeholder-image.jpg";
+            
+            console.log(`🖼️ Brand ${brand.name}:`, {
+              hasBrandImages: !!brand.brand_images,
+              brandImagesCount: brand.brand_images?.length || 0,
+              storagePath: brand.brand_images?.[0]?.storage_path,
+              finalImageUrl: imageUrl
+            });
+            
+            return {
+              id: brand.id,
+              name: brand.name,
+              image: imageUrl,
+              location: brand.location?.split(",")[0] || "Unknown",
+              rating: brand.rating,
+              isVerified: brand.is_verified || false,
+              category: brand.category,
+              video_url: brand.video_url || undefined,
+              video_thumbnail: brand.video_thumbnail || undefined,
+            };
+          });
 
         return {
           title: category.displayName,
@@ -739,19 +750,30 @@ export default function HomeContent() {
           })
         )
           .slice(0, 8)
-          .map((brand: any) => ({
-            id: brand.id,
-            name: brand.name,
-            image: brand.brand_images?.[0]?.storage_path
+          .map((brand: any) => {
+            const imageUrl = brand.brand_images?.[0]?.storage_path
               ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${brand.brand_images[0].storage_path}`
-              : "/placeholder-image.jpg",
-            location: brand.location?.split(",")[0] || "Unknown",
-            rating: brand.rating,
-            isVerified: brand.is_verified || false,
-            category: brand.category,
-            video_url: brand.video_url || undefined,
-            video_thumbnail: brand.video_thumbnail || undefined,
-          }));
+              : "/placeholder-image.jpg";
+            
+            console.log(`🖼️ Refresh Brand ${brand.name}:`, {
+              hasBrandImages: !!brand.brand_images,
+              brandImagesCount: brand.brand_images?.length || 0,
+              storagePath: brand.brand_images?.[0]?.storage_path,
+              finalImageUrl: imageUrl
+            });
+            
+            return {
+              id: brand.id,
+              name: brand.name,
+              image: imageUrl,
+              location: brand.location?.split(",")[0] || "Unknown",
+              rating: brand.rating,
+              isVerified: brand.is_verified || false,
+              category: brand.category,
+              video_url: brand.video_url || undefined,
+              video_thumbnail: brand.video_thumbnail || undefined,
+            };
+          });
         return {
           title: category.displayName,
           image: category.homepageImage!,
