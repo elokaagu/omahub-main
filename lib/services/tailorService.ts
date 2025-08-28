@@ -123,7 +123,7 @@ export async function getTailorsWithBrands(): Promise<
     }
     // If no brand_images, keep the existing brands.image field as fallback
     return tailor;
-  };
+  });
 
   return processedData;
 }
