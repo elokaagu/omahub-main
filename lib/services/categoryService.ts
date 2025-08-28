@@ -77,7 +77,7 @@ export async function getCategoryCounts(): Promise<Record<string, number>> {
     counts[cat.displayName] = 0;
   });
 
-  data.forEach((item) => {
+  (data as { categories?: string[] }[]).forEach((item) => {
     const brandCategories: string[] = Array.isArray(item.categories)
       ? item.categories
       : [];
