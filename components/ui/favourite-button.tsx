@@ -20,6 +20,7 @@ export function FavouriteButton({
 }: FavouriteButtonProps) {
   
   const [showModal, setShowModal] = useState(false);
+  const [modalType, setModalType] = useState<"add" | "remove">("add");
   const [isClosing, setIsClosing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -50,7 +51,8 @@ export function FavouriteButton({
         // We just attempted to add to favourites
         if (success) {
           // Successfully added
-          console.log("🎉 Showing success modal");
+          console.log("🎉 Showing add success modal");
+          setModalType("add");
           setShowModal(true);
           // Don't show toast when showing modal - modal is more prominent
         } else {
@@ -63,10 +65,20 @@ export function FavouriteButton({
         }
       } else {
         // We just removed from favourites
-        toast({
-          title: "Removed from favourites",
-          description: "Item has been removed from your favourites.",
-        });
+        if (success) {
+          // Successfully removed
+          console.log("🎉 Showing remove success modal");
+          setModalType("remove");
+          setShowModal(true);
+          // Don't show toast when showing modal - modal is more prominent
+        } else {
+          // Failed to remove
+          toast({
+            title: "Error",
+            description: "Failed to remove from favourites. Please try again.",
+            variant: "destructive",
+          });
+        }
       }
     } catch (error) {
       console.error("Error toggling favourite:", error);
@@ -128,15 +140,19 @@ export function FavouriteButton({
             </button>
             <div className="flex flex-col items-center text-center">
               <Heart
-                className="h-10 w-10 text-oma-plum mb-4 animate-bounce"
-                fill="currentColor"
+                className={`h-10 w-10 mb-4 animate-bounce ${
+                  modalType === "add" ? "text-oma-plum fill-current" : "text-red-500"
+                }`}
+                fill={modalType === "add" ? "currentColor" : "none"}
               />
               <h2 className="text-xl font-semibold mb-2 text-oma-plum">
-                Added to Favourites!
+                {modalType === "add" ? "Added to Favourites!" : "Removed from Favourites!"}
               </h2>
               <p className="text-gray-700 mb-4">
-                This item has been added to your favourites. You can view all
-                your favourites from your account menu.
+                {modalType === "add" 
+                  ? "This item has been added to your favourites. You can view all your favourites from your account menu."
+                  : "This item has been removed from your favourites."
+                }
               </p>
               <Button
                 onClick={handleCloseModal}

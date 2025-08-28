@@ -72,7 +72,10 @@ const useFavourites = () => {
       console.log("📧 Fetched favourites:", data.favourites?.length || 0);
       console.log("📧 Fetched favourites data:", data.favourites);
       setFavourites(data.favourites || []);
-      console.log("📧 State updated with favourites count:", data.favourites?.length || 0);
+      console.log(
+        "📧 State updated with favourites count:",
+        data.favourites?.length || 0
+      );
       setError(null);
     } catch (err) {
       console.error("❌ Error fetching favourites:", err);
@@ -84,7 +87,10 @@ const useFavourites = () => {
 
   // Add to favourites
   const addFavourite = useCallback(
-    async (itemId: string, itemType: "brand" | "catalogue" | "product"): Promise<boolean> => {
+    async (
+      itemId: string,
+      itemType: "brand" | "catalogue" | "product"
+    ): Promise<boolean> => {
       try {
         // Add debugging
         console.log("🔍 addFavourite called with:", {
@@ -104,24 +110,27 @@ const useFavourites = () => {
 
         if (!res.ok) {
           // Handle specific error cases
-          if (res.status === 400 && responseData.error === "Item already in favourites") {
+          if (
+            res.status === 400 &&
+            responseData.error === "Item already in favourites"
+          ) {
             // Item is already favourited, just refresh the list
             console.log("✅ Item already in favourites, refreshing list");
             await fetchFavourites();
             // Return false to indicate this was not a successful addition
             return false;
           }
-          
+
           throw new Error(
             responseData.error || `Failed to add favourite: ${res.status}`
           );
         }
 
         console.log("✅ Favourite added successfully to database");
-        
+
         // Refresh from server to get the updated list
         await fetchFavourites();
-        
+
         // Return true to indicate successful addition
         return true;
       } catch (err: any) {
@@ -143,14 +152,14 @@ const useFavourites = () => {
     async (itemId: string, itemType: "brand" | "catalogue" | "product") => {
       try {
         console.log("🔄 Removing favourite:", { itemId, itemType });
-        
+
         const res = await fetch(
           `/api/favourites?itemId=${itemId}&itemType=${itemType}`,
           {
             method: "DELETE",
           }
         );
-        
+
         if (!res.ok) {
           const errorData = await res.json().catch(() => ({}));
           throw new Error(
@@ -159,14 +168,19 @@ const useFavourites = () => {
         }
 
         console.log("✅ Favourite removed successfully from database");
-        
+
         // Immediately update local state to reflect the removal
-        setFavourites(prev => prev.filter(fav => 
-          !(fav.id === itemId && fav.item_type === itemType)
-        ));
-        
+        setFavourites((prev) =>
+          prev.filter(
+            (fav) => !(fav.id === itemId && fav.item_type === itemType)
+          )
+        );
+
         // Also refresh from server to ensure consistency
         await fetchFavourites();
+        
+        // Return true to indicate successful removal
+        return true;
       } catch (err: any) {
         console.error("❌ Error in removeFavourite:", err);
         toast({
@@ -174,6 +188,9 @@ const useFavourites = () => {
           description: err.message || "Failed to remove favourite",
           variant: "destructive",
         });
+        
+        // Return false on error
+        return false;
       }
     },
     [fetchFavourites, toast]
@@ -186,13 +203,16 @@ const useFavourites = () => {
         (favourite) =>
           favourite.id === itemId && favourite.item_type === itemType
       );
-      console.log("🔍 isFavourite check:", { 
-        itemId, 
-        itemType, 
-        result, 
+      console.log("🔍 isFavourite check:", {
+        itemId,
+        itemType,
+        result,
         favouritesCount: favourites.length,
-        favourites: favourites.map(f => ({ id: f.id, item_type: f.item_type })),
-        currentFavourites: favourites
+        favourites: favourites.map((f) => ({
+          id: f.id,
+          item_type: f.item_type,
+        })),
+        currentFavourites: favourites,
       });
       return result;
     },
@@ -206,8 +226,8 @@ const useFavourites = () => {
       itemType: "brand" | "catalogue" | "product"
     ): Promise<boolean> => {
       if (isFavourite(itemId, itemType)) {
-        await removeFavourite(itemId, itemType);
-        return true; // Successfully removed
+        const success = await removeFavourite(itemId, itemType);
+        return success; // Return the success status from removeFavourite
       } else {
         const success = await addFavourite(itemId, itemType);
         return success; // Return the success status from addFavourite
