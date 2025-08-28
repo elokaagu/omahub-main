@@ -597,7 +597,7 @@ export async function getBrandsByCategory(category: string): Promise<Brand[]> {
 
   const { data, error } = await supabase
     .from("brands")
-    .select("*")
+    .select("*, brand_images(*)")
     .eq("category", category);
 
   if (error) {
@@ -686,7 +686,7 @@ export async function searchBrands(query: string): Promise<Brand[]> {
 
   const { data, error } = await supabase
     .from("brands")
-    .select("*")
+    .select("*, brand_images(*)")
     .or(`name.ilike.%${query}%,description.ilike.%${query}%`);
 
   if (error) {
