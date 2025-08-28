@@ -64,7 +64,7 @@ export function SimpleFileUpload({
       const {
         data: { user },
         error: authError,
-      } = await supabase.auth.getUser();
+      } = await supabase().auth.getUser();
 
       if (authError || !user) {
         throw new Error("Please log in to upload files");
@@ -117,7 +117,7 @@ export function SimpleFileUpload({
       });
 
       // Upload file
-      const { data, error } = await supabase.storage
+      const { data, error } = await supabase().storage
         .from(bucket)
         .upload(filePath, file, {
           cacheControl: "3600",
@@ -158,7 +158,7 @@ export function SimpleFileUpload({
       }
 
       // Get the public URL
-      const { data: urlData } = supabase.storage
+      const { data: urlData } = supabase().storage
         .from(bucket)
         .getPublicUrl(data.path);
 
