@@ -151,7 +151,7 @@ export default function ProductsPage() {
       let mostPopular: ProductFavourites | null = null;
       let maxCount = 0;
 
-      Object.entries(productFavouritesMap).forEach(([productId, count]) => {
+      Object.entries(productFavouritesMap).forEach(([productId, count]: [string, number]) => {
         if (count > maxCount) {
           maxCount = count;
           mostPopular = { productId, count } as ProductFavourites;
