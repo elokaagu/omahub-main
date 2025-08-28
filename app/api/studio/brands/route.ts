@@ -146,6 +146,53 @@ export async function POST(request: NextRequest) {
       contact_email: newBrand.contact_email,
     });
 
+    // If the brand has an image, also create an entry in the brand_images table
+    if (newBrand.image) {
+      console.log(
+        "🖼️ Brand created with image, creating brand_images entry..."
+      );
+
+      try {
+        // Extract storage path from the image URL
+        const imageUrl = newBrand.image;
+        let storagePath = imageUrl;
+
+        // If it's a full Supabase URL, extract just the path
+        if (imageUrl.includes("/storage/v1/object/public/brand-assets/")) {
+          storagePath = imageUrl.split(
+            "/storage/v1/object/public/brand-assets/"
+          )[1];
+        }
+
+        console.log("📁 Extracted storage path:", storagePath);
+
+        // Create entry in brand_images table
+        const { data: newBrandImage, error: imageError } = await supabaseAdmin
+          .from("brand_images")
+          .insert({
+            brand_id: newBrand.id,
+            role: "cover",
+            storage_path: storagePath,
+          })
+          .select()
+          .single();
+
+        if (imageError) {
+          console.warn(
+            "⚠️ Warning: Failed to create brand_image entry:",
+            imageError
+          );
+        } else {
+          console.log("✅ Brand_image entry created:", newBrandImage);
+        }
+
+        console.log("✅ Brand_images table entry created");
+      } catch (imageSyncError) {
+        console.warn("⚠️ Warning: Image sync failed:", imageSyncError);
+        // Don't fail the entire operation for this
+      }
+    }
+
     // Auto-assign the new brand to all super admins
     console.log("🔄 Auto-assigning new brand to all super admins...");
 
@@ -184,14 +231,23 @@ export async function POST(request: NextRequest) {
 
     // If the brand has a currency, sync any existing products to use it
     if (newBrand.currency) {
-      console.log(`🔄 Brand created with currency ${newBrand.currency}, syncing any existing products...`);
-      
+      console.log(
+        `🔄 Brand created with currency ${newBrand.currency}, syncing any existing products...`
+      );
+
       try {
-        const syncResult = await syncProductCurrencies(newBrand.id, newBrand.currency);
+        const syncResult = await syncProductCurrencies(
+          newBrand.id,
+          newBrand.currency
+        );
         if (syncResult.success) {
-          console.log(`✅ Successfully synced ${syncResult.updatedCount} existing products to currency ${newBrand.currency}`);
+          console.log(
+            `✅ Successfully synced ${syncResult.updatedCount} existing products to currency ${newBrand.currency}`
+          );
         } else {
-          console.warn(`⚠️ Warning: Product currency sync failed: ${syncResult.error}`);
+          console.warn(
+            `⚠️ Warning: Product currency sync failed: ${syncResult.error}`
+          );
         }
       } catch (syncError) {
         console.warn("⚠️ Warning: Product currency sync failed:", syncError);

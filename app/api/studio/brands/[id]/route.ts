@@ -168,14 +168,16 @@ export async function PUT(
     // Update the brand
     console.log("💾 Updating brand in database...");
     console.log("📝 Full update data:", updateData);
-    
+
     // Filter out undefined/null values to avoid overwriting with null
     const cleanUpdateData = Object.fromEntries(
-      Object.entries(updateData).filter(([_, value]) => value !== undefined && value !== null)
+      Object.entries(updateData).filter(
+        ([_, value]) => value !== undefined && value !== null
+      )
     );
-    
+
     console.log("🧹 Cleaned update data:", cleanUpdateData);
-    
+
     const { data: updatedBrand, error: updateError } = await supabase
       .from("brands")
       .update({
@@ -192,7 +194,7 @@ export async function PUT(
         code: updateError.code,
         message: updateError.message,
         details: updateError.details,
-        hint: updateError.hint
+        hint: updateError.hint,
       });
       return NextResponse.json(
         { error: "Failed to update brand", details: updateError.message },
@@ -202,16 +204,85 @@ export async function PUT(
 
     console.log("✅ Brand updated successfully");
 
+    // If an image was updated, also update the brand_images table
+    if (updateData.image) {
+      console.log("🖼️ Image updated, syncing brand_images table...");
+
+      try {
+        // Extract storage path from the image URL
+        const imageUrl = updateData.image;
+        let storagePath = imageUrl;
+
+        // If it's a full Supabase URL, extract just the path
+        if (imageUrl.includes("/storage/v1/object/public/brand-assets/")) {
+          storagePath = imageUrl.split(
+            "/storage/v1/object/public/brand-assets/"
+          )[1];
+        }
+
+        console.log("📁 Extracted storage path:", storagePath);
+
+        // First, delete any existing brand_images entries for this brand
+        const { error: deleteError } = await supabase
+          .from("brand_images")
+          .delete()
+          .eq("brand_id", brandId);
+
+        if (deleteError) {
+          console.warn(
+            "⚠️ Warning: Failed to delete existing brand_images:",
+            deleteError
+          );
+        } else {
+          console.log("✅ Existing brand_images entries deleted");
+        }
+
+        // Then insert the new entry
+        const { data: newBrandImage, error: insertError } = await supabase
+          .from("brand_images")
+          .insert({
+            brand_id: brandId,
+            role: "cover",
+            storage_path: storagePath,
+          })
+          .select()
+          .single();
+
+        if (insertError) {
+          console.warn(
+            "⚠️ Warning: Failed to insert new brand_image:",
+            insertError
+          );
+        } else {
+          console.log("✅ New brand_image entry created:", newBrandImage);
+        }
+
+        console.log("✅ Brand_images table synchronized");
+      } catch (imageSyncError) {
+        console.warn("⚠️ Warning: Image sync failed:", imageSyncError);
+        // Don't fail the entire operation for this
+      }
+    }
+
     // If the brand currency changed, sync product currencies
     if (updateData.currency && updateData.currency !== currentBrand.currency) {
-      console.log(`🔄 Brand currency changed to ${updateData.currency}, syncing product currencies...`);
-      
+      console.log(
+        `🔄 Brand currency changed to ${updateData.currency}, syncing product currencies...`
+      );
+
       try {
-        const syncResult = await syncProductCurrencies(brandId, updateData.currency);
+        const syncResult = await syncProductCurrencies(
+          brandId,
+          updateData.currency
+        );
         if (syncResult.success) {
-          console.log(`✅ Successfully synced ${syncResult.updatedCount} products to currency ${updateData.currency}`);
+          console.log(
+            `✅ Successfully synced ${syncResult.updatedCount} products to currency ${updateData.currency}`
+          );
         } else {
-          console.warn(`⚠️ Warning: Product currency sync failed: ${syncResult.error}`);
+          console.warn(
+            `⚠️ Warning: Product currency sync failed: ${syncResult.error}`
+          );
           // Don't fail the entire operation for this
         }
       } catch (syncError) {
