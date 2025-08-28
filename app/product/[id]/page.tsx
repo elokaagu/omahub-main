@@ -132,7 +132,9 @@ export default function ProductPage() {
       title: product?.title,
       description: product?.description
     });
+    console.log("🔍 Current showOrderModal state:", showOrderModal);
     setShowOrderModal(true);
+    console.log("🔍 After setShowOrderModal(true), state should be true");
   };
 
   const productImages =
@@ -600,6 +602,10 @@ export default function ProductPage() {
       </div>
 
       {/* Tailored Order Modal */}
+      {(() => {
+        console.log("🔍 Modal render check:", { showOrderModal, hasProduct: !!product, hasBrand: !!brand });
+        return null;
+      })()}
       {showOrderModal && product && brand && (
         <TailoredOrderModal
           product={product}
