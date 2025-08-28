@@ -37,46 +37,21 @@ import { getAllCategoryNames } from "@/lib/data/unified-categories";
 import { formatBrandDescription } from "@/lib/utils/textFormatter";
 import { VideoUpload } from "@/components/ui/video-upload";
 
-// Add error boundary wrapper
-function ErrorBoundary({ children }: { children: React.ReactNode }) {
-  const [hasError, setHasError] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-
-  useEffect(() => {
-    const handleError = (error: ErrorEvent) => {
-      console.error("Error caught by boundary:", error);
-      setError(error.error);
-      setHasError(true);
-    };
-
-    window.addEventListener('error', handleError);
-    return () => window.removeEventListener('error', handleError);
-  }, []);
-
-  if (hasError) {
-    return (
-      <div className="p-8 text-center">
-        <h2 className="text-xl font-bold text-red-600 mb-4">Something went wrong</h2>
-        <p className="text-gray-600 mb-4">The page encountered an error while loading.</p>
-        {error && (
-          <details className="text-left bg-gray-100 p-4 rounded">
-            <summary className="cursor-pointer font-medium">Error Details</summary>
-            <pre className="text-sm text-red-600 mt-2">{error.message}</pre>
-            <pre className="text-sm text-gray-600 mt-1">{error.stack}</pre>
-          </details>
-        )}
-        <Button onClick={() => window.location.reload()} className="mt-4">
-          Reload Page
-        </Button>
-      </div>
-    );
-  }
-
-  return <>{children}</>;
+// Simple error handler for critical failures
+function handleCriticalError(error: Error) {
+  console.error("Critical error in brand creation:", error);
+  toast.error("Failed to load brand creation form. Please refresh the page.");
 }
 
 // Brand categories - now using unified categories (same as product)
-const CATEGORIES = getAllCategoryNames();
+const CATEGORIES = (() => {
+  try {
+    return getAllCategoryNames();
+  } catch (error) {
+    console.error("Failed to load categories:", error);
+    return ["Ready to Wear", "Accessories", "Footwear", "Jewelry", "Bags"];
+  }
+})();
 
 // Common currencies used across Africa
 const CURRENCIES = [
@@ -95,10 +70,17 @@ const CURRENCIES = [
 ];
 
 // Generate founding year options from current year backwards to 1950
-const FOUNDING_YEARS = Array.from(
-  { length: new Date().getFullYear() - 1950 + 1 },
-  (_, i) => (new Date().getFullYear() - i).toString()
-);
+const FOUNDING_YEARS = (() => {
+  try {
+    return Array.from(
+      { length: new Date().getFullYear() - 1950 + 1 },
+      (_, i) => (new Date().getFullYear() - i).toString()
+    );
+  } catch (error) {
+    console.error("Failed to generate founding years:", error);
+    return ["2024", "2023", "2022", "2021", "2020"];
+  }
+})();
 
 // Character limits
 const SHORT_DESCRIPTION_LIMIT = 150;
@@ -130,22 +112,31 @@ export default function CreateBrandPage() {
     video_thumbnail: "",
   });
 
-  // Add debugging
+  // Check if user has permission and redirect if not
   useEffect(() => {
-    console.log("🔍 CreateBrandPage mounted");
-    console.log("🔍 User:", user);
-    console.log("🔍 Categories loaded:", CATEGORIES.length);
-    console.log("🔍 Currencies loaded:", CURRENCIES.length);
-  }, [user]);
-
-  // Check if user has permission
-  useEffect(() => {
-    if (user && !user.role) {
-      console.error("❌ User has no role");
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+    
+    if (!user.role || !["admin", "super_admin", "brand_admin"].includes(user.role)) {
       toast.error("You don't have permission to create brands");
       router.push("/studio");
+      return;
     }
   }, [user, router]);
+
+  // Don't render the form until user is authenticated and authorized
+  if (!user || !user.role || !["admin", "super_admin", "brand_admin"].includes(user.role)) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-oma-plum mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -408,8 +399,7 @@ export default function CreateBrandPage() {
   const remainingNameChars = BRAND_NAME_LIMIT - formData.name.length;
 
   return (
-    <ErrorBoundary>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         <div className="flex items-center gap-4 mb-8">
           <Button variant="outline" size="icon" asChild className="h-8 w-8">
             <Link href="/studio/brands">
@@ -419,48 +409,7 @@ export default function CreateBrandPage() {
           <h1 className="text-3xl font-canela text-gray-900">Create New Brand</h1>
         </div>
 
-        {/* Debug Info in Development */}
-        {process.env.NODE_ENV === "development" && (
-          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm">
-            <p className="font-semibold text-blue-800 mb-2">
-              🔍 Debug Information:
-            </p>
-            <div className="space-y-1 text-blue-700">
-              <p>• User Authenticated: {user ? "✅ Yes" : "❌ No"}</p>
-              {user && (
-                <>
-                  <p>• User Email: {user.email}</p>
-                  <p>• User Role: {user.role}</p>
-                  <p>• User ID: {user.id}</p>
-                </>
-              )}
-              <p>
-                • Form Valid:{" "}
-                {formData.name &&
-                formData.description &&
-                formData.categories.length > 0 &&
-                formData.location &&
-                formData.image &&
-                formData.contact_email
-                  ? "✅ Yes"
-                  : "❌ No"}
-              </p>
-              <p>
-                • Missing Fields:{" "}
-                {[
-                  !formData.name && "Name",
-                  !formData.description && "Description",
-                  !formData.categories.length && "Categories",
-                  !formData.location && "Location",
-                  !formData.image && "Image",
-                  !formData.contact_email && "Contact Email",
-                ]
-                  .filter(Boolean)
-                  .join(", ") || "None"}
-              </p>
-            </div>
-          </div>
-        )}
+
 
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -831,6 +780,5 @@ export default function CreateBrandPage() {
           </div>
         </form>
       </div>
-    </ErrorBoundary>
-  );
+    );
 }
