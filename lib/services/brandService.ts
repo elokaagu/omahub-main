@@ -89,7 +89,7 @@ export async function getAllBrandsWithProductCounts(): Promise<
 
     // Map the data to include product_count and video fields
     const brandsWithCounts: (Brand & { product_count: number })[] = data.map(
-      (item: any) => ({
+      (item: { id?: string; name?: string; description?: string; long_description?: string; location?: string; price_range?: string; currency?: string; category?: string; categories?: string[]; rating?: number; is_verified?: boolean; image?: string; brand_images?: any[]; products?: any[]; video_url?: string; video_thumbnail?: string }) => ({
         id: item.id || `temp-id-${Math.random().toString(36).substring(2, 9)}`,
         name: item.name || "Brand Name",
         description: item.description || "Brand description",
@@ -145,7 +145,7 @@ export async function getAllBrands(
       if (error) throw new Error(`Failed to fetch brands: ${error.message}`);
       if (!data || data.length === 0)
         throw new Error("No brands found in the database");
-      return data.map((item: any) => {
+      return data.map((item: { id?: string; name?: string; description?: string; long_description?: string; location?: string; price_range?: string; currency?: string; category?: string; categories?: string[]; rating?: number; is_verified?: boolean; image?: string; brand_images?: any[]; video_url?: string; video_thumbnail?: string }) => {
         // Clean location data - remove trailing 'O' and '0' characters that might be data entry errors
         const cleanLocation = item.location
           ? item.location.replace(/[O0]+$/, "")
@@ -265,7 +265,7 @@ export async function getAllBrands(
     }
 
     // Map the data to Brand objects
-    const fullBrands: Brand[] = data.map((item: any) => {
+    const fullBrands: Brand[] = data.map((item: { id?: string; name?: string; description?: string; long_description?: string; location?: string; price_range?: string; currency?: string; category?: string; categories?: string[]; rating?: number; is_verified?: boolean; image?: string; brand_images?: any[]; video_url?: string; video_thumbnail?: string }) => {
       // Debug: Log the raw currency value from database
       console.log(
         `🔍 Brand ${item.name}: raw currency from DB = '${item.currency}'`
@@ -757,7 +757,7 @@ export async function getBrandNamesMap(): Promise<Map<string, string>> {
     }
 
     // Create and return the Map directly
-    const brandMap = new Map(data.map((brand: any) => [brand.id, brand.name]));
+    const brandMap = new Map(data.map((brand: { id: string; name: string }) => [brand.id, brand.name]));
 
     return brandMap;
   } catch (err) {
