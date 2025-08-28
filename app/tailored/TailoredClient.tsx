@@ -113,22 +113,23 @@ export default function TailoredClient() {
     return () => observer.disconnect();
   }, []);
 
-  useEffect(() => {
-    async function fetchTailors() {
-      try {
-        setLoading(true);
-        const data = await getTailorsWithBrands();
-        console.log("Fetched tailors data:", data);
-        setTailors(data);
+  const fetchTailors = async (forceRefresh: boolean = false) => {
+    try {
+      setLoading(true);
+      const data = await getTailorsWithBrands(forceRefresh);
+      console.log("Fetched tailors data:", data);
+      setTailors(data);
 
-        // Always use the static tailored hero image
-      } catch (err) {
-        console.error("Error fetching tailors:", err);
-        setError("Failed to load tailor information");
-      } finally {
-        setLoading(false);
-      }
+      // Always use the static tailored hero image
+    } catch (err) {
+      console.error("Error fetching tailors:", err);
+      setError("Failed to load tailor information");
+    } finally {
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
     fetchTailors();
   }, []);
 
@@ -217,9 +218,27 @@ export default function TailoredClient() {
       >
         <div className="w-full">
           <div className="text-center mb-8 sm:mb-12 px-4 sm:px-6">
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-canela text-black mb-4">
-              Featured Tailors
-            </h2>
+            <div className="flex items-center justify-center gap-4 mb-4">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-canela text-black">
+                Featured Tailors
+              </h2>
+              <Button
+                onClick={() => {
+                  console.log("🔄 Manually refreshing tailors data...");
+                  fetchTailors(true);
+                }}
+                variant="outline"
+                size="sm"
+                className="text-oma-plum border-oma-plum hover:bg-oma-plum/10"
+                disabled={loading}
+              >
+                {loading ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-oma-plum" />
+                ) : (
+                  "🔄"
+                )}
+              </Button>
+            </div>
             <p className="text-lg sm:text-xl text-black/70 max-w-2xl mx-auto">
               Explore our curated selection of Africa's most skilled tailors
             </p>

@@ -1,5 +1,20 @@
 import { supabase, Tailor, Brand } from "../supabase";
 
+// Cache for tailors data
+let tailorsCache: {
+  data: any[] | null;
+  timestamp: number;
+} | null = null;
+
+const TAILORS_CACHE_EXPIRY = 10 * 1000; // 10 seconds for fresh data
+
+/**
+ * Clear the tailors cache
+ */
+export function clearTailorsCache(): void {
+  tailorsCache = null;
+}
+
 /**
  * Fetch all tailors from the database
  */
@@ -78,7 +93,7 @@ export async function getTailorWithBrand(id: string): Promise<
 /**
  * Fetch tailors with brand information
  */
-export async function getTailorsWithBrands(): Promise<
+export async function getTailorsWithBrands(forceRefresh: boolean = false): Promise<
   (Tailor & {
     brand: {
       name: string;
@@ -96,6 +111,16 @@ export async function getTailorsWithBrands(): Promise<
     throw new Error("Supabase client not available");
   }
 
+  // Check cache first (unless force refresh is requested)
+  if (!forceRefresh && tailorsCache && tailorsCache.data) {
+    const now = Date.now();
+    if (now - tailorsCache.timestamp < TAILORS_CACHE_EXPIRY) {
+      console.log("📦 Using cached tailors data");
+      return tailorsCache.data;
+    }
+  }
+
+  console.log("🔄 Fetching fresh tailors data from database");
   const { data, error } = await supabase
     .from("tailors")
     .select(
@@ -111,6 +136,12 @@ export async function getTailorsWithBrands(): Promise<
     console.error("Error fetching tailors with brands:", error);
     throw error;
   }
+
+  // Update cache
+  tailorsCache = {
+    data: data || [],
+    timestamp: Date.now(),
+  };
 
   return data || [];
 }

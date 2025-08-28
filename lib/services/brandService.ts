@@ -1,5 +1,6 @@
 import { supabase, Brand, Review, Catalogue, Product } from "../supabase";
 import { getProfile, isAdmin } from "./authService";
+import { clearTailorsCache } from "./tailorService";
 
 // Cache configuration
 let brandsCache: {
@@ -511,7 +512,9 @@ export async function updateBrand(
 
   // Clear the brands cache to ensure fresh data after update
   clearBrandsCache();
-  console.log("🔄 Brands cache cleared after brand update");
+  // Also clear tailors cache since they depend on brand data
+  clearTailorsCache();
+  console.log("🔄 Brands and tailors cache cleared after brand update");
 
   return data;
 }

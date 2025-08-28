@@ -93,10 +93,12 @@
     transform: translate(-50%, -50%) !important;
     -webkit-transform: translate(-50%, -50%) !important;
     -ms-transform: translate(-50%, -50%) !important;
-    left: 50% !important;
-    top: 50% !important;
+    left: 50vw !important;
+    top: 50vh !important;
     position: fixed !important;
     will-change: transform;
+    max-height: 90vh !important;
+    overflow-y: auto !important;
   }
 
   /* Ensure modal stacking context works in Chrome */
@@ -111,8 +113,18 @@
   /* Force Chrome to respect positioning */
   @supports (-webkit-appearance: none) {
     [data-radix-dialog-content] {
-      left: 50% !important;
-      top: 50% !important;
+      left: 50vw !important;
+      top: 50vh !important;
+      transform: translate(-50%, -50%) !important;
+      -webkit-transform: translate(-50%, -50%) !important;
+    }
+  }
+
+  /* Additional Chrome-specific positioning */
+  @media screen and (-webkit-min-device-pixel-ratio: 0) {
+    [data-radix-dialog-content] {
+      left: 50vw !important;
+      top: 50vh !important;
       transform: translate(-50%, -50%) !important;
       -webkit-transform: translate(-50%, -50%) !important;
     }
@@ -474,7 +486,7 @@ html::-webkit-scrollbar,
     min-height: 44px;
     font-size: 16px; /* Prevents zoom on iOS */
   }
-  
+
   /* Enhanced mobile horizontal scrolling */
   .mobile-scroll-container {
     -webkit-overflow-scrolling: touch;
@@ -482,12 +494,12 @@ html::-webkit-scrollbar,
     scroll-snap-type: x mandatory;
     scroll-padding: 0 1rem;
   }
-  
+
   .mobile-scroll-item {
     scroll-snap-align: start;
     scroll-snap-stop: always;
   }
-  
+
   /* Show partial next item on mobile */
   .mobile-scroll-preview {
     overflow-x: auto;
