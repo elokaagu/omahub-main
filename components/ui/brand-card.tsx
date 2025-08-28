@@ -89,6 +89,9 @@ export function BrandCard({
         video_url,
         video_thumbnail,
         hasVideo: !!video_url,
+        videoUrlType: typeof video_url,
+        videoUrlLength: video_url?.length,
+        willShowVideo: !!video_url && video_url.trim() !== "",
         brand_images: brand_images?.length || 0,
       });
     }

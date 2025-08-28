@@ -73,12 +73,15 @@ export function VideoPlayer({
   // Debug logging
   useEffect(() => {
     if (process.env.NODE_ENV === "development") {
-      console.log("🎬 VideoPlayer:", {
+      console.log("🎬 VideoPlayer Debug:", {
         videoUrl,
         thumbnailUrl,
         fallbackImageUrl,
         alt,
         hasVideo: !!videoUrl,
+        videoUrlType: typeof videoUrl,
+        videoUrlLength: videoUrl?.length,
+        willShowVideo: !!videoUrl && videoUrl.trim() !== "",
       });
     }
   }, [videoUrl, thumbnailUrl, fallbackImageUrl, alt]);
