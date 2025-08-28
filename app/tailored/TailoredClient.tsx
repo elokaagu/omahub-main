@@ -276,7 +276,6 @@ export default function TailoredClient() {
                           isVerified={tailor.brand.is_verified}
                           video_url={tailor.brand.video_url}
                           video_thumbnail={tailor.brand.video_thumbnail}
-                          brand_images={tailor.brand.brand_images}
                           className="h-full"
                         />
                       ) : (
