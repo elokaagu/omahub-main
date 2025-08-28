@@ -15,7 +15,7 @@ let brandsCache: {
 };
 
 // Cache expiration time (restored to reasonable value)
-const CACHE_EXPIRY = 30 * 1000; // 30 seconds for stable performance
+const CACHE_EXPIRY = 0; // Temporarily set to 0 to force fresh data fetch
 
 // Define essential fields to reduce payload size
 const ESSENTIAL_BRAND_FIELDS = "*";

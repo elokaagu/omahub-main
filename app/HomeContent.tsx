@@ -10,7 +10,7 @@ import {
   StaggerContainer,
   StaggerItem,
 } from "@/app/components/ui/animations";
-import { getAllBrands, getBrandsByCategory } from "@/lib/services/brandService";
+import { getAllBrands, getBrandsByCategory, forceRefreshBrands } from "@/lib/services/brandService";
 import { getCollectionsWithBrands } from "@/lib/services/collectionService";
 import { getTailorsWithBrands } from "@/lib/services/tailorService";
 import { getProductsByCategories } from "@/lib/services/productSearchService";
@@ -489,11 +489,11 @@ export default function HomeContent() {
         setIsLoading(true);
         setError(null);
 
-        // Use optimized API for better performance
+        // Use optimized API for better performance - FORCE FRESH DATA
         const [brandsData, heroData, spotlightData, dynamicItems] =
           await Promise.all([
-            // Fetch all brands (always fresh, no cache)
-            getAllBrands(false, true),
+            // Force refresh brands data to get latest image URLs
+            forceRefreshBrands(),
             getActiveHeroSlides(),
             getActiveSpotlightContent(),
             generateDynamicFallbackItems(),
