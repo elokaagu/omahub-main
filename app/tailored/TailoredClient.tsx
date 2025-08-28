@@ -123,7 +123,7 @@ export default function TailoredClient() {
           title: t.title,
           brandName: t.brand?.name,
           brandImage: t.brand?.image,
-          hasBrandImages: t.brand?.brand_images?.length > 0,
+          hasBrandImages: (t.brand?.brand_images?.length || 0) > 0,
           brandImageCount: t.brand?.brand_images?.length || 0
         })));
         setTailors(data);
