@@ -38,6 +38,7 @@ export function FavouriteButton({
       setIsLoading(true);
       await toggleFavourite(itemId, itemType);
 
+      // Only show modal if we successfully added to favourites
       if (!isFavourited) {
         setShowModal(true);
         // Don't show toast when showing modal - modal is more prominent

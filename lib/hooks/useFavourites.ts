@@ -78,7 +78,7 @@ const useFavourites = () => {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user?.id]);
 
   // Add to favourites
   const addFavourite = useCallback(
@@ -101,9 +101,16 @@ const useFavourites = () => {
         console.log("🔍 API response data:", responseData);
 
         if (!res.ok) {
-          const errorData = await res.json().catch(() => ({}));
+          // Handle specific error cases
+          if (res.status === 400 && responseData.error === "Item already in favourites") {
+            // Item is already favourited, just refresh the list
+            console.log("✅ Item already in favourites, refreshing list");
+            await fetchFavourites();
+            return; // Don't show error, just return
+          }
+          
           throw new Error(
-            errorData.error || `Failed to add favourite: ${res.status}`
+            responseData.error || `Failed to add favourite: ${res.status}`
           );
         }
 
@@ -118,7 +125,7 @@ const useFavourites = () => {
         });
       }
     },
-    [fetchFavourites]
+    [fetchFavourites, toast]
   );
 
   // Remove from favourites
@@ -149,7 +156,7 @@ const useFavourites = () => {
         });
       }
     },
-    [fetchFavourites]
+    [fetchFavourites, toast]
   );
 
   // Check if an item is favourited
@@ -180,8 +187,10 @@ const useFavourites = () => {
 
   // Fetch favourites on component mount or user change
   useEffect(() => {
-    fetchFavourites();
-  }, [fetchFavourites]);
+    if (user) {
+      fetchFavourites();
+    }
+  }, [user?.id]); // Only depend on user ID, not the entire fetchFavourites function
 
   return {
     favourites,
