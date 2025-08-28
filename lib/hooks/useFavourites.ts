@@ -128,6 +128,20 @@ const useFavourites = () => {
 
         console.log("✅ Favourite added successfully to database");
         
+        // Fetch the complete item data and add to local state
+        try {
+          const response = await fetch(`/api/favourites`);
+          if (response.ok) {
+            const data = await response.json();
+            if (data.favourites) {
+              setFavourites(data.favourites);
+              console.log("🔄 Local state updated with fresh data from server");
+            }
+          }
+        } catch (error) {
+          console.log("⚠️ Could not refresh favourites from server, but item was added successfully");
+        }
+        
         // Return true to indicate successful addition
         return true;
       } catch (err: any) {
