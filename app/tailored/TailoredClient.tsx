@@ -282,7 +282,9 @@ export default function TailoredClient() {
                         <BrandCard
                           id={tailor.brand.id}
                           name={tailor.brand.name}
-                          image={tailor.image || tailor.brand.image}
+                          image={tailor.image || (tailor.brand?.brand_images?.[0]?.storage_path ? 
+                            `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${tailor.brand.brand_images[0].storage_path}` : 
+                            "/placeholder-image.jpg")}
                           category={tailor.brand.category}
                           location={tailor.brand.location}
                           isVerified={tailor.brand.is_verified}

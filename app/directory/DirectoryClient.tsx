@@ -157,7 +157,9 @@ export default function DirectoryClient() {
     const brandDisplayData = allBrands.map((brand) => ({
       id: brand.id || `temp-id-${Math.random().toString(36).substring(2, 9)}`,
       name: brand.name || "Unnamed Brand",
-      image: brand.image || "/placeholder.jpg",
+      image: brand.brand_images?.[0]?.storage_path ? 
+        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${brand.brand_images[0].storage_path}` : 
+        "/placeholder.jpg",
       category: brand.category || "",
       categories: brand.categories || [],
       location: brand.location ? brand.location.split(",")[0] : "Unknown",
@@ -175,7 +177,9 @@ export default function DirectoryClient() {
     let filtered = [...allBrands].map((brand) => ({
       id: brand.id || `temp-id-${Math.random().toString(36).substring(2, 9)}`,
       name: brand.name || "Unnamed Brand",
-      image: brand.image || "/placeholder.jpg",
+      image: brand.brand_images?.[0]?.storage_path ? 
+        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${brand.brand_images[0].storage_path}` : 
+        "/placeholder.jpg",
       category: brand.category || "",
       categories: brand.categories || [],
       location: brand.location ? brand.location.split(",")[0] : "Unknown",
@@ -242,7 +246,9 @@ export default function DirectoryClient() {
       const brandDisplayData = allBrands.map((brand) => ({
         id: brand.id || `temp-id-${Math.random().toString(36).substring(2, 9)}`,
         name: brand.name || "Unnamed Brand",
-        image: brand.image || "/placeholder.jpg",
+        image: brand.brand_images?.[0]?.storage_path ? 
+          `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${brand.brand_images[0].storage_path}` : 
+          "/placeholder.jpg",
         category: brand.category || "Ready to Wear",
         location: brand.location ? brand.location.split(",")[0] : "Unknown",
         isVerified: brand.is_verified || false,

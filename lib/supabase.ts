@@ -108,7 +108,7 @@ export type Brand = {
   categories?: string[];
   rating: number;
   is_verified: boolean;
-  image: string;
+  // image: string; // DEPRECATED: Use brand_images table instead
   website?: string;
   instagram?: string;
   whatsapp?: string;

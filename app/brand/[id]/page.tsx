@@ -118,7 +118,9 @@ export default function BrandPage() {
     category: brand.category,
     rating: brand.rating,
     isVerified: brand.is_verified,
-    image: brand.image,
+    image: brand.brand_images?.[0]?.storage_path ? 
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${brand.brand_images[0].storage_path}` : 
+      brand.image,
     website: brand.website,
     instagram: brand.instagram,
     whatsapp: brand.whatsapp,

@@ -272,7 +272,9 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
     const payload = {
       brand_id: brand.id,
       title: brand.name, // required by schema
-      image: brand.image, // required by schema
+              image: brand.brand_images?.[0]?.storage_path ? 
+          `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${brand.brand_images[0].storage_path}` : 
+          brand.image, // required by schema
       description: brand.description || brand.long_description || "",
       specialties: specialtiesArr,
       price_range: tailorPriceRange,

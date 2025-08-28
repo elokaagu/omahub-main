@@ -356,7 +356,9 @@ export default function HomeContent() {
           .map((brand: any) => ({
             id: brand.id,
             name: brand.name,
-            image: brand.image || "/placeholder-image.jpg",
+            image: brand.brand_images?.[0]?.storage_path ? 
+              `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${brand.brand_images[0].storage_path}` : 
+              "/placeholder-image.jpg",
             location: brand.location?.split(",")[0] || "Unknown",
             rating: brand.rating,
             isVerified: brand.is_verified || false,
@@ -541,7 +543,9 @@ export default function HomeContent() {
             .map((brand: any) => ({
               id: brand.id,
               name: brand.name,
-              image: brand.image || "/placeholder-image.jpg",
+              image: brand.brand_images?.[0]?.storage_path ? 
+                `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${brand.brand_images[0].storage_path}` : 
+                "/placeholder-image.jpg",
               location: brand.location?.split(",")[0] || "Unknown", // Take just the city name
               rating: brand.rating,
               isVerified: brand.is_verified || false,
@@ -733,7 +737,9 @@ export default function HomeContent() {
           .map((brand: any) => ({
             id: brand.id,
             name: brand.name,
-            image: brand.image || "/placeholder-image.jpg",
+            image: brand.brand_images?.[0]?.storage_path ? 
+              `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${brand.brand_images[0].storage_path}` : 
+              "/placeholder-image.jpg",
             location: brand.location?.split(",")[0] || "Unknown",
             rating: brand.rating,
             isVerified: brand.is_verified || false,

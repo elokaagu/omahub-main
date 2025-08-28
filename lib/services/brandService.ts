@@ -100,7 +100,7 @@ export async function getAllBrandsWithProductCounts(): Promise<
         categories: item.categories || [],
         rating: item.rating || 4.5,
         is_verified: item.is_verified || false,
-        image: item.image || "/placeholder-image.jpg",
+        // image: item.image || "/placeholder-image.jpg", // DEPRECATED: Use brand_images instead
         product_count: item.products?.[0]?.count || 0,
         // Include video fields
         video_url: item.video_url || undefined,
@@ -162,7 +162,7 @@ export async function getAllBrands(
           categories: item.categories || [],
           rating: item.rating || 4.5,
           is_verified: item.is_verified || false,
-          image: item.image || "/placeholder-image.jpg",
+          // image: item.image || "/placeholder-image.jpg", // DEPRECATED: Use brand_images instead
           video_url: item.video_url || undefined,
           video_thumbnail: item.video_thumbnail || undefined,
         };
@@ -275,7 +275,7 @@ export async function getAllBrands(
         categories: item.categories || [],
         rating: item.rating || 4.5,
         is_verified: item.is_verified || false,
-        image: item.image || "/placeholder-image.jpg",
+        // image: item.image || "/placeholder-image.jpg", // DEPRECATED: Use brand_images instead
         video_url: item.video_url || undefined,
         video_thumbnail: item.video_thumbnail || undefined,
         // Include the new normalized images

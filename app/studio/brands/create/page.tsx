@@ -171,7 +171,7 @@ export default function CreateBrandPage() {
         description: formData.description,
         categories: formData.categories,
         location: formData.location,
-        image: formData.image,
+        image: formData.image, // This will be updated to use brand_images after creation
       },
     });
 

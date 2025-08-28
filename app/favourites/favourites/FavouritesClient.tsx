@@ -80,7 +80,9 @@ export default function FavouritesClient() {
             key={brand.id}
             id={brand.id}
             name={brand.name}
-            image={brand.image || "/placeholder-brand.jpg"}
+            image={brand.brand_images?.[0]?.storage_path ? 
+          `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${brand.brand_images[0].storage_path}` : 
+          "/placeholder-brand.jpg"}
             category={brand.category}
             location={brand.location}
             isVerified={brand.is_verified}
