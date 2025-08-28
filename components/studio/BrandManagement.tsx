@@ -198,7 +198,7 @@ export default function BrandManagement({ className }: BrandManagementProps) {
       whatsapp: brand.whatsapp || "",
               image: brand.brand_images?.[0]?.storage_path ? 
           `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${brand.brand_images[0].storage_path}` : 
-          (brand.image || ""),
+          "",
     });
   };
 
@@ -467,7 +467,9 @@ export default function BrandManagement({ className }: BrandManagementProps) {
             <Card key={brand.id} className="overflow-hidden">
               <div className="aspect-video relative">
                 <AuthImage
-                  src={brand.image}
+                  src={brand.brand_images?.[0]?.storage_path ? 
+                    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${brand.brand_images[0].storage_path}` : 
+                    "/placeholder-image.jpg"}
                   alt={brand.name}
                   width={400}
                   height={225}
@@ -700,7 +702,9 @@ export default function BrandManagement({ className }: BrandManagementProps) {
                           await createTailor({
                             brand_id: editingBrand.id,
                             title: editingBrand.name,
-                            image: editingBrand.image,
+                            image: editingBrand.brand_images?.[0]?.storage_path ? 
+                              `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${editingBrand.brand_images[0].storage_path}` : 
+                              "",
                             description:
                               editingBrand.description ||
                               editingBrand.long_description ||

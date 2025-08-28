@@ -90,7 +90,9 @@ export default function ProductPage() {
 
       // Add cache-busting timestamp to ensure fresh data
       const timestamp = Date.now();
-      console.log(`🔄 Fetching product data at ${new Date(timestamp).toISOString()}`);
+      console.log(
+        `🔄 Fetching product data at ${new Date(timestamp).toISOString()}`
+      );
 
       const productData = await getProductById(productId);
       if (!productData) {
@@ -98,10 +100,10 @@ export default function ProductPage() {
         return;
       }
 
-      console.log('📦 Product data fetched:', {
+      console.log("📦 Product data fetched:", {
         title: productData.title,
         price: productData.price,
-        currency: productData.currency
+        currency: productData.currency,
       });
 
       const brandData = await getBrandById(productData.brand_id);
@@ -110,10 +112,10 @@ export default function ProductPage() {
         return;
       }
 
-      console.log('🏷️ Brand data fetched:', {
+      console.log("🏷️ Brand data fetched:", {
         name: brandData.name,
         currency: brandData.currency,
-        price_range: brandData.price_range
+        price_range: brandData.price_range,
       });
 
       setProduct(productData);
@@ -130,7 +132,7 @@ export default function ProductPage() {
     console.log("🔍 Opening modal with product:", {
       id: product?.id,
       title: product?.title,
-      description: product?.description
+      description: product?.description,
     });
     console.log("🔍 Current showOrderModal state:", showOrderModal);
     setShowOrderModal(true);
@@ -574,6 +576,7 @@ export default function ProductPage() {
                   price={product.sale_price || product.price}
                   brandId={product.brand_id}
                   brandName={brand.name}
+                  brandCurrency={brand.currency}
                   className="w-full py-3"
                 />
               )}
@@ -583,8 +586,6 @@ export default function ProductPage() {
                 itemType="product"
                 className="w-full"
               />
-              
-
             </div>
 
             {/* Brand Rating */}
@@ -603,7 +604,11 @@ export default function ProductPage() {
 
       {/* Tailored Order Modal */}
       {(() => {
-        console.log("🔍 Modal render check:", { showOrderModal, hasProduct: !!product, hasBrand: !!brand });
+        console.log("🔍 Modal render check:", {
+          showOrderModal,
+          hasProduct: !!product,
+          hasBrand: !!brand,
+        });
         return null;
       })()}
       {showOrderModal && product && brand && (

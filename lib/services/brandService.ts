@@ -322,7 +322,7 @@ function getSampleBrandsData(): Brand[] {
       category: "Ready to Wear",
       rating: 4.8,
       is_verified: true,
-      image: "/lovable-uploads/4a7c7e86-6cde-4d07-a246-a5aa4cb6fa51.png",
+      // image property removed - use brand_images table instead
       video_url: undefined,
       video_thumbnail: undefined,
     },
@@ -337,7 +337,7 @@ function getSampleBrandsData(): Brand[] {
       category: "Bridal",
       rating: 5.0,
       is_verified: true,
-      image: "/lovable-uploads/57cc6a40-0f0d-4a7d-8786-41f15832ebfb.png",
+      // image property removed - use brand_images table instead
       video_url: undefined,
       video_thumbnail: undefined,
     },
@@ -353,7 +353,7 @@ function getSampleBrandsData(): Brand[] {
       category: "Tailored",
       rating: 4.6,
       is_verified: true,
-      image: "/lovable-uploads/99ca757a-bed8-422e-b155-0b9d365b58e0.png",
+      // image property removed - use brand_images table instead
       video_url: undefined,
       video_thumbnail: undefined,
     },
@@ -368,7 +368,7 @@ function getSampleBrandsData(): Brand[] {
       category: "Accessories",
       rating: 4.7,
       is_verified: true,
-      image: "/lovable-uploads/25c3fe26-3fc4-43ef-83ac-6931a74468c0.png",
+      // image property removed - use brand_images table instead
       video_url: undefined,
       video_thumbnail: undefined,
     },

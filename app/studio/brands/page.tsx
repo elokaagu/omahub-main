@@ -309,9 +309,9 @@ export default function BrandsPage() {
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-md overflow-hidden bg-gray-100 flex-shrink-0">
-                        {brand.image && (
+                        {brand.brand_images?.[0]?.storage_path && (
                           <AuthImage
-                            src={brand.image}
+                            src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${brand.brand_images[0].storage_path}`}
                             alt={brand.name}
                             aspectRatio="square"
                             className="w-full h-full"

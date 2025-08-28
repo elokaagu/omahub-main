@@ -29,6 +29,7 @@ import {
   MessageSquare,
 } from "lucide-react";
 import { toast } from "sonner";
+import { formatPrice } from "@/lib/utils/priceFormatter";
 
 interface BrandRequestModalProps {
   isOpen: boolean;
@@ -39,6 +40,7 @@ interface BrandRequestModalProps {
   price: number;
   brandId: string;
   brandName: string;
+  brandCurrency?: string;
   size?: string;
   color?: string;
 }
@@ -52,6 +54,7 @@ export function BrandRequestModal({
   price,
   brandId,
   brandName,
+  brandCurrency,
   size,
   color,
 }: BrandRequestModalProps) {
@@ -182,7 +185,11 @@ export function BrandRequestModal({
                 </div>
                 <div>
                   <p className="font-medium text-gray-900">{productName}</p>
-                  <p className="text-sm text-gray-600">£{price.toFixed(2)}</p>
+                  <p className="text-sm text-gray-600">
+                    {price > 0
+                      ? formatPrice(price, brandCurrency || "£")
+                      : "Contact for pricing"}
+                  </p>
                   {size && (
                     <p className="text-sm text-gray-600">Size: {size}</p>
                   )}

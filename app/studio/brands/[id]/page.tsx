@@ -143,8 +143,12 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
 
   // Function to update form state from brand data
   const updateFormStateFromBrand = (brandData: Brand) => {
-    setImageUrl(brandData.image || "");
-    
+    setImageUrl(
+      brandData.brand_images?.[0]?.storage_path
+        ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${brandData.brand_images[0].storage_path}`
+        : ""
+    );
+
     // First, check if the brand has an explicit currency set
     if (brandData.currency && brandData.currency !== "NONE") {
       setCurrency(brandData.currency);
@@ -162,8 +166,7 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
         if (priceRangeMatch) {
           const [, symbol1, min, symbol2, max] = priceRangeMatch;
           const foundCurrency = CURRENCIES.find(
-            (c) =>
-              c.symbol === symbol1.trim() || c.symbol === symbol2.trim()
+            (c) => c.symbol === symbol1.trim() || c.symbol === symbol2.trim()
           );
           if (foundCurrency) {
             setCurrency(foundCurrency.code);
@@ -272,9 +275,9 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
     const payload = {
       brand_id: brand.id,
       title: brand.name, // required by schema
-              image: brand.brand_images?.[0]?.storage_path ? 
-          `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${brand.brand_images[0].storage_path}` : 
-          brand.image, // required by schema
+      image: brand.brand_images?.[0]?.storage_path
+        ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${brand.brand_images[0].storage_path}`
+        : "", // required by schema
       description: brand.description || brand.long_description || "",
       specialties: specialtiesArr,
       price_range: tailorPriceRange,
@@ -391,10 +394,9 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
     setImageUploading(false);
     setImageUploadProgress(0);
     if (brand) {
-      setBrand({
-        ...brand,
-        image: url,
-      });
+      // Note: image is now handled through brand_images table
+      // The imageUrl state is used for the form display
+      console.log("Image URL updated:", url);
     }
   };
 
@@ -456,10 +458,10 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
         video_url: brand.video_url,
         video_thumbnail: brand.video_thumbnail,
       };
-      
+
       console.log("🔄 Submitting brand update:", updateData);
       console.log("🔄 Brand ID:", brand.id);
-      
+
       // Use the new API endpoint that handles name propagation
       const response = await fetch(`/api/studio/brands/${brand.id}`, {
         method: "PUT",
@@ -470,8 +472,11 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
       });
 
       console.log("📡 Response status:", response.status);
-      console.log("📡 Response headers:", Object.fromEntries(response.headers.entries()));
-      
+      console.log(
+        "📡 Response headers:",
+        Object.fromEntries(response.headers.entries())
+      );
+
       const result = await response.json();
       console.log("📡 Response data:", result);
 
@@ -479,13 +484,15 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
         console.error("❌ API error response:", {
           status: response.status,
           statusText: response.statusText,
-          result: result
+          result: result,
         });
-        throw new Error(result.error || `Failed to update brand (${response.status})`);
+        throw new Error(
+          result.error || `Failed to update brand (${response.status})`
+        );
       }
 
       console.log("✅ Brand update successful:", result);
-      
+
       if (result.nameChanged) {
         toast.success(
           "Brand updated successfully! Name changes have been propagated across all connections."
@@ -493,7 +500,7 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
       } else {
         toast.success("Brand updated successfully");
       }
-      
+
       // Refresh the brand data to show updated values
       if (result.brand) {
         setBrand(result.brand);
@@ -653,13 +660,16 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
                         className="min-h-[200px]"
                       />
                       <div className="text-xs text-muted-foreground mt-1">
-                        💡 Tip: Contractions (isn't, it's, don't) will be automatically converted to formal language.
+                        💡 Tip: Contractions (isn't, it's, don't) will be
+                        automatically converted to formal language.
                       </div>
                     </div>
-                    
+
                     {/* Live Preview */}
                     <div className="space-y-2">
-                      <Label className="text-sm font-medium text-gray-700">Live Preview</Label>
+                      <Label className="text-sm font-medium text-gray-700">
+                        Live Preview
+                      </Label>
                       <div className="min-h-[200px] p-4 bg-gray-50 rounded-md border border-gray-200">
                         {brand.long_description ? (
                           <div className="text-sm text-gray-700 whitespace-pre-wrap">
@@ -672,7 +682,8 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
                         )}
                       </div>
                       <div className="text-xs text-muted-foreground">
-                        This shows how your description will appear on the frontend
+                        This shows how your description will appear on the
+                        frontend
                       </div>
                     </div>
                   </div>
@@ -743,25 +754,31 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
                         )}
                       </>
                     ) : (
-                      <>Current: {(() => {
-                        // Check if price range is essentially empty (like "$75 - $75" or similar)
-                        if (!brand.price_range) return "Explore brand for prices";
-                        
-                        // Check for patterns like "$X - $X" where min = max (likely placeholder)
-                        const priceMatch = brand.price_range.match(/^(.+?)(\d+(?:,\d+)*)\s*-\s*(.+?)(\d+(?:,\d+)*)$/);
-                        if (priceMatch) {
-                          const [, symbol1, min, symbol2, max] = priceMatch;
-                          const minNum = parseFloat(min.replace(/,/g, ""));
-                          const maxNum = parseFloat(max.replace(/,/g, ""));
-                          
-                          // If min and max are the same (like $75 - $75), treat as unspecified
-                          if (minNum === maxNum && minNum <= 100) {
+                      <>
+                        Current:{" "}
+                        {(() => {
+                          // Check if price range is essentially empty (like "$75 - $75" or similar)
+                          if (!brand.price_range)
                             return "Explore brand for prices";
+
+                          // Check for patterns like "$X - $X" where min = max (likely placeholder)
+                          const priceMatch = brand.price_range.match(
+                            /^(.+?)(\d+(?:,\d+)*)\s*-\s*(.+?)(\d+(?:,\d+)*)$/
+                          );
+                          if (priceMatch) {
+                            const [, symbol1, min, symbol2, max] = priceMatch;
+                            const minNum = parseFloat(min.replace(/,/g, ""));
+                            const maxNum = parseFloat(max.replace(/,/g, ""));
+
+                            // If min and max are the same (like $75 - $75), treat as unspecified
+                            if (minNum === maxNum && minNum <= 100) {
+                              return "Explore brand for prices";
+                            }
                           }
-                        }
-                        
-                        return brand.price_range;
-                      })()}</>
+
+                          return brand.price_range;
+                        })()}
+                      </>
                     )}
                   </p>
                 </div>
@@ -927,7 +944,11 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
                 onUploadComplete={handleImageUpload}
                 onUploadStart={handleImageUploadStart}
                 onUploadProgress={handleImageUploadProgress}
-                defaultValue={brand.image}
+                defaultValue={
+                  brand.brand_images?.[0]?.storage_path
+                    ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${brand.brand_images[0].storage_path}`
+                    : ""
+                }
                 bucket="brand-assets"
                 path="brands"
                 // Note: This component needs to be updated to support the new naming convention

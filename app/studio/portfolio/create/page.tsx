@@ -19,7 +19,13 @@ interface Brand {
   id: string;
   name: string;
   category: string;
-  image: string;
+  brand_images?: Array<{
+    id: string;
+    role: string;
+    storage_path: string;
+    created_at: string;
+    updated_at: string;
+  }>;
 }
 
 export default function CreatePortfolioPage() {

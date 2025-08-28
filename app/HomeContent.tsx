@@ -323,18 +323,21 @@ export default function HomeContent() {
     try {
       console.log("🔄 Refreshing all homepage data...");
       setIsLoading(true);
-      
+
       // Clear all caches that depend on brand data
-      const { clearAllBrandDependentCaches } = await import("@/lib/services/brandService");
+      const { clearAllBrandDependentCaches } = await import(
+        "@/lib/services/brandService"
+      );
       clearAllBrandDependentCaches();
-      
+
       // Refetch all data
-      const [brandsData, heroData, spotlightData, dynamicItems] = await Promise.all([
-        getAllBrands(false, true),
-        getActiveHeroSlides(),
-        getActiveSpotlightContent(),
-        generateDynamicFallbackItems(),
-      ]);
+      const [brandsData, heroData, spotlightData, dynamicItems] =
+        await Promise.all([
+          getAllBrands(false, true),
+          getActiveHeroSlides(),
+          getActiveSpotlightContent(),
+          generateDynamicFallbackItems(),
+        ]);
 
       // Process brands data and update state
       const updatedCategories = UNIFIED_CATEGORIES.map((category) => {
@@ -356,9 +359,9 @@ export default function HomeContent() {
           .map((brand: any) => ({
             id: brand.id,
             name: brand.name,
-            image: brand.brand_images?.[0]?.storage_path ? 
-              `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${brand.brand_images[0].storage_path}` : 
-              "/placeholder-image.jpg",
+            image: brand.brand_images?.[0]?.storage_path
+              ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${brand.brand_images[0].storage_path}`
+              : "/placeholder-image.jpg",
             location: brand.location?.split(",")[0] || "Unknown",
             rating: brand.rating,
             isVerified: brand.is_verified || false,
@@ -380,7 +383,7 @@ export default function HomeContent() {
       setHeroSlides(heroData);
       setSpotlightContent(spotlightData);
       setDynamicFallbackItems(dynamicItems);
-      
+
       console.log("✅ Homepage data refreshed successfully");
     } catch (error) {
       console.error("❌ Error refreshing homepage data:", error);
@@ -543,9 +546,9 @@ export default function HomeContent() {
             .map((brand: any) => ({
               id: brand.id,
               name: brand.name,
-              image: brand.brand_images?.[0]?.storage_path ? 
-                `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${brand.brand_images[0].storage_path}` : 
-                "/placeholder-image.jpg",
+              image: brand.brand_images?.[0]?.storage_path
+                ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${brand.brand_images[0].storage_path}`
+                : "/placeholder-image.jpg",
               location: brand.location?.split(",")[0] || "Unknown", // Take just the city name
               rating: brand.rating,
               isVerified: brand.is_verified || false,
@@ -672,7 +675,9 @@ export default function HomeContent() {
               ];
             usedBrandIds.add(randomBrand.id);
             newImages[occasion] =
-              randomBrand.image ||
+              (randomBrand.brand_images?.[0]?.storage_path
+                ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${randomBrand.brand_images[0].storage_path}`
+                : null) ||
               occasionFallbacks[occasion as keyof typeof occasionFallbacks];
             console.log(
               `✅ Using brand image for ${occasion}:`,
@@ -737,9 +742,9 @@ export default function HomeContent() {
           .map((brand: any) => ({
             id: brand.id,
             name: brand.name,
-            image: brand.brand_images?.[0]?.storage_path ? 
-              `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${brand.brand_images[0].storage_path}` : 
-              "/placeholder-image.jpg",
+            image: brand.brand_images?.[0]?.storage_path
+              ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${brand.brand_images[0].storage_path}`
+              : "/placeholder-image.jpg",
             location: brand.location?.split(",")[0] || "Unknown",
             rating: brand.rating,
             isVerified: brand.is_verified || false,

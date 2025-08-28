@@ -17,6 +17,14 @@ interface Brand {
   location: string;
   is_verified: boolean;
   rating: number;
+  // New normalized image structure
+  brand_images?: Array<{
+    id: string;
+    role: string;
+    storage_path: string;
+    created_at: string;
+    updated_at: string;
+  }>;
 }
 
 export default function FavouritesClient() {
@@ -80,9 +88,11 @@ export default function FavouritesClient() {
             key={brand.id}
             id={brand.id}
             name={brand.name}
-            image={brand.brand_images?.[0]?.storage_path ? 
-          `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${brand.brand_images[0].storage_path}` : 
-          "/placeholder-brand.jpg"}
+            image={
+              brand.brand_images?.[0]?.storage_path
+                ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${brand.brand_images[0].storage_path}`
+                : "/placeholder-brand.jpg"
+            }
             category={brand.category}
             location={brand.location}
             isVerified={brand.is_verified}

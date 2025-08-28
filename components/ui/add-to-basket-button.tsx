@@ -14,6 +14,7 @@ interface AddToBasketButtonProps {
   price: number;
   brandId: string;
   brandName: string;
+  brandCurrency?: string;
   size?: string;
   color?: string;
   className?: string;
@@ -34,6 +35,7 @@ export default function AddToBasketButton({
   price,
   brandId,
   brandName,
+  brandCurrency,
   size,
   color,
   className,
@@ -87,6 +89,7 @@ export default function AddToBasketButton({
         price={price}
         brandId={brandId}
         brandName={brandName}
+        brandCurrency={brandCurrency}
         size={size}
         color={color}
       />
