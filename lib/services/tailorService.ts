@@ -89,6 +89,7 @@ export async function getTailorsWithBrands(): Promise<
       image: string;
       video_url?: string;
       video_thumbnail?: string;
+      brand_images?: any[];
     };
   })[]
 > {
@@ -101,7 +102,7 @@ export async function getTailorsWithBrands(): Promise<
     .select(
       `
       *,
-      brand:brands(id, name, location, is_verified, category, image, video_url, video_thumbnail)
+      brand:brands(id, name, location, is_verified, category, image, video_url, video_thumbnail, brand_images(*))
     `
     )
     .order("updated_at", { ascending: false, nullsFirst: false })
@@ -112,7 +113,18 @@ export async function getTailorsWithBrands(): Promise<
     throw error;
   }
 
-  return data || [];
+  // Process the data to construct proper image URLs from brand_images
+  const processedData = (data || []).map(tailor => {
+    if (tailor.brand && tailor.brand.brand_images && tailor.brand.brand_images.length > 0) {
+      // Use the new brand_images relationship - this ensures we get the current studio images
+      const storagePath = tailor.brand.brand_images[0].storage_path;
+      tailor.brand.image = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${storagePath}`;
+    }
+    // If no brand_images, keep the existing brands.image field as fallback
+    return tailor;
+  });
+
+  return processedData;
 }
 
 /**
