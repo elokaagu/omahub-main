@@ -146,7 +146,22 @@ export async function GET() {
           case "product":
             const { data: product } = await supabase
               .from("products")
-              .select("id, title, image, brand_id, price, sale_price, category")
+              .select(`
+                id, 
+                title, 
+                image, 
+                brand_id, 
+                price, 
+                sale_price, 
+                category,
+                brand:brands(
+                  id,
+                  name,
+                  location,
+                  price_range,
+                  currency
+                )
+              `)
               .eq("id", favourite.item_id)
               .single();
             if (product) {
@@ -155,6 +170,7 @@ export async function GET() {
                 item_type: "product",
                 favourite_id: favourite.id,
                 price: product.sale_price || product.price,
+                brand: product.brand,
               };
             }
             break;
