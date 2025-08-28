@@ -15,7 +15,7 @@ let brandsCache: {
 };
 
 // Cache expiration time (restored to reasonable value)
-const CACHE_EXPIRY = 0; // Temporarily set to 0 to force fresh data fetch
+const CACHE_EXPIRY = 30 * 1000; // 30 seconds for stable performance
 
 // Define essential fields to reduce payload size
 const ESSENTIAL_BRAND_FIELDS = "*";
@@ -144,15 +144,18 @@ export async function getAllBrands(
         throw new Error("No brands found in the database");
       return data.map((item) => {
         // Clean location data - remove trailing 'O' and '0' characters that might be data entry errors
-        const cleanLocation = item.location ? item.location.replace(/[O0]+$/, '') : undefined;
+        const cleanLocation = item.location
+          ? item.location.replace(/[O0]+$/, "")
+          : undefined;
         if (item.location && cleanLocation !== item.location) {
-          console.log(`🧹 Cleaned location for ${item.name}: '${item.location}' → '${cleanLocation}'`);
+          console.log(
+            `🧹 Cleaned location for ${item.name}: '${item.location}' → '${cleanLocation}'`
+          );
         }
-        
 
-        
         return {
-          id: item.id || `temp-id-${Math.random().toString(36).substring(2, 9)}`,
+          id:
+            item.id || `temp-id-${Math.random().toString(36).substring(2, 9)}`,
           name: item.name || "Brand Name",
           description: item.description || "Brand description",
           long_description: item.long_description || "Long brand description",
@@ -221,7 +224,8 @@ export async function getAllBrands(
     // Fetch all brand data with their normalized images
     const { data, error } = await supabase
       .from("brands")
-      .select(`
+      .select(
+        `
         *,
         video_url,
         video_thumbnail,
@@ -232,7 +236,8 @@ export async function getAllBrands(
           created_at,
           updated_at
         )
-      `)
+      `
+      )
       .order("name");
 
     if (error) {
@@ -253,17 +258,23 @@ export async function getAllBrands(
       throw new Error("No brands found in the database");
     }
 
-        // Map the data to Brand objects
+    // Map the data to Brand objects
     const fullBrands: Brand[] = data.map((item) => {
       // Debug: Log the raw currency value from database
-      console.log(`🔍 Brand ${item.name}: raw currency from DB = '${item.currency}'`);
-      
-              // Clean location data - remove trailing 'O' and '0' characters that might be data entry errors
-        const cleanLocation = item.location ? item.location.replace(/[O0]+$/, '') : undefined;
+      console.log(
+        `🔍 Brand ${item.name}: raw currency from DB = '${item.currency}'`
+      );
+
+      // Clean location data - remove trailing 'O' and '0' characters that might be data entry errors
+      const cleanLocation = item.location
+        ? item.location.replace(/[O0]+$/, "")
+        : undefined;
       if (item.location && cleanLocation !== item.location) {
-        console.log(`🧹 Cleaned location for ${item.name}: '${item.location}' → '${cleanLocation}'`);
+        console.log(
+          `🧹 Cleaned location for ${item.name}: '${item.location}' → '${cleanLocation}'`
+        );
       }
-      
+
       return {
         id: item.id || `temp-id-${Math.random().toString(36).substring(2, 9)}`,
         name: item.name || "Brand Name",
@@ -427,13 +438,15 @@ export async function getBrandById(id: string): Promise<Brand | null> {
   if (!error && data) {
     // Clean location data - remove trailing 'O' and '0' characters that might be data entry errors
     if (data.location) {
-      const cleanLocation = data.location.replace(/[O0]+$/, '');
+      const cleanLocation = data.location.replace(/[O0]+$/, "");
       if (cleanLocation !== data.location) {
-        console.log(`🧹 Cleaned location for ${data.name}: '${data.location}' → '${cleanLocation}'`);
+        console.log(
+          `🧹 Cleaned location for ${data.name}: '${data.location}' → '${cleanLocation}'`
+        );
         data.location = cleanLocation;
       }
     }
-    
+
     console.log(`Successfully fetched brand: ${data.name} (${data.id})`);
     return data;
   }
@@ -471,9 +484,11 @@ export async function getBrandById(id: string): Promise<Brand | null> {
 
   // Clean location data - remove trailing 'O' and '0' characters that might be data entry errors
   if (data.location) {
-    const cleanLocation = data.location.replace(/[O0]+$/, '');
+    const cleanLocation = data.location.replace(/[O0]+$/, "");
     if (cleanLocation !== data.location) {
-      console.log(`🧹 Cleaned location for ${data.name}: '${data.location}' → '${cleanLocation}'`);
+      console.log(
+        `🧹 Cleaned location for ${data.name}: '${data.location}' → '${cleanLocation}'`
+      );
       data.location = cleanLocation;
     }
   }
@@ -527,7 +542,9 @@ export async function updateBrand(
   // Also clear tailors and collections cache since they depend on brand data
   clearTailorsCache();
   clearCollectionsCache();
-  console.log("🔄 Brands, tailors, and collections cache cleared after brand update");
+  console.log(
+    "🔄 Brands, tailors, and collections cache cleared after brand update"
+  );
 
   return data;
 }
@@ -749,7 +766,7 @@ export async function getTailorBrands(): Promise<Brand[]> {
   if (!supabase) {
     throw new Error("Supabase client not available");
   }
-  
+
   try {
     // Join brands with tailors on brand_id
     const { data, error } = await supabase
@@ -761,12 +778,12 @@ export async function getTailorBrands(): Promise<Brand[]> {
           (t: any) => t.brand_id
         ) || []
       );
-    
+
     if (error) {
       console.error("Error fetching tailor brands:", error);
       return [];
     }
-    
+
     return data || [];
   } catch (error) {
     console.error("Error in getTailorBrands:", error);
