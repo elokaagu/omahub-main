@@ -115,7 +115,7 @@ export async function getTailorsWithBrands(): Promise<
   }
 
   // Process the data to construct proper image URLs from brand_images
-  const processedData = (data || []).map(tailor => {
+  const processedData = (data || []).map((tailor: any) => {
     if (tailor.brand && tailor.brand.brand_images && tailor.brand.brand_images.length > 0) {
       // Use the new brand_images relationship - this ensures we get the current studio images
       const storagePath = tailor.brand.brand_images[0].storage_path;
