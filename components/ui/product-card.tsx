@@ -30,11 +30,6 @@ export function ProductCard({
   brand,
   className,
 }: ProductCardProps) {
-  const formattedPrice = formatProductPrice(
-    { price, sale_price },
-    brand
-  );
-
   return (
     <NavigationLink
       href={`/product/${id}`}
@@ -75,16 +70,6 @@ export function ProductCard({
             {brand.location && ` • ${brand.location}`}
           </p>
         )}
-        <div className="flex items-center gap-2">
-          <span className="text-lg font-semibold text-oma-plum">
-            {formattedPrice.displayPrice}
-          </span>
-          {formattedPrice.originalPrice && (
-            <span className="text-sm text-oma-cocoa/60 line-through">
-              {formattedPrice.originalPrice}
-            </span>
-          )}
-        </div>
       </div>
     </NavigationLink>
   );
