@@ -80,11 +80,7 @@ export default function FavouritesPage() {
                     {item.location}
                   </p>
                 )}
-                {item.price && (
-                  <p className="text-oma-plum font-medium">
-                    {item.price.toLocaleString()}
-                  </p>
-                )}
+                {/* Price removed from favourite products cards */}
               </div>
             </Link>
           ))}

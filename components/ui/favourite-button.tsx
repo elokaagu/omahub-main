@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Heart, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
@@ -33,17 +33,24 @@ export function FavouriteButton({
 
   const isFavourited = isFavourite(itemId, itemType);
 
+  // Debug logging to see state changes
+  console.log("🔍 FavouriteButton render:", { itemId, itemType, isFavourited });
+
   const handleToggleFavourite = async () => {
     try {
       setIsLoading(true);
       const wasFavourited = isFavourited; // Capture current state before toggle
+      console.log("🔄 Starting toggle:", { wasFavourited, itemId, itemType });
+      
       const success = await toggleFavourite(itemId, itemType);
+      console.log("✅ Toggle completed:", { success, wasFavourited });
 
       // Show appropriate feedback based on the action that was performed
       if (!wasFavourited) {
         // We just attempted to add to favourites
         if (success) {
           // Successfully added
+          console.log("🎉 Showing success modal");
           setShowModal(true);
           // Don't show toast when showing modal - modal is more prominent
         } else {
