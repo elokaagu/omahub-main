@@ -737,9 +737,29 @@ export default function LeadsTrackingDashboard({
 
       {/* Leads Analytics Section */}
       <div>
-        <h2 className="text-2xl font-canela text-oma-plum mb-6">
-          Leads & Bookings Analytics
-        </h2>
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-canela text-oma-plum">
+            Leads & Bookings Analytics
+          </h2>
+          <div className="flex items-center gap-2">
+            {analyticsLoading && (
+              <div className="flex items-center gap-2 text-sm text-oma-cocoa">
+                <div className="animate-spin h-4 w-4 border-2 border-oma-plum border-t-transparent rounded-full"></div>
+                Loading analytics...
+              </div>
+            )}
+            {!analyticsLoading && analytics && (
+              <div className="text-sm text-green-600">
+                ✓ Data loaded successfully
+              </div>
+            )}
+            {!analyticsLoading && !analytics && (
+              <div className="text-sm text-amber-600">
+                ⚠ No analytics data available
+              </div>
+            )}
+          </div>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card className="p-4 border-l-4 border-l-oma-plum border-oma-beige">
@@ -783,96 +803,78 @@ export default function LeadsTrackingDashboard({
             </p>
           </Card>
         </div>
+        
+        {/* No Data Message */}
+        {!analyticsLoading && analytics && analytics.total_leads === 0 && (
+          <Card className="p-4 border-l-4 border-l-amber-500 border-amber-200 bg-amber-50 mt-4">
+            <h3 className="text-sm font-medium text-amber-800 mb-2">
+              No Data Available
+            </h3>
+            <p className="text-sm text-amber-700">
+              The dashboard is showing zeros because there are no leads or bookings in the system yet. 
+              This is normal for a new installation. Data will appear here once leads are created or 
+              the leads tracking system is set up.
+            </p>
+          </Card>
+        )}
+        
+        {/* Analytics Error Display */}
+        {analyticsError && (
+          <Card className="p-4 border-l-4 border-l-red-500 border-red-200 bg-red-50 mt-4">
+            <h3 className="text-sm font-medium text-red-800 mb-2">
+              Analytics Error
+            </h3>
+            <p className="text-sm text-red-700 mb-3">
+              {analyticsError}
+            </p>
+            <Button 
+              onClick={refetchAnalytics} 
+              variant="outline" 
+              size="sm"
+              disabled={analyticsLoading}
+              className="text-red-700 border-red-300 hover:bg-red-100"
+            >
+              {analyticsLoading ? 'Retrying...' : 'Retry Analytics'}
+            </Button>
+          </Card>
+        )}
       </div>
 
-      {/* Charts Section */}
+      {/* Charts Section - REMOVED */}
+      {/* 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Leads by Source Chart */}
-        <Card className="p-6 border-oma-beige">
-          <h3 className="text-lg font-canela text-oma-plum mb-4">
-            Leads by Source
-          </h3>
-          <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={Object.entries(analytics?.leads_by_source || {}).map(
-                    ([name, value]) => ({
-                      name,
-                      value,
-                    })
-                  )}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  outerRadius={80}
-                  fill="#6B46C1"
-                  dataKey="value"
-                  label={({ name, value }) => `${name}: ${value}`}
-                >
-                  {Object.entries(analytics?.leads_by_source || {}).map(
-                    (entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={COLORS[index % COLORS.length]}
-                      />
-                    )
-                  )}
-                </Pie>
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "#FEF7ED",
-                    border: "1px solid #F3E8D7",
-                    borderRadius: "8px",
-                    color: "#7C2D12",
-                  }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
-
-        {/* Revenue Metrics */}
-        <Card className="p-6 border-oma-beige">
-          <h3 className="text-lg font-canela text-oma-plum mb-4">
-            Revenue Metrics
-          </h3>
-          <div className="space-y-4">
-            <div className="flex justify-between items-center p-3 bg-oma-cream/30 rounded border border-oma-beige">
-              <span className="text-sm font-medium text-oma-cocoa">
-                Total Booking Value
-              </span>
-              <span className="text-lg font-canela text-oma-plum">
-                {formatCurrency(analytics?.total_booking_value || 0)}
-              </span>
-            </div>
-            <div className="flex justify-between items-center p-3 bg-oma-cream/30 rounded border border-oma-beige">
-              <span className="text-sm font-medium text-oma-cocoa">
-                Average Booking Value
-              </span>
-              <span className="text-lg font-canela text-oma-plum">
-                {formatCurrency(analytics?.average_booking_value || 0)}
-              </span>
-            </div>
-            <div className="flex justify-between items-center p-3 bg-oma-cream/30 rounded border border-oma-beige">
-              <span className="text-sm font-medium text-oma-cocoa">
-                Total Commission Earned
-              </span>
-              <span className="text-lg font-canela text-green-600">
-                {formatCurrency(analytics?.total_commission_earned || 0)}
-              </span>
-            </div>
-            <div className="flex justify-between items-center p-3 bg-oma-cream/30 rounded border border-oma-beige">
-              <span className="text-sm font-medium text-oma-cocoa">
-                This Month Revenue
-              </span>
-              <span className="text-lg font-canela text-blue-600">
-                {formatCurrency(analytics?.this_month_revenue || 0)}
-              </span>
-            </div>
-          </div>
-        </Card>
+        <div>Leads by Source Chart - REMOVED</div>
+        <div>Revenue Metrics - REMOVED</div>
       </div>
+      */}
+
+      {/* Debug Information (Development Only) */}
+      {process.env.NODE_ENV === "development" && (
+        <Card className="p-6 border-oma-beige mb-8">
+          <h3 className="text-lg font-canela text-oma-plum mb-4">
+            Debug Information
+          </h3>
+          <div className="space-y-2 text-sm">
+            <p><strong>User Role:</strong> {user?.role || 'Unknown'}</p>
+            <p><strong>Analytics Loading:</strong> {analyticsLoading ? 'Yes' : 'No'}</p>
+            <p><strong>Analytics Error:</strong> {analyticsError || 'None'}</p>
+            <p><strong>Total Leads:</strong> {analytics?.total_leads || 0}</p>
+            <p><strong>Leads Data:</strong> {leads?.length || 0} leads loaded</p>
+            <p><strong>Owned Brands:</strong> {effectiveOwnedBrands.length}</p>
+            <p><strong>API Status:</strong> {analytics ? 'Data loaded' : 'No data'}</p>
+          </div>
+          <div className="mt-4">
+            <Button 
+              onClick={refetchAnalytics} 
+              variant="outline" 
+              size="sm"
+              disabled={analyticsLoading}
+            >
+              {analyticsLoading ? 'Refreshing...' : 'Refresh Analytics'}
+            </Button>
+          </div>
+        </Card>
+      )}
 
       {/* Top Performing Brands (Super Admin Only) */}
       {isSuperAdmin &&
