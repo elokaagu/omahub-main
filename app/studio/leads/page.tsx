@@ -668,7 +668,7 @@ export default function StudioLeadsPage() {
           <Card>
             <CardContent className="pt-6">
               <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">
+                <div className="text-2xl font-bold text-oma-plum">
                   {filteredLeads.filter((l) => l.status === "converted").length}
                 </div>
                 <p className="text-sm text-oma-cocoa">Converted</p>
@@ -679,7 +679,7 @@ export default function StudioLeadsPage() {
           <Card>
             <CardContent className="pt-6">
               <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">
+                <div className="text-2xl font-bold text-oma-plum">
                   {
                     filteredLeads.filter((l) =>
                       ["new", "contacted", "qualified"].includes(l.status)
