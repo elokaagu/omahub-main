@@ -29,7 +29,7 @@ import {
   formatPriceRange,
   formatNumberWithCommas,
 } from "@/lib/utils/priceFormatter";
-import { extractCurrencyFromPriceRange } from "@/lib/utils/currencySync";
+import { getCurrencyByCode } from "@/lib/utils/currencyUtils";
 import { getAllCategoryNames } from "@/lib/data/unified-categories";
 import { formatBrandDescription } from "@/lib/utils/textFormatter";
 
@@ -138,17 +138,40 @@ export default function CreateBrandPage() {
 
     // Auto-detect currency from price range ONLY if no currency is explicitly selected
     if (name === "price_range" && value && !formData.currency) {
-      const detectedCurrency = extractCurrencyFromPriceRange(value);
-      if (detectedCurrency) {
-        console.log(
-          `🔄 Auto-detected currency: ${detectedCurrency} from price range (no explicit currency set)`
-        );
-        setFormData((prev) => ({
-          ...prev,
-          [name]: value,
-          currency: detectedCurrency,
-        }));
-        return;
+      // Extract currency symbol from price range and convert to currency code
+      const currencySymbol = value.match(/^([^\d,]+)/)?.[1]?.trim();
+      if (currencySymbol) {
+        const detectedCurrency = (() => {
+          const currencyObj = getCurrencyByCode(currencySymbol);
+          if (currencyObj) return currencyObj.code;
+          
+          // Fallback mapping for common symbols
+          if (currencySymbol === "₦") return "NGN";
+          if (currencySymbol === "KSh") return "KES";
+          if (currencySymbol === "GHS") return "GHS";
+          if (currencySymbol === "R") return "ZAR";
+          if (currencySymbol === "EGP") return "EGP";
+          if (currencySymbol === "MAD") return "MAD";
+          if (currencySymbol === "TND") return "TND";
+          if (currencySymbol === "XOF") return "XOF";
+          if (currencySymbol === "DA") return "DZD";
+          if (currencySymbol === "$") return "USD";
+          if (currencySymbol === "£") return "GBP";
+          if (currencySymbol === "€") return "EUR";
+          return null;
+        })();
+        
+        if (detectedCurrency) {
+          console.log(
+            `🔄 Auto-detected currency: ${detectedCurrency} from price range (no explicit currency set)`
+          );
+          setFormData((prev) => ({
+            ...prev,
+            [name]: value,
+            currency: detectedCurrency,
+          }));
+          return;
+        }
       }
     }
 
