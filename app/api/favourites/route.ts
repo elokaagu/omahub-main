@@ -151,7 +151,11 @@ export async function POST(request: NextRequest) {
     }
 
     const userId = session.user.id;
-    const { item_id, item_type } = await request.json();
+    const body = await request.json();
+
+    // Handle both parameter naming conventions
+    const item_id = body.item_id || body.itemId;
+    const item_type = body.item_type || body.itemType;
 
     if (!item_id || !item_type) {
       return NextResponse.json(
