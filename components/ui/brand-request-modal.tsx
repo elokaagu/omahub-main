@@ -109,13 +109,11 @@ export function BrandRequestModal({
   const validateForm = () => {
     const errors = [];
     
-    // Required fields
+    // Required fields (only essential contact info)
     if (!formData.full_name?.trim()) errors.push("Full name is required");
     if (!formData.email?.trim()) errors.push("Email address is required");
-    if (!formData.address_line_1?.trim()) errors.push("Address is required");
-    if (!formData.city?.trim()) errors.push("City is required");
-    if (!formData.postal_code?.trim()) errors.push("Postal code is required");
-    if (!formData.country?.trim()) errors.push("Country is required");
+    
+    // Address fields are now optional - no validation required
     
     // Email format validation
     if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
@@ -445,7 +443,7 @@ export function BrandRequestModal({
                 htmlFor="address_line_1"
                 className="text-sm font-medium text-oma-cocoa"
               >
-                Address Line 1 *
+                Address Line 1
               </Label>
               <div className="relative">
                 <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
@@ -457,7 +455,6 @@ export function BrandRequestModal({
                   onChange={(e) =>
                     handleInputChange("address_line_1", e.target.value)
                   }
-                  required
                 />
               </div>
             </div>
@@ -468,7 +465,7 @@ export function BrandRequestModal({
                   htmlFor="city"
                   className="text-sm font-medium text-oma-cocoa"
                 >
-                  City *
+                  City
                 </Label>
                 <Input
                   id="city"
@@ -476,7 +473,6 @@ export function BrandRequestModal({
                   className="border-oma-beige focus:border-oma-plum focus:ring-oma-plum"
                   value={formData.city}
                   onChange={(e) => handleInputChange("city", e.target.value)}
-                  required
                 />
               </div>
               <div>
@@ -502,7 +498,7 @@ export function BrandRequestModal({
                   htmlFor="postal_code"
                   className="text-sm font-medium text-oma-cocoa"
                 >
-                  Postal Code *
+                  Postal Code
                 </Label>
                 <Input
                   id="postal_code"
@@ -512,7 +508,6 @@ export function BrandRequestModal({
                   onChange={(e) =>
                     handleInputChange("postal_code", e.target.value)
                   }
-                  required
                 />
               </div>
               <div>
@@ -520,7 +515,7 @@ export function BrandRequestModal({
                   htmlFor="country"
                   className="text-sm font-medium text-oma-cocoa"
                 >
-                  Country *
+                  Country
                 </Label>
                 <Select
                   value={formData.country}
@@ -625,6 +620,7 @@ export function BrandRequestModal({
                   <p><strong>Preferred Color:</strong> {formData.preferred_color || 'Not entered'}</p>
                   <p><strong>Full Name:</strong> {formData.full_name || 'Not entered'}</p>
                   <p><strong>Email:</strong> {formData.email || 'Not entered'}</p>
+                  <p className="text-blue-600"><strong>Note:</strong> Address fields are now optional</p>
                 </div>
                 
                 {/* Test Buttons */}
