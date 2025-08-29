@@ -65,6 +65,8 @@ export function TailoredOrderModal({
   // Form state
   const [measurements, setMeasurements] = useState<CustomerMeasurements>({
     fit_preference: "regular",
+    length_preference: "regular",
+    sleeve_preference: "long",
   });
 
   const [deliveryAddress, setDeliveryAddress] = useState<DeliveryAddress>({
@@ -87,7 +89,7 @@ export function TailoredOrderModal({
     if (isOpen) {
       setOrderComplete(false);
       setCurrentTab("measurements");
-      setDeliveryAddress(prev => ({
+      setDeliveryAddress((prev) => ({
         ...prev,
         email: user?.email || "",
       }));
@@ -238,9 +240,11 @@ export function TailoredOrderModal({
                 </div>
                 <div className="text-right">
                   <p className="text-2xl font-bold text-oma-plum">
-                    {formatProductPrice(product, {
-                      price_range: brand.price_range,
-                    }).displayPrice}
+                    {
+                      formatProductPrice(product, {
+                        price_range: brand.price_range,
+                      }).displayPrice
+                    }
                   </p>
                   <Badge variant="secondary" className="mt-1">
                     Custom Order
@@ -250,7 +254,11 @@ export function TailoredOrderModal({
             </div>
 
             {/* Tabs */}
-            <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
+            <Tabs
+              value={currentTab}
+              onValueChange={setCurrentTab}
+              className="w-full"
+            >
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="measurements">Measurements</TabsTrigger>
                 <TabsTrigger value="contact">Contact</TabsTrigger>
@@ -282,22 +290,39 @@ export function TailoredOrderModal({
                           <SelectValue placeholder="Select fit preference" />
                         </SelectTrigger>
                         <SelectContent>
+                          <SelectItem value="very-loose">Very Loose</SelectItem>
                           <SelectItem value="loose">Loose</SelectItem>
+                          <SelectItem value="slightly-loose">Slightly Loose</SelectItem>
                           <SelectItem value="regular">Regular</SelectItem>
+                          <SelectItem value="slightly-fitted">Slightly Fitted</SelectItem>
                           <SelectItem value="fitted">Fitted</SelectItem>
+                          <SelectItem value="slim">Slim</SelectItem>
                           <SelectItem value="tight">Tight</SelectItem>
+                          <SelectItem value="very-tight">Very Tight</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="size">Preferred Size</Label>
-                      <Input
-                        id="size"
+                      <Select
                         value={selectedSize}
-                        onChange={(e) => setSelectedSize(e.target.value)}
-                        placeholder="e.g., M, L, XL, or custom"
-                      />
+                        onValueChange={setSelectedSize}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select your preferred size" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="xs">XS (Extra Small)</SelectItem>
+                          <SelectItem value="s">S (Small)</SelectItem>
+                          <SelectItem value="m">M (Medium)</SelectItem>
+                          <SelectItem value="l">L (Large)</SelectItem>
+                          <SelectItem value="xl">XL (Extra Large)</SelectItem>
+                          <SelectItem value="xxl">XXL (2XL)</SelectItem>
+                          <SelectItem value="xxxl">XXXL (3XL)</SelectItem>
+                          <SelectItem value="custom">Custom Measurements</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
 
                     <div className="space-y-2">
@@ -311,7 +336,49 @@ export function TailoredOrderModal({
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="customer_notes">Special Requirements</Label>
+                      <Label htmlFor="length_preference">Length Preference</Label>
+                      <Select
+                        value={measurements.length_preference || ""}
+                        onValueChange={(value) =>
+                          handleMeasurementChange("length_preference", value)
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select length preference" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="short">Short</SelectItem>
+                          <SelectItem value="regular">Regular</SelectItem>
+                          <SelectItem value="long">Long</SelectItem>
+                          <SelectItem value="extra-long">Extra Long</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="sleeve_preference">Sleeve Preference</Label>
+                      <Select
+                        value={measurements.sleeve_preference || ""}
+                        onValueChange={(value) =>
+                          handleMeasurementChange("sleeve_preference", value)
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select sleeve preference" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="short">Short Sleeve</SelectItem>
+                          <SelectItem value="three-quarter">3/4 Sleeve</SelectItem>
+                          <SelectItem value="long">Long Sleeve</SelectItem>
+                          <SelectItem value="no-sleeve">No Sleeve</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="customer_notes">
+                        Special Requirements
+                      </Label>
                       <Textarea
                         id="customer_notes"
                         value={customerNotes}
@@ -451,19 +518,25 @@ export function TailoredOrderModal({
 
                   <div className="space-y-4">
                     <div className="bg-gray-50 rounded-lg p-4">
-                      <h5 className="font-medium text-gray-900 mb-2">Product Details</h5>
+                      <h5 className="font-medium text-gray-900 mb-2">
+                        Product Details
+                      </h5>
                       <p className="text-sm text-gray-600">
                         {product.title} by {brand.name}
                       </p>
                       <p className="text-lg font-semibold text-oma-plum mt-2">
-                        {formatProductPrice(product, {
-                          price_range: brand.price_range,
-                        }).displayPrice}
+                        {
+                          formatProductPrice(product, {
+                            price_range: brand.price_range,
+                          }).displayPrice
+                        }
                       </p>
                     </div>
 
                     <div className="bg-gray-50 rounded-lg p-4">
-                      <h5 className="font-medium text-gray-900 mb-2">Customization</h5>
+                      <h5 className="font-medium text-gray-900 mb-2">
+                        Customization
+                      </h5>
                       <div className="text-sm text-gray-600 space-y-1">
                         <p>Fit: {measurements.fit_preference}</p>
                         {selectedSize && <p>Size: {selectedSize}</p>}
@@ -473,28 +546,33 @@ export function TailoredOrderModal({
                     </div>
 
                     <div className="bg-gray-50 rounded-lg p-4">
-                      <h5 className="font-medium text-gray-900 mb-2">Delivery Address</h5>
+                      <h5 className="font-medium text-gray-900 mb-2">
+                        Delivery Address
+                      </h5>
                       <div className="text-sm text-gray-600">
                         <p>{deliveryAddress.full_name}</p>
                         <p>{deliveryAddress.address_line_1}</p>
                         <p>
-                          {deliveryAddress.city}, {deliveryAddress.state} {deliveryAddress.postal_code}
+                          {deliveryAddress.city}, {deliveryAddress.state}{" "}
+                          {deliveryAddress.postal_code}
                         </p>
                         <p>{deliveryAddress.country}</p>
-                        <p className="mt-2">
-                          Phone: {deliveryAddress.phone}
-                        </p>
+                        <p className="mt-2">Phone: {deliveryAddress.phone}</p>
                         <p>Email: {deliveryAddress.email}</p>
                       </div>
                     </div>
 
                     <div className="bg-oma-plum/10 rounded-lg p-4 border border-oma-plum/20">
                       <div className="flex items-center justify-between">
-                        <span className="font-medium text-gray-900">Total Amount:</span>
+                        <span className="font-medium text-gray-900">
+                          Total Amount:
+                        </span>
                         <span className="text-2xl font-bold text-oma-plum">
-                          {formatProductPrice(product, {
-                            price_range: brand.price_range,
-                          }).displayPrice}
+                          {
+                            formatProductPrice(product, {
+                              price_range: brand.price_range,
+                            }).displayPrice
+                          }
                         </span>
                       </div>
                     </div>
