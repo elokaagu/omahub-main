@@ -1,39 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
-
-// Helper function to create authenticated Supabase client
-async function createAuthenticatedClient() {
-  const cookieStore = cookies();
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          try {
-            const cookie = cookieStore.get(name);
-            return cookie?.value;
-          } catch (error) {
-            console.error(`Error getting cookie ${name}:`, error);
-            return undefined;
-          }
-        },
-        set() {},
-        remove() {},
-      },
-    }
-  );
-
-  return supabase;
-}
+import { createServerSupabaseClient } from "@/lib/supabase-unified";
 
 // Helper function to get authenticated user
 async function getAuthenticatedUser() {
-  const supabase = await createAuthenticatedClient();
-
   try {
+    const supabase = await createServerSupabaseClient();
+
     const {
       data: { session },
       error: sessionError,
@@ -44,28 +16,13 @@ async function getAuthenticatedUser() {
       return null;
     }
 
-    if (session?.user) {
-      console.log("User authenticated via session:", session.user.id);
-      return session.user;
-    }
-
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError) {
-      console.error("User error:", userError);
+    if (!session?.user) {
+      console.log("No session or user found");
       return null;
     }
 
-    if (user) {
-      console.log("User authenticated via direct lookup:", user.id);
-      return user;
-    }
-
-    console.log("No authenticated user found");
-    return null;
+    console.log("User authenticated via session:", session.user.id);
+    return session.user;
   } catch (error) {
     console.error("Authentication error:", error);
     return null;
@@ -87,7 +44,7 @@ export async function GET() {
 
     console.log("Favourites API GET: User authenticated:", user.id);
 
-    const supabase = await createAuthenticatedClient();
+    const supabase = await createServerSupabaseClient();
 
     // Fetch user's favourites from the database
     const { data: favourites, error: favouritesError } = await supabase
@@ -230,7 +187,7 @@ export async function POST(request: NextRequest) {
 
     console.log("Favourites API POST: Adding favourite:", { itemId, itemType, userId: user.id });
 
-    const supabase = await createAuthenticatedClient();
+    const supabase = await createServerSupabaseClient();
 
     // Check if already favourited
     const { data: existingFavourite } = await supabase
@@ -312,7 +269,7 @@ export async function DELETE(request: NextRequest) {
 
     console.log("Favourites API DELETE: Removing favourite:", { itemId, itemType, userId: user.id });
 
-    const supabase = await createAuthenticatedClient();
+    const supabase = await createServerSupabaseClient();
 
     // Remove from favourites
     const { error: deleteError } = await supabase
