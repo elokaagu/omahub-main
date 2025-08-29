@@ -281,7 +281,16 @@ export type CustomerMeasurements = {
   ankle?: string;
 
   // Additional notes
-  fit_preference?: "very-loose" | "loose" | "slightly-loose" | "regular" | "slightly-fitted" | "fitted" | "slim" | "tight" | "very-tight";
+  fit_preference?:
+    | "very-loose"
+    | "loose"
+    | "slightly-loose"
+    | "regular"
+    | "slightly-fitted"
+    | "fitted"
+    | "slim"
+    | "tight"
+    | "very-tight";
   length_preference?: "short" | "regular" | "long" | "extra-long";
   sleeve_preference?: "short" | "three-quarter" | "long" | "no-sleeve";
   special_requirements?: string;

@@ -292,9 +292,13 @@ export function TailoredOrderModal({
                         <SelectContent>
                           <SelectItem value="very-loose">Very Loose</SelectItem>
                           <SelectItem value="loose">Loose</SelectItem>
-                          <SelectItem value="slightly-loose">Slightly Loose</SelectItem>
+                          <SelectItem value="slightly-loose">
+                            Slightly Loose
+                          </SelectItem>
                           <SelectItem value="regular">Regular</SelectItem>
-                          <SelectItem value="slightly-fitted">Slightly Fitted</SelectItem>
+                          <SelectItem value="slightly-fitted">
+                            Slightly Fitted
+                          </SelectItem>
                           <SelectItem value="fitted">Fitted</SelectItem>
                           <SelectItem value="slim">Slim</SelectItem>
                           <SelectItem value="tight">Tight</SelectItem>
@@ -320,7 +324,9 @@ export function TailoredOrderModal({
                           <SelectItem value="xl">XL (Extra Large)</SelectItem>
                           <SelectItem value="xxl">XXL (2XL)</SelectItem>
                           <SelectItem value="xxxl">XXXL (3XL)</SelectItem>
-                          <SelectItem value="custom">Custom Measurements</SelectItem>
+                          <SelectItem value="custom">
+                            Custom Measurements
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -336,7 +342,9 @@ export function TailoredOrderModal({
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="length_preference">Length Preference</Label>
+                      <Label htmlFor="length_preference">
+                        Length Preference
+                      </Label>
                       <Select
                         value={measurements.length_preference || ""}
                         onValueChange={(value) =>
@@ -356,7 +364,9 @@ export function TailoredOrderModal({
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="sleeve_preference">Sleeve Preference</Label>
+                      <Label htmlFor="sleeve_preference">
+                        Sleeve Preference
+                      </Label>
                       <Select
                         value={measurements.sleeve_preference || ""}
                         onValueChange={(value) =>
@@ -368,7 +378,9 @@ export function TailoredOrderModal({
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="short">Short Sleeve</SelectItem>
-                          <SelectItem value="three-quarter">3/4 Sleeve</SelectItem>
+                          <SelectItem value="three-quarter">
+                            3/4 Sleeve
+                          </SelectItem>
                           <SelectItem value="long">Long Sleeve</SelectItem>
                           <SelectItem value="no-sleeve">No Sleeve</SelectItem>
                         </SelectContent>

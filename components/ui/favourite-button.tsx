@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Heart, X } from "lucide-react";
+import { useState } from "react";
+import { Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import useFavourites from "@/lib/hooks/useFavourites";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -11,164 +11,78 @@ interface FavouriteButtonProps {
   itemId: string;
   itemType: "brand" | "catalogue" | "product";
   className?: string;
+  showText?: boolean;
 }
 
 export function FavouriteButton({
   itemId,
   itemType,
   className = "",
+  showText = true,
 }: FavouriteButtonProps) {
-  
-  const [showModal, setShowModal] = useState(false);
-  const [modalType, setModalType] = useState<"add" | "remove">("add");
-  const [isClosing, setIsClosing] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
-  const { isFavourite, toggleFavourite } = useFavourites();
   const { user } = useAuth();
+  const { isFavourite, toggleFavourite, loading } = useFavourites();
+  const [isToggling, setIsToggling] = useState(false);
 
-  // Force re-render when favourites state changes
-  useEffect(() => {
-    console.log("🔄 FavouriteButton useEffect - favourites state changed:", { itemId, itemType, isFavourited: isFavourite(itemId, itemType) });
-  }, [isFavourite, itemId, itemType]);
-
-  // Don't render the button if user is not signed in
+  // Don't render if user is not signed in
   if (!user) {
     return null;
   }
 
   const isFavourited = isFavourite(itemId, itemType);
+  const isLoading = loading || isToggling;
 
-  // Debug logging to see state changes
-  console.log("🔍 FavouriteButton render:", { itemId, itemType, isFavourited });
+  const handleToggle = async () => {
+    if (isLoading) return;
 
-  const handleToggleFavourite = async () => {
     try {
-      setIsLoading(true);
-      const wasFavourited = isFavourited; // Capture current state before toggle
-      console.log("🔄 Starting toggle:", { wasFavourited, itemId, itemType });
-      
+      setIsToggling(true);
       const success = await toggleFavourite(itemId, itemType);
-      console.log("✅ Toggle completed:", { success, wasFavourited });
-
-      // Show appropriate feedback based on the action that was performed
-      if (!wasFavourited) {
-        // We just attempted to add to favourites
-        if (success) {
-          // Successfully added
-          console.log("🎉 Showing add success modal");
-          setModalType("add");
-          setShowModal(true);
-          // Don't show toast when showing modal - modal is more prominent
+      
+      if (success) {
+        if (isFavourited) {
+          toast.success("Removed from favourites");
         } else {
-          // Failed to add (e.g., already in favourites)
-          toast({
-            title: "Already in favourites",
-            description: "This item is already in your favourites.",
-            variant: "default",
-          });
-        }
-      } else {
-        // We just removed from favourites
-        if (success) {
-          // Successfully removed
-          console.log("🎉 Showing remove success modal");
-          setModalType("remove");
-          setShowModal(true);
-          // Don't show toast when showing modal - modal is more prominent
-        } else {
-          // Failed to remove
-          toast({
-            title: "Error",
-            description: "Failed to remove from favourites. Please try again.",
-            variant: "destructive",
-          });
+          toast.success("Added to favourites");
         }
       }
     } catch (error) {
       console.error("Error toggling favourite:", error);
-      toast({
-        title: "Error",
-        description: "Failed to update favourites. Please try again.",
-        variant: "destructive",
-      });
+      toast.error("Failed to update favourites");
     } finally {
-      setIsLoading(false);
+      setIsToggling(false);
     }
   };
 
-  const handleCloseModal = () => {
-    setIsClosing(true);
-    setTimeout(() => {
-      setShowModal(false);
-      setIsClosing(false);
-    }, 150);
-  };
-
   return (
-    <>
-      <Button
-        variant={isFavourited ? "default" : "outline"}
-        onClick={handleToggleFavourite}
-        disabled={isLoading}
-        className={`flex items-center gap-2 ${isFavourited ? "bg-oma-plum text-white hover:bg-oma-plum/90" : "border-oma-plum text-oma-plum hover:bg-oma-plum/10"} ${className}`}
-        aria-label={
-          isFavourited ? "Remove from favourites" : "Add to favourites"
+    <Button
+      variant={isFavourited ? "default" : "outline"}
+      onClick={handleToggle}
+      disabled={isLoading}
+      className={`
+        flex items-center gap-2 transition-all duration-200
+        ${isFavourited 
+          ? "bg-oma-plum text-white hover:bg-oma-plum/90" 
+          : "border-oma-plum text-oma-plum hover:bg-oma-plum/10"
         }
-      >
-        <Heart
-          className={`h-5 w-5 ${isFavourited ? "fill-current" : ""}`}
-          fill={isFavourited ? "currentColor" : "none"}
-        />
-        <span>{isFavourited ? "Favourited" : "Add to Favourites"}</span>
-      </Button>
-      {/* Modal Popup */}
-      {showModal && (
-        <div 
-          className="fixed inset-0 z-50 flex items-center justify-center"
-          onClick={handleCloseModal}
-        >
-          <div 
-            className={`bg-white rounded-lg shadow-lg p-8 max-w-sm w-full relative transition-all duration-200 ${
-              isClosing 
-                ? 'animate-out fade-out-0 zoom-out-95' 
-                : 'animate-in fade-in-0 zoom-in-95'
-            }`}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 transition-colors"
-              onClick={handleCloseModal}
-              aria-label="Close"
-            >
-              <X className="h-5 w-5" />
-            </button>
-            <div className="flex flex-col items-center text-center">
-              <Heart
-                className={`h-10 w-10 mb-4 animate-bounce ${
-                  modalType === "add" ? "text-oma-plum fill-current" : "text-red-500"
-                }`}
-                fill={modalType === "add" ? "currentColor" : "none"}
-              />
-              <h2 className="text-xl font-semibold mb-2 text-oma-plum">
-                {modalType === "add" ? "Added to Favourites!" : "Removed from Favourites!"}
-              </h2>
-              <p className="text-gray-700 mb-4">
-                {modalType === "add" 
-                  ? "This item has been added to your favourites. You can view all your favourites from your account menu."
-                  : "This item has been removed from your favourites."
-                }
-              </p>
-              <Button
-                onClick={handleCloseModal}
-                className="bg-oma-plum text-white hover:bg-oma-plum/90 w-full transition-colors"
-              >
-                Close
-              </Button>
-            </div>
-          </div>
-        </div>
+        ${isLoading ? "opacity-50 cursor-not-allowed" : ""}
+        ${className}
+      `}
+      aria-label={
+        isFavourited ? "Remove from favourites" : "Add to favourites"
+      }
+    >
+      <Heart
+        className={`h-5 w-5 transition-all duration-200 ${
+          isFavourited ? "fill-current scale-110" : ""
+        }`}
+        fill={isFavourited ? "currentColor" : "none"}
+      />
+      {showText && (
+        <span className="font-medium">
+          {isFavourited ? "Favourited" : "Add to Favourites"}
+        </span>
       )}
-    </>
+    </Button>
   );
 }
