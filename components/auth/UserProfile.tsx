@@ -28,7 +28,6 @@ export default function UserProfile() {
       setIsSigningOut(true);
       await signOut();
       toast.success("Signed out successfully");
-      router.push("/");
     } catch (error) {
       console.error("Sign out error:", error);
       toast.error("Failed to sign out");

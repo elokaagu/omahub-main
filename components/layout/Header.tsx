@@ -38,7 +38,6 @@ import { getBrandsByCategory } from "@/lib/services/brandService";
 import { checkCategoryHasBrands } from "@/lib/services/categoryService";
 import { triggerSearchModal } from "@/components/ui/search-modal";
 
-
 const collectionItems = collections.map((category) => ({
   name: category,
   href: `/directory?category=${category.replace(/ /g, "+")}`,
@@ -226,7 +225,7 @@ export default function Header() {
   const handleSignOut = async () => {
     try {
       await signOut();
-      router.push("/");
+      router.push("/login");
     } catch (error) {
       console.error("Error signing out:", error);
     }
@@ -547,8 +546,6 @@ export default function Header() {
                     </span>
                   </button>
                 </div>
-
-
 
                 {/* Main Navigation */}
                 <div className="space-y-2">
