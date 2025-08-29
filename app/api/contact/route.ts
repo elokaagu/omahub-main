@@ -327,6 +327,11 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     console.log("📧 Contact API - Request received:", body);
+    console.log("📧 Contact API - Environment check:", {
+      hasResendKey: !!process.env.RESEND_API_KEY,
+      resendKeyLength: process.env.RESEND_API_KEY?.length || 0,
+      nodeEnv: process.env.NODE_ENV
+    });
 
     // Check if this is a brand-specific contact or general platform contact
     const isBrandContact = body.brandId && body.brandName;
@@ -350,7 +355,7 @@ export async function POST(request: NextRequest) {
       }
 
       const supabase = await getAdminClient();
-      
+
       if (!supabase) {
         console.error("❌ Failed to get admin client");
         return NextResponse.json(
@@ -380,22 +385,24 @@ export async function POST(request: NextRequest) {
 
       // Create inquiry in the database (Studio inbox)
       console.log("📝 Creating inquiry in Studio inbox...");
-      
+
       let inquiry;
       try {
         // Check if inquiries table exists first
         const { data: tableExists, error: tableCheckError } = await supabase
-          .from('information_schema.tables')
-          .select('table_name')
-          .eq('table_schema', 'public')
-          .eq('table_name', 'inquiries')
+          .from("information_schema.tables")
+          .select("table_name")
+          .eq("table_schema", "public")
+          .eq("table_name", "inquiries")
           .single();
 
         if (tableCheckError || !tableExists) {
-          console.log("⚠️ Inquiries table does not exist - skipping database insert for now");
+          console.log(
+            "⚠️ Inquiries table does not exist - skipping database insert for now"
+          );
           // Create a mock inquiry object for now
           inquiry = {
-            id: 'temp-' + Date.now(),
+            id: "temp-" + Date.now(),
             brand_id: brandId,
             customer_name: name,
             customer_email: email,
@@ -406,7 +413,7 @@ export async function POST(request: NextRequest) {
             source: "website_contact_form",
             status: "new",
             created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
+            updated_at: new Date().toISOString(),
           };
         } else {
           // Table exists, proceed with normal insert
@@ -433,15 +440,15 @@ export async function POST(request: NextRequest) {
               { status: 500 }
             );
           }
-          
+
           inquiry = inquiryData;
         }
       } catch (dbError) {
         console.error("❌ Database error creating inquiry:", dbError);
-        
+
         // Create a mock inquiry object as fallback
         inquiry = {
-          id: 'temp-' + Date.now(),
+          id: "temp-" + Date.now(),
           brand_id: brandId,
           customer_name: name,
           customer_email: email,
@@ -452,7 +459,7 @@ export async function POST(request: NextRequest) {
           source: "website_contact_form",
           status: "new",
           created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         };
       }
 
@@ -460,6 +467,13 @@ export async function POST(request: NextRequest) {
 
       // Send email notification to brand contact email
       console.log("📧 Sending email notification to:", contactEmail);
+      console.log("📧 Email service configuration:", {
+        hasResendKey: !!process.env.RESEND_API_KEY,
+        resendKeyLength: process.env.RESEND_API_KEY?.length || 0,
+        contactEmail,
+        brandName: brand.name
+      });
+      
       try {
         const emailResult = await sendContactEmail({
           name: name,
@@ -472,12 +486,14 @@ Message: ${message}
 
 This inquiry has been saved to your Studio inbox. You can respond directly to the customer at ${email}.
 
-View all inquiries in your Studio: [Studio Inbox Link]
+View all inquiries in your Studio: https://oma-hub.com/studio/inbox?brand=${brandId}
 
 Best regards,
 OmaHub Team`,
           to: contactEmail, // Send to brand's contact email
         });
+
+        console.log("📧 Email service response:", emailResult);
 
         if (emailResult.success) {
           console.log("✅ Email notification sent successfully");
@@ -489,6 +505,11 @@ OmaHub Team`,
         }
       } catch (emailError) {
         console.error("❌ Email sending error:", emailError);
+        console.error("❌ Email error details:", {
+          error: emailError,
+          errorMessage: emailError instanceof Error ? emailError.message : String(emailError),
+          errorStack: emailError instanceof Error ? emailError.stack : undefined
+        });
         // Don't fail the entire request if email fails
       }
 
@@ -522,6 +543,11 @@ OmaHub Team`,
 
       // For general platform contact, send to OmaHub admin
       console.log("📧 General platform contact:", { name, email, subject });
+      console.log("📧 General contact email service configuration:", {
+        hasResendKey: !!process.env.RESEND_API_KEY,
+        resendKeyLength: process.env.RESEND_API_KEY?.length || 0,
+        nodeEnv: process.env.NODE_ENV
+      });
 
       try {
         const emailResult = await sendContactEmail({
@@ -533,8 +559,12 @@ OmaHub Team`,
 Name: ${name}
 Email: ${email}
 Subject: ${subject}
-Message: ${message}`,
+Message: ${message}
+
+View all inquiries in your Studio: https://oma-hub.com/studio/inbox`,
         });
+
+        console.log("📧 General contact email service response:", emailResult);
 
         if (emailResult.success) {
           console.log("✅ General contact email sent successfully");
@@ -546,6 +576,11 @@ Message: ${message}`,
         }
       } catch (emailError) {
         console.error("❌ Email sending error:", emailError);
+        console.error("❌ General contact email error details:", {
+          error: emailError,
+          errorMessage: emailError instanceof Error ? emailError.message : String(emailError),
+          errorStack: emailError instanceof Error ? emailError.stack : undefined
+        });
       }
 
       // Return success response
