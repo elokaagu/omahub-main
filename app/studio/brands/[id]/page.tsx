@@ -161,7 +161,7 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
         brandData.price_range !== "Explore brand for prices"
       ) {
         const priceRangeMatch = brandData.price_range.match(
-          /^(.+?)(\d+(?:,\d+)*)\s*-\s*(.+?)(\d+(?:,\d+)*)$/
+          /^([^\d,]+)(\d+(?:,\d+)*)\s*-\s*([^\d,]+)(\d+(?:,\d+)*)$/
         );
         if (priceRangeMatch) {
           const [, symbol1, min, symbol2, max] = priceRangeMatch;
@@ -172,6 +172,7 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
             setCurrency(foundCurrency.code);
             setPriceMin(min.replace(/,/g, ""));
             setPriceMax(max.replace(/,/g, ""));
+            console.log("🔄 Parsed price range:", { min: min.replace(/,/g, ""), max: max.replace(/,/g, ""), currency: foundCurrency.code });
           }
         } else {
           // If price range is not a valid format, set to NONE
