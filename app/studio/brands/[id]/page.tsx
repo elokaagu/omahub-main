@@ -172,7 +172,11 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
             setCurrency(foundCurrency.code);
             setPriceMin(min.replace(/,/g, ""));
             setPriceMax(max.replace(/,/g, ""));
-            console.log("🔄 Parsed price range:", { min: min.replace(/,/g, ""), max: max.replace(/,/g, ""), currency: foundCurrency.code });
+            console.log("🔄 Parsed price range:", {
+              min: min.replace(/,/g, ""),
+              max: max.replace(/,/g, ""),
+              currency: foundCurrency.code,
+            });
           }
         } else {
           // If price range is not a valid format, set to NONE
@@ -958,7 +962,8 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
                   <br />
                   brand.brand_images = {brand?.brand_images?.length || 0} items
                   <br />
-                  storage_path = {brand?.brand_images?.[0]?.storage_path || "none"}
+                  storage_path ={" "}
+                  {brand?.brand_images?.[0]?.storage_path || "none"}
                 </div>
               )}
             </CardContent>
