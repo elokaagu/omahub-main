@@ -28,13 +28,15 @@ export default function FavouritesPage() {
   }, []); // Empty dependency array to run only once on mount
 
   // Separate favourites by type
-  const brands = favourites.filter(
+  const brands = (Array.isArray(favourites) ? favourites : []).filter(
     (item: any) => item.name && !item.brand_id && !item.price
   );
-  const collections = favourites.filter(
+  const collections = (Array.isArray(favourites) ? favourites : []).filter(
     (item: any) => item.title && item.brand_id && !item.price
   );
-  const products = favourites.filter((item: any) => item.title && item.price);
+  const products = (Array.isArray(favourites) ? favourites : []).filter(
+    (item: any) => item.title && item.price
+  );
 
   const FavouriteSection = ({
     title,

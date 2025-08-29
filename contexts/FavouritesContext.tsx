@@ -74,7 +74,18 @@ export function FavouritesProvider({
 
       const data = await response.json();
       console.log("📚 Fetched favourites:", data);
-      setFavourites(data.favourites || []);
+
+      // Handle the new API response structure
+      const favouritesData = data.favourites?.items || data.favourites || [];
+
+      // Ensure we always have an array
+      if (!Array.isArray(favouritesData)) {
+        console.error("❌ Favourites data is not an array:", favouritesData);
+        setFavourites([]);
+        return;
+      }
+
+      setFavourites(favouritesData);
     } catch (error) {
       console.error("❌ Error fetching favourites:", error);
       toast.error("Failed to load favourites");
