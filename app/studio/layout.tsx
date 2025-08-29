@@ -389,6 +389,7 @@ export default function StudioLayout({
       icon: any;
       permission: string;
       customLabel?: string;
+      showForRoles?: string[]; // New property for conditional visibility
     };
 
     const baseItems: NavigationItem[] = [
@@ -475,6 +476,9 @@ export default function StudioLayout({
         label: "Applications",
         icon: FileText,
         permission: "studio.users.manage",
+        customLabel: "Designer Applications",
+        // Only show for super admins
+        showForRoles: ["super_admin"]
       },
       {
         href: "/studio/profile",
@@ -493,7 +497,16 @@ export default function StudioLayout({
     // Filter items based on permissions
     const filteredItems = permissionItems.filter((item) => {
       if (item.permission === "studio.access") return true;
-      return permissions.includes(item.permission as any);
+      
+      // Check if user has the required permission
+      const hasPermission = permissions.includes(item.permission as any);
+      
+      // Check if item has role restrictions
+      if (item.showForRoles && user?.role) {
+        return hasPermission && item.showForRoles.includes(user.role);
+      }
+      
+      return hasPermission;
     });
 
     return [...baseItems, ...filteredItems];

@@ -40,6 +40,20 @@ export default function ApplicationsPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [accessDenied, setAccessDenied] = useState(false);
+
+  // Check if user has super admin access
+  useEffect(() => {
+    if (user) {
+      // Only super admins can access designer applications
+      if (user.role !== 'super_admin') {
+        setAccessDenied(true);
+        setLoading(false);
+        return;
+      }
+      fetchApplications();
+    }
+  }, [user]);
 
   // Fetch applications
   const fetchApplications = async () => {
@@ -91,13 +105,6 @@ export default function ApplicationsPage() {
     }
   };
 
-  // Load applications on component mount
-  useEffect(() => {
-    if (user) {
-      fetchApplications();
-    }
-  }, [user]);
-
   // Filter applications based on search and status
   const filteredApplications = applications.filter(app => {
     const matchesSearch = 
@@ -145,6 +152,17 @@ export default function ApplicationsPage() {
         <div className="text-center">
           <p className="text-red-500 mb-4">{error}</p>
           <Button onClick={fetchApplications}>Try Again</Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (accessDenied) {
+    return (
+      <div className="container mx-auto px-6 py-8">
+        <div className="text-center">
+          <p className="text-red-500 mb-4">You do not have permission to access this page.</p>
+          <Button onClick={() => window.history.back()}>Go Back</Button>
         </div>
       </div>
     );
