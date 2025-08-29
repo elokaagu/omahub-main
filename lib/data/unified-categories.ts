@@ -234,21 +234,21 @@ export const mapUnifiedToLegacy = (unifiedCategory: string): string => {
 };
 
 export const getAllCategoryNames = () => {
-  return UNIFIED_CATEGORIES.map((cat: any) => cat.name);
+  return UNIFIED_CATEGORIES.map((cat) => cat.name);
 };
 
 export const getAllCategoryIds = () => {
-  return UNIFIED_CATEGORIES.map((cat: any) => cat.id);
+  return UNIFIED_CATEGORIES.map((cat) => cat.id);
 };
 
 export const getCategoriesForHomepage = () => {
   return UNIFIED_CATEGORIES.filter(
-    (cat: any) => cat.homepageImage && cat.homepageCta
+    (cat) => cat.homepageImage && cat.homepageCta
   );
 };
 
 export const getCategoriesForDirectory = () => {
-  return UNIFIED_CATEGORIES.map((cat: any) => ({
+  return UNIFIED_CATEGORIES.map((cat) => ({
     id: cat.id,
     name: cat.displayName,
     slug: cat.slug,
@@ -256,7 +256,7 @@ export const getCategoriesForDirectory = () => {
 };
 
 export const getCategoriesForStudio = () => {
-  return UNIFIED_CATEGORIES.map((cat: any) => ({
+  return UNIFIED_CATEGORIES.map((cat) => ({
     value: cat.name, // Use name for backward compatibility with existing database
     label: cat.displayName,
     id: cat.id,

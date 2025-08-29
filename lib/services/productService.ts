@@ -143,10 +143,12 @@ export async function getProductsByCatalogueWithBrand(
 
   const { data, error } = await supabase
     .from("products")
-    .select(`
+    .select(
+      `
       *,
       brand:brands(id, name, location, is_verified, price_range, currency)
-    `)
+    `
+    )
     .eq("catalogue_id", catalogueId)
     .order("created_at", { ascending: false });
 
@@ -374,7 +376,10 @@ export async function createProduct(
         .single();
 
       if (brandError) {
-        console.error("Error fetching brand for currency validation:", brandError);
+        console.error(
+          "Error fetching brand for currency validation:",
+          brandError
+        );
         throw new Error("Failed to validate brand currency");
       }
 
@@ -383,7 +388,7 @@ export async function createProduct(
         if (brandCurrency && productData.currency !== brandCurrency.code) {
           throw new Error(
             `Currency mismatch! Product currency (${productData.currency}) does not match brand currency (${brandCurrency.code}). ` +
-            `Products must use the same currency as their brand.`
+              `Products must use the same currency as their brand.`
           );
         }
       }
@@ -512,7 +517,10 @@ export async function updateProduct(
       .single();
 
     if (brandError) {
-      console.error("Error fetching brand for currency validation:", brandError);
+      console.error(
+        "Error fetching brand for currency validation:",
+        brandError
+      );
       throw new Error("Failed to validate brand currency");
     }
 
@@ -521,7 +529,7 @@ export async function updateProduct(
       if (brandCurrency && productData.currency !== brandCurrency.code) {
         throw new Error(
           `Currency mismatch! Product currency (${productData.currency}) does not match brand currency (${brandCurrency.code}). ` +
-          `Products must use the same currency as their brand.`
+            `Products must use the same currency as their brand.`
         );
       }
     }
@@ -755,7 +763,7 @@ export async function getIntelligentRecommendations(
         .from("products")
         .select("*")
         .eq("catalogue_id", catalogueId)
-        .not("id", "in", `(${recommendations.map((r: { id: string }) => r.id).join(",")})`)
+        .not("id", "in", `(${recommendations.map((r) => r.id).join(",")})`)
         .limit(remainingLimit)
         .order("created_at", { ascending: false });
 
@@ -771,7 +779,7 @@ export async function getIntelligentRecommendations(
         .from("products")
         .select("*")
         .eq("brand_id", brandId)
-        .not("id", "in", `(${recommendations.map((r: { id: string }) => r.id).join(",")})`)
+        .not("id", "in", `(${recommendations.map((r) => r.id).join(",")})`)
         .limit(stillNeedMore)
         .order("created_at", { ascending: false });
 
@@ -800,7 +808,11 @@ export async function getIntelligentRecommendationsWithBrand(
   catalogueId?: string,
   brandId?: string,
   limit: number = 4
-): Promise<(Product & { brand: { price_range?: string; currency?: string; location?: string } })[]> {
+): Promise<
+  (Product & {
+    brand: { price_range?: string; currency?: string; location?: string };
+  })[]
+> {
   if (!supabase) {
     throw new Error("Supabase client not available");
   }
@@ -823,12 +835,12 @@ export async function getIntelligentRecommendationsWithBrand(
           .select("brand_id")
           .in(
             "id",
-            favourites.map((f: { product_id: string }) => f.product_id)
+            favourites.map((f: any) => f.product_id)
           );
 
         if (favouritedProducts && favouritedProducts.length > 0) {
           const favouriteBrandIds = [
-            ...new Set(favouritedProducts.map((p: { brand_id: string }) => p.brand_id)),
+            ...new Set(favouritedProducts.map((p: any) => p.brand_id)),
           ];
 
           // Get products from favourite brands with brand info (up to half of the limit)
@@ -864,7 +876,7 @@ export async function getIntelligentRecommendationsWithBrand(
         `
         )
         .eq("catalogue_id", catalogueId)
-        .not("id", "in", `(${recommendations.map((r: { id: string }) => r.id).join(",")})`)
+        .not("id", "in", `(${recommendations.map((r) => r.id).join(",")})`)
         .limit(remainingLimit)
         .order("created_at", { ascending: false });
 
@@ -885,7 +897,7 @@ export async function getIntelligentRecommendationsWithBrand(
         `
         )
         .eq("brand_id", brandId)
-        .not("id", "in", `(${recommendations.map((r: { id: string }) => r.id).join(",")})`)
+        .not("id", "in", `(${recommendations.map((r) => r.id).join(",")})`)
         .limit(stillNeedMore)
         .order("created_at", { ascending: false });
 
@@ -917,7 +929,11 @@ export async function getCatalogueRecommendationsWithBrand(
   catalogueId: string,
   excludeProductId?: string,
   limit: number = 4
-): Promise<(Product & { brand: { price_range?: string; currency?: string; location?: string } })[]> {
+): Promise<
+  (Product & {
+    brand: { price_range?: string; currency?: string; location?: string };
+  })[]
+> {
   if (!supabase) {
     throw new Error("Supabase client not available");
   }

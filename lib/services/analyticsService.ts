@@ -278,11 +278,11 @@ export async function getAnalyticsData(): Promise<AnalyticsData> {
 
     // Calculate average rating from brands
     const brandRatings = brands
-      .map((brand: { rating?: number }) => brand.rating)
-      .filter((rating): rating is number => rating !== null && rating !== undefined);
+      .map((brand) => brand.rating)
+      .filter((rating) => rating !== null && rating !== undefined);
     const averageRating =
       brandRatings.length > 0
-        ? brandRatings.reduce((acc: number, rating: any) => acc + rating, 0) /
+        ? brandRatings.reduce((acc, rating) => acc + rating, 0) /
           brandRatings.length
         : 0;
 
@@ -317,7 +317,7 @@ export async function getAnalyticsData(): Promise<AnalyticsData> {
         return bScore - aScore;
       })
       .slice(0, 5)
-      .map((brand: { name: string; rating?: number; reviews: any[] }) => ({
+      .map((brand) => ({
         name: brand.name,
         rating: brand.rating || 0,
         reviewCount: brand.reviews.length,
@@ -443,7 +443,7 @@ export async function getBrandGrowthData(): Promise<BrandGrowthData[]> {
     // Group by month
     const monthlyData: { [key: string]: number } = {};
 
-    (brands || []).forEach((brand: { created_at: string }) => {
+    (brands || []).forEach((brand) => {
       const month = new Date(brand.created_at).toLocaleDateString("en-US", {
         year: "numeric",
         month: "short",
@@ -501,7 +501,7 @@ export async function getReviewTrendsData(): Promise<ReviewTrendsData[]> {
     const monthlyData: { [key: string]: { total: number; ratings: number[] } } =
       {};
 
-    (reviews || []).forEach((review: { created_at: string; rating: number }) => {
+    (reviews || []).forEach((review) => {
       const month = new Date(review.created_at).toLocaleDateString("en-US", {
         year: "numeric",
         month: "short",
@@ -525,7 +525,7 @@ export async function getReviewTrendsData(): Promise<ReviewTrendsData[]> {
       const data = monthlyData[month] || { total: 0, ratings: [] };
       const averageRating =
         data.ratings.length > 0
-          ? data.ratings.reduce((acc: number, rating: any) => acc + rating, 0) /
+          ? data.ratings.reduce((acc, rating) => acc + rating, 0) /
             data.ratings.length
           : 0;
 
@@ -643,7 +643,7 @@ export async function getBrandOwnerAnalyticsData(
     // Calculate average rating from all reviews for owned brands
     const averageRating =
       reviews.length > 0
-        ? reviews.reduce((sum: number, review: any) => sum + (review.rating || 0), 0) /
+        ? reviews.reduce((sum, review) => sum + (review.rating || 0), 0) /
           reviews.length
         : 0;
 
@@ -727,7 +727,7 @@ export async function getBrandOwnerGrowthData(
     }
 
     // Count products by month
-    (data || []).forEach((product: { created_at: string }) => {
+    (data || []).forEach((product) => {
       const createdDate = new Date(product.created_at);
       const monthIndex = months.findIndex(
         (m) =>
@@ -741,7 +741,7 @@ export async function getBrandOwnerGrowthData(
 
     // Convert to cumulative count (total products up to each month)
     let cumulative = 0;
-    return months.map((month: { month: string; products: number }) => {
+    return months.map((month) => {
       cumulative += month.products;
       return {
         month: month.month,
@@ -795,7 +795,7 @@ export async function getBrandOwnerReviewTrends(
     }
 
     // Group reviews by month
-    (data || []).forEach((review: { created_at: string; rating: number }) => {
+    (data || []).forEach((review) => {
       const createdDate = new Date(review.created_at);
       const monthIndex = months.findIndex(
         (m) =>
@@ -808,12 +808,12 @@ export async function getBrandOwnerReviewTrends(
     });
 
     // Calculate monthly stats
-    return months.map((month: { month: string; reviews: number[] }) => ({
+    return months.map((month) => ({
       month: month.month,
       reviews: month.reviews.length,
       avgRating:
         month.reviews.length > 0
-          ? month.reviews.reduce((sum: number, rating: any) => sum + rating, 0) /
+          ? month.reviews.reduce((sum, rating) => sum + rating, 0) /
             month.reviews.length
           : 0,
     }));

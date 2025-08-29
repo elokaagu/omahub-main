@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
           { status: 500 }
         );
       } else {
-        const allBrandIds = allBrands.map((brand: { id: string }) => brand.id);
+        const allBrandIds = allBrands.map((brand) => brand.id);
         finalOwnedBrands = allBrandIds;
       }
     } else {
@@ -202,7 +202,6 @@ export async function POST(request: NextRequest) {
                 trigger: "admin_update",
               },
             });
-
         } catch (realtimeError) {
           console.warn(
             "⚠️ Failed to send real-time profile update:",

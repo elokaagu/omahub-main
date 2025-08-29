@@ -24,33 +24,37 @@ export class AdminEmailServiceServer {
    * Get all admin email configurations from the database
    */
   async getAdminEmailConfig(): Promise<AdminEmailConfig> {
-    const cacheKey = 'admin_email_config';
+    const cacheKey = "admin_email_config";
     const cached = this.cache.get(cacheKey);
-    
+
     if (cached && Date.now() - cached.timestamp < this.CACHE_DURATION) {
       return cached.data;
     }
 
     try {
       const supabase = await createServerSupabaseClient();
-      
+
       const { data, error } = await supabase
-        .from('platform_settings')
-        .select('key, value')
-        .in('key', ['super_admin_emails', 'brand_admin_emails', 'webhook_admin_emails']);
+        .from("platform_settings")
+        .select("key, value")
+        .in("key", [
+          "super_admin_emails",
+          "brand_admin_emails",
+          "webhook_admin_emails",
+        ]);
 
       if (error) {
-        console.error('Error fetching admin email config:', error);
+        console.error("Error fetching admin email config:", error);
         throw error;
       }
 
       const config: AdminEmailConfig = {
         super_admin_emails: [],
         brand_admin_emails: [],
-        webhook_admin_emails: []
+        webhook_admin_emails: [],
       };
 
-      data?.forEach(setting => {
+      data?.forEach((setting) => {
         try {
           const emails = JSON.parse(setting.value);
           if (Array.isArray(emails)) {
@@ -64,17 +68,24 @@ export class AdminEmailServiceServer {
       // Cache the result
       this.cache.set(cacheKey, {
         data: config,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
 
       return config;
     } catch (error) {
-      console.error('Failed to fetch admin email config:', error);
+      console.error("Failed to fetch admin email config:", error);
       // Return fallback configuration
       return {
-        super_admin_emails: ['eloka.agu@icloud.com', 'shannonalisa@oma-hub.com'],
-        brand_admin_emails: ['eloka@culturin.com'],
-        webhook_admin_emails: ['eloka.agu@icloud.com', 'shannonalisa@oma-hub.com', 'eloka@satellitelabs.xyz']
+        super_admin_emails: [
+          "eloka.agu@icloud.com",
+          "shannonalisa@oma-hub.com",
+        ],
+        brand_admin_emails: ["eloka@culturin.com"],
+        webhook_admin_emails: [
+          "eloka.agu@icloud.com",
+          "shannonalisa@oma-hub.com",
+          "eloka@satellitelabs.xyz",
+        ],
       };
     }
   }
@@ -128,33 +139,35 @@ export class AdminEmailServiceServer {
   ): Promise<boolean> {
     // Verify user is super admin
     if (!(await this.isSuperAdmin(userEmail))) {
-      throw new Error('Unauthorized: Only super admins can update admin email configuration');
+      throw new Error(
+        "Unauthorized: Only super admins can update admin email configuration"
+      );
     }
 
     try {
       const supabase = await createServerSupabaseClient();
-      
-      const updates = Object.entries(config).map(([key, emails]: [string, any]) => ({
+
+      const updates = Object.entries(config).map(([key, emails]) => ({
         key: key,
         value: JSON.stringify(emails),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       }));
 
       const { error } = await supabase
-        .from('platform_settings')
-        .upsert(updates, { onConflict: 'key' });
+        .from("platform_settings")
+        .upsert(updates, { onConflict: "key" });
 
       if (error) {
-        console.error('Error updating admin email config:', error);
+        console.error("Error updating admin email config:", error);
         throw error;
       }
 
       // Clear cache to force refresh
       this.cache.clear();
-      
+
       return true;
     } catch (error) {
-      console.error('Failed to update admin email config:', error);
+      console.error("Failed to update admin email config:", error);
       throw error;
     }
   }
@@ -166,7 +179,10 @@ export class AdminEmailServiceServer {
     const config = await this.getAdminEmailConfig();
     if (!config.super_admin_emails.includes(email)) {
       config.super_admin_emails.push(email);
-      return await this.updateAdminEmailConfig({ super_admin_emails: config.super_admin_emails }, userEmail);
+      return await this.updateAdminEmailConfig(
+        { super_admin_emails: config.super_admin_emails },
+        userEmail
+      );
     }
     return true; // Already exists
   }
@@ -176,9 +192,12 @@ export class AdminEmailServiceServer {
    */
   async removeSuperAdmin(email: string, userEmail: string): Promise<boolean> {
     const config = await this.getAdminEmailConfig();
-    const filtered = config.super_admin_emails.filter(e => e !== email);
+    const filtered = config.super_admin_emails.filter((e) => e !== email);
     if (filtered.length !== config.super_admin_emails.length) {
-      return await this.updateAdminEmailConfig({ super_admin_emails: filtered }, userEmail);
+      return await this.updateAdminEmailConfig(
+        { super_admin_emails: filtered },
+        userEmail
+      );
     }
     return true; // Wasn't in the list
   }
@@ -195,8 +214,13 @@ export class AdminEmailServiceServer {
 export const adminEmailServiceServer = AdminEmailServiceServer.getInstance();
 
 // Export convenience functions for backward compatibility
-export const isSuperAdmin = (email: string) => adminEmailServiceServer.isSuperAdmin(email);
-export const isBrandAdmin = (email: string) => adminEmailServiceServer.isBrandAdmin(email);
-export const getSuperAdminEmails = () => adminEmailServiceServer.getSuperAdminEmails();
-export const getBrandAdminEmails = () => adminEmailServiceServer.getBrandAdminEmails();
-export const getWebhookAdminEmails = () => adminEmailServiceServer.getWebhookAdminEmails();
+export const isSuperAdmin = (email: string) =>
+  adminEmailServiceServer.isSuperAdmin(email);
+export const isBrandAdmin = (email: string) =>
+  adminEmailServiceServer.isBrandAdmin(email);
+export const getSuperAdminEmails = () =>
+  adminEmailServiceServer.getSuperAdminEmails();
+export const getBrandAdminEmails = () =>
+  adminEmailServiceServer.getBrandAdminEmails();
+export const getWebhookAdminEmails = () =>
+  adminEmailServiceServer.getWebhookAdminEmails();

@@ -39,7 +39,9 @@ export async function searchProductsByCategories(
 /**
  * Fallback search method if the database function doesn't exist
  */
-async function fallbackCategorySearch(categories: string[]): Promise<Product[]> {
+async function fallbackCategorySearch(
+  categories: string[]
+): Promise<Product[]> {
   if (!supabase) {
     throw new Error("Supabase client not available");
   }
@@ -49,7 +51,9 @@ async function fallbackCategorySearch(categories: string[]): Promise<Product[]> 
     let query = supabase
       .from("products")
       .select("*")
-      .or(`category.in.(${categories.join(",")}),categories.cs.{${categories.join(",")}}`)
+      .or(
+        `category.in.(${categories.join(",")}),categories.cs.{${categories.join(",")}}`
+      )
       .order("created_at", { ascending: false });
 
     const { data, error } = await query;
@@ -118,7 +122,10 @@ export async function getAllProductCategories(): Promise<string[]> {
       .not("categories", "is", null);
 
     if (legacyError || arrayError) {
-      console.error("Error fetching product categories:", { legacyError, arrayError });
+      console.error("Error fetching product categories:", {
+        legacyError,
+        arrayError,
+      });
       return [];
     }
 
@@ -126,14 +133,14 @@ export async function getAllProductCategories(): Promise<string[]> {
     const allCategories = new Set<string>();
 
     // Add legacy categories
-    legacyCategories?.forEach((item: { category: string }) => {
+    legacyCategories?.forEach((item) => {
       if (item.category) allCategories.add(item.category);
     });
 
     // Add array categories
-    arrayCategories?.forEach((item: { categories?: string[] }) => {
+    arrayCategories?.forEach((item) => {
       if (item.categories && Array.isArray(item.categories)) {
-        item.categories.forEach((cat: string) => {
+        item.categories.forEach((cat) => {
           if (cat) allCategories.add(cat);
         });
       }
@@ -166,10 +173,14 @@ export async function searchProductsByTextAndCategories(
 
     // Add category filtering if categories are specified
     if (categories && categories.length > 0) {
-      query = query.or(`category.in.(${categories.join(",")}),categories.cs.{${categories.join(",")}}`);
+      query = query.or(
+        `category.in.(${categories.join(",")}),categories.cs.{${categories.join(",")}}`
+      );
     }
 
-    const { data, error } = await query.order("created_at", { ascending: false });
+    const { data, error } = await query.order("created_at", {
+      ascending: false,
+    });
 
     if (error) {
       console.error("Error searching products by text and categories:", error);

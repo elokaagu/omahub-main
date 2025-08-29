@@ -103,7 +103,9 @@ export async function getCollectionWithBrand(id: string): Promise<
 /**
  * Fetch collections with brand information
  */
-export async function getCollectionsWithBrands(forceRefresh: boolean = false): Promise<
+export async function getCollectionsWithBrands(
+  forceRefresh: boolean = false
+): Promise<
   (Catalogue & {
     brand: {
       name: string;
@@ -147,8 +149,12 @@ export async function getCollectionsWithBrands(forceRefresh: boolean = false): P
   }
 
   // Process the data to construct proper image URLs from brand_images
-  const processedData = (data || []).map((collection: any) => {
-    if (collection.brand && collection.brand.brand_images && collection.brand.brand_images.length > 0) {
+  const processedData = (data || []).map((collection) => {
+    if (
+      collection.brand &&
+      collection.brand.brand_images &&
+      collection.brand.brand_images.length > 0
+    ) {
       // Use the new brand_images relationship
       const storagePath = collection.brand.brand_images[0].storage_path;
       collection.brand.image = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${storagePath}`;

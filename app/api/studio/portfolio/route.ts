@@ -61,12 +61,14 @@ export async function GET(request: NextRequest) {
     }
 
     // Ensure portfolio items have correct image structure
-    const normalizedPortfolioItems = (portfolioItems || []).map((item: any) => {
+    const normalizedPortfolioItems = (portfolioItems || []).map((item) => {
       // For portfolio items, ensure the first image from images array is always the main image
       if (item.images && item.images.length > 0) {
         const firstImage = item.images[0];
         if (firstImage && firstImage !== item.image) {
-          console.log(`🔄 Normalizing portfolio item "${item.title}": updating main image from "${item.image}" to "${firstImage}"`);
+          console.log(
+            `🔄 Normalizing portfolio item "${item.title}": updating main image from "${item.image}" to "${firstImage}"`
+          );
           return {
             ...item,
             image: firstImage,
@@ -75,9 +77,11 @@ export async function GET(request: NextRequest) {
       }
       return item;
     });
-    
-    console.log(`📸 Fetched ${normalizedPortfolioItems.length} portfolio items with normalized images`);
-    
+
+    console.log(
+      `📸 Fetched ${normalizedPortfolioItems.length} portfolio items with normalized images`
+    );
+
     return NextResponse.json(normalizedPortfolioItems);
   } catch (error) {
     console.error("Portfolio API error:", error);

@@ -48,7 +48,7 @@ export async function getAllBrandCategories(): Promise<string[]> {
   }
 
   // Get unique categories and sort them
-  const categories = [...new Set((data as { category: string }[]).map((item) => item.category))].sort();
+  const categories = [...new Set(data.map((item) => item.category))].sort();
   return categories;
 }
 
@@ -77,7 +77,7 @@ export async function getCategoryCounts(): Promise<Record<string, number>> {
     counts[cat.displayName] = 0;
   });
 
-  (data as { categories?: string[] }[]).forEach((item) => {
+  data.forEach((item) => {
     const brandCategories: string[] = Array.isArray(item.categories)
       ? item.categories
       : [];

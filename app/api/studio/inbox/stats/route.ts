@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
         "eloka.agu@icloud.com",
         "shannonalisa@oma-hub.com",
       ];
-      
+
       if (legacySuperAdmins.includes(user.email || "")) {
         profile = {
           role: "super_admin",
@@ -133,7 +133,7 @@ export async function GET(request: NextRequest) {
     const inquiriesByStatus: Record<string, number> = {};
 
     if (breakdownData) {
-      breakdownData.forEach((inquiry: any) => {
+      breakdownData.forEach((inquiry) => {
         // Count by type
         inquiriesByType[inquiry.inquiry_type] =
           (inquiriesByType[inquiry.inquiry_type] || 0) + 1;

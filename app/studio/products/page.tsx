@@ -140,7 +140,7 @@ export default function ProductsPage() {
 
       // Count favourites per product
       const productFavouritesMap = favouritesCountData.reduce(
-        (acc: Record<string, number>, fav: { item_id: string }) => {
+        (acc, fav) => {
           acc[fav.item_id] = (acc[fav.item_id] || 0) + 1;
           return acc;
         },
@@ -152,7 +152,7 @@ export default function ProductsPage() {
       let maxCount = 0;
 
       Object.entries(productFavouritesMap).forEach(([productId, count]) => {
-        if (typeof count === 'number' && count > maxCount) {
+        if (count > maxCount) {
           maxCount = count;
           mostPopular = { productId, count } as ProductFavourites;
         }

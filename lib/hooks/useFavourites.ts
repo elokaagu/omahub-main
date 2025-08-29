@@ -128,7 +128,7 @@ const useFavourites = () => {
         }
 
         console.log("✅ Favourite added successfully to database");
-        
+
         // Optimistically update local state immediately for better UX
         setFavourites((prev) => {
           // Create a temporary favourite item for immediate UI update
@@ -142,16 +142,16 @@ const useFavourites = () => {
             location: "Loading...",
             favourite_id: `temp-${Date.now()}`,
           } as any;
-          
+
           const updated = [...prev, tempFavourite];
           console.log("🚀 Optimistic update - item added to local state:", {
             beforeCount: prev.length,
             afterCount: updated.length,
-            addedItem: { itemId, itemType }
+            addedItem: { itemId, itemType },
           });
           return updated;
         });
-        
+
         // Then fetch fresh data from server in background
         setTimeout(async () => {
           try {
@@ -160,17 +160,25 @@ const useFavourites = () => {
               const data = await response.json();
               if (data.favourites) {
                 setFavourites(data.favourites);
-                console.log("🔄 Background refresh - local state updated with fresh data:", {
-                  newCount: data.favourites.length,
-                  newFavourites: data.favourites.map((f: any) => ({ id: f.id, item_type: f.item_type }))
-                });
+                console.log(
+                  "🔄 Background refresh - local state updated with fresh data:",
+                  {
+                    newCount: data.favourites.length,
+                    newFavourites: data.favourites.map((f: any) => ({
+                      id: f.id,
+                      item_type: f.item_type,
+                    })),
+                  }
+                );
               }
             }
           } catch (error) {
-            console.log("⚠️ Background refresh failed, but optimistic update is active");
+            console.log(
+              "⚠️ Background refresh failed, but optimistic update is active"
+            );
           }
         }, 100); // Small delay to ensure optimistic update renders first
-        
+
         // Return true to indicate successful addition
         return true;
       } catch (err: any) {
@@ -214,14 +222,14 @@ const useFavourites = () => {
           const updated = prev.filter(
             (fav) => !(fav.id === itemId && fav.item_type === itemType)
           );
-          console.log("🔄 Local state updated:", { 
-            beforeCount: prev.length, 
+          console.log("🔄 Local state updated:", {
+            beforeCount: prev.length,
             afterCount: updated.length,
-            removedItem: { itemId, itemType }
+            removedItem: { itemId, itemType },
           });
           return updated;
         });
-        
+
         // Return true to indicate successful removal
         return true;
       } catch (err: any) {
@@ -231,7 +239,7 @@ const useFavourites = () => {
           description: err.message || "Failed to remove favourite",
           variant: "destructive",
         });
-        
+
         // Return false on error
         return false;
       }
@@ -251,13 +259,15 @@ const useFavourites = () => {
         itemType,
         result,
         favouritesCount: favourites.length,
-        favourites: favourites.map((f: { id: string; item_type: string }) => ({
+        favourites: favourites.map((f) => ({
           id: f.id,
           item_type: f.item_type,
         })),
         currentFavourites: favourites,
         searchingFor: { itemId, itemType },
-        foundMatch: favourites.find(f => f.id === itemId && f.item_type === itemType)
+        foundMatch: favourites.find(
+          (f) => f.id === itemId && f.item_type === itemType
+        ),
       });
       return result;
     },

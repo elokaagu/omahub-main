@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Calculate hours_since_creation
-    const processedData = data.map((account: { id: string; email: string; role: string; created_at: string }) => ({
+    const processedData = data.map((account) => ({
       ...account,
       hours_since_creation:
         (Date.now() - new Date(account.created_at).getTime()) /

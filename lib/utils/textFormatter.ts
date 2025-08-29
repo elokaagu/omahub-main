@@ -31,7 +31,7 @@ export function removeContractions(text: string): string {
     "shan't": "shall not",
     "ain't": "am not",
     "aren't": "are not",
-    
+
     // Possessive contractions
     "you're": "you are",
     "they're": "they are",
@@ -44,38 +44,38 @@ export function removeContractions(text: string): string {
     "when's": "when is",
     "why's": "why is",
     "how's": "how is",
-    
+
     // Other common contractions
     "let's": "let us",
     "that's": "that is",
     "there's": "there is",
     "here's": "here is",
     "y'all": "you all",
-    "gonna": "going to",
-    "wanna": "want to",
-    "gotta": "got to",
-    "lemme": "let me",
-    "gimme": "give me",
-    "kinda": "kind of",
-    "sorta": "sort of",
-    "outta": "out of",
-    "lotsa": "lots of",
-    "cuppa": "cup of",
-    "dunno": "do not know",
-    "gotcha": "got you",
-    "howdy": "how do you do",
-    "innit": "is it not",
-    "nope": "no",
-    "yep": "yes",
-    "yup": "yes",
+    gonna: "going to",
+    wanna: "want to",
+    gotta: "got to",
+    lemme: "let me",
+    gimme: "give me",
+    kinda: "kind of",
+    sorta: "sort of",
+    outta: "out of",
+    lotsa: "lots of",
+    cuppa: "cup of",
+    dunno: "do not know",
+    gotcha: "got you",
+    howdy: "how do you do",
+    innit: "is it not",
+    nope: "no",
+    yep: "yes",
+    yup: "yes",
   };
 
   let formattedText = text;
 
   // Replace contractions with their full forms
-      Object.entries(contractions).forEach(([contraction, fullForm]: [string, string]) => {
+  Object.entries(contractions).forEach(([contraction, fullForm]) => {
     // Use word boundaries to avoid partial matches
-    const regex = new RegExp(`\\b${contraction}\\b`, 'gi');
+    const regex = new RegExp(`\\b${contraction}\\b`, "gi");
     formattedText = formattedText.replace(regex, fullForm);
   });
 
@@ -88,7 +88,9 @@ export function removeContractions(text: string): string {
  * - Ensures proper capitalization
  * - Adds proper spacing
  */
-export function formatBrandDescription(description: string | undefined): string {
+export function formatBrandDescription(
+  description: string | undefined
+): string {
   if (!description) return "";
 
   let formatted = description;
@@ -98,8 +100,8 @@ export function formatBrandDescription(description: string | undefined): string 
 
   // Ensure proper spacing around punctuation
   formatted = formatted
-    .replace(/([.!?])([A-Z])/g, '$1 $2') // Add space after sentence endings
-    .replace(/\s+/g, ' ') // Normalize multiple spaces to single space
+    .replace(/([.!?])([A-Z])/g, "$1 $2") // Add space after sentence endings
+    .replace(/\s+/g, " ") // Normalize multiple spaces to single space
     .trim();
 
   return formatted;
@@ -121,9 +123,10 @@ export function professionalizeText(text: string): string {
 
   // Ensure proper sentence structure
   cleaned = cleaned
-    .replace(/\s+/g, ' ') // Normalize spaces
-    .replace(/([.!?])\s*([a-z])/g, (match, punct, letter) => 
-      `${punct} ${letter.toUpperCase()}`
+    .replace(/\s+/g, " ") // Normalize spaces
+    .replace(
+      /([.!?])\s*([a-z])/g,
+      (match, punct, letter) => `${punct} ${letter.toUpperCase()}`
     ) // Capitalize after punctuation
     .trim();
 

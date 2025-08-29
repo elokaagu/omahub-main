@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
     const allCookies = cookieStore.getAll();
     console.log(
       "🍪 Available cookies:",
-      allCookies.map((c: { name: string; value: string }) => ({ name: c.name, hasValue: !!c.value }))
+      allCookies.map((c) => ({ name: c.name, hasValue: !!c.value }))
     );
 
     // Create authenticated client

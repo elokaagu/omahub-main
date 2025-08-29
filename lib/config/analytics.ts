@@ -5,7 +5,8 @@
 export const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID || "GTM-55JQB28Z";
 
 // Google Analytics 4 Measurement ID (as fallback)
-export const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_ID || "G-94EE1362LB";
+export const GA_MEASUREMENT_ID =
+  process.env.NEXT_PUBLIC_GA_ID || "G-94EE1362LB";
 
 // Check if GTM is enabled
 export const GTM_ENABLED = !!GTM_ID;
@@ -100,7 +101,7 @@ export const ecommerce = {
         ecommerce: {
           currency: items[0]?.currency || "USD",
           value: totalValue,
-          items: items.map((item: any) => ({
+          items: items.map((item) => ({
             item_id: item.item_id,
             item_name: item.item_name,
             price: item.price,
@@ -139,7 +140,7 @@ export const ecommerce = {
           currency: transaction.currency,
           tax: transaction.tax,
           shipping: transaction.shipping,
-          items: transaction.items.map((item: any) => ({
+          items: transaction.items.map((item) => ({
             item_id: item.item_id,
             item_name: item.item_name,
             price: item.price,
@@ -199,7 +200,7 @@ export const ecommerce = {
         event: "view_item_list",
         ecommerce: {
           item_list_name: list_name || "Product List",
-          items: items.map((item: any) => ({
+          items: items.map((item) => ({
             item_id: item.item_id,
             item_name: item.item_name,
             price: item.price,

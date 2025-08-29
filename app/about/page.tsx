@@ -20,12 +20,6 @@ export default function About() {
 
   useEffect(() => {
     async function fetchContent() {
-      if (!supabase) {
-        console.error("Supabase client not available");
-        setLoading(false);
-        return;
-      }
-
       setLoading(true);
       const { data: aboutData } = await supabase
         .from("platform_settings")

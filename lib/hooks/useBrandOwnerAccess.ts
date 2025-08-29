@@ -235,7 +235,7 @@ export function useBrandOwnerAccess(): BrandOwnerAccess {
             totalBrands: brands.length,
             ownedBrandIds,
             filteredCount: filtered.length,
-            filteredBrands: filtered.map((b: { name: string; id: string }) => `${b.name} (${b.id})`),
+            filteredBrands: filtered.map((b) => `${b.name} (${b.id})`),
           }
         );
         return filtered;

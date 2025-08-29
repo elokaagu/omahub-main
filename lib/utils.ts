@@ -104,7 +104,7 @@ export function generateSlug(text: string): string {
 export function getInitials(name: string): string {
   return name
     .split(" ")
-            .map((word: any) => word.charAt(0))
+    .map((word) => word.charAt(0))
     .join("")
     .toUpperCase()
     .slice(0, 2);

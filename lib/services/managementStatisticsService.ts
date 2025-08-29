@@ -61,7 +61,7 @@ export async function getPlatformStatistics(): Promise<PlatformStatistics> {
     );
 
     // Get the most recent update time
-    const lastUpdated = statistics.reduce((latest: any, stat: any) => {
+    const lastUpdated = statistics.reduce((latest, stat) => {
       return new Date(stat.last_updated) > new Date(latest)
         ? stat.last_updated
         : latest;
@@ -187,7 +187,7 @@ export async function getFormattedStatistics(): Promise<
       total_products: "Total Products",
     };
 
-    return statistics.map((stat: { metric_name: string; metric_value: number; last_updated: string }) => ({
+    return statistics.map((stat) => ({
       label: labelMap[stat.metric_name] || stat.metric_name,
       value: stat.metric_value,
       lastUpdated: stat.last_updated,

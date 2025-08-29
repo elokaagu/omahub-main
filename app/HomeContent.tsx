@@ -146,7 +146,7 @@ const generateDynamicFallbackItems = async (): Promise<CarouselItem[]> => {
       const randomTailor = tailors[Math.floor(Math.random() * tailors.length)];
       items.push({
         id: 2,
-        image: randomTailor.brand.image,
+        image: randomTailor.image,
         title: "Tailored",
         subtitle: "Masters of craft creating perfectly fitted garments",
         link: "/tailors",

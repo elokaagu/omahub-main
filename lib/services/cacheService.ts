@@ -183,7 +183,7 @@ class AdvancedCacheService {
       priority?: "high" | "medium" | "low";
     }>
   ): Promise<void> {
-    const promises = entries.map((entry: { key: string; data: T; priority?: "high" | "medium" | "low" }) =>
+    const promises = entries.map((entry) =>
       this.preload(entry.key, entry.data, entry.priority)
     );
     await Promise.all(promises);
@@ -237,7 +237,7 @@ class AdvancedCacheService {
 
     // Need to evict entries
     const entries = Array.from(this.cache.entries())
-      .map(([key, entry]: [string, any]) => ({ key, entry }))
+      .map(([key, entry]) => ({ key, entry }))
       .sort((a, b) => {
         // Sort by priority, then by access count, then by last accessed
         const priorityOrder: Record<string, number> = {

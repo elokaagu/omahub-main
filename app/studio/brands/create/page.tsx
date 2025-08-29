@@ -1,13 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { SimpleFileUpload } from "@/components/ui/simple-file-upload";
 import { Label } from "@/components/ui/label";
 import {
   Card,
@@ -24,7 +23,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { MultiSelect } from "@/components/ui/multi-select";
 import { ArrowLeft, Save, Globe, Instagram } from "lucide-react";
 import Link from "next/link";
 import {
@@ -32,16 +30,8 @@ import {
   formatNumberWithCommas,
 } from "@/lib/utils/priceFormatter";
 import { extractCurrencyFromPriceRange } from "@/lib/utils/currencySync";
-import { LazyImage } from "@/components/ui/lazy-image";
 import { getAllCategoryNames } from "@/lib/data/unified-categories";
 import { formatBrandDescription } from "@/lib/utils/textFormatter";
-import { VideoUpload } from "@/components/ui/video-upload";
-
-// Simple error handler for critical failures
-function handleCriticalError(error: Error) {
-  console.error("Critical error in brand creation:", error);
-  toast.error("Failed to load brand creation form. Please refresh the page.");
-}
 
 // Brand categories - now using unified categories (same as product)
 const CATEGORIES = getAllCategoryNames();
@@ -97,39 +87,6 @@ export default function CreateBrandPage() {
     video_url: "",
     video_thumbnail: "",
   });
-
-  // Check if user has permission and redirect if not
-  useEffect(() => {
-    if (!user) {
-      router.push("/login");
-      return;
-    }
-
-    if (
-      !user.role ||
-      !["admin", "super_admin", "brand_admin"].includes(user.role)
-    ) {
-      toast.error("You don't have permission to create brands");
-      router.push("/studio");
-      return;
-    }
-  }, [user, router]);
-
-  // Don't render the form until user is authenticated and authorized
-  if (
-    !user ||
-    !user.role ||
-    !["admin", "super_admin", "brand_admin"].includes(user.role)
-  ) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-oma-plum mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
-  }
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -406,6 +363,49 @@ export default function CreateBrandPage() {
         <h1 className="text-3xl font-canela text-gray-900">Create New Brand</h1>
       </div>
 
+      {/* Debug Info in Development */}
+      {process.env.NODE_ENV === "development" && (
+        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm">
+          <p className="font-semibold text-blue-800 mb-2">
+            🔍 Debug Information:
+          </p>
+          <div className="space-y-1 text-blue-700">
+            <p>• User Authenticated: {user ? "✅ Yes" : "❌ No"}</p>
+            {user && (
+              <>
+                <p>• User Email: {user.email}</p>
+                <p>• User Role: {user.role}</p>
+                <p>• User ID: {user.id}</p>
+              </>
+            )}
+            <p>
+              • Form Valid:{" "}
+              {formData.name &&
+              formData.description &&
+              formData.categories.length > 0 &&
+              formData.location &&
+              formData.image &&
+              formData.contact_email
+                ? "✅ Yes"
+                : "❌ No"}
+            </p>
+            <p>
+              • Missing Fields:{" "}
+              {[
+                !formData.name && "Name",
+                !formData.description && "Description",
+                !formData.categories.length && "Categories",
+                !formData.location && "Location",
+                !formData.image && "Image",
+                !formData.contact_email && "Contact Email",
+              ]
+                .filter(Boolean)
+                .join(", ") || "None"}
+            </p>
+          </div>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
@@ -519,12 +519,24 @@ export default function CreateBrandPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="categories">Categories *</Label>
-                    <MultiSelect
-                      options={CATEGORIES}
-                      value={formData.categories}
-                      onValueChange={handleCategoriesChange}
-                      placeholder="Select categories"
-                    />
+                    <Select
+                      value={formData.categories[0] || ""}
+                      onValueChange={(value) => handleCategoriesChange([value])}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CATEGORIES.map((category) => (
+                          <SelectItem key={category} value={category}>
+                            {category}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      Note: Only one category can be selected at a time
+                    </p>
                   </div>
 
                   <div className="space-y-2">
@@ -721,37 +733,21 @@ export default function CreateBrandPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <SimpleFileUpload
-                  onUploadComplete={handleImageUpload}
-                  defaultValue={formData.image}
-                  bucket="brand-assets"
-                  accept="image/png,image/jpeg,image/jpg,image/webp"
-                  maxSize={5}
-                  imageType="brand"
-                  imageRole="cover"
-                  // Note: brandId and brandName will be set after brand creation
-                  // For now, this will use legacy naming, but can be updated later
-                />
-                {/* Always show brand video and thumbnail upload fields */}
-                <div className="mt-6 space-y-4">
-                  <Label>Brand Video (optional)</Label>
-                  <VideoUpload
-                    onUploadComplete={handleVideoUpload}
-                    defaultValue={formData.video_url}
-                    bucket="product-videos"
-                    path="brands"
-                    accept="video/mp4,video/webm,video/quicktime"
-                    maxSize={50}
-                  />
-                  <Label className="mt-4">Video Thumbnail (optional)</Label>
-                  <SimpleFileUpload
-                    onUploadComplete={handleVideoThumbnailUpload}
-                    defaultValue={formData.video_thumbnail}
-                    bucket="brand-assets"
-                    path="thumbnails"
-                    accept="image/png,image/jpeg,image/jpg,image/webp"
-                    maxSize={5}
-                  />
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="image">Brand Image URL</Label>
+                    <Input
+                      id="image"
+                      name="image"
+                      value={formData.image}
+                      onChange={handleInputChange}
+                      placeholder="Enter image URL (e.g., https://example.com/image.jpg)"
+                      required
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      For now, please enter an image URL. File upload will be restored later.
+                    </p>
+                  </div>
                 </div>
               </CardContent>
               <CardFooter>

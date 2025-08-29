@@ -314,7 +314,7 @@ export async function reorderHeroSlides(
     }
 
     await Promise.all(
-      slideIds.map((id: string, index: number) =>
+      slideIds.map((id, index) =>
         supabase!
           .from("hero_slides")
           .update({ display_order: index + 1 })
