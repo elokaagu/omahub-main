@@ -121,6 +121,22 @@ export async function POST(request: NextRequest) {
     }
 
     // Create the order in the database
+    console.log('💾 Saving order to database with data:', {
+      user_id: finalUserId,
+      product_id,
+      brand_id,
+      status: 'pending',
+      total_amount: total_amount || product.sale_price || product.price,
+      measurements: {
+        fit_preference: orderData.measurements?.fit_preference || null,
+        length_preference: orderData.measurements?.length_preference || null,
+        sleeve_preference: orderData.measurements?.sleeve_preference || null,
+      },
+      size: orderData.size || null,
+      color: orderData.color || null,
+      quantity: orderData.quantity || 1,
+    });
+    
     const { data: order, error: orderError } = await supabase
       .from("tailored_orders")
       .insert({
@@ -131,8 +147,41 @@ export async function POST(request: NextRequest) {
         total_amount: total_amount || product.sale_price || product.price,
         currency: "USD",
         customer_notes: customer_notes || "",
-        measurements: {}, // Empty measurements object for now
-        delivery_address,
+        
+        // Save actual measurements data instead of empty object
+        measurements: {
+          fit_preference: orderData.measurements?.fit_preference || null,
+          length_preference: orderData.measurements?.length_preference || null,
+          sleeve_preference: orderData.measurements?.sleeve_preference || null,
+          height: orderData.measurements?.height || null,
+          weight: orderData.measurements?.weight || null,
+          chest: orderData.measurements?.chest || null,
+          waist: orderData.measurements?.waist || null,
+          hips: orderData.measurements?.hips || null,
+          inseam: orderData.measurements?.inseam || null,
+          shoulder: orderData.measurements?.shoulder || null,
+          arm_length: orderData.measurements?.arm_length || null,
+          neck: orderData.measurements?.neck || null,
+          custom_measurements: orderData.measurements?.custom_measurements || null
+        },
+        
+        // Save product preferences
+        size: orderData.size || null,
+        color: orderData.color || null,
+        quantity: orderData.quantity || 1,
+        
+        // Save delivery address
+        delivery_address: {
+          full_name: delivery_address.full_name,
+          email: delivery_address.email,
+          phone: delivery_address.phone,
+          address_line_1: delivery_address.address_line_1,
+          city: delivery_address.city,
+          state: delivery_address.state,
+          postal_code: delivery_address.postal_code,
+          country: delivery_address.country
+        },
+        
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
@@ -140,12 +189,14 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (orderError) {
-      console.error("Error creating order:", orderError);
+      console.error("❌ Error creating order:", orderError);
       return NextResponse.json(
         { error: "Failed to create order" },
         { status: 500 }
       );
     }
+
+    console.log('✅ Order saved successfully with ID:', order.id);
 
     // Create notification for brand owner
     try {

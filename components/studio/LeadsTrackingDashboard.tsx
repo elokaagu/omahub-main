@@ -803,7 +803,7 @@ export default function LeadsTrackingDashboard({
             </p>
           </Card>
         </div>
-        
+
         {/* No Data Message */}
         {!analyticsLoading && analytics && analytics.total_leads === 0 && (
           <Card className="p-4 border-l-4 border-l-amber-500 border-amber-200 bg-amber-50 mt-4">
@@ -811,30 +811,29 @@ export default function LeadsTrackingDashboard({
               No Data Available
             </h3>
             <p className="text-sm text-amber-700">
-              The dashboard is showing zeros because there are no leads or bookings in the system yet. 
-              This is normal for a new installation. Data will appear here once leads are created or 
-              the leads tracking system is set up.
+              The dashboard is showing zeros because there are no leads or
+              bookings in the system yet. This is normal for a new installation.
+              Data will appear here once leads are created or the leads tracking
+              system is set up.
             </p>
           </Card>
         )}
-        
+
         {/* Analytics Error Display */}
         {analyticsError && (
           <Card className="p-4 border-l-4 border-l-red-500 border-red-200 bg-red-50 mt-4">
             <h3 className="text-sm font-medium text-red-800 mb-2">
               Analytics Error
             </h3>
-            <p className="text-sm text-red-700 mb-3">
-              {analyticsError}
-            </p>
-            <Button 
-              onClick={refetchAnalytics} 
-              variant="outline" 
+            <p className="text-sm text-red-700 mb-3">{analyticsError}</p>
+            <Button
+              onClick={refetchAnalytics}
+              variant="outline"
               size="sm"
               disabled={analyticsLoading}
               className="text-red-700 border-red-300 hover:bg-red-100"
             >
-              {analyticsLoading ? 'Retrying...' : 'Retry Analytics'}
+              {analyticsLoading ? "Retrying..." : "Retry Analytics"}
             </Button>
           </Card>
         )}
@@ -855,22 +854,38 @@ export default function LeadsTrackingDashboard({
             Debug Information
           </h3>
           <div className="space-y-2 text-sm">
-            <p><strong>User Role:</strong> {user?.role || 'Unknown'}</p>
-            <p><strong>Analytics Loading:</strong> {analyticsLoading ? 'Yes' : 'No'}</p>
-            <p><strong>Analytics Error:</strong> {analyticsError || 'None'}</p>
-            <p><strong>Total Leads:</strong> {analytics?.total_leads || 0}</p>
-            <p><strong>Leads Data:</strong> {leads?.length || 0} leads loaded</p>
-            <p><strong>Owned Brands:</strong> {effectiveOwnedBrands.length}</p>
-            <p><strong>API Status:</strong> {analytics ? 'Data loaded' : 'No data'}</p>
+            <p>
+              <strong>User Role:</strong> {user?.role || "Unknown"}
+            </p>
+            <p>
+              <strong>Analytics Loading:</strong>{" "}
+              {analyticsLoading ? "Yes" : "No"}
+            </p>
+            <p>
+              <strong>Analytics Error:</strong> {analyticsError || "None"}
+            </p>
+            <p>
+              <strong>Total Leads:</strong> {analytics?.total_leads || 0}
+            </p>
+            <p>
+              <strong>Leads Data:</strong> {leads?.length || 0} leads loaded
+            </p>
+            <p>
+              <strong>Owned Brands:</strong> {effectiveOwnedBrands.length}
+            </p>
+            <p>
+              <strong>API Status:</strong>{" "}
+              {analytics ? "Data loaded" : "No data"}
+            </p>
           </div>
           <div className="mt-4">
-            <Button 
-              onClick={refetchAnalytics} 
-              variant="outline" 
+            <Button
+              onClick={refetchAnalytics}
+              variant="outline"
               size="sm"
               disabled={analyticsLoading}
             >
-              {analyticsLoading ? 'Refreshing...' : 'Refresh Analytics'}
+              {analyticsLoading ? "Refreshing..." : "Refresh Analytics"}
             </Button>
           </div>
         </Card>
