@@ -124,8 +124,10 @@ export function TailoredOrderModal({
       return;
     }
 
-    if (!isFormValid()) {
-      toast.error("Please fill in all required fields.");
+    // Get validation errors
+    const validationErrors = getValidationErrors();
+    if (validationErrors.length > 0) {
+      toast.error(`Please fix the following errors:\n${validationErrors.join('\n')}`);
       return;
     }
 
@@ -145,6 +147,8 @@ export function TailoredOrderModal({
         measurements: measurements,
       };
 
+      console.log("Submitting custom order:", orderData);
+
       const response = await fetch("/api/orders/custom", {
         method: "POST",
         headers: {
@@ -158,28 +162,94 @@ export function TailoredOrderModal({
         throw new Error(errorData.error || "Failed to create order");
       }
 
+      const result = await response.json();
+      console.log("Order submitted successfully:", result);
+
       toast.success("Custom order submitted successfully!");
       engagement.submitCustomOrder(`${product.title} - ${brand.name}`);
       setOrderComplete(true);
+      
+      // Reset form
+      setMeasurements({
+        fit_preference: "regular",
+        length_preference: "regular",
+        sleeve_preference: "long",
+      });
+      setDeliveryAddress({
+        full_name: "",
+        phone: "",
+        email: user?.email || "",
+        address_line_1: "",
+        city: "",
+        state: "",
+        postal_code: "",
+        country: "",
+      });
+      setCustomerNotes("");
+      setSelectedSize("");
+      setSelectedColor("");
+      
     } catch (error) {
       console.error("Error creating order:", error);
-      toast.error("Failed to create order. Please try again.");
+      toast.error(error instanceof Error ? error.message : "Failed to create order. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
   const isFormValid = () => {
-    return (
-      deliveryAddress.full_name &&
-      deliveryAddress.phone &&
-      deliveryAddress.email &&
-      deliveryAddress.address_line_1 &&
-      deliveryAddress.city &&
-      deliveryAddress.state &&
-      deliveryAddress.postal_code &&
-      deliveryAddress.country
-    );
+    // Check required fields
+    const requiredFields = [
+      deliveryAddress.full_name,
+      deliveryAddress.phone,
+      deliveryAddress.email,
+      deliveryAddress.address_line_1,
+      deliveryAddress.city,
+      deliveryAddress.postal_code,
+      deliveryAddress.country,
+    ];
+
+    // Check if any required field is empty
+    if (requiredFields.some(field => !field?.trim())) {
+      return false;
+    }
+
+    // Check email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(deliveryAddress.email)) {
+      return false;
+    }
+
+    // Check if at least one measurement preference is selected
+    if (!measurements.fit_preference || !measurements.length_preference || !measurements.sleeve_preference) {
+      return false;
+    }
+
+    return true;
+  };
+
+  const getValidationErrors = () => {
+    const errors = [];
+    
+    if (!deliveryAddress.full_name?.trim()) errors.push("Full name is required");
+    if (!deliveryAddress.phone?.trim()) errors.push("Phone number is required");
+    if (!deliveryAddress.email?.trim()) errors.push("Email is required");
+    if (!deliveryAddress.address_line_1?.trim()) errors.push("Address is required");
+    if (!deliveryAddress.city?.trim()) errors.push("City is required");
+    if (!deliveryAddress.postal_code?.trim()) errors.push("Postal code is required");
+    if (!deliveryAddress.country?.trim()) errors.push("Country is required");
+    
+    // Email format validation
+    if (deliveryAddress.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(deliveryAddress.email)) {
+      errors.push("Please enter a valid email address");
+    }
+    
+    // Measurement preferences validation
+    if (!measurements.fit_preference) errors.push("Please select a fit preference");
+    if (!measurements.length_preference) errors.push("Please select a length preference");
+    if (!measurements.sleeve_preference) errors.push("Please select a sleeve preference");
+    
+    return errors;
   };
 
   // Success state
@@ -267,6 +337,29 @@ export function TailoredOrderModal({
 
               {/* Measurements Tab */}
               <TabsContent value="measurements" className="space-y-4">
+                {/* Validation Errors Display */}
+                {(() => {
+                  const errors = getValidationErrors();
+                  if (errors.length === 0) return null;
+                  
+                  return (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <AlertCircle className="h-4 w-4 text-red-600" />
+                        <h4 className="font-medium text-red-800">Please fix the following errors:</h4>
+                      </div>
+                      <ul className="text-sm text-red-700 space-y-1">
+                        {errors.map((error, index) => (
+                          <li key={index} className="flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 bg-red-600 rounded-full"></span>
+                            {error}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  );
+                })()}
+                
                 <div className="bg-white rounded-lg border border-gray-200 p-6">
                   <div className="flex items-center gap-2 mb-4">
                     <div className="h-8 w-8 bg-oma-plum/10 rounded-full flex items-center justify-center">

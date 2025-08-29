@@ -27,6 +27,7 @@ import {
   Phone,
   MapPin,
   MessageSquare,
+  AlertCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatPrice } from "@/lib/utils/priceFormatter";
@@ -59,6 +60,8 @@ export function BrandRequestModal({
   color,
 }: BrandRequestModalProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
+
   const [formData, setFormData] = useState({
     full_name: "",
     email: "",
@@ -76,10 +79,43 @@ export function BrandRequestModal({
 
   const handleInputChange = (field: string, value: string | number) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+    // Clear validation errors when user starts typing
+    if (validationErrors.length > 0) {
+      setValidationErrors([]);
+    }
+  };
+
+  const validateForm = () => {
+    const errors = [];
+    
+    // Required fields
+    if (!formData.full_name?.trim()) errors.push("Full name is required");
+    if (!formData.email?.trim()) errors.push("Email address is required");
+    if (!formData.address_line_1?.trim()) errors.push("Address is required");
+    if (!formData.city?.trim()) errors.push("City is required");
+    if (!formData.postal_code?.trim()) errors.push("Postal code is required");
+    if (!formData.country?.trim()) errors.push("Country is required");
+    
+    // Email format validation
+    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      errors.push("Please enter a valid email address");
+    }
+    
+    // Quantity validation
+    if (formData.quantity < 1) errors.push("Quantity must be at least 1");
+    
+    setValidationErrors(errors);
+    return errors.length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    
+    // Validate form before submission
+    if (!validateForm()) {
+      return;
+    }
+    
     setIsLoading(true);
 
     const requestData = {
@@ -145,6 +181,7 @@ export function BrandRequestModal({
         preferred_size: size || "",
         preferred_color: color || "",
       });
+      setValidationErrors([]);
     } catch (error: any) {
       console.error("Error submitting request:", error);
       toast.error(
@@ -171,6 +208,24 @@ export function BrandRequestModal({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Product Information */}
           <div className="space-y-4">
+            {/* Validation Errors Display */}
+            {validationErrors.length > 0 && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <AlertCircle className="h-4 w-4 text-red-600" />
+                  <h4 className="font-medium text-red-800">Please fix the following errors:</h4>
+                </div>
+                <ul className="text-sm text-red-700 space-y-1">
+                  {validationErrors.map((error, index) => (
+                    <li key={index} className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 bg-red-600 rounded-full"></span>
+                      {error}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            
             <div className="bg-gray-50 p-4 rounded-lg">
               <h3 className="font-semibold text-oma-plum mb-3">
                 Product Details
@@ -234,15 +289,25 @@ export function BrandRequestModal({
                 >
                   Preferred Size
                 </Label>
-                <Input
-                  id="preferred_size"
-                  placeholder="e.g., M, L, XL, or custom measurements"
-                  className="border-oma-beige focus:border-oma-plum focus:ring-oma-plum"
+                <Select
                   value={formData.preferred_size}
-                  onChange={(e) =>
-                    handleInputChange("preferred_size", e.target.value)
-                  }
-                />
+                  onValueChange={(value) => handleInputChange("preferred_size", value)}
+                >
+                  <SelectTrigger className="border-oma-beige focus:border-oma-plum focus:ring-oma-plum">
+                    <SelectValue placeholder="Select your preferred size" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="XS">XS (Extra Small)</SelectItem>
+                    <SelectItem value="S">S (Small)</SelectItem>
+                    <SelectItem value="M">M (Medium)</SelectItem>
+                    <SelectItem value="L">L (Large)</SelectItem>
+                    <SelectItem value="XL">XL (Extra Large)</SelectItem>
+                    <SelectItem value="XXL">XXL (2XL)</SelectItem>
+                    <SelectItem value="XXXL">XXXL (3XL)</SelectItem>
+                    <SelectItem value="custom">Custom Measurements</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div>
@@ -412,14 +477,57 @@ export function BrandRequestModal({
                 >
                   Country *
                 </Label>
-                <Input
-                  id="country"
-                  placeholder="Country"
-                  className="border-oma-beige focus:border-oma-plum focus:ring-oma-plum"
+                <Select
                   value={formData.country}
-                  onChange={(e) => handleInputChange("country", e.target.value)}
-                  required
-                />
+                  onValueChange={(value) => handleInputChange("country", value)}
+                >
+                  <SelectTrigger className="border-oma-beige focus:border-oma-plum focus:ring-oma-plum">
+                    <SelectValue placeholder="Select your country" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Nigeria">Nigeria</SelectItem>
+                    <SelectItem value="United Kingdom">United Kingdom</SelectItem>
+                    <SelectItem value="United States">United States</SelectItem>
+                    <SelectItem value="Canada">Canada</SelectItem>
+                    <SelectItem value="Australia">Australia</SelectItem>
+                    <SelectItem value="Germany">Germany</SelectItem>
+                    <SelectItem value="France">France</SelectItem>
+                    <SelectItem value="Italy">Italy</SelectItem>
+                    <SelectItem value="Spain">Spain</SelectItem>
+                    <SelectItem value="Netherlands">Netherlands</SelectItem>
+                    <SelectItem value="Belgium">Belgium</SelectItem>
+                    <SelectItem value="Switzerland">Switzerland</SelectItem>
+                    <SelectItem value="Austria">Austria</SelectItem>
+                    <SelectItem value="Sweden">Sweden</SelectItem>
+                    <SelectItem value="Norway">Norway</SelectItem>
+                    <SelectItem value="Denmark">Denmark</SelectItem>
+                    <SelectItem value="Finland">Finland</SelectItem>
+                    <SelectItem value="Ireland">Ireland</SelectItem>
+                    <SelectItem value="Portugal">Portugal</SelectItem>
+                    <SelectItem value="Greece">Greece</SelectItem>
+                    <SelectItem value="Poland">Poland</SelectItem>
+                    <SelectItem value="Czech Republic">Czech Republic</SelectItem>
+                    <SelectItem value="Hungary">Hungary</SelectItem>
+                    <SelectItem value="Romania">Romania</SelectItem>
+                    <SelectItem value="Bulgaria">Bulgaria</SelectItem>
+                    <SelectItem value="Croatia">Croatia</SelectItem>
+                    <SelectItem value="Slovenia">Slovenia</SelectItem>
+                    <SelectItem value="Slovakia">Slovakia</SelectItem>
+                    <SelectItem value="Estonia">Estonia</SelectItem>
+                    <SelectItem value="Latvia">Latvia</SelectItem>
+                    <SelectItem value="Lithuania">Lithuania</SelectItem>
+                    <SelectItem value="Luxembourg">Luxembourg</SelectItem>
+                    <SelectItem value="Malta">Malta</SelectItem>
+                    <SelectItem value="Cyprus">Cyprus</SelectItem>
+                    <SelectItem value="Iceland">Iceland</SelectItem>
+                    <SelectItem value="Liechtenstein">Liechtenstein</SelectItem>
+                    <SelectItem value="Monaco">Monaco</SelectItem>
+                    <SelectItem value="San Marino">San Marino</SelectItem>
+                    <SelectItem value="Vatican City">Vatican City</SelectItem>
+                    <SelectItem value="Andorra">Andorra</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
