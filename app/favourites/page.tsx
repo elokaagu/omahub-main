@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import useFavourites from "@/lib/hooks/useFavourites";
 import { Loading } from "@/components/ui/loading";
 import Link from "next/link";
@@ -12,10 +12,20 @@ import { formatProductPrice } from "@/lib/utils/priceFormatter";
 export default function FavouritesPage() {
   const { favourites, loading, refreshFavourites } = useFavourites();
 
-  // Refresh favourites when the page loads to ensure we have the latest data
-  useEffect(() => {
+  // Create a stable callback for refresh
+  const handleRefresh = useCallback(() => {
     refreshFavourites();
   }, [refreshFavourites]);
+
+  // Refresh favourites when the page loads to ensure we have the latest data
+  useEffect(() => {
+    handleRefresh();
+
+    // Set up periodic refresh every 30 seconds to catch changes from other parts of the app
+    const interval = setInterval(handleRefresh, 30000);
+
+    return () => clearInterval(interval);
+  }, []); // Empty dependency array to run only once on mount
 
   // Separate favourites by type
   const brands = favourites.filter(
@@ -106,7 +116,7 @@ export default function FavouritesPage() {
           </span>
         )}
         <Button
-          onClick={refreshFavourites}
+          onClick={handleRefresh}
           variant="outline"
           size="sm"
           className="ml-auto border-oma-plum text-oma-plum hover:bg-oma-plum/10"
