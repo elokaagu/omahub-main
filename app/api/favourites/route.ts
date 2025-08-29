@@ -214,21 +214,32 @@ export async function POST(request: NextRequest) {
     }
 
     // Insert new favourite
+    console.log("🔄 Attempting to insert favourite:", {
+      user_id: userId,
+      item_id,
+      item_type,
+    });
+
     const { data: favourite, error: insertError } = await supabase
       .from("favourites")
       .insert({
         user_id: userId,
         item_id,
         item_type,
-        name: itemName,
       })
       .select()
       .single();
 
     if (insertError) {
-      console.error("Error inserting favourite:", insertError);
+      console.error("❌ Error inserting favourite:", insertError);
+      console.error("❌ Error details:", {
+        message: insertError.message,
+        details: insertError.details,
+        hint: insertError.hint,
+        code: insertError.code,
+      });
       return NextResponse.json(
-        { error: "Failed to add favourite" },
+        { error: "Failed to add favourite", details: insertError.message },
         { status: 500 }
       );
     }

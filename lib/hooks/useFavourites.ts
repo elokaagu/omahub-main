@@ -78,7 +78,7 @@ export default function useFavourites() {
       };
 
       // Update UI immediately for this specific item
-      setFavourites(prev => [...prev, optimisticItem]);
+      setFavourites((prev) => [...prev, optimisticItem]);
 
       try {
         const response = await fetch("/api/favourites", {
@@ -99,10 +99,14 @@ export default function useFavourites() {
         console.log("✅ Added to favourites:", data);
 
         // Replace optimistic item with real data from database
-        setFavourites(prev => 
-          prev.map(item => 
+        setFavourites((prev) =>
+          prev.map((item) =>
             item.id === itemId && item.item_type === itemType
-              ? { ...item, favourite_id: data.favourite.id, name: data.favourite.name || "Unknown" }
+              ? {
+                  ...item,
+                  favourite_id: data.favourite.id,
+                  name: data.favourite.name || "Unknown",
+                }
               : item
           )
         );
@@ -115,11 +119,11 @@ export default function useFavourites() {
         return true;
       } catch (error) {
         console.error("❌ Error adding favourite:", error);
-        
+
         // Revert optimistic update on error
-        setFavourites(prev => 
-          prev.filter(item => 
-            !(item.id === itemId && item.item_type === itemType)
+        setFavourites((prev) =>
+          prev.filter(
+            (item) => !(item.id === itemId && item.item_type === itemType)
           )
         );
 
@@ -152,13 +156,13 @@ export default function useFavourites() {
 
       // Store the item being removed for potential restoration
       const itemToRemove = favourites.find(
-        item => item.id === itemId && item.item_type === itemType
+        (item) => item.id === itemId && item.item_type === itemType
       );
 
       // Remove from UI immediately
-      setFavourites(prev => 
-        prev.filter(item => 
-          !(item.id === itemId && item.item_type === itemType)
+      setFavourites((prev) =>
+        prev.filter(
+          (item) => !(item.id === itemId && item.item_type === itemType)
         )
       );
 
@@ -180,19 +184,19 @@ export default function useFavourites() {
 
         const data = await response.json();
         console.log("✅ Removed from favourites:", data);
-        
+
         // Show success toast
         toast.success("Removed from favourites", {
           duration: 1500,
         });
-        
+
         return true;
       } catch (error) {
         console.error("❌ Error removing favourite:", error);
-        
+
         // Restore item on error
         if (itemToRemove) {
-          setFavourites(prev => [...prev, itemToRemove]);
+          setFavourites((prev) => [...prev, itemToRemove]);
         }
 
         toast.error(
