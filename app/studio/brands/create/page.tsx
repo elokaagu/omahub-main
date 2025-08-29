@@ -66,6 +66,27 @@ export default function CreateBrandPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const [submitting, setSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    description: "",
+    long_description: "",
+    location: "",
+    price_range: "",
+    price_min: "",
+    price_max: "",
+    contact_for_pricing: false,
+    currency: "USD", // Default to USD instead of NGN
+    categories: [] as string[],
+    image: "",
+    is_verified: false,
+    website: "",
+    instagram: "",
+    whatsapp: "",
+    contact_email: "",
+    founded_year: "",
+    video_url: "",
+    video_thumbnail: "",
+  });
 
   // Add loading state while auth is initializing
   if (authLoading) {
@@ -99,27 +120,6 @@ export default function CreateBrandPage() {
       </div>
     );
   }
-  const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-    long_description: "",
-    location: "",
-    price_range: "",
-    price_min: "",
-    price_max: "",
-    contact_for_pricing: false,
-    currency: "USD", // Default to USD instead of NGN
-    categories: [] as string[],
-    image: "",
-    is_verified: false,
-    website: "",
-    instagram: "",
-    whatsapp: "",
-    contact_email: "",
-    founded_year: "",
-    video_url: "",
-    video_thumbnail: "",
-  });
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -144,7 +144,7 @@ export default function CreateBrandPage() {
         const detectedCurrency = (() => {
           const currencyObj = getCurrencyByCode(currencySymbol);
           if (currencyObj) return currencyObj.code;
-          
+
           // Fallback mapping for common symbols
           if (currencySymbol === "₦") return "NGN";
           if (currencySymbol === "KSh") return "KES";
@@ -160,7 +160,7 @@ export default function CreateBrandPage() {
           if (currencySymbol === "€") return "EUR";
           return null;
         })();
-        
+
         if (detectedCurrency) {
           console.log(
             `🔄 Auto-detected currency: ${detectedCurrency} from price range (no explicit currency set)`
