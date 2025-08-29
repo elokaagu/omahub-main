@@ -226,7 +226,7 @@ export default function Header() {
   const handleSignOut = async () => {
     try {
       await signOut();
-      router.push("/login");
+      router.push("/");
     } catch (error) {
       console.error("Error signing out:", error);
     }
