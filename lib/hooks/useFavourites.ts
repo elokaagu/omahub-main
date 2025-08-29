@@ -56,7 +56,7 @@ export default function useFavourites() {
     }
   }, [user]);
 
-  // Add item to favourites with optimistic update
+  // Add item to favourites - direct to database
   const addFavourite = useCallback(
     async (
       itemId: string,
@@ -68,17 +68,6 @@ export default function useFavourites() {
         });
         return false;
       }
-
-      // Optimistic update - immediately add to local state
-      const optimisticItem: FavouriteItem = {
-        id: itemId,
-        item_type: itemType,
-        favourite_id: `temp-${Date.now()}`, // Temporary ID
-        name: "Loading...", // Placeholder data
-      };
-
-      setFavourites((prev) => [...prev, optimisticItem]);
-      console.log("🚀 Optimistic add:", { itemId, itemType });
 
       try {
         const response = await fetch("/api/favourites", {
@@ -98,26 +87,11 @@ export default function useFavourites() {
         const data = await response.json();
         console.log("✅ Added to favourites:", data);
 
-        // Replace optimistic item with real data
-        setFavourites((prev) =>
-          prev.map((item) =>
-            item.id === itemId && item.item_type === itemType
-              ? { ...item, ...data.favourite, favourite_id: data.favourite.id }
-              : item
-          )
-        );
-
+        // Refresh favourites from database to ensure consistency
+        await fetchFavourites();
         return true;
       } catch (error) {
         console.error("❌ Error adding favourite:", error);
-
-        // Revert optimistic update on error
-        setFavourites((prev) =>
-          prev.filter(
-            (item) => !(item.id === itemId && item.item_type === itemType)
-          )
-        );
-
         toast.error(
           error instanceof Error ? error.message : "Failed to add to favourites",
           {
@@ -127,10 +101,10 @@ export default function useFavourites() {
         return false;
       }
     },
-    [user]
+    [user, fetchFavourites]
   );
 
-  // Remove item from favourites with optimistic update
+  // Remove item from favourites - direct to database
   const removeFavourite = useCallback(
     async (
       itemId: string,
@@ -142,14 +116,6 @@ export default function useFavourites() {
         });
         return false;
       }
-
-      // Optimistic update - immediately remove from local state
-      setFavourites((prev) =>
-        prev.filter(
-          (item) => !(item.id === itemId && item.item_type === itemType)
-        )
-      );
-      console.log("🚀 Optimistic remove:", { itemId, itemType });
 
       try {
         const response = await fetch(
@@ -170,13 +136,11 @@ export default function useFavourites() {
         const data = await response.json();
         console.log("✅ Removed from favourites:", data);
 
+        // Refresh favourites from database to ensure consistency
+        await fetchFavourites();
         return true;
       } catch (error) {
         console.error("❌ Error removing favourite:", error);
-
-        // Revert optimistic update on error by refreshing from server
-        await fetchFavourites();
-
         toast.error(
           error instanceof Error
             ? error.message
@@ -191,7 +155,7 @@ export default function useFavourites() {
     [user, fetchFavourites]
   );
 
-  // Toggle favourite status
+  // Toggle favourite status - direct to database
   const toggleFavourite = useCallback(
     async (
       itemId: string,
