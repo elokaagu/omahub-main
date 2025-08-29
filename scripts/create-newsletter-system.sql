@@ -101,7 +101,7 @@ CREATE POLICY "Super admins can view all newsletter sends" ON public.newsletter_
         )
     );
 
--- Step 9: Create trigger function for updated_at
+-- Step 9: Create trigger function for updated_at (FIXED - create this BEFORE triggers)
 CREATE OR REPLACE FUNCTION update_newsletter_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -110,7 +110,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Step 10: Create triggers for updated_at
+-- Step 10: Create triggers for updated_at (FIXED - now the function exists)
 CREATE TRIGGER update_newsletter_subscribers_updated_at
     BEFORE UPDATE ON public.newsletter_subscribers
     FOR EACH ROW
@@ -119,12 +119,12 @@ CREATE TRIGGER update_newsletter_subscribers_updated_at
 CREATE TRIGGER update_newsletter_campaigns_updated_at
     BEFORE UPDATE ON public.newsletter_campaigns
     FOR EACH ROW
-    EXECUTE FUNCTION update_newsletter_campaigns_updated_at();
+    EXECUTE FUNCTION update_newsletter_updated_at();
 
 CREATE TRIGGER update_newsletter_sends_updated_at
     BEFORE UPDATE ON public.newsletter_sends
     FOR EACH ROW
-    EXECUTE FUNCTION update_newsletter_sends_updated_at();
+    EXECUTE FUNCTION update_newsletter_updated_at();
 
 -- Step 11: Add comments for documentation
 COMMENT ON TABLE public.newsletter_subscribers IS 'Newsletter subscribers with preferences and tracking';
