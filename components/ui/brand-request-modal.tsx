@@ -99,10 +99,12 @@ export function BrandRequestModal({
     
     console.log("🔄 Form reset - Size prop:", size, "Color prop:", color);
     console.log("📝 Initial form data:", initialFormData);
+    console.log("🔍 Modal props:", { isOpen, size, color, productName, brandName });
   }, [isOpen, size, color]);
 
   const handleInputChange = (field: string, value: string | number) => {
     console.log(`📝 Field change: ${field} = ${value}`);
+    console.log(`📊 Previous form data:`, formData);
     setFormData((prev) => ({ ...prev, [field]: value }));
     // Clear validation errors when user starts typing
     if (validationErrors.length > 0) {
@@ -357,9 +359,33 @@ export function BrandRequestModal({
                 </Select>
                 {/* Debug info - remove in production */}
                 {process.env.NODE_ENV === 'development' && (
-                  <p className="text-xs text-blue-600 mt-1">
-                    Current value: "{formData.preferred_size}" | Size prop: "{size}"
-                  </p>
+                  <div className="text-xs text-blue-600 mt-1 space-y-1">
+                    <p>Current value: "{formData.preferred_size}"</p>
+                    <p>Size prop: "{size}"</p>
+                    <p>Form data preferred_size: "{formData.preferred_size}"</p>
+                    <p>Select value prop: "{formData.preferred_size}"</p>
+                  </div>
+                )}
+                
+                {/* Fallback HTML select for testing */}
+                {process.env.NODE_ENV === 'development' && (
+                  <div className="mt-2 p-2 bg-yellow-100 rounded border">
+                    <p className="text-xs font-medium mb-1">Fallback HTML Select (Testing):</p>
+                    <select
+                      value={formData.preferred_size}
+                      onChange={(e) => handleInputChange("preferred_size", e.target.value)}
+                      className="w-full p-1 text-xs border rounded"
+                    >
+                      <option value="">Select size (HTML fallback)</option>
+                      <option value="XS">XS</option>
+                      <option value="S">S</option>
+                      <option value="M">M</option>
+                      <option value="L">L</option>
+                      <option value="XL">XL</option>
+                      <option value="XXL">XXL</option>
+                    </select>
+                    <p className="text-xs mt-1">HTML select value: "{formData.preferred_size}"</p>
+                  </div>
                 )}
               </div>
 

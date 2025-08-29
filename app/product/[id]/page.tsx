@@ -577,8 +577,20 @@ export default function ProductPage() {
                   brandId={product.brand_id}
                   brandName={brand.name}
                   brandCurrency={brand.currency}
+                  size={product.sizes && product.sizes.length > 0 ? product.sizes[0] : undefined}
+                  color={product.colors && product.colors.length > 0 ? product.colors[0] : undefined}
                   className="w-full py-3"
                 />
+              )}
+              
+              {/* Debug info for sizes and colors */}
+              {process.env.NODE_ENV === 'development' && (
+                <div className="text-xs text-blue-600 p-2 bg-blue-50 rounded">
+                  <p><strong>Product sizes:</strong> {product.sizes ? JSON.stringify(product.sizes) : 'None'}</p>
+                  <p><strong>Product colors:</strong> {product.colors ? JSON.stringify(product.colors) : 'None'}</p>
+                  <p><strong>Size passed to button:</strong> {product.sizes && product.sizes.length > 0 ? product.sizes[0] : 'undefined'}</p>
+                  <p><strong>Color passed to button:</strong> {product.colors && product.colors.length > 0 ? product.colors[0] : 'undefined'}</p>
+                </div>
               )}
 
               <FavouriteButton
