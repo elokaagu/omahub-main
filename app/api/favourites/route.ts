@@ -273,8 +273,9 @@ export async function DELETE(request: NextRequest) {
 
     const userId = session.user.id;
     const { searchParams } = new URL(request.url);
-    const item_id = searchParams.get("item_id");
-    const item_type = searchParams.get("item_type");
+    const item_id = searchParams.get("itemId") || searchParams.get("item_id");
+    const item_type =
+      searchParams.get("itemType") || searchParams.get("item_type");
 
     if (!item_id || !item_type) {
       return NextResponse.json(
