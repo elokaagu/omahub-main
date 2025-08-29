@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase-unified";
 
-// Helper function to get authenticated user
+// Helper function to get authenticated user with proper session handling
 async function getAuthenticatedUser() {
   try {
     const supabase = await createServerSupabaseClient();
 
+    // First, try to get the current session
     const {
       data: { session },
       error: sessionError,
@@ -18,6 +19,18 @@ async function getAuthenticatedUser() {
 
     if (!session?.user) {
       console.log("No session or user found");
+      return null;
+    }
+
+    // Verify the user exists in our profiles table
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("id, email, role")
+      .eq("id", session.user.id)
+      .single();
+
+    if (profileError || !profile) {
+      console.error("Profile not found:", profileError);
       return null;
     }
 
@@ -65,7 +78,7 @@ export async function GET() {
     // Fetch the actual items for each favourite
     const enrichedFavourites = [];
 
-    for (const favourite of favourites || []) {
+    for (const favourite of favourites) {
       try {
         let itemData = null;
 
@@ -73,79 +86,49 @@ export async function GET() {
           case "brand":
             const { data: brand } = await supabase
               .from("brands")
-              .select("id, name, image, category, location, is_verified, rating, brand_images(*)")
+              .select("*")
               .eq("id", favourite.item_id)
               .single();
-            if (brand) {
-              itemData = {
-                ...brand,
-                item_type: "brand",
-                favourite_id: favourite.id,
-              };
-            }
+            itemData = brand;
             break;
 
           case "catalogue":
             const { data: catalogue } = await supabase
               .from("catalogues")
-              .select("id, title, image, brand_id, description")
+              .select("*")
               .eq("id", favourite.item_id)
               .single();
-            if (catalogue) {
-              itemData = {
-                ...catalogue,
-                item_type: "catalogue",
-                favourite_id: favourite.id,
-              };
-            }
+            itemData = catalogue;
             break;
 
           case "product":
             const { data: product } = await supabase
               .from("products")
-              .select(`
-                id, 
-                title, 
-                image, 
-                brand_id, 
-                price, 
-                sale_price, 
-                category,
-                brand:brands(
-                  id,
-                  name,
-                  location,
-                  price_range,
-                  currency
-                )
-              `)
+              .select("*")
               .eq("id", favourite.item_id)
               .single();
-            if (product) {
-              itemData = {
-                ...product,
-                item_type: "product",
-                favourite_id: favourite.id,
-                price: product.sale_price || product.price,
-                brand: product.brand,
-              };
-            }
+            itemData = product;
             break;
 
           default:
             console.warn("Unknown item type:", favourite.item_type);
+            continue;
         }
 
         if (itemData) {
-          enrichedFavourites.push(itemData);
+          enrichedFavourites.push({
+            ...itemData,
+            favourite_id: favourite.id,
+            item_type: favourite.item_type,
+          });
         }
       } catch (itemError) {
-        console.error(`Error fetching item ${favourite.item_id}:`, itemError);
+        console.error("Error fetching item data:", itemError);
         // Continue with other items even if one fails
       }
     }
 
-    console.log("Enriched favourites:", enrichedFavourites);
+    console.log("Enriched favourites:", enrichedFavourites.length);
 
     return NextResponse.json({
       favourites: enrichedFavourites,
@@ -185,7 +168,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log("Favourites API POST: Adding favourite:", { itemId, itemType, userId: user.id });
+    console.log("Favourites API POST: Adding favourite:", {
+      itemId,
+      itemType,
+      userId: user.id,
+    });
 
     const supabase = await createServerSupabaseClient();
 
@@ -267,7 +254,11 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    console.log("Favourites API DELETE: Removing favourite:", { itemId, itemType, userId: user.id });
+    console.log("Favourites API DELETE: Removing favourite:", {
+      itemId,
+      itemType,
+      userId: user.id,
+    });
 
     const supabase = await createServerSupabaseClient();
 
@@ -302,5 +293,5 @@ export async function DELETE(request: NextRequest) {
       { error: "Internal server error" },
       { status: 500 }
     );
-    }
+  }
 }
