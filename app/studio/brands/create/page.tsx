@@ -64,8 +64,41 @@ const BRAND_NAME_LIMIT = 50; // Add brand name character limit
 
 export default function CreateBrandPage() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [submitting, setSubmitting] = useState(false);
+
+  // Add loading state while auth is initializing
+  if (authLoading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-oma-plum mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading brand creation form...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Add error handling for missing user
+  if (!user) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-red-600 mb-4">
+            Authentication Required
+          </h1>
+          <p className="text-gray-600 mb-4">
+            You must be logged in to create a brand.
+          </p>
+          <Button asChild>
+            <Link href="/login">Go to Login</Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -351,6 +384,14 @@ export default function CreateBrandPage() {
 
   // Calculate remaining characters for brand name
   const remainingNameChars = BRAND_NAME_LIMIT - formData.name.length;
+
+  // Add debugging to see what's happening
+  console.log("🔍 CreateBrandPage render:", {
+    hasUser: !!user,
+    userRole: user?.role,
+    authLoading,
+    categoriesCount: CATEGORIES.length,
+  });
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">

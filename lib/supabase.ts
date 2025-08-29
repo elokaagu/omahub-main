@@ -8,12 +8,28 @@ const isBuildTime =
   !process.env.NEXT_PUBLIC_SUPABASE_URL;
 
 // Safely access environment variables with fallbacks
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+// Validate environment variables
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error("❌ Missing Supabase environment variables:", {
+    hasUrl: !!supabaseUrl,
+    hasKey: !!supabaseAnonKey,
+    env: process.env.NODE_ENV,
+  });
+
+  // In production, we need these to be defined
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("Missing required Supabase environment variables");
+  }
+}
 
 console.log("🔄 Initializing Supabase client:", {
   hasUrl: !!supabaseUrl,
-  hasKey: !!supabaseAnonKey.substring(0, 10) + "...",
+  hasKey: !!supabaseAnonKey
+    ? supabaseAnonKey.substring(0, 10) + "..."
+    : "undefined",
   env: process.env.NODE_ENV,
   isBuildTime,
 });
@@ -22,6 +38,14 @@ console.log("🔄 Initializing Supabase client:", {
 const createClient = () => {
   if (typeof window === "undefined") {
     console.log("🖥️ Server-side rendering, creating client for hydration");
+  }
+
+  // Ensure environment variables are available
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.error(
+      "❌ Cannot create Supabase client - missing environment variables"
+    );
+    throw new Error("Supabase environment variables not configured");
   }
 
   return createBrowserClient(supabaseUrl, supabaseAnonKey, {
