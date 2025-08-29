@@ -32,6 +32,7 @@ import {
   Menu,
   X,
   FileText,
+  Mail,
 } from "@/lib/utils/iconImports";
 import { TailoringEventProvider } from "@/contexts/NavigationContext";
 import ErrorBoundary from "../components/ErrorBoundary";
@@ -478,6 +479,14 @@ export default function StudioLayout({
         permission: "studio.users.manage",
         customLabel: "Designer Applications",
         // Only show for super admins
+        showForRoles: ["super_admin"]
+      },
+      {
+        href: "/studio/subscriptions",
+        label: "Subscriptions",
+        icon: Mail,
+        permission: "studio.users.manage",
+        customLabel: "Newsletter Subscriptions",
         showForRoles: ["super_admin"]
       },
       {

@@ -135,15 +135,57 @@ export default function ContactPage() {
 
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate email
+    if (!email.trim()) {
+      toast.error("Please enter your email address");
+      return;
+    }
+    
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+    
     setIsSubscribing(true);
 
     try {
-      // TODO: Replace with actual newsletter subscription API
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      toast.success("Thanks for subscribing!");
+      console.log('📧 Subscribing to newsletter:', email);
+      
+      const response = await fetch("/api/newsletter/subscribe", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: email.trim(),
+          source: "contact_form"
+        }),
+      });
+
+      console.log('📡 Newsletter API response status:', response.status);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('❌ Newsletter subscription failed:', errorData);
+        
+        if (errorData.alreadySubscribed) {
+          toast.error("This email is already subscribed to our newsletter");
+        } else {
+          toast.error(errorData.error || "Failed to subscribe to newsletter");
+        }
+        return;
+      }
+
+      const result = await response.json();
+      console.log('✅ Newsletter subscription successful:', result);
+      
+      toast.success(result.message || "Successfully subscribed to our newsletter!");
       setEmail("");
-    } catch {
-      toast.error("Failed to subscribe. Please try again.");
+      
+    } catch (error) {
+      console.error('💥 Newsletter subscription error:', error);
+      toast.error("Failed to subscribe to newsletter. Please try again.");
     } finally {
       setIsSubscribing(false);
     }
