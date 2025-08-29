@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useCallback } from "react";
-import useFavourites from "@/lib/hooks/useFavourites";
+import { useFavourites } from "@/contexts/FavouritesContext";
 import { Loading } from "@/components/ui/loading";
 import Link from "next/link";
 import { LazyImage } from "@/components/ui/lazy-image";

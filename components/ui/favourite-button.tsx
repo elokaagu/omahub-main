@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import useFavourites from "@/lib/hooks/useFavourites";
+import { useFavourites } from "@/contexts/FavouritesContext";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface FavouriteButtonProps {
@@ -12,6 +12,15 @@ interface FavouriteButtonProps {
   itemType: "brand" | "catalogue" | "product";
   className?: string;
   showText?: boolean;
+  itemData?: {
+    name?: string;
+    title?: string;
+    image?: string;
+    category?: string;
+    location?: string;
+    price?: string;
+    brand_id?: string;
+  };
 }
 
 export function FavouriteButton({
@@ -19,6 +28,7 @@ export function FavouriteButton({
   itemType,
   className = "",
   showText = true,
+  itemData,
 }: FavouriteButtonProps) {
   const { user } = useAuth();
   const { isFavourite, toggleFavourite, loading } = useFavourites();
@@ -37,8 +47,8 @@ export function FavouriteButton({
 
     try {
       setIsToggling(true);
-      const success = await toggleFavourite(itemId, itemType);
-      
+      const success = await toggleFavourite(itemId, itemType, itemData);
+
       if (success) {
         // Toast is handled by the hook now, so we don't need to show it here
         // The UI updates immediately due to optimistic updates
@@ -58,16 +68,15 @@ export function FavouriteButton({
       disabled={isLoading}
       className={`
         flex items-center gap-2 transition-all duration-200
-        ${isFavourited 
-          ? "bg-oma-plum text-white hover:bg-oma-plum/90" 
-          : "border-oma-plum text-oma-plum hover:bg-oma-plum/10"
+        ${
+          isFavourited
+            ? "bg-oma-plum text-white hover:bg-oma-plum/90"
+            : "border-oma-plum text-oma-plum hover:bg-oma-plum/10"
         }
         ${isLoading ? "opacity-50 cursor-not-allowed" : ""}
         ${className}
       `}
-      aria-label={
-        isFavourited ? "Remove from favourites" : "Add to favourites"
-      }
+      aria-label={isFavourited ? "Remove from favourites" : "Add to favourites"}
     >
       <Heart
         className={`h-5 w-5 transition-all duration-200 ${

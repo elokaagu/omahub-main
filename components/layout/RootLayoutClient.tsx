@@ -9,6 +9,7 @@ import {
   NavigationProvider,
   useNavigation,
 } from "@/contexts/NavigationContext";
+import { FavouritesProvider } from "@/contexts/FavouritesContext";
 import { PageFade } from "@/app/components/ui/animations";
 import { AnimatePresence } from "framer-motion";
 import { Toaster } from "sonner";
@@ -40,9 +41,11 @@ export default function RootLayoutClient({ children }: RootLayoutClientProps) {
     <ErrorBoundary>
       <AuthProvider>
         <NavigationProvider>
-          <AuthModalProvider>
-            <LayoutContent>{children}</LayoutContent>
-          </AuthModalProvider>
+          <FavouritesProvider>
+            <AuthModalProvider>
+              <LayoutContent>{children}</LayoutContent>
+            </AuthModalProvider>
+          </FavouritesProvider>
         </NavigationProvider>
       </AuthProvider>
     </ErrorBoundary>

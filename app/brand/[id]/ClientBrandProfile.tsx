@@ -32,7 +32,7 @@ import useReviews from "@/lib/hooks/useReviews";
 import type { BrandData } from "@/lib/data/brands";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
-import useFavourites from "@/lib/hooks/useFavourites";
+import { useFavourites } from "@/contexts/FavouritesContext";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { NavigationLink } from "@/components/ui/navigation-link";
@@ -44,10 +44,14 @@ import {
   isValidWhatsAppNumber,
   formatPhoneForDisplay,
 } from "@/lib/utils/phoneUtils";
-import { formatProductPrice, formatPriceRangeWithCommas } from "@/lib/utils/priceFormatter";
+import {
+  formatProductPrice,
+  formatPriceRangeWithCommas,
+} from "@/lib/utils/priceFormatter";
 import { getProductMainImage } from "@/lib/utils/productImageUtils";
 import { FavouriteButton } from "@/components/ui/favourite-button";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 // Extended interface for brand profile data that includes currency and matches actual data structure
 interface BrandProfileData {
@@ -160,6 +164,10 @@ export default function ClientBrandProfile({
     // Hide the review form and refresh reviews
     setShowReviewForm(false);
     fetchReviews();
+    // Show success message
+    toast.success(
+      "Review submitted successfully! Thank you for sharing your experience."
+    );
   };
 
   const handleShowReviewForm = () => {
@@ -206,7 +214,9 @@ export default function ClientBrandProfile({
             {brandData.location && (
               <div className="flex items-center">
                 <MapPin size={14} className="mr-1 flex-shrink-0" />
-                <span className="text-sm sm:text-base">{brandData.location}</span>
+                <span className="text-sm sm:text-base">
+                  {brandData.location}
+                </span>
               </div>
             )}
             {brandData.rating && (
@@ -545,6 +555,12 @@ export default function ClientBrandProfile({
               <FavouriteButton
                 itemId={brandData.id}
                 itemType="brand"
+                itemData={{
+                  name: brandData.name,
+                  image: brandData.image,
+                  category: brandData.category,
+                  location: brandData.location,
+                }}
                 className="w-full bg-oma-plum hover:bg-oma-plum/90 text-white min-h-[44px] text-sm sm:text-base transition-all duration-200"
               />
             </div>
