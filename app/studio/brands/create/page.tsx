@@ -745,7 +745,8 @@ export default function CreateBrandPage() {
                       required
                     />
                     <p className="text-xs text-muted-foreground">
-                      For now, please enter an image URL. File upload will be restored later.
+                      For now, please enter an image URL. File upload will be
+                      restored later.
                     </p>
                   </div>
                 </div>
