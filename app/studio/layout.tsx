@@ -477,7 +477,7 @@ export default function StudioLayout({
         label: "Applications",
         icon: FileText,
         permission: "studio.users.manage",
-        customLabel: "Designer Applications",
+        customLabel: "Applications",
         // Only show for super admins
         showForRoles: ["super_admin"]
       },
@@ -486,7 +486,7 @@ export default function StudioLayout({
         label: "Subscriptions",
         icon: Mail,
         permission: "studio.users.manage",
-        customLabel: "Newsletter Subscriptions",
+        customLabel: "Subscriptions",
         showForRoles: ["super_admin"]
       },
       {
@@ -669,7 +669,7 @@ export default function StudioLayout({
                 <h1 className="text-2xl font-canela text-oma-plum">Studio</h1>
               </div>
               <nav
-                className="space-y-1 flex-1"
+                className="space-y-1 flex-1 overflow-y-auto"
                 role="navigation"
                 aria-label="Studio navigation"
               >
@@ -711,12 +711,12 @@ export default function StudioLayout({
             aria-modal="true"
             role="dialog"
           >
-            <div className="px-8 pt-8 pb-6 h-full flex flex-col">
+            <div className="px-8 pt-8 pb-6 h-full flex flex-col overflow-y-auto">
               {/* Studio title only */}
               <div className="mb-8">
                 <h1 className="text-2xl font-canela text-oma-plum">Studio</h1>
               </div>
-              <nav className="space-y-1 flex-1">
+              <nav className="space-y-1 flex-1 overflow-y-auto">
                 {navigationItems.map((item) => (
                   <NavigationLink
                     key={item.href}
