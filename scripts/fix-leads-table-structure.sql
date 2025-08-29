@@ -225,4 +225,5 @@ WHERE customer_email = 'test-after-fix@example.com';
 -- Clean up test data
 DELETE FROM public.leads WHERE customer_email = 'test-after-fix@example.com';
 
-RAISE NOTICE 'Leads table structure fixed successfully!';
+-- Success message
+SELECT 'Leads table structure fixed successfully!' as status;
