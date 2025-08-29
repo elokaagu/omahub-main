@@ -27,6 +27,7 @@ import { ArrowLeft, Save, Globe, Instagram } from "lucide-react";
 import Link from "next/link";
 import { SimpleFileUpload } from "@/components/ui/simple-file-upload";
 import { VideoUpload } from "@/components/ui/video-upload";
+import { MultiSelect } from "@/components/ui/multi-select";
 import {
   formatPriceRange,
   formatNumberWithCommas,
@@ -585,23 +586,15 @@ export default function CreateBrandPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="categories">Categories *</Label>
-                    <Select
-                      value={formData.categories[0] || ""}
-                      onValueChange={(value) => handleCategoriesChange([value])}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {CATEGORIES.map((category) => (
-                          <SelectItem key={category} value={category}>
-                            {category}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <MultiSelect
+                      options={CATEGORIES}
+                      value={formData.categories}
+                      onValueChange={handleCategoriesChange}
+                      placeholder="Select categories"
+                    />
                     <p className="text-xs text-muted-foreground">
-                      Note: Only one category can be selected at a time
+                      Select one or more categories that best describe your
+                      brand
                     </p>
                   </div>
 
@@ -747,7 +740,7 @@ export default function CreateBrandPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="contact_email">Contact Email *</Label>
+                    <Label htmlFor="contact_email">Contact Email</Label>
                     <Input
                       id="contact_email"
                       name="contact_email"
@@ -755,7 +748,6 @@ export default function CreateBrandPage() {
                       value={formData.contact_email}
                       onChange={handleInputChange}
                       placeholder="hello@brand.com"
-                      required
                     />
                     <p className="text-xs text-muted-foreground">
                       This email will receive notifications when customers
