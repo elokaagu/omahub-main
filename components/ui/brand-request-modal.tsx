@@ -59,6 +59,8 @@ export function BrandRequestModal({
   size,
   color,
 }: BrandRequestModalProps) {
+  console.log("🎭 BrandRequestModal rendered with props:", { size, color, productName, brandName, isOpen });
+  
   const [isLoading, setIsLoading] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
@@ -100,7 +102,20 @@ export function BrandRequestModal({
     console.log("🔄 Form reset - Size prop:", size, "Color prop:", color);
     console.log("📝 Initial form data:", initialFormData);
     console.log("🔍 Modal props:", { isOpen, size, color, productName, brandName });
+    console.log("🎯 FormData preferred_size after setState:", initialFormData.preferred_size);
   }, [isOpen, size, color]);
+
+  // Additional effect to handle size/color prop changes specifically
+  useEffect(() => {
+    if (size && size !== formData.preferred_size) {
+      console.log("🔄 Size prop changed, updating form:", { old: formData.preferred_size, new: size });
+      setFormData(prev => ({ ...prev, preferred_size: size }));
+    }
+    if (color && color !== formData.preferred_color) {
+      console.log("🔄 Color prop changed, updating form:", { old: formData.preferred_color, new: color });
+      setFormData(prev => ({ ...prev, preferred_color: color }));
+    }
+  }, [size, color, formData.preferred_size, formData.preferred_color]);
 
   const handleInputChange = (field: string, value: string | number) => {
     console.log(`📝 Field change: ${field} = ${value}`);
@@ -315,11 +330,14 @@ export function BrandRequestModal({
                   Preferred Size
                 </Label>
                 <Select
+                  key={`size-${formData.preferred_size}`}
                   value={formData.preferred_size}
                   onValueChange={(value) => handleInputChange("preferred_size", value)}
                 >
                   <SelectTrigger className="border-oma-beige focus:border-oma-plum focus:ring-oma-plum">
-                    <SelectValue placeholder="Select your preferred size" />
+                    <SelectValue placeholder="Select your preferred size">
+                      {formData.preferred_size || "Select your preferred size"}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {/* Standard Sizes */}
@@ -364,6 +382,43 @@ export function BrandRequestModal({
                     <p>Size prop: "{size}"</p>
                     <p>Form data preferred_size: "{formData.preferred_size}"</p>
                     <p>Select value prop: "{formData.preferred_size}"</p>
+                  </div>
+                )}
+                
+                {/* Test buttons for debugging - remove in production */}
+                {process.env.NODE_ENV === 'development' && (
+                  <div className="mt-2 p-2 bg-green-100 rounded border">
+                    <p className="text-xs font-medium mb-2">Test Buttons (Development):</p>
+                    <div className="flex flex-wrap gap-1">
+                      <button
+                        type="button"
+                        onClick={() => handleInputChange("preferred_size", "M")}
+                        className="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
+                      >
+                        Set Size: M
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleInputChange("preferred_size", "XL")}
+                        className="px-2 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600"
+                      >
+                        Set Size: XL
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleInputChange("preferred_size", "custom")}
+                        className="px-2 py-1 text-xs bg-purple-500 text-white rounded hover:bg-purple-600"
+                      >
+                        Set Size: Custom
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleInputChange("preferred_size", "")}
+                        className="px-2 py-1 text-xs bg-gray-500 text-white rounded hover:bg-gray-600"
+                      >
+                        Clear Size
+                      </button>
+                    </div>
                   </div>
                 )}
                 
@@ -554,11 +609,14 @@ export function BrandRequestModal({
                   Country
                 </Label>
                 <Select
+                  key={`country-${formData.country}`}
                   value={formData.country}
                   onValueChange={(value) => handleInputChange("country", value)}
                 >
                   <SelectTrigger className="border-oma-beige focus:border-oma-plum focus:ring-oma-plum">
-                    <SelectValue placeholder="Select your country" />
+                    <SelectValue placeholder="Select your country">
+                      {formData.country || "Select your country"}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Nigeria">Nigeria</SelectItem>
@@ -604,6 +662,36 @@ export function BrandRequestModal({
                     <SelectItem value="Other">Other</SelectItem>
                   </SelectContent>
                 </Select>
+                
+                {/* Test buttons for country - remove in production */}
+                {process.env.NODE_ENV === 'development' && (
+                  <div className="mt-2 p-2 bg-yellow-100 rounded border">
+                    <p className="text-xs font-medium mb-2">Test Country (Development):</p>
+                    <div className="flex flex-wrap gap-1">
+                      <button
+                        type="button"
+                        onClick={() => handleInputChange("country", "United Kingdom")}
+                        className="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
+                      >
+                        Set UK
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleInputChange("country", "Nigeria")}
+                        className="px-2 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600"
+                      >
+                        Set Nigeria
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleInputChange("country", "")}
+                        className="px-2 py-1 text-xs bg-gray-500 text-white rounded hover:bg-gray-600"
+                      >
+                        Clear Country
+                      </button>
+                    </div>
+                  </div>
+                )}
                 {/* Debug info - remove in production */}
                 {process.env.NODE_ENV === 'development' && (
                   <p className="text-xs text-blue-600 mt-1">
