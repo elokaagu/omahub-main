@@ -74,10 +74,37 @@ export function createAdminClient() {
     );
   }
 
-  return createSupabaseClient(supabaseUrl, supabaseServiceKey, {
+  return createSupabaseClient(supabaseUrl, supabaseAnonKey, {
     auth: {
       persistSession: false,
       autoRefreshToken: false,
+    },
+  });
+}
+
+// API route client for server-side operations with request cookies
+export function createApiRouteSupabaseClient(request: Request) {
+  return createServerClient(supabaseUrl, supabaseAnonKey, {
+    ...clientConfig,
+    cookies: {
+      get(name: string) {
+        const cookieHeader = request.headers.get("cookie");
+        if (!cookieHeader) return undefined;
+
+        const cookies = cookieHeader.split(";").reduce((acc, cookie) => {
+          const [key, value] = cookie.trim().split("=");
+          acc[key] = value;
+          return acc;
+        }, {});
+
+        return cookies[name];
+      },
+      set() {
+        // No-op in API routes
+      },
+      remove() {
+        // No-op in API routes
+      },
     },
   });
 }

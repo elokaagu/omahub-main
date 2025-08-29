@@ -1,61 +1,28 @@
-import { createClient } from "@supabase/supabase-js";
-import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
+import { NextRequest, NextResponse } from "next/server";
+import { createApiRouteSupabaseClient } from "@/lib/supabase-unified";
 
-// Initialize Supabase client with service role key
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-// Function to get Supabase client
-const getSupabaseClient = async () => {
-  const cookieStore = cookies();
-
-  console.log("Initializing Supabase client with URL:", supabaseUrl);
-
-  if (!supabaseServiceKey) {
-    console.error("ERROR: SUPABASE_SERVICE_ROLE_KEY is not defined");
-  }
-
-  // Use service role key for API operations
-  return createClient(supabaseUrl, supabaseServiceKey);
-};
-
-// POST endpoint to add a new review
 export async function POST(request) {
   console.log("POST /api/reviews received");
   try {
-    // Check authentication first
-    const supabase = await getSupabaseClient();
-    
+    // Check authentication first using the proper API route client
+    const supabase = createApiRouteSupabaseClient(request);
+
     // Get the session from the request
-    const authHeader = request.headers.get("authorization");
-    let userId = null;
-    
-    if (authHeader && authHeader.startsWith("Bearer ")) {
-      const token = authHeader.split(" ")[1];
-      const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-      
-      if (authError || !user) {
-        console.error("Authentication failed:", authError);
-        return NextResponse.json(
-          { error: "Authentication required to submit reviews" },
-          { status: 401 }
-        );
-      }
-      userId = user.id;
-    } else {
-      // Try to get session from cookies
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError || !session?.user) {
-        console.error("No valid session found:", sessionError);
-        return NextResponse.json(
-          { error: "Authentication required to submit reviews" },
-          { status: 401 }
-        );
-      }
-      userId = session.user.id;
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession();
+
+    if (sessionError || !session?.user) {
+      console.error("❌ Authentication failed:", sessionError);
+      return NextResponse.json(
+        { error: "Authentication required to submit reviews" },
+        { status: 401 }
+      );
     }
+
+    const userId = session.user.id;
+    console.log("✅ User authenticated:", userId);
 
     const body = await request.json();
     console.log("Review submission data:", body);
@@ -82,7 +49,9 @@ export async function POST(request) {
       );
     }
 
-    console.log(`Adding review for brand ${brandId} by ${author} (user: ${userId})`);
+    console.log(
+      `Adding review for brand ${brandId} by ${author} (user: ${userId})`
+    );
 
     // First, check if the user_id column exists in the reviews table
     const { data: tableInfo, error: tableError } = await supabase
@@ -148,7 +117,7 @@ export async function POST(request) {
 export async function GET(request) {
   console.log("GET /api/reviews received");
   try {
-    const supabase = await getSupabaseClient();
+    const supabase = createApiRouteSupabaseClient(request);
     const { searchParams } = new URL(request.url);
     const brandId = searchParams.get("brandId");
 

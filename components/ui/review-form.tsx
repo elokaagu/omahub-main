@@ -1,14 +1,14 @@
-import { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { StarIcon } from "@heroicons/react/24/solid";
-import { StarIcon as StarOutlineIcon } from "@heroicons/react/24/outline";
+import { useAuth } from "@/contexts/AuthContext";
 import useReviews, { Review } from "@/lib/hooks/useReviews";
-import { getProfile } from "@/lib/services/authService";
 import { toast } from "sonner";
 import Link from "next/link";
+import { StarIcon } from "@heroicons/react/24/solid";
+import { StarIcon as StarOutlineIcon } from "@heroicons/react/24/outline";
 
 interface ReviewFormProps {
   brandId: string;
@@ -33,29 +33,17 @@ export function ReviewForm({
   // Load user profile data if logged in
   useEffect(() => {
     if (user && !initialNameSet) {
-      const loadUserProfile = async () => {
-        try {
-          const profile = await getProfile(user.id);
-          if (profile) {
-            const fullName = [profile.first_name, profile.last_name]
-              .filter(Boolean)
-              .join(" ");
-
-            if (fullName) {
-              setName(fullName);
-            } else if (user.email) {
-              // Use email before @ symbol as name
-              setName(user.email.split("@")[0]);
-            }
-          }
-          setInitialNameSet(true);
-        } catch (error) {
-          console.error("Error loading user profile:", error);
-          setInitialNameSet(true);
-        }
-      };
-
-      loadUserProfile();
+      // Use user data directly from AuthContext
+      if (user.first_name || user.last_name) {
+        const fullName = [user.first_name, user.last_name]
+          .filter(Boolean)
+          .join(" ");
+        setName(fullName);
+      } else if (user.email) {
+        // Use email before @ symbol as name
+        setName(user.email.split("@")[0]);
+      }
+      setInitialNameSet(true);
     } else if (!user) {
       setInitialNameSet(true);
     }
@@ -66,7 +54,9 @@ export function ReviewForm({
     return (
       <div className={`bg-white rounded-lg shadow-sm p-6 ${className}`}>
         <div className="text-center py-8">
-          <h3 className="text-lg font-semibold mb-4">Authentication Required</h3>
+          <h3 className="text-lg font-semibold mb-4">
+            Authentication Required
+          </h3>
           <p className="text-gray-600 mb-6">
             You need to be signed in to write a review.
           </p>
