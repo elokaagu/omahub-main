@@ -187,17 +187,29 @@ export default function ReviewManagementPage() {
 
     try {
       setIsDeleting(reviewId);
-      const response = await fetch(`/api/admin/reviews?id=${reviewId}`, {
+      console.log("🗑️ Attempting to delete review:", reviewId);
+      console.log("🔑 Using access token:", session.access_token ? "Present" : "Missing");
+      
+      const url = `/api/admin/reviews?id=${reviewId}`;
+      console.log("🌐 DELETE request to:", url);
+      
+      const response = await fetch(url, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
       });
 
+      console.log("📡 Response status:", response.status);
+      console.log("📡 Response status text:", response.statusText);
+
       if (!response.ok) {
-        throw new Error("Failed to delete review");
+        const errorText = await response.text();
+        console.error("❌ Delete failed:", response.status, errorText);
+        throw new Error(`Failed to delete review: ${response.status} ${response.statusText}`);
       }
 
+      console.log("✅ Review deleted successfully");
       toast.success("Review deleted successfully");
 
       // Remove the deleted review from local state immediately
@@ -218,7 +230,7 @@ export default function ReviewManagementPage() {
         fetchReviews(currentPage, searchTerm, selectedBrand);
       }
     } catch (error) {
-      console.error("Error deleting review:", error);
+      console.error("💥 Error deleting review:", error);
       toast.error("Failed to delete review");
     } finally {
       setIsDeleting(null);
