@@ -25,7 +25,7 @@ export default function About() {
         setLoading(false);
         return;
       }
-      
+
       setLoading(true);
       const { data: aboutData } = await supabase
         .from("platform_settings")

@@ -104,8 +104,11 @@ export default function CreateBrandPage() {
       router.push("/login");
       return;
     }
-    
-    if (!user.role || !["admin", "super_admin", "brand_admin"].includes(user.role)) {
+
+    if (
+      !user.role ||
+      !["admin", "super_admin", "brand_admin"].includes(user.role)
+    ) {
       toast.error("You don't have permission to create brands");
       router.push("/studio");
       return;
@@ -113,7 +116,11 @@ export default function CreateBrandPage() {
   }, [user, router]);
 
   // Don't render the form until user is authenticated and authorized
-  if (!user || !user.role || !["admin", "super_admin", "brand_admin"].includes(user.role)) {
+  if (
+    !user ||
+    !user.role ||
+    !["admin", "super_admin", "brand_admin"].includes(user.role)
+  ) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -260,14 +267,16 @@ export default function CreateBrandPage() {
     }
 
     // Validate price range - either set a range or explicitly mark as contact for pricing
-          if (
-        !formData.price_min &&
-        !formData.price_max &&
-        !formData.contact_for_pricing
-      ) {
-        toast.error("Please set a price range or mark as 'explore brand for prices'");
-        return;
-      }
+    if (
+      !formData.price_min &&
+      !formData.price_max &&
+      !formData.contact_for_pricing
+    ) {
+      toast.error(
+        "Please set a price range or mark as 'explore brand for prices'"
+      );
+      return;
+    }
 
     // Email is optional - only validate format if provided
     if (formData.contact_email) {
@@ -299,12 +308,14 @@ export default function CreateBrandPage() {
       priceRange = "explore brand for prices";
     }
 
-          // Format descriptions to remove contractions and make them more professional
-      const payload = {
-        name: formData.name,
-        description: formatBrandDescription(formData.description || ""),
-        long_description: formatBrandDescription(formData.long_description || formData.description || ""),
-        location: formData.location,
+    // Format descriptions to remove contractions and make them more professional
+    const payload = {
+      name: formData.name,
+      description: formatBrandDescription(formData.description || ""),
+      long_description: formatBrandDescription(
+        formData.long_description || formData.description || ""
+      ),
+      location: formData.location,
       price_range: priceRange || "explore brand for prices",
       currency: formData.currency,
       category: formData.categories[0],
@@ -386,385 +397,387 @@ export default function CreateBrandPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-        <div className="flex items-center gap-4 mb-8">
-          <Button variant="outline" size="icon" asChild className="h-8 w-8">
-            <Link href="/studio/brands">
-              <ArrowLeft className="h-4 w-4" />
-            </Link>
-          </Button>
-          <h1 className="text-3xl font-canela text-gray-900">Create New Brand</h1>
-        </div>
+      <div className="flex items-center gap-4 mb-8">
+        <Button variant="outline" size="icon" asChild className="h-8 w-8">
+          <Link href="/studio/brands">
+            <ArrowLeft className="h-4 w-4" />
+          </Link>
+        </Button>
+        <h1 className="text-3xl font-canela text-gray-900">Create New Brand</h1>
+      </div>
 
-
-
-        <form onSubmit={handleSubmit}>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2 space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Brand Information</CardTitle>
-                  <CardDescription>
-                    Enter the basic information about the brand
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="name">Brand Name *</Label>
-                      <span
-                        className={`text-sm ${remainingNameChars < 10 ? "text-red-500" : "text-muted-foreground"}`}
-                      >
-                        {remainingNameChars} characters remaining
-                      </span>
-                    </div>
-                    <Input
-                      id="name"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleInputChange}
-                      placeholder="e.g. Adire Designs"
-                      required
-                      className={remainingNameChars < 0 ? "border-red-500" : ""}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Keep it concise and memorable (max 50 characters)
-                    </p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="description">Short Description *</Label>
-                      <span
-                        className={`text-sm ${remainingChars < 20 ? "text-red-500" : "text-muted-foreground"}`}
-                      >
-                        {remainingChars} characters remaining
-                      </span>
-                    </div>
-                    <Textarea
-                      id="description"
-                      name="description"
-                      value={formData.description}
-                      onChange={handleInputChange}
-                      placeholder="A brief description of the brand (max 150 characters)"
-                      required
-                      className={remainingChars < 0 ? "border-red-500" : ""}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Keep it concise - this appears in brand listings and
-                      previews
-                    </p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="long_description">Full Description</Label>
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                      <div>
-                        <Textarea
-                          id="long_description"
-                          name="long_description"
-                          value={formData.long_description}
-                          onChange={handleInputChange}
-                          placeholder="Detailed description of the brand, its history, values, etc."
-                          className="min-h-[200px]"
-                        />
-                        <div className="text-xs text-muted-foreground mt-1">
-                          💡 Tip: Contractions (isn't, it's, don't) will be automatically converted to formal language.
-                        </div>
-                      </div>
-                      
-                      {/* Live Preview */}
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium text-gray-700">Live Preview</Label>
-                        <div className="min-h-[200px] p-4 bg-gray-50 rounded-md border border-gray-200">
-                          {formData.long_description ? (
-                            <div className="text-sm text-gray-700 whitespace-pre-wrap">
-                              {formatBrandDescription(formData.long_description)}
-                            </div>
-                          ) : (
-                            <div className="text-sm text-gray-400 italic">
-                              Start typing to see the formatted preview...
-                            </div>
-                          )}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          This shows how your description will appear on the frontend
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Details</CardTitle>
-                  <CardDescription>
-                    Additional information about the brand
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="categories">Categories *</Label>
-                      <MultiSelect
-                        options={CATEGORIES}
-                        value={formData.categories}
-                        onValueChange={handleCategoriesChange}
-                        placeholder="Select categories"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="price_range">Price Range</Label>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                        <Select
-                          value={formData.currency}
-                          onValueChange={(value) =>
-                            handleSelectChange("currency", value)
-                          }
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Currency" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {CURRENCIES.map((currency) => (
-                              <SelectItem
-                                key={currency.code}
-                                value={currency.code}
-                              >
-                                {currency.symbol} - {currency.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-
-                        <Input
-                          name="price_min"
-                          value={formData.price_min}
-                          onChange={handleInputChange}
-                          placeholder="Min price (e.g. 15000)"
-                          type="number"
-                        />
-
-                        <Input
-                          name="price_max"
-                          value={formData.price_max}
-                          onChange={handleInputChange}
-                          placeholder="Max price (e.g. 120000)"
-                          type="number"
-                        />
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        {formData.price_min &&
-                        formData.price_max &&
-                        formData.currency ? (
-                          <>
-                            Preview:{" "}
-                            {formatPriceRange(
-                              formData.price_min,
-                              formData.price_max,
-                              CURRENCIES.find((c) => c.code === formData.currency)
-                                ?.symbol || "$"
-                            )}
-                          </>
-                        ) : (
-                          "Enter minimum and maximum prices to see preview"
-                        )}
-                      </p>
-
-                      {/* Contact for Pricing Option */}
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          id="contact_for_pricing"
-                          name="contact_for_pricing"
-                          checked={formData.contact_for_pricing}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              contact_for_pricing: e.target.checked,
-                            })
-                          }
-                          className="rounded border-gray-300 text-oma-plum focus:ring-oma-plum"
-                        />
-                                                <Label htmlFor="contact_for_pricing" className="text-sm">
-                            explore brand for prices (if you prefer not to show specific
-                            prices)
-                          </Label>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="location">Location *</Label>
-                    <Input
-                      id="location"
-                      name="location"
-                      value={formData.location}
-                      onChange={handleInputChange}
-                      placeholder="e.g. Lagos, Nigeria"
-                      required
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="website">Website</Label>
-                      <div className="flex items-center rounded-md border border-input ring-offset-background">
-                        <div className="flex items-center justify-center h-9 w-9 border-r">
-                          <Globe className="h-4 w-4 text-muted-foreground" />
-                        </div>
-                        <Input
-                          id="website"
-                          name="website"
-                          value={formData.website}
-                          onChange={handleInputChange}
-                          placeholder="https://example.com"
-                          className="border-0"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="instagram">Instagram</Label>
-                      <div className="flex items-center rounded-md border border-input ring-offset-background">
-                        <div className="flex items-center justify-center h-9 w-9 border-r">
-                          <Instagram className="h-4 w-4 text-muted-foreground" />
-                        </div>
-                        <Input
-                          id="instagram"
-                          name="instagram"
-                          value={formData.instagram}
-                          onChange={handleInputChange}
-                          placeholder="@username"
-                          className="border-0"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="whatsapp">WhatsApp</Label>
-                      <Input
-                        id="whatsapp"
-                        name="whatsapp"
-                        value={formData.whatsapp}
-                        onChange={handleInputChange}
-                        placeholder="+234 123 456 7890"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="contact_email">Contact Email *</Label>
-                      <Input
-                        id="contact_email"
-                        name="contact_email"
-                        type="email"
-                        value={formData.contact_email}
-                        onChange={handleInputChange}
-                        placeholder="hello@brand.com"
-                        required
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        This email will receive notifications when customers
-                        contact you. If left empty, inquiries will be sent to
-                        info@oma-hub.com
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="founded_year">Founded Year</Label>
-                    <Select
-                      value={formData.founded_year}
-                      onValueChange={(value) =>
-                        handleSelectChange("founded_year", value)
-                      }
+      <form onSubmit={handleSubmit}>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Brand Information</CardTitle>
+                <CardDescription>
+                  Enter the basic information about the brand
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="name">Brand Name *</Label>
+                    <span
+                      className={`text-sm ${remainingNameChars < 10 ? "text-red-500" : "text-muted-foreground"}`}
                     >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select founding year" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="">Not specified</SelectItem>
-                        {FOUNDING_YEARS.map((year) => (
-                          <SelectItem key={year} value={year}>
-                            {year}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      {remainingNameChars} characters remaining
+                    </span>
                   </div>
-                </CardContent>
-              </Card>
-            </div>
+                  <Input
+                    id="name"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    placeholder="e.g. Adire Designs"
+                    required
+                    className={remainingNameChars < 0 ? "border-red-500" : ""}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Keep it concise and memorable (max 50 characters)
+                  </p>
+                </div>
 
-            <div>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Brand Image</CardTitle>
-                  <CardDescription>
-                    Upload a logo or representative image
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="description">Short Description *</Label>
+                    <span
+                      className={`text-sm ${remainingChars < 20 ? "text-red-500" : "text-muted-foreground"}`}
+                    >
+                      {remainingChars} characters remaining
+                    </span>
+                  </div>
+                  <Textarea
+                    id="description"
+                    name="description"
+                    value={formData.description}
+                    onChange={handleInputChange}
+                    placeholder="A brief description of the brand (max 150 characters)"
+                    required
+                    className={remainingChars < 0 ? "border-red-500" : ""}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Keep it concise - this appears in brand listings and
+                    previews
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="long_description">Full Description</Label>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div>
+                      <Textarea
+                        id="long_description"
+                        name="long_description"
+                        value={formData.long_description}
+                        onChange={handleInputChange}
+                        placeholder="Detailed description of the brand, its history, values, etc."
+                        className="min-h-[200px]"
+                      />
+                      <div className="text-xs text-muted-foreground mt-1">
+                        💡 Tip: Contractions (isn't, it's, don't) will be
+                        automatically converted to formal language.
+                      </div>
+                    </div>
+
+                    {/* Live Preview */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-700">
+                        Live Preview
+                      </Label>
+                      <div className="min-h-[200px] p-4 bg-gray-50 rounded-md border border-gray-200">
+                        {formData.long_description ? (
+                          <div className="text-sm text-gray-700 whitespace-pre-wrap">
+                            {formatBrandDescription(formData.long_description)}
+                          </div>
+                        ) : (
+                          <div className="text-sm text-gray-400 italic">
+                            Start typing to see the formatted preview...
+                          </div>
+                        )}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        This shows how your description will appear on the
+                        frontend
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Details</CardTitle>
+                <CardDescription>
+                  Additional information about the brand
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="categories">Categories *</Label>
+                    <MultiSelect
+                      options={CATEGORIES}
+                      value={formData.categories}
+                      onValueChange={handleCategoriesChange}
+                      placeholder="Select categories"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="price_range">Price Range</Label>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                      <Select
+                        value={formData.currency}
+                        onValueChange={(value) =>
+                          handleSelectChange("currency", value)
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Currency" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {CURRENCIES.map((currency) => (
+                            <SelectItem
+                              key={currency.code}
+                              value={currency.code}
+                            >
+                              {currency.symbol} - {currency.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+
+                      <Input
+                        name="price_min"
+                        value={formData.price_min}
+                        onChange={handleInputChange}
+                        placeholder="Min price (e.g. 15000)"
+                        type="number"
+                      />
+
+                      <Input
+                        name="price_max"
+                        value={formData.price_max}
+                        onChange={handleInputChange}
+                        placeholder="Max price (e.g. 120000)"
+                        type="number"
+                      />
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {formData.price_min &&
+                      formData.price_max &&
+                      formData.currency ? (
+                        <>
+                          Preview:{" "}
+                          {formatPriceRange(
+                            formData.price_min,
+                            formData.price_max,
+                            CURRENCIES.find((c) => c.code === formData.currency)
+                              ?.symbol || "$"
+                          )}
+                        </>
+                      ) : (
+                        "Enter minimum and maximum prices to see preview"
+                      )}
+                    </p>
+
+                    {/* Contact for Pricing Option */}
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="contact_for_pricing"
+                        name="contact_for_pricing"
+                        checked={formData.contact_for_pricing}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            contact_for_pricing: e.target.checked,
+                          })
+                        }
+                        className="rounded border-gray-300 text-oma-plum focus:ring-oma-plum"
+                      />
+                      <Label htmlFor="contact_for_pricing" className="text-sm">
+                        explore brand for prices (if you prefer not to show
+                        specific prices)
+                      </Label>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="location">Location *</Label>
+                  <Input
+                    id="location"
+                    name="location"
+                    value={formData.location}
+                    onChange={handleInputChange}
+                    placeholder="e.g. Lagos, Nigeria"
+                    required
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="website">Website</Label>
+                    <div className="flex items-center rounded-md border border-input ring-offset-background">
+                      <div className="flex items-center justify-center h-9 w-9 border-r">
+                        <Globe className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                      <Input
+                        id="website"
+                        name="website"
+                        value={formData.website}
+                        onChange={handleInputChange}
+                        placeholder="https://example.com"
+                        className="border-0"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="instagram">Instagram</Label>
+                    <div className="flex items-center rounded-md border border-input ring-offset-background">
+                      <div className="flex items-center justify-center h-9 w-9 border-r">
+                        <Instagram className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                      <Input
+                        id="instagram"
+                        name="instagram"
+                        value={formData.instagram}
+                        onChange={handleInputChange}
+                        placeholder="@username"
+                        className="border-0"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="whatsapp">WhatsApp</Label>
+                    <Input
+                      id="whatsapp"
+                      name="whatsapp"
+                      value={formData.whatsapp}
+                      onChange={handleInputChange}
+                      placeholder="+234 123 456 7890"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="contact_email">Contact Email *</Label>
+                    <Input
+                      id="contact_email"
+                      name="contact_email"
+                      type="email"
+                      value={formData.contact_email}
+                      onChange={handleInputChange}
+                      placeholder="hello@brand.com"
+                      required
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      This email will receive notifications when customers
+                      contact you. If left empty, inquiries will be sent to
+                      info@oma-hub.com
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="founded_year">Founded Year</Label>
+                  <Select
+                    value={formData.founded_year}
+                    onValueChange={(value) =>
+                      handleSelectChange("founded_year", value)
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select founding year" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Not specified</SelectItem>
+                      {FOUNDING_YEARS.map((year) => (
+                        <SelectItem key={year} value={year}>
+                          {year}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Brand Image</CardTitle>
+                <CardDescription>
+                  Upload a logo or representative image
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <SimpleFileUpload
+                  onUploadComplete={handleImageUpload}
+                  defaultValue={formData.image}
+                  bucket="brand-assets"
+                  accept="image/png,image/jpeg,image/jpg,image/webp"
+                  maxSize={5}
+                  imageType="brand"
+                  imageRole="cover"
+                  // Note: brandId and brandName will be set after brand creation
+                  // For now, this will use legacy naming, but can be updated later
+                />
+                {/* Always show brand video and thumbnail upload fields */}
+                <div className="mt-6 space-y-4">
+                  <Label>Brand Video (optional)</Label>
+                  <VideoUpload
+                    onUploadComplete={handleVideoUpload}
+                    defaultValue={formData.video_url}
+                    bucket="product-videos"
+                    path="brands"
+                    accept="video/mp4,video/webm,video/quicktime"
+                    maxSize={50}
+                  />
+                  <Label className="mt-4">Video Thumbnail (optional)</Label>
                   <SimpleFileUpload
-                    onUploadComplete={handleImageUpload}
-                    defaultValue={formData.image}
+                    onUploadComplete={handleVideoThumbnailUpload}
+                    defaultValue={formData.video_thumbnail}
                     bucket="brand-assets"
+                    path="thumbnails"
                     accept="image/png,image/jpeg,image/jpg,image/webp"
                     maxSize={5}
-                    imageType="brand"
-                    imageRole="cover"
-                    // Note: brandId and brandName will be set after brand creation
-                    // For now, this will use legacy naming, but can be updated later
                   />
-                  {/* Always show brand video and thumbnail upload fields */}
-                  <div className="mt-6 space-y-4">
-                    <Label>Brand Video (optional)</Label>
-                    <VideoUpload
-                      onUploadComplete={handleVideoUpload}
-                      defaultValue={formData.video_url}
-                      bucket="product-videos"
-                      path="brands"
-                      accept="video/mp4,video/webm,video/quicktime"
-                      maxSize={50}
-                    />
-                    <Label className="mt-4">Video Thumbnail (optional)</Label>
-                    <SimpleFileUpload
-                      onUploadComplete={handleVideoThumbnailUpload}
-                      defaultValue={formData.video_thumbnail}
-                      bucket="brand-assets"
-                      path="thumbnails"
-                      accept="image/png,image/jpeg,image/jpg,image/webp"
-                      maxSize={5}
-                    />
-                  </div>
-                </CardContent>
-                <CardFooter>
-                  <Button
-                    type="submit"
-                    className="w-full"
-                    disabled={submitting}
-                    onClick={handleSubmit}
-                  >
-                    {submitting ? (
-                      <span className="flex items-center gap-2">
-                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-r-transparent" />
-                        Creating...
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-2">
-                        <Save className="h-4 w-4" />
-                        Create Brand
-                      </span>
-                    )}
-                  </Button>
-                </CardFooter>
-              </Card>
-            </div>
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={submitting}
+                  onClick={handleSubmit}
+                >
+                  {submitting ? (
+                    <span className="flex items-center gap-2">
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-r-transparent" />
+                      Creating...
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-2">
+                      <Save className="h-4 w-4" />
+                      Create Brand
+                    </span>
+                  )}
+                </Button>
+              </CardFooter>
+            </Card>
           </div>
-        </form>
-      </div>
-    );
+        </div>
+      </form>
+    </div>
+  );
 }
