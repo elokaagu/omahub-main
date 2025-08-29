@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "@/components/ui/use-toast";
 import { clearMalformedCookies } from "@/lib/utils/cookieUtils";
+import { createClient } from "@/lib/supabase-unified";
+import { toast } from "sonner";
 
 interface Brand {
   id: string;
@@ -44,11 +45,42 @@ export interface FavouriteResult {
 type FavouriteItem = Brand | Catalogue | Product;
 
 const useFavourites = () => {
-  const { user } = useAuth();
-  const { toast } = useToast();
+  const { user, session } = useAuth();
   const [favourites, setFavourites] = useState<FavouriteItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Helper function to validate and refresh session if needed
+  const ensureValidSession = async (): Promise<boolean> => {
+    if (!session) return false;
+
+    try {
+      const supabase = createClient();
+      
+      // Check if current session is still valid
+      const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !currentSession) {
+        console.log("🔄 Session invalid, attempting refresh...");
+        
+        // Try to refresh the session
+        const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+        
+        if (refreshError || !refreshData.session) {
+          console.error("❌ Session refresh failed:", refreshError);
+          return false;
+        }
+        
+        console.log("✅ Session refreshed successfully");
+        return true;
+      }
+      
+      return true;
+    } catch (error) {
+      console.error("❌ Error validating session:", error);
+      return false;
+    }
+  };
 
   // Fetch favourites
   const fetchFavourites = useCallback(async () => {
@@ -58,9 +90,20 @@ const useFavourites = () => {
       return;
     }
 
+    // Ensure we have a valid session before making API calls
+    const hasValidSession = await ensureValidSession();
+    if (!hasValidSession) {
+      console.error("❌ No valid session for fetching favourites");
+      setError("Authentication required - please sign in again");
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     try {
-      const response = await fetch(`/api/favourites`);
+      const response = await fetch(`/api/favourites`, {
+        credentials: 'include', // Ensure cookies are sent
+      });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -84,7 +127,7 @@ const useFavourites = () => {
     } finally {
       setLoading(false);
     }
-  }, [user?.id]);
+  }, [user?.id, session]);
 
   // Add to favourites
   const addFavourite = useCallback(
@@ -93,6 +136,14 @@ const useFavourites = () => {
       itemType: "brand" | "catalogue" | "product"
     ): Promise<boolean> => {
       try {
+        // Ensure we have a valid session before making API calls
+        const hasValidSession = await ensureValidSession();
+        if (!hasValidSession) {
+          console.error("❌ No valid session for adding favourite");
+          toast.error("Authentication required - please sign in again");
+          return false;
+        }
+
         // Add debugging
         console.log("🔍 addFavourite called with:", {
           itemId,
@@ -102,6 +153,7 @@ const useFavourites = () => {
         const res = await fetch("/api/favourites", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          credentials: 'include', // Ensure cookies are sent
           body: JSON.stringify({ itemId, itemType }),
         });
 
@@ -130,65 +182,24 @@ const useFavourites = () => {
         console.log("✅ Favourite added successfully to database");
 
         // Optimistically update local state immediately for better UX
-        setFavourites((prev) => {
-          // Create a temporary favourite item for immediate UI update
-          const tempFavourite = {
-            id: itemId,
-            item_type: itemType,
-            // Add minimal required fields to prevent TypeScript errors
-            name: `Loading...`, // Will be replaced with real data
-            image: "/placeholder.png",
-            category: "Loading...",
-            location: "Loading...",
-            favourite_id: `temp-${Date.now()}`,
-          } as any;
+        const newFavourite = {
+          id: itemId,
+          item_type: itemType,
+          // Add other required fields based on item type
+          ...(itemType === "brand" && { name: "", image: "", category: "", location: "", is_verified: false, rating: 0 }),
+          ...(itemType === "catalogue" && { title: "", image: "", brand_id: "", description: "" }),
+          ...(itemType === "product" && { title: "", image: "", brand_id: "", price: 0, sale_price: 0, category: "" }),
+        };
 
-          const updated = [...prev, tempFavourite];
-          console.log("🚀 Optimistic update - item added to local state:", {
-            beforeCount: prev.length,
-            afterCount: updated.length,
-            addedItem: { itemId, itemType },
-          });
-          return updated;
-        });
+        setFavourites((prev) => [...prev, newFavourite as FavouriteItem]);
 
-        // Then fetch fresh data from server in background
-        setTimeout(async () => {
-          try {
-            const response = await fetch(`/api/favourites`);
-            if (response.ok) {
-              const data = await response.json();
-              if (data.favourites) {
-                setFavourites(data.favourites);
-                console.log(
-                  "🔄 Background refresh - local state updated with fresh data:",
-                  {
-                    newCount: data.favourites.length,
-                    newFavourites: data.favourites.map((f: any) => ({
-                      id: f.id,
-                      item_type: f.item_type,
-                    })),
-                  }
-                );
-              }
-            }
-          } catch (error) {
-            console.log(
-              "⚠️ Background refresh failed, but optimistic update is active"
-            );
-          }
-        }, 100); // Small delay to ensure optimistic update renders first
+        // Also refresh from server to get complete data
+        await fetchFavourites();
 
-        // Return true to indicate successful addition
         return true;
-      } catch (err: any) {
-        console.error("❌ Error in addFavourite:", err);
-        toast({
-          title: "Error",
-          description: err.message || "Failed to add favourite",
-          variant: "destructive",
-        });
-        // Return false on error
+      } catch (error) {
+        console.error("❌ Error in addFavourite:", error);
+        toast.error(error instanceof Error ? error.message : "Failed to add to favourites");
         return false;
       }
     },
@@ -197,14 +208,29 @@ const useFavourites = () => {
 
   // Remove from favourites
   const removeFavourite = useCallback(
-    async (itemId: string, itemType: "brand" | "catalogue" | "product") => {
+    async (
+      itemId: string,
+      itemType: "brand" | "catalogue" | "product"
+    ): Promise<boolean> => {
       try {
-        console.log("🔄 Removing favourite:", { itemId, itemType });
+        // Ensure we have a valid session before making API calls
+        const hasValidSession = await ensureValidSession();
+        if (!hasValidSession) {
+          console.error("❌ No valid session for removing favourite");
+          toast.error("Authentication required - please sign in again");
+          return false;
+        }
+
+        console.log("🔍 removeFavourite called with:", {
+          itemId,
+          itemType,
+        });
 
         const res = await fetch(
           `/api/favourites?itemId=${itemId}&itemType=${itemType}`,
           {
             method: "DELETE",
+            credentials: 'include', // Ensure cookies are sent
           }
         );
 
@@ -217,34 +243,22 @@ const useFavourites = () => {
 
         console.log("✅ Favourite removed successfully from database");
 
-        // Immediately update local state to reflect the removal
-        setFavourites((prev) => {
-          const updated = prev.filter(
-            (fav) => !(fav.id === itemId && fav.item_type === itemType)
-          );
-          console.log("🔄 Local state updated:", {
-            beforeCount: prev.length,
-            afterCount: updated.length,
-            removedItem: { itemId, itemType },
-          });
-          return updated;
-        });
+        // Optimistically update local state immediately for better UX
+        setFavourites((prev) =>
+          prev.filter(
+            (favourite) =>
+              !(favourite.id === itemId && favourite.item_type === itemType)
+          )
+        );
 
-        // Return true to indicate successful removal
         return true;
-      } catch (err: any) {
-        console.error("❌ Error in removeFavourite:", err);
-        toast({
-          title: "Error",
-          description: err.message || "Failed to remove favourite",
-          variant: "destructive",
-        });
-
-        // Return false on error
+      } catch (error) {
+        console.error("❌ Error in removeFavourite:", error);
+        toast.error(error instanceof Error ? error.message : "Failed to remove from favourites");
         return false;
       }
     },
-    [fetchFavourites, toast]
+    [toast]
   );
 
   // Check if an item is favourited
@@ -298,7 +312,7 @@ const useFavourites = () => {
       clearMalformedCookies();
       fetchFavourites();
     }
-  }, [user?.id]); // Only depend on user ID, not the entire fetchFavourites function
+  }, [user?.id, session]); // Also depend on session changes
 
   return {
     favourites,
