@@ -90,15 +90,18 @@ export function createApiRouteSupabaseClient(request: Request) {
       get(name: string) {
         const cookieHeader = request.headers.get("cookie");
         if (!cookieHeader) return undefined;
-        
-        const cookies: Record<string, string> = cookieHeader.split(";").reduce((acc, cookie) => {
-          const [key, value] = cookie.trim().split("=");
-          if (key && value) {
-            acc[key] = value;
-          }
-          return acc;
-        }, {} as Record<string, string>);
-        
+
+        const cookies: Record<string, string> = cookieHeader.split(";").reduce(
+          (acc, cookie) => {
+            const [key, value] = cookie.trim().split("=");
+            if (key && value) {
+              acc[key] = value;
+            }
+            return acc;
+          },
+          {} as Record<string, string>
+        );
+
         return cookies[name];
       },
       set() {

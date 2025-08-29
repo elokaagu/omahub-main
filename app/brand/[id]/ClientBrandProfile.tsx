@@ -52,6 +52,7 @@ import { getProductMainImage } from "@/lib/utils/productImageUtils";
 import { FavouriteButton } from "@/components/ui/favourite-button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { Review } from "@/lib/hooks/useReviews";
 
 // Extended interface for brand profile data that includes currency and matches actual data structure
 interface BrandProfileData {
@@ -103,11 +104,22 @@ export default function ClientBrandProfile({
   console.log("Extracted brand ID:", id);
 
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
-  const { reviews, loading, error, fetchReviews } = useReviews(id as string);
+  const { reviews: hookReviews, loading, error, fetchReviews } = useReviews(id as string);
+  const [localReviews, setLocalReviews] = useState<Review[]>([]);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [showAllProducts, setShowAllProducts] = useState(false);
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
   const [productsLoading, setProductsLoading] = useState(false);
+
+  // Sync local reviews with hook reviews
+  useEffect(() => {
+    if (hookReviews.length > 0) {
+      setLocalReviews(hookReviews);
+    }
+  }, [hookReviews]);
+
+  // Use localReviews for display, fallback to hookReviews
+  const reviews = localReviews.length > 0 ? localReviews : hookReviews;
 
   // Scroll to collections function
   const scrollToCollections = () => {
@@ -180,6 +192,22 @@ export default function ClientBrandProfile({
     toast.success(
       "Review submitted successfully! Thank you for sharing your experience."
     );
+  };
+
+  const handleReviewAdded = (newReview: Review) => {
+    // Immediately add the new review to local state for instant display
+    setLocalReviews(prevReviews => [newReview, ...prevReviews]);
+    
+    // Hide the review form
+    setShowReviewForm(false);
+    
+    // Show success message
+    toast.success("Review submitted successfully! Thank you for sharing your experience.");
+    
+    // Refresh parent brand data (including reviews)
+    if (onReviewSubmitted) {
+      onReviewSubmitted();
+    }
   };
 
   const handleShowReviewForm = () => {
@@ -625,6 +653,7 @@ export default function ClientBrandProfile({
               <ReviewForm
                 brandId={id as string}
                 onReviewSubmitted={handleReviewSubmitted}
+                onReviewAdded={handleReviewAdded}
                 className="mb-6"
               />
               <Button

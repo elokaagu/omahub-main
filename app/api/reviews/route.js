@@ -96,6 +96,33 @@ export async function POST(request) {
 
     console.log("Review added successfully:", data);
 
+    // Create inbox notification for the brand owner
+    try {
+      const { data: inboxData, error: inboxError } = await supabase
+        .from("inquiries")
+        .insert([{
+          brand_id: brandId,
+          customer_name: author,
+          customer_email: `review-${userId}@oma-hub.com`, // Use a placeholder email for reviews
+          subject: `New ${rating}-Star Review Received`,
+          message: `Customer "${author}" left a ${rating}-star review: "${comment}"`,
+          inquiry_type: "review_notification",
+          status: "unread",
+          priority: "normal",
+          source: "website_review"
+        }])
+        .select()
+        .single();
+
+      if (inboxError) {
+        console.warn("⚠️ Failed to create inbox notification:", inboxError);
+      } else {
+        console.log("✅ Inbox notification created:", inboxData);
+      }
+    } catch (inboxError) {
+      console.warn("⚠️ Error creating inbox notification:", inboxError);
+    }
+
     // Update the brand's average rating
     await updateBrandRating(supabase, brandId);
 

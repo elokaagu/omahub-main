@@ -13,12 +13,14 @@ import { StarIcon as StarOutlineIcon } from "@heroicons/react/24/outline";
 interface ReviewFormProps {
   brandId: string;
   onReviewSubmitted?: () => void;
+  onReviewAdded?: (review: Review) => void; // New callback for immediate display
   className?: string;
 }
 
 export function ReviewForm({
   brandId,
   onReviewSubmitted,
+  onReviewAdded,
   className = "",
 }: ReviewFormProps) {
   const { user } = useAuth();
@@ -116,6 +118,11 @@ export function ReviewForm({
       // Call callback if provided
       if (onReviewSubmitted) {
         onReviewSubmitted();
+      }
+
+      // Call onReviewAdded if provided
+      if (onReviewAdded && result.review) {
+        onReviewAdded(result.review);
       }
     } else {
       toast.error(result.message || "Failed to submit review");
