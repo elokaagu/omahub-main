@@ -3,55 +3,22 @@ import { getProfile, isAdmin } from "./authService";
 
 import { clearCollectionsCache } from "./collectionService";
 
-/**
- * Unified Brand Service - Consolidates all brand-related functions
- * Replaces: getAllBrands, getBrandsByCategory, getBrandsOptimized, etc.
- */
-
-interface BrandFetchOptions {
-  // Filtering options
-  category?: string;
-  filterEmptyBrands?: boolean;
-  limit?: number;
-  offset?: number;
-  
-  // Field selection options
-  fields?: string[];
-  includeImages?: boolean;
-  includeProducts?: boolean;
-  includeCollections?: boolean;
-  
-  // Caching options
-  useCache?: boolean;
-  forceRefresh?: boolean;
-  
-  // Sorting options
-  sortBy?: 'name' | 'created_at' | 'rating' | 'is_verified';
-  sortOrder?: 'asc' | 'desc';
-}
-
-interface BrandWithRelations extends Brand {
-  product_count?: number;
-  collections?: Catalogue[];
-  reviews?: Review[];
-}
-
-// Enhanced cache with better invalidation
-interface EnhancedBrandsCache {
-  data: BrandWithRelations[] | null;
+// Cache configuration
+let brandsCache: {
+  data: Brand[] | null;
   timestamp: number;
   isLoading: boolean;
-  filters: string; // Cache key based on filters
-}
-
-let enhancedBrandsCache: EnhancedBrandsCache = {
+} = {
   data: null,
   timestamp: 0,
   isLoading: false,
-  filters: '',
 };
 
-const ENHANCED_CACHE_EXPIRY = 5 * 60 * 1000; // 5 minutes
+// Cache expiration time (restored to reasonable value)
+const CACHE_EXPIRY = 30 * 1000; // 30 seconds for stable performance
+
+// Define essential fields to reduce payload size
+const ESSENTIAL_BRAND_FIELDS = "*";
 
 /**
  * Check if user has permission to modify a brand
@@ -153,115 +120,161 @@ export async function getAllBrandsWithProductCounts(): Promise<
 }
 
 /**
- * Unified function to fetch brands with flexible options
- * Replaces: getAllBrands, getBrandsByCategory, getBrandsOptimized
+ * Fetch all brands, optionally filtering out those with no products
  */
-export async function getBrands(options: BrandFetchOptions = {}): Promise<BrandWithRelations[]> {
-  const {
-    category,
-    filterEmptyBrands = false,
-    limit,
-    offset = 0,
-    fields = ['*'],
-    includeImages = true,
-    includeProducts = false,
-    includeCollections = false,
-    useCache = true,
-    forceRefresh = false,
-    sortBy = 'name',
-    sortOrder = 'asc'
-  } = options;
-
-  // Create cache key based on options
-  const cacheKey = JSON.stringify({
-    category,
-    filterEmptyBrands,
-    limit,
-    offset,
-    fields: fields.sort(),
-    includeImages,
-    includeProducts,
-    includeCollections,
-    sortBy,
-    sortOrder
-  });
-
-  // Check cache first (unless forcing refresh)
-  if (useCache && !forceRefresh && enhancedBrandsCache.data && enhancedBrandsCache.filters === cacheKey) {
-    const now = Date.now();
-    if (now - enhancedBrandsCache.timestamp < ENHANCED_CACHE_EXPIRY) {
-      console.log("🎯 Using cached brands data");
-      return enhancedBrandsCache.data;
-    }
-  }
-
-  // Prevent concurrent fetches with same options
-  if (enhancedBrandsCache.isLoading && enhancedBrandsCache.filters === cacheKey) {
-    console.log("🔄 Already fetching brands with same options, waiting...");
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    if (enhancedBrandsCache.data && enhancedBrandsCache.filters === cacheKey) {
-      return enhancedBrandsCache.data;
-    }
-  }
-
+export async function getAllBrands(
+  filterEmptyBrands: boolean = false,
+  noCache: boolean = false
+): Promise<Brand[]> {
   try {
-    enhancedBrandsCache.isLoading = true;
-    console.log("🔄 Fetching brands with options:", options);
-
-    if (!supabase) {
-      throw new Error("Supabase client is not initialized");
+    if (filterEmptyBrands) {
+      // Get brands with product counts and filter out empty ones
+      const brandsWithCounts = await getAllBrandsWithProductCounts();
+      return brandsWithCounts.filter((brand) => brand.product_count > 0);
     }
 
-    // Build the base query
-    let selectFields = fields.includes('*') ? '*' : fields.join(', ');
-    
-    // Always include essential fields for processing
-    if (!fields.includes('*')) {
-      const essentialFields = ['id', 'name', 'category', 'location'];
-      essentialFields.forEach(field => {
-        if (!selectFields.includes(field)) {
-          selectFields += `, ${field}`;
+    // If noCache is true, always fetch fresh data
+    if (noCache) {
+      if (!supabase) {
+        throw new Error("Supabase client is not initialized");
+      }
+      const { data, error } = await supabase
+        .from("brands")
+        .select("*, video_url, video_thumbnail, brand_images(*)")
+        .order("name");
+      if (error) throw new Error(`Failed to fetch brands: ${error.message}`);
+      if (!data || data.length === 0)
+        throw new Error("No brands found in the database");
+      return data.map((item) => {
+        // Clean location data - remove trailing 'O' and '0' characters that might be data entry errors
+        const cleanLocation = item.location
+          ? item.location.replace(/[O0]+$/, "")
+          : undefined;
+        if (item.location && cleanLocation !== item.location) {
+          console.log(
+            `🧹 Cleaned location for ${item.name}: '${item.location}' → '${cleanLocation}'`
+          );
         }
+
+        return {
+          id:
+            item.id || `temp-id-${Math.random().toString(36).substring(2, 9)}`,
+          name: item.name || "Brand Name",
+          description: item.description || "Brand description",
+          long_description: item.long_description || "Long brand description",
+          location: cleanLocation || "Unknown location",
+          price_range: item.price_range || "$",
+          currency: item.currency,
+          category: item.category || "Other",
+          categories: item.categories || [],
+          rating: item.rating || 4.5,
+          is_verified: item.is_verified || false,
+          // Construct image URL from brand_images relationship
+          image: item.brand_images?.[0]?.storage_path
+            ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${item.brand_images[0].storage_path}`
+            : item.image || "/placeholder-image.jpg", // Fallback to old image field for backward compatibility
+          video_url: item.video_url || undefined,
+          video_thumbnail: item.video_thumbnail || undefined,
+        };
       });
     }
 
-    // Build the query
-    let query = supabase
+    // Check if we're already loading brands
+    if (brandsCache.isLoading) {
+      console.log("🔄 Already fetching brands, waiting for completion...");
+      // Wait for a short period and check cache
+      await new Promise((resolve) => setTimeout(resolve, 2000)); // Increased to 2 seconds
+      if (brandsCache.data) {
+        console.log("✅ Got data from cache after waiting");
+        return brandsCache.data;
+      }
+      console.log("⚠️ No data in cache after waiting, using sample data");
+      return getSampleBrandsData();
+    }
+
+    // Check cache first
+    const now = Date.now();
+    if (brandsCache.data && now - brandsCache.timestamp < CACHE_EXPIRY) {
+      console.log(
+        "🎯 Using cached brands data, age:",
+        (now - brandsCache.timestamp) / 1000,
+        "seconds"
+      );
+      return brandsCache.data;
+    }
+
+    // Set loading state
+    brandsCache.isLoading = true;
+    console.log("🔄 Cache expired or empty, fetching fresh data...");
+
+    // Debug Supabase connection
+    if (!supabase) {
+      console.error("⛔ ERROR: Supabase client is undefined!");
+      brandsCache.isLoading = false;
+      throw new Error("Supabase client is not initialized");
+    }
+
+    // Test connection with a count query first
+    const { count, error: countError } = await supabase
       .from("brands")
-      .select(selectFields);
+      .select("*", { count: "exact", head: true });
 
-    // Apply filters
-    if (category) {
-      query = query.eq("category", category);
+    if (countError) {
+      console.error("⛔ Error testing database connection:", countError);
+      brandsCache.isLoading = false;
+      throw new Error(`Database connection error: ${countError.message}`);
     }
 
-    // Apply sorting
-    query = query.order(sortBy, { ascending: sortOrder === 'asc' });
+    console.log(`📊 Found ${count} brands in database`);
 
-    // Apply pagination
-    if (limit) {
-      query = query.range(offset, offset + limit - 1);
-    }
-
-    // Execute query
-    const { data, error } = await query;
+    // Fetch all brand data with their normalized images
+    const { data, error } = await supabase
+      .from("brands")
+      .select(
+        `
+        *,
+        video_url,
+        video_thumbnail,
+        brand_images (
+          id,
+          role,
+          storage_path,
+          created_at,
+          updated_at
+        )
+      `
+      )
+      .order("name");
 
     if (error) {
+      console.error(
+        "⛔ Error fetching brands:",
+        error.message,
+        error.details,
+        error.hint,
+        "\nStatus:",
+        error.code
+      );
+      brandsCache.isLoading = false;
       throw new Error(`Failed to fetch brands: ${error.message}`);
     }
 
     if (!data || data.length === 0) {
-      console.log("⚠️ No brands found with current filters");
-      return [];
+      brandsCache.isLoading = false;
+      throw new Error("No brands found in the database");
     }
 
-    // Process the data
-    let processedBrands: BrandWithRelations[] = data.map((item: any) => {
-      // Clean location data
+    // Map the data to Brand objects
+    const fullBrands: Brand[] = data.map((item) => {
+      // Debug: Log the raw currency value from database
+      console.log(
+        `🔍 Brand ${item.name}: raw currency from DB = '${item.currency}'`
+      );
+
+      // Clean location data - remove trailing 'O' and '0' characters that might be data entry errors
       const cleanLocation = item.location
         ? item.location.replace(/[O0]+$/, "")
         : undefined;
-
       if (item.location && cleanLocation !== item.location) {
         console.log(
           `🧹 Cleaned location for ${item.name}: '${item.location}' → '${cleanLocation}'`
@@ -280,105 +293,41 @@ export async function getBrands(options: BrandFetchOptions = {}): Promise<BrandW
         categories: item.categories || [],
         rating: item.rating || 4.5,
         is_verified: item.is_verified || false,
-        image: item.image || "/placeholder-image.jpg",
-        video_url: item.video_url,
-        video_thumbnail: item.video_thumbnail,
-        created_at: item.created_at,
-        updated_at: item.updated_at,
+        // Construct image URL from brand_images relationship
+        image: item.brand_images?.[0]?.storage_path
+          ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${item.brand_images[0].storage_path}`
+          : item.image || "/placeholder-image.jpg", // Fallback to old image field for backward compatibility
+        video_url: item.video_url || undefined,
+        video_thumbnail: item.video_thumbnail || undefined,
+        // Include the new normalized images
+        brand_images: item.brand_images || [],
       };
     });
 
-    // Apply additional filters
-    if (filterEmptyBrands) {
-      console.log("🔍 Filtering out brands with no products...");
-      const brandsWithCounts = await getAllBrandsWithProductCounts();
-      const brandCountsMap = new Map(
-        brandsWithCounts.map(brand => [brand.id, brand.product_count || 0])
-      );
-      
-      processedBrands = processedBrands.filter(brand => {
-        const count = brandCountsMap.get(brand.id) || 0;
-        brand.product_count = count;
-        return count > 0;
-      });
-      
-      console.log(`✅ Filtered to ${processedBrands.length} brands with products`);
-    }
-
     // Update cache
-    enhancedBrandsCache = {
-      data: processedBrands,
-      timestamp: Date.now(),
+    brandsCache = {
+      data: fullBrands,
+      timestamp: now,
       isLoading: false,
-      filters: cacheKey,
     };
 
-    console.log(`✅ Successfully fetched ${processedBrands.length} brands`);
-    return processedBrands;
+    console.log(`✅ Successfully fetched ${fullBrands.length} brands`);
+    return fullBrands;
+  } catch (err) {
+    console.error("⛔ Unexpected error in getAllBrands:", err);
+    brandsCache.isLoading = false;
 
-  } catch (error) {
-    console.error("⛔ Error in unified getBrands:", error);
-    enhancedBrandsCache.isLoading = false;
-    
-    // Return sample data as fallback
-    console.log("⚠️ Using sample data as fallback");
-    return getSampleBrandsData();
+    // If this is a known error (thrown by us), rethrow it
+    if (err instanceof Error) {
+      throw err;
+    }
+
+    // Otherwise, wrap it in a new error
+    throw new Error(`Failed to fetch brands: ${err}`);
   }
 }
 
-/**
- * Convenience function for getting all brands (backward compatibility)
- * @deprecated Use getBrands() instead
- */
-export async function getAllBrands(
-  filterEmptyBrands: boolean = false,
-  noCache: boolean = false
-): Promise<Brand[]> {
-  console.warn("⚠️ getAllBrands is deprecated. Use getBrands() instead.");
-  
-  return getBrands({
-    filterEmptyBrands,
-    forceRefresh: noCache,
-    useCache: !noCache
-  });
-}
-
-/**
- * Convenience function for getting brands by category (backward compatibility)
- * @deprecated Use getBrands({ category: '...' }) instead
- */
-export async function getBrandsByCategory(category: string): Promise<Brand[]> {
-  console.warn("⚠️ getBrandsByCategory is deprecated. Use getBrands({ category: '...' }) instead.");
-  
-  return getBrands({ category });
-}
-
-/**
- * Get brands with minimal fields for performance (replaces getBrandsOptimized)
- */
-export async function getBrandsOptimized(options: {
-  fields?: string[];
-  limit?: number;
-  category?: string;
-  useCache?: boolean;
-} = {}): Promise<Brand[]> {
-  console.warn("⚠️ getBrandsOptimized is deprecated. Use getBrands() with options instead.");
-  
-  const { fields = ["id", "name", "image", "category", "location", "is_verified"], limit, category, useCache } = options;
-  
-  return getBrands({
-    fields,
-    limit,
-    category,
-    useCache,
-    includeImages: false,
-    includeProducts: false
-  });
-}
-
-/**
- * Function to provide sample data in case of database connection issues
- */
+// Function to provide sample data in case of database connection issues
 function getSampleBrandsData(): Brand[] {
   console.log("⚠️ Using sample brand data as fallback");
   return [
@@ -394,7 +343,7 @@ function getSampleBrandsData(): Brand[] {
       category: "Ready to Wear",
       rating: 4.8,
       is_verified: true,
-      brand_images: [],
+      // image property removed - use brand_images table instead
       video_url: undefined,
       video_thumbnail: undefined,
     },
@@ -409,7 +358,7 @@ function getSampleBrandsData(): Brand[] {
       category: "Bridal",
       rating: 5.0,
       is_verified: true,
-      brand_images: [],
+      // image property removed - use brand_images table instead
       video_url: undefined,
       video_thumbnail: undefined,
     },
@@ -425,7 +374,7 @@ function getSampleBrandsData(): Brand[] {
       category: "Tailored",
       rating: 4.6,
       is_verified: true,
-      brand_images: [],
+      // image property removed - use brand_images table instead
       video_url: undefined,
       video_thumbnail: undefined,
     },
@@ -440,7 +389,7 @@ function getSampleBrandsData(): Brand[] {
       category: "Accessories",
       rating: 4.7,
       is_verified: true,
-      brand_images: [],
+      // image property removed - use brand_images table instead
       video_url: undefined,
       video_thumbnail: undefined,
     },
@@ -452,11 +401,10 @@ function getSampleBrandsData(): Brand[] {
  */
 export function clearBrandsCache(): void {
   console.log("Clearing brands cache");
-  enhancedBrandsCache = {
+  brandsCache = {
     data: null,
     timestamp: 0,
     isLoading: false,
-    filters: '',
   };
 }
 
@@ -474,7 +422,7 @@ export async function forceRefreshBrands(
 ): Promise<Brand[]> {
   console.log("Force refreshing brands data");
   clearBrandsCache();
-  return getBrands({ filterEmptyBrands, forceRefresh: true });
+  return getAllBrands(filterEmptyBrands);
 }
 
 /**
@@ -636,6 +584,27 @@ export async function deleteBrand(
 }
 
 /**
+ * Fetch brands by category
+ */
+export async function getBrandsByCategory(category: string): Promise<Brand[]> {
+  if (!supabase) {
+    throw new Error("Supabase client not available");
+  }
+
+  const { data, error } = await supabase
+    .from("brands")
+    .select("*, brand_images(*)")
+    .eq("category", category);
+
+  if (error) {
+    console.error(`Error fetching brands in category ${category}:`, error);
+    throw error;
+  }
+
+  return data || [];
+}
+
+/**
  * Fetch reviews for a brand
  */
 export async function getBrandReviews(brandId: string): Promise<Review[]> {
@@ -751,11 +720,10 @@ export async function getBrandProducts(brandId: string): Promise<Product[]> {
  */
 export function invalidateBrandsCache() {
   console.log("🗑️ Invalidating brands cache");
-  enhancedBrandsCache = {
+  brandsCache = {
     data: null,
     timestamp: 0,
     isLoading: false,
-    filters: '',
   };
 }
 
