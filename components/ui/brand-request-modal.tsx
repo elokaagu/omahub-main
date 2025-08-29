@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -77,7 +77,28 @@ export function BrandRequestModal({
     preferred_color: color || "",
   });
 
+  // Reset form when modal opens/closes or props change
+  useEffect(() => {
+    setFormData({
+      full_name: "",
+      email: "",
+      phone: "",
+      address_line_1: "",
+      city: "",
+      state: "",
+      postal_code: "",
+      country: "",
+      customer_notes: "",
+      quantity: 1,
+      preferred_size: size || "",
+      preferred_color: color || "",
+    });
+    setValidationErrors([]);
+    console.log("🔄 Form reset - Size prop:", size, "Color prop:", color);
+  }, [isOpen, size, color]);
+
   const handleInputChange = (field: string, value: string | number) => {
+    console.log(`📝 Field change: ${field} = ${value}`);
     setFormData((prev) => ({ ...prev, [field]: value }));
     // Clear validation errors when user starts typing
     if (validationErrors.length > 0) {
@@ -297,6 +318,8 @@ export function BrandRequestModal({
                     <SelectValue placeholder="Select your preferred size" />
                   </SelectTrigger>
                   <SelectContent>
+                    {/* Standard Sizes */}
+                    <SelectItem value="XXS">XXS (Extra Extra Small)</SelectItem>
                     <SelectItem value="XS">XS (Extra Small)</SelectItem>
                     <SelectItem value="S">S (Small)</SelectItem>
                     <SelectItem value="M">M (Medium)</SelectItem>
@@ -304,7 +327,29 @@ export function BrandRequestModal({
                     <SelectItem value="XL">XL (Extra Large)</SelectItem>
                     <SelectItem value="XXL">XXL (2XL)</SelectItem>
                     <SelectItem value="XXXL">XXXL (3XL)</SelectItem>
+                    <SelectItem value="4XL">4XL</SelectItem>
+                    <SelectItem value="5XL">5XL</SelectItem>
+                    
+                    {/* Numeric Sizes */}
+                    <SelectItem value="32">32</SelectItem>
+                    <SelectItem value="34">34</SelectItem>
+                    <SelectItem value="36">36</SelectItem>
+                    <SelectItem value="38">38</SelectItem>
+                    <SelectItem value="40">40</SelectItem>
+                    <SelectItem value="42">42</SelectItem>
+                    <SelectItem value="44">44</SelectItem>
+                    <SelectItem value="46">46</SelectItem>
+                    <SelectItem value="48">48</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                    <SelectItem value="52">52</SelectItem>
+                    <SelectItem value="54">54</SelectItem>
+                    
+                    {/* Custom Options */}
                     <SelectItem value="custom">Custom Measurements</SelectItem>
+                    <SelectItem value="petite">Petite</SelectItem>
+                    <SelectItem value="tall">Tall</SelectItem>
+                    <SelectItem value="plus-size">Plus Size</SelectItem>
+                    <SelectItem value="maternity">Maternity</SelectItem>
                     <SelectItem value="other">Other</SelectItem>
                   </SelectContent>
                 </Select>
@@ -569,6 +614,63 @@ export function BrandRequestModal({
                 </div>
               )}
             </Button>
+            
+            {/* Debug Display (Development Only) */}
+            {process.env.NODE_ENV === "development" && (
+              <div className="mt-4 p-3 bg-gray-100 rounded-lg text-xs">
+                <h4 className="font-medium mb-2">Debug Info:</h4>
+                <div className="space-y-1">
+                  <p><strong>Quantity:</strong> {formData.quantity}</p>
+                  <p><strong>Preferred Size:</strong> {formData.preferred_size || 'Not selected'}</p>
+                  <p><strong>Preferred Color:</strong> {formData.preferred_color || 'Not entered'}</p>
+                  <p><strong>Full Name:</strong> {formData.full_name || 'Not entered'}</p>
+                  <p><strong>Email:</strong> {formData.email || 'Not entered'}</p>
+                </div>
+                
+                {/* Test Buttons */}
+                <div className="mt-3 space-y-2">
+                  <h5 className="font-medium">Test Dropdowns:</h5>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleInputChange("preferred_size", "M")}
+                      className="text-xs"
+                    >
+                      Set Size: M
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleInputChange("preferred_size", "XL")}
+                      className="text-xs"
+                    >
+                      Set Size: XL
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleInputChange("preferred_size", "custom")}
+                      className="text-xs"
+                    >
+                      Set Size: Custom
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleInputChange("quantity", 3)}
+                      className="text-xs"
+                    >
+                      Set Quantity: 3
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
           </form>
         </div>
       </DialogContent>
