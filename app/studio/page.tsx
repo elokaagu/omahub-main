@@ -43,24 +43,62 @@ export default function StudioPage() {
           return;
         }
 
-        // Wait for user profile to be fully loaded with brands
-        if (!user.owned_brands || user.owned_brands.length === 0) {
-          console.log("🔄 Studio Page: Waiting for user profile to load brands...");
-          // Wait a bit for the profile to load
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          
+        // For brand owners, ensure we have the owned_brands before proceeding
+        if (
+          user.role === "brand_admin" &&
+          (!user.owned_brands || user.owned_brands.length === 0)
+        ) {
+          console.log(
+            "🔄 Studio Page: Brand owner detected, waiting for profile to load brands..."
+          );
+
           // Try to refresh the user profile to get the latest data
           if (user.id) {
             try {
-              const profileResult = await supabaseHelpers.getProfileById(user.id);
-              if (profileResult.data && profileResult.data.owned_brands && profileResult.data.owned_brands.length > 0) {
-                console.log("✅ Studio Page: Profile refreshed with brands:", profileResult.data.owned_brands);
+              const profileResult = await supabaseHelpers.getProfileById(
+                user.id
+              );
+              if (
+                profileResult.data &&
+                profileResult.data.owned_brands &&
+                profileResult.data.owned_brands.length > 0
+              ) {
+                console.log(
+                  "✅ Studio Page: Profile refreshed with brands:",
+                  profileResult.data.owned_brands
+                );
                 setUserProfile(profileResult.data);
                 setLoading(false);
                 return;
+              } else {
+                console.log(
+                  "⚠️ Studio Page: Profile loaded but no brands found, waiting..."
+                );
+                // Wait a bit more for the profile to be fully populated
+                await new Promise((resolve) => setTimeout(resolve, 2000));
+
+                // Try one more time
+                const retryResult = await supabaseHelpers.getProfileById(
+                  user.id
+                );
+                if (
+                  retryResult.data &&
+                  retryResult.data.owned_brands &&
+                  retryResult.data.owned_brands.length > 0
+                ) {
+                  console.log(
+                    "✅ Studio Page: Brands loaded on retry:",
+                    retryResult.data.owned_brands
+                  );
+                  setUserProfile(retryResult.data);
+                  setLoading(false);
+                  return;
+                }
               }
             } catch (error) {
-              console.log("⚠️ Studio Page: Could not refresh profile, continuing with current data");
+              console.log(
+                "⚠️ Studio Page: Could not refresh profile, continuing with current data"
+              );
             }
           }
         }
@@ -116,29 +154,74 @@ export default function StudioPage() {
     }
   }, [user]);
 
-  // Additional effect to wait for brands to load
+  // Additional effect to wait for brands to load for brand owners
   useEffect(() => {
-    if (user && userProfile && (!userProfile.owned_brands || userProfile.owned_brands.length === 0)) {
-      console.log("🔄 Studio Page: Waiting for brands to load...");
+    if (
+      user &&
+      user.role === "brand_admin" &&
+      userProfile &&
+      (!userProfile.owned_brands || userProfile.owned_brands.length === 0)
+    ) {
+      console.log(
+        "🔄 Studio Page: Brand owner - waiting for brands to load..."
+      );
       const timer = setTimeout(async () => {
         if (user.id) {
           try {
             const profileResult = await supabaseHelpers.getProfileById(user.id);
-            if (profileResult.data && profileResult.data.owned_brands && profileResult.data.owned_brands.length > 0) {
-              console.log("✅ Studio Page: Brands loaded after delay:", profileResult.data.owned_brands);
+            if (
+              profileResult.data &&
+              profileResult.data.owned_brands &&
+              profileResult.data.owned_brands.length > 0
+            ) {
+              console.log(
+                "✅ Studio Page: Brands loaded after delay:",
+                profileResult.data.owned_brands
+              );
               setUserProfile(profileResult.data);
             }
           } catch (error) {
             console.log("⚠️ Studio Page: Could not load brands after delay");
           }
         }
-      }, 2000); // Wait 2 seconds for brands to load
+      }, 3000); // Wait 3 seconds for brands to load
 
       return () => clearTimeout(timer);
     }
   }, [user, userProfile]);
 
   if (loading) {
+    // Special loading state for brand owners
+    if (
+      user?.role === "brand_admin" &&
+      (!user.owned_brands || user.owned_brands.length === 0)
+    ) {
+      return (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8">
+          <div className="text-center">
+            <h1 className="text-4xl font-bold text-omahub-primary mb-2">
+              Welcome to OmaHub Studio
+            </h1>
+            <p className="text-lg text-omahub-secondary mb-8">
+              Manage your brands, products, and business operations
+            </p>
+            <div className="bg-oma-plum/10 border border-oma-plum/20 rounded-lg p-6 max-w-md mx-auto">
+              <div className="flex items-center justify-center space-x-3 mb-4">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-oma-plum"></div>
+                <span className="text-oma-plum font-medium">
+                  Loading Your Brands
+                </span>
+              </div>
+              <p className="text-sm text-oma-cocoa">
+                We're setting up your brand dashboard. This may take a few
+                moments on first login.
+              </p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8">
         {/* Enhanced skeleton loading with better visual hierarchy */}

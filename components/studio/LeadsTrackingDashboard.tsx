@@ -312,11 +312,17 @@ export default function LeadsTrackingDashboard({
         // Log every 5 seconds max
         console.log("🔍 LeadsTrackingDashboard Debug:", {
           user: user?.email,
+          userRole,
+          ownedBrandIds,
+          effectiveOwnedBrands: effectiveOwnedBrands,
+          isBrandAdmin,
+          isSuperAdmin,
           authLoading,
           leadsLoading,
           analyticsLoading,
           leadsCount: leads?.length,
           totalCount,
+          brandOwnerAnalytics,
           analyticsData: analytics
             ? {
                 total_leads: analytics.total_leads,
@@ -330,11 +336,17 @@ export default function LeadsTrackingDashboard({
     }
   }, [
     user,
+    userRole,
+    ownedBrandIds,
+    effectiveOwnedBrands,
+    isBrandAdmin,
+    isSuperAdmin,
     authLoading,
     leadsLoading,
     analyticsLoading,
     leads?.length,
     totalCount,
+    brandOwnerAnalytics,
     analytics?.total_leads,
     analytics?.qualified_leads,
     analytics?.conversion_rate,
@@ -345,32 +357,24 @@ export default function LeadsTrackingDashboard({
     if (user) {
       fetchLeads();
       fetchAnalytics();
-      fetchPlatformAnalytics();
-      // Google Analytics function - commented out for future use
-      // async function fetchVercelAnalytics() {
-      //   setVercelLoading(true);
-      //   setVercelError(null);
-      //   try {
-      //     // Call the actual Vercel Analytics API endpoint
-      //     const res = await fetch("/api/analytics/pageviews");
-      //     if (!res.ok) {
-      //       const err = await res.json();
-      //       setVercelError(err.error || "Failed to fetch Vercel analytics");
-      //       setVercelAnalytics(null);
-      //   } else {
-      //       const data = await res.json();
-      //       setVercelAnalytics(data);
-      //   }
-      // } catch (error) {
-      //   setVercelError("Failed to fetch Vercel analytics");
-      //   setVercelAnalytics(null);
-      // } finally {
-      //   setVercelLoading(false);
-      // }
-      // }
-      // fetchVercelAnalytics();
+
+      // Only fetch platform analytics if we have the necessary data
+      if (isSuperAdmin || (isBrandAdmin && effectiveOwnedBrands.length > 0)) {
+        fetchPlatformAnalytics();
+      }
     }
-  }, [user, currentPage, filters]);
+  }, [user, currentPage, filters, effectiveOwnedBrands.length]); // Add effectiveOwnedBrands.length as dependency
+
+  // Additional effect to fetch analytics when ownedBrandIds become available
+  useEffect(() => {
+    if (user && isBrandAdmin && effectiveOwnedBrands.length > 0) {
+      console.log(
+        "🏷️ Brand owner analytics: Owned brands now available, fetching analytics:",
+        effectiveOwnedBrands
+      );
+      fetchPlatformAnalytics();
+    }
+  }, [user, isBrandAdmin, effectiveOwnedBrands.length]);
 
   // Handle inline field updates
   const handleFieldUpdate = async (
