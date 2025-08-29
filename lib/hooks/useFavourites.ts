@@ -49,14 +49,14 @@ export default function useFavourites() {
     } catch (error) {
       console.error("❌ Error fetching favourites:", error);
       toast.error("Failed to load favourites", {
-        duration: 3000, // 3 seconds for errors
+        duration: 3000,
       });
     } finally {
       setLoading(false);
     }
   }, [user]);
 
-  // Add item to favourites - direct to database
+  // Add item to favourites with smart optimistic update
   const addFavourite = useCallback(
     async (
       itemId: string,
@@ -64,10 +64,21 @@ export default function useFavourites() {
     ): Promise<boolean> => {
       if (!user) {
         toast.error("Please sign in to add favourites", {
-          duration: 2500, // 2.5 seconds for user guidance
+          duration: 2500,
         });
         return false;
       }
+
+      // Create optimistic item for immediate UI update
+      const optimisticItem: FavouriteItem = {
+        id: itemId,
+        item_type: itemType,
+        favourite_id: `temp-${Date.now()}`, // Temporary ID
+        name: "Loading...", // Placeholder data
+      };
+
+      // Update UI immediately for this specific item
+      setFavourites(prev => [...prev, optimisticItem]);
 
       try {
         const response = await fetch("/api/favourites", {
@@ -87,24 +98,46 @@ export default function useFavourites() {
         const data = await response.json();
         console.log("✅ Added to favourites:", data);
 
-        // Refresh favourites from database to ensure consistency
-        await fetchFavourites();
+        // Replace optimistic item with real data from database
+        setFavourites(prev => 
+          prev.map(item => 
+            item.id === itemId && item.item_type === itemType
+              ? { ...item, favourite_id: data.favourite.id, name: data.favourite.name || "Unknown" }
+              : item
+          )
+        );
+
+        // Show success toast
+        toast.success("Added to favourites", {
+          duration: 1500,
+        });
+
         return true;
       } catch (error) {
         console.error("❌ Error adding favourite:", error);
+        
+        // Revert optimistic update on error
+        setFavourites(prev => 
+          prev.filter(item => 
+            !(item.id === itemId && item.item_type === itemType)
+          )
+        );
+
         toast.error(
-          error instanceof Error ? error.message : "Failed to add to favourites",
+          error instanceof Error
+            ? error.message
+            : "Failed to add to favourites",
           {
-            duration: 3000, // 3 seconds for errors
+            duration: 3000,
           }
         );
         return false;
       }
     },
-    [user, fetchFavourites]
+    [user]
   );
 
-  // Remove item from favourites - direct to database
+  // Remove item from favourites with smart optimistic update
   const removeFavourite = useCallback(
     async (
       itemId: string,
@@ -112,10 +145,22 @@ export default function useFavourites() {
     ): Promise<boolean> => {
       if (!user) {
         toast.error("Please sign in to manage favourites", {
-          duration: 2500, // 2.5 seconds for user guidance
+          duration: 2500,
         });
         return false;
       }
+
+      // Store the item being removed for potential restoration
+      const itemToRemove = favourites.find(
+        item => item.id === itemId && item.item_type === itemType
+      );
+
+      // Remove from UI immediately
+      setFavourites(prev => 
+        prev.filter(item => 
+          !(item.id === itemId && item.item_type === itemType)
+        )
+      );
 
       try {
         const response = await fetch(
@@ -135,27 +180,36 @@ export default function useFavourites() {
 
         const data = await response.json();
         console.log("✅ Removed from favourites:", data);
-
-        // Refresh favourites from database to ensure consistency
-        await fetchFavourites();
+        
+        // Show success toast
+        toast.success("Removed from favourites", {
+          duration: 1500,
+        });
+        
         return true;
       } catch (error) {
         console.error("❌ Error removing favourite:", error);
+        
+        // Restore item on error
+        if (itemToRemove) {
+          setFavourites(prev => [...prev, itemToRemove]);
+        }
+
         toast.error(
           error instanceof Error
             ? error.message
             : "Failed to remove from favourites",
           {
-            duration: 3000, // 3 seconds for errors
+            duration: 3000,
           }
         );
         return false;
       }
     },
-    [user, fetchFavourites]
+    [user, favourites]
   );
 
-  // Toggle favourite status - direct to database
+  // Toggle favourite status with smart optimistic updates
   const toggleFavourite = useCallback(
     async (
       itemId: string,

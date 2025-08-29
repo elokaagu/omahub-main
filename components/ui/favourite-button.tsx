@@ -40,21 +40,12 @@ export function FavouriteButton({
       const success = await toggleFavourite(itemId, itemType);
       
       if (success) {
-        if (isFavourited) {
-          toast.success("Removed from favourites", {
-            duration: 1500, // 1.5 seconds for quick feedback
-          });
-        } else {
-          toast.success("Added to favourites", {
-            duration: 1500, // 1.5 seconds for quick feedback
-          });
-        }
+        // Toast is handled by the hook now, so we don't need to show it here
+        // The UI updates immediately due to optimistic updates
       }
     } catch (error) {
       console.error("Error toggling favourite:", error);
-      toast.error("Failed to update favourites", {
-        duration: 3000, // 3 seconds for errors so users can read them
-      });
+      // Error handling is done in the hook, so we don't need to show toast here
     } finally {
       setIsToggling(false);
     }
