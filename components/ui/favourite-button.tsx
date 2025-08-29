@@ -41,14 +41,20 @@ export function FavouriteButton({
       
       if (success) {
         if (isFavourited) {
-          toast.success("Removed from favourites");
+          toast.success("Removed from favourites", {
+            duration: 1500, // 1.5 seconds for quick feedback
+          });
         } else {
-          toast.success("Added to favourites");
+          toast.success("Added to favourites", {
+            duration: 1500, // 1.5 seconds for quick feedback
+          });
         }
       }
     } catch (error) {
       console.error("Error toggling favourite:", error);
-      toast.error("Failed to update favourites");
+      toast.error("Failed to update favourites", {
+        duration: 3000, // 3 seconds for errors so users can read them
+      });
     } finally {
       setIsToggling(false);
     }
