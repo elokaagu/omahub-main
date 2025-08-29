@@ -79,7 +79,7 @@ export function BrandRequestModal({
 
   // Reset form when modal opens/closes or props change
   useEffect(() => {
-    setFormData({
+    const initialFormData = {
       full_name: "",
       email: "",
       phone: "",
@@ -92,9 +92,13 @@ export function BrandRequestModal({
       quantity: 1,
       preferred_size: size || "",
       preferred_color: color || "",
-    });
+    };
+    
+    setFormData(initialFormData);
     setValidationErrors([]);
+    
     console.log("🔄 Form reset - Size prop:", size, "Color prop:", color);
+    console.log("📝 Initial form data:", initialFormData);
   }, [isOpen, size, color]);
 
   const handleInputChange = (field: string, value: string | number) => {
@@ -351,6 +355,12 @@ export function BrandRequestModal({
                     <SelectItem value="other">Other</SelectItem>
                   </SelectContent>
                 </Select>
+                {/* Debug info - remove in production */}
+                {process.env.NODE_ENV === 'development' && (
+                  <p className="text-xs text-blue-600 mt-1">
+                    Current value: "{formData.preferred_size}" | Size prop: "{size}"
+                  </p>
+                )}
               </div>
 
               <div>
@@ -568,6 +578,12 @@ export function BrandRequestModal({
                     <SelectItem value="Other">Other</SelectItem>
                   </SelectContent>
                 </Select>
+                {/* Debug info - remove in production */}
+                {process.env.NODE_ENV === 'development' && (
+                  <p className="text-xs text-blue-600 mt-1">
+                    Current value: "{formData.country}"
+                  </p>
+                )}
               </div>
             </div>
 
@@ -658,10 +674,19 @@ export function BrandRequestModal({
                       type="button"
                       size="sm"
                       variant="outline"
-                      onClick={() => handleInputChange("quantity", 3)}
+                      onClick={() => handleInputChange("country", "United Kingdom")}
                       className="text-xs"
                     >
-                      Set Quantity: 3
+                      Set Country: UK
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleInputChange("country", "Nigeria")}
+                      className="text-xs"
+                    >
+                      Set Country: Nigeria
                     </Button>
                   </div>
                 </div>
