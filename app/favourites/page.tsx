@@ -1,15 +1,21 @@
 "use client";
 
+import { useEffect } from "react";
 import useFavourites from "@/lib/hooks/useFavourites";
 import { Loading } from "@/components/ui/loading";
 import Link from "next/link";
 import { LazyImage } from "@/components/ui/lazy-image";
 import { Button } from "@/components/ui/button";
-import { Heart, Store, BookOpen, ShoppingBag } from "lucide-react";
+import { Heart, Store, BookOpen, ShoppingBag, RefreshCw } from "lucide-react";
 import { formatProductPrice } from "@/lib/utils/priceFormatter";
 
 export default function FavouritesPage() {
-  const { favourites, loading } = useFavourites();
+  const { favourites, loading, refreshFavourites } = useFavourites();
+
+  // Refresh favourites when the page loads to ensure we have the latest data
+  useEffect(() => {
+    refreshFavourites();
+  }, [refreshFavourites]);
 
   // Separate favourites by type
   const brands = favourites.filter(
@@ -99,6 +105,15 @@ export default function FavouritesPage() {
             {favourites.length}
           </span>
         )}
+        <Button
+          onClick={refreshFavourites}
+          variant="outline"
+          size="sm"
+          className="ml-auto border-oma-plum text-oma-plum hover:bg-oma-plum/10"
+        >
+          <RefreshCw className="w-4 h-4 mr-2" />
+          Refresh
+        </Button>
       </div>
 
       {loading ? (
