@@ -31,6 +31,7 @@ import {
   LogOut,
   Menu,
   X,
+  FileText,
 } from "@/lib/utils/iconImports";
 import { TailoringEventProvider } from "@/contexts/NavigationContext";
 import ErrorBoundary from "../components/ErrorBoundary";
@@ -468,6 +469,12 @@ export default function StudioLayout({
         icon: Inbox,
         permission: "studio.products.manage",
         customLabel: user?.role === "brand_admin" ? "Your Inbox" : "Inbox",
+      },
+      {
+        href: "/studio/applications",
+        label: "Applications",
+        icon: FileText,
+        permission: "studio.users.manage",
       },
       {
         href: "/studio/profile",

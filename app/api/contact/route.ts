@@ -330,7 +330,7 @@ export async function POST(request: NextRequest) {
     console.log("📧 Contact API - Environment check:", {
       hasResendKey: !!process.env.RESEND_API_KEY,
       resendKeyLength: process.env.RESEND_API_KEY?.length || 0,
-      nodeEnv: process.env.NODE_ENV
+      nodeEnv: process.env.NODE_ENV,
     });
 
     // Check if this is a brand-specific contact or general platform contact
@@ -471,9 +471,9 @@ export async function POST(request: NextRequest) {
         hasResendKey: !!process.env.RESEND_API_KEY,
         resendKeyLength: process.env.RESEND_API_KEY?.length || 0,
         contactEmail,
-        brandName: brand.name
+        brandName: brand.name,
       });
-      
+
       try {
         const emailResult = await sendContactEmail({
           name: name,
@@ -507,8 +507,12 @@ OmaHub Team`,
         console.error("❌ Email sending error:", emailError);
         console.error("❌ Email error details:", {
           error: emailError,
-          errorMessage: emailError instanceof Error ? emailError.message : String(emailError),
-          errorStack: emailError instanceof Error ? emailError.stack : undefined
+          errorMessage:
+            emailError instanceof Error
+              ? emailError.message
+              : String(emailError),
+          errorStack:
+            emailError instanceof Error ? emailError.stack : undefined,
         });
         // Don't fail the entire request if email fails
       }
@@ -546,7 +550,7 @@ OmaHub Team`,
       console.log("📧 General contact email service configuration:", {
         hasResendKey: !!process.env.RESEND_API_KEY,
         resendKeyLength: process.env.RESEND_API_KEY?.length || 0,
-        nodeEnv: process.env.NODE_ENV
+        nodeEnv: process.env.NODE_ENV,
       });
 
       try {
@@ -578,8 +582,12 @@ View all inquiries in your Studio: https://oma-hub.com/studio/inbox`,
         console.error("❌ Email sending error:", emailError);
         console.error("❌ General contact email error details:", {
           error: emailError,
-          errorMessage: emailError instanceof Error ? emailError.message : String(emailError),
-          errorStack: emailError instanceof Error ? emailError.stack : undefined
+          errorMessage:
+            emailError instanceof Error
+              ? emailError.message
+              : String(emailError),
+          errorStack:
+            emailError instanceof Error ? emailError.stack : undefined,
         });
       }
 
