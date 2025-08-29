@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import {
   getBrandById,
@@ -48,6 +48,25 @@ export default function BrandPage() {
   const [catalogues, setCatalogues] = useState<Catalogue[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+
+  // Function to refresh brand data (including reviews)
+  const refreshBrandData = useCallback(async () => {
+    if (!id || typeof id !== "string") return;
+
+    try {
+      console.log("🔄 Refreshing brand data after review submission...");
+      const [reviewsData, cataloguesData] = await Promise.all([
+        getBrandReviews(id),
+        getBrandCollections(id),
+      ]);
+
+      setReviews(reviewsData);
+      setCatalogues(cataloguesData);
+      console.log("✅ Brand data refreshed successfully");
+    } catch (err) {
+      console.error("❌ Error refreshing brand data:", err);
+    }
+  }, [id]);
 
   useEffect(() => {
     async function fetchBrandData() {
@@ -141,5 +160,10 @@ export default function BrandPage() {
     })),
   };
 
-  return <ClientBrandProfile brandData={brandData} />;
+  return (
+    <ClientBrandProfile
+      brandData={brandData}
+      onReviewSubmitted={refreshBrandData}
+    />
+  );
 }

@@ -82,10 +82,12 @@ interface BrandProfileData {
 
 interface ClientBrandProfileProps {
   brandData: BrandProfileData;
+  onReviewSubmitted?: () => Promise<void>;
 }
 
 export default function ClientBrandProfile({
   brandData,
+  onReviewSubmitted,
 }: ClientBrandProfileProps) {
   const { user } = useAuth();
   const { isFavourite, toggleFavourite } = useFavourites();
@@ -163,7 +165,17 @@ export default function ClientBrandProfile({
   const handleReviewSubmitted = () => {
     // Hide the review form and refresh reviews
     setShowReviewForm(false);
-    fetchReviews();
+
+    // Refresh local reviews from the hook
+    if (id) {
+      fetchReviews();
+    }
+
+    // Refresh parent brand data (including reviews)
+    if (onReviewSubmitted) {
+      onReviewSubmitted();
+    }
+
     // Show success message
     toast.success(
       "Review submitted successfully! Thank you for sharing your experience."
