@@ -595,7 +595,7 @@ export default function ClientBrandProfile({
             <h2 className="text-2xl sm:text-3xl font-canela font-normal">
               Customer Reviews
             </h2>
-            {!showReviewForm && (
+            {user && !showReviewForm && (
               <Button
                 onClick={handleShowReviewForm}
                 className="bg-oma-plum hover:bg-oma-plum/90 text-white w-full sm:w-auto min-h-[44px] text-sm sm:text-base"
@@ -603,9 +603,24 @@ export default function ClientBrandProfile({
                 Write a Review
               </Button>
             )}
+            {!user && (
+              <div className="text-center sm:text-right">
+                <p className="text-sm text-oma-cocoa mb-2">
+                  Sign in to write a review
+                </p>
+                <Link href="/login">
+                  <Button
+                    variant="outline"
+                    className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white w-full sm:w-auto min-h-[44px] text-sm sm:text-base"
+                  >
+                    Sign In
+                  </Button>
+                </Link>
+              </div>
+            )}
           </div>
 
-          {showReviewForm && (
+          {showReviewForm && user && (
             <div className="mb-8">
               <ReviewForm
                 brandId={id as string}

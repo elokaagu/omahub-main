@@ -8,6 +8,7 @@ import { StarIcon as StarOutlineIcon } from "@heroicons/react/24/outline";
 import useReviews, { Review } from "@/lib/hooks/useReviews";
 import { getProfile } from "@/lib/services/authService";
 import { toast } from "sonner";
+import Link from "next/link";
 
 interface ReviewFormProps {
   brandId: string;
@@ -59,6 +60,25 @@ export function ReviewForm({
       setInitialNameSet(true);
     }
   }, [user, initialNameSet]);
+
+  // If user is not authenticated, show message to sign in
+  if (!user) {
+    return (
+      <div className={`bg-white rounded-lg shadow-sm p-6 ${className}`}>
+        <div className="text-center py-8">
+          <h3 className="text-lg font-semibold mb-4">Authentication Required</h3>
+          <p className="text-gray-600 mb-6">
+            You need to be signed in to write a review.
+          </p>
+          <Link href="/login">
+            <Button className="bg-oma-plum hover:bg-oma-plum/90 text-white">
+              Sign In to Review
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   const resetForm = () => {
     // Only reset name if user is not logged in

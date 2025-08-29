@@ -56,7 +56,9 @@ const useReviews = (brandId?: string) => {
         console.log(
           `Fetching reviews from /api/reviews?brandId=${targetBrandId}`
         );
-        const response = await fetch(`/api/reviews?brandId=${targetBrandId}`);
+        const response = await fetch(`/api/reviews?brandId=${targetBrandId}`, {
+          credentials: "include", // Include cookies for authentication
+        });
 
         if (!response.ok) {
           const errorData = await response.json();
@@ -104,6 +106,7 @@ const useReviews = (brandId?: string) => {
           headers: {
             "Content-Type": "application/json",
           },
+          credentials: "include", // Include cookies for authentication
           body: JSON.stringify(payload),
         });
 

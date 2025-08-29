@@ -24,12 +24,43 @@ const getSupabaseClient = async () => {
 export async function POST(request) {
   console.log("POST /api/reviews received");
   try {
+    // Check authentication first
     const supabase = await getSupabaseClient();
+    
+    // Get the session from the request
+    const authHeader = request.headers.get("authorization");
+    let userId = null;
+    
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      const token = authHeader.split(" ")[1];
+      const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+      
+      if (authError || !user) {
+        console.error("Authentication failed:", authError);
+        return NextResponse.json(
+          { error: "Authentication required to submit reviews" },
+          { status: 401 }
+        );
+      }
+      userId = user.id;
+    } else {
+      // Try to get session from cookies
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session?.user) {
+        console.error("No valid session found:", sessionError);
+        return NextResponse.json(
+          { error: "Authentication required to submit reviews" },
+          { status: 401 }
+        );
+      }
+      userId = session.user.id;
+    }
+
     const body = await request.json();
     console.log("Review submission data:", body);
 
     const {
-      userId,
       brandId,
       author,
       comment,
@@ -51,7 +82,7 @@ export async function POST(request) {
       );
     }
 
-    console.log(`Adding review for brand ${brandId} by ${author}`);
+    console.log(`Adding review for brand ${brandId} by ${author} (user: ${userId})`);
 
     // First, check if the user_id column exists in the reviews table
     const { data: tableInfo, error: tableError } = await supabase
