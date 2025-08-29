@@ -25,6 +25,8 @@ import {
 } from "@/components/ui/select";
 import { ArrowLeft, Save, Globe, Instagram } from "lucide-react";
 import Link from "next/link";
+import { SimpleFileUpload } from "@/components/ui/simple-file-upload";
+import { VideoUpload } from "@/components/ui/video-upload";
 import {
   formatPriceRange,
   formatNumberWithCommas,
@@ -797,22 +799,37 @@ export default function CreateBrandPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="image">Brand Image URL</Label>
-                    <Input
-                      id="image"
-                      name="image"
-                      value={formData.image}
-                      onChange={handleInputChange}
-                      placeholder="Enter image URL (e.g., https://example.com/image.jpg)"
-                      required
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      For now, please enter an image URL. File upload will be
-                      restored later.
-                    </p>
-                  </div>
+                <SimpleFileUpload
+                  onUploadComplete={handleImageUpload}
+                  defaultValue={formData.image}
+                  bucket="brand-assets"
+                  accept="image/png,image/jpeg,image/jpg,image/webp"
+                  maxSize={5}
+                  imageType="brand"
+                  imageRole="cover"
+                  // Note: brandId and brandName will be set after brand creation
+                  // For now, this will use legacy naming, but can be updated later
+                />
+                {/* Always show brand video and thumbnail upload fields */}
+                <div className="mt-6 space-y-4">
+                  <Label>Brand Video (optional)</Label>
+                  <VideoUpload
+                    onUploadComplete={handleVideoUpload}
+                    defaultValue={formData.video_url}
+                    bucket="product-videos"
+                    path="brands"
+                    accept="video/mp4,video/webm,video/quicktime"
+                    maxSize={50}
+                  />
+                  <Label className="mt-4">Video Thumbnail (optional)</Label>
+                  <SimpleFileUpload
+                    onUploadComplete={handleVideoThumbnailUpload}
+                    defaultValue={formData.video_thumbnail}
+                    bucket="brand-assets"
+                    path="thumbnails"
+                    accept="image/png,image/jpeg,image/jpg,image/webp"
+                    maxSize={5}
+                  />
                 </div>
               </CardContent>
               <CardFooter>
