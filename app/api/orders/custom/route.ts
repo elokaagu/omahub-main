@@ -254,63 +254,104 @@ export async function POST(request: NextRequest) {
     try {
       console.log("📊 Creating lead from custom order...");
       
-      // Check if leads table exists
-      const { data: leadsTableExists, error: leadsTableCheckError } = await supabase
-        .from("information_schema.tables")
-        .select("table_name")
-        .eq("table_schema", "public")
-        .eq("table_name", "leads")
+      // Create lead in the leads table
+      const leadData = {
+        brand_id: brand_id,
+        customer_name: delivery_address.full_name,
+        customer_email: delivery_address.email,
+        customer_phone: delivery_address.phone || "",
+        source: "custom_order",
+        lead_type: "product_request",
+        status: "new",
+        priority: "high",
+        notes: `Custom order for ${product.title}\n\nCustomer notes: ${customer_notes || 'None'}\n\nSize: ${size || 'Not specified'}\nColor: ${color || 'Not specified'}\nQuantity: ${quantity}`,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      const { data: lead, error: leadError } = await supabase
+        .from("leads")
+        .insert(leadData)
+        .select()
         .single();
 
-      if (leadsTableCheckError || !leadsTableExists) {
-        console.log("⚠️ Leads table does not exist - skipping lead creation");
+      if (leadError) {
+        console.error("❌ Failed to create lead:", leadError);
+        console.log("⚠️ Lead creation failed, but order was created successfully");
       } else {
-        // Create lead in the leads table
-        const leadData = {
-          brand_id: brand_id,
-          customer_name: delivery_address.full_name,
-          customer_email: delivery_address.email,
-          customer_phone: delivery_address.phone || "",
-          lead_source: "brand_request_form",
-          lead_status: "new",
-          lead_score: 80, // High score for product requests
-          priority: "high", // High priority for product requests
-          estimated_budget: total_amount || product.sale_price || product.price,
-          project_type: "product_request",
-          project_timeline: null, // Not collected in brand request form
-          location: delivery_address.city && delivery_address.country ? 
-            `${delivery_address.city}, ${delivery_address.country}` : "",
-          notes: `Brand request for ${product.title}\n\nCustomer notes: ${customer_notes || 'None'}\n\nSize: ${size || 'Not specified'}\nColor: ${color || 'Not specified'}\nQuantity: ${quantity}`,
-          tags: ["brand_request", "product_request", "custom_order"],
-          inquiry_id: null, // No inquiry for brand requests
-          company_name: "", // Not collected in brand request form
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        };
-
-        const { data: lead, error: leadError } = await supabase
-          .from("leads")
-          .insert(leadData)
-          .select()
-          .single();
-
-        if (leadError) {
-          console.error("❌ Failed to create lead:", leadError);
-          console.log("⚠️ Lead creation failed, but order was created successfully");
-        } else {
-          console.log("✅ Lead created successfully:", lead.id);
-          console.log("📊 Lead data:", {
-            id: lead.id,
-            customer_name: lead.customer_name,
-            lead_status: lead.lead_status,
-            lead_source: lead.lead_source,
-            estimated_budget: lead.estimated_budget
-          });
-        }
+        console.log("✅ Lead created successfully:", lead.id);
+        console.log("📊 Lead data:", {
+          id: lead.id,
+          customer_name: lead.customer_name,
+          status: lead.status,
+          source: lead.source,
+          notes: lead.notes
+        });
       }
     } catch (leadError) {
       console.error("❌ Error creating lead:", leadError);
       console.log("⚠️ Lead creation failed, but order was created successfully");
+    }
+
+    // Create an inquiry from this custom order (for Studio inbox)
+    try {
+      console.log("📧 Creating inquiry from custom order...");
+      
+      const inquiryData = {
+        brand_id: brand_id,
+        customer_name: delivery_address.full_name,
+        customer_email: delivery_address.email,
+        customer_phone: delivery_address.phone || null,
+        subject: `Custom Order Request - ${product.title}`,
+        message: `Customer ${delivery_address.full_name} has submitted a custom order request for ${product.title}.
+
+Order Details:
+- Product: ${product.title}
+- Size: ${size || 'Not specified'}
+- Color: ${color || 'Not specified'}
+- Quantity: ${quantity || 1}
+- Total Amount: ${total_amount || product.sale_price || product.price}
+- Customer Notes: ${customer_notes || 'None'}
+
+Delivery Address:
+- ${delivery_address.full_name}
+- ${delivery_address.email}
+- ${delivery_address.phone || 'No phone'}
+- ${delivery_address.address_line_1 || ''}
+- ${delivery_address.city || ''}, ${delivery_address.state || ''} ${delivery_address.postal_code || ''}
+- ${delivery_address.country || ''}
+
+This order has been saved to your leads dashboard and can be managed from there.`,
+        inquiry_type: "product_request",
+        priority: "high",
+        source: "custom_order",
+        status: "new",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      const { data: inquiry, error: inquiryError } = await supabase
+        .from("inquiries")
+        .insert(inquiryData)
+        .select()
+        .single();
+
+      if (inquiryError) {
+        console.error("❌ Failed to create inquiry:", inquiryError);
+        console.log("⚠️ Inquiry creation failed, but order and lead were created successfully");
+      } else {
+        console.log("✅ Inquiry created successfully:", inquiry.id);
+        console.log("📧 Inquiry data:", {
+          id: inquiry.id,
+          customer_name: inquiry.customer_name,
+          subject: inquiry.subject,
+          status: inquiry.status,
+          source: inquiry.source
+        });
+      }
+    } catch (inquiryError) {
+      console.error("❌ Error creating inquiry:", inquiryError);
+      console.log("⚠️ Inquiry creation failed, but order and lead were created successfully");
     }
 
     // Create notification for brand owner
