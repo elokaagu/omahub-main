@@ -84,17 +84,65 @@ export function TailoredOrderModal({
   const [selectedSize, setSelectedSize] = useState("");
   const [selectedColor, setSelectedColor] = useState("");
 
+  // Log product data for debugging
+  useEffect(() => {
+    console.log('🔍 TailoredOrderModal - Product data received:', {
+      id: product.id,
+      title: product.title,
+      sizes: product.sizes,
+      colors: product.colors,
+      sizesType: typeof product.sizes,
+      colorsType: typeof product.colors,
+      sizesLength: product.sizes ? product.sizes.length : 'N/A',
+      colorsLength: product.colors ? product.colors.length : 'N/A'
+    });
+  }, [product]);
+
   // Reset form when modal opens
   useEffect(() => {
     if (isOpen) {
       setOrderComplete(false);
       setCurrentTab("measurements");
+      
+      // Reset all form fields
+      setMeasurements({
+        fit_preference: "regular",
+        length_preference: "regular",
+        sleeve_preference: "long",
+      });
+      
       setDeliveryAddress((prev) => ({
         ...prev,
         email: user?.email || "",
+        full_name: "",
+        phone: "",
+        address_line_1: "",
+        city: "",
+        state: "",
+        postal_code: "",
+        country: "",
       }));
+      
+      setCustomerNotes("");
+      
+      // Initialize size and color with product data if available
+      if (product.sizes && product.sizes.length > 0) {
+        console.log('🔍 Setting selected size to:', product.sizes[0]);
+        setSelectedSize(product.sizes[0]);
+      } else {
+        console.log('⚠️ No product sizes available');
+        setSelectedSize(""); // Reset if no sizes available
+      }
+      
+      if (product.colors && product.colors.length > 0) {
+        console.log('🔍 Setting selected color to:', product.colors[0]);
+        setSelectedColor(product.colors[0]);
+      } else {
+        console.log('⚠️ No product colors available');
+        setSelectedColor(""); // Reset if no colors available
+      }
     }
-  }, [isOpen, user?.email]);
+  }, [isOpen, user?.email, product.sizes, product.colors]);
 
   // Calculate final price
   const finalPrice = calculateTailoredPrice(
@@ -361,6 +409,27 @@ export function TailoredOrderModal({
                 })()}
                 
                 <div className="bg-white rounded-lg border border-gray-200 p-6">
+                  {/* Development Debug Info */}
+                  {process.env.NODE_ENV === 'development' && (
+                    <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded text-xs">
+                      <p className="font-medium text-yellow-800 mb-2">🔍 Debug Info (Development):</p>
+                      <div className="grid grid-cols-2 gap-2 text-yellow-700">
+                        <div>
+                          <p><strong>Product ID:</strong> {product.id}</p>
+                          <p><strong>Product Title:</strong> {product.title}</p>
+                          <p><strong>Product Sizes:</strong> {product.sizes ? JSON.stringify(product.sizes) : 'None'}</p>
+                          <p><strong>Product Colors:</strong> {product.colors ? JSON.stringify(product.colors) : 'None'}</p>
+                        </div>
+                        <div>
+                          <p><strong>Selected Size:</strong> "{selectedSize || 'empty'}"</p>
+                          <p><strong>Selected Color:</strong> "{selectedColor || 'empty'}"</p>
+                          <p><strong>Sizes Array Length:</strong> {product.sizes ? product.sizes.length : 'N/A'}</p>
+                          <p><strong>Colors Array Length:</strong> {product.colors ? product.colors.length : 'N/A'}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
                   <div className="flex items-center gap-2 mb-4">
                     <div className="h-8 w-8 bg-oma-plum/10 rounded-full flex items-center justify-center">
                       <Ruler className="h-4 w-4 text-oma-plum" />
@@ -403,6 +472,7 @@ export function TailoredOrderModal({
                     <div className="space-y-2">
                       <Label htmlFor="size">Preferred Size</Label>
                       <Select
+                        key={`size-${selectedSize}`}
                         value={selectedSize}
                         onValueChange={setSelectedSize}
                       >
@@ -410,6 +480,16 @@ export function TailoredOrderModal({
                           <SelectValue placeholder="Select your preferred size" />
                         </SelectTrigger>
                         <SelectContent>
+                          {/* Show product's available sizes first */}
+                          {product.sizes && product.sizes.length > 0 ? (
+                            product.sizes.map((size, index) => (
+                              <SelectItem key={`product-${index}`} value={size}>
+                                {size}
+                              </SelectItem>
+                            ))
+                          ) : null}
+                          
+                          {/* Show standard sizes as fallback */}
                           <SelectItem value="xs">XS (Extra Small)</SelectItem>
                           <SelectItem value="s">S (Small)</SelectItem>
                           <SelectItem value="m">M (Medium)</SelectItem>
@@ -417,6 +497,8 @@ export function TailoredOrderModal({
                           <SelectItem value="xl">XL (Extra Large)</SelectItem>
                           <SelectItem value="xxl">XXL (2XL)</SelectItem>
                           <SelectItem value="xxxl">XXXL (3XL)</SelectItem>
+                          
+                          {/* Always show custom option */}
                           <SelectItem value="custom">
                             Custom Measurements
                           </SelectItem>
@@ -426,12 +508,32 @@ export function TailoredOrderModal({
 
                     <div className="space-y-2">
                       <Label htmlFor="color">Preferred Color</Label>
-                      <Input
-                        id="color"
-                        value={selectedColor}
-                        onChange={(e) => setSelectedColor(e.target.value)}
-                        placeholder="e.g., Navy, Black, etc."
-                      />
+                      {product.colors && product.colors.length > 0 ? (
+                        <Select
+                          key={`color-${selectedColor}`}
+                          value={selectedColor}
+                          onValueChange={setSelectedColor}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select your preferred color" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {product.colors.map((color, index) => (
+                              <SelectItem key={`color-${index}`} value={color}>
+                                {color}
+                              </SelectItem>
+                            ))}
+                            <SelectItem value="custom">Custom Color</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <Input
+                          id="color"
+                          value={selectedColor}
+                          onChange={(e) => setSelectedColor(e.target.value)}
+                          placeholder="e.g., Navy, Black, etc."
+                        />
+                      )}
                     </div>
 
                     <div className="space-y-2">
