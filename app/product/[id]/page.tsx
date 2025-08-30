@@ -590,6 +590,11 @@ export default function ProductPage() {
                   <p><strong>Product colors:</strong> {product.colors ? JSON.stringify(product.colors) : 'None'}</p>
                   <p><strong>Size passed to button:</strong> {product.sizes && product.sizes.length > 0 ? product.sizes[0] : 'undefined'}</p>
                   <p><strong>Color passed to button:</strong> {product.colors && product.colors.length > 0 ? product.colors[0] : 'undefined'}</p>
+                  <p><strong>Product ID:</strong> {product.id}</p>
+                  <p><strong>Product title:</strong> {product.title}</p>
+                  <p><strong>Product type:</strong> {typeof product.sizes}</p>
+                  <p><strong>Sizes array length:</strong> {product.sizes ? product.sizes.length : 'N/A'}</p>
+                  <p><strong>Colors array length:</strong> {product.colors ? product.colors.length : 'N/A'}</p>
                 </div>
               )}
 

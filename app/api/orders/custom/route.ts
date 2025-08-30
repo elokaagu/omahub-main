@@ -74,31 +74,83 @@ export async function POST(request: NextRequest) {
     let userProfile = null;
 
     if (!user_id) {
-      // Create a guest user profile for unauthenticated users
-      const { data: guestUser, error: guestUserError } = await supabase
-        .from("profiles")
-        .insert({
+      // For unauthenticated users, use a temporary approach
+      // Instead of creating a full profile, we'll use a guest identifier
+      const guestEmail = delivery_address.email;
+      const guestName = delivery_address.full_name;
+      
+      // Create a simple guest user record or use existing one
+      try {
+        // First, try to find an existing guest profile with this email
+        const { data: existingGuest, error: findError } = await supabase
+          .from("profiles")
+          .select("id, email, first_name, last_name, role")
+          .eq("email", guestEmail)
+          .single();
+
+        if (existingGuest && !findError) {
+          // Use existing guest profile
+          finalUserId = existingGuest.id;
+          userProfile = existingGuest;
+          console.log("✅ Using existing guest profile:", existingGuest.id);
+        } else {
+          // Create a minimal guest profile
+          const { data: guestUser, error: guestUserError } = await supabase
+            .from("profiles")
+            .insert({
+              email: guestEmail,
+              first_name: guestName.split(" ")[0] || "Guest",
+              last_name: guestName.split(" ").slice(1).join(" ") || "User",
+              role: "user",
+              username: `guest_${Date.now()}`, // Generate unique username
+              avatar_url: "", // Empty avatar
+              bio: "", // Empty bio
+              location: "", // Empty location
+              website: "", // Empty website
+              owned_brands: [], // No owned brands
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            })
+            .select()
+            .single();
+
+          if (guestUserError) {
+            console.error("❌ Error creating guest user:", guestUserError);
+            console.error("❌ Guest user data attempted:", {
+              email: guestEmail,
+              first_name: guestName.split(" ")[0] || "Guest",
+              last_name: guestName.split(" ").slice(1).join(" ") || "User",
+              role: "user",
+              username: `guest_${Date.now()}`,
+            });
+            
+            // Fallback: use a system-generated user ID for this order
+            finalUserId = `guest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+            userProfile = {
+              id: finalUserId,
+              email: guestEmail,
+              role: "guest",
+              owned_brands: [],
+            };
+            console.log("⚠️ Using fallback guest user ID:", finalUserId);
+          } else {
+            finalUserId = guestUser.id;
+            userProfile = guestUser;
+            console.log("✅ Created new guest profile:", guestUser.id);
+          }
+        }
+      } catch (error) {
+        console.error("❌ Unexpected error in guest user handling:", error);
+        // Final fallback: use a system-generated user ID
+        finalUserId = `guest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        userProfile = {
+          id: finalUserId,
           email: delivery_address.email,
-          first_name: delivery_address.full_name.split(" ")[0] || "",
-          last_name:
-            delivery_address.full_name.split(" ").slice(1).join(" ") || "",
-          role: "user",
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        })
-        .select()
-        .single();
-
-      if (guestUserError) {
-        console.error("Error creating guest user:", guestUserError);
-        return NextResponse.json(
-          { error: "Failed to create guest user profile" },
-          { status: 500 }
-        );
+          role: "guest",
+          owned_brands: [],
+        };
+        console.log("⚠️ Using emergency fallback guest user ID:", finalUserId);
       }
-
-      finalUserId = guestUser.id;
-      userProfile = guestUser;
     } else {
       // Fetch existing user profile
       const { data: existingUser, error: userError } = await supabase

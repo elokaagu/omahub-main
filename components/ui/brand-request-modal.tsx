@@ -59,7 +59,15 @@ export function BrandRequestModal({
   size,
   color,
 }: BrandRequestModalProps) {
-  console.log("🎭 BrandRequestModal rendered with props:", { size, color, productName, brandName, isOpen });
+  console.log("🎭 BrandRequestModal rendered with props:", { 
+    size, 
+    color, 
+    productName, 
+    brandName, 
+    isOpen,
+    productId,
+    price 
+  });
   
   const [isLoading, setIsLoading] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
@@ -235,14 +243,34 @@ export function BrandRequestModal({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="text-center">
-          <DialogTitle className="text-xl font-semibold text-oma-plum">
+        <DialogHeader>
+          <DialogTitle className="text-xl font-semibold text-oma-cocoa">
             Request from {brandName}
           </DialogTitle>
-          <DialogDescription className="text-oma-cocoa">
-            Submit your request for {productName} and we'll connect you with the
-            brand
+          <DialogDescription className="text-gray-600">
+            Submit your request for {productName} and we'll connect you with the brand.
           </DialogDescription>
+          
+          {/* Debug display - remove in production */}
+          {process.env.NODE_ENV === 'development' && (
+            <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded text-xs">
+              <p className="font-medium text-yellow-800 mb-2">🔍 Debug Info (Development):</p>
+              <div className="grid grid-cols-2 gap-2 text-yellow-700">
+                <div>
+                  <p><strong>Size prop:</strong> "{size || 'undefined'}"</p>
+                  <p><strong>Color prop:</strong> "{color || 'undefined'}"</p>
+                  <p><strong>Product:</strong> {productName}</p>
+                  <p><strong>Brand:</strong> {brandName}</p>
+                </div>
+                <div>
+                  <p><strong>Form size:</strong> "{formData.preferred_size || 'empty'}"</p>
+                  <p><strong>Form color:</strong> "{formData.preferred_color || 'empty'}"</p>
+                  <p><strong>Modal open:</strong> {isOpen ? 'Yes' : 'No'}</p>
+                  <p><strong>Product ID:</strong> {productId}</p>
+                </div>
+              </div>
+            </div>
+          )}
         </DialogHeader>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
