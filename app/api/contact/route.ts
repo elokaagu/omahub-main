@@ -383,24 +383,32 @@ export async function POST(request: NextRequest) {
       const contactEmail = brand.contact_email || "info@oma-hub.com";
       const isOmaHubFallback = !brand.contact_email;
 
-      // Create inquiry in the database (Studio inbox)
+      // Create inquiry in the inquiries table
       console.log("📝 Creating inquiry in Studio inbox...");
-
+      
       let inquiry;
       try {
-        // Check if inquiries table exists first
-        const { data: tableExists, error: tableCheckError } = await supabase
-          .from("information_schema.tables")
-          .select("table_name")
-          .eq("table_schema", "public")
-          .eq("table_name", "inquiries")
+        console.log("📧 Creating inquiry in database...");
+        
+        const { data: inquiryData, error: inquiryError } = await supabase
+          .from("inquiries")
+          .insert({
+            brand_id: brandId,
+            customer_name: name,
+            customer_email: email,
+            subject: `Inquiry from ${name}`,
+            message: message,
+            inquiry_type: "customer_inquiry",
+            priority: "normal",
+            source: "website_contact_form",
+            status: "new",
+          })
+          .select()
           .single();
 
-        if (tableCheckError || !tableExists) {
-          console.log(
-            "⚠️ Inquiries table does not exist - skipping database insert for now"
-          );
-          // Create a mock inquiry object for now
+        if (inquiryError) {
+          console.error("❌ Failed to create inquiry:", inquiryError);
+          // Don't fail the entire request, continue with mock inquiry
           inquiry = {
             id: "temp-" + Date.now(),
             brand_id: brandId,
@@ -415,37 +423,13 @@ export async function POST(request: NextRequest) {
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
           };
+          console.log("⚠️ Using mock inquiry due to database error");
         } else {
-          // Table exists, proceed with normal insert
-          const { data: inquiryData, error: inquiryError } = await supabase
-            .from("inquiries")
-            .insert({
-              brand_id: brandId,
-              customer_name: name,
-              customer_email: email,
-              subject: `Inquiry from ${name}`,
-              message: message,
-              inquiry_type: "customer_inquiry",
-              priority: "normal",
-              source: "website_contact_form",
-              status: "new",
-            })
-            .select()
-            .single();
-
-          if (inquiryError) {
-            console.error("❌ Failed to create inquiry:", inquiryError);
-            return NextResponse.json(
-              { error: "Failed to save your inquiry. Please try again." },
-              { status: 500 }
-            );
-          }
-
           inquiry = inquiryData;
+          console.log("✅ Inquiry created successfully in database:", inquiry.id);
         }
       } catch (dbError) {
         console.error("❌ Database error creating inquiry:", dbError);
-
         // Create a mock inquiry object as fallback
         inquiry = {
           id: "temp-" + Date.now(),
@@ -461,65 +445,45 @@ export async function POST(request: NextRequest) {
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         };
+        console.log("⚠️ Using mock inquiry due to database error");
       }
-
-      console.log("✅ Inquiry created successfully:", inquiry.id);
 
       // Create a lead from this inquiry
       try {
         console.log("📊 Creating lead from inquiry...");
         
-        // Check if leads table exists
-        const { data: leadsTableExists, error: leadsTableCheckError } = await supabase
-          .from("information_schema.tables")
-          .select("table_name")
-          .eq("table_schema", "public")
-          .eq("table_name", "leads")
+        // Create lead in the leads table
+        const leadData = {
+          brand_id: brandId,
+          customer_name: name,
+          customer_email: email,
+          customer_phone: "", // Contact form doesn't collect phone
+          source: "website_contact_form",
+          lead_type: "inquiry",
+          status: "new",
+          priority: "normal",
+          notes: `Contact form inquiry: ${message}`,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+
+        const { data: lead, error: leadError } = await supabase
+          .from("leads")
+          .insert(leadData)
+          .select()
           .single();
 
-        if (leadsTableCheckError || !leadsTableExists) {
-          console.log("⚠️ Leads table does not exist - skipping lead creation");
+        if (leadError) {
+          console.error("❌ Failed to create lead:", leadError);
+          console.log("⚠️ Lead creation failed, but inquiry was created successfully");
         } else {
-          // Create lead in the leads table
-          const leadData = {
-            brand_id: brandId,
-            customer_name: name,
-            customer_email: email,
-            customer_phone: "", // Contact form doesn't collect phone
-            lead_source: "contact_form",
-            lead_status: "new",
-            lead_score: 50, // Default score for contact form leads
-            priority: "medium",
-            estimated_budget: null, // Not collected in contact form
-            project_type: "general_inquiry",
-            project_timeline: null, // Not collected in contact form
-            location: "", // Not collected in contact form
-            notes: `Contact form inquiry: ${message}`,
-            tags: ["contact_form", "website"],
-            inquiry_id: inquiry.id, // Link to the inquiry
-            company_name: "", // Not collected in contact form
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          };
-
-          const { data: lead, error: leadError } = await supabase
-            .from("leads")
-            .insert(leadData)
-            .select()
-            .single();
-
-          if (leadError) {
-            console.error("❌ Failed to create lead:", leadError);
-            console.log("⚠️ Lead creation failed, but inquiry was created successfully");
-          } else {
-            console.log("✅ Lead created successfully:", lead.id);
-            console.log("📊 Lead data:", {
-              id: lead.id,
-              customer_name: lead.customer_name,
-              lead_status: lead.lead_status,
-              lead_source: lead.lead_source
-            });
-          }
+          console.log("✅ Lead created successfully:", lead.id);
+          console.log("📊 Lead data:", {
+            id: lead.id,
+            customer_name: lead.customer_name,
+            status: lead.status,
+            source: lead.source
+          });
         }
       } catch (leadError) {
         console.error("❌ Error creating lead:", leadError);
