@@ -6,15 +6,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Search, 
-  Mail, 
-  Users, 
-  TrendingUp, 
+import {
+  Search,
+  Mail,
+  Users,
+  TrendingUp,
   Calendar,
   Download,
   Filter,
-  RefreshCw
+  RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -23,8 +23,8 @@ interface NewsletterSubscriber {
   email: string;
   first_name: string | null;
   last_name: string | null;
-  subscription_status: 'active' | 'unsubscribed' | 'bounced' | 'pending';
-  source: 'website' | 'contact_form' | 'studio_signup' | 'manual_import';
+  subscription_status: "active" | "unsubscribed" | "bounced" | "pending";
+  source: "website" | "contact_form" | "studio_signup" | "manual_import";
   subscribed_at: string;
   unsubscribed_at: string | null;
   last_email_sent: string | null;
@@ -58,13 +58,15 @@ export default function SubscriptionsPage() {
 
   // Check if user has access
   useEffect(() => {
-    if (user && user.role !== 'super_admin') {
-      toast.error("Access denied. Only super admins can view newsletter subscriptions.");
+    if (user && user.role !== "super_admin") {
+      toast.error(
+        "Access denied. Only super admins can view newsletter subscriptions."
+      );
       // Redirect or show access denied message
       return;
     }
-    
-    if (user?.role === 'super_admin') {
+
+    if (user?.role === "super_admin") {
       fetchSubscribers();
       fetchStats();
     }
@@ -73,7 +75,7 @@ export default function SubscriptionsPage() {
   const fetchSubscribers = async () => {
     try {
       setLoading(true);
-      
+
       const params = new URLSearchParams({
         page: currentPage.toString(),
         limit: itemsPerPage.toString(),
@@ -82,8 +84,10 @@ export default function SubscriptionsPage() {
         source: sourceFilter !== "all" ? sourceFilter : "",
       });
 
-      const response = await fetch(`/api/studio/newsletter/subscribers?${params}`);
-      
+      const response = await fetch(
+        `/api/studio/newsletter/subscribers?${params}`
+      );
+
       if (!response.ok) {
         throw new Error("Failed to fetch subscribers");
       }
@@ -91,7 +95,6 @@ export default function SubscriptionsPage() {
       const data = await response.json();
       setSubscribers(data.subscribers || []);
       setTotalPages(Math.ceil((data.total || 0) / itemsPerPage));
-      
     } catch (error) {
       console.error("Error fetching subscribers:", error);
       toast.error("Failed to fetch subscribers");
@@ -103,28 +106,33 @@ export default function SubscriptionsPage() {
   const fetchStats = async () => {
     try {
       const response = await fetch("/api/studio/newsletter/stats");
-      
+
       if (!response.ok) {
         throw new Error("Failed to fetch stats");
       }
 
       const data = await response.json();
       setStats(data.stats);
-      
     } catch (error) {
       console.error("Error fetching stats:", error);
     }
   };
 
-  const handleStatusChange = async (subscriberId: string, newStatus: string) => {
+  const handleStatusChange = async (
+    subscriberId: string,
+    newStatus: string
+  ) => {
     try {
-      const response = await fetch(`/api/studio/newsletter/subscribers/${subscriberId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ subscription_status: newStatus }),
-      });
+      const response = await fetch(
+        `/api/studio/newsletter/subscribers/${subscriberId}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ subscription_status: newStatus }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Failed to update status");
@@ -133,7 +141,6 @@ export default function SubscriptionsPage() {
       toast.success("Subscription status updated successfully");
       fetchSubscribers(); // Refresh the list
       fetchStats(); // Refresh stats
-      
     } catch (error) {
       console.error("Error updating status:", error);
       toast.error("Failed to update subscription status");
@@ -143,7 +150,7 @@ export default function SubscriptionsPage() {
   const exportSubscribers = async () => {
     try {
       const response = await fetch("/api/studio/newsletter/export");
-      
+
       if (!response.ok) {
         throw new Error("Failed to export subscribers");
       }
@@ -152,14 +159,13 @@ export default function SubscriptionsPage() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `newsletter-subscribers-${new Date().toISOString().split('T')[0]}.csv`;
+      a.download = `newsletter-subscribers-${new Date().toISOString().split("T")[0]}.csv`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      
+
       toast.success("Subscribers exported successfully");
-      
     } catch (error) {
       console.error("Error exporting subscribers:", error);
       toast.error("Failed to export subscribers");
@@ -173,30 +179,45 @@ export default function SubscriptionsPage() {
       bounced: { color: "bg-yellow-100 text-yellow-800", label: "Bounced" },
       pending: { color: "bg-blue-100 text-blue-800", label: "Pending" },
     };
-    
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
+
+    const config =
+      statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
     return <Badge className={config.color}>{config.label}</Badge>;
   };
 
   const getSourceBadge = (source: string) => {
     const sourceConfig = {
       website: { color: "bg-blue-100 text-blue-800", label: "Website" },
-      contact_form: { color: "bg-purple-100 text-purple-800", label: "Contact Form" },
-      studio_signup: { color: "bg-indigo-100 text-indigo-800", label: "Studio Signup" },
-      manual_import: { color: "bg-gray-100 text-gray-800", label: "Manual Import" },
+      contact_form: {
+        color: "bg-purple-100 text-purple-800",
+        label: "Contact Form",
+      },
+      studio_signup: {
+        color: "bg-indigo-100 text-indigo-800",
+        label: "Studio Signup",
+      },
+      manual_import: {
+        color: "bg-gray-100 text-gray-800",
+        label: "Manual Import",
+      },
     };
-    
-    const config = sourceConfig[source as keyof typeof sourceConfig] || sourceConfig.website;
+
+    const config =
+      sourceConfig[source as keyof typeof sourceConfig] || sourceConfig.website;
     return <Badge className={config.color}>{config.label}</Badge>;
   };
 
   // Check access
-  if (!user || user.role !== 'super_admin') {
+  if (!user || user.role !== "super_admin") {
     return (
       <div className="container mx-auto px-6 py-8">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">Access Denied</h1>
-          <p className="text-gray-600">Only super admins can access this page.</p>
+          <h1 className="text-2xl font-bold text-red-600 mb-4">
+            Access Denied
+          </h1>
+          <p className="text-gray-600">
+            Only super admins can access this page.
+          </p>
         </div>
       </div>
     );
@@ -206,10 +227,14 @@ export default function SubscriptionsPage() {
     <div className="container mx-auto px-6 py-8">
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-oma-plum mb-2">Newsletter Subscriptions</h1>
-          <p className="text-oma-cocoa">Manage and monitor newsletter subscribers</p>
+          <h1 className="text-3xl font-bold text-oma-plum mb-2">
+            Newsletter Subscriptions
+          </h1>
+          <p className="text-oma-cocoa">
+            Manage and monitor newsletter subscribers
+          </p>
         </div>
-        
+
         <div className="flex gap-3 mt-4 lg:mt-0">
           <Button
             onClick={exportSubscribers}
@@ -220,7 +245,10 @@ export default function SubscriptionsPage() {
             Export CSV
           </Button>
           <Button
-            onClick={() => { fetchSubscribers(); fetchStats(); }}
+            onClick={() => {
+              fetchSubscribers();
+              fetchStats();
+            }}
             className="flex items-center gap-2"
           >
             <RefreshCw className="h-4 w-4" />
@@ -234,25 +262,32 @@ export default function SubscriptionsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Subscribers</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-black">
+                Total Subscribers
+              </CardTitle>
+              <Users className="h-4 w-4 text-black" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.total}</div>
-              <p className="text-xs text-muted-foreground">
-                {stats.growth > 0 ? "+" : ""}{stats.growth}% from last month
+              <div className="text-2xl font-bold text-black">{stats.total}</div>
+              <p className="text-xs text-black">
+                {stats.growth > 0 ? "+" : ""}
+                {stats.growth}% from last month
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Subscribers</CardTitle>
-              <Mail className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-black">
+                Active Subscribers
+              </CardTitle>
+              <Mail className="h-4 w-4 text-black" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">{stats.active}</div>
-              <p className="text-xs text-muted-foreground">
+              <div className="text-2xl font-bold text-black">
+                {stats.active}
+              </div>
+              <p className="text-xs text-black">
                 {((stats.active / stats.total) * 100).toFixed(1)}% of total
               </p>
             </CardContent>
@@ -260,26 +295,33 @@ export default function SubscriptionsPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">This Month</CardTitle>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-black">
+                This Month
+              </CardTitle>
+              <Calendar className="h-4 w-4 text-black" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-blue-600">{stats.thisMonth}</div>
-              <p className="text-xs text-muted-foreground">
-                New subscriptions this month
-              </p>
+              <div className="text-2xl font-bold text-black">
+                {stats.thisMonth}
+              </div>
+              <p className="text-xs text-black">New subscriptions this month</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Unsubscribed</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-black">
+                Unsubscribed
+              </CardTitle>
+              <TrendingUp className="h-4 w-4 text-black" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-600">{stats.unsubscribed}</div>
-              <p className="text-xs text-muted-foreground">
-                {((stats.unsubscribed / stats.total) * 100).toFixed(1)}% of total
+              <div className="text-2xl font-bold text-black">
+                {stats.unsubscribed}
+              </div>
+              <p className="text-xs text-black">
+                {((stats.unsubscribed / stats.total) * 100).toFixed(1)}% of
+                total
               </p>
             </CardContent>
           </Card>
@@ -292,21 +334,21 @@ export default function SubscriptionsPage() {
           <div className="flex flex-col lg:flex-row gap-4">
             <div className="flex-1">
               <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-3 h-4 w-4 text-black" />
                 <Input
                   placeholder="Search by email, name..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 text-black placeholder:text-black/60"
                 />
               </div>
             </div>
-            
+
             <div className="flex gap-2">
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-3 py-2 border border-input rounded-md text-sm"
+                className="px-3 py-2 border border-input rounded-md text-sm text-black bg-white"
               >
                 <option value="all">All Statuses</option>
                 <option value="active">Active</option>
@@ -314,11 +356,11 @@ export default function SubscriptionsPage() {
                 <option value="bounced">Bounced</option>
                 <option value="pending">Pending</option>
               </select>
-              
+
               <select
                 value={sourceFilter}
                 onChange={(e) => setSourceFilter(e.target.value)}
-                className="px-3 py-2 border border-input rounded-md text-sm"
+                className="px-3 py-2 border border-input rounded-md text-sm text-black bg-white"
               >
                 <option value="all">All Sources</option>
                 <option value="website">Website</option>
@@ -326,9 +368,12 @@ export default function SubscriptionsPage() {
                 <option value="studio_signup">Studio Signup</option>
                 <option value="manual_import">Manual Import</option>
               </select>
-              
+
               <Button
-                onClick={() => { setCurrentPage(1); fetchSubscribers(); }}
+                onClick={() => {
+                  setCurrentPage(1);
+                  fetchSubscribers();
+                }}
                 className="flex items-center gap-2"
               >
                 <Filter className="h-4 w-4" />
@@ -342,18 +387,18 @@ export default function SubscriptionsPage() {
       {/* Subscribers Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Subscribers</CardTitle>
+          <CardTitle className="text-black">Subscribers</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
             <div className="text-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-oma-plum mx-auto"></div>
-              <p className="mt-2 text-muted-foreground">Loading subscribers...</p>
+              <p className="mt-2 text-black">Loading subscribers...</p>
             </div>
           ) : subscribers.length === 0 ? (
             <div className="text-center py-8">
-              <Mail className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">No subscribers found</p>
+              <Mail className="h-12 w-12 text-black mx-auto mb-4" />
+              <p className="text-black">No subscribers found</p>
             </div>
           ) : (
             <>
@@ -361,28 +406,47 @@ export default function SubscriptionsPage() {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b">
-                      <th className="text-left py-3 px-4 font-medium">Email</th>
-                      <th className="text-left py-3 px-4 font-medium">Name</th>
-                      <th className="text-left py-3 px-4 font-medium">Status</th>
-                      <th className="text-left py-3 px-4 font-medium">Source</th>
-                      <th className="text-left py-3 px-4 font-medium">Subscribed</th>
-                      <th className="text-left py-3 px-4 font-medium">Emails Sent</th>
-                      <th className="text-left py-3 px-4 font-medium">Actions</th>
+                      <th className="text-left py-3 px-4 font-medium text-black">
+                        Email
+                      </th>
+                      <th className="text-left py-3 px-4 font-medium text-black">
+                        Name
+                      </th>
+                      <th className="text-left py-3 px-4 font-medium text-black">
+                        Status
+                      </th>
+                      <th className="text-left py-3 px-4 font-medium text-black">
+                        Source
+                      </th>
+                      <th className="text-left py-3 px-4 font-medium text-black">
+                        Subscribed
+                      </th>
+                      <th className="text-left py-3 px-4 font-medium text-black">
+                        Emails Sent
+                      </th>
+                      <th className="text-left py-3 px-4 font-medium text-black">
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {subscribers.map((subscriber) => (
-                      <tr key={subscriber.id} className="border-b hover:bg-gray-50">
+                      <tr
+                        key={subscriber.id}
+                        className="border-b hover:bg-gray-50"
+                      >
                         <td className="py-3 px-4">
-                          <div className="font-medium">{subscriber.email}</div>
+                          <div className="font-medium text-black">
+                            {subscriber.email}
+                          </div>
                         </td>
                         <td className="py-3 px-4">
                           {subscriber.first_name || subscriber.last_name ? (
-                            <div>
+                            <div className="text-black">
                               {subscriber.first_name} {subscriber.last_name}
                             </div>
                           ) : (
-                            <span className="text-muted-foreground">-</span>
+                            <span className="text-black">-</span>
                           )}
                         </td>
                         <td className="py-3 px-4">
@@ -392,20 +456,29 @@ export default function SubscriptionsPage() {
                           {getSourceBadge(subscriber.source)}
                         </td>
                         <td className="py-3 px-4">
-                          <div className="text-sm">
-                            {new Date(subscriber.subscribed_at).toLocaleDateString()}
+                          <div className="text-sm text-black">
+                            {new Date(
+                              subscriber.subscribed_at
+                            ).toLocaleDateString()}
                           </div>
                         </td>
                         <td className="py-3 px-4">
-                          <div className="text-sm">{subscriber.email_count}</div>
+                          <div className="text-sm text-black">
+                            {subscriber.email_count}
+                          </div>
                         </td>
                         <td className="py-3 px-4">
                           <div className="flex gap-2">
-                            {subscriber.subscription_status === 'active' ? (
+                            {subscriber.subscription_status === "active" ? (
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => handleStatusChange(subscriber.id, 'unsubscribed')}
+                                onClick={() =>
+                                  handleStatusChange(
+                                    subscriber.id,
+                                    "unsubscribed"
+                                  )
+                                }
                                 className="text-red-600 border-red-200 hover:bg-red-50"
                               >
                                 Unsubscribe
@@ -414,7 +487,9 @@ export default function SubscriptionsPage() {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => handleStatusChange(subscriber.id, 'active')}
+                                onClick={() =>
+                                  handleStatusChange(subscriber.id, "active")
+                                }
                                 className="text-green-600 border-green-200 hover:bg-green-50"
                               >
                                 Reactivate
@@ -431,14 +506,16 @@ export default function SubscriptionsPage() {
               {/* Pagination */}
               {totalPages > 1 && (
                 <div className="flex items-center justify-between mt-6">
-                  <div className="text-sm text-muted-foreground">
+                  <div className="text-sm text-black">
                     Page {currentPage} of {totalPages}
                   </div>
                   <div className="flex gap-2">
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                      onClick={() =>
+                        setCurrentPage(Math.max(1, currentPage - 1))
+                      }
                       disabled={currentPage === 1}
                     >
                       Previous
@@ -446,7 +523,9 @@ export default function SubscriptionsPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                      onClick={() =>
+                        setCurrentPage(Math.min(totalPages, currentPage + 1))
+                      }
                       disabled={currentPage === totalPages}
                     >
                       Next
