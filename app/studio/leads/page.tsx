@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { createClient } from "@/lib/supabase-unified";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,7 +34,7 @@ import {
   ChevronDownIcon,
   ChevronUpIcon,
 } from "@heroicons/react/24/outline";
-import { Mail, Phone, User, Building, MapPin } from "lucide-react";
+import { Mail, Phone, User, Building, MapPin, RefreshCw } from "lucide-react";
 import { LEADS_CONFIG, type LeadStatus } from "@/lib/config/leads";
 import { PipelineService } from "@/lib/services/pipelineService";
 
@@ -99,6 +99,18 @@ export default function StudioLeadsPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [leadToDelete, setLeadToDelete] = useState<Lead | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Lead statistics state
+  const [leadStats, setLeadStats] = useState({
+    totalLeads: 0,
+    qualifiedLeads: 0,
+    convertedLeads: 0,
+    activeLeads: 0,
+    conversionRate: 0,
+    totalBookings: 0,
+    thisMonthLeads: 0,
+    thisMonthBookings: 0
+  });
   const [updatingLeadId, setUpdatingLeadId] = useState<string | null>(null);
 
   // Filters and search
@@ -136,6 +148,54 @@ export default function StudioLeadsPage() {
         });
     }
   }, [filteredLeads]);
+
+  // Refresh leads data
+  const refreshLeads = async () => {
+    setLoading(true);
+    try {
+      await loadLeads();
+      toast.success("Leads refreshed successfully");
+    } catch (error) {
+      console.error("Error refreshing leads:", error);
+      toast.error("Failed to refresh leads");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Calculate lead statistics
+  const calculateLeadStats = useCallback((leadsData: Lead[]) => {
+    const now = new Date();
+    const thisMonth = now.getMonth();
+    const thisYear = now.getFullYear();
+
+    const stats = {
+      totalLeads: leadsData.length,
+      qualifiedLeads: leadsData.filter(l => l.status === "qualified").length,
+      convertedLeads: leadsData.filter(l => l.status === "converted").length,
+      activeLeads: leadsData.filter(l => ["new", "contacted", "qualified"].includes(l.status)).length,
+      conversionRate: leadsData.length > 0 ? 
+        Math.round((leadsData.filter(l => l.status === "converted").length / leadsData.length) * 100) : 0,
+      totalBookings: leadsData.filter(l => l.status === "converted").length, // Assuming converted leads are bookings
+      thisMonthLeads: leadsData.filter(l => {
+        const leadDate = new Date(l.created_at);
+        return leadDate.getMonth() === thisMonth && leadDate.getFullYear() === thisYear;
+      }).length,
+      thisMonthBookings: leadsData.filter(l => {
+        const leadDate = new Date(l.created_at);
+        return l.status === "converted" && 
+               leadDate.getMonth() === thisMonth && 
+               leadDate.getFullYear() === thisYear;
+      }).length
+    };
+
+    setLeadStats(stats);
+  }, []);
+
+  // Update stats whenever leads change
+  useEffect(() => {
+    calculateLeadStats(leads);
+  }, [leads, calculateLeadStats]);
 
   useEffect(() => {
     if (!authLoading && user) {
@@ -378,14 +438,13 @@ export default function StudioLeadsPage() {
       };
 
       // Use API endpoint for consistent handling
-      const response = await fetch("/api/admin/leads", {
+      const response = await fetch("/api/leads", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
         credentials: "include",
         body: JSON.stringify({
-          type: "lead",
           id: leadId,
           data: updateData,
         }),
@@ -595,21 +654,38 @@ export default function StudioLeadsPage() {
         <StudioNav />
 
         <div className="mb-8">
-          <h1 className="text-3xl font-canela text-oma-plum mb-2">
-            Leads Dashboard
-          </h1>
-          <p className="text-oma-cocoa">
-            {isSuperAdmin
-              ? "Manage all customer leads across the platform"
-              : "Track and manage your potential customers"}
-          </p>
-          {isSuperAdmin && (
-            <div className="mt-2">
-              <Badge className="bg-oma-plum text-white">
-                Super Admin View - All Leads
-              </Badge>
+          <div className="flex justify-between items-start">
+            <div>
+              <h1 className="text-3xl font-canela text-oma-plum mb-2">
+                Leads Dashboard
+              </h1>
+              <p className="text-oma-cocoa">
+                {isSuperAdmin
+                  ? "Manage all customer leads across the platform"
+                  : "Track and manage your potential customers"}
+              </p>
+              {isSuperAdmin && (
+                <div className="mt-2">
+                  <Badge className="bg-oma-plum text-white">
+                    Super Admin View - All Leads
+                  </Badge>
+                </div>
+              )}
             </div>
-          )}
+            <Button
+              onClick={refreshLeads}
+              variant="outline"
+              className="border-oma-plum text-oma-plum hover:bg-oma-plum/10"
+              disabled={loading}
+            >
+              {loading ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-oma-plum mr-2"></div>
+              ) : (
+                <RefreshCw className="h-4 w-4 mr-2" />
+              )}
+              Refresh
+            </Button>
+          </div>
         </div>
 
         {/* Filters and Search */}
@@ -704,9 +780,10 @@ export default function StudioLeadsPage() {
             <CardContent className="pt-6">
               <div className="text-center">
                 <div className="text-2xl font-bold text-oma-plum">
-                  {filteredLeads.length}
+                  {leadStats.totalLeads}
                 </div>
                 <p className="text-sm text-oma-cocoa">Total Leads</p>
+                <p className="text-xs text-oma-cocoa/60">This month: {leadStats.thisMonthLeads}</p>
               </div>
             </CardContent>
           </Card>
@@ -715,9 +792,10 @@ export default function StudioLeadsPage() {
             <CardContent className="pt-6">
               <div className="text-center">
                 <div className="text-2xl font-bold text-oma-plum">
-                  {filteredLeads.filter((l) => l.status === "converted").length}
+                  {leadStats.qualifiedLeads}
                 </div>
-                <p className="text-sm text-oma-cocoa">Converted</p>
+                <p className="text-sm text-oma-cocoa">Qualified Leads</p>
+                <p className="text-xs text-oma-cocoa/60">Ready for follow-up</p>
               </div>
             </CardContent>
           </Card>
@@ -726,37 +804,25 @@ export default function StudioLeadsPage() {
             <CardContent className="pt-6">
               <div className="text-center">
                 <div className="text-2xl font-bold text-oma-plum">
-                  {
-                    filteredLeads.filter((l) =>
-                      ["new", "contacted", "qualified"].includes(l.status)
-                    ).length
-                  }
+                  {leadStats.conversionRate}%
                 </div>
-                <p className="text-sm text-oma-cocoa">Active</p>
+                <p className="text-sm text-oma-cocoa">Conversion Rate</p>
+                <p className="text-xs text-oma-cocoa/60">Converted: {leadStats.convertedLeads}</p>
               </div>
             </CardContent>
           </Card>
 
-          {SHOW_PIPELINE_VALUE && (
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-oma-plum">
-                    ${intelligentPipelineValue.toLocaleString()}
-                  </div>
-                  <p className="text-sm text-oma-cocoa">
-                    {USE_INTELLIGENT_CALCULATION ? "Estimated" : "Total"}{" "}
-                    Pipeline Value
-                  </p>
-                  {USE_INTELLIGENT_CALCULATION && (
-                    <p className="text-xs text-oma-cocoa/60 mt-1">
-                      Based on brand product averages
-                    </p>
-                  )}
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-oma-plum">
+                  {leadStats.totalBookings}
                 </div>
-              </CardContent>
-            </Card>
-          )}
+                <p className="text-sm text-oma-cocoa">Total Bookings</p>
+                <p className="text-xs text-oma-cocoa/60">This month: {leadStats.thisMonthBookings}</p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Leads List */}

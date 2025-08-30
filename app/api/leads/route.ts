@@ -349,3 +349,119 @@ export async function DELETE(request: NextRequest) {
     );
   }
 }
+
+export async function PUT(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { id, data } = body;
+
+    if (!id || !data) {
+      return NextResponse.json({ 
+        error: 'Missing required fields: id and data are required' 
+      }, { status: 400 });
+    }
+
+    console.log(`📝 PUT request for lead: ${id}`, data);
+
+    const supabase = await createServerSupabaseClient();
+
+    // Get authenticated user
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      console.log("❌ Unauthorized lead update attempt");
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Get user profile
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("role, owned_brands")
+      .eq("id", user.id)
+      .single();
+
+    if (profileError || !profile) {
+      console.error("❌ Profile not found:", profileError);
+      return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+    }
+
+    // Check permissions
+    if (!["super_admin", "brand_admin"].includes(profile.role)) {
+      console.log("❌ Access denied for role:", profile.role);
+      return NextResponse.json({ error: "Access denied" }, { status: 403 });
+    }
+
+    // Verify lead exists and user has access
+    let verifyQuery = supabase
+      .from("leads")
+      .select("id, brand_id, customer_name")
+      .eq("id", id);
+
+    if (profile.role === "brand_admin") {
+      if (!profile.owned_brands || profile.owned_brands.length === 0) {
+        console.log("❌ Brand admin has no accessible brands");
+        return NextResponse.json(
+          { error: "No accessible brands" },
+          { status: 403 }
+        );
+      }
+      verifyQuery = verifyQuery.in("brand_id", profile.owned_brands);
+    }
+
+    const { data: existingLead, error: verifyError } = await verifyQuery.single();
+
+    if (verifyError) {
+      if (verifyError.code === "PGRST116") {
+        console.log("❌ Lead not found:", id);
+        return NextResponse.json(
+          { error: "Lead not found" },
+          { status: 404 }
+        );
+      }
+      console.error("❌ Error verifying lead:", verifyError);
+      return NextResponse.json(
+        { error: "Failed to verify lead" },
+        { status: 500 }
+      );
+    }
+
+    console.log(`✅ Lead verified for update: ${existingLead.customer_name}`);
+
+    // Update the lead
+    const { data: updatedLead, error: updateError } = await supabase
+      .from("leads")
+      .update({
+        ...data,
+        updated_at: new Date().toISOString()
+      })
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (updateError) {
+      console.error("❌ Failed to update lead:", updateError);
+      return NextResponse.json(
+        { error: "Failed to update lead" },
+        { status: 500 }
+      );
+    }
+
+    console.log(`✅ Lead ${id} updated successfully`);
+
+    return NextResponse.json({
+      success: true,
+      message: `Lead ${existingLead.customer_name} updated successfully`,
+      lead: updatedLead,
+    });
+
+  } catch (error) {
+    console.error("💥 Update lead error:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
