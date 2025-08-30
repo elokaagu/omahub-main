@@ -250,7 +250,14 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.log(`✅ Fetched ${leads.length} leads (total: ${count})`);
+    console.log(`✅ Fetched ${leads?.length || 0} leads (total: ${count})`);
+    console.log(`🔍 Query details:`, {
+      userRole: profile.role,
+      userEmail: user.email,
+      ownedBrands: profile.role === "brand_admin" ? profile.owned_brands : "N/A",
+      leadsReturned: leads?.length || 0,
+      totalCount: count
+    });
 
     return NextResponse.json({
       success: true,
@@ -318,12 +325,36 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
-    // Verify lead exists and user has access
-    let verifyQuery = supabase
+    // First check if the lead exists at all (without role filtering)
+    console.log(`🔍 Checking if lead ${leadId} exists in database...`);
+    const { data: leadExists, error: existsError } = await supabase
       .from("leads")
       .select("id, brand_id, customer_name")
-      .eq("id", leadId);
+      .eq("id", leadId)
+      .single();
 
+    if (existsError) {
+      if (existsError.code === "PGRST116") {
+        console.log(`❌ Lead ${leadId} does not exist in database`);
+        return NextResponse.json({ error: "Lead not found" }, { status: 404 });
+      }
+      console.error("❌ Error checking if lead exists:", existsError);
+      return NextResponse.json(
+        { error: "Failed to check lead existence" },
+        { status: 500 }
+      );
+    }
+
+    console.log(`✅ Lead ${leadId} exists in database:`, {
+      id: leadExists.id,
+      brand_id: leadExists.brand_id,
+      customer_name: leadExists.customer_name
+    });
+
+    // Now verify user has access to this lead
+    console.log(`🔍 Verifying access for user ${user.email} (role: ${profile.role})`);
+    
+    let hasAccess = true;
     if (profile.role === "brand_admin") {
       if (!profile.owned_brands || profile.owned_brands.length === 0) {
         console.log("❌ Brand admin has no accessible brands");
@@ -332,23 +363,22 @@ export async function DELETE(request: NextRequest) {
           { status: 403 }
         );
       }
-      verifyQuery = verifyQuery.in("brand_id", profile.owned_brands);
+      hasAccess = profile.owned_brands.includes(leadExists.brand_id);
+      console.log(`🔍 Brand admin access check:`, {
+        ownedBrands: profile.owned_brands,
+        leadBrandId: leadExists.brand_id,
+        hasAccess
+      });
+    } else {
+      console.log(`🔍 Super admin - full access granted`);
     }
 
-    const { data: existingLead, error: verifyError } =
-      await verifyQuery.single();
+     if (!hasAccess) {
+       console.log(`❌ Access denied: User cannot access lead ${leadId}`);
+       return NextResponse.json({ error: "Access denied" }, { status: 403 });
+     }
 
-    if (verifyError) {
-      if (verifyError.code === "PGRST116") {
-        console.log("❌ Lead not found:", leadId);
-        return NextResponse.json({ error: "Lead not found" }, { status: 404 });
-      }
-      console.error("❌ Error verifying lead:", verifyError);
-      return NextResponse.json(
-        { error: "Failed to verify lead" },
-        { status: 500 }
-      );
-    }
+     const existingLead = leadExists;
 
     console.log(`✅ Lead verified for deletion: ${existingLead.customer_name}`);
 
@@ -580,6 +610,13 @@ async function handleAnalyticsRequest(request: NextRequest) {
         { status: 500 }
       );
     }
+
+    console.log(`🔍 Analytics query details:`, {
+      userRole: profile.role,
+      userEmail: user.email,
+      ownedBrands: profile.role === "brand_admin" ? profile.owned_brands : "N/A",
+      leadsReturned: leads?.length || 0
+    });
 
     // Calculate analytics with detailed logging
     const totalLeads = leads?.length || 0;
