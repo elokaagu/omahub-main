@@ -400,7 +400,7 @@ export async function POST(request: NextRequest) {
             message: message,
             inquiry_type: "customer_inquiry",
             priority: "normal",
-            source: "website_contact_form",
+            source: "website", // Use valid source value
             status: "new",
           })
           .select()
@@ -408,6 +408,12 @@ export async function POST(request: NextRequest) {
 
         if (inquiryError) {
           console.error("❌ Failed to create inquiry:", inquiryError);
+          console.log("🔍 Inquiry error details:", {
+            code: inquiryError.code,
+            message: inquiryError.message,
+            details: inquiryError.details,
+            hint: inquiryError.hint
+          });
           // Don't fail the entire request, continue with mock inquiry
           inquiry = {
             id: "temp-" + Date.now(),
@@ -418,7 +424,7 @@ export async function POST(request: NextRequest) {
             message: message,
             inquiry_type: "customer_inquiry",
             priority: "normal",
-            source: "website_contact_form",
+            source: "website", // Use valid source value
             status: "new",
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
@@ -440,7 +446,7 @@ export async function POST(request: NextRequest) {
           message: message,
           inquiry_type: "customer_inquiry",
           priority: "normal",
-          source: "website_contact_form",
+          source: "website", // Use valid source value
           status: "new",
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
@@ -458,7 +464,7 @@ export async function POST(request: NextRequest) {
           customer_name: name,
           customer_email: email,
           customer_phone: "", // Contact form doesn't collect phone
-          source: "website_contact_form",
+          source: "website", // Use valid source value
           lead_type: "inquiry",
           status: "new",
           priority: "normal",
@@ -476,6 +482,12 @@ export async function POST(request: NextRequest) {
         if (leadError) {
           console.error("❌ Failed to create lead:", leadError);
           console.log("⚠️ Lead creation failed, but inquiry was created successfully");
+          console.log("🔍 Lead error details:", {
+            code: leadError.code,
+            message: leadError.message,
+            details: leadError.details,
+            hint: leadError.hint
+          });
         } else {
           console.log("✅ Lead created successfully:", lead.id);
           console.log("📊 Lead data:", {

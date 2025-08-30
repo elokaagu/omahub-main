@@ -581,7 +581,7 @@ async function handleAnalyticsRequest(request: NextRequest) {
       );
     }
 
-    // Calculate analytics
+    // Calculate analytics with detailed logging
     const totalLeads = leads?.length || 0;
     const qualifiedLeads =
       leads?.filter((lead) => lead.status === "qualified").length || 0;
@@ -593,6 +593,20 @@ async function handleAnalyticsRequest(request: NextRequest) {
       leads
         ?.filter((lead) => lead.estimated_value)
         .reduce((sum, lead) => sum + (lead.estimated_value || 0), 0) || 0;
+
+    // Log detailed analytics breakdown for debugging
+    console.log("📊 Analytics calculation details:", {
+      totalLeads,
+      qualifiedLeads,
+      convertedLeads,
+      conversionRate: Math.round(conversionRate * 100) / 100,
+      totalValue,
+      leadStatuses: leads?.map(lead => ({ id: lead.id, status: lead.status })) || [],
+      queryFilters: {
+        role: profile.role,
+        brandFilter: profile.role === "brand_admin" ? profile.owned_brands : "all"
+      }
+    });
 
     const analytics = {
       total_leads: totalLeads,

@@ -391,9 +391,8 @@ export default function LeadsTrackingDashboard({
         },
         credentials: "include",
         body: JSON.stringify({
-          type: "lead",
           id: leadId,
-          data: { [field]: value },
+          [field]: value,
         }),
       });
 
