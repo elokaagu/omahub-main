@@ -76,6 +76,25 @@ export default function StudioInboxPage() {
   const [inquiryToDelete, setInquiryToDelete] = useState<Inquiry | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  const checkUserRole = async () => {
+    if (!user?.id) return;
+    
+    try {
+      const supabase = createClient();
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+
+      if (!profileError && profile) {
+        setIsSuperAdmin(profile.role === "super_admin");
+      }
+    } catch (error) {
+      console.error("Error checking user role:", error);
+    }
+  };
+
   useEffect(() => {
     if (
       !authLoading &&
@@ -89,10 +108,12 @@ export default function StudioInboxPage() {
         lastUserId.current = user.id;
         hasLoadedInquiries.current = false;
         deletedInquiryIds.current.clear(); // Clear deleted set for new user
+        checkUserRole(); // Check user role first
         loadInquiries();
         loadNotifications();
       } else if (!hasLoadedInquiries.current) {
         console.log("📧 Initial load for current user");
+        checkUserRole(); // Check user role first
         loadInquiries();
         loadNotifications();
       }
@@ -176,63 +197,28 @@ export default function StudioInboxPage() {
     console.log("📧 Loading inquiries...");
 
     try {
-      const supabase = createClient();
+      // Use the API endpoint instead of direct Supabase query
+      const response = await fetch('/api/studio/inbox', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include', // Include cookies for auth
+      });
 
-      // Check if user is super admin
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("role, owned_brands")
-        .eq("id", user?.id)
-        .single();
-
-      if (profileError) {
-        console.error("Error fetching user profile:", profileError);
-        toast.error("Failed to load your profile");
-        return;
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("API Error:", errorData);
+        throw new Error(errorData.error || `HTTP ${response.status}`);
       }
 
-      let inquiriesQuery = supabase
-        .from("inquiries")
-        .select(
-          `
-          *,
-          brand:brands(name)
-        `
-        )
-        .order("created_at", { ascending: false });
+      const { inquiries: inquiriesData, totalCount } = await response.json();
 
-      // If user is super admin, get all inquiries
-      if (profile?.role === "super_admin") {
-        console.log("🔑 Super admin access: Loading all inquiries");
-        setIsSuperAdmin(true);
-        // No additional filtering needed for super admin
-      } else {
-        setIsSuperAdmin(false);
-        // Regular user: filter by owned brands
-        if (!profile?.owned_brands || profile.owned_brands.length === 0) {
-          setInquiries([]);
-          setLoading(false);
-          return;
-        }
-
-        const brandIds = profile.owned_brands;
-        inquiriesQuery = inquiriesQuery.in("brand_id", brandIds);
-      }
-
-      const { data: inquiriesData, error: inquiriesError } =
-        await inquiriesQuery;
-
-      if (inquiriesError) {
-        console.error("Error fetching inquiries:", inquiriesError);
-        toast.error("Failed to load inquiries");
-        return;
-      }
-
-      console.log(`📧 Loaded ${inquiriesData?.length || 0} inquiries`);
+      console.log(`📧 Loaded ${inquiriesData?.length || 0} inquiries from API`);
 
       // Filter out any inquiries that were deleted in this session
       const filteredInquiries = (inquiriesData || []).filter(
-        (inquiry) => !deletedInquiryIds.current.has(inquiry.id)
+        (inquiry: Inquiry) => !deletedInquiryIds.current.has(inquiry.id)
       );
 
       console.log(
