@@ -24,27 +24,27 @@ export default function ContactPage() {
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-    
+
     if (!formData.name.trim()) {
       newErrors.name = "Name is required";
     }
-    
+
     if (!formData.email.trim()) {
       newErrors.email = "Email is required";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = "Please enter a valid email address";
     }
-    
+
     if (!formData.subject.trim()) {
       newErrors.subject = "Subject is required";
     }
-    
+
     if (!formData.message.trim()) {
       newErrors.message = "Message is required";
     } else if (formData.message.trim().length < 10) {
       newErrors.message = "Message must be at least 10 characters long";
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -54,27 +54,27 @@ export default function ContactPage() {
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    
+
     // Clear error when user starts typing
     if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: "" }));
+      setErrors((prev) => ({ ...prev, [name]: "" }));
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validate form before submission
     if (!validateForm()) {
       toast.error("Please fix the errors in the form");
       return;
     }
-    
+
     setIsSubmitting(true);
 
     try {
-      console.log('📧 Submitting contact form:', formData);
-      
+      console.log("📧 Submitting contact form:", formData);
+
       const response = await fetch("/api/contact", {
         method: "POST",
         headers: {
@@ -83,51 +83,61 @@ export default function ContactPage() {
         body: JSON.stringify(formData),
       });
 
-      console.log('📡 Contact API response status:', response.status);
-      console.log('📡 Contact API response headers:', Object.fromEntries(response.headers.entries()));
+      console.log("📡 Contact API response status:", response.status);
+      console.log(
+        "📡 Contact API response headers:",
+        Object.fromEntries(response.headers.entries())
+      );
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('❌ Contact API error:', response.status, errorText);
-        throw new Error(`Failed to send message: ${response.status} ${response.statusText}`);
+        console.error("❌ Contact API error:", response.status, errorText);
+        throw new Error(
+          `Failed to send message: ${response.status} ${response.statusText}`
+        );
       }
 
       const result = await response.json();
-      console.log('✅ Contact API success:', result);
+      console.log("✅ Contact API success:", result);
 
       // Validate the response
       if (result.success) {
-        toast.success(result.message || "Your message has been sent successfully!");
+        toast.success(
+          result.message || "Your message has been sent successfully!"
+        );
         setFormData({ name: "", email: "", subject: "", message: "" });
         setErrors({}); // Clear any previous errors
-        
+
         // Log success details
-        console.log('📧 Message sent successfully:', {
+        console.log("📧 Message sent successfully:", {
           type: result.type,
           inquiry: result.inquiry?.id,
-          notification_sent: result.notification_sent
+          notification_sent: result.notification_sent,
         });
       } else {
         throw new Error(result.error || "Unknown error occurred");
       }
     } catch (error) {
-      console.error('💥 Contact form submission error:', error);
-      
+      console.error("💥 Contact form submission error:", error);
+
       // Show more specific error messages
       let errorMessage = "Failed to send message. Please try again.";
-      
+
       if (error instanceof Error) {
-        if (error.message.includes('Failed to fetch')) {
-          errorMessage = "Network error. Please check your connection and try again.";
-        } else if (error.message.includes('500')) {
-          errorMessage = "Server error. Please try again later or contact support.";
-        } else if (error.message.includes('400')) {
-          errorMessage = "Invalid form data. Please check your inputs and try again.";
+        if (error.message.includes("Failed to fetch")) {
+          errorMessage =
+            "Network error. Please check your connection and try again.";
+        } else if (error.message.includes("500")) {
+          errorMessage =
+            "Server error. Please try again later or contact support.";
+        } else if (error.message.includes("400")) {
+          errorMessage =
+            "Invalid form data. Please check your inputs and try again.";
         } else {
           errorMessage = error.message;
         }
       }
-      
+
       toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
@@ -136,23 +146,23 @@ export default function ContactPage() {
 
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validate email
     if (!email.trim()) {
       toast.error("Please enter your email address");
       return;
     }
-    
+
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
       toast.error("Please enter a valid email address");
       return;
     }
-    
+
     setIsSubscribing(true);
 
     try {
-      console.log('📧 Subscribing to newsletter:', email);
-      
+      console.log("📧 Subscribing to newsletter:", email);
+
       const response = await fetch("/api/newsletter/subscribe", {
         method: "POST",
         headers: {
@@ -162,16 +172,16 @@ export default function ContactPage() {
           email: email.trim(),
           firstName: firstName.trim() || null,
           lastName: lastName.trim() || null,
-          source: "contact_form"
+          source: "contact_form",
         }),
       });
 
-      console.log('📡 Newsletter API response status:', response.status);
+      console.log("📡 Newsletter API response status:", response.status);
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error('❌ Newsletter subscription failed:', errorData);
-        
+        console.error("❌ Newsletter subscription failed:", errorData);
+
         if (errorData.alreadySubscribed) {
           toast.error("This email is already subscribed to our newsletter");
         } else {
@@ -181,15 +191,16 @@ export default function ContactPage() {
       }
 
       const result = await response.json();
-      console.log('✅ Newsletter subscription successful:', result);
-      
-      toast.success(result.message || "Successfully subscribed to our newsletter!");
+      console.log("✅ Newsletter subscription successful:", result);
+
+      toast.success(
+        result.message || "Successfully subscribed to our newsletter!"
+      );
       setEmail("");
       setFirstName("");
       setLastName("");
-      
     } catch (error) {
-      console.error('💥 Newsletter subscription error:', error);
+      console.error("💥 Newsletter subscription error:", error);
       toast.error("Failed to subscribe to newsletter. Please try again.");
     } finally {
       setIsSubscribing(false);
@@ -228,7 +239,9 @@ export default function ContactPage() {
                 placeholder="John Doe"
                 className="bg-white border-oma-gold/30 focus-visible:ring-oma-plum"
               />
-              {errors.name && <p className="text-sm text-red-500">{errors.name}</p>}
+              {errors.name && (
+                <p className="text-sm text-red-500">{errors.name}</p>
+              )}
             </div>
 
             <div className="space-y-3">
@@ -248,7 +261,9 @@ export default function ContactPage() {
                 placeholder="john@example.com"
                 className="bg-white border-oma-gold/30 focus-visible:ring-oma-plum"
               />
-              {errors.email && <p className="text-sm text-red-500">{errors.email}</p>}
+              {errors.email && (
+                <p className="text-sm text-red-500">{errors.email}</p>
+              )}
             </div>
 
             <div className="space-y-3">
@@ -267,7 +282,9 @@ export default function ContactPage() {
                 placeholder="How can we help you?"
                 className="bg-white border-oma-gold/30 focus-visible:ring-oma-plum"
               />
-              {errors.subject && <p className="text-sm text-red-500">{errors.subject}</p>}
+              {errors.subject && (
+                <p className="text-sm text-red-500">{errors.subject}</p>
+              )}
             </div>
 
             <div className="space-y-3">
@@ -286,7 +303,9 @@ export default function ContactPage() {
                 placeholder="Please describe your inquiry in detail..."
                 className="min-h-[150px] bg-white border-oma-gold/30 focus-visible:ring-oma-plum"
               />
-              {errors.message && <p className="text-sm text-red-500">{errors.message}</p>}
+              {errors.message && (
+                <p className="text-sm text-red-500">{errors.message}</p>
+              )}
             </div>
 
             <Button

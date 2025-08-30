@@ -175,7 +175,7 @@ export function TailoredOrderModal({
     // Get validation errors
     const validationErrors = getValidationErrors();
     if (validationErrors.length > 0) {
-      toast.error(`Please fix the following errors:\n${validationErrors.join('\n')}`);
+      toast.error(`Please complete: ${validationErrors.join(', ')}`);
       return;
     }
 
@@ -246,15 +246,10 @@ export function TailoredOrderModal({
   };
 
   const isFormValid = () => {
-    // Check required fields
+    // Check required fields - only essential ones
     const requiredFields = [
       deliveryAddress.full_name,
-      deliveryAddress.phone,
       deliveryAddress.email,
-      deliveryAddress.address_line_1,
-      deliveryAddress.city,
-      deliveryAddress.postal_code,
-      deliveryAddress.country,
     ];
 
     // Check if any required field is empty
@@ -279,13 +274,9 @@ export function TailoredOrderModal({
   const getValidationErrors = () => {
     const errors = [];
     
+    // Only require email and full name - make other fields optional
     if (!deliveryAddress.full_name?.trim()) errors.push("Full name is required");
-    if (!deliveryAddress.phone?.trim()) errors.push("Phone number is required");
     if (!deliveryAddress.email?.trim()) errors.push("Email is required");
-    if (!deliveryAddress.address_line_1?.trim()) errors.push("Address is required");
-    if (!deliveryAddress.city?.trim()) errors.push("City is required");
-    if (!deliveryAddress.postal_code?.trim()) errors.push("Postal code is required");
-    if (!deliveryAddress.country?.trim()) errors.push("Country is required");
     
     // Email format validation
     if (deliveryAddress.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(deliveryAddress.email)) {
@@ -385,7 +376,7 @@ export function TailoredOrderModal({
                     <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                       <div className="flex items-center gap-2 mb-2">
                         <AlertCircle className="h-4 w-4 text-red-600" />
-                        <h4 className="font-medium text-red-800">Please fix the following errors:</h4>
+                        <h4 className="font-medium text-red-800">Please complete the following:</h4>
                       </div>
                       <ul className="text-sm text-red-700 space-y-1">
                         {errors.map((error, index) => (
