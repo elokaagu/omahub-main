@@ -172,12 +172,8 @@ export function calculateTailoredPrice(
 ): number {
   let finalPrice = basePrice;
 
-  // Add custom tailored fee
-  if (isCustom) {
-    finalPrice += basePrice * 0.3; // 30% markup for custom work
-  }
-
-  // Add complexity fee based on special requirements
+  // No additional markup for custom work - price is the same as base product
+  // Add complexity fee based on special requirements if needed
   if (measurements?.special_requirements) {
     finalPrice += basePrice * 0.1; // 10% for special requirements
   }

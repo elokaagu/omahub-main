@@ -348,18 +348,12 @@ export function TailoredOrderModal({
                   <p className="text-sm text-gray-600">
                     {product.title} by {brand.name}
                   </p>
-                  <p className="text-sm text-gray-500 mt-1">
-                    Base Price: {formatProductPrice(product, {
-                      price_range: brand.price_range,
-                    }).displayPrice}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    Custom Markup: +30% (Tailored Service)
-                  </p>
                 </div>
                 <div className="text-right">
                   <p className="text-2xl font-bold text-oma-plum">
-                    £{finalPrice.toFixed(2)}
+                    {formatProductPrice(product, {
+                      price_range: brand.price_range,
+                    }).displayPrice}
                   </p>
                   <Badge variant="secondary" className="mt-1">
                     Custom Order
@@ -406,21 +400,6 @@ export function TailoredOrderModal({
                 })()}
                 
                 <div className="bg-white rounded-lg border border-gray-200 p-6">
-                  {/* Pricing Information */}
-                  <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded text-sm">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="h-4 w-4 bg-blue-600 rounded-full flex items-center justify-center">
-                        <span className="text-white text-xs">£</span>
-                      </div>
-                      <p className="font-medium text-blue-800">Pricing Information</p>
-                    </div>
-                    <p className="text-blue-700">
-                      Custom tailored orders include a 30% markup for personalized measurements, 
-                      custom fitting, and specialized craftsmanship. This ensures your piece is 
-                      perfectly tailored to your specifications.
-                    </p>
-                  </div>
-                  
                   {/* Development Debug Info */}
                   {process.env.NODE_ENV === 'development' && (
                     <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded text-xs">
@@ -782,33 +761,15 @@ export function TailoredOrderModal({
                     </div>
 
                     <div className="bg-oma-plum/10 rounded-lg p-4 border border-oma-plum/20">
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="font-medium text-gray-900">
-                            Base Price:
-                          </span>
-                          <span className="text-gray-600">
-                            {formatProductPrice(product, {
-                              price_range: brand.price_range,
-                            }).displayPrice}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="font-medium text-gray-900">
-                            Custom Markup (30%):
-                          </span>
-                          <span className="text-gray-600">
-                            +£{((product.sale_price || product.price) * 0.3).toFixed(2)}
-                          </span>
-                        </div>
-                        <div className="border-t pt-2 flex items-center justify-between">
-                          <span className="font-medium text-gray-900">
-                            Total Amount:
-                          </span>
-                          <span className="text-2xl font-bold text-oma-plum">
-                            £{finalPrice.toFixed(2)}
-                          </span>
-                        </div>
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium text-gray-900">
+                          Total Amount:
+                        </span>
+                        <span className="text-2xl font-bold text-oma-plum">
+                          {formatProductPrice(product, {
+                            price_range: brand.price_range,
+                          }).displayPrice}
+                        </span>
                       </div>
                     </div>
                   </div>
