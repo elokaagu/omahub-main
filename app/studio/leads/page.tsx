@@ -14,22 +14,28 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import {
-  Users,
-  TrendingUp,
-  Calendar,
-  Mail,
-  Phone,
-  Building,
-  MapPin,
-  RefreshCw,
-  Search,
-  Filter,
-  Eye,
-  Edit,
-  Trash2,
-} from "lucide-react";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { StudioNav } from "@/components/ui/studio-nav";
+import {
+  TrashIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
+} from "@heroicons/react/24/outline";
+import { Mail, Phone, User, Building, MapPin } from "lucide-react";
+import { LEADS_CONFIG, type LeadStatus } from "@/lib/config/leads";
+import { PipelineService } from "@/lib/services/pipelineService";
 
 interface Lead {
   id: string;
@@ -38,346 +44,547 @@ interface Lead {
   customer_email: string;
   customer_phone?: string;
   company_name?: string;
-  lead_source: string;
-  lead_status: string;
-  lead_score: number;
+  source: string;
+  status: string;
   priority: string;
+  estimated_value?: number;
   estimated_budget?: number;
-  project_type?: string;
-  project_timeline?: string;
+  lead_type?: string;
   location?: string;
   notes?: string;
   tags?: string[];
+  last_contact_date?: string;
+  next_follow_up_date?: string;
   created_at: string;
-  updated_at: string;
-  brand?: {
+  updated_at?: string;
+  contacted_at?: string;
+  qualified_at?: string;
+  converted_at?: string;
+  brands?: {
     name: string;
     category?: string;
+    image?: string;
+  };
+  inquiry?: {
+    id: string;
+    subject: string;
   };
 }
 
-interface LeadsAnalytics {
-  total_leads: number;
-  qualified_leads: number;
-  converted_leads: number;
-  total_bookings: number;
-  this_month_leads: number;
-  this_month_bookings: number;
-  conversion_rate: number;
-  leads_by_source: Record<string, number>;
-  leads_by_status: Record<string, number>;
+interface LeadInteraction {
+  id: string;
+  interaction_type: string;
+  interaction_date: string;
+  subject?: string;
+  description?: string;
+  outcome?: string;
+  next_action?: string;
 }
+
+// Remove the inline configuration constants and replace with config import
+// Configuration for pipeline value display - now imported from config
+const { SHOW_PIPELINE_VALUE, USE_INTELLIGENT_CALCULATION } = LEADS_CONFIG;
 
 export default function StudioLeadsPage() {
   const { user, loading: authLoading } = useAuth();
   const [leads, setLeads] = useState<Lead[]>([]);
-  const [analytics, setAnalytics] = useState<LeadsAnalytics | null>(null);
+  const [filteredLeads, setFilteredLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  
-  // Filters
+  const [expandedLead, setExpandedLead] = useState<string | null>(null);
+  const [leadInteractions, setLeadInteractions] = useState<LeadInteraction[]>(
+    []
+  );
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [leadToDelete, setLeadToDelete] = useState<Lead | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [updatingLeadId, setUpdatingLeadId] = useState<string | null>(null);
+
+  // Filters and search
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [sourceFilter, setSourceFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
+  const [sourceFilter, setSourceFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("created_at");
+  const [sortOrder, setSortOrder] = useState("desc");
 
-  // Check if user has access
+  // Form states
+  const [isAddingInteraction, setIsAddingInteraction] = useState(false);
+  const [newInteraction, setNewInteraction] = useState({
+    type: "email",
+    subject: "",
+    description: "",
+    outcome: "",
+    nextAction: "",
+  });
+
+  // State for intelligent pipeline value
+  const [intelligentPipelineValue, setIntelligentPipelineValue] = useState(0);
+
+  // Calculate intelligent pipeline value when leads change
+  useEffect(() => {
+    if (SHOW_PIPELINE_VALUE) {
+      PipelineService.calculatePipelineValue(filteredLeads)
+        .then(setIntelligentPipelineValue)
+        .catch((error) => {
+          console.error("Error calculating pipeline value:", error);
+          // Fallback to simple calculation
+          setIntelligentPipelineValue(
+            PipelineService.calculateSimplePipelineValue(filteredLeads)
+          );
+        });
+    }
+  }, [filteredLeads]);
+
   useEffect(() => {
     if (!authLoading && user) {
-      if (user.role === 'super_admin' || user.role === 'brand_admin') {
-        loadLeads();
-        loadAnalytics();
-      } else {
-        toast.error("Access denied. Only admins can view leads.");
-      }
+      loadLeads();
     }
   }, [user, authLoading]);
+
+  useEffect(() => {
+    filterAndSortLeads();
+  }, [
+    leads,
+    searchTerm,
+    statusFilter,
+    priorityFilter,
+    sourceFilter,
+    sortBy,
+    sortOrder,
+  ]);
 
   const loadLeads = async () => {
     try {
       setLoading(true);
+
       const supabase = createClient();
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("role, owned_brands")
+        .eq("id", user?.id)
+        .single();
 
-      let query = supabase
-        .from('leads')
-        .select(`
-          *,
-          brand:brands(name, category)
-        `)
-        .order('created_at', { ascending: false });
-
-      // Apply filters
-      if (searchTerm) {
-        query = query.or(`customer_name.ilike.%${searchTerm}%,customer_email.ilike.%${searchTerm}%,company_name.ilike.%${searchTerm}%`);
-      }
-      if (statusFilter !== 'all') {
-        query = query.eq('lead_status', statusFilter);
-      }
-      if (sourceFilter !== 'all') {
-        query = query.eq('lead_source', sourceFilter);
-      }
-      if (priorityFilter !== 'all') {
-        query = query.eq('priority', priorityFilter);
+      if (!profileError && profile?.role === "super_admin") {
+        setIsSuperAdmin(true);
+      } else {
+        setIsSuperAdmin(false);
       }
 
-      const { data, error } = await query;
+      const response = await fetch("/api/admin/leads", {
+        credentials: "include",
+        headers: {
+          "Cache-Control": "no-cache",
+          Pragma: "no-cache",
+        },
+      });
 
-      if (error) {
-        console.error('Error fetching leads:', error);
-        toast.error('Failed to fetch leads');
-        return;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to fetch leads");
       }
 
-      setLeads(data || []);
+      const data = await response.json();
+
+      let filteredLeads = data.leads || [];
+      if (profile?.role === "brand_admin" && profile.owned_brands?.length > 0) {
+        filteredLeads = filteredLeads.filter((lead: Lead) =>
+          profile.owned_brands!.includes(lead.brand_id)
+        );
+      }
+
+      setLeads(filteredLeads);
     } catch (error) {
-      console.error('Error loading leads:', error);
-      toast.error('Failed to load leads');
+      console.error("Error loading leads:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to load leads"
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  const loadAnalytics = async () => {
+  const filterAndSortLeads = () => {
+    let filtered = [...leads];
+
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(
+        (lead) =>
+          lead.customer_name.toLowerCase().includes(term) ||
+          lead.customer_email.toLowerCase().includes(term) ||
+          lead.lead_type?.toLowerCase().includes(term) ||
+          lead.company_name?.toLowerCase().includes(term) ||
+          lead.location?.toLowerCase().includes(term)
+      );
+    }
+
+    if (statusFilter !== "all") {
+      filtered = filtered.filter((lead) => lead.status === statusFilter);
+    }
+
+    if (priorityFilter !== "all") {
+      filtered = filtered.filter((lead) => lead.priority === priorityFilter);
+    }
+
+    if (sourceFilter !== "all") {
+      filtered = filtered.filter((lead) => lead.source === sourceFilter);
+    }
+
+    filtered.sort((a, b) => {
+      let aValue: any = a[sortBy as keyof Lead];
+      let bValue: any = b[sortBy as keyof Lead];
+
+      if (
+        sortBy === "created_at" ||
+        sortBy === "last_contact_date" ||
+        sortBy === "next_follow_up_date"
+      ) {
+        aValue = new Date(aValue || 0).getTime();
+        bValue = new Date(bValue || 0).getTime();
+      } else if (sortBy === "estimated_value") {
+        aValue = Number(aValue) || 0;
+        bValue = Number(bValue) || 0;
+      }
+
+      if (sortOrder === "desc") {
+        return bValue > aValue ? 1 : -1;
+      } else {
+        return aValue > bValue ? 1 : -1;
+      }
+    });
+
+    setFilteredLeads(filtered);
+  };
+
+  const loadLeadInteractions = async (leadId: string) => {
     try {
       const supabase = createClient();
-      
-      // Get current month dates
-      const now = new Date();
-      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-      const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
-      // Fetch all leads for analytics
-      const { data: allLeads, error: leadsError } = await supabase
-        .from('leads')
-        .select('*');
+      const { data, error } = await supabase
+        .from("lead_interactions")
+        .select("*")
+        .eq("lead_id", leadId)
+        .order("interaction_date", { ascending: false });
 
-      if (leadsError) {
-        console.error('Error fetching leads for analytics:', leadsError);
+      if (error) {
+        console.error("Error loading lead interactions:", error);
         return;
       }
 
-      // Calculate analytics
-      const totalLeads = allLeads?.length || 0;
-      const qualifiedLeads = allLeads?.filter(lead => lead.lead_status === 'qualified').length || 0;
-      const convertedLeads = allLeads?.filter(lead => lead.lead_status === 'converted').length || 0;
-      
-      // This month leads
-      const thisMonthLeads = allLeads?.filter(lead => {
-        const leadDate = new Date(lead.created_at);
-        return leadDate >= startOfMonth && leadDate <= endOfMonth;
-      }).length || 0;
-
-      // Calculate conversion rate
-      const conversionRate = totalLeads > 0 ? Math.round((convertedLeads / totalLeads) * 100) : 0;
-
-      // Group by source
-      const leadsBySource: Record<string, number> = {};
-      allLeads?.forEach(lead => {
-        leadsBySource[lead.lead_source] = (leadsBySource[lead.lead_source] || 0) + 1;
-      });
-
-      // Group by status
-      const leadsByStatus: Record<string, number> = {};
-      allLeads?.forEach(lead => {
-        leadsByStatus[lead.lead_status] = (leadsByStatus[lead.lead_status] || 0) + 1;
-      });
-
-      // For now, set bookings to 0 (can be expanded later)
-      const totalBookings = 0;
-      const thisMonthBookings = 0;
-
-      setAnalytics({
-        total_leads: totalLeads,
-        qualified_leads: qualifiedLeads,
-        converted_leads: convertedLeads,
-        total_bookings: totalBookings,
-        this_month_leads: thisMonthLeads,
-        this_month_bookings: thisMonthBookings,
-        conversion_rate: conversionRate,
-        leads_by_source: leadsBySource,
-        leads_by_status: leadsByStatus,
-      });
-
+      setLeadInteractions(data || []);
     } catch (error) {
-      console.error('Error loading analytics:', error);
+      console.error("Error loading lead interactions:", error);
     }
   };
 
-  const refreshData = async () => {
-    setRefreshing(true);
-    await Promise.all([loadLeads(), loadAnalytics()]);
-    setRefreshing(false);
-    toast.success('Data refreshed successfully');
+  const toggleLeadExpansion = (leadId: string) => {
+    if (expandedLead === leadId) {
+      setExpandedLead(null);
+      setLeadInteractions([]);
+    } else {
+      setExpandedLead(leadId);
+      loadLeadInteractions(leadId);
+    }
   };
 
-  const getStatusBadge = (status: string) => {
-    const statusConfig = {
-      new: { color: "bg-blue-100 text-blue-800", label: "New" },
-      contacted: { color: "bg-yellow-100 text-yellow-800", label: "Contacted" },
-      qualified: { color: "bg-green-100 text-green-800", label: "Qualified" },
-      converted: { color: "bg-purple-100 text-purple-800", label: "Converted" },
-      lost: { color: "bg-red-100 text-red-800", label: "Lost" },
-      closed: { color: "bg-gray-100 text-gray-800", label: "Closed" },
-    };
-    
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.new;
-    return <Badge className={config.color}>{config.label}</Badge>;
+  const updateLeadStatus = async (leadId: string, newStatus: string) => {
+    // Prevent multiple concurrent updates
+    if (updatingLeadId === leadId) {
+      return;
+    }
+
+    // Find the lead to update
+    const leadToUpdate = leads.find((lead) => lead.id === leadId);
+    if (!leadToUpdate) {
+      toast.error("Lead not found");
+      return;
+    }
+
+    // Store original status for rollback
+    const originalStatus = leadToUpdate.status;
+
+    // Set loading state
+    setUpdatingLeadId(leadId);
+
+    // Optimistic update - update UI immediately
+    setLeads((prev) =>
+      prev.map((lead) =>
+        lead.id === leadId ? { ...lead, status: newStatus } : lead
+      )
+    );
+
+    try {
+      // Prepare the update data
+      const updateData = {
+        status: newStatus,
+        updated_at: new Date().toISOString(),
+        ...(newStatus === "contacted" && {
+          contacted_at: new Date().toISOString(),
+        }),
+        ...(newStatus === "qualified" && {
+          qualified_at: new Date().toISOString(),
+        }),
+        ...(newStatus === "converted" && {
+          converted_at: new Date().toISOString(),
+        }),
+      };
+
+      // Use API endpoint for consistent handling
+      const response = await fetch("/api/admin/leads", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          type: "lead",
+          id: leadId,
+          data: updateData,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to update lead status");
+      }
+
+      const result = await response.json();
+
+      // Update with the actual data returned from server
+      if (result.lead) {
+        setLeads((prev) =>
+          prev.map((lead) =>
+            lead.id === leadId ? { ...lead, ...result.lead } : lead
+          )
+        );
+      }
+
+      toast.success("Lead status updated successfully");
+    } catch (error) {
+      console.error("Error updating lead status:", error);
+
+      // Rollback optimistic update
+      setLeads((prev) =>
+        prev.map((lead) =>
+          lead.id === leadId ? { ...lead, status: originalStatus } : lead
+        )
+      );
+
+      toast.error(
+        error instanceof Error ? error.message : "Failed to update lead status"
+      );
+    } finally {
+      // Clear loading state
+      setUpdatingLeadId(null);
+    }
   };
 
-  const getSourceBadge = (source: string) => {
-    const sourceConfig = {
-      contact_form: { color: "bg-purple-100 text-purple-800", label: "Contact Form" },
-      brand_request_form: { color: "bg-indigo-100 text-indigo-800", label: "Brand Request" },
-      website: { color: "bg-blue-100 text-blue-800", label: "Website" },
-      whatsapp: { color: "bg-green-100 text-green-800", label: "WhatsApp" },
-      instagram: { color: "bg-pink-100 text-pink-800", label: "Instagram" },
-      email: { color: "bg-orange-100 text-orange-800", label: "Email" },
-      phone: { color: "bg-teal-100 text-teal-800", label: "Phone" },
-      referral: { color: "bg-amber-100 text-amber-800", label: "Referral" },
-    };
-    
-    const config = sourceConfig[source as keyof typeof sourceConfig] || sourceConfig.contact_form;
-    return <Badge className={config.color}>{config.label}</Badge>;
+  const addInteraction = async (leadId: string) => {
+    if (!newInteraction.description.trim()) {
+      toast.error("Please enter a description for the interaction");
+      return;
+    }
+
+    setIsAddingInteraction(true);
+
+    try {
+      const supabase = createClient();
+
+      const { error } = await supabase.from("lead_interactions").insert({
+        lead_id: leadId,
+        interaction_type: newInteraction.type,
+        interaction_date: new Date().toISOString(),
+        subject: newInteraction.subject.trim() || null,
+        description: newInteraction.description.trim(),
+        outcome: newInteraction.outcome.trim() || null,
+        next_action: newInteraction.nextAction.trim() || null,
+      });
+
+      if (error) {
+        console.error("Error adding interaction:", error);
+        toast.error("Failed to add interaction");
+        return;
+      }
+
+      setNewInteraction({
+        type: "email",
+        subject: "",
+        description: "",
+        outcome: "",
+        nextAction: "",
+      });
+
+      await loadLeadInteractions(leadId);
+      toast.success("Interaction added successfully");
+    } catch (error) {
+      console.error("Error adding interaction:", error);
+      toast.error("Failed to add interaction");
+    } finally {
+      setIsAddingInteraction(false);
+    }
   };
 
-  const getPriorityBadge = (priority: string) => {
-    const priorityConfig = {
-      low: { color: "bg-gray-100 text-gray-800", label: "Low" },
-      normal: { color: "bg-blue-100 text-blue-800", label: "Normal" },
-      high: { color: "bg-orange-100 text-orange-800", label: "High" },
-      urgent: { color: "bg-red-100 text-red-800", label: "Urgent" },
-    };
-    
-    const config = priorityConfig[priority as keyof typeof priorityConfig] || priorityConfig.normal;
-    return <Badge className={config.color}>{config.label}</Badge>;
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "new":
+        return "bg-blue-100 text-blue-800";
+      case "contacted":
+        return "bg-yellow-100 text-yellow-800";
+      case "qualified":
+        return "bg-purple-100 text-purple-800";
+      case "converted":
+        return "bg-green-100 text-green-800";
+      case "lost":
+        return "bg-red-100 text-red-800";
+      case "closed":
+        return "bg-gray-100 text-gray-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
   };
 
-  if (authLoading) {
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case "urgent":
+        return "bg-red-100 text-red-800";
+      case "high":
+        return "bg-orange-100 text-orange-800";
+      case "medium":
+        return "bg-yellow-100 text-yellow-800";
+      case "low":
+        return "bg-green-100 text-green-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const deleteLead = async (lead: Lead) => {
+    setIsDeleting(true);
+
+    try {
+      const supabase = createClient();
+
+      const { error: interactionsError } = await supabase
+        .from("lead_interactions")
+        .delete()
+        .eq("lead_id", lead.id);
+
+      if (interactionsError) {
+        console.error("Error deleting lead interactions:", interactionsError);
+        toast.error("Failed to delete lead interactions");
+        return;
+      }
+
+      const { error: leadError } = await supabase
+        .from("leads")
+        .delete()
+        .eq("id", lead.id);
+
+      if (leadError) {
+        console.error("Error deleting lead:", leadError);
+        toast.error("Failed to delete lead");
+        return;
+      }
+
+      setLeads((prev) => prev.filter((l) => l.id !== lead.id));
+      setDeleteDialogOpen(false);
+      setLeadToDelete(null);
+
+      if (expandedLead === lead.id) {
+        setExpandedLead(null);
+      }
+
+      toast.success("Lead deleted successfully");
+    } catch (error) {
+      console.error("Error deleting lead:", error);
+      toast.error("Failed to delete lead");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleDeleteClick = (lead: Lead, event: React.MouseEvent) => {
+    event.stopPropagation();
+    setLeadToDelete(lead);
+    setDeleteDialogOpen(true);
+  };
+
+  if (authLoading || loading) {
     return (
-      <div className="container mx-auto px-6 py-8">
+      <div className="min-h-screen bg-oma-cream flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-oma-plum mx-auto"></div>
-          <p className="mt-2 text-gray-600">Loading...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-oma-plum mx-auto mb-4"></div>
+          <p className="text-oma-cocoa">Loading your leads...</p>
         </div>
       </div>
     );
   }
 
-  if (!user || (user.role !== 'super_admin' && user.role !== 'brand_admin')) {
+  if (!user) {
     return (
-      <div className="container mx-auto px-6 py-8">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">Access Denied</h1>
-          <p className="text-gray-600">Only admins can access this page.</p>
-        </div>
+      <div className="min-h-screen bg-oma-cream flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <h2 className="text-xl font-canela text-oma-plum mb-2">
+                Authentication Required
+              </h2>
+              <p className="text-oma-cocoa mb-4">
+                Please log in to view your leads.
+              </p>
+              <Button asChild className="bg-oma-plum hover:bg-oma-plum/90">
+                <a href="/login">Log In</a>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-6 py-8">
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-oma-plum mb-2">Leads & Bookings Analytics</h1>
-          <p className="text-oma-cocoa">Track and manage your leads and conversions</p>
-        </div>
-        
-        <div className="flex gap-3 mt-4 lg:mt-0">
-          <Button
-            onClick={refreshData}
-            disabled={refreshing}
-            className="flex items-center gap-2"
-          >
-            <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-            {refreshing ? 'Refreshing...' : 'Refresh'}
-          </Button>
-        </div>
-      </div>
+    <div className="min-h-screen bg-oma-cream">
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        <StudioNav />
 
-      {/* Analytics Cards */}
-      {analytics && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-black">Total Leads</CardTitle>
-              <Users className="h-4 w-4 text-black" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-black">{analytics.total_leads}</div>
-              <p className="text-xs text-black">
-                This month: {analytics.this_month_leads}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-black">Qualified Leads</CardTitle>
-              <TrendingUp className="h-4 w-4 text-black" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-black">{analytics.qualified_leads}</div>
-              <p className="text-xs text-black">
-                Ready for follow-up
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-black">Conversion Rate</CardTitle>
-              <Calendar className="h-4 w-4 text-black" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-black">{analytics.conversion_rate}%</div>
-              <p className="text-xs text-black">
-                Converted: {analytics.converted_leads}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-black">Total Bookings</CardTitle>
-              <Mail className="h-4 w-4 text-black" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-black">{analytics.total_bookings}</div>
-              <p className="text-xs text-black">
-                This month: {analytics.this_month_bookings}
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Data Status */}
-      {/* Removed "No Data Available" warning banner */}
-
-      {/* Filters */}
-      <Card className="mb-6">
-        <CardContent className="pt-6">
-          <div className="flex flex-col lg:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-black" />
-                <Input
-                  placeholder="Search by name, email, company..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 text-black placeholder:text-black/60"
-                />
-              </div>
+        <div className="mb-8">
+          <h1 className="text-3xl font-canela text-oma-plum mb-2">
+            Leads Dashboard
+          </h1>
+          <p className="text-oma-cocoa">
+            {isSuperAdmin
+              ? "Manage all customer leads across the platform"
+              : "Track and manage your potential customers"}
+          </p>
+          {isSuperAdmin && (
+            <div className="mt-2">
+              <Badge className="bg-oma-plum text-white">
+                Super Admin View - All Leads
+              </Badge>
             </div>
-            
-            <div className="flex gap-2">
+          )}
+        </div>
+
+        {/* Filters and Search */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Filters</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+              <Input
+                placeholder="Search leads..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-32 text-black bg-white">
+                <SelectTrigger>
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="all">All Status</SelectItem>
                   <SelectItem value="new">New</SelectItem>
                   <SelectItem value="contacted">Contacted</SelectItem>
                   <SelectItem value="qualified">Qualified</SelectItem>
@@ -386,155 +593,655 @@ export default function StudioLeadsPage() {
                   <SelectItem value="closed">Closed</SelectItem>
                 </SelectContent>
               </Select>
-              
+
+              <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Priority" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Priority</SelectItem>
+                  <SelectItem value="urgent">Urgent</SelectItem>
+                  <SelectItem value="high">High</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="low">Low</SelectItem>
+                </SelectContent>
+              </Select>
+
               <Select value={sourceFilter} onValueChange={setSourceFilter}>
-                <SelectTrigger className="w-32 text-black bg-white">
+                <SelectTrigger>
                   <SelectValue placeholder="Source" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Sources</SelectItem>
                   <SelectItem value="contact_form">Contact Form</SelectItem>
-                  <SelectItem value="brand_request_form">Brand Request</SelectItem>
-                  <SelectItem value="website">Website</SelectItem>
-                  <SelectItem value="whatsapp">WhatsApp</SelectItem>
-                  <SelectItem value="instagram">Instagram</SelectItem>
-                  <SelectItem value="email">Email</SelectItem>
-                  <SelectItem value="phone">Phone</SelectItem>
+                  <SelectItem value="social_media">Social Media</SelectItem>
                   <SelectItem value="referral">Referral</SelectItem>
+                  <SelectItem value="website">Website</SelectItem>
+                  <SelectItem value="phone">Phone</SelectItem>
+                  <SelectItem value="email">Email</SelectItem>
+                  <SelectItem value="event">Event</SelectItem>
                 </SelectContent>
               </Select>
-              
-              <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-                <SelectTrigger className="w-32 text-black bg-white">
-                  <SelectValue placeholder="Priority" />
+
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Priorities</SelectItem>
-                  <SelectItem value="low">Low</SelectItem>
-                  <SelectItem value="normal">Normal</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                  <SelectItem value="urgent">Urgent</SelectItem>
+                  <SelectItem value="created_at">Created Date</SelectItem>
+                  <SelectItem value="estimated_value">Budget</SelectItem>
+                  <SelectItem value="last_contact_date">
+                    Last Contact
+                  </SelectItem>
+                  <SelectItem value="next_follow_up_date">
+                    Follow Up Date
+                  </SelectItem>
                 </SelectContent>
               </Select>
-              
-              <Button
-                onClick={() => { loadLeads(); loadAnalytics(); }}
-                className="flex items-center gap-2"
-              >
-                <Filter className="h-4 w-4" />
-                Apply
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
-      {/* Leads Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-black">Recent Leads</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-oma-plum mx-auto"></div>
-              <p className="mt-2 text-black">Loading leads...</p>
+              <Select value={sortOrder} onValueChange={setSortOrder}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Order" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="desc">Descending</SelectItem>
+                  <SelectItem value="asc">Ascending</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-          ) : leads.length === 0 ? (
-            <div className="text-center py-8">
-              <Users className="h-12 w-12 text-black mx-auto mb-4" />
-              <p className="text-black">No leads found</p>
-            </div>
-          ) : (
-            <>
-              <div className="text-sm text-gray-600 mb-4">
-                Showing {leads.length} of {leads.length} leads
+          </CardContent>
+        </Card>
+
+        {/* Lead Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-oma-plum">
+                  {filteredLeads.length}
+                </div>
+                <p className="text-sm text-oma-cocoa">Total Leads</p>
               </div>
-              
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left py-3 px-4 font-medium text-black">Customer</th>
-                      <th className="text-left py-3 px-4 font-medium text-black">Brand</th>
-                      <th className="text-left py-3 px-4 font-medium text-black">Source</th>
-                      <th className="text-left py-3 px-4 font-medium text-black">Type</th>
-                      <th className="text-left py-3 px-4 font-medium text-black">Status</th>
-                      <th className="text-left py-3 px-4 font-medium text-black">Priority</th>
-                      <th className="text-left py-3 px-4 font-medium text-black">Date</th>
-                      <th className="text-left py-3 px-4 font-medium text-black">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {leads.map((lead) => (
-                      <tr key={lead.id} className="border-b hover:bg-gray-50">
-                        <td className="py-3 px-4">
-                          <div className="font-medium text-black">{lead.customer_name}</div>
-                          <div className="text-sm text-gray-600">{lead.customer_email}</div>
-                          {lead.customer_phone && (
-                            <div className="text-sm text-gray-500 flex items-center gap-1">
-                              <Phone className="h-3 w-3" />
-                              {lead.customer_phone}
-                            </div>
-                          )}
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="font-medium text-black">
-                            {lead.brand?.name || 'Unknown Brand'}
-                          </div>
-                          {lead.company_name && (
-                            <div className="text-sm text-gray-600 flex items-center gap-1">
-                              <Building className="h-3 w-3" />
-                              {lead.company_name}
-                            </div>
-                          )}
-                        </td>
-                        <td className="py-3 px-4">
-                          {getSourceBadge(lead.lead_source)}
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="text-sm text-black">
-                            {lead.project_type || 'General Inquiry'}
-                          </div>
-                        </td>
-                        <td className="py-3 px-4">
-                          {getStatusBadge(lead.lead_status)}
-                        </td>
-                        <td className="py-3 px-4">
-                          {getPriorityBadge(lead.priority)}
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="text-sm text-black">
-                            {new Date(lead.created_at).toLocaleDateString()}
-                          </div>
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="h-8 w-8 p-0"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="h-8 w-8 p-0"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-oma-plum">
+                  {filteredLeads.filter((l) => l.status === "converted").length}
+                </div>
+                <p className="text-sm text-oma-cocoa">Converted</p>
               </div>
-            </>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-oma-plum">
+                  {
+                    filteredLeads.filter((l) =>
+                      ["new", "contacted", "qualified"].includes(l.status)
+                    ).length
+                  }
+                </div>
+                <p className="text-sm text-oma-cocoa">Active</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {SHOW_PIPELINE_VALUE && (
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-oma-plum">
+                    ${intelligentPipelineValue.toLocaleString()}
+                  </div>
+                  <p className="text-sm text-oma-cocoa">
+                    {USE_INTELLIGENT_CALCULATION ? "Estimated" : "Total"}{" "}
+                    Pipeline Value
+                  </p>
+                  {USE_INTELLIGENT_CALCULATION && (
+                    <p className="text-xs text-oma-cocoa/60 mt-1">
+                      Based on brand product averages
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
           )}
-        </CardContent>
-      </Card>
+        </div>
+
+        {/* Leads List */}
+        {filteredLeads.length === 0 ? (
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center py-8">
+                <h3 className="text-lg font-canela text-oma-plum mb-2">
+                  {leads.length === 0
+                    ? "No leads yet"
+                    : "No leads match your filters"}
+                </h3>
+                <p className="text-oma-cocoa">
+                  {leads.length === 0
+                    ? isSuperAdmin
+                      ? "When customers contact brands on the platform, leads will appear here."
+                      : "When customers contact you through your brand pages, leads will appear here."
+                    : "Try adjusting your search and filter criteria."}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-4">
+            {filteredLeads.map((lead) => (
+              <Card key={lead.id} className="transition-all duration-200">
+                {/* Lead Summary Row */}
+                <CardHeader
+                  className="cursor-pointer hover:bg-oma-beige/20 transition-colors"
+                  onClick={() => toggleLeadExpansion(lead.id)}
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 w-full">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 w-full">
+                        <div className="flex-1 min-w-0">
+                          <CardTitle className="text-lg font-canela text-oma-plum flex flex-wrap items-center gap-2 truncate">
+                            <User className="h-5 w-5 shrink-0" />
+                            <span
+                              className="truncate max-w-[120px] sm:max-w-xs"
+                              title={lead.customer_name}
+                            >
+                              {lead.customer_name}
+                            </span>
+                            {lead.company_name && (
+                              <span
+                                className="text-sm text-oma-cocoa font-normal truncate max-w-[100px] sm:max-w-xs"
+                                title={lead.company_name}
+                              >
+                                ({lead.company_name})
+                              </span>
+                            )}
+                          </CardTitle>
+                          <div className="flex flex-wrap items-center gap-2 sm:gap-4 mt-2 text-sm text-oma-cocoa w-full">
+                            <div className="flex items-center gap-1 truncate max-w-[120px] sm:max-w-xs">
+                              <Mail className="h-4 w-4 shrink-0" />
+                              <span
+                                className="truncate"
+                                title={lead.customer_email}
+                              >
+                                {lead.customer_email}
+                              </span>
+                            </div>
+                            {lead.customer_phone && (
+                              <div className="flex items-center gap-1 truncate max-w-[100px] sm:max-w-xs">
+                                <Phone className="h-4 w-4 shrink-0" />
+                                <span
+                                  className="truncate"
+                                  title={lead.customer_phone}
+                                >
+                                  {lead.customer_phone}
+                                </span>
+                              </div>
+                            )}
+                            {lead.location && (
+                              <div className="flex items-center gap-1 truncate max-w-[100px] sm:max-w-xs">
+                                <MapPin className="h-4 w-4 shrink-0" />
+                                <span
+                                  className="truncate"
+                                  title={lead.location}
+                                >
+                                  {lead.location}
+                                </span>
+                              </div>
+                            )}
+                            {lead.brands && (
+                              <div className="flex items-center gap-1 truncate max-w-[100px] sm:max-w-xs">
+                                <Building className="h-4 w-4 shrink-0" />
+                                <span
+                                  className="truncate"
+                                  title={lead.brands.name}
+                                >
+                                  {lead.brands.name}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex flex-row flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-3 mt-2 sm:mt-0 overflow-x-auto">
+                          <Badge className={getStatusColor(lead.status)}>
+                            {lead.status.replace("_", " ")}
+                          </Badge>
+                          <Badge className={getPriorityColor(lead.priority)}>
+                            {lead.priority}
+                          </Badge>
+                          {lead.estimated_value && (
+                            <Badge variant="outline">
+                              ${lead.estimated_value.toLocaleString()}
+                            </Badge>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => handleDeleteClick(lead, e)}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <TrashIcon className="h-4 w-4" />
+                          </Button>
+                          {expandedLead === lead.id ? (
+                            <ChevronUpIcon className="h-5 w-5 text-oma-cocoa" />
+                          ) : (
+                            <ChevronDownIcon className="h-5 w-5 text-oma-cocoa" />
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardHeader>
+
+                {/* Expanded Lead Details */}
+                {expandedLead === lead.id && (
+                  <CardContent className="border-t bg-oma-beige/10">
+                    <Tabs defaultValue="details" className="w-full">
+                      <TabsList className="grid w-full grid-cols-3">
+                        <TabsTrigger value="details">Details</TabsTrigger>
+                        <TabsTrigger value="interactions">
+                          Interactions
+                        </TabsTrigger>
+                        <TabsTrigger value="actions">Actions</TabsTrigger>
+                      </TabsList>
+
+                      <TabsContent value="details" className="space-y-4 mt-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="space-y-4">
+                            <div>
+                              <h4 className="font-medium text-oma-plum mb-2">
+                                Lead Information
+                              </h4>
+                              <div className="space-y-2 text-sm">
+                                <div>
+                                  <span className="font-medium">Source:</span>{" "}
+                                  {lead.source}
+                                </div>
+                                <div>
+                                  <span className="font-medium">Type:</span>{" "}
+                                  {lead.lead_type || "Not specified"}
+                                </div>
+                                <div>
+                                  <span className="font-medium">Created:</span>{" "}
+                                  {new Date(
+                                    lead.created_at
+                                  ).toLocaleDateString()}
+                                </div>
+                              </div>
+                            </div>
+
+                            {lead.notes && (
+                              <div>
+                                <h4 className="font-medium text-oma-plum mb-2">
+                                  Notes
+                                </h4>
+                                <p className="text-sm text-oma-cocoa bg-white p-3 rounded border">
+                                  {lead.notes}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="space-y-4">
+                            <div>
+                              <h4 className="font-medium text-oma-plum mb-2">
+                                Status & Priority
+                              </h4>
+                              <div className="space-y-3">
+                                <div>
+                                  <label className="text-sm font-medium text-oma-cocoa">
+                                    Status
+                                  </label>
+                                  <Select
+                                    value={lead.status}
+                                    onValueChange={(value) =>
+                                      updateLeadStatus(lead.id, value)
+                                    }
+                                    disabled={updatingLeadId === lead.id}
+                                  >
+                                    <SelectTrigger className="mt-1">
+                                      <SelectValue />
+                                      {updatingLeadId === lead.id && (
+                                        <div className="ml-2 h-4 w-4 animate-spin rounded-full border-2 border-oma-plum border-t-transparent"></div>
+                                      )}
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="new">New</SelectItem>
+                                      <SelectItem value="contacted">
+                                        Contacted
+                                      </SelectItem>
+                                      <SelectItem value="qualified">
+                                        Qualified
+                                      </SelectItem>
+                                      <SelectItem value="converted">
+                                        Converted
+                                      </SelectItem>
+                                      <SelectItem value="lost">Lost</SelectItem>
+                                      <SelectItem value="closed">
+                                        Closed
+                                      </SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div>
+                              <h4 className="font-medium text-oma-plum mb-2">
+                                Quick Actions
+                              </h4>
+                              <div className="flex flex-wrap gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    window.open(
+                                      `mailto:${lead.customer_email}`,
+                                      "_blank"
+                                    )
+                                  }
+                                >
+                                  <Mail className="mr-2 h-4 w-4" />
+                                  Email
+                                </Button>
+                                {lead.customer_phone && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() =>
+                                      window.open(
+                                        `tel:${lead.customer_phone}`,
+                                        "_blank"
+                                      )
+                                    }
+                                  >
+                                    <Phone className="mr-2 h-4 w-4" />
+                                    Call
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </TabsContent>
+
+                      <TabsContent
+                        value="interactions"
+                        className="space-y-4 mt-4"
+                      >
+                        {/* Add New Interaction */}
+                        {!isAddingInteraction ? (
+                          <Button
+                            onClick={() => setIsAddingInteraction(true)}
+                            className="bg-oma-plum hover:bg-oma-plum/90"
+                          >
+                            Add Interaction
+                          </Button>
+                        ) : (
+                          <Card>
+                            <CardHeader>
+                              <CardTitle className="text-lg">
+                                Add New Interaction
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                              <div className="grid grid-cols-2 gap-4">
+                                <Select
+                                  value={newInteraction.type}
+                                  onValueChange={(value) =>
+                                    setNewInteraction((prev) => ({
+                                      ...prev,
+                                      type: value,
+                                    }))
+                                  }
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Interaction Type" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="email">Email</SelectItem>
+                                    <SelectItem value="phone">
+                                      Phone Call
+                                    </SelectItem>
+                                    <SelectItem value="meeting">
+                                      Meeting
+                                    </SelectItem>
+                                    <SelectItem value="proposal">
+                                      Proposal
+                                    </SelectItem>
+                                    <SelectItem value="follow_up">
+                                      Follow Up
+                                    </SelectItem>
+                                  </SelectContent>
+                                </Select>
+
+                                <Input
+                                  placeholder="Subject (optional)"
+                                  value={newInteraction.subject}
+                                  onChange={(e) =>
+                                    setNewInteraction((prev) => ({
+                                      ...prev,
+                                      subject: e.target.value,
+                                    }))
+                                  }
+                                />
+                              </div>
+
+                              <Textarea
+                                placeholder="Description *"
+                                value={newInteraction.description}
+                                onChange={(e) =>
+                                  setNewInteraction((prev) => ({
+                                    ...prev,
+                                    description: e.target.value,
+                                  }))
+                                }
+                                rows={3}
+                              />
+
+                              <div className="grid grid-cols-2 gap-4">
+                                <Input
+                                  placeholder="Outcome (optional)"
+                                  value={newInteraction.outcome}
+                                  onChange={(e) =>
+                                    setNewInteraction((prev) => ({
+                                      ...prev,
+                                      outcome: e.target.value,
+                                    }))
+                                  }
+                                />
+
+                                <Input
+                                  placeholder="Next Action (optional)"
+                                  value={newInteraction.nextAction}
+                                  onChange={(e) =>
+                                    setNewInteraction((prev) => ({
+                                      ...prev,
+                                      nextAction: e.target.value,
+                                    }))
+                                  }
+                                />
+                              </div>
+
+                              <div className="flex justify-end gap-2">
+                                <Button
+                                  variant="outline"
+                                  onClick={() => setIsAddingInteraction(false)}
+                                >
+                                  Cancel
+                                </Button>
+                                <Button
+                                  onClick={() => addInteraction(lead.id)}
+                                  disabled={isAddingInteraction}
+                                  className="bg-oma-plum hover:bg-oma-plum/90"
+                                >
+                                  {isAddingInteraction
+                                    ? "Adding..."
+                                    : "Add Interaction"}
+                                </Button>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        )}
+
+                        {/* Interactions List */}
+                        <div className="space-y-3">
+                          {leadInteractions.length === 0 ? (
+                            <p className="text-center text-oma-cocoa py-4">
+                              No interactions recorded yet
+                            </p>
+                          ) : (
+                            leadInteractions.map((interaction) => (
+                              <Card key={interaction.id}>
+                                <CardContent className="pt-4">
+                                  <div className="flex justify-between items-start mb-2">
+                                    <div>
+                                      <Badge variant="outline" className="mb-1">
+                                        {interaction.interaction_type.replace(
+                                          "_",
+                                          " "
+                                        )}
+                                      </Badge>
+                                      {interaction.subject && (
+                                        <h5 className="font-medium text-oma-plum">
+                                          {interaction.subject}
+                                        </h5>
+                                      )}
+                                    </div>
+                                    <span className="text-xs text-oma-cocoa">
+                                      {new Date(
+                                        interaction.interaction_date
+                                      ).toLocaleDateString()}
+                                    </span>
+                                  </div>
+
+                                  {interaction.description && (
+                                    <p className="text-sm text-oma-cocoa mb-2">
+                                      {interaction.description}
+                                    </p>
+                                  )}
+
+                                  {(interaction.outcome ||
+                                    interaction.next_action) && (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+                                      {interaction.outcome && (
+                                        <div>
+                                          <span className="font-medium">
+                                            Outcome:
+                                          </span>{" "}
+                                          {interaction.outcome}
+                                        </div>
+                                      )}
+                                      {interaction.next_action && (
+                                        <div>
+                                          <span className="font-medium">
+                                            Next Action:
+                                          </span>{" "}
+                                          {interaction.next_action}
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+                                </CardContent>
+                              </Card>
+                            ))
+                          )}
+                        </div>
+                      </TabsContent>
+
+                      <TabsContent value="actions" className="space-y-4 mt-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div>
+                            <h4 className="font-medium text-oma-plum mb-2">
+                              Important Dates
+                            </h4>
+                            <div className="text-sm space-y-1">
+                              <div>
+                                <span className="font-medium">Created:</span>{" "}
+                                {new Date(lead.created_at).toLocaleDateString()}
+                              </div>
+                              {lead.last_contact_date && (
+                                <div>
+                                  <span className="font-medium">
+                                    Last Contact:
+                                  </span>{" "}
+                                  {new Date(
+                                    lead.last_contact_date
+                                  ).toLocaleDateString()}
+                                </div>
+                              )}
+                              {lead.next_follow_up_date && (
+                                <div>
+                                  <span className="font-medium">
+                                    Next Follow Up:
+                                  </span>{" "}
+                                  {new Date(
+                                    lead.next_follow_up_date
+                                  ).toLocaleDateString()}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          <div>
+                            <h4 className="font-medium text-oma-plum mb-2">
+                              Lead Management
+                            </h4>
+                            <div className="space-y-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
+                                onClick={(e) => handleDeleteClick(lead, e)}
+                              >
+                                <TrashIcon className="mr-2 h-4 w-4" />
+                                Delete Lead
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </TabsContent>
+                    </Tabs>
+                  </CardContent>
+                )}
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {/* Delete Dialog */}
+        <AlertDialog
+          open={deleteDialogOpen}
+          onOpenChange={() => setDeleteDialogOpen(false)}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete this lead? This action cannot be
+                undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => leadToDelete && deleteLead(leadToDelete)}
+                disabled={isDeleting}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                {isDeleting ? "Deleting..." : "Delete"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
     </div>
   );
 }
