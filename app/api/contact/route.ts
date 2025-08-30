@@ -465,6 +465,67 @@ export async function POST(request: NextRequest) {
 
       console.log("✅ Inquiry created successfully:", inquiry.id);
 
+      // Create a lead from this inquiry
+      try {
+        console.log("📊 Creating lead from inquiry...");
+        
+        // Check if leads table exists
+        const { data: leadsTableExists, error: leadsTableCheckError } = await supabase
+          .from("information_schema.tables")
+          .select("table_name")
+          .eq("table_schema", "public")
+          .eq("table_name", "leads")
+          .single();
+
+        if (leadsTableCheckError || !leadsTableExists) {
+          console.log("⚠️ Leads table does not exist - skipping lead creation");
+        } else {
+          // Create lead in the leads table
+          const leadData = {
+            brand_id: brandId,
+            customer_name: name,
+            customer_email: email,
+            customer_phone: "", // Contact form doesn't collect phone
+            lead_source: "contact_form",
+            lead_status: "new",
+            lead_score: 50, // Default score for contact form leads
+            priority: "medium",
+            estimated_budget: null, // Not collected in contact form
+            project_type: "general_inquiry",
+            project_timeline: null, // Not collected in contact form
+            location: "", // Not collected in contact form
+            notes: `Contact form inquiry: ${message}`,
+            tags: ["contact_form", "website"],
+            inquiry_id: inquiry.id, // Link to the inquiry
+            company_name: "", // Not collected in contact form
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          };
+
+          const { data: lead, error: leadError } = await supabase
+            .from("leads")
+            .insert(leadData)
+            .select()
+            .single();
+
+          if (leadError) {
+            console.error("❌ Failed to create lead:", leadError);
+            console.log("⚠️ Lead creation failed, but inquiry was created successfully");
+          } else {
+            console.log("✅ Lead created successfully:", lead.id);
+            console.log("📊 Lead data:", {
+              id: lead.id,
+              customer_name: lead.customer_name,
+              lead_status: lead.lead_status,
+              lead_source: lead.lead_source
+            });
+          }
+        }
+      } catch (leadError) {
+        console.error("❌ Error creating lead:", leadError);
+        console.log("⚠️ Lead creation failed, but inquiry was created successfully");
+      }
+
       // Send email notification to brand contact email
       console.log("📧 Sending email notification to:", contactEmail);
       console.log("📧 Email service configuration:", {
@@ -552,6 +613,72 @@ OmaHub Team`,
         resendKeyLength: process.env.RESEND_API_KEY?.length || 0,
         nodeEnv: process.env.NODE_ENV,
       });
+
+      // Create lead for general platform contact
+      let lead = null;
+      try {
+        console.log("📊 Creating lead from general platform contact...");
+        
+        const supabase = await getAdminClient();
+        if (supabase) {
+          // Check if leads table exists
+          const { data: leadsTableExists, error: leadsTableCheckError } = await supabase
+            .from("information_schema.tables")
+            .select("table_name")
+            .eq("table_schema", "public")
+            .eq("table_name", "leads")
+            .single();
+
+          if (leadsTableCheckError || !leadsTableExists) {
+            console.log("⚠️ Leads table does not exist - skipping lead creation");
+          } else {
+            // Create lead in the leads table for general platform contact
+            const generalLeadData = {
+              brand_id: null, // No specific brand for general contact
+              customer_name: name,
+              customer_email: email,
+              customer_phone: "", // General contact form doesn't collect phone
+              lead_source: "platform_contact_form",
+              lead_status: "new",
+              lead_score: 30, // Lower score for general inquiries
+              priority: "normal",
+              estimated_budget: null, // Not collected in general contact form
+              project_type: "general_inquiry",
+              project_timeline: null, // Not collected in general contact form
+              location: "", // Not collected in general contact form
+              notes: `General platform contact: ${subject}\n\n${message}`,
+              tags: ["platform_contact", "general_inquiry"],
+              inquiry_id: null, // No specific inquiry for general contact
+              company_name: "", // Not collected in general contact form
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            };
+
+            const { data: insertedLead, error: leadError } = await supabase
+              .from("leads")
+              .insert(generalLeadData)
+              .select()
+              .single();
+
+            if (leadError) {
+              console.error("❌ Failed to create lead for general contact:", leadError);
+              console.log("⚠️ Lead creation failed, but contact form was submitted successfully");
+            } else {
+              lead = insertedLead;
+              console.log("✅ Lead created successfully for general contact:", insertedLead.id);
+              console.log("📊 Lead data:", {
+                id: insertedLead.id,
+                customer_name: insertedLead.customer_name,
+                lead_status: insertedLead.lead_status,
+                lead_source: insertedLead.lead_source
+              });
+            }
+          }
+        }
+      } catch (leadError) {
+        console.error("❌ Error creating lead for general contact:", leadError);
+        console.log("⚠️ Lead creation failed, but contact form was submitted successfully");
+      }
 
       try {
         const emailResult = await sendContactEmail({

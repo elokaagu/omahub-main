@@ -250,6 +250,69 @@ export async function POST(request: NextRequest) {
 
     console.log('✅ Order saved successfully with ID:', order.id);
 
+    // Create a lead from this custom order
+    try {
+      console.log("📊 Creating lead from custom order...");
+      
+      // Check if leads table exists
+      const { data: leadsTableExists, error: leadsTableCheckError } = await supabase
+        .from("information_schema.tables")
+        .select("table_name")
+        .eq("table_schema", "public")
+        .eq("table_name", "leads")
+        .single();
+
+      if (leadsTableCheckError || !leadsTableExists) {
+        console.log("⚠️ Leads table does not exist - skipping lead creation");
+      } else {
+        // Create lead in the leads table
+        const leadData = {
+          brand_id: brand_id,
+          customer_name: delivery_address.full_name,
+          customer_email: delivery_address.email,
+          customer_phone: delivery_address.phone || "",
+          lead_source: "brand_request_form",
+          lead_status: "new",
+          lead_score: 80, // High score for product requests
+          priority: "high", // High priority for product requests
+          estimated_budget: total_amount || product.sale_price || product.price,
+          project_type: "product_request",
+          project_timeline: null, // Not collected in brand request form
+          location: delivery_address.city && delivery_address.country ? 
+            `${delivery_address.city}, ${delivery_address.country}` : "",
+          notes: `Brand request for ${product.title}\n\nCustomer notes: ${customer_notes || 'None'}\n\nSize: ${size || 'Not specified'}\nColor: ${color || 'Not specified'}\nQuantity: ${quantity}`,
+          tags: ["brand_request", "product_request", "custom_order"],
+          inquiry_id: null, // No inquiry for brand requests
+          company_name: "", // Not collected in brand request form
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+
+        const { data: lead, error: leadError } = await supabase
+          .from("leads")
+          .insert(leadData)
+          .select()
+          .single();
+
+        if (leadError) {
+          console.error("❌ Failed to create lead:", leadError);
+          console.log("⚠️ Lead creation failed, but order was created successfully");
+        } else {
+          console.log("✅ Lead created successfully:", lead.id);
+          console.log("📊 Lead data:", {
+            id: lead.id,
+            customer_name: lead.customer_name,
+            lead_status: lead.lead_status,
+            lead_source: lead.lead_source,
+            estimated_budget: lead.estimated_budget
+          });
+        }
+      }
+    } catch (leadError) {
+      console.error("❌ Error creating lead:", leadError);
+      console.log("⚠️ Lead creation failed, but order was created successfully");
+    }
+
     // Create notification for brand owner
     try {
       const { data: brandOwner, error: brandOwnerError } = await supabase
