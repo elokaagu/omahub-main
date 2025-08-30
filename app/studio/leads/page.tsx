@@ -324,6 +324,8 @@ export default function StudioLeadsPage() {
     }
   };
 
+
+
   const filterAndSortLeads = () => {
     let filtered = [...leads];
 
@@ -579,6 +581,7 @@ export default function StudioLeadsPage() {
   };
 
   const deleteLead = async (lead: Lead) => {
+    if (isDeleting) return; // Prevent multiple deletions
     setIsDeleting(true);
 
     try {
@@ -602,8 +605,13 @@ export default function StudioLeadsPage() {
       const result = await response.json();
       console.log("✅ Lead deleted successfully:", result);
 
-      // Remove from local state
-      setLeads((prev) => prev.filter((l) => l.id !== lead.id));
+      // Wait a moment for backend to complete deletion
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Refresh leads from backend to ensure sync
+      await loadLeads();
+
+      // Close delete dialog
       setDeleteDialogOpen(false);
       setLeadToDelete(null);
 
