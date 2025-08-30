@@ -106,49 +106,246 @@ OmaHub Team`,
 
 export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '50');
+    const status = searchParams.get('status');
+    const source = searchParams.get('source');
+    const priority = searchParams.get('priority');
+    const search = searchParams.get('search');
+
+    console.log(`📊 GET leads request: page=${page}, limit=${limit}, status=${status}, source=${source}, priority=${priority}, search=${search}`);
+
     const supabase = await createServerSupabaseClient();
+
+    // Get authenticated user
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     
-    // Get user session
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    
-    if (sessionError || !session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (authError || !user) {
+      console.log("❌ Unauthorized leads fetch attempt");
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // Get user profile
     const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('role, owned_brands')
-      .eq('id', session.user.id)
+      .from("profiles")
+      .select("role, owned_brands")
+      .eq("id", user.id)
       .single();
 
     if (profileError || !profile) {
-      return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
+      console.error("❌ Profile not found:", profileError);
+      return NextResponse.json({ error: "Profile not found" }, { status: 404 });
     }
 
-    // Build query based on user role
-    let query = supabase.from('leads').select(`
-      *,
-      brand:brands(name, category, image)
-    `).order('created_at', { ascending: false });
+    // Check permissions
+    if (!["super_admin", "brand_admin"].includes(profile.role)) {
+      console.log("❌ Access denied for role:", profile.role);
+      return NextResponse.json({ error: "Access denied" }, { status: 403 });
+    }
+
+    // Build query
+    let query = supabase
+      .from("leads")
+      .select(`
+        *,
+        brands(
+          id,
+          name,
+          contact_email,
+          category
+        )
+      `, { count: 'exact' });
 
     // Apply role-based filtering
-    if (profile.role === 'brand_admin' && profile.owned_brands?.length > 0) {
-      query = query.in('brand_id', profile.owned_brands);
+    if (profile.role === "brand_admin") {
+      if (!profile.owned_brands || profile.owned_brands.length === 0) {
+        console.log("❌ Brand admin has no accessible brands");
+        return NextResponse.json(
+          { error: "No accessible brands" },
+          { status: 403 }
+        );
+      }
+      query = query.in("brand_id", profile.owned_brands);
     }
-    // Super admins can see all leads
 
-    const { data: leads, error: leadsError } = await query;
-
-    if (leadsError) {
-      console.error('Error fetching leads:', leadsError);
-      return NextResponse.json({ error: 'Failed to fetch leads' }, { status: 500 });
+    // Apply filters
+    if (status && status !== 'all') {
+      query = query.eq('status', status);
+    }
+    if (source && source !== 'all') {
+      query = query.eq('source', source);
+    }
+    if (priority && priority !== 'all') {
+      query = query.eq('priority', priority);
+    }
+    if (search) {
+      query = query.or(`customer_name.ilike.%${search}%,customer_email.ilike.%${search}%,notes.ilike.%${search}%`);
     }
 
-    return NextResponse.json({ leads: leads || [] });
+    // Apply pagination and sorting
+    const offset = (page - 1) * limit;
+    query = query
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    const { data: leads, error, count } = await query;
+
+    if (error) {
+      console.error("❌ Error fetching leads:", error);
+      return NextResponse.json(
+        { error: "Failed to fetch leads" },
+        { status: 500 }
+      );
+    }
+
+    console.log(`✅ Fetched ${leads.length} leads (total: ${count})`);
+
+    return NextResponse.json({
+      success: true,
+      leads: leads || [],
+      pagination: {
+        page,
+        limit,
+        total: count || 0,
+        totalPages: Math.ceil((count || 0) / limit),
+      },
+    });
 
   } catch (error) {
-    console.error('Leads fetch error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error("💥 Get leads error:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const leadId = searchParams.get('id');
+
+    if (!leadId) {
+      return NextResponse.json({ 
+        error: 'Lead ID is required' 
+      }, { status: 400 });
+    }
+
+    console.log(`🗑️ DELETE request for lead: ${leadId}`);
+
+    const supabase = await createServerSupabaseClient();
+
+    // Get authenticated user
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      console.log("❌ Unauthorized delete attempt");
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Get user profile
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("role, owned_brands")
+      .eq("id", user.id)
+      .single();
+
+    if (profileError || !profile) {
+      console.error("❌ Profile not found:", profileError);
+      return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+    }
+
+    // Check permissions
+    if (!["super_admin", "brand_admin"].includes(profile.role)) {
+      console.log("❌ Access denied for role:", profile.role);
+      return NextResponse.json({ error: "Access denied" }, { status: 403 });
+    }
+
+    // Verify lead exists and user has access
+    let verifyQuery = supabase
+      .from("leads")
+      .select("id, brand_id, customer_name")
+      .eq("id", leadId);
+
+    if (profile.role === "brand_admin") {
+      if (!profile.owned_brands || profile.owned_brands.length === 0) {
+        console.log("❌ Brand admin has no accessible brands");
+        return NextResponse.json(
+          { error: "No accessible brands" },
+          { status: 403 }
+        );
+      }
+      verifyQuery = verifyQuery.in("brand_id", profile.owned_brands);
+    }
+
+    const { data: existingLead, error: verifyError } = await verifyQuery.single();
+
+    if (verifyError) {
+      if (verifyError.code === "PGRST116") {
+        console.log("❌ Lead not found:", leadId);
+        return NextResponse.json(
+          { error: "Lead not found" },
+          { status: 404 }
+        );
+      }
+      console.error("❌ Error verifying lead:", verifyError);
+      return NextResponse.json(
+        { error: "Failed to verify lead" },
+        { status: 500 }
+      );
+    }
+
+    console.log(`✅ Lead verified for deletion: ${existingLead.customer_name}`);
+
+    // Delete any lead interactions first
+    console.log("🗑️ Deleting lead interactions...");
+    const { error: interactionsDeleteError } = await supabase
+      .from("lead_interactions")
+      .delete()
+      .eq("lead_id", leadId);
+
+    if (interactionsDeleteError) {
+      console.warn("⚠️ Warning: Could not delete interactions:", interactionsDeleteError.message);
+      // Continue with lead deletion even if interactions fail
+    } else {
+      console.log("✅ Lead interactions deleted successfully");
+    }
+
+    // Delete the lead
+    console.log("🗑️ Deleting lead from database...");
+    const { error: deleteError } = await supabase
+      .from("leads")
+      .delete()
+      .eq("id", leadId);
+
+    if (deleteError) {
+      console.error("❌ Failed to delete lead:", deleteError);
+      return NextResponse.json(
+        { error: "Failed to delete lead" },
+        { status: 500 }
+      );
+    }
+
+    console.log(`✅ Lead ${leadId} deleted successfully from database`);
+
+    return NextResponse.json({
+      success: true,
+      message: `Lead ${existingLead.customer_name} deleted successfully`,
+      deletedLeadId: leadId,
+    });
+
+  } catch (error) {
+    console.error("💥 Delete lead error:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }

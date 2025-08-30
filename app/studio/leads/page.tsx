@@ -510,30 +510,27 @@ export default function StudioLeadsPage() {
     setIsDeleting(true);
 
     try {
-      const supabase = createClient();
+      console.log(`🗑️ Deleting lead: ${lead.id} (${lead.customer_name})`);
 
-      const { error: interactionsError } = await supabase
-        .from("lead_interactions")
-        .delete()
-        .eq("lead_id", lead.id);
+      // Use the new DELETE API endpoint
+      const response = await fetch(`/api/leads?id=${lead.id}`, {
+        method: "DELETE",
+        credentials: "include",
+        headers: {
+          "Cache-Control": "no-cache",
+          Pragma: "no-cache",
+        },
+      });
 
-      if (interactionsError) {
-        console.error("Error deleting lead interactions:", interactionsError);
-        toast.error("Failed to delete lead interactions");
-        return;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to delete lead");
       }
 
-      const { error: leadError } = await supabase
-        .from("leads")
-        .delete()
-        .eq("id", lead.id);
+      const result = await response.json();
+      console.log("✅ Lead deleted successfully:", result);
 
-      if (leadError) {
-        console.error("Error deleting lead:", leadError);
-        toast.error("Failed to delete lead");
-        return;
-      }
-
+      // Remove from local state
       setLeads((prev) => prev.filter((l) => l.id !== lead.id));
       setDeleteDialogOpen(false);
       setLeadToDelete(null);
@@ -545,7 +542,9 @@ export default function StudioLeadsPage() {
       toast.success("Lead deleted successfully");
     } catch (error) {
       console.error("Error deleting lead:", error);
-      toast.error("Failed to delete lead");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to delete lead"
+      );
     } finally {
       setIsDeleting(false);
     }
