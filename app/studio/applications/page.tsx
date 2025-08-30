@@ -111,13 +111,30 @@ export default function ApplicationsPage() {
   const deleteApplication = async (applicationId: string) => {
     try {
       setDeletingApplication(applicationId);
+      console.log(`🗑️ Attempting to delete application: ${applicationId}`);
+      
       const response = await fetch(`/api/studio/applications/${applicationId}`, {
         method: "DELETE",
       });
 
+      console.log(`🗑️ Delete response status: ${response.status}`);
+      console.log(`🗑️ Delete response URL: ${response.url}`);
+
       if (!response.ok) {
-        throw new Error("Failed to delete application");
+        const errorText = await response.text();
+        console.error(`🗑️ Delete failed with status ${response.status}:`, errorText);
+        
+        if (response.status === 404) {
+          throw new Error("API route not found. Please check if the route is deployed correctly.");
+        } else if (response.status === 500) {
+          throw new Error("Server error occurred while deleting the application.");
+        } else {
+          throw new Error(`Failed to delete application (${response.status}): ${errorText}`);
+        }
       }
+
+      const result = await response.json();
+      console.log(`🗑️ Delete successful:`, result);
 
       toast.success("Application deleted successfully");
       
@@ -132,7 +149,9 @@ export default function ApplicationsPage() {
       // Hide delete confirmation
       setShowDeleteConfirm(null);
     } catch (err) {
-      toast.error("Failed to delete application");
+      console.error("🗑️ Delete error:", err);
+      const errorMessage = err instanceof Error ? err.message : "Failed to delete application";
+      toast.error(errorMessage);
     } finally {
       setDeletingApplication(null);
     }
