@@ -41,6 +41,8 @@ export default function ApplicationsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [accessDenied, setAccessDenied] = useState(false);
+  const [deletingApplication, setDeletingApplication] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
 
   // Check if user has super admin access
   useEffect(() => {
@@ -102,6 +104,37 @@ export default function ApplicationsPage() {
       toast.error("Failed to update application status");
     } finally {
       setUpdatingStatus(false);
+    }
+  };
+
+  // Delete application
+  const deleteApplication = async (applicationId: string) => {
+    try {
+      setDeletingApplication(applicationId);
+      const response = await fetch(`/api/studio/applications/${applicationId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete application");
+      }
+
+      toast.success("Application deleted successfully");
+      
+      // Refresh applications
+      await fetchApplications();
+      
+      // Close detail view if it was the deleted application
+      if (selectedApplication?.id === applicationId) {
+        setSelectedApplication(null);
+      }
+      
+      // Hide delete confirmation
+      setShowDeleteConfirm(null);
+    } catch (err) {
+      toast.error("Failed to delete application");
+    } finally {
+      setDeletingApplication(null);
     }
   };
 
@@ -289,6 +322,14 @@ export default function ApplicationsPage() {
                       Start Review
                     </Button>
                   )}
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => setShowDeleteConfirm(application.id)}
+                    disabled={deletingApplication === application.id}
+                  >
+                    {deletingApplication === application.id ? "Deleting..." : "Delete"}
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -444,8 +485,45 @@ export default function ApplicationsPage() {
                     >
                       Cancel
                     </Button>
+                    <Button
+                      variant="destructive"
+                      onClick={() => setShowDeleteConfirm(selectedApplication.id)}
+                      disabled={deletingApplication === selectedApplication.id}
+                    >
+                      {deletingApplication === selectedApplication.id ? "Deleting..." : "Delete Application"}
+                    </Button>
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <div className="text-center">
+              <h3 className="text-lg font-medium text-oma-cocoa mb-4">Delete Application</h3>
+              <p className="text-sm text-oma-cocoa mb-6">
+                Are you sure you want to delete this application? This action cannot be undone and will permanently remove the application from the database.
+              </p>
+              <div className="flex gap-3 justify-center">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowDeleteConfirm(null)}
+                  disabled={deletingApplication === showDeleteConfirm}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => deleteApplication(showDeleteConfirm)}
+                  disabled={deletingApplication === showDeleteConfirm}
+                >
+                  {deletingApplication === showDeleteConfirm ? "Deleting..." : "Delete Permanently"}
+                </Button>
               </div>
             </div>
           </div>

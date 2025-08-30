@@ -89,3 +89,73 @@ export async function PUT(
     );
   }
 }
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const { id } = params;
+    console.log(`🗑️ Deleting application ${id}`);
+
+    const supabase = await getAdminClient();
+    
+    if (!supabase) {
+      console.error("❌ Failed to get admin client");
+      return NextResponse.json(
+        { error: "Internal server error" },
+        { status: 500 }
+      );
+    }
+
+    // First, check if the application exists
+    const { data: existingApplication, error: fetchError } = await supabase
+      .from("designer_applications")
+      .select("id, brand_name, designer_name")
+      .eq("id", id)
+      .single();
+
+    if (fetchError || !existingApplication) {
+      console.error("❌ Application not found:", id, fetchError);
+      return NextResponse.json(
+        { error: "Application not found" },
+        { status: 404 }
+      );
+    }
+
+    console.log(`🗑️ Found application to delete: ${existingApplication.brand_name} by ${existingApplication.designer_name}`);
+
+    // Delete the application
+    const { error: deleteError } = await supabase
+      .from("designer_applications")
+      .delete()
+      .eq("id", id);
+
+    if (deleteError) {
+      console.error("❌ Error deleting application:", deleteError);
+      return NextResponse.json(
+        { error: "Failed to delete application" },
+        { status: 500 }
+      );
+    }
+
+    console.log(`✅ Application ${id} deleted successfully`);
+
+    return NextResponse.json({
+      success: true,
+      message: "Application deleted successfully",
+      deletedApplication: {
+        id,
+        brand_name: existingApplication.brand_name,
+        designer_name: existingApplication.designer_name
+      }
+    });
+
+  } catch (error) {
+    console.error("💥 Error in application delete API:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
