@@ -352,8 +352,8 @@ export async function POST(request: NextRequest) {
     // Generate order number
     const orderNumber = `OMH-${order.id.slice(-8).toUpperCase()}`;
 
-    // Send email notification to eloka@satellitelabs.xyz
-    const emailRecipient = "eloka@satellitelabs.xyz";
+    // Send email notification to admin
+    const adminEmailRecipient = "eloka@satellitelabs.xyz";
 
     // Try to send email if Resend is configured
     let emailSent = false;
@@ -362,9 +362,10 @@ export async function POST(request: NextRequest) {
         const { Resend } = await import("resend");
         const resend = new Resend(process.env.RESEND_API_KEY);
 
+        // Send email to admin
         await resend.emails.send({
           from: "OmaHub <info@oma-hub.com>",
-          to: [emailRecipient],
+          to: [adminEmailRecipient],
           subject: `New Custom Order Request - ${product.title}`,
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -415,8 +416,75 @@ export async function POST(request: NextRequest) {
           `,
         });
 
+        // Send email to brand's contact email if available
+        if (brand.contact_email && brand.contact_email !== adminEmailRecipient) {
+          try {
+            await resend.emails.send({
+              from: "OmaHub <info@oma-hub.com>",
+              to: [brand.contact_email],
+              subject: `New Custom Order Request - ${product.title}`,
+              html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                  <h2 style="color: #8B4513;">New Custom Order Request</h2>
+                  <p style="color: #666; font-size: 16px;">You have received a new custom order request through OmaHub!</p>
+                  
+                  <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                    <h3>Order Details</h3>
+                    <p><strong>Order Number:</strong> ${orderNumber}</p>
+                    <p><strong>Product:</strong> ${product.title}</p>
+                    <p><strong>Brand:</strong> ${brand.name}</p>
+                    <p><strong>Price:</strong> ${extractCurrencyFromPriceRange(brand.price_range)} ${total_amount || product.sale_price || product.price}</p>
+                    <p><strong>Order Date:</strong> ${new Date().toLocaleDateString()}</p>
+                  </div>
+
+                  <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                    <h3>Customer Information</h3>
+                    <p><strong>Name:</strong> ${delivery_address.full_name}</p>
+                    <p><strong>Email:</strong> ${delivery_address.email}</p>
+                    <p><strong>Phone:</strong> ${delivery_address.phone}</p>
+                    <p><strong>Address:</strong> ${delivery_address.address_line_1}, ${delivery_address.city}, ${delivery_address.state} ${delivery_address.postal_code}, ${delivery_address.country}</p>
+                  </div>
+
+                  ${
+                    customer_notes
+                      ? `
+                  <div style="background-color: #fff3cd; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                    <h3>Customer Notes</h3>
+                    <p>${customer_notes}</p>
+                  </div>
+                  `
+                      : ""
+                  }
+
+                  <div style="background-color: #e8f4f8; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                    <h3>Next Steps</h3>
+                    <ul>
+                      <li>Contact the customer within 24-48 hours to discuss measurements and details</li>
+                      <li>Confirm the order and pricing</li>
+                      <li>Arrange for measurements if needed</li>
+                      <li>Provide estimated completion timeline</li>
+                    </ul>
+                  </div>
+
+                  <p style="color: #666; font-size: 14px; margin-top: 30px;">
+                    This order was submitted through OmaHub. Please respond to the customer directly at ${delivery_address.email}.
+                  </p>
+                  
+                  <p style="color: #666; font-size: 14px; margin-top: 20px;">
+                    <strong>Important:</strong> You can also view and manage this order in your OmaHub Studio dashboard.
+                  </p>
+                </div>
+              `,
+            });
+            console.log("Brand notification email sent successfully to:", brand.contact_email);
+          } catch (brandEmailError) {
+            console.error("Error sending brand notification email:", brandEmailError);
+            // Don't fail the order creation if brand email fails
+          }
+        }
+
         emailSent = true;
-        console.log("Order notification email sent successfully");
+        console.log("Order notification emails sent successfully");
       } catch (emailError) {
         console.error("Error sending email:", emailError);
         // Don't fail the order creation if email fails

@@ -42,6 +42,53 @@ export async function POST(request: NextRequest) {
 
     console.log('✅ Lead created successfully:', lead.id);
 
+    // Send email notification to brand's contact email
+    try {
+      // Get brand details to find contact email
+      const { data: brand, error: brandError } = await supabase
+        .from('brands')
+        .select('name, contact_email')
+        .eq('id', brandId)
+        .single();
+
+      if (!brandError && brand?.contact_email) {
+        // Import and use the email service
+        const { sendContactEmail } = await import('@/lib/services/emailService');
+        
+        const emailResult = await sendContactEmail({
+          name: name,
+          email: email,
+          subject: `New Lead - ${name} is interested in your designs`,
+          message: `You have a new lead from ${name} (${email}) who is interested in your designs.
+
+Lead Details:
+- Name: ${name}
+- Email: ${email}
+- Phone: ${phone || 'Not provided'}
+- Source: ${source}
+- Type: ${leadType}
+- Notes: ${notes || 'None'}
+
+This lead has been saved to your Studio leads dashboard. You can view and manage all leads at: https://oma-hub.com/studio/leads
+
+Best regards,
+OmaHub Team`,
+          to: brand.contact_email,
+        });
+
+        if (emailResult.success) {
+          console.log('✅ Lead notification email sent to brand:', brand.contact_email);
+        } else {
+          console.error('❌ Failed to send lead notification email:', emailResult.error);
+        }
+      } else {
+        console.log('⚠️ Brand contact email not found, skipping email notification');
+      }
+    } catch (emailError) {
+      console.error('❌ Error sending lead notification email:', emailError);
+      // Don't fail lead creation if email fails
+    }
+
     return NextResponse.json({ 
       success: true, 
       lead,
