@@ -32,7 +32,7 @@ export async function sendContactEmail(formData: {
     }
 
     // Determine recipient - use provided 'to' email or fallback to admin
-    const recipientEmail = formData.to || "eloka@satellitelabs.xyz";
+    const recipientEmail = formData.to || "info@oma-hub.com";
     
     console.log("📧 Sending contact email via Resend to:", recipientEmail);
     const { data, error } = await resend.emails.send({

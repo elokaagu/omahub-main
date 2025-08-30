@@ -353,7 +353,7 @@ export async function POST(request: NextRequest) {
     const orderNumber = `OMH-${order.id.slice(-8).toUpperCase()}`;
 
     // Send email notification to admin
-    const adminEmailRecipient = "eloka@satellitelabs.xyz";
+    const adminEmailRecipient = "info@oma-hub.com";
 
     // Try to send email if Resend is configured
     let emailSent = false;
