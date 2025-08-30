@@ -353,21 +353,7 @@ export default function StudioLeadsPage() {
       )}
 
       {/* Data Status */}
-      {leads.length === 0 && !loading ? (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="h-5 w-5 bg-yellow-600 rounded-full flex items-center justify-center">
-              <span className="text-white text-xs">!</span>
-            </div>
-            <h4 className="font-medium text-yellow-800">No Data Available</h4>
-          </div>
-          <p className="text-yellow-700">
-            The dashboard is showing zeros because there are no leads in the system yet. 
-            This is normal for a new installation. Data will appear here once leads are created 
-            through contact forms, brand requests, or other lead generation methods.
-          </p>
-        </div>
-      ) : null}
+      {/* Removed "No Data Available" warning banner */}
 
       {/* Filters */}
       <Card className="mb-6">
