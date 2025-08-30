@@ -9,17 +9,18 @@ import { SectionHeader } from "@/components/ui/section-header";
 import { toast } from "sonner";
 
 export default function ContactPage() {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSubscribing, setIsSubscribing] = useState(false);
-  const [email, setEmail] = useState("");
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     subject: "",
     message: "",
   });
-
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubscribing, setIsSubscribing] = useState(false);
+  const [email, setEmail] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -159,6 +160,8 @@ export default function ContactPage() {
         },
         body: JSON.stringify({
           email: email.trim(),
+          firstName: firstName.trim() || null,
+          lastName: lastName.trim() || null,
           source: "contact_form"
         }),
       });
@@ -182,6 +185,8 @@ export default function ContactPage() {
       
       toast.success(result.message || "Successfully subscribed to our newsletter!");
       setEmail("");
+      setFirstName("");
+      setLastName("");
       
     } catch (error) {
       console.error('💥 Newsletter subscription error:', error);
@@ -377,6 +382,22 @@ export default function ContactPage() {
               </p>
 
               <form onSubmit={handleSubscribe} className="space-y-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <Input
+                    type="text"
+                    placeholder="First name"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    className="bg-white border-oma-gold/30 focus-visible:ring-oma-plum"
+                  />
+                  <Input
+                    type="text"
+                    placeholder="Last name"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    className="bg-white border-oma-gold/30 focus-visible:ring-oma-plum"
+                  />
+                </div>
                 <Input
                   type="email"
                   placeholder="Enter your email"

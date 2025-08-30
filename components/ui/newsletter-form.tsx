@@ -10,6 +10,8 @@ interface NewsletterFormProps {
 
 export function NewsletterForm({ location, className }: NewsletterFormProps) {
   const [email, setEmail] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const { toast } = useToast();
@@ -22,15 +24,42 @@ export function NewsletterForm({ location, className }: NewsletterFormProps) {
     setLoading(true);
 
     try {
-      // In production, this would be an API call to your newsletter service
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      setSuccess(true);
-      toast({
-        title: "Successfully subscribed",
-        description: "Thank you for joining our fashion community.",
+      const response = await fetch("/api/newsletter/subscribe", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          firstName: firstName.trim() || null,
+          lastName: lastName.trim() || null,
+          source: "website",
+        }),
       });
-      setEmail("");
-    } catch {
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setSuccess(true);
+        toast({
+          title: "Successfully subscribed",
+          description: data.message || "Thank you for joining our fashion community.",
+        });
+        setEmail("");
+        setFirstName("");
+        setLastName("");
+      } else {
+        if (data.alreadySubscribed) {
+          toast({
+            title: "Already subscribed",
+            description: "This email is already subscribed to our newsletter.",
+          });
+        } else {
+          throw new Error(data.error || "Failed to subscribe");
+        }
+      }
+    } catch (error) {
+      console.error("Newsletter subscription error:", error);
       toast({
         title: "Something went wrong",
         description: "Please try again later.",
@@ -110,30 +139,48 @@ export function NewsletterForm({ location, className }: NewsletterFormProps) {
               </div>
 
               <form onSubmit={handleSubmit} className="max-w-md mx-auto">
-                <div className="flex flex-col sm:flex-row gap-3">
+                <div className="space-y-3 mb-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <Input
+                      type="text"
+                      placeholder="First name"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      className="bg-white border-oma-gold/20 focus-visible:ring-oma-plum"
+                    />
+                    <Input
+                      type="text"
+                      placeholder="Last name"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      className="bg-white border-oma-gold/20 focus-visible:ring-oma-plum"
+                    />
+                  </div>
                   <Input
                     type="email"
                     placeholder="Your email address"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    className="bg-white border-oma-gold/20 focus-visible:ring-oma-plum flex-grow"
+                    className="bg-white border-oma-gold/20 focus-visible:ring-oma-plum"
                   />
-                  <Button
-                    type="submit"
-                    disabled={loading}
-                    className="bg-[#391c25] hover:bg-[#391c25]/90 text-white"
-                  >
-                    {loading ? (
-                      <span className="flex items-center gap-2">
-                        <span className="h-4 w-4 border-2 border-t-transparent border-white/80 animate-spin rounded-full"></span>
-                        <span>Subscribing...</span>
-                      </span>
-                    ) : (
-                      "Subscribe"
-                    )}
-                  </Button>
                 </div>
+                
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-[#391c25] hover:bg-[#391c25]/90 text-white"
+                >
+                  {loading ? (
+                    <span className="flex items-center gap-2">
+                      <span className="h-4 w-4 border-2 border-t-transparent border-white/80 animate-spin rounded-full"></span>
+                      <span>Subscribing...</span>
+                    </span>
+                  ) : (
+                    "Subscribe"
+                  )}
+                </Button>
+                
                 <p className="text-xs text-oma-cocoa/70 mt-3">
                   Join our community to discover new designers and collections.
                   No spam&mdash;just style.
