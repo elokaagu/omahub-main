@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -154,6 +155,48 @@ export default function StudioLeadsPage() {
     sortOrder,
   ]);
 
+  const createTestLead = async () => {
+    try {
+      // Get the first available brand for testing
+      const supabase = createClient();
+      const { data: brands } = await supabase
+        .from("brands")
+        .select("id, name")
+        .limit(1);
+
+      if (!brands || brands.length === 0) {
+        toast.error("No brands available to create test leads");
+        return;
+      }
+
+      const testBrand = brands[0];
+
+      const response = await fetch("/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          brandId: testBrand.id,
+          name: "Test Customer",
+          email: "test@example.com",
+          phone: "+1234567890",
+          source: "website",
+          leadType: "inquiry",
+          notes: "This is a test lead to demonstrate the system",
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to create test lead");
+      }
+
+      toast.success("Test lead created successfully!");
+      loadLeads(); // Refresh the leads list
+    } catch (error) {
+      console.error("Error creating test lead:", error);
+      toast.error("Failed to create test lead");
+    }
+  };
+
   const loadLeads = async () => {
     try {
       setLoading(true);
@@ -171,7 +214,8 @@ export default function StudioLeadsPage() {
         setIsSuperAdmin(false);
       }
 
-      const response = await fetch("/api/admin/leads", {
+      // Use the new leads API endpoint
+      const response = await fetch("/api/leads", {
         credentials: "include",
         headers: {
           "Cache-Control": "no-cache",
@@ -185,15 +229,18 @@ export default function StudioLeadsPage() {
       }
 
       const data = await response.json();
+      const fetchedLeads = data.leads || [];
 
-      let filteredLeads = data.leads || [];
+      // Apply additional filtering if needed for brand admins
+      let filteredLeads = fetchedLeads;
       if (profile?.role === "brand_admin" && profile.owned_brands?.length > 0) {
-        filteredLeads = filteredLeads.filter((lead: Lead) =>
+        filteredLeads = fetchedLeads.filter((lead: Lead) =>
           profile.owned_brands!.includes(lead.brand_id)
         );
       }
 
       setLeads(filteredLeads);
+      console.log(`✅ Loaded ${filteredLeads.length} leads from API`);
     } catch (error) {
       console.error("Error loading leads:", error);
       toast.error(
@@ -714,26 +761,58 @@ export default function StudioLeadsPage() {
         </div>
 
         {/* Leads List */}
-        {filteredLeads.length === 0 ? (
+        {filteredLeads.length === 0 && (
           <Card>
-            <CardContent className="pt-6">
-              <div className="text-center py-8">
-                <h3 className="text-lg font-canela text-oma-plum mb-2">
-                  {leads.length === 0
-                    ? "No leads yet"
-                    : "No leads match your filters"}
-                </h3>
-                <p className="text-oma-cocoa">
-                  {leads.length === 0
-                    ? isSuperAdmin
+            <CardContent className="text-center py-8">
+              {leads.length === 0 ? (
+                // No leads at all - show setup state
+                <div>
+                  <h3 className="text-lg font-canela text-oma-plum mb-2">
+                    {isSuperAdmin
+                      ? "No leads on the platform yet"
+                      : "No leads yet"}
+                  </h3>
+                  <p className="text-oma-cocoa mb-4">
+                    {isSuperAdmin
                       ? "When customers contact brands on the platform, leads will appear here."
-                      : "When customers contact you through your brand pages, leads will appear here."
-                    : "Try adjusting your search and filter criteria."}
-                </p>
-              </div>
+                      : "When customers contact you through your brand pages, leads will appear here."}
+                  </p>
+                  <div className="space-y-2">
+                    <Button
+                      onClick={createTestLead}
+                      className="bg-oma-plum hover:bg-oma-plum/90"
+                    >
+                      Create Test Lead
+                    </Button>
+                    {isSuperAdmin && (
+                      <p className="text-sm text-oma-cocoa/70">
+                        Test leads help demonstrate the system to brand owners
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                // Has leads but none match filters
+                <div>
+                  <h3 className="text-lg font-canela text-oma-plum mb-2">
+                    No leads match your filters
+                  </h3>
+                  <p className="text-oma-cocoa mb-4">
+                    Try adjusting your search and filter criteria.
+                  </p>
+                  <Button
+                    onClick={createTestLead}
+                    className="bg-oma-plum hover:bg-oma-plum/90"
+                  >
+                    Create Test Lead
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
-        ) : (
+        )}
+
+        {filteredLeads.length > 0 && (
           <div className="space-y-4">
             {filteredLeads.map((lead) => (
               <Card key={lead.id} className="transition-all duration-200">
