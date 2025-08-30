@@ -606,7 +606,7 @@ export function TailoredOrderModal({
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="phone">Phone Number *</Label>
+                      <Label htmlFor="phone">Phone Number</Label>
                       <Input
                         id="phone"
                         value={deliveryAddress.phone}
@@ -631,7 +631,7 @@ export function TailoredOrderModal({
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="address_line_1">Address *</Label>
+                      <Label htmlFor="address_line_1">Address</Label>
                       <Input
                         id="address_line_1"
                         value={deliveryAddress.address_line_1}
@@ -643,7 +643,7 @@ export function TailoredOrderModal({
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="city">City *</Label>
+                      <Label htmlFor="city">City</Label>
                       <Input
                         id="city"
                         value={deliveryAddress.city}
@@ -655,7 +655,7 @@ export function TailoredOrderModal({
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="state">State/Province *</Label>
+                      <Label htmlFor="state">State/Province</Label>
                       <Input
                         id="state"
                         value={deliveryAddress.state}
@@ -667,7 +667,7 @@ export function TailoredOrderModal({
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="postal_code">Postal Code *</Label>
+                      <Label htmlFor="postal_code">Postal Code</Label>
                       <Input
                         id="postal_code"
                         value={deliveryAddress.postal_code}
@@ -679,7 +679,7 @@ export function TailoredOrderModal({
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="country">Country *</Label>
+                      <Label htmlFor="country">Country</Label>
                       <Input
                         id="country"
                         value={deliveryAddress.country}
