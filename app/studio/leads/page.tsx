@@ -109,7 +109,7 @@ export default function StudioLeadsPage() {
     conversionRate: 0,
     totalBookings: 0,
     thisMonthLeads: 0,
-    thisMonthBookings: 0
+    thisMonthBookings: 0,
   });
   const [updatingLeadId, setUpdatingLeadId] = useState<string | null>(null);
 
@@ -171,22 +171,35 @@ export default function StudioLeadsPage() {
 
     const stats = {
       totalLeads: leadsData.length,
-      qualifiedLeads: leadsData.filter(l => l.status === "qualified").length,
-      convertedLeads: leadsData.filter(l => l.status === "converted").length,
-      activeLeads: leadsData.filter(l => ["new", "contacted", "qualified"].includes(l.status)).length,
-      conversionRate: leadsData.length > 0 ? 
-        Math.round((leadsData.filter(l => l.status === "converted").length / leadsData.length) * 100) : 0,
-      totalBookings: leadsData.filter(l => l.status === "converted").length, // Assuming converted leads are bookings
-      thisMonthLeads: leadsData.filter(l => {
+      qualifiedLeads: leadsData.filter((l) => l.status === "qualified").length,
+      convertedLeads: leadsData.filter((l) => l.status === "converted").length,
+      activeLeads: leadsData.filter((l) =>
+        ["new", "contacted", "qualified"].includes(l.status)
+      ).length,
+      conversionRate:
+        leadsData.length > 0
+          ? Math.round(
+              (leadsData.filter((l) => l.status === "converted").length /
+                leadsData.length) *
+                100
+            )
+          : 0,
+      totalBookings: leadsData.filter((l) => l.status === "converted").length, // Assuming converted leads are bookings
+      thisMonthLeads: leadsData.filter((l) => {
         const leadDate = new Date(l.created_at);
-        return leadDate.getMonth() === thisMonth && leadDate.getFullYear() === thisYear;
+        return (
+          leadDate.getMonth() === thisMonth &&
+          leadDate.getFullYear() === thisYear
+        );
       }).length,
-      thisMonthBookings: leadsData.filter(l => {
+      thisMonthBookings: leadsData.filter((l) => {
         const leadDate = new Date(l.created_at);
-        return l.status === "converted" && 
-               leadDate.getMonth() === thisMonth && 
-               leadDate.getFullYear() === thisYear;
-      }).length
+        return (
+          l.status === "converted" &&
+          leadDate.getMonth() === thisMonth &&
+          leadDate.getFullYear() === thisYear
+        );
+      }).length,
     };
 
     setLeadStats(stats);
@@ -783,7 +796,9 @@ export default function StudioLeadsPage() {
                   {leadStats.totalLeads}
                 </div>
                 <p className="text-sm text-oma-cocoa">Total Leads</p>
-                <p className="text-xs text-oma-cocoa/60">This month: {leadStats.thisMonthLeads}</p>
+                <p className="text-xs text-oma-cocoa/60">
+                  This month: {leadStats.thisMonthLeads}
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -807,7 +822,9 @@ export default function StudioLeadsPage() {
                   {leadStats.conversionRate}%
                 </div>
                 <p className="text-sm text-oma-cocoa">Conversion Rate</p>
-                <p className="text-xs text-oma-cocoa/60">Converted: {leadStats.convertedLeads}</p>
+                <p className="text-xs text-oma-cocoa/60">
+                  Converted: {leadStats.convertedLeads}
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -819,7 +836,9 @@ export default function StudioLeadsPage() {
                   {leadStats.totalBookings}
                 </div>
                 <p className="text-sm text-oma-cocoa">Total Bookings</p>
-                <p className="text-xs text-oma-cocoa/60">This month: {leadStats.thisMonthBookings}</p>
+                <p className="text-xs text-oma-cocoa/60">
+                  This month: {leadStats.thisMonthBookings}
+                </p>
               </div>
             </CardContent>
           </Card>

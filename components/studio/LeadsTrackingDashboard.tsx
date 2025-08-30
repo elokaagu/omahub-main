@@ -204,7 +204,7 @@ export default function LeadsTrackingDashboard({
       setLeadsLoading(true);
       setLeadsError(null);
 
-      const response = await fetch("/api/admin/leads?action=list");
+      const response = await fetch("/api/leads?action=list");
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || "Failed to fetch leads");
@@ -235,7 +235,7 @@ export default function LeadsTrackingDashboard({
       setAnalyticsLoading(true);
       setAnalyticsError(null);
 
-      const response = await fetch("/api/admin/leads?action=analytics");
+      const response = await fetch("/api/leads?action=analytics");
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || "Failed to fetch analytics");
@@ -384,7 +384,7 @@ export default function LeadsTrackingDashboard({
   ) => {
     setUpdatingLead(leadId);
     try {
-      const response = await fetch("/api/admin/leads", {
+      const response = await fetch("/api/leads", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

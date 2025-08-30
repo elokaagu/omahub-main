@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS public.inquiries (
     subject TEXT NOT NULL,
     message TEXT NOT NULL,
     inquiry_type TEXT DEFAULT 'customer_inquiry' CHECK (inquiry_type IN ('customer_inquiry', 'quote_request', 'booking_intent', 'consultation', 'product_interest', 'partnership', 'other')),
-    priority TEXT DEFAULT 'normal' CHECK (priority IN ('low', 'normal', 'high', 'urgent')),
+    priority TEXT DEFAULT 'normal' CHECK (priority IN ('low', ' normal', 'high', 'urgent')),
     status TEXT DEFAULT 'new' CHECK (status IN ('new', 'read', 'replied', 'closed', 'archived')),
     source TEXT DEFAULT 'website_contact_form' CHECK (source IN ('website_contact_form', 'brand_contact_form', 'email', 'phone', 'social_media', 'referral', 'other')),
     estimated_budget DECIMAL(10,2),

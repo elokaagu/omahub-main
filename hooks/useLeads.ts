@@ -218,7 +218,7 @@ export function useLeads(filters?: {
       if (filters?.limit) params.append("limit", filters.limit.toString());
       if (filters?.offset) params.append("offset", filters.offset.toString());
 
-      const response = await fetch(`/api/admin/leads?${params.toString()}`, {
+      const response = await fetch(`/api/leads?${params.toString()}`, {
         credentials: "include",
         signal: abortController.signal,
         headers: {
@@ -341,7 +341,7 @@ export function useBookings(filters?: {
       if (filters?.limit) params.append("limit", filters.limit.toString());
       if (filters?.offset) params.append("offset", filters.offset.toString());
 
-      const response = await fetch(`/api/admin/leads?${params.toString()}`, {
+      const response = await fetch(`/api/leads?${params.toString()}`, {
         credentials: "include",
         signal: abortController.signal,
       });
@@ -463,7 +463,7 @@ export function useLeadsAnalytics() {
 
       console.log("📊 useLeadsAnalytics: Fetching analytics data...");
 
-      const response = await fetch("/api/admin/leads?action=analytics", {
+      const response = await fetch("/api/leads?action=analytics", {
         credentials: "include",
         signal: abortController.signal,
         headers: {
@@ -576,7 +576,7 @@ export function useCommissionStructure() {
       setLoading(true);
       setError(null);
 
-      const response = await fetch("/api/admin/leads?action=commission", {
+      const response = await fetch("/api/leads?action=commission", {
         credentials: "include",
         signal: abortController.signal,
       });
@@ -643,16 +643,13 @@ export function useLeadMutations() {
     try {
       setLoading(true);
 
-      const response = await fetch("/api/admin/leads", {
+      const response = await fetch("/api/leads", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         credentials: "include",
-        body: JSON.stringify({
-          type: "lead",
-          data: leadData,
-        }),
+        body: JSON.stringify(leadData),
       });
 
       if (!response.ok) {
@@ -676,16 +673,15 @@ export function useLeadMutations() {
     try {
       setLoading(true);
 
-      const response = await fetch("/api/admin/leads", {
+      const response = await fetch("/api/leads", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
         credentials: "include",
         body: JSON.stringify({
-          type: "lead",
           id,
-          data: updates,
+          ...updates,
         }),
       });
 
@@ -710,9 +706,10 @@ export function useLeadMutations() {
     try {
       setLoading(true);
 
-      const response = await fetch(`/api/admin/leads?type=lead&id=${id}`, {
+      const response = await fetch(`/api/leads`, {
         method: "DELETE",
         credentials: "include",
+        body: JSON.stringify({ id }),
       });
 
       if (!response.ok) {
@@ -736,16 +733,13 @@ export function useLeadMutations() {
     try {
       setLoading(true);
 
-      const response = await fetch("/api/admin/leads", {
+      const response = await fetch("/api/leads", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         credentials: "include",
-        body: JSON.stringify({
-          type: "interaction",
-          data: interactionData,
-        }),
+        body: JSON.stringify(interactionData),
       });
 
       if (!response.ok) {
@@ -789,16 +783,13 @@ export function useBookingMutations() {
     try {
       setLoading(true);
 
-      const response = await fetch("/api/admin/leads", {
+      const response = await fetch("/api/leads", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         credentials: "include",
-        body: JSON.stringify({
-          type: "booking",
-          data: bookingData,
-        }),
+        body: JSON.stringify(bookingData),
       });
 
       if (!response.ok) {
@@ -824,16 +815,15 @@ export function useBookingMutations() {
     try {
       setLoading(true);
 
-      const response = await fetch("/api/admin/leads", {
+      const response = await fetch("/api/leads", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
         credentials: "include",
         body: JSON.stringify({
-          type: "booking",
           id,
-          data: updates,
+          ...updates,
         }),
       });
 
@@ -860,9 +850,10 @@ export function useBookingMutations() {
     try {
       setLoading(true);
 
-      const response = await fetch(`/api/admin/leads?type=booking&id=${id}`, {
+      const response = await fetch(`/api/leads`, {
         method: "DELETE",
         credentials: "include",
+        body: JSON.stringify({ id }),
       });
 
       if (!response.ok) {
@@ -901,16 +892,15 @@ export function useCommissionMutations() {
     try {
       setLoading(true);
 
-      const response = await fetch("/api/admin/leads", {
+      const response = await fetch("/api/leads", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
         credentials: "include",
         body: JSON.stringify({
-          type: "commission",
           id,
-          data: updates,
+          ...updates,
         }),
       });
 
