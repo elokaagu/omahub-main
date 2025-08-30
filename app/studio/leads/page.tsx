@@ -324,8 +324,6 @@ export default function StudioLeadsPage() {
     }
   };
 
-
-
   const filterAndSortLeads = () => {
     let filtered = [...leads];
 
@@ -606,7 +604,7 @@ export default function StudioLeadsPage() {
       console.log("✅ Lead deleted successfully:", result);
 
       // Wait a moment for backend to complete deletion
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       // Refresh leads from backend to ensure sync
       await loadLeads();

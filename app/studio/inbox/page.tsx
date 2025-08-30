@@ -215,6 +215,8 @@ export default function StudioInboxPage() {
       const { inquiries: inquiriesData, totalCount } = await response.json();
 
       console.log(`📧 Loaded ${inquiriesData?.length || 0} inquiries from API`);
+      console.log(`📧 API Response:`, { inquiriesData, totalCount });
+      console.log(`📧 Current user:`, user?.email, `Role:`, user?.role);
 
       // Filter out any inquiries that were deleted in this session
       const filteredInquiries = (inquiriesData || []).filter(
@@ -225,10 +227,8 @@ export default function StudioInboxPage() {
         `📧 Filtered to ${filteredInquiries.length} inquiries (${deletedInquiryIds.current.size} deleted in session)`
       );
 
-      // Only update state if we have new data or if this is the initial load
-      if (filteredInquiries.length > 0 || inquiries.length === 0) {
-        setInquiries(filteredInquiries);
-      }
+      // Always update state with the latest data
+      setInquiries(filteredInquiries);
 
       hasLoadedInquiries.current = true;
     } catch (error) {
