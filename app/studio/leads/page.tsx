@@ -203,7 +203,7 @@ export default function StudioLeadsPage() {
     };
 
     setLeadStats(stats);
-  }, []);
+  }, [setLeadStats]);
 
   // Update stats whenever leads change
   useEffect(() => {
@@ -451,20 +451,38 @@ export default function StudioLeadsPage() {
       };
 
       // Use API endpoint for consistent handling
+      const requestBody = {
+        id: leadId,
+        data: updateData,
+      };
+      
+      console.log("🔍 Sending lead update request:", {
+        url: "/api/leads",
+        method: "PUT",
+        body: requestBody,
+        leadId,
+        newStatus
+      });
+      
       const response = await fetch("/api/leads", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
         credentials: "include",
-        body: JSON.stringify({
-          id: leadId,
-          data: updateData,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
+        console.error("❌ Lead update failed:", {
+          status: response.status,
+          statusText: response.statusText,
+          url: response.url
+        });
+        
         const errorData = await response.json();
+        console.error("❌ Error response data:", errorData);
+        
         throw new Error(errorData.error || "Failed to update lead status");
       }
 
