@@ -276,6 +276,7 @@ export default function StudioLeadsPage() {
         body: requestBody,
         leadId,
         newStatus,
+        bodyStringified: JSON.stringify(requestBody),
       });
 
       const response = await fetch("/api/leads", {

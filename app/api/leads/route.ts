@@ -460,13 +460,27 @@ async function handleListRequest(supabase: any, profile: any, filters: any) {
 
 export async function PUT(request: NextRequest) {
   try {
+    console.log("📝 PUT request received for leads API");
+    
+    // Log the raw request details
+    console.log("🔍 Request details:", {
+      method: request.method,
+      url: request.url,
+      headers: Object.fromEntries(request.headers.entries()),
+    });
+
     const body = await request.json();
+    console.log("📦 Request body received:", body);
+    
     const { id, data } = body;
+    console.log("🔍 Extracted fields:", { id, data });
 
     if (!id || !data) {
+      console.error("❌ Missing required fields:", { id: !!id, data: !!data, body });
       return NextResponse.json(
         {
           error: "Missing required fields: id and data are required",
+          received: { id: !!id, data: !!data, bodyKeys: Object.keys(body || {}) },
         },
         { status: 400 }
       );
