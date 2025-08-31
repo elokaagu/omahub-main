@@ -123,6 +123,19 @@ export default function StudioLeadsPage() {
     }
   }, [user, authLoading]);
 
+  // Auto-refresh data every 30 seconds to keep it fresh
+  useEffect(() => {
+    if (!user || authLoading) return;
+
+    const interval = setInterval(() => {
+      console.log("🔄 Auto-refreshing leads data...");
+      loadLeads();
+      loadLeadStats();
+    }, 30000); // Refresh every 30 seconds
+
+    return () => clearInterval(interval);
+  }, [user, authLoading]);
+
   // Filter and sort leads when filters change
   useEffect(() => {
     filterAndSortLeads();
@@ -140,13 +153,17 @@ export default function StudioLeadsPage() {
     try {
       setLoading(true);
 
-      const response = await fetch("/api/leads?action=list&page=1&limit=100", {
-        credentials: "include",
-        headers: {
-          "Cache-Control": "no-cache",
-          Pragma: "no-cache",
-        },
-      });
+      const response = await fetch(
+        `/api/leads?action=list&page=1&limit=100&_t=${Date.now()}`,
+        {
+          credentials: "include",
+          headers: {
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            Pragma: "no-cache",
+            Expires: "0",
+          },
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -165,8 +182,13 @@ export default function StudioLeadsPage() {
 
   const loadLeadStats = async () => {
     try {
-      const response = await fetch("/api/leads?action=analytics", {
+      const response = await fetch(`/api/leads?action=analytics&_t=${Date.now()}`, {
         credentials: "include",
+        headers: {
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          Pragma: "no-cache",
+          Expires: "0",
+        },
       });
 
       if (response.ok) {

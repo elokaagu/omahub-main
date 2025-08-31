@@ -120,8 +120,13 @@ export default function StudioInboxPage() {
       setLoading(true);
       console.log("📧 Loading inbox for user:", user.email);
 
-      const response = await fetch("/api/studio/inbox", {
+      const response = await fetch(`/api/studio/inbox?_t=${Date.now()}`, {
         credentials: "include",
+        headers: {
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          Pragma: "no-cache",
+          Expires: "0",
+        },
       });
 
       if (!response.ok) {
@@ -146,6 +151,18 @@ export default function StudioInboxPage() {
     if (user && !authLoading) {
       loadInbox();
     }
+  }, [user, authLoading]);
+
+  // Auto-refresh inbox every 30 seconds to keep it fresh
+  useEffect(() => {
+    if (!user || authLoading) return;
+
+    const interval = setInterval(() => {
+      console.log("🔄 Auto-refreshing inbox data...");
+      loadInbox();
+    }, 30000); // Refresh every 30 seconds
+
+    return () => clearInterval(interval);
   }, [user, authLoading]);
 
   // Mark inquiry as read
