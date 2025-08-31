@@ -344,6 +344,8 @@ export default function StudioLeadsPage() {
 
     setIsDeleting(true);
     try {
+      console.log("🗑️ Deleting lead:", lead.id, lead.customer_name);
+
       const response = await fetch(`/api/leads?id=${lead.id}`, {
         method: "DELETE",
         credentials: "include",
@@ -354,25 +356,37 @@ export default function StudioLeadsPage() {
         throw new Error(errorData.error || "Failed to delete lead");
       }
 
+      console.log("✅ Lead deleted from database successfully");
+
       // Remove from local state immediately
-      setLeads((prev) => prev.filter((l) => l.id !== lead.id));
+      setLeads((prev) => {
+        const newLeads = prev.filter((l) => l.id !== lead.id);
+        console.log(
+          `🔄 Updated local state: ${prev.length} → ${newLeads.length} leads`
+        );
+        return newLeads;
+      });
+
       setDeleteDialogOpen(false);
       setLeadToDelete(null);
 
       toast.success("Lead deleted successfully");
 
-      // Refresh data immediately to ensure sync
-      loadLeads();
-      loadLeadStats();
-
-      // Also trigger a custom event to notify other components
+      // Trigger custom event BEFORE refreshing data
+      console.log("📡 Dispatching leadDeleted event");
       window.dispatchEvent(
         new CustomEvent("leadDeleted", {
-          detail: { leadId: lead.id },
+          detail: { leadId: lead.id, leadName: lead.customer_name },
         })
       );
+
+      // Refresh data to ensure everything is in sync
+      console.log("🔄 Refreshing leads and stats");
+      await Promise.all([loadLeads(), loadLeadStats()]);
+
+      console.log("✅ Delete operation completed successfully");
     } catch (error) {
-      console.error("Error deleting lead:", error);
+      console.error("❌ Error deleting lead:", error);
       toast.error(
         error instanceof Error ? error.message : "Failed to delete lead"
       );

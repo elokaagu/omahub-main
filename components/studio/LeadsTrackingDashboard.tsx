@@ -192,15 +192,17 @@ export default function LeadsTrackingDashboard({
   const { updateLead } = useLeadMutations();
 
   // Determine user access level - only after authentication is complete
-  const isSuperAdmin = !authLoading && (
-    user?.role === "super_admin" || userRole === "super_admin"
-  );
-  const isBrandAdmin = !authLoading && (
-    user?.role === "brand_admin" || userRole === "brand_admin"
-  );
-  const effectiveOwnedBrands = !authLoading ? (
-    ownedBrandIds.length > 0 ? ownedBrandIds : user?.owned_brands || []
-  ) : [];
+  const isSuperAdmin =
+    !authLoading &&
+    (user?.role === "super_admin" || userRole === "super_admin");
+  const isBrandAdmin =
+    !authLoading &&
+    (user?.role === "brand_admin" || userRole === "brand_admin");
+  const effectiveOwnedBrands = !authLoading
+    ? ownedBrandIds.length > 0
+      ? ownedBrandIds
+      : user?.owned_brands || []
+    : [];
 
   const fetchLeads = async () => {
     try {
@@ -379,32 +381,62 @@ export default function LeadsTrackingDashboard({
     }
   }, [user, isBrandAdmin, effectiveOwnedBrands.length]);
 
+  // Fallback: Periodic refresh to ensure data stays in sync
+  useEffect(() => {
+    if (!user) return;
+
+    const interval = setInterval(() => {
+      console.log("🔄 Periodic refresh: updating dashboard data");
+      fetchLeads();
+      fetchAnalytics();
+      if (isSuperAdmin || (isBrandAdmin && effectiveOwnedBrands.length > 0)) {
+        fetchPlatformAnalytics();
+      }
+    }, 30000); // Refresh every 30 seconds as fallback
+
+    return () => clearInterval(interval);
+  }, [user, isSuperAdmin, isBrandAdmin, effectiveOwnedBrands.length]);
+
   // Listen for lead deletion and update events to refresh data in real-time
   useEffect(() => {
-    const handleLeadDeleted = () => {
-      console.log("🔄 Lead deleted event received, refreshing dashboard data");
+    const handleLeadDeleted = (event: any) => {
+      const { leadId, leadName } = event.detail || {};
+      console.log("🔄 Lead deleted event received:", { leadId, leadName });
+      console.log("🔄 Refreshing dashboard data...");
+      
+      // Refresh all data immediately
       fetchLeads();
       fetchAnalytics();
       if (isSuperAdmin || (isBrandAdmin && effectiveOwnedBrands.length > 0)) {
         fetchPlatformAnalytics();
       }
+      
+      console.log("✅ Dashboard data refreshed after lead deletion");
     };
 
-    const handleLeadUpdated = () => {
-      console.log("🔄 Lead updated event received, refreshing dashboard data");
+    const handleLeadUpdated = (event: any) => {
+      const { leadId, newStatus } = event.detail || {};
+      console.log("🔄 Lead updated event received:", { leadId, newStatus });
+      console.log("🔄 Refreshing dashboard data...");
+      
+      // Refresh all data immediately
       fetchLeads();
       fetchAnalytics();
       if (isSuperAdmin || (isBrandAdmin && effectiveOwnedBrands.length > 0)) {
         fetchPlatformAnalytics();
       }
+      
+      console.log("✅ Dashboard data refreshed after lead update");
     };
 
-    window.addEventListener('leadDeleted', handleLeadDeleted);
-    window.addEventListener('leadUpdated', handleLeadUpdated);
-    
+    console.log("🎧 Setting up event listeners for leadDeleted and leadUpdated");
+    window.addEventListener("leadDeleted", handleLeadDeleted);
+    window.addEventListener("leadUpdated", handleLeadUpdated);
+
     return () => {
-      window.removeEventListener('leadDeleted', handleLeadDeleted);
-      window.removeEventListener('leadUpdated', handleLeadUpdated);
+      console.log("🎧 Cleaning up event listeners");
+      window.removeEventListener("leadDeleted", handleLeadDeleted);
+      window.removeEventListener("leadUpdated", handleLeadUpdated);
     };
   }, [isSuperAdmin, isBrandAdmin, effectiveOwnedBrands.length]);
 
