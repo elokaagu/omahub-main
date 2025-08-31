@@ -110,7 +110,9 @@ export async function GET(request: NextRequest) {
     const priority = searchParams.get("priority");
     const search = searchParams.get("search");
 
-    console.log(`📊 GET leads request: action=${action}, page=${page}, limit=${limit}`);
+    console.log(
+      `📊 GET leads request: action=${action}, page=${page}, limit=${limit}`
+    );
 
     const supabase = await createServerSupabaseClient();
 
@@ -173,11 +175,16 @@ export async function GET(request: NextRequest) {
 
 async function handleAnalyticsRequest(supabase: any, profile: any) {
   try {
-    let query = supabase.from("leads").select(`id, status, created_at, estimated_value, brand_id`);
+    let query = supabase
+      .from("leads")
+      .select(`id, status, created_at, estimated_value, brand_id`);
 
     // Apply role-based filtering
     if (profile.role === "brand_admin" && profile.owned_brands?.length > 0) {
-      console.log("🔍 Filtering analytics by owned brands:", profile.owned_brands);
+      console.log(
+        "🔍 Filtering analytics by owned brands:",
+        profile.owned_brands
+      );
       query = query.in("brand_id", profile.owned_brands);
     } else if (profile.role === "brand_admin") {
       console.log("⚠️ Brand admin has no accessible brands for analytics");
@@ -191,9 +198,14 @@ async function handleAnalyticsRequest(supabase: any, profile: any) {
           total_value: 0,
           total_bookings: 0,
           leadsByStatus: {
-            new: 0, contacted: 0, qualified: 0, converted: 0, lost: 0, closed: 0
-          }
-        }
+            new: 0,
+            contacted: 0,
+            qualified: 0,
+            converted: 0,
+            lost: 0,
+            closed: 0,
+          },
+        },
       });
     } else {
       console.log("🔍 Super admin - no brand filtering for analytics");
@@ -211,15 +223,25 @@ async function handleAnalyticsRequest(supabase: any, profile: any) {
 
     console.log("📊 Analytics calculation details:", {
       userRole: profile.role,
-      ownedBrands: profile.role === "brand_admin" ? profile.owned_brands : "N/A",
-      totalLeads: leads?.length || 0
+      ownedBrands:
+        profile.role === "brand_admin" ? profile.owned_brands : "N/A",
+      totalLeads: leads?.length || 0,
     });
 
     const totalLeads = leads?.length || 0;
-    const qualifiedLeads = leads?.filter((lead: any) => lead.status === 'qualified').length || 0;
-    const convertedLeads = leads?.filter((lead: any) => lead.status === 'converted').length || 0;
-    const conversionRate = totalLeads > 0 ? (convertedLeads / totalLeads) * 100 : 0;
-    const totalValue = leads?.filter((lead: any) => lead.estimated_value).reduce((sum: number, lead: any) => sum + (lead.estimated_value || 0), 0) || 0;
+    const qualifiedLeads =
+      leads?.filter((lead: any) => lead.status === "qualified").length || 0;
+    const convertedLeads =
+      leads?.filter((lead: any) => lead.status === "converted").length || 0;
+    const conversionRate =
+      totalLeads > 0 ? (convertedLeads / totalLeads) * 100 : 0;
+    const totalValue =
+      leads
+        ?.filter((lead: any) => lead.estimated_value)
+        .reduce(
+          (sum: number, lead: any) => sum + (lead.estimated_value || 0),
+          0
+        ) || 0;
 
     const analytics = {
       total_leads: totalLeads,
@@ -229,20 +251,23 @@ async function handleAnalyticsRequest(supabase: any, profile: any) {
       total_value: totalValue,
       total_bookings: convertedLeads, // Converted leads count as bookings
       leadsByStatus: {
-        new: leads?.filter((lead: any) => lead.status === 'new').length || 0,
-        contacted: leads?.filter((lead: any) => lead.status === 'contacted').length || 0,
+        new: leads?.filter((lead: any) => lead.status === "new").length || 0,
+        contacted:
+          leads?.filter((lead: any) => lead.status === "contacted").length || 0,
         qualified: qualifiedLeads,
         converted: convertedLeads,
-        lost: leads?.filter((lead: any) => lead.status === 'lost').length || 0,
-        closed: leads?.filter((lead: any) => lead.status === 'closed').length || 0,
-      }
+        lost: leads?.filter((lead: any) => lead.status === "lost").length || 0,
+        closed:
+          leads?.filter((lead: any) => lead.status === "closed").length || 0,
+      },
     };
 
     console.log(`🔍 Analytics query details:`, {
       userRole: profile.role,
-      ownedBrands: profile.role === "brand_admin" ? profile.owned_brands : "N/A",
+      ownedBrands:
+        profile.role === "brand_admin" ? profile.owned_brands : "N/A",
       leadsReturned: leads?.length || 0,
-      analytics
+      analytics,
     });
 
     return NextResponse.json({ success: true, analytics });
@@ -259,14 +284,16 @@ async function handleCommissionRequest(supabase: any, profile: any) {
   try {
     let query = supabase
       .from("leads")
-      .select(`
+      .select(
+        `
         id,
         status,
         created_at,
         estimated_value,
         brand_id,
         brand:brands(name, commission_rate)
-      `)
+      `
+      )
       .eq("status", "converted");
 
     // Apply role-based filtering
@@ -284,16 +311,22 @@ async function handleCommissionRequest(supabase: any, profile: any) {
       );
     }
 
-    const commissionData = convertedLeads?.map((lead: any) => ({
-      leadId: lead.id,
-      brandName: lead.brand?.name || "Unknown Brand",
-      estimatedValue: lead.estimated_value || 0,
-      commissionRate: lead.brand?.commission_rate || 0,
-      commissionAmount: (lead.estimated_value || 0) * (lead.brand?.commission_rate || 0) / 100,
-      convertedAt: lead.created_at,
-    })) || [];
+    const commissionData =
+      convertedLeads?.map((lead: any) => ({
+        leadId: lead.id,
+        brandName: lead.brand?.name || "Unknown Brand",
+        estimatedValue: lead.estimated_value || 0,
+        commissionRate: lead.brand?.commission_rate || 0,
+        commissionAmount:
+          ((lead.estimated_value || 0) * (lead.brand?.commission_rate || 0)) /
+          100,
+        convertedAt: lead.created_at,
+      })) || [];
 
-    const totalCommission = commissionData.reduce((sum: number, item: any) => sum + item.commissionAmount, 0);
+    const totalCommission = commissionData.reduce(
+      (sum: number, item: any) => sum + item.commissionAmount,
+      0
+    );
 
     return NextResponse.json({
       success: true,
@@ -302,12 +335,19 @@ async function handleCommissionRequest(supabase: any, profile: any) {
         convertedLeads: commissionData,
         summary: {
           totalLeads: commissionData.length,
-          totalValue: commissionData.reduce((sum: number, item: any) => sum + item.estimatedValue, 0),
-          averageCommissionRate: commissionData.length > 0 
-            ? commissionData.reduce((sum: number, item: any) => sum + item.commissionRate, 0) / commissionData.length 
-            : 0
-        }
-      }
+          totalValue: commissionData.reduce(
+            (sum: number, item: any) => sum + item.estimatedValue,
+            0
+          ),
+          averageCommissionRate:
+            commissionData.length > 0
+              ? commissionData.reduce(
+                  (sum: number, item: any) => sum + item.commissionRate,
+                  0
+                ) / commissionData.length
+              : 0,
+        },
+      },
     });
   } catch (error) {
     console.error("💥 Commission error:", error);
@@ -320,16 +360,17 @@ async function handleCommissionRequest(supabase: any, profile: any) {
 
 async function handleListRequest(supabase: any, profile: any, filters: any) {
   try {
-    let query = supabase
-      .from("leads")
-      .select(`
+    let query = supabase.from("leads").select(
+      `
         *,
         brand:brands(
           id,
           name,
           category
         )
-      `, { count: "exact", head: true });
+      `,
+      { count: "exact" }
+    );
 
     // Apply role-based filtering
     if (profile.role === "brand_admin") {
@@ -378,9 +419,10 @@ async function handleListRequest(supabase: any, profile: any, filters: any) {
     console.log(`✅ Fetched ${leads?.length || 0} leads (total: ${count})`);
     console.log(`🔍 Query details:`, {
       userRole: profile.role,
-      ownedBrands: profile.role === "brand_admin" ? profile.owned_brands : "N/A",
+      ownedBrands:
+        profile.role === "brand_admin" ? profile.owned_brands : "N/A",
       leadsReturned: leads?.length || 0,
-      totalCount: count
+      totalCount: count,
     });
 
     return NextResponse.json({
@@ -581,7 +623,8 @@ export async function DELETE(request: NextRequest) {
       verifyQuery = verifyQuery.in("brand_id", profile.owned_brands);
     }
 
-    const { data: existingLead, error: verifyError } = await verifyQuery.single();
+    const { data: existingLead, error: verifyError } =
+      await verifyQuery.single();
 
     if (verifyError) {
       if (verifyError.code === "PGRST116") {
@@ -605,7 +648,10 @@ export async function DELETE(request: NextRequest) {
       .eq("lead_id", leadId);
 
     if (interactionsError) {
-      console.warn("⚠️ Warning: Failed to delete lead interactions:", interactionsError);
+      console.warn(
+        "⚠️ Warning: Failed to delete lead interactions:",
+        interactionsError
+      );
     } else {
       console.log("✅ Lead interactions deleted successfully");
     }
