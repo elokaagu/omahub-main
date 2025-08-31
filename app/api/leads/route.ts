@@ -23,9 +23,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log("📝 Creating new lead:", { name, email, source, leadType });
+    console.log("📝 Creating new lead:", { name, email, source, leadType, brandId });
 
     const supabase = await createServerSupabaseClient();
+
+    // First, verify the brand exists
+    const { data: brand, error: brandError } = await supabase
+      .from("brands")
+      .select("id, name, contact_email")
+      .eq("id", brandId)
+      .single();
+
+    if (brandError || !brand) {
+      console.error("❌ Brand not found:", brandId, brandError);
+      return NextResponse.json(
+        { 
+          error: "Invalid brand ID. The specified brand does not exist.",
+          details: `Brand ID '${brandId}' not found in database`
+        }, 
+        { status: 400 }
+      );
+    }
+
+    console.log("✅ Brand verified:", brand.name);
 
     // Create the lead
     const { data: lead, error: leadError } = await supabase
@@ -55,12 +75,6 @@ export async function POST(request: NextRequest) {
 
     // Send email notification to brand
     try {
-      const { data: brand } = await supabase
-        .from("brands")
-        .select("name, contact_email")
-        .eq("id", brandId)
-        .single();
-
       if (brand?.contact_email) {
         const emailResponse = await fetch("/api/email/send", {
           method: "POST",

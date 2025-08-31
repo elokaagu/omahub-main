@@ -26,7 +26,15 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { StudioNav } from "@/components/ui/studio-nav";
-import { RefreshCw, Plus, Search, Filter, Trash2, Edit3, Eye } from "lucide-react";
+import {
+  RefreshCw,
+  Plus,
+  Search,
+  Filter,
+  Trash2,
+  Edit3,
+  Eye,
+} from "lucide-react";
 
 interface Lead {
   id: string;
@@ -174,7 +182,8 @@ export default function StudioLeadsPage() {
         (lead) =>
           lead.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
           lead.contact_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (lead.notes && lead.notes.toLowerCase().includes(searchTerm.toLowerCase()))
+          (lead.notes &&
+            lead.notes.toLowerCase().includes(searchTerm.toLowerCase()))
       );
     }
 
@@ -230,7 +239,9 @@ export default function StudioLeadsPage() {
     // Optimistic update
     setLeads((prev) =>
       prev.map((lead) =>
-        lead.id === leadId ? { ...lead, status: newStatus as Lead["status"] } : lead
+        lead.id === leadId
+          ? { ...lead, status: newStatus as Lead["status"] }
+          : lead
       )
     );
 
@@ -355,11 +366,46 @@ export default function StudioLeadsPage() {
 
   const createTestLead = async () => {
     try {
+      // First, get a real brand ID from the user's owned brands or any available brand
+      let brandId = null;
+
+      if (user?.id) {
+        try {
+          const response = await fetch("/api/leads?action=analytics", {
+            credentials: "include",
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            // If we have leads, use the brand_id from the first one
+            if (data.analytics?.total_leads > 0) {
+              const leadsResponse = await fetch(
+                "/api/leads?action=list&page=1&limit=1",
+                {
+                  credentials: "include",
+                }
+              );
+
+              if (leadsResponse.ok) {
+                const leadsData = await leadsResponse.json();
+                if (leadsData.leads?.[0]?.brand_id) {
+                  brandId = leadsData.leads[0].brand_id;
+                }
+              }
+            }
+          }
+        } catch (error) {
+          console.log(
+            "Could not get existing brand ID, will create without brand"
+          );
+        }
+      }
+
       const response = await fetch("/api/leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          brandId: "test-brand-id", // This will need to be a real brand ID
+          brandId: brandId || "demo-brand", // Use real brand ID if available, otherwise demo
           name: "Test Customer",
           email: "test@example.com",
           phone: "+1234567890",
@@ -370,7 +416,8 @@ export default function StudioLeadsPage() {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to create test lead");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to create test lead");
       }
 
       toast.success("Test lead created successfully!");
@@ -378,7 +425,9 @@ export default function StudioLeadsPage() {
       loadLeadStats();
     } catch (error) {
       console.error("Error creating test lead:", error);
-      toast.error("Failed to create test lead");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to create test lead"
+      );
     }
   };
 
@@ -487,7 +536,9 @@ export default function StudioLeadsPage() {
                 variant="outline"
                 className="border-oma-plum text-oma-plum hover:bg-oma-plum/10"
               >
-                <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
+                <RefreshCw
+                  className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`}
+                />
                 Refresh
               </Button>
               <Button
@@ -507,7 +558,9 @@ export default function StudioLeadsPage() {
           <Card className="border border-oma-gold/10 bg-white">
             <CardContent className="pt-6">
               <div className="text-center">
-                <h3 className="text-2xl font-bold text-oma-plum">{leadStats.total_leads}</h3>
+                <h3 className="text-2xl font-bold text-oma-plum">
+                  {leadStats.total_leads}
+                </h3>
                 <p className="text-sm text-oma-cocoa">Total Leads</p>
               </div>
             </CardContent>
@@ -516,7 +569,9 @@ export default function StudioLeadsPage() {
           <Card className="border border-oma-gold/10 bg-white">
             <CardContent className="pt-6">
               <div className="text-center">
-                <h3 className="text-2xl font-bold text-oma-plum">{leadStats.qualified_leads}</h3>
+                <h3 className="text-2xl font-bold text-oma-plum">
+                  {leadStats.qualified_leads}
+                </h3>
                 <p className="text-sm text-oma-cocoa">Qualified Leads</p>
                 <p className="text-xs text-oma-cocoa/70">Ready for follow-up</p>
               </div>
@@ -526,7 +581,9 @@ export default function StudioLeadsPage() {
           <Card className="border border-oma-gold/10 bg-white">
             <CardContent className="pt-6">
               <div className="text-center">
-                <h3 className="text-2xl font-bold text-oma-plum">{leadStats.conversion_rate}%</h3>
+                <h3 className="text-2xl font-bold text-oma-plum">
+                  {leadStats.conversion_rate}%
+                </h3>
                 <p className="text-sm text-oma-cocoa">Conversion Rate</p>
                 <p className="text-xs text-oma-cocoa/70">
                   Converted: {leadStats.converted_leads}
@@ -538,7 +595,9 @@ export default function StudioLeadsPage() {
           <Card className="border border-oma-gold/10 bg-white">
             <CardContent className="pt-6">
               <div className="text-center">
-                <h3 className="text-2xl font-bold text-oma-plum">{leadStats.total_bookings}</h3>
+                <h3 className="text-2xl font-bold text-oma-plum">
+                  {leadStats.total_bookings}
+                </h3>
                 <p className="text-sm text-oma-cocoa">Total Bookings</p>
               </div>
             </CardContent>
@@ -550,7 +609,10 @@ export default function StudioLeadsPage() {
           <CardContent className="pt-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
               <div>
-                <Label htmlFor="search" className="text-sm font-medium text-oma-cocoa">
+                <Label
+                  htmlFor="search"
+                  className="text-sm font-medium text-oma-cocoa"
+                >
                   Search
                 </Label>
                 <div className="relative">
@@ -566,7 +628,10 @@ export default function StudioLeadsPage() {
               </div>
 
               <div>
-                <Label htmlFor="status" className="text-sm font-medium text-oma-cocoa">
+                <Label
+                  htmlFor="status"
+                  className="text-sm font-medium text-oma-cocoa"
+                >
                   Status
                 </Label>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -586,7 +651,10 @@ export default function StudioLeadsPage() {
               </div>
 
               <div>
-                <Label htmlFor="source" className="text-sm font-medium text-oma-cocoa">
+                <Label
+                  htmlFor="source"
+                  className="text-sm font-medium text-oma-cocoa"
+                >
                   Source
                 </Label>
                 <Select value={sourceFilter} onValueChange={setSourceFilter}>
@@ -597,7 +665,9 @@ export default function StudioLeadsPage() {
                     <SelectItem value="all">All Sources</SelectItem>
                     <SelectItem value="website">Website</SelectItem>
                     <SelectItem value="custom_order">Custom Order</SelectItem>
-                    <SelectItem value="product_request">Product Request</SelectItem>
+                    <SelectItem value="product_request">
+                      Product Request
+                    </SelectItem>
                     <SelectItem value="referral">Referral</SelectItem>
                     <SelectItem value="social_media">Social Media</SelectItem>
                   </SelectContent>
@@ -605,10 +675,16 @@ export default function StudioLeadsPage() {
               </div>
 
               <div>
-                <Label htmlFor="priority" className="text-sm font-medium text-oma-cocoa">
+                <Label
+                  htmlFor="priority"
+                  className="text-sm font-medium text-oma-cocoa"
+                >
                   Priority
                 </Label>
-                <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+                <Select
+                  value={priorityFilter}
+                  onValueChange={setPriorityFilter}
+                >
                   <SelectTrigger className="border-oma-cocoa/20 focus:border-oma-plum">
                     <SelectValue placeholder="All priorities" />
                   </SelectTrigger>
@@ -622,7 +698,10 @@ export default function StudioLeadsPage() {
               </div>
 
               <div>
-                <Label htmlFor="sort" className="text-sm font-medium text-oma-cocoa">
+                <Label
+                  htmlFor="sort"
+                  className="text-sm font-medium text-oma-cocoa"
+                >
                   Sort By
                 </Label>
                 <Select value={sortBy} onValueChange={setSortBy}>
@@ -644,7 +723,9 @@ export default function StudioLeadsPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+                  onClick={() =>
+                    setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+                  }
                   className="border-oma-cocoa/20 text-oma-cocoa hover:bg-oma-cocoa/5"
                 >
                   {sortOrder === "asc" ? "↑ Ascending" : "↓ Descending"}
@@ -674,7 +755,9 @@ export default function StudioLeadsPage() {
                   <Filter className="h-8 w-8 text-oma-cocoa/50" />
                 </div>
                 <h3 className="text-lg font-canela text-oma-plum mb-2">
-                  {leads.length === 0 ? "No leads yet" : "No leads match your filters"}
+                  {leads.length === 0
+                    ? "No leads yet"
+                    : "No leads match your filters"}
                 </h3>
                 <p className="text-oma-cocoa mb-4">
                   {leads.length === 0
@@ -682,7 +765,10 @@ export default function StudioLeadsPage() {
                     : "Try adjusting your search criteria or filters."}
                 </p>
                 {leads.length === 0 && (
-                  <Button onClick={createTestLead} className="bg-oma-plum hover:bg-oma-plum/90">
+                  <Button
+                    onClick={createTestLead}
+                    className="bg-oma-plum hover:bg-oma-plum/90"
+                  >
                     <Plus className="h-4 w-4 mr-2" />
                     Create Test Lead
                   </Button>
@@ -714,46 +800,58 @@ export default function StudioLeadsPage() {
                           {lead.priority}
                         </Badge>
                       </div>
-                      
+
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-oma-cocoa">
                         <div>
-                          <span className="font-medium">Email:</span> {lead.contact_email}
+                          <span className="font-medium">Email:</span>{" "}
+                          {lead.contact_email}
                         </div>
                         {lead.contact_phone && (
                           <div>
-                            <span className="font-medium">Phone:</span> {lead.contact_phone}
+                            <span className="font-medium">Phone:</span>{" "}
+                            {lead.contact_phone}
                           </div>
                         )}
                         <div>
-                          <span className="font-medium">Source:</span> {lead.source}
+                          <span className="font-medium">Source:</span>{" "}
+                          {lead.source}
                         </div>
                         <div>
-                          <span className="font-medium">Type:</span> {lead.lead_type}
+                          <span className="font-medium">Type:</span>{" "}
+                          {lead.lead_type}
                         </div>
                         {lead.brand && (
                           <div>
-                            <span className="font-medium">Brand:</span> {lead.brand.name}
+                            <span className="font-medium">Brand:</span>{" "}
+                            {lead.brand.name}
                           </div>
                         )}
                         {lead.estimated_value && (
                           <div>
-                            <span className="font-medium">Value:</span> £{lead.estimated_value}
+                            <span className="font-medium">Value:</span> £
+                            {lead.estimated_value}
                           </div>
                         )}
                         <div>
-                          <span className="font-medium">Created:</span> {formatDate(lead.created_at)}
+                          <span className="font-medium">Created:</span>{" "}
+                          {formatDate(lead.created_at)}
                         </div>
                         {lead.updated_at && (
                           <div>
-                            <span className="font-medium">Updated:</span> {formatDate(lead.updated_at)}
+                            <span className="font-medium">Updated:</span>{" "}
+                            {formatDate(lead.updated_at)}
                           </div>
                         )}
                       </div>
 
                       {lead.notes && (
                         <div className="mt-3">
-                          <span className="font-medium text-oma-cocoa">Notes:</span>
-                          <p className="text-sm text-oma-cocoa/80 mt-1">{lead.notes}</p>
+                          <span className="font-medium text-oma-cocoa">
+                            Notes:
+                          </span>
+                          <p className="text-sm text-oma-cocoa/80 mt-1">
+                            {lead.notes}
+                          </p>
                         </div>
                       )}
                     </div>
@@ -762,7 +860,9 @@ export default function StudioLeadsPage() {
                       <div className="flex items-center gap-2">
                         <Select
                           value={lead.status}
-                          onValueChange={(value) => updateLeadStatus(lead.id, value)}
+                          onValueChange={(value) =>
+                            updateLeadStatus(lead.id, value)
+                          }
                           disabled={updatingLeadId === lead.id}
                         >
                           <SelectTrigger className="w-32 border-oma-cocoa/20 focus:border-oma-plum">
@@ -821,7 +921,8 @@ export default function StudioLeadsPage() {
               <AlertDialogTitle>Delete Lead</AlertDialogTitle>
               <AlertDialogDescription>
                 Are you sure you want to delete the lead for{" "}
-                <strong>{leadToDelete?.customer_name}</strong>? This action cannot be undone.
+                <strong>{leadToDelete?.customer_name}</strong>? This action
+                cannot be undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
