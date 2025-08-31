@@ -182,14 +182,17 @@ export default function StudioLeadsPage() {
 
   const loadLeadStats = async () => {
     try {
-      const response = await fetch(`/api/leads?action=analytics&_t=${Date.now()}`, {
-        credentials: "include",
-        headers: {
-          "Cache-Control": "no-cache, no-store, must-revalidate",
-          Pragma: "no-cache",
-          Expires: "0",
-        },
-      });
+      const response = await fetch(
+        `/api/leads?action=analytics&_t=${Date.now()}`,
+        {
+          credentials: "include",
+          headers: {
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            Pragma: "no-cache",
+            Expires: "0",
+          },
+        }
+      );
 
       if (response.ok) {
         const result = await response.json();
