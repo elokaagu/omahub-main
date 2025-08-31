@@ -590,70 +590,79 @@ OmaHub Team`,
         nodeEnv: process.env.NODE_ENV,
       });
 
-      // Create lead for general platform contact
+      // Create inquiry and lead for general platform contact
+      let inquiry = null;
       let lead = null;
+      
       try {
-        console.log("📊 Creating lead from general platform contact...");
+        console.log("📝 Creating inquiry for general platform contact...");
         
         const supabase = await getAdminClient();
         if (supabase) {
-          // Check if leads table exists
-          const { data: leadsTableExists, error: leadsTableCheckError } = await supabase
-            .from("information_schema.tables")
-            .select("table_name")
-            .eq("table_schema", "public")
-            .eq("table_name", "leads")
-            .single();
-
-          if (leadsTableCheckError || !leadsTableExists) {
-            console.log("⚠️ Leads table does not exist - skipping lead creation");
-          } else {
-            // Create lead in the leads table for general platform contact
-            const generalLeadData = {
-              brand_id: null, // No specific brand for general contact
+          // First create an inquiry in the inquiries table
+          const { data: inquiryData, error: inquiryError } = await supabase
+            .from("inquiries")
+            .insert({
+              brand_id: "omahub-platform-0000-0000-0000-000000000000", // Use OmaHub Platform brand
               customer_name: name,
               customer_email: email,
-              customer_phone: "", // General contact form doesn't collect phone
-              lead_source: "platform_contact_form",
-              lead_status: "new",
-              lead_score: 30, // Lower score for general inquiries
+              subject: subject,
+              message: message,
+              inquiry_type: "platform_contact",
               priority: "normal",
-              estimated_budget: null, // Not collected in general contact form
-              project_type: "general_inquiry",
-              project_timeline: null, // Not collected in general contact form
-              location: "", // Not collected in general contact form
-              notes: `General platform contact: ${subject}\n\n${message}`,
-              tags: ["platform_contact", "general_inquiry"],
-              inquiry_id: null, // No specific inquiry for general contact
-              company_name: "", // Not collected in general contact form
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-            };
+              source: "platform_contact_form",
+              status: "new",
+            })
+            .select()
+            .single();
 
-            const { data: insertedLead, error: leadError } = await supabase
-              .from("leads")
-              .insert(generalLeadData)
-              .select()
-              .single();
+          if (inquiryError) {
+            console.error("❌ Failed to create inquiry for general contact:", inquiryError);
+            console.log("⚠️ Inquiry creation failed, but contact form was submitted successfully");
+          } else {
+            inquiry = inquiryData;
+            console.log("✅ Inquiry created successfully for general contact:", inquiry.id);
+          }
 
-            if (leadError) {
-              console.error("❌ Failed to create lead for general contact:", leadError);
-              console.log("⚠️ Lead creation failed, but contact form was submitted successfully");
-            } else {
-              lead = insertedLead;
-              console.log("✅ Lead created successfully for general contact:", insertedLead.id);
-              console.log("📊 Lead data:", {
-                id: insertedLead.id,
-                customer_name: insertedLead.customer_name,
-                lead_status: insertedLead.lead_status,
-                lead_source: insertedLead.lead_source
-              });
-            }
+          // Then create a lead in the leads table
+          const generalLeadData = {
+            brand_id: "omahub-platform-0000-0000-0000-000000000000", // Use OmaHub Platform brand
+            customer_name: name,
+            customer_email: email,
+            customer_phone: "", // General contact form doesn't collect phone
+            source: "platform_contact_form",
+            status: "new",
+            priority: "normal",
+            estimated_value: null, // Not collected in general contact form
+            lead_type: "inquiry",
+            notes: `General platform contact: ${subject}\n\n${message}`,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          };
+
+          const { data: insertedLead, error: leadError } = await supabase
+            .from("leads")
+            .insert(generalLeadData)
+            .select()
+            .single();
+
+          if (leadError) {
+            console.error("❌ Failed to create lead for general contact:", leadError);
+            console.log("⚠️ Lead creation failed, but inquiry was created successfully");
+          } else {
+            lead = insertedLead;
+            console.log("✅ Lead created successfully for general contact:", insertedLead.id);
+            console.log("📊 Lead data:", {
+              id: insertedLead.id,
+              customer_name: insertedLead.customer_name,
+              status: insertedLead.status,
+              source: insertedLead.source
+            });
           }
         }
-      } catch (leadError) {
-        console.error("❌ Error creating lead for general contact:", leadError);
-        console.log("⚠️ Lead creation failed, but contact form was submitted successfully");
+      } catch (error) {
+        console.error("❌ Error creating inquiry/lead for general contact:", error);
+        console.log("⚠️ Inquiry/lead creation failed, but contact form was submitted successfully");
       }
 
       try {
@@ -699,6 +708,8 @@ View all inquiries in your Studio: https://oma-hub.com/studio/inbox`,
         success: true,
         message: "Thank you for contacting us! We'll get back to you soon.",
         type: "general_contact",
+        inquiry: inquiry,
+        lead: lead,
       });
     }
   } catch (error) {
