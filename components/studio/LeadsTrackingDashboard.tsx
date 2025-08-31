@@ -191,13 +191,16 @@ export default function LeadsTrackingDashboard({
 
   const { updateLead } = useLeadMutations();
 
-  // Determine user access level
-  const isSuperAdmin =
-    user?.role === "super_admin" || userRole === "super_admin";
-  const isBrandAdmin =
-    user?.role === "brand_admin" || userRole === "brand_admin";
-  const effectiveOwnedBrands =
-    ownedBrandIds.length > 0 ? ownedBrandIds : user?.owned_brands || [];
+  // Determine user access level - only after authentication is complete
+  const isSuperAdmin = !authLoading && (
+    user?.role === "super_admin" || userRole === "super_admin"
+  );
+  const isBrandAdmin = !authLoading && (
+    user?.role === "brand_admin" || userRole === "brand_admin"
+  );
+  const effectiveOwnedBrands = !authLoading ? (
+    ownedBrandIds.length > 0 ? ownedBrandIds : user?.owned_brands || []
+  ) : [];
 
   const fetchLeads = async () => {
     try {
@@ -628,7 +631,29 @@ export default function LeadsTrackingDashboard({
       )}
 
       {/* Brand Overview Section - Brand Admin Only */}
-      {isBrandAdmin && (
+      {authLoading ? (
+        <div className="bg-gradient-to-r from-oma-plum/5 to-oma-beige/10 rounded-lg p-6 border border-oma-beige">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-canela text-oma-plum">
+                Your Brand Overview
+              </h2>
+              <p className="text-oma-cocoa">Loading brand information...</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[...Array(4)].map((_, i) => (
+              <Card key={i} className="p-4">
+                <div className="animate-pulse">
+                  <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                  <div className="h-8 bg-gray-200 rounded mb-1"></div>
+                  <div className="h-3 bg-gray-200 rounded w-3/4"></div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+      ) : isBrandAdmin ? (
         <div className="bg-gradient-to-r from-oma-plum/5 to-oma-beige/10 rounded-lg p-6 border border-oma-beige">
           <div className="flex items-center justify-between mb-6">
             <div>
@@ -732,7 +757,7 @@ export default function LeadsTrackingDashboard({
             </div>
           )}
         </div>
-      )}
+      ) : null}
 
       {/* Leads Analytics Section */}
       <div>
