@@ -140,7 +140,28 @@ export default function StudioInboxPage() {
       // Apply role-based filtering
       if (profile.role === "brand_admin" && profile.owned_brands?.length > 0) {
         console.log("🔍 Filtering by owned brands:", profile.owned_brands);
-        query = query.in("brand_id", profile.owned_brands);
+        
+        // Handle both UUID and slug-based brand IDs
+        // First, get the actual brand IDs from the brands table
+        const { data: brandIds, error: brandIdsError } = await supabase
+          .from("brands")
+          .select("id")
+          .in("id", profile.owned_brands);
+        
+        if (brandIdsError) {
+          console.error("❌ Error fetching brand IDs:", brandIdsError);
+          // Fallback to direct filtering
+          query = query.in("brand_id", profile.owned_brands);
+        } else if (brandIds && brandIds.length > 0) {
+          const actualBrandIds = brandIds.map(brand => brand.id);
+          console.log("🔍 Actual brand IDs for filtering:", actualBrandIds);
+          query = query.in("brand_id", actualBrandIds);
+        } else {
+          console.log("⚠️ No valid brand IDs found for filtering");
+          setInquiries([]);
+          setLoading(false);
+          return;
+        }
       } else if (profile.role === "brand_admin") {
         console.log("⚠️ Brand admin has no owned brands");
         setInquiries([]);
