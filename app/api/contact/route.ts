@@ -390,6 +390,18 @@ export async function POST(request: NextRequest) {
       try {
         console.log("📧 Creating inquiry in database...");
         
+        console.log("📝 Attempting to create brand-specific inquiry with data:", {
+          brand_id: brandId,
+          customer_name: name,
+          customer_email: email,
+          subject: `Inquiry from ${name}`,
+          message: message,
+          inquiry_type: "general",
+          priority: "normal",
+          source: "website",
+          status: "unread"
+        });
+
         const { data: inquiryData, error: inquiryError } = await supabase
           .from("inquiries")
           .insert({
@@ -600,6 +612,18 @@ OmaHub Team`,
         const supabase = await getAdminClient();
         if (supabase) {
           // First create an inquiry in the inquiries table
+          console.log("📝 Attempting to create inquiry with data:", {
+            brand_id: "omahub-platform-0000-0000-0000-000000000000",
+            customer_name: name,
+            customer_email: email,
+            subject: subject,
+            message: message,
+            inquiry_type: "general",
+            priority: "normal",
+            source: "website",
+            status: "unread"
+          });
+
           const { data: inquiryData, error: inquiryError } = await supabase
             .from("inquiries")
             .insert({
