@@ -368,108 +368,49 @@ export function BrandRequestModal({
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
-                    {/* Standard Sizes */}
-                    <SelectItem value="XXS">XXS (Extra Extra Small)</SelectItem>
-                    <SelectItem value="XS">XS (Extra Small)</SelectItem>
-                    <SelectItem value="S">S (Small)</SelectItem>
-                    <SelectItem value="M">M (Medium)</SelectItem>
-                    <SelectItem value="L">L (Large)</SelectItem>
-                    <SelectItem value="XL">XL (Extra Large)</SelectItem>
-                    <SelectItem value="XXL">XXL (2XL)</SelectItem>
-                    <SelectItem value="XXXL">XXXL (3XL)</SelectItem>
-                    <SelectItem value="4XL">4XL</SelectItem>
-                    <SelectItem value="5XL">5XL</SelectItem>
-                    
-                    {/* Numeric Sizes */}
-                    <SelectItem value="32">32</SelectItem>
-                    <SelectItem value="34">34</SelectItem>
-                    <SelectItem value="36">36</SelectItem>
-                    <SelectItem value="38">38</SelectItem>
-                    <SelectItem value="40">40</SelectItem>
-                    <SelectItem value="42">42</SelectItem>
-                    <SelectItem value="44">44</SelectItem>
-                    <SelectItem value="46">46</SelectItem>
-                    <SelectItem value="48">48</SelectItem>
-                    <SelectItem value="50">50</SelectItem>
-                    <SelectItem value="52">52</SelectItem>
-                    <SelectItem value="54">54</SelectItem>
-                    
-                    {/* Custom Options */}
-                    <SelectItem value="custom">Custom Measurements</SelectItem>
-                    <SelectItem value="petite">Petite</SelectItem>
-                    <SelectItem value="tall">Tall</SelectItem>
-                    <SelectItem value="plus-size">Plus Size</SelectItem>
-                    <SelectItem value="maternity">Maternity</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
+                    {/* Only show the size that was selected when the product was created */}
+                    {size ? (
+                      <SelectItem value={size}>{size}</SelectItem>
+                    ) : (
+                      <>
+                        {/* Fallback to standard sizes if no specific size was set */}
+                        <SelectItem value="XXS">XXS (Extra Extra Small)</SelectItem>
+                        <SelectItem value="XS">XS (Extra Small)</SelectItem>
+                        <SelectItem value="S">S (Small)</SelectItem>
+                        <SelectItem value="M">M (Medium)</SelectItem>
+                        <SelectItem value="L">L (Large)</SelectItem>
+                        <SelectItem value="XL">XL (Extra Large)</SelectItem>
+                        <SelectItem value="XXL">XXL (2XL)</SelectItem>
+                        <SelectItem value="XXXL">XXXL (3XL)</SelectItem>
+                        <SelectItem value="4XL">4XL</SelectItem>
+                        <SelectItem value="5XL">5XL</SelectItem>
+                        
+                        {/* Numeric Sizes */}
+                        <SelectItem value="32">32</SelectItem>
+                        <SelectItem value="34">34</SelectItem>
+                        <SelectItem value="36">36</SelectItem>
+                        <SelectItem value="38">38</SelectItem>
+                        <SelectItem value="40">40</SelectItem>
+                        <SelectItem value="42">42</SelectItem>
+                        <SelectItem value="44">44</SelectItem>
+                        <SelectItem value="46">46</SelectItem>
+                        <SelectItem value="48">48</SelectItem>
+                        <SelectItem value="50">50</SelectItem>
+                        <SelectItem value="52">52</SelectItem>
+                        <SelectItem value="54">54</SelectItem>
+                        
+                        {/* Custom Options */}
+                        <SelectItem value="custom">Custom Measurements</SelectItem>
+                        <SelectItem value="petite">Petite</SelectItem>
+                        <SelectItem value="tall">Tall</SelectItem>
+                        <SelectItem value="plus-size">Plus Size</SelectItem>
+                        <SelectItem value="maternity">Maternity</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </>
+                    )}
                   </SelectContent>
                 </Select>
-                {/* Debug info - remove in production */}
-                {process.env.NODE_ENV === 'development' && (
-                  <div className="text-xs text-blue-600 mt-1 space-y-1">
-                    <p>Current value: "{formData.preferred_size}"</p>
-                    <p>Size prop: "{size}"</p>
-                    <p>Form data preferred_size: "{formData.preferred_size}"</p>
-                    <p>Select value prop: "{formData.preferred_size}"</p>
-                  </div>
-                )}
-                
-                {/* Test buttons for debugging - remove in production */}
-                {process.env.NODE_ENV === 'development' && (
-                  <div className="mt-2 p-2 bg-green-100 rounded border">
-                    <p className="text-xs font-medium mb-2">Test Buttons (Development):</p>
-                    <div className="flex flex-wrap gap-1">
-                      <button
-                        type="button"
-                        onClick={() => handleInputChange("preferred_size", "M")}
-                        className="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
-                      >
-                        Set Size: M
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleInputChange("preferred_size", "XL")}
-                        className="px-2 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600"
-                      >
-                        Set Size: XL
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleInputChange("preferred_size", "custom")}
-                        className="px-2 py-1 text-xs bg-purple-500 text-white rounded hover:bg-purple-600"
-                      >
-                        Set Size: Custom
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleInputChange("preferred_size", "")}
-                        className="px-2 py-1 text-xs bg-gray-500 text-white rounded hover:bg-gray-600"
-                      >
-                        Clear Size
-                      </button>
-                    </div>
-                  </div>
-                )}
-                
-                {/* Fallback HTML select for testing */}
-                {process.env.NODE_ENV === 'development' && (
-                  <div className="mt-2 p-2 bg-yellow-100 rounded border">
-                    <p className="text-xs font-medium mb-1">Fallback HTML Select (Testing):</p>
-                    <select
-                      value={formData.preferred_size}
-                      onChange={(e) => handleInputChange("preferred_size", e.target.value)}
-                      className="w-full p-1 text-xs border rounded"
-                    >
-                      <option value="">Select size (HTML fallback)</option>
-                      <option value="XS">XS</option>
-                      <option value="S">S</option>
-                      <option value="M">M</option>
-                      <option value="L">L</option>
-                      <option value="XL">XL</option>
-                      <option value="XXL">XXL</option>
-                    </select>
-                    <p className="text-xs mt-1">HTML select value: "{formData.preferred_size}"</p>
-                  </div>
-                )}
+
               </div>
 
               <div>
@@ -479,15 +420,42 @@ export function BrandRequestModal({
                 >
                   Preferred Color
                 </Label>
-                <Input
-                  id="preferred_color"
-                  placeholder="e.g., Navy, Black, or specific color preference"
-                  className="border-oma-beige focus:border-oma-plum focus:ring-oma-plum"
+                <Select
+                  key={`color-${formData.preferred_color}`}
                   value={formData.preferred_color}
-                  onChange={(e) =>
-                    handleInputChange("preferred_color", e.target.value)
-                  }
-                />
+                  onValueChange={(value) => handleInputChange("preferred_color", value)}
+                >
+                  <SelectTrigger className="border-oma-beige focus:border-oma-plum focus:ring-oma-plum">
+                    <SelectValue placeholder="Select your preferred color">
+                      {formData.preferred_color || "Select your preferred color"}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {/* Only show the color that was selected when the product was created */}
+                    {color ? (
+                      <SelectItem value={color}>{color}</SelectItem>
+                    ) : (
+                      <>
+                        {/* Fallback to common colors if no specific color was set */}
+                        <SelectItem value="black">Black</SelectItem>
+                        <SelectItem value="white">White</SelectItem>
+                        <SelectItem value="navy">Navy</SelectItem>
+                        <SelectItem value="red">Red</SelectItem>
+                        <SelectItem value="blue">Blue</SelectItem>
+                        <SelectItem value="green">Green</SelectItem>
+                        <SelectItem value="yellow">Yellow</SelectItem>
+                        <SelectItem value="pink">Pink</SelectItem>
+                        <SelectItem value="purple">Purple</SelectItem>
+                        <SelectItem value="orange">Orange</SelectItem>
+                        <SelectItem value="brown">Brown</SelectItem>
+                        <SelectItem value="gray">Gray</SelectItem>
+                        <SelectItem value="beige">Beige</SelectItem>
+                        <SelectItem value="cream">Cream</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </>
+                    )}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>
