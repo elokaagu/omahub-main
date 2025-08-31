@@ -158,6 +158,50 @@ export async function PUT(
 
     // Add reply if provided
     if (reply) {
+      // Get the full inquiry details for email
+      const { data: inquiryDetails, error: inquiryError } = await supabase
+        .from("inquiries")
+        .select(`
+          *,
+          brand:brands(name, contact_email)
+        `)
+        .eq("id", inquiryId)
+        .single();
+
+      if (inquiryError) {
+        console.error("❌ Failed to get inquiry details for email:", inquiryError);
+      } else {
+        // Send email to customer
+        try {
+          const emailResponse = await fetch("/api/email/send", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              to: inquiryDetails.customer_email,
+              subject: `Re: ${inquiryDetails.subject}`,
+              template: "inquiry-reply",
+              data: {
+                customerName: inquiryDetails.customer_name,
+                brandName: inquiryDetails.brand?.name || "OmaHub",
+                adminName: profile.first_name || profile.email,
+                replyMessage: reply,
+                originalMessage: inquiryDetails.message,
+                inquiryId: inquiryId,
+              },
+            }),
+          });
+
+          if (!emailResponse.ok) {
+            console.warn("⚠️ Failed to send reply email");
+          } else {
+            console.log("✅ Reply email sent successfully to:", inquiryDetails.customer_email);
+          }
+        } catch (emailError) {
+          console.error("❌ Email sending error:", emailError);
+        }
+      }
+
+      // Save reply to database
       const { error: replyError } = await supabase
         .from("inquiry_replies")
         .insert({
