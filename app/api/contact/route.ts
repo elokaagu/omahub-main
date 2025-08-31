@@ -396,10 +396,10 @@ export async function POST(request: NextRequest) {
           customer_email: email,
           subject: `Inquiry from ${name}`,
           message: message,
-          inquiry_type: "general",
+          inquiry_type: "customer_inquiry",
           priority: "normal",
           source: "website",
-          status: "unread"
+          status: "new"
         });
 
         const { data: inquiryData, error: inquiryError } = await supabase
@@ -410,10 +410,10 @@ export async function POST(request: NextRequest) {
             customer_email: email,
             subject: `Inquiry from ${name}`,
             message: message,
-            inquiry_type: "general", // Use valid inquiry type
+            inquiry_type: "customer_inquiry", // Use original inquiry type
             priority: "normal",
             source: "website", // Use valid source value
-            status: "unread", // Use valid status
+            status: "new", // Use original status
           })
           .select()
           .single();
@@ -618,10 +618,10 @@ OmaHub Team`,
             customer_email: email,
             subject: subject,
             message: message,
-            inquiry_type: "general",
+            inquiry_type: "platform_contact",
             priority: "normal",
-            source: "website",
-            status: "unread"
+            source: "platform_contact_form",
+            status: "new"
           });
 
           const { data: inquiryData, error: inquiryError } = await supabase
@@ -632,10 +632,10 @@ OmaHub Team`,
               customer_email: email,
               subject: subject,
               message: message,
-              inquiry_type: "general", // Use valid inquiry type
+              inquiry_type: "platform_contact", // Use original inquiry type
               priority: "normal",
-              source: "website", // Use valid source
-              status: "unread", // Use valid status
+              source: "platform_contact_form", // Use original source
+              status: "new", // Use original status
             })
             .select()
             .single();
