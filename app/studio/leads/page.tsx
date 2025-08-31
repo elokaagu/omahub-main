@@ -140,7 +140,7 @@ export default function StudioLeadsPage() {
     try {
       setLoading(true);
 
-      const response = await fetch("/api/leads", {
+      const response = await fetch("/api/leads?action=list&page=1&limit=100", {
         credentials: "include",
         headers: {
           "Cache-Control": "no-cache",
