@@ -384,18 +384,27 @@ export default function StudioLeadsPage() {
       console.log("✅ Lead deleted from database successfully");
 
       // Verify the lead was actually deleted by checking if it still exists
-      const verifyResponse = await fetch(`/api/leads?action=list&_t=${Date.now()}`, {
-        credentials: "include",
-      });
-      
+      const verifyResponse = await fetch(
+        `/api/leads?action=list&_t=${Date.now()}`,
+        {
+          credentials: "include",
+        }
+      );
+
       if (verifyResponse.ok) {
         const verifyData = await verifyResponse.json();
-        const leadStillExists = verifyData.leads?.some((l: any) => l.id === lead.id);
-        
+        const leadStillExists = verifyData.leads?.some(
+          (l: any) => l.id === lead.id
+        );
+
         if (leadStillExists) {
-          console.warn("⚠️ Lead still exists in database after deletion attempt");
+          console.warn(
+            "⚠️ Lead still exists in database after deletion attempt"
+          );
         } else {
-          console.log("✅ Lead deletion verified - lead no longer exists in database");
+          console.log(
+            "✅ Lead deletion verified - lead no longer exists in database"
+          );
         }
       }
 

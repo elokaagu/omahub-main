@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get user profile
+    // Get user profile with role and owned brands
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("role, owned_brands")
@@ -34,66 +34,34 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
-    console.log(
-      "📧 Loading inbox for user:",
-      user.email,
-      "Role:",
-      profile.role
-    );
+    console.log("📧 Loading inbox for user:", user.email, "Role:", profile.role);
 
-    // Build query for inquiries
+    // Build base query for inquiries
     let inquiriesQuery = supabase
       .from("inquiries")
-      .select(
-        `
+      .select(`
         *,
         brand:brands(
+          id,
           name,
           category
         )
-      `
-      )
+      `)
       .order("created_at", { ascending: false });
 
     // Apply role-based filtering
     if (profile.role === "brand_admin" && profile.owned_brands?.length > 0) {
-      console.log(
-        "🔍 Filtering inquiries by owned brands:",
-        profile.owned_brands
-      );
-
-      // Handle both UUID and slug-based brand IDs
-      const { data: brandIds, error: brandIdsError } = await supabase
-        .from("brands")
-        .select("id")
-        .in("id", profile.owned_brands);
-
-      if (brandIdsError) {
-        console.error("❌ Error fetching brand IDs:", brandIdsError);
-        // Fallback to direct filtering
-        inquiriesQuery = inquiriesQuery.in("brand_id", profile.owned_brands);
-      } else if (brandIds && brandIds.length > 0) {
-        const actualBrandIds = brandIds.map((brand: any) => brand.id);
-        console.log("🔍 Actual brand IDs for filtering:", actualBrandIds);
-        inquiriesQuery = inquiriesQuery.in("brand_id", actualBrandIds);
-      } else {
-        console.log("⚠️ No valid brand IDs found for filtering");
-        return NextResponse.json({ success: true, inquiries: [] });
-      }
+      console.log("🔍 Brand admin filtering by owned brands:", profile.owned_brands);
+      
+      // For brand admins, show inquiries for their owned brands
+      inquiriesQuery = inquiriesQuery.in("brand_id", profile.owned_brands);
     } else if (profile.role === "brand_admin") {
       console.log("⚠️ Brand admin has no owned brands");
-      return NextResponse.json({ success: true, inquiries: [] });
+      return NextResponse.json({ success: true, inquiries: [], notifications: [] });
     } else {
-      console.log("🔍 Super admin - no brand filtering");
+      console.log("🔍 Super admin - showing all inquiries");
+      // Super admins see all inquiries (no filtering)
     }
-
-    // Debug: Log the final query and results
-    console.log("🔍 Final inquiries query details:", {
-      role: profile.role,
-      ownedBrands: profile.owned_brands,
-      isBrandAdmin: profile.role === "brand_admin",
-      hasOwnedBrands: profile.owned_brands?.length > 0,
-    });
 
     // Fetch inquiries
     const { data: inquiries, error: inquiriesError } = await inquiriesQuery;
@@ -106,48 +74,41 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Debug: Log what inquiries were returned and their brand IDs
-    console.log(
-      "🔍 Inquiries returned:",
-      inquiries?.map((inq) => ({
-        id: inq.id,
-        customer_name: inq.customer_name,
-        brand_id: inq.brand_id,
-        brand_name: inq.brand?.name,
-      }))
-    );
+    // Debug: Log what inquiries were returned
+    console.log("🔍 Inquiries returned:", inquiries?.map((inq) => ({
+      id: inq.id,
+      customer_name: inq.customer_name,
+      brand_id: inq.brand_id,
+      brand_name: inq.brand?.name,
+      inquiry_type: inq.inquiry_type,
+      status: inq.status,
+      source: inq.source,
+      created_at: inq.created_at
+    })));
 
     // Build query for notifications
     let notificationsQuery = supabase
       .from("notifications")
-      .select(
-        `
+      .select(`
         *,
         brand:brands(name)
-      `
-      )
+      `)
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
 
     // Apply role-based filtering for notifications
     if (profile.role === "brand_admin" && profile.owned_brands?.length > 0) {
-      notificationsQuery = notificationsQuery.in(
-        "brand_id",
-        profile.owned_brands
-      );
+      notificationsQuery = notificationsQuery.in("brand_id", profile.owned_brands);
     }
 
-    const { data: notifications, error: notificationsError } =
-      await notificationsQuery;
+    const { data: notifications, error: notificationsError } = await notificationsQuery;
 
     if (notificationsError) {
       console.warn("⚠️ Failed to fetch notifications:", notificationsError);
       // Continue without notifications
     }
 
-    console.log(
-      `✅ Loaded ${inquiries?.length || 0} inquiries and ${notifications?.length || 0} notifications`
-    );
+    console.log(`✅ Loaded ${inquiries?.length || 0} inquiries and ${notifications?.length || 0} notifications`);
 
     return NextResponse.json({
       success: true,

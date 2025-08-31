@@ -398,10 +398,10 @@ export async function POST(request: NextRequest) {
             customer_email: email,
             subject: `Inquiry from ${name}`,
             message: message,
-            inquiry_type: "customer_inquiry",
+            inquiry_type: "general", // Use valid inquiry type
             priority: "normal",
             source: "website", // Use valid source value
-            status: "new",
+            status: "unread", // Use valid status
           })
           .select()
           .single();
@@ -422,10 +422,10 @@ export async function POST(request: NextRequest) {
             customer_email: email,
             subject: `Inquiry from ${name}`,
             message: message,
-            inquiry_type: "customer_inquiry",
+            inquiry_type: "general", // Use valid inquiry type
             priority: "normal",
             source: "website", // Use valid source value
-            status: "new",
+            status: "unread", // Use valid status
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
           };
@@ -444,10 +444,10 @@ export async function POST(request: NextRequest) {
           customer_email: email,
           subject: `Inquiry from ${name}`,
           message: message,
-          inquiry_type: "customer_inquiry",
+          inquiry_type: "general", // Use valid inquiry type
           priority: "normal",
           source: "website", // Use valid source value
-          status: "new",
+          status: "unread", // Use valid status
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         };
@@ -608,10 +608,10 @@ OmaHub Team`,
               customer_email: email,
               subject: subject,
               message: message,
-              inquiry_type: "platform_contact",
+              inquiry_type: "general", // Use valid inquiry type
               priority: "normal",
-              source: "platform_contact_form",
-              status: "new",
+              source: "website", // Use valid source
+              status: "unread", // Use valid status
             })
             .select()
             .single();
