@@ -460,33 +460,32 @@ async function handleListRequest(supabase: any, profile: any, filters: any) {
 
 export async function PUT(request: NextRequest) {
   try {
-    console.log("📝 PUT request received for leads API");
-    
-    // Log the raw request details
-    console.log("🔍 Request details:", {
-      method: request.method,
-      url: request.url,
-      headers: Object.fromEntries(request.headers.entries()),
-    });
-
     const body = await request.json();
-    console.log("📦 Request body received:", body);
     
-    const { id, data } = body;
-    console.log("🔍 Extracted fields:", { id, data });
-
-    if (!id || !data) {
-      console.error("❌ Missing required fields:", { id: !!id, data: !!data, body });
+    // Handle both possible request formats
+    let id, updateData;
+    
+    if (body.id && body.data) {
+      // Format: { id: "...", data: {...} }
+      id = body.id;
+      updateData = body.data;
+    } else if (body.leadId && body.newStatus) {
+      // Format: { leadId: "...", newStatus: "..." }
+      id = body.leadId;
+      updateData = { status: body.newStatus };
+    } else {
       return NextResponse.json(
-        {
-          error: "Missing required fields: id and data are required",
-          received: { id: !!id, data: !!data, bodyKeys: Object.keys(body || {}) },
-        },
+        { error: "Invalid request format. Expected { id, data } or { leadId, newStatus }" },
         { status: 400 }
       );
     }
 
-    console.log(`📝 PUT request for lead: ${id}`, data);
+    if (!id) {
+      return NextResponse.json(
+        { error: "Lead ID is required" },
+        { status: 400 }
+      );
+    }
 
     const supabase = await createServerSupabaseClient();
 
@@ -497,67 +496,14 @@ export async function PUT(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      console.log("❌ Unauthorized lead update attempt");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get user profile
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("role, owned_brands")
-      .eq("id", user.id)
-      .single();
-
-    if (profileError || !profile) {
-      console.error("❌ Profile not found:", profileError);
-      return NextResponse.json({ error: "Profile not found" }, { status: 404 });
-    }
-
-    // Check permissions
-    if (!["super_admin", "brand_admin"].includes(profile.role)) {
-      console.log("❌ Access denied for role:", profile.role);
-      return NextResponse.json({ error: "Access denied" }, { status: 403 });
-    }
-
-    // Verify lead exists and user has access
-    let verifyQuery = supabase
-      .from("leads")
-      .select("id, brand_id, customer_name")
-      .eq("id", id);
-
-    if (profile.role === "brand_admin") {
-      if (!profile.owned_brands || profile.owned_brands.length === 0) {
-        console.log("❌ Brand admin has no accessible brands");
-        return NextResponse.json(
-          { error: "No accessible brands" },
-          { status: 403 }
-        );
-      }
-      verifyQuery = verifyQuery.in("brand_id", profile.owned_brands);
-    }
-
-    const { data: existingLead, error: verifyError } =
-      await verifyQuery.single();
-
-    if (verifyError) {
-      if (verifyError.code === "PGRST116") {
-        console.log("❌ Lead not found:", id);
-        return NextResponse.json({ error: "Lead not found" }, { status: 404 });
-      }
-      console.error("❌ Error verifying lead:", verifyError);
-      return NextResponse.json(
-        { error: "Failed to verify lead" },
-        { status: 500 }
-      );
-    }
-
-    console.log(`✅ Lead verified for update: ${existingLead.customer_name}`);
-
-    // Update the lead
+    // Update the lead directly
     const { data: updatedLead, error: updateError } = await supabase
       .from("leads")
       .update({
-        ...data,
+        ...updateData,
         updated_at: new Date().toISOString(),
       })
       .eq("id", id)
@@ -571,8 +517,6 @@ export async function PUT(request: NextRequest) {
         { status: 500 }
       );
     }
-
-    console.log(`✅ Lead updated successfully: ${updatedLead.customer_name}`);
 
     return NextResponse.json({
       success: true,
