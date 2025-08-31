@@ -183,7 +183,7 @@ export async function PUT(
               data: {
                 customerName: inquiryDetails.customer_name,
                 brandName: inquiryDetails.brand?.name || "OmaHub",
-                adminName: profile.first_name || profile.email,
+                adminName: profile.email || "OmaHub Admin",
                 replyMessage: reply,
                 originalMessage: inquiryDetails.message,
                 inquiryId: inquiryId,
