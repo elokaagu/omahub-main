@@ -164,46 +164,51 @@ export default function StudioLeadsPage() {
   };
 
   // Calculate lead statistics
-  const calculateLeadStats = useCallback((leadsData: Lead[]) => {
-    const now = new Date();
-    const thisMonth = now.getMonth();
-    const thisYear = now.getFullYear();
+  const calculateLeadStats = useCallback(
+    (leadsData: Lead[]) => {
+      const now = new Date();
+      const thisMonth = now.getMonth();
+      const thisYear = now.getFullYear();
 
-    const stats = {
-      totalLeads: leadsData.length,
-      qualifiedLeads: leadsData.filter((l) => l.status === "qualified").length,
-      convertedLeads: leadsData.filter((l) => l.status === "converted").length,
-      activeLeads: leadsData.filter((l) =>
-        ["new", "contacted", "qualified"].includes(l.status)
-      ).length,
-      conversionRate:
-        leadsData.length > 0
-          ? Math.round(
-              (leadsData.filter((l) => l.status === "converted").length /
-                leadsData.length) *
-                100
-            )
-          : 0,
-      totalBookings: leadsData.filter((l) => l.status === "converted").length, // Assuming converted leads are bookings
-      thisMonthLeads: leadsData.filter((l) => {
-        const leadDate = new Date(l.created_at);
-        return (
-          leadDate.getMonth() === thisMonth &&
-          leadDate.getFullYear() === thisYear
-        );
-      }).length,
-      thisMonthBookings: leadsData.filter((l) => {
-        const leadDate = new Date(l.created_at);
-        return (
-          l.status === "converted" &&
-          leadDate.getMonth() === thisMonth &&
-          leadDate.getFullYear() === thisYear
-        );
-      }).length,
-    };
+      const stats = {
+        totalLeads: leadsData.length,
+        qualifiedLeads: leadsData.filter((l) => l.status === "qualified")
+          .length,
+        convertedLeads: leadsData.filter((l) => l.status === "converted")
+          .length,
+        activeLeads: leadsData.filter((l) =>
+          ["new", "contacted", "qualified"].includes(l.status)
+        ).length,
+        conversionRate:
+          leadsData.length > 0
+            ? Math.round(
+                (leadsData.filter((l) => l.status === "converted").length /
+                  leadsData.length) *
+                  100
+              )
+            : 0,
+        totalBookings: leadsData.filter((l) => l.status === "converted").length, // Assuming converted leads are bookings
+        thisMonthLeads: leadsData.filter((l) => {
+          const leadDate = new Date(l.created_at);
+          return (
+            leadDate.getMonth() === thisMonth &&
+            leadDate.getFullYear() === thisYear
+          );
+        }).length,
+        thisMonthBookings: leadsData.filter((l) => {
+          const leadDate = new Date(l.created_at);
+          return (
+            l.status === "converted" &&
+            leadDate.getMonth() === thisMonth &&
+            leadDate.getFullYear() === thisYear
+          );
+        }).length,
+      };
 
-    setLeadStats(stats);
-  }, [setLeadStats]);
+      setLeadStats(stats);
+    },
+    [setLeadStats]
+  );
 
   // Update stats whenever leads change
   useEffect(() => {
@@ -455,15 +460,15 @@ export default function StudioLeadsPage() {
         id: leadId,
         data: updateData,
       };
-      
+
       console.log("🔍 Sending lead update request:", {
         url: "/api/leads",
         method: "PUT",
         body: requestBody,
         leadId,
-        newStatus
+        newStatus,
       });
-      
+
       const response = await fetch("/api/leads", {
         method: "PUT",
         headers: {
@@ -477,12 +482,12 @@ export default function StudioLeadsPage() {
         console.error("❌ Lead update failed:", {
           status: response.status,
           statusText: response.statusText,
-          url: response.url
+          url: response.url,
         });
-        
+
         const errorData = await response.json();
         console.error("❌ Error response data:", errorData);
-        
+
         throw new Error(errorData.error || "Failed to update lead status");
       }
 

@@ -15,8 +15,8 @@ interface AddToBasketButtonProps {
   brandId: string;
   brandName: string;
   brandCurrency?: string;
-  size?: string;
-  color?: string;
+  sizes?: string[];
+  colors?: string[];
   className?: string;
   variant?:
     | "default"
@@ -36,8 +36,8 @@ export default function AddToBasketButton({
   brandId,
   brandName,
   brandCurrency,
-  size,
-  color,
+  sizes,
+  colors,
   className,
   variant = "default",
   disabled = false,
@@ -90,8 +90,8 @@ export default function AddToBasketButton({
         brandId={brandId}
         brandName={brandName}
         brandCurrency={brandCurrency}
-        size={size}
-        color={color}
+        sizes={sizes}
+        colors={colors}
       />
     </>
   );

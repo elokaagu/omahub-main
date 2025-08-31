@@ -577,8 +577,8 @@ export default function ProductPage() {
                   brandId={product.brand_id}
                   brandName={brand.name}
                   brandCurrency={brand.currency}
-                  size={product.sizes && product.sizes.length > 0 ? product.sizes[0] : undefined}
-                  color={product.colors && product.colors.length > 0 ? product.colors[0] : undefined}
+                  sizes={product.sizes}
+                  colors={product.colors}
                   className="w-full py-3"
                 />
               )}

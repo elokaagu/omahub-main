@@ -42,8 +42,8 @@ interface BrandRequestModalProps {
   brandId: string;
   brandName: string;
   brandCurrency?: string;
-  size?: string;
-  color?: string;
+  sizes?: string[];
+  colors?: string[];
 }
 
 export function BrandRequestModal({
@@ -56,12 +56,12 @@ export function BrandRequestModal({
   brandId,
   brandName,
   brandCurrency,
-  size,
-  color,
+  sizes,
+  colors,
 }: BrandRequestModalProps) {
   console.log("🎭 BrandRequestModal rendered with props:", { 
-    size, 
-    color, 
+    sizes, 
+    colors, 
     productName, 
     brandName, 
     isOpen,
@@ -83,8 +83,8 @@ export function BrandRequestModal({
     country: "",
     customer_notes: "",
     quantity: 1,
-    preferred_size: size || "",
-    preferred_color: color || "",
+    preferred_size: "",
+    preferred_color: "",
   });
 
   // Reset form when modal opens/closes or props change
@@ -100,30 +100,30 @@ export function BrandRequestModal({
       country: "",
       customer_notes: "",
       quantity: 1,
-      preferred_size: size || "",
-      preferred_color: color || "",
+      preferred_size: "",
+      preferred_color: "",
     };
     
     setFormData(initialFormData);
     setValidationErrors([]);
     
-    console.log("🔄 Form reset - Size prop:", size, "Color prop:", color);
+    console.log("🔄 Form reset - Sizes prop:", sizes, "Colors prop:", colors);
     console.log("📝 Initial form data:", initialFormData);
-    console.log("🔍 Modal props:", { isOpen, size, color, productName, brandName });
+    console.log("🔍 Modal props:", { isOpen, sizes, colors, productName, brandName });
     console.log("🎯 FormData preferred_size after setState:", initialFormData.preferred_size);
-  }, [isOpen, size, color]);
+  }, [isOpen, sizes, colors]);
 
   // Additional effect to handle size/color prop changes specifically
   useEffect(() => {
-    if (size && size !== formData.preferred_size) {
-      console.log("🔄 Size prop changed, updating form:", { old: formData.preferred_size, new: size });
-      setFormData(prev => ({ ...prev, preferred_size: size }));
+    if (sizes && sizes.length > 0 && !formData.preferred_size) {
+      console.log("🔄 Sizes prop available, setting default size:", { sizes, current: formData.preferred_size });
+      setFormData(prev => ({ ...prev, preferred_size: sizes[0] }));
     }
-    if (color && color !== formData.preferred_color) {
-      console.log("🔄 Color prop changed, updating form:", { old: formData.preferred_color, new: color });
-      setFormData(prev => ({ ...prev, preferred_color: color }));
+    if (colors && colors.length > 0 && !formData.preferred_color) {
+      console.log("🔄 Colors prop available, setting default color:", { colors, current: formData.preferred_color });
+      setFormData(prev => ({ ...prev, preferred_color: colors[0] }));
     }
-  }, [size, color, formData.preferred_size, formData.preferred_color]);
+  }, [sizes, colors, formData.preferred_size, formData.preferred_color]);
 
   const handleInputChange = (field: string, value: string | number) => {
     console.log(`📝 Field change: ${field} = ${value}`);
@@ -226,8 +226,8 @@ export function BrandRequestModal({
         country: "",
         customer_notes: "",
         quantity: 1,
-        preferred_size: size || "",
-        preferred_color: color || "",
+        preferred_size: "",
+        preferred_color: "",
       });
       setValidationErrors([]);
     } catch (error: any) {
@@ -257,8 +257,8 @@ export function BrandRequestModal({
               <p className="font-medium text-yellow-800 mb-2">🔍 Debug Info (Development):</p>
               <div className="grid grid-cols-2 gap-2 text-yellow-700">
                 <div>
-                  <p><strong>Size prop:</strong> "{size || 'undefined'}"</p>
-                  <p><strong>Color prop:</strong> "{color || 'undefined'}"</p>
+                  <p><strong>Sizes prop:</strong> "{sizes ? JSON.stringify(sizes) : 'undefined'}"</p>
+                  <p><strong>Colors prop:</strong> "{colors ? JSON.stringify(colors) : 'undefined'}"</p>
                   <p><strong>Product:</strong> {productName}</p>
                   <p><strong>Brand:</strong> {brandName}</p>
                 </div>
@@ -313,11 +313,11 @@ export function BrandRequestModal({
                       ? formatPrice(price, brandCurrency || "£")
                       : "Contact for pricing"}
                   </p>
-                  {size && (
-                    <p className="text-sm text-gray-600">Size: {size}</p>
+                  {sizes && sizes.length > 0 && (
+                    <p className="text-sm text-gray-600">Available Sizes: {sizes.join(", ")}</p>
                   )}
-                  {color && (
-                    <p className="text-sm text-gray-600">Color: {color}</p>
+                  {colors && colors.length > 0 && (
+                    <p className="text-sm text-gray-600">Available Colors: {colors.join(", ")}</p>
                   )}
                 </div>
               </div>
