@@ -313,6 +313,13 @@ export default function StudioLeadsPage() {
       // Refresh stats after update
       loadLeadStats();
 
+      // Trigger a custom event to notify other components
+      window.dispatchEvent(
+        new CustomEvent("leadUpdated", {
+          detail: { leadId: leadId, newStatus },
+        })
+      );
+
       toast.success("Lead status updated successfully");
     } catch (error) {
       console.error("Error updating lead status:", error);
@@ -347,18 +354,23 @@ export default function StudioLeadsPage() {
         throw new Error(errorData.error || "Failed to delete lead");
       }
 
-      // Remove from local state
+      // Remove from local state immediately
       setLeads((prev) => prev.filter((l) => l.id !== lead.id));
       setDeleteDialogOpen(false);
       setLeadToDelete(null);
 
       toast.success("Lead deleted successfully");
 
-      // Refresh data after a short delay to ensure sync
-      setTimeout(() => {
-        loadLeads();
-        loadLeadStats();
-      }, 500);
+      // Refresh data immediately to ensure sync
+      loadLeads();
+      loadLeadStats();
+
+      // Also trigger a custom event to notify other components
+      window.dispatchEvent(
+        new CustomEvent("leadDeleted", {
+          detail: { leadId: lead.id },
+        })
+      );
     } catch (error) {
       console.error("Error deleting lead:", error);
       toast.error(
@@ -366,73 +378,6 @@ export default function StudioLeadsPage() {
       );
     } finally {
       setIsDeleting(false);
-    }
-  };
-
-  const createTestLead = async () => {
-    try {
-      // First, get a real brand ID from the user's owned brands or any available brand
-      let brandId = null;
-
-      if (user?.id) {
-        try {
-          const response = await fetch("/api/leads?action=analytics", {
-            credentials: "include",
-          });
-
-          if (response.ok) {
-            const data = await response.json();
-            // If we have leads, use the brand_id from the first one
-            if (data.analytics?.total_leads > 0) {
-              const leadsResponse = await fetch(
-                "/api/leads?action=list&page=1&limit=1",
-                {
-                  credentials: "include",
-                }
-              );
-
-              if (leadsResponse.ok) {
-                const leadsData = await leadsResponse.json();
-                if (leadsData.leads?.[0]?.brand_id) {
-                  brandId = leadsData.leads[0].brand_id;
-                }
-              }
-            }
-          }
-        } catch (error) {
-          console.log(
-            "Could not get existing brand ID, will create without brand"
-          );
-        }
-      }
-
-      const response = await fetch("/api/leads", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          brandId: brandId || "demo-brand", // Use real brand ID if available, otherwise demo
-          name: "Test Customer",
-          email: "test@example.com",
-          phone: "+1234567890",
-          source: "website",
-          leadType: "inquiry",
-          notes: "This is a test lead to demonstrate the system",
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to create test lead");
-      }
-
-      toast.success("Test lead created successfully!");
-      loadLeads();
-      loadLeadStats();
-    } catch (error) {
-      console.error("Error creating test lead:", error);
-      toast.error(
-        error instanceof Error ? error.message : "Failed to create test lead"
-      );
     }
   };
 
@@ -545,14 +490,6 @@ export default function StudioLeadsPage() {
                   className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`}
                 />
                 Refresh
-              </Button>
-              <Button
-                onClick={createTestLead}
-                disabled={loading}
-                className="bg-oma-plum hover:bg-oma-plum/90"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Create Test Lead
               </Button>
             </div>
           </div>
@@ -769,15 +706,6 @@ export default function StudioLeadsPage() {
                     ? "When customers contact brands or submit orders, leads will appear here."
                     : "Try adjusting your search criteria or filters."}
                 </p>
-                {leads.length === 0 && (
-                  <Button
-                    onClick={createTestLead}
-                    className="bg-oma-plum hover:bg-oma-plum/90"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create Test Lead
-                  </Button>
-                )}
               </div>
             </CardContent>
           </Card>

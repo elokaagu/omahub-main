@@ -379,6 +379,35 @@ export default function LeadsTrackingDashboard({
     }
   }, [user, isBrandAdmin, effectiveOwnedBrands.length]);
 
+  // Listen for lead deletion and update events to refresh data in real-time
+  useEffect(() => {
+    const handleLeadDeleted = () => {
+      console.log("🔄 Lead deleted event received, refreshing dashboard data");
+      fetchLeads();
+      fetchAnalytics();
+      if (isSuperAdmin || (isBrandAdmin && effectiveOwnedBrands.length > 0)) {
+        fetchPlatformAnalytics();
+      }
+    };
+
+    const handleLeadUpdated = () => {
+      console.log("🔄 Lead updated event received, refreshing dashboard data");
+      fetchLeads();
+      fetchAnalytics();
+      if (isSuperAdmin || (isBrandAdmin && effectiveOwnedBrands.length > 0)) {
+        fetchPlatformAnalytics();
+      }
+    };
+
+    window.addEventListener('leadDeleted', handleLeadDeleted);
+    window.addEventListener('leadUpdated', handleLeadUpdated);
+    
+    return () => {
+      window.removeEventListener('leadDeleted', handleLeadDeleted);
+      window.removeEventListener('leadUpdated', handleLeadUpdated);
+    };
+  }, [isSuperAdmin, isBrandAdmin, effectiveOwnedBrands.length]);
+
   // Handle inline field updates
   const handleFieldUpdate = async (
     leadId: string,
