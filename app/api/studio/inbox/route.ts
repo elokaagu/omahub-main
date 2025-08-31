@@ -5,264 +5,120 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = await createServerSupabaseClient();
 
-    // Enhanced authentication with better error handling
+    // Get authenticated user
     const {
-      data: { session },
-      error: sessionError,
-    } = await supabase.auth.getSession();
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
-    if (sessionError) {
-      console.error("Session error:", sessionError);
-      return NextResponse.json(
-        { error: "Session invalid - please sign in again" },
-        { status: 401 }
-      );
-    }
-
-    if (!session?.user) {
-      console.error("No session or user found");
+    if (authError || !user) {
+      console.log("❌ Unauthorized inbox access attempt");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const user = session.user;
-    console.log("✅ Inbox API: User authenticated:", user.email);
-
-    // Get user profile with fallback for super_admin users
-    let profile;
-    const { data: profileData, error: profileError } = await supabase
+    // Get user profile
+    const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("role, owned_brands")
       .eq("id", user.id)
       .single();
 
-    if (profileError || !profileData) {
-      console.log(
-        "⚠️ Profile not found, checking user email for super_admin access"
-      );
-
-      // Fallback: Check if user email indicates super_admin access (legacy support)
-      const legacySuperAdmins = [
-        "eloka.agu@icloud.com",
-        "shannonalisa@oma-hub.com",
-      ];
-      
-      if (legacySuperAdmins.includes(user.email || "")) {
-        profile = {
-          role: "super_admin",
-          owned_brands: [],
-        };
-        console.log(
-          "✅ Granted super_admin access based on email:",
-          user.email
-        );
-      } else {
-        console.error("Profile error:", profileError);
-        return NextResponse.json(
-          { error: "Profile not found" },
-          { status: 404 }
-        );
-      }
-    } else {
-      profile = profileData;
+    if (profileError || !profile) {
+      console.error("❌ Profile not found:", profileError);
+      return NextResponse.json({ error: "Profile not found" }, { status: 404 });
     }
 
-    // Check if user has inbox access
+    // Check permissions
     if (!["super_admin", "brand_admin"].includes(profile.role)) {
       console.log("❌ Access denied for role:", profile.role);
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
-    console.log("✅ Access granted for role:", profile.role);
+    console.log("📧 Loading inbox for user:", user.email, "Role:", profile.role);
 
-    // Parse query parameters
-    const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "20");
-    const status = searchParams.get("status");
-    const priority = searchParams.get("priority");
-    const inquiryType = searchParams.get("type");
-    const brandId = searchParams.get("brandId");
-    const search = searchParams.get("search");
-
-    const offset = (page - 1) * limit;
-
-    // Build query - check if inquiries table/view exists
-    let query;
-    try {
-      query = supabase
-        .from("inquiries_with_details")
-        .select("*", { count: "exact" });
-    } catch (viewError) {
-      console.log(
-        "⚠️ inquiries_with_details view not found, using inquiries table"
-      );
-      query = supabase.from("inquiries").select(
-        `
-          *,
-          brands:brand_id (
-            name,
-            category,
-            image
-          )
-        `,
-        { count: "exact" }
-      );
-    }
+    // Build query for inquiries
+    let inquiriesQuery = supabase
+      .from("inquiries")
+      .select(`
+        *,
+        brand:brands(
+          name,
+          category
+        )
+      `)
+      .order("created_at", { ascending: false });
 
     // Apply role-based filtering
-    if (profile.role === "brand_admin") {
-      if (!profile.owned_brands || profile.owned_brands.length === 0) {
-        return NextResponse.json({
-          inquiries: [],
-          totalCount: 0,
-          totalPages: 0,
-          currentPage: page,
-        });
+    if (profile.role === "brand_admin" && profile.owned_brands?.length > 0) {
+      console.log("🔍 Filtering inquiries by owned brands:", profile.owned_brands);
+      
+      // Handle both UUID and slug-based brand IDs
+      const { data: brandIds, error: brandIdsError } = await supabase
+        .from("brands")
+        .select("id")
+        .in("id", profile.owned_brands);
+      
+      if (brandIdsError) {
+        console.error("❌ Error fetching brand IDs:", brandIdsError);
+        // Fallback to direct filtering
+        inquiriesQuery = inquiriesQuery.in("brand_id", profile.owned_brands);
+      } else if (brandIds && brandIds.length > 0) {
+        const actualBrandIds = brandIds.map((brand: any) => brand.id);
+        console.log("🔍 Actual brand IDs for filtering:", actualBrandIds);
+        inquiriesQuery = inquiriesQuery.in("brand_id", actualBrandIds);
+      } else {
+        console.log("⚠️ No valid brand IDs found for filtering");
+        return NextResponse.json({ success: true, inquiries: [] });
       }
-      query = query.in("brand_id", profile.owned_brands);
+    } else if (profile.role === "brand_admin") {
+      console.log("⚠️ Brand admin has no owned brands");
+      return NextResponse.json({ success: true, inquiries: [] });
+    } else {
+      console.log("🔍 Super admin - no brand filtering");
     }
 
-    // Apply filters
-    if (status) {
-      query = query.eq("status", status);
-    }
-    if (priority) {
-      query = query.eq("priority", priority);
-    }
-    if (inquiryType) {
-      query = query.eq("inquiry_type", inquiryType);
-    }
-    if (brandId) {
-      query = query.eq("brand_id", brandId);
-    }
-    if (search) {
-      query = query.or(
-        `customer_name.ilike.%${search}%,customer_email.ilike.%${search}%,subject.ilike.%${search}%,message.ilike.%${search}%`
-      );
-    }
+    // Fetch inquiries
+    const { data: inquiries, error: inquiriesError } = await inquiriesQuery;
 
-    // Apply pagination and ordering
-    query = query
-      .order("created_at", { ascending: false })
-      .range(offset, offset + limit - 1);
-
-    const { data: inquiries, error, count } = await query;
-
-    if (error) {
-      console.error("Error fetching inquiries:", error);
-
-      // If table doesn't exist, return empty results
-      if (
-        error.message?.includes("relation") &&
-        error.message?.includes("does not exist")
-      ) {
-        console.log("⚠️ Inquiries table not found, returning empty results");
-        return NextResponse.json({
-          inquiries: [],
-          totalCount: 0,
-          totalPages: 0,
-          currentPage: page,
-        });
-      }
-
+    if (inquiriesError) {
+      console.error("❌ Error fetching inquiries:", inquiriesError);
       return NextResponse.json(
         { error: "Failed to fetch inquiries" },
         { status: 500 }
       );
     }
 
-    const totalPages = Math.ceil((count || 0) / limit);
+    // Build query for notifications
+    let notificationsQuery = supabase
+      .from("notifications")
+      .select(`
+        *,
+        brand:brands(name)
+      `)
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
 
-    console.log(
-      `✅ Fetched ${inquiries?.length || 0} inquiries for ${user.email}`
-    );
+    // Apply role-based filtering for notifications
+    if (profile.role === "brand_admin" && profile.owned_brands?.length > 0) {
+      notificationsQuery = notificationsQuery.in("brand_id", profile.owned_brands);
+    }
+
+    const { data: notifications, error: notificationsError } = await notificationsQuery;
+
+    if (notificationsError) {
+      console.warn("⚠️ Failed to fetch notifications:", notificationsError);
+      // Continue without notifications
+    }
+
+    console.log(`✅ Loaded ${inquiries?.length || 0} inquiries and ${notifications?.length || 0} notifications`);
 
     return NextResponse.json({
+      success: true,
       inquiries: inquiries || [],
-      totalCount: count || 0,
-      totalPages,
-      currentPage: page,
+      notifications: notifications || [],
     });
   } catch (error) {
-    console.error("Inbox API error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
-  }
-}
-
-// POST - Create new inquiry (for public contact forms)
-export async function POST(request: NextRequest) {
-  try {
-    const supabase = await createServerSupabaseClient();
-    const body = await request.json();
-
-    const {
-      brandId,
-      customerName,
-      customerEmail,
-      customerPhone,
-      subject,
-      message,
-      inquiryType = "general",
-      priority = "normal",
-      source = "website",
-    } = body;
-
-    // Validate required fields
-    if (!brandId || !customerName || !customerEmail || !subject || !message) {
-      return NextResponse.json(
-        { error: "Missing required fields" },
-        { status: 400 }
-      );
-    }
-
-    // Verify brand exists
-    const { data: brand, error: brandError } = await supabase
-      .from("brands")
-      .select("id, name")
-      .eq("id", brandId)
-      .single();
-
-    if (brandError || !brand) {
-      return NextResponse.json({ error: "Brand not found" }, { status: 404 });
-    }
-
-    // Create inquiry
-    const { data: inquiry, error: insertError } = await supabase
-      .from("inquiries")
-      .insert({
-        brand_id: brandId,
-        customer_name: customerName,
-        customer_email: customerEmail,
-        customer_phone: customerPhone,
-        subject,
-        message,
-        inquiry_type: inquiryType,
-        priority,
-        source,
-      })
-      .select()
-      .single();
-
-    if (insertError) {
-      console.error("Error creating inquiry:", insertError);
-      return NextResponse.json(
-        { error: "Failed to create inquiry" },
-        { status: 500 }
-      );
-    }
-
-    // TODO: Send email notification to brand admin
-    // This would be implemented with your email service
-
-    return NextResponse.json({
-      message: "Inquiry created successfully",
-      inquiry,
-    });
-  } catch (error) {
-    console.error("Create inquiry error:", error);
+    console.error("💥 Get inbox error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

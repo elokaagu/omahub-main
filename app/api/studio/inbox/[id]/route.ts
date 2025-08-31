@@ -6,55 +6,28 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = await createServerSupabaseClient();
     const inquiryId = params.id;
+    const supabase = await createServerSupabaseClient();
 
     // Get authenticated user
     const {
       data: { user },
       error: authError,
     } = await supabase.auth.getUser();
+
     if (authError || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get user profile with fallback for super_admin users
-    let profile;
-    const { data: profileData, error: profileError } = await supabase
+    // Get user profile
+    const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("role, owned_brands")
       .eq("id", user.id)
       .single();
 
-    if (profileError || !profileData) {
-      console.log(
-        "⚠️ Profile not found, checking user email for super_admin access"
-      );
-
-      // Fallback: Check if user email indicates super_admin access (legacy support)
-      const legacySuperAdmins = [
-        "eloka.agu@icloud.com",
-        "shannonalisa@oma-hub.com",
-      ];
-      
-      if (legacySuperAdmins.includes(user.email || "")) {
-        profile = {
-          role: "super_admin",
-          owned_brands: [],
-        };
-        console.log(
-          "✅ Granted super_admin access based on email:",
-          user.email
-        );
-      } else {
-        console.error("Profile error:", profileError);
-        return NextResponse.json(
-          { error: "Profile not found" },
-          { status: 404 }
-        );
-      }
-    } else {
-      profile = profileData;
+    if (profileError || !profile) {
+      return NextResponse.json({ error: "Profile not found" }, { status: 404 });
     }
 
     // Check permissions
@@ -62,20 +35,18 @@ export async function GET(
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
-    // Get inquiry with details
+    // Build query for inquiry
     let query = supabase
-      .from("inquiries_with_details")
-      .select("*")
+      .from("inquiries")
+      .select(`
+        *,
+        brand:brands(name, category),
+        replies:inquiry_replies(*)
+      `)
       .eq("id", inquiryId);
 
     // Apply role-based filtering
-    if (profile.role === "brand_admin") {
-      if (!profile.owned_brands || profile.owned_brands.length === 0) {
-        return NextResponse.json(
-          { error: "No accessible brands" },
-          { status: 403 }
-        );
-      }
+    if (profile.role === "brand_admin" && profile.owned_brands?.length > 0) {
       query = query.in("brand_id", profile.owned_brands);
     }
 
@@ -83,40 +54,125 @@ export async function GET(
 
     if (error) {
       if (error.code === "PGRST116") {
-        return NextResponse.json(
-          { error: "Inquiry not found" },
-          { status: 404 }
-        );
+        return NextResponse.json({ error: "Inquiry not found" }, { status: 404 });
       }
-      console.error("Error fetching inquiry:", error);
       return NextResponse.json(
         { error: "Failed to fetch inquiry" },
         { status: 500 }
       );
     }
 
-    // Get replies for this inquiry
-    const { data: replies, error: repliesError } = await supabase
-      .from("inquiry_replies")
-      .select(
-        `
-        *,
-        admin:profiles(first_name, last_name, email)
-      `
-      )
-      .eq("inquiry_id", inquiryId)
-      .order("created_at", { ascending: true });
+    return NextResponse.json({ success: true, inquiry });
+  } catch (error) {
+    console.error("💥 Get inquiry error:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
 
-    if (repliesError) {
-      console.error("Error fetching replies:", repliesError);
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const inquiryId = params.id;
+    const body = await request.json();
+    const { status, is_read, reply } = body;
+
+    const supabase = await createServerSupabaseClient();
+
+    // Get authenticated user
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Get user profile
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("role, owned_brands")
+      .eq("id", user.id)
+      .single();
+
+    if (profileError || !profile) {
+      return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+    }
+
+    // Check permissions
+    if (!["super_admin", "brand_admin"].includes(profile.role)) {
+      return NextResponse.json({ error: "Access denied" }, { status: 403 });
+    }
+
+    // Verify inquiry exists and user has access
+    let verifyQuery = supabase
+      .from("inquiries")
+      .select("id, brand_id, customer_name")
+      .eq("id", inquiryId);
+
+    if (profile.role === "brand_admin" && profile.owned_brands?.length > 0) {
+      verifyQuery = verifyQuery.in("brand_id", profile.owned_brands);
+    }
+
+    const { data: existingInquiry, error: verifyError } = await verifyQuery.single();
+
+    if (verifyError) {
+      if (verifyError.code === "PGRST116") {
+        return NextResponse.json({ error: "Inquiry not found" }, { status: 404 });
+      }
+      return NextResponse.json(
+        { error: "Failed to verify inquiry" },
+        { status: 500 }
+      );
+    }
+
+    // Update the inquiry
+    const updateData: any = {};
+    if (status !== undefined) updateData.status = status;
+    if (is_read !== undefined) updateData.is_read = is_read;
+    updateData.updated_at = new Date().toISOString();
+
+    const { data: updatedInquiry, error: updateError } = await supabase
+      .from("inquiries")
+      .update(updateData)
+      .eq("id", inquiryId)
+      .select()
+      .single();
+
+    if (updateError) {
+      return NextResponse.json(
+        { error: "Failed to update inquiry" },
+        { status: 500 }
+      );
+    }
+
+    // Add reply if provided
+    if (reply) {
+      const { error: replyError } = await supabase
+        .from("inquiry_replies")
+        .insert({
+          inquiry_id: inquiryId,
+          user_id: user.id,
+          message: reply,
+          is_brand_reply: profile.role === "brand_admin",
+        });
+
+      if (replyError) {
+        console.warn("⚠️ Failed to add reply:", replyError);
+      }
     }
 
     return NextResponse.json({
-      inquiry,
-      replies: replies || [],
+      success: true,
+      inquiry: updatedInquiry,
     });
   } catch (error) {
-    console.error("Get inquiry error:", error);
+    console.error("💥 Update inquiry error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
@@ -129,58 +185,32 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = await createServerSupabaseClient();
     const inquiryId = params.id;
-
-    console.log(`🗑️ DELETE request for inquiry: ${inquiryId}`);
+    const supabase = await createServerSupabaseClient();
 
     // Get authenticated user
     const {
       data: { user },
       error: authError,
     } = await supabase.auth.getUser();
+
     if (authError || !user) {
-      console.log("❌ Unauthorized delete attempt");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // Get user profile
-    let profile;
-    const { data: profileData, error: profileError } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("role, owned_brands")
       .eq("id", user.id)
       .single();
 
-    if (profileError || !profileData) {
-      console.log("⚠️ Profile not found, checking user email for super_admin access");
-
-      // Fallback: Check if user email indicates super_admin access
-      const legacySuperAdmins = [
-        "eloka.agu@icloud.com",
-        "shannonalisa@oma-hub.com",
-      ];
-      
-      if (legacySuperAdmins.includes(user.email || "")) {
-        profile = {
-          role: "super_admin",
-          owned_brands: [],
-        };
-        console.log("✅ Granted super_admin access based on email:", user.email);
-      } else {
-        console.error("Profile error:", profileError);
-        return NextResponse.json(
-          { error: "Profile not found" },
-          { status: 404 }
-        );
-      }
-    } else {
-      profile = profileData;
+    if (profileError || !profile) {
+      return NextResponse.json({ error: "Profile not found" }, { status: 404 });
     }
 
     // Check permissions
     if (!["super_admin", "brand_admin"].includes(profile.role)) {
-      console.log("❌ Access denied for role:", profile.role);
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
@@ -190,208 +220,51 @@ export async function DELETE(
       .select("id, brand_id, customer_name")
       .eq("id", inquiryId);
 
-    if (profile.role === "brand_admin") {
-      if (!profile.owned_brands || profile.owned_brands.length === 0) {
-        console.log("❌ Brand admin has no accessible brands");
-        return NextResponse.json(
-          { error: "No accessible brands" },
-          { status: 403 }
-        );
-      }
+    if (profile.role === "brand_admin" && profile.owned_brands?.length > 0) {
       verifyQuery = verifyQuery.in("brand_id", profile.owned_brands);
     }
 
-    const { data: existingInquiry, error: verifyError } =
-      await verifyQuery.single();
+    const { data: existingInquiry, error: verifyError } = await verifyQuery.single();
 
     if (verifyError) {
       if (verifyError.code === "PGRST116") {
-        console.log("❌ Inquiry not found:", inquiryId);
-        return NextResponse.json(
-          { error: "Inquiry not found" },
-          { status: 404 }
-        );
+        return NextResponse.json({ error: "Inquiry not found" }, { status: 404 });
       }
-      console.error("❌ Error verifying inquiry:", verifyError);
       return NextResponse.json(
         { error: "Failed to verify inquiry" },
         { status: 500 }
       );
     }
 
-    console.log(`✅ Inquiry verified for deletion: ${existingInquiry.customer_name}`);
-
-    // Delete any replies first
-    console.log("🗑️ Deleting inquiry replies...");
-    const { error: repliesDeleteError } = await supabase
+    // Delete associated replies first
+    const { error: repliesError } = await supabase
       .from("inquiry_replies")
       .delete()
       .eq("inquiry_id", inquiryId);
 
-    if (repliesDeleteError) {
-      console.warn("⚠️ Warning: Could not delete replies:", repliesDeleteError.message);
-      // Continue with inquiry deletion even if replies fail
-    } else {
-      console.log("✅ Inquiry replies deleted successfully");
+    if (repliesError) {
+      console.warn("⚠️ Warning: Failed to delete inquiry replies:", repliesError);
     }
 
     // Delete the inquiry
-    console.log("🗑️ Deleting inquiry from database...");
     const { error: deleteError } = await supabase
       .from("inquiries")
       .delete()
       .eq("id", inquiryId);
 
     if (deleteError) {
-      console.error("❌ Failed to delete inquiry:", deleteError);
       return NextResponse.json(
         { error: "Failed to delete inquiry" },
         { status: 500 }
       );
     }
 
-    console.log(`✅ Inquiry ${inquiryId} deleted successfully from database`);
-
     return NextResponse.json({
       success: true,
-      message: `Inquiry from ${existingInquiry.customer_name} deleted successfully`,
-      deletedInquiryId: inquiryId,
+      message: "Inquiry deleted successfully",
     });
-
   } catch (error) {
     console.error("💥 Delete inquiry error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
-  }
-}
-
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const supabase = await createServerSupabaseClient();
-    const inquiryId = params.id;
-    const body = await request.json();
-
-    // Get authenticated user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Get user profile with fallback for super_admin users
-    let profile;
-    const { data: profileData, error: profileError } = await supabase
-      .from("profiles")
-      .select("role, owned_brands")
-      .eq("id", user.id)
-      .single();
-
-    if (profileError || !profileData) {
-      console.log(
-        "⚠️ Profile not found, checking user email for super_admin access"
-      );
-
-      // Fallback: Check if user email indicates super_admin access (legacy support)
-      const legacySuperAdmins = [
-        "eloka.agu@icloud.com",
-        "shannonalisa@oma-hub.com",
-      ];
-      
-      if (legacySuperAdmins.includes(user.email || "")) {
-        profile = {
-          role: "super_admin",
-          owned_brands: [],
-        };
-        console.log(
-          "✅ Granted super_admin access based on email:",
-          user.email
-        );
-      } else {
-        console.error("Profile error:", profileError);
-        return NextResponse.json(
-          { error: "Profile not found" },
-          { status: 404 }
-        );
-      }
-    } else {
-      profile = profileData;
-    }
-
-    // Check permissions
-    if (!["super_admin", "brand_admin"].includes(profile.role)) {
-      return NextResponse.json({ error: "Access denied" }, { status: 403 });
-    }
-
-    // Verify inquiry exists and user has access
-    let verifyQuery = supabase
-      .from("inquiries")
-      .select("brand_id")
-      .eq("id", inquiryId);
-
-    if (profile.role === "brand_admin") {
-      if (!profile.owned_brands || profile.owned_brands.length === 0) {
-        return NextResponse.json(
-          { error: "No accessible brands" },
-          { status: 403 }
-        );
-      }
-      verifyQuery = verifyQuery.in("brand_id", profile.owned_brands);
-    }
-
-    const { data: existingInquiry, error: verifyError } =
-      await verifyQuery.single();
-
-    if (verifyError) {
-      if (verifyError.code === "PGRST116") {
-        return NextResponse.json(
-          { error: "Inquiry not found" },
-          { status: 404 }
-        );
-      }
-      return NextResponse.json(
-        { error: "Failed to verify inquiry" },
-        { status: 500 }
-      );
-    }
-
-    // Prepare update data
-    const updateData: any = {};
-    const { status, priority, readAt } = body;
-
-    if (status) updateData.status = status;
-    if (priority) updateData.priority = priority;
-    if (readAt !== undefined)
-      updateData.read_at = readAt ? new Date().toISOString() : null;
-
-    // Update inquiry
-    const { data: updatedInquiry, error: updateError } = await supabase
-      .from("inquiries")
-      .update(updateData)
-      .eq("id", inquiryId)
-      .select()
-      .single();
-
-    if (updateError) {
-      console.error("Error updating inquiry:", updateError);
-      return NextResponse.json(
-        { error: "Failed to update inquiry" },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json({
-      message: "Inquiry updated successfully",
-      inquiry: updatedInquiry,
-    });
-  } catch (error) {
-    console.error("Update inquiry error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
