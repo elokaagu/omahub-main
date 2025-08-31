@@ -7,6 +7,7 @@ export async function GET(
 ) {
   try {
     const inquiryId = params.id;
+    console.log("🔍 Fetching inquiry with ID:", inquiryId);
     const supabase = await createServerSupabaseClient();
 
     // Get authenticated user
@@ -52,7 +53,10 @@ export async function GET(
 
     const { data: inquiry, error } = await query.single();
 
+    console.log("🔍 Inquiry query result:", { inquiry, error });
+
     if (error) {
+      console.error("❌ Inquiry fetch error:", error);
       if (error.code === "PGRST116") {
         return NextResponse.json({ error: "Inquiry not found" }, { status: 404 });
       }
@@ -62,6 +66,7 @@ export async function GET(
       );
     }
 
+    console.log("✅ Inquiry fetched successfully:", inquiry?.id);
     return NextResponse.json({ success: true, inquiry });
   } catch (error) {
     console.error("💥 Get inquiry error:", error);

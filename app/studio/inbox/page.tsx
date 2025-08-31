@@ -172,7 +172,7 @@ export default function StudioInboxPage() {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ is_read: true }),
+        body: JSON.stringify({ status: "read" }),
       });
 
       if (!response.ok) {
