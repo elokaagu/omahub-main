@@ -82,15 +82,27 @@ export default function StudioInboxPage() {
       if (!user?.id) return;
       
       try {
-        const response = await fetch("/api/leads?action=analytics", {
-          credentials: "include",
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          // If we can fetch analytics, we're likely a super admin or brand admin
-          setIsSuperAdmin(true); // This will be refined based on actual role
+        // Get user profile to determine actual role
+        const supabase = createClient();
+        const { data: profile, error } = await supabase
+          .from("profiles")
+          .select("role, owned_brands")
+          .eq("id", user.id)
+          .single();
+
+        if (error) {
+          console.error("Error fetching user profile:", error);
+          return;
         }
+
+        const isSuperAdmin = profile.role === "super_admin";
+        setIsSuperAdmin(isSuperAdmin);
+        
+        console.log("🔍 User role determined:", {
+          role: profile.role,
+          isSuperAdmin,
+          ownedBrands: profile.owned_brands?.length || 0
+        });
       } catch (error) {
         console.error("Error checking user role:", error);
       }
