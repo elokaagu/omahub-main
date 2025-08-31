@@ -377,7 +377,7 @@ async function handleListRequest(supabase: any, profile: any, filters: any) {
     let query = supabase.from("leads").select(
       `
         *,
-        brand:brands(
+        brands(
           id,
           name,
           category

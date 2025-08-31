@@ -54,6 +54,11 @@ interface Lead {
     name: string;
     category?: string;
   };
+  brands?: {
+    id: string;
+    name: string;
+    category?: string;
+  };
 }
 
 interface LeadStats {
@@ -820,12 +825,15 @@ export default function StudioLeadsPage() {
                           <span className="font-medium">Type:</span>{" "}
                           {lead.lead_type}
                         </div>
-                        {lead.brand && (
-                          <div>
-                            <span className="font-medium">Brand:</span>{" "}
-                            {lead.brand.name}
-                          </div>
-                        )}
+                        <div>
+                          <span className="font-medium">Brand:</span>{" "}
+                          {lead.brand?.name || lead.brands?.name || "Unknown Brand"}
+                          {process.env.NODE_ENV === 'development' && (
+                            <span className="text-xs text-gray-500 ml-2">
+                              (Debug: {JSON.stringify({ brand: lead.brand, brands: lead.brands })}) 
+                            </span>
+                          )}
+                        </div>
                         {lead.estimated_value && (
                           <div>
                             <span className="font-medium">Value:</span> £
