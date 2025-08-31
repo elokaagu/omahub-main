@@ -368,9 +368,11 @@ export function BrandRequestModal({
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
-                    {/* Only show the size that was selected when the product was created */}
-                    {size ? (
-                      <SelectItem value={size}>{size}</SelectItem>
+                    {/* Show all available sizes for this product */}
+                    {sizes && sizes.length > 0 ? (
+                      sizes.map((sizeOption) => (
+                        <SelectItem key={sizeOption} value={sizeOption}>{sizeOption}</SelectItem>
+                      ))
                     ) : (
                       <>
                         {/* Fallback to standard sizes if no specific size was set */}
@@ -431,9 +433,11 @@ export function BrandRequestModal({
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
-                    {/* Only show the color that was selected when the product was created */}
-                    {color ? (
-                      <SelectItem value={color}>{color}</SelectItem>
+                    {/* Show all available colors for this product */}
+                    {colors && colors.length > 0 ? (
+                      colors.map((colorOption) => (
+                        <SelectItem key={colorOption} value={colorOption}>{colorOption}</SelectItem>
+                      ))
                     ) : (
                       <>
                         {/* Fallback to common colors if no specific color was set */}
