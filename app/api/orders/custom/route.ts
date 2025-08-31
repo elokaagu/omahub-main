@@ -268,9 +268,9 @@ export async function POST(request: NextRequest) {
         customer_phone: delivery_address.phone || "",
         source: source,
         lead_type: "product_request",
-        status: "new",
+        status: "converted", // Automatically converted since they've already ordered
         priority: "high",
-        notes: `${orderType} for ${product.title}\n\nCustomer notes: ${customer_notes || 'None'}\n\nSize: ${size || 'Not specified'}\nColor: ${color || 'Not specified'}\nQuantity: ${quantity}`,
+        notes: `${orderType} for ${product.title}\n\nCustomer notes: ${customer_notes || 'None'}\n\nSize: ${size || 'Not specified'}\nColor: ${color || 'Not specified'}\nQuantity: ${quantity}\n\nStatus: Automatically marked as converted since customer has already submitted an order.`,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
@@ -332,11 +332,11 @@ Delivery Address:
 - ${delivery_address.city || ''}, ${delivery_address.state || ''} ${delivery_address.postal_code || ''}
 - ${delivery_address.country || ''}
 
-This ${orderType.toLowerCase()} has been saved to your leads dashboard and can be managed from there.`,
+This ${orderType.toLowerCase()} has been completed and saved to your leads dashboard. The customer has already submitted their order details.`,
         inquiry_type: "product_request",
         priority: "high",
         source: source,
-        status: "new",
+        status: "replied", // Mark as replied since this is a completed order request
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
