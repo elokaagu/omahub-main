@@ -209,7 +209,14 @@ export default function LeadsTrackingDashboard({
       setLeadsLoading(true);
       setLeadsError(null);
 
-      const response = await fetch("/api/leads?action=list");
+      const response = await fetch("/api/leads?action=list", {
+        credentials: "include",
+        headers: {
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          Pragma: "no-cache",
+          Expires: "0",
+        },
+      });
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || "Failed to fetch leads");
@@ -240,7 +247,14 @@ export default function LeadsTrackingDashboard({
       setAnalyticsLoading(true);
       setAnalyticsError(null);
 
-      const response = await fetch("/api/leads?action=analytics");
+      const response = await fetch("/api/leads?action=analytics", {
+        credentials: "include",
+        headers: {
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          Pragma: "no-cache",
+          Expires: "0",
+        },
+      });
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || "Failed to fetch analytics");
@@ -403,6 +417,13 @@ export default function LeadsTrackingDashboard({
       const { leadId, leadName } = event.detail || {};
       console.log("🔄 Lead deleted event received:", { leadId, leadName });
       console.log("🔄 Refreshing dashboard data...");
+      
+      // Remove the deleted lead from local state immediately for better UX
+      setLeads((prevLeads) => {
+        const newLeads = prevLeads.filter(lead => lead.id !== leadId);
+        console.log(`🔄 Updated local leads state: ${prevLeads.length} → ${newLeads.length} leads`);
+        return newLeads;
+      });
       
       // Refresh all data immediately
       fetchLeads();
