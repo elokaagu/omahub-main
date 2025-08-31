@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase-unified";
+import { sendInquiryReplyEmail } from "@/lib/services/emailService";
 
 export async function GET(
   request: NextRequest,
@@ -173,26 +174,19 @@ export async function PUT(
       } else {
         // Send email to customer
         try {
-          const emailResponse = await fetch("/api/email/send", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              to: inquiryDetails.customer_email,
-              subject: `Re: ${inquiryDetails.subject}`,
-              template: "inquiry-reply",
-              data: {
-                customerName: inquiryDetails.customer_name,
-                brandName: inquiryDetails.brand?.name || "OmaHub",
-                adminName: "OmaHub Admin",
-                replyMessage: reply,
-                originalMessage: inquiryDetails.message,
-                inquiryId: inquiryId,
-              },
-            }),
+          const emailResult = await sendInquiryReplyEmail({
+            customerName: inquiryDetails.customer_name,
+            customerEmail: inquiryDetails.customer_email,
+            originalSubject: inquiryDetails.subject,
+            originalMessage: inquiryDetails.message,
+            replyMessage: reply,
+            brandName: inquiryDetails.brand?.name || "OmaHub",
+            adminName: "OmaHub Admin",
+            isFromSuperAdmin: profile.role === "super_admin",
           });
 
-          if (!emailResponse.ok) {
-            console.warn("⚠️ Failed to send reply email");
+          if (!emailResult.success) {
+            console.warn("⚠️ Failed to send reply email:", emailResult.error);
           } else {
             console.log("✅ Reply email sent successfully to:", inquiryDetails.customer_email);
           }
