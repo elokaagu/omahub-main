@@ -22,6 +22,7 @@ export async function POST(request: NextRequest) {
       size,
       color,
       quantity,
+      measurements,
     } = orderData;
 
     console.log("Parsed order data:", {
@@ -250,9 +251,14 @@ export async function POST(request: NextRequest) {
 
     console.log('✅ Order saved successfully with ID:', order.id);
 
-    // Create a lead from this custom order
+    // Create a lead from this order (custom order or basic request)
     try {
-      console.log("📊 Creating lead from custom order...");
+      console.log("📊 Creating lead from order...");
+      
+      // Determine if this is a custom order or basic request
+      const isCustomOrder = measurements && Object.keys(measurements).length > 0;
+      const source = isCustomOrder ? "custom_order" : "product_request";
+      const orderType = isCustomOrder ? "Custom order" : "Product request";
       
       // Create lead in the leads table
       const leadData = {
@@ -260,11 +266,11 @@ export async function POST(request: NextRequest) {
         customer_name: delivery_address.full_name,
         customer_email: delivery_address.email,
         customer_phone: delivery_address.phone || "",
-        source: "custom_order",
+        source: source,
         lead_type: "product_request",
         status: "new",
         priority: "high",
-        notes: `Custom order for ${product.title}\n\nCustomer notes: ${customer_notes || 'None'}\n\nSize: ${size || 'Not specified'}\nColor: ${color || 'Not specified'}\nQuantity: ${quantity}`,
+        notes: `${orderType} for ${product.title}\n\nCustomer notes: ${customer_notes || 'None'}\n\nSize: ${size || 'Not specified'}\nColor: ${color || 'Not specified'}\nQuantity: ${quantity}`,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
@@ -293,17 +299,22 @@ export async function POST(request: NextRequest) {
       console.log("⚠️ Lead creation failed, but order was created successfully");
     }
 
-    // Create an inquiry from this custom order (for Studio inbox)
+    // Create an inquiry from this order (custom order or basic request)
     try {
-      console.log("📧 Creating inquiry from custom order...");
+      console.log("📧 Creating inquiry from order...");
+      
+      // Determine if this is a custom order or basic request
+      const isCustomOrder = measurements && Object.keys(measurements).length > 0;
+      const source = isCustomOrder ? "custom_order" : "product_request";
+      const orderType = isCustomOrder ? "Custom order" : "Product request";
       
       const inquiryData = {
         brand_id: brand_id,
         customer_name: delivery_address.full_name,
         customer_email: delivery_address.email,
         customer_phone: delivery_address.phone || null,
-        subject: `Custom Order Request - ${product.title}`,
-        message: `Customer ${delivery_address.full_name} has submitted a custom order request for ${product.title}.
+        subject: `${orderType} Request - ${product.title}`,
+        message: `Customer ${delivery_address.full_name} has submitted a ${orderType.toLowerCase()} request for ${product.title}.
 
 Order Details:
 - Product: ${product.title}
@@ -321,10 +332,10 @@ Delivery Address:
 - ${delivery_address.city || ''}, ${delivery_address.state || ''} ${delivery_address.postal_code || ''}
 - ${delivery_address.country || ''}
 
-This order has been saved to your leads dashboard and can be managed from there.`,
+This ${orderType.toLowerCase()} has been saved to your leads dashboard and can be managed from there.`,
         inquiry_type: "product_request",
         priority: "high",
-        source: "custom_order",
+        source: source,
         status: "new",
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
