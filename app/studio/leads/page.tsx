@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { createClient } from "@/lib/supabase-unified";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -50,14 +49,20 @@ interface Lead {
 }
 
 interface LeadStats {
-  totalLeads: number;
-  qualifiedLeads: number;
-  convertedLeads: number;
-  activeLeads: number;
-  conversionRate: number;
-  totalBookings: number;
-  thisMonthLeads: number;
-  thisMonthBookings: number;
+  total_leads: number;
+  qualified_leads: number;
+  converted_leads: number;
+  conversion_rate: number;
+  total_value: number;
+  total_bookings: number;
+  leadsByStatus: {
+    new: number;
+    contacted: number;
+    qualified: number;
+    converted: number;
+    lost: number;
+    closed: number;
+  };
 }
 
 export default function StudioLeadsPage() {
@@ -67,14 +72,20 @@ export default function StudioLeadsPage() {
   const [loading, setLoading] = useState(true);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [leadStats, setLeadStats] = useState<LeadStats>({
-    totalLeads: 0,
-    qualifiedLeads: 0,
-    convertedLeads: 0,
-    activeLeads: 0,
-    conversionRate: 0,
-    totalBookings: 0,
-    thisMonthLeads: 0,
-    thisMonthBookings: 0,
+    total_leads: 0,
+    qualified_leads: 0,
+    converted_leads: 0,
+    conversion_rate: 0,
+    total_value: 0,
+    total_bookings: 0,
+    leadsByStatus: {
+      new: 0,
+      contacted: 0,
+      qualified: 0,
+      converted: 0,
+      lost: 0,
+      closed: 0,
+    },
   });
 
   // Filter states
@@ -91,57 +102,11 @@ export default function StudioLeadsPage() {
   const [leadToDelete, setLeadToDelete] = useState<Lead | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Calculate lead statistics
-  const calculateLeadStats = useCallback((leadsData: Lead[]) => {
-    const now = new Date();
-    const thisMonth = now.getMonth();
-    const thisYear = now.getFullYear();
-
-    const stats = {
-      totalLeads: leadsData.length,
-      qualifiedLeads: leadsData.filter((l) => l.status === "qualified").length,
-      convertedLeads: leadsData.filter((l) => l.status === "converted").length,
-      activeLeads: leadsData.filter((l) =>
-        ["new", "contacted", "qualified"].includes(l.status)
-      ).length,
-      conversionRate:
-        leadsData.length > 0
-          ? Math.round(
-              (leadsData.filter((l) => l.status === "converted").length /
-                leadsData.length) *
-                100
-            )
-          : 0,
-      totalBookings: leadsData.filter((l) => l.status === "converted").length,
-      thisMonthLeads: leadsData.filter((l) => {
-        const leadDate = new Date(l.created_at);
-        return (
-          leadDate.getMonth() === thisMonth &&
-          leadDate.getFullYear() === thisYear
-        );
-      }).length,
-      thisMonthBookings: leadsData.filter((l) => {
-        const leadDate = new Date(l.created_at);
-        return (
-          l.status === "converted" &&
-          leadDate.getMonth() === thisMonth &&
-          leadDate.getFullYear() === thisYear
-        );
-      }).length,
-    };
-
-    setLeadStats(stats);
-  }, []);
-
-  // Update stats whenever leads change
-  useEffect(() => {
-    calculateLeadStats(leads);
-  }, [leads, calculateLeadStats]);
-
   // Load leads on mount
   useEffect(() => {
     if (!authLoading && user) {
       loadLeads();
+      loadLeadStats();
     }
   }, [user, authLoading]);
 
@@ -162,20 +127,6 @@ export default function StudioLeadsPage() {
     try {
       setLoading(true);
 
-      const supabase = createClient();
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("role, owned_brands")
-        .eq("id", user?.id)
-        .single();
-
-      if (!profileError && profile?.role === "super_admin") {
-        setIsSuperAdmin(true);
-      } else {
-        setIsSuperAdmin(false);
-      }
-
-      // Use the leads API endpoint
       const response = await fetch("/api/leads", {
         credentials: "include",
         headers: {
@@ -196,6 +147,21 @@ export default function StudioLeadsPage() {
       toast.error("Failed to load leads");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadLeadStats = async () => {
+    try {
+      const response = await fetch("/api/leads?action=analytics", {
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setLeadStats(result.analytics);
+      }
+    } catch (error) {
+      console.error("Error loading lead stats:", error);
     }
   };
 
@@ -328,6 +294,9 @@ export default function StudioLeadsPage() {
         );
       }
 
+      // Refresh stats after update
+      loadLeadStats();
+
       toast.success("Lead status updated successfully");
     } catch (error) {
       console.error("Error updating lead status:", error);
@@ -372,6 +341,7 @@ export default function StudioLeadsPage() {
       // Refresh data after a short delay to ensure sync
       setTimeout(() => {
         loadLeads();
+        loadLeadStats();
       }, 500);
     } catch (error) {
       console.error("Error deleting lead:", error);
@@ -385,24 +355,11 @@ export default function StudioLeadsPage() {
 
   const createTestLead = async () => {
     try {
-      const supabase = createClient();
-      const { data: brands } = await supabase
-        .from("brands")
-        .select("id, name")
-        .limit(1);
-
-      if (!brands || brands.length === 0) {
-        toast.error("No brands available to create test leads");
-        return;
-      }
-
-      const testBrand = brands[0];
-
       const response = await fetch("/api/leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          brandId: testBrand.id,
+          brandId: "test-brand-id", // This will need to be a real brand ID
           name: "Test Customer",
           email: "test@example.com",
           phone: "+1234567890",
@@ -418,6 +375,7 @@ export default function StudioLeadsPage() {
 
       toast.success("Test lead created successfully!");
       loadLeads();
+      loadLeadStats();
     } catch (error) {
       console.error("Error creating test lead:", error);
       toast.error("Failed to create test lead");
@@ -426,6 +384,7 @@ export default function StudioLeadsPage() {
 
   const refreshLeads = () => {
     loadLeads();
+    loadLeadStats();
   };
 
   const getStatusColor = (status: string) => {
@@ -548,11 +507,8 @@ export default function StudioLeadsPage() {
           <Card className="border border-oma-gold/10 bg-white">
             <CardContent className="pt-6">
               <div className="text-center">
-                <h3 className="text-2xl font-bold text-oma-plum">{leadStats.totalLeads}</h3>
+                <h3 className="text-2xl font-bold text-oma-plum">{leadStats.total_leads}</h3>
                 <p className="text-sm text-oma-cocoa">Total Leads</p>
-                <p className="text-xs text-oma-cocoa/70">
-                  This month: {leadStats.thisMonthLeads}
-                </p>
               </div>
             </CardContent>
           </Card>
@@ -560,7 +516,7 @@ export default function StudioLeadsPage() {
           <Card className="border border-oma-gold/10 bg-white">
             <CardContent className="pt-6">
               <div className="text-center">
-                <h3 className="text-2xl font-bold text-oma-plum">{leadStats.qualifiedLeads}</h3>
+                <h3 className="text-2xl font-bold text-oma-plum">{leadStats.qualified_leads}</h3>
                 <p className="text-sm text-oma-cocoa">Qualified Leads</p>
                 <p className="text-xs text-oma-cocoa/70">Ready for follow-up</p>
               </div>
@@ -570,10 +526,10 @@ export default function StudioLeadsPage() {
           <Card className="border border-oma-gold/10 bg-white">
             <CardContent className="pt-6">
               <div className="text-center">
-                <h3 className="text-2xl font-bold text-oma-plum">{leadStats.conversionRate}%</h3>
+                <h3 className="text-2xl font-bold text-oma-plum">{leadStats.conversion_rate}%</h3>
                 <p className="text-sm text-oma-cocoa">Conversion Rate</p>
                 <p className="text-xs text-oma-cocoa/70">
-                  Converted: {leadStats.convertedLeads}
+                  Converted: {leadStats.converted_leads}
                 </p>
               </div>
             </CardContent>
@@ -582,11 +538,8 @@ export default function StudioLeadsPage() {
           <Card className="border border-oma-gold/10 bg-white">
             <CardContent className="pt-6">
               <div className="text-center">
-                <h3 className="text-2xl font-bold text-oma-plum">{leadStats.totalBookings}</h3>
+                <h3 className="text-2xl font-bold text-oma-plum">{leadStats.total_bookings}</h3>
                 <p className="text-sm text-oma-cocoa">Total Bookings</p>
-                <p className="text-xs text-oma-cocoa/70">
-                  This month: {leadStats.thisMonthBookings}
-                </p>
               </div>
             </CardContent>
           </Card>
