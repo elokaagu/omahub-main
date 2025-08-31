@@ -229,12 +229,12 @@ async function handleAnalyticsRequest(supabase: any, profile: any) {
       total_value: totalValue,
       total_bookings: convertedLeads, // Converted leads count as bookings
       leadsByStatus: {
-        new: leads?.filter(lead => lead.status === 'new').length || 0,
-        contacted: leads?.filter(lead => lead.status === 'contacted').length || 0,
+        new: leads?.filter((lead: any) => lead.status === 'new').length || 0,
+        contacted: leads?.filter((lead: any) => lead.status === 'contacted').length || 0,
         qualified: qualifiedLeads,
         converted: convertedLeads,
-        lost: leads?.filter(lead => lead.status === 'lost').length || 0,
-        closed: leads?.filter(lead => lead.status === 'closed').length || 0,
+        lost: leads?.filter((lead: any) => lead.status === 'lost').length || 0,
+        closed: leads?.filter((lead: any) => lead.status === 'closed').length || 0,
       }
     };
 
@@ -284,7 +284,7 @@ async function handleCommissionRequest(supabase: any, profile: any) {
       );
     }
 
-    const commissionData = convertedLeads?.map(lead => ({
+    const commissionData = convertedLeads?.map((lead: any) => ({
       leadId: lead.id,
       brandName: lead.brand?.name || "Unknown Brand",
       estimatedValue: lead.estimated_value || 0,
@@ -293,7 +293,7 @@ async function handleCommissionRequest(supabase: any, profile: any) {
       convertedAt: lead.created_at,
     })) || [];
 
-    const totalCommission = commissionData.reduce((sum, item) => sum + item.commissionAmount, 0);
+    const totalCommission = commissionData.reduce((sum: number, item: any) => sum + item.commissionAmount, 0);
 
     return NextResponse.json({
       success: true,
@@ -302,9 +302,9 @@ async function handleCommissionRequest(supabase: any, profile: any) {
         convertedLeads: commissionData,
         summary: {
           totalLeads: commissionData.length,
-          totalValue: commissionData.reduce((sum, item) => sum + item.estimatedValue, 0),
+          totalValue: commissionData.reduce((sum: number, item: any) => sum + item.estimatedValue, 0),
           averageCommissionRate: commissionData.length > 0 
-            ? commissionData.reduce((sum, item) => sum + item.commissionRate, 0) / commissionData.length 
+            ? commissionData.reduce((sum: number, item: any) => sum + item.commissionRate, 0) / commissionData.length 
             : 0
         }
       }
