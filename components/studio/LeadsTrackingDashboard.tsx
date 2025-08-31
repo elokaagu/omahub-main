@@ -209,7 +209,7 @@ export default function LeadsTrackingDashboard({
       setLeadsLoading(true);
       setLeadsError(null);
 
-      const response = await fetch("/api/leads?action=list", {
+      const response = await fetch(`/api/leads?action=list&_t=${Date.now()}`, {
         credentials: "include",
         headers: {
           "Cache-Control": "no-cache, no-store, must-revalidate",
@@ -247,7 +247,7 @@ export default function LeadsTrackingDashboard({
       setAnalyticsLoading(true);
       setAnalyticsError(null);
 
-      const response = await fetch("/api/leads?action=analytics", {
+      const response = await fetch(`/api/leads?action=analytics&_t=${Date.now()}`, {
         credentials: "include",
         headers: {
           "Cache-Control": "no-cache, no-store, must-revalidate",
@@ -425,14 +425,15 @@ export default function LeadsTrackingDashboard({
         return newLeads;
       });
       
-      // Refresh all data immediately
-      fetchLeads();
-      fetchAnalytics();
-      if (isSuperAdmin || (isBrandAdmin && effectiveOwnedBrands.length > 0)) {
-        fetchPlatformAnalytics();
-      }
-      
-      console.log("✅ Dashboard data refreshed after lead deletion");
+      // Add a small delay to ensure database has been updated, then refresh all data
+      setTimeout(() => {
+        fetchLeads();
+        fetchAnalytics();
+        if (isSuperAdmin || (isBrandAdmin && effectiveOwnedBrands.length > 0)) {
+          fetchPlatformAnalytics();
+        }
+        console.log("✅ Dashboard data refreshed after lead deletion");
+      }, 100);
     };
 
     const handleLeadUpdated = (event: any) => {

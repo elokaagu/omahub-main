@@ -383,6 +383,22 @@ export default function StudioLeadsPage() {
 
       console.log("✅ Lead deleted from database successfully");
 
+      // Verify the lead was actually deleted by checking if it still exists
+      const verifyResponse = await fetch(`/api/leads?action=list&_t=${Date.now()}`, {
+        credentials: "include",
+      });
+      
+      if (verifyResponse.ok) {
+        const verifyData = await verifyResponse.json();
+        const leadStillExists = verifyData.leads?.some((l: any) => l.id === lead.id);
+        
+        if (leadStillExists) {
+          console.warn("⚠️ Lead still exists in database after deletion attempt");
+        } else {
+          console.log("✅ Lead deletion verified - lead no longer exists in database");
+        }
+      }
+
       // Remove from local state immediately
       setLeads((prev) => {
         const newLeads = prev.filter((l) => l.id !== lead.id);
@@ -405,11 +421,12 @@ export default function StudioLeadsPage() {
         })
       );
 
-      // Refresh data to ensure everything is in sync
+      // Add a small delay to ensure database has been updated, then refresh data
       console.log("🔄 Refreshing leads and stats");
-      await Promise.all([loadLeads(), loadLeadStats()]);
-
-      console.log("✅ Delete operation completed successfully");
+      setTimeout(async () => {
+        await Promise.all([loadLeads(), loadLeadStats()]);
+        console.log("✅ Delete operation completed successfully");
+      }, 200);
     } catch (error) {
       console.error("❌ Error deleting lead:", error);
       toast.error(
