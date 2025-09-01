@@ -173,7 +173,11 @@ export default function ProductsPage() {
       Object.entries(productFavouritesMap).forEach(([productId, count]) => {
         if (count > maxCount) {
           maxCount = count;
-          mostPopular = { productId, count, productTitle: undefined } as ProductFavourites;
+          mostPopular = {
+            productId,
+            count,
+            productTitle: undefined,
+          } as ProductFavourites;
         }
       });
 
@@ -181,7 +185,7 @@ export default function ProductsPage() {
       if (mostPopular && products.length > 0) {
         const product = products.find((p) => p.id === mostPopular!.productId);
         if (product) {
-          mostPopular.productTitle = product.title;
+          (mostPopular as ProductFavourites).productTitle = product.title;
           console.log("🏆 Most popular product:", mostPopular);
         }
       }
