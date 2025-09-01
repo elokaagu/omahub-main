@@ -5,6 +5,8 @@
 DROP POLICY IF EXISTS "Anyone can view products" ON public.products;
 DROP POLICY IF EXISTS "Authenticated users can insert products" ON public.products;
 DROP POLICY IF EXISTS "Users can update their own products" ON public.products;
+DROP POLICY IF EXISTS "Users can delete their own products" ON public.products;
+DROP POLICY IF EXISTS "Allow super_admin to delete products" ON public.products;
 
 -- Create proper policies
 
