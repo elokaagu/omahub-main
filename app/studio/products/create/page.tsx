@@ -117,63 +117,6 @@ export default function CreateProductPage() {
     service_type: "" as "product" | "service" | "consultation",
   });
 
-  // Show loading state while auth is initializing
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-oma-beige/30 to-white">
-        <div className="max-w-4xl mx-auto px-6 py-24">
-          <div className="flex items-center justify-center min-h-[400px]">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-oma-plum mx-auto mb-4"></div>
-              <p className="text-gray-600">Loading product creation form...</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Show error if user is not authenticated or doesn't have proper permissions
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-oma-beige/30 to-white">
-        <div className="max-w-4xl mx-auto px-6 py-24">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-red-600 mb-4">
-              Authentication Required
-            </h1>
-            <p className="text-gray-600 mb-4">
-              You must be logged in to create products.
-            </p>
-            <Button asChild>
-              <NavigationLink href="/login">Go to Login</NavigationLink>
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (user.role !== "super_admin" && user.role !== "brand_admin") {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-oma-beige/30 to-white">
-        <div className="max-w-4xl mx-auto px-6 py-24">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-red-600 mb-4">
-              Insufficient Permissions
-            </h1>
-            <p className="text-gray-600 mb-4">
-              You don't have permission to create products.
-            </p>
-            <Button asChild>
-              <NavigationLink href="/studio">Go to Studio</NavigationLink>
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   // Fetch brands and catalogues with improved error handling and loading states
   useEffect(() => {
     const fetchData = async () => {
@@ -263,6 +206,63 @@ export default function CreateProductPage() {
       }
     }
   }, [formData.brand_id, brands]);
+
+  // Show loading state while auth is initializing
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-oma-beige/30 to-white">
+        <div className="max-w-4xl mx-auto px-6 py-24">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-oma-plum mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading product creation form...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error if user is not authenticated or doesn't have proper permissions
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-oma-beige/30 to-white">
+        <div className="max-w-4xl mx-auto px-6 py-24">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-red-600 mb-4">
+              Authentication Required
+            </h1>
+            <p className="text-gray-600 mb-4">
+              You must be logged in to create products.
+            </p>
+            <Button asChild>
+              <NavigationLink href="/login">Go to Login</NavigationLink>
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (user.role !== "super_admin" && user.role !== "brand_admin") {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-oma-beige/30 to-white">
+        <div className="max-w-4xl mx-auto px-6 py-24">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-red-600 mb-4">
+              Insufficient Permissions
+            </h1>
+            <p className="text-gray-600 mb-4">
+              You don't have permission to create products.
+            </p>
+            <Button asChild>
+              <NavigationLink href="/studio">Go to Studio</NavigationLink>
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Function to get currency symbol from currency code
   const getCurrencySymbol = (currencyCode: string): string => {
