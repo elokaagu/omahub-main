@@ -40,7 +40,6 @@ export function SimpleFileUpload({
   imageRole = "cover",
   imageType = "brand",
 }: SimpleFileUploadProps) {
-  const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState<string | null>(defaultValue || null);
   const [error, setError] = useState<string | null>(null);
   const [isTemporaryPreview, setIsTemporaryPreview] = useState(false);
