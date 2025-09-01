@@ -590,9 +590,11 @@ export default function EditProductPage() {
       const updatedProduct = await updateProduct(productId, updateData);
 
       if (updatedProduct) {
-        toast.success("Product updated successfully! You can continue editing or go back to products.");
-        // Don't auto-redirect to avoid getting stuck on loading spinner
-        // User can manually navigate back using the back button
+        toast.success("Product updated successfully!");
+        // Use window.location.href for a clean redirect that bypasses Next.js router issues
+        setTimeout(() => {
+          window.location.href = "/studio/products";
+        }, 1000); // Small delay to show the success message
       } else {
         throw new Error("Product update returned null");
       }
@@ -626,10 +628,10 @@ export default function EditProductPage() {
           <Button
             variant="outline"
             size="icon"
-            asChild
+            onClick={() => window.location.href = "/studio/products"}
             className="border-gray-300 hover:bg-gray-100"
           >
-            <NavigationLink href="/studio/products">←</NavigationLink>
+            ←
           </Button>
           <div>
             <h1 className="text-4xl font-canela text-black mb-2">
@@ -1222,7 +1224,7 @@ export default function EditProductPage() {
             <Button
               type="button"
               variant="outline"
-              onClick={() => router.push("/studio/products")}
+              onClick={() => window.location.href = "/studio/products"}
               className="border-gray-300 text-black hover:bg-gray-100"
             >
               Cancel
