@@ -1,69 +1,61 @@
--- Fix RLS policies for products table to allow brand admins to edit their products
--- This script should be run in the Supabase SQL Editor
+-- Complete rewrite of products RLS policies
+-- Run this entire script in Supabase SQL Editor
 
--- First, drop all existing policies
-DROP POLICY IF EXISTS "Anyone can view products" ON public.products;
-DROP POLICY IF EXISTS "Authenticated users can insert products" ON public.products;
-DROP POLICY IF EXISTS "Users can update their own products" ON public.products;
-DROP POLICY IF EXISTS "Users can delete their own products" ON public.products;
-DROP POLICY IF EXISTS "Allow super_admin to delete products" ON public.products;
+-- Step 1: Disable RLS temporarily to clear all policies
+ALTER TABLE public.products DISABLE ROW LEVEL SECURITY;
 
--- Create new policies with simpler syntax
+-- Step 2: Re-enable RLS
+ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
 
--- 1. Anyone can view products (public read access)
-CREATE POLICY "Anyone can view products" 
-  ON public.products FOR SELECT 
-  USING (true);
+-- Step 3: Create new policies one by one
 
--- 2. Super admins and brand admins can insert products
-CREATE POLICY "Authenticated users can insert products" 
-  ON public.products FOR INSERT 
-  TO authenticated 
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM public.profiles p
-      WHERE p.id = auth.uid() 
-      AND p.role IN ('super_admin', 'brand_admin')
-    )
-  );
+-- Policy 1: Anyone can view products
+CREATE POLICY "public_select_policy" ON public.products
+FOR SELECT USING (true);
 
--- 3. Super admins can update any product, brand admins can update their own products
-CREATE POLICY "Users can update their own products" 
-  ON public.products FOR UPDATE 
-  TO authenticated 
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.profiles p
-      WHERE p.id = auth.uid() 
-      AND (
-        p.role = 'super_admin' 
-        OR (
-          p.role = 'brand_admin' 
-          AND brand_id = ANY(p.owned_brands)
-        )
-      )
-    )
-  );
+-- Policy 2: Super admins can do anything
+CREATE POLICY "super_admin_all_policy" ON public.products
+FOR ALL USING (
+  EXISTS (
+    SELECT 1 FROM public.profiles 
+    WHERE id = auth.uid() 
+    AND role = 'super_admin'
+  )
+);
 
--- 4. Super admins can delete any product, brand admins can delete their own products
-CREATE POLICY "Users can delete their own products" 
-  ON public.products FOR DELETE 
-  TO authenticated 
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.profiles p
-      WHERE p.id = auth.uid() 
-      AND (
-        p.role = 'super_admin' 
-        OR (
-          p.role = 'brand_admin' 
-          AND brand_id = ANY(p.owned_brands)
-        )
-      )
-    )
-  );
+-- Policy 3: Brand admins can insert products for their brands
+CREATE POLICY "brand_admin_insert_policy" ON public.products
+FOR INSERT WITH CHECK (
+  EXISTS (
+    SELECT 1 FROM public.profiles p
+    WHERE p.id = auth.uid() 
+    AND p.role = 'brand_admin'
+  )
+);
 
--- Verify the policies were created
+-- Policy 4: Brand admins can update products for their brands
+CREATE POLICY "brand_admin_update_policy" ON public.products
+FOR UPDATE USING (
+  EXISTS (
+    SELECT 1 FROM public.profiles p
+    WHERE p.id = auth.uid() 
+    AND p.role = 'brand_admin'
+    AND brand_id = ANY(p.owned_brands)
+  )
+);
+
+-- Policy 5: Brand admins can delete products for their brands
+CREATE POLICY "brand_admin_delete_policy" ON public.products
+FOR DELETE USING (
+  EXISTS (
+    SELECT 1 FROM public.profiles p
+    WHERE p.id = auth.uid() 
+    AND p.role = 'brand_admin'
+    AND brand_id = ANY(p.owned_brands)
+  )
+);
+
+-- Step 4: Verify the policies
 SELECT 
   policyname, 
   cmd,
