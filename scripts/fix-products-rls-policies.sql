@@ -2,10 +2,21 @@
 -- Brand admins have same rights as super admins, but only for their own products
 -- Run this entire script in Supabase SQL Editor
 
--- Step 1: Disable RLS temporarily to clear all policies
-ALTER TABLE public.products DISABLE ROW LEVEL SECURITY;
+-- Step 1: Drop all existing policies explicitly
+DROP POLICY IF EXISTS "public_select_policy" ON public.products;
+DROP POLICY IF EXISTS "super_admin_all_policy" ON public.products;
+DROP POLICY IF EXISTS "brand_admin_own_products_policy" ON public.products;
+DROP POLICY IF EXISTS "Anyone can view products" ON public.products;
+DROP POLICY IF EXISTS "Authenticated users can insert products" ON public.products;
+DROP POLICY IF EXISTS "Users can update their own products" ON public.products;
+DROP POLICY IF EXISTS "Users can delete their own products" ON public.products;
+DROP POLICY IF EXISTS "Allow super_admin to delete products" ON public.products;
+DROP POLICY IF EXISTS "brand_admin_insert_policy" ON public.products;
+DROP POLICY IF EXISTS "brand_admin_update_policy" ON public.products;
+DROP POLICY IF EXISTS "brand_admin_delete_policy" ON public.products;
 
--- Step 2: Re-enable RLS
+-- Step 2: Disable and re-enable RLS to ensure clean state
+ALTER TABLE public.products DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
 
 -- Step 3: Create new policies
