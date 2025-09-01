@@ -36,14 +36,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { supabase, clearAuthData } from "@/lib/supabase-unified";
+import { supabase } from "@/lib/supabase";
 import {
   formatNumberWithCommas,
   parseFormattedNumber,
 } from "@/lib/utils/priceFormatter";
 import { getBrandCurrency } from "@/lib/utils/currencyUtils";
 import { Checkbox } from "@/components/ui/checkbox";
-import { clearMalformedCookies } from "@/lib/utils/cookieUtils";
 
 // Brand categories - now using standardized categories
 const CATEGORIES = [
@@ -80,14 +79,7 @@ export default function EditProductPage() {
   const params = useParams();
   const productId = params.id as string;
 
-  // Function to clear malformed cookies and refresh auth state
-  const clearCorruptedAuth = () => {
-    console.log("🧹 Clearing corrupted authentication data...");
-    clearMalformedCookies();
-    clearAuthData();
-    // Force a page reload to refresh the authentication state
-    window.location.reload();
-  };
+
 
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingProduct, setIsLoadingProduct] = useState(true);
@@ -324,23 +316,9 @@ export default function EditProductPage() {
             <p className="text-gray-600 mb-4">
               You don't have permission to edit products.
             </p>
-            <div className="space-y-4">
-              <Button asChild>
-                <NavigationLink href="/studio">Go to Studio</NavigationLink>
-              </Button>
-              <div className="mt-4">
-                <p className="text-sm text-gray-500 mb-2">
-                  If you believe this is an error, try clearing your authentication data:
-                </p>
-                <Button 
-                  variant="outline" 
-                  onClick={clearCorruptedAuth}
-                  className="text-sm"
-                >
-                  Clear Auth Data & Reload
-                </Button>
-              </div>
-            </div>
+            <Button asChild>
+              <NavigationLink href="/studio">Go to Studio</NavigationLink>
+            </Button>
           </div>
         </div>
       </div>
