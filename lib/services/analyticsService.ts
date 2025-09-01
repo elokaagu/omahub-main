@@ -227,8 +227,8 @@ export async function getAnalyticsData(): Promise<AnalyticsData> {
       // All reviews
       supabase.from("reviews").select("id, rating, created_at, brand_id"),
 
-      // Products count
-      supabase.from("products").select("id", { count: "exact", head: true }),
+      // Products with stock information
+      supabase.from("products").select("id, in_stock"),
 
       // Recent brands (last 30 days)
       supabase
@@ -295,8 +295,9 @@ export async function getAnalyticsData(): Promise<AnalyticsData> {
       count: reviews.filter((review) => review.rating === rating).length,
     }));
 
-    // Get counts
-    const totalProducts = productsResult.count || 0;
+    // Get product counts with stock information
+    const products = productsResult.data || [];
+    const totalProducts = products.length;
     const recentBrands = recentBrandsResult.count || 0;
     const recentReviews = recentReviewsResult.count || 0;
 
@@ -608,10 +609,10 @@ export async function getBrandOwnerAnalyticsData(
           .select("id, rating, created_at, brand_id")
           .in("brand_id", ownedBrandIds),
 
-        // Products for owned brands only
+        // Products for owned brands only with stock information
         supabase
           .from("products")
-          .select("id", { count: "exact", head: true })
+          .select("id, in_stock")
           .in("brand_id", ownedBrandIds),
 
         // Recent reviews for owned brands (last 30 days)
@@ -647,8 +648,9 @@ export async function getBrandOwnerAnalyticsData(
           reviews.length
         : 0;
 
-    // Get counts
-    const totalProducts = productsResult.count || 0;
+    // Get product counts with stock information
+    const products = productsResult.data || [];
+    const totalProducts = products.length;
     const recentReviews = recentReviewsResult.count || 0;
     const recentBrands = 0; // Brand owners don't create new brands frequently
 

@@ -25,11 +25,13 @@ import {
   RefreshCw,
   AlertTriangle,
   LogIn,
+  Heart,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
 import PageViewsCard from "./PageViewsCard";
+import { supabase } from "@/lib/supabase";
 
 interface BrandGrowthData {
   month: string;
@@ -40,6 +42,18 @@ interface ReviewTrendsData {
   month: string;
   reviews: number;
   avgRating?: number; // Make avgRating optional to match the service
+}
+
+interface ProductAnalytics {
+  totalProducts: number;
+  inStock: number;
+  outOfStock: number;
+  totalFavourites: number;
+  mostPopularProduct: {
+    id: string;
+    title: string;
+    favourites: number;
+  } | null;
 }
 
 interface AnalyticsDashboardProps {
@@ -55,6 +69,13 @@ export default function AnalyticsDashboard({
 }: AnalyticsDashboardProps) {
   const { user, loading: authLoading } = useAuth();
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
+  const [productAnalytics, setProductAnalytics] = useState<ProductAnalytics>({
+    totalProducts: 0,
+    inStock: 0,
+    outOfStock: 0,
+    totalFavourites: 0,
+    mostPopularProduct: null,
+  });
   const [analyticsSource, setAnalyticsSource] = useState<string>("estimated");
   const [brandGrowth, setBrandGrowth] = useState<BrandGrowthData[]>([]);
   const [reviewTrends, setReviewTrends] = useState<ReviewTrendsData[]>([]);
@@ -64,6 +85,109 @@ export default function AnalyticsDashboard({
   const [vercelAnalytics, setVercelAnalytics] = useState<any>(null);
   const [vercelLoading, setVercelLoading] = useState(true);
   const [vercelError, setVercelError] = useState<string | null>(null);
+
+  // Fetch product-specific analytics
+  const fetchProductAnalytics = async () => {
+    try {
+      if (!supabase || !user) return;
+
+      let productsQuery = supabase
+        .from("products")
+        .select("id, title, in_stock, brand_id");
+
+      // Apply role-based filtering
+      if (isBrandOwner && ownedBrandIds.length > 0) {
+        productsQuery = productsQuery.in("brand_id", ownedBrandIds);
+      }
+
+      const { data: products, error: productsError } = await productsQuery;
+
+      if (productsError) {
+        console.error("Error fetching products for analytics:", productsError);
+        return;
+      }
+
+      // Calculate product statistics
+      const totalProducts = products?.length || 0;
+      const inStock = products?.filter(p => p.in_stock).length || 0;
+      const outOfStock = totalProducts - inStock;
+
+      // Fetch favourites data
+      let favouritesQuery = supabase
+        .from("favourites")
+        .select("item_id, item_type")
+        .eq("item_type", "product");
+
+      // If brand owner, only get favourites for their products
+      if (isBrandOwner && ownedBrandIds.length > 0) {
+        const productIds = products?.map(p => p.id) || [];
+        if (productIds.length > 0) {
+          favouritesQuery = favouritesQuery.in("item_id", productIds);
+        } else {
+          // No products, so no favourites
+          setProductAnalytics({
+            totalProducts,
+            inStock,
+            outOfStock,
+            totalFavourites: 0,
+            mostPopularProduct: null,
+          });
+          return;
+        }
+      }
+
+      const { data: favourites, error: favouritesError } = await favouritesQuery;
+
+      if (favouritesError) {
+        console.error("Error fetching favourites:", favouritesError);
+        return;
+      }
+
+      // Calculate favourites statistics
+      const totalFavourites = favourites?.length || 0;
+
+      // Find most popular product
+      let mostPopularProduct = null;
+      if (favourites && products) {
+        const productFavouritesCount = favourites.reduce((acc, fav) => {
+          acc[fav.item_id] = (acc[fav.item_id] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>);
+
+        let maxCount = 0;
+        let mostPopularId = null;
+
+        Object.entries(productFavouritesCount).forEach(([productId, count]) => {
+          if (count > maxCount) {
+            maxCount = count;
+            mostPopularId = productId;
+          }
+        });
+
+        if (mostPopularId && maxCount > 0) {
+          const product = products.find(p => p.id === mostPopularId);
+          if (product) {
+            mostPopularProduct = {
+              id: product.id,
+              title: product.title,
+              favourites: maxCount,
+            };
+          }
+        }
+      }
+
+      setProductAnalytics({
+        totalProducts,
+        inStock,
+        outOfStock,
+        totalFavourites,
+        mostPopularProduct,
+      });
+
+    } catch (error) {
+      console.error("Error fetching product analytics:", error);
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -79,6 +203,9 @@ export default function AnalyticsDashboard({
       // Check analytics source before fetching main data
       const analyticsSourceResult = await detectAnalyticsSource();
       setAnalyticsSource(analyticsSourceResult);
+
+      // Fetch product analytics
+      await fetchProductAnalytics();
 
       if (isBrandOwner && ownedBrandIds.length > 0) {
         // Fetch brand owner specific data
@@ -103,30 +230,9 @@ export default function AnalyticsDashboard({
         setBrandGrowth(growthData);
         setReviewTrends(trendsData);
       }
-    } catch (err) {
-      console.error("Error fetching analytics:", err);
-
-      // Provide more specific error messages
-      if (err instanceof Error) {
-        if (err.message.includes("not available")) {
-          setError("Database connection unavailable. Please try again later.");
-        } else if (
-          err.message.includes("permission") ||
-          err.message.includes("insufficient")
-        ) {
-          setError(
-            "You don't have permission to view analytics data. Please log in with an admin account."
-          );
-        } else {
-          setError(`Failed to load analytics data: ${err.message}`);
-        }
-      } else {
-        setError(
-          "Failed to load analytics data. Please check your connection and try again."
-        );
-      }
-
-      toast.error("Failed to load analytics data");
+    } catch (error) {
+      console.error("Error fetching analytics data:", error);
+      setError("Failed to load analytics data");
     } finally {
       setLoading(false);
     }
@@ -434,24 +540,80 @@ export default function AnalyticsDashboard({
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-oma-beige border-oma-beige">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-oma-cocoa">
-              {isBrandOwner ? "Your Products" : "Products"}
-            </CardTitle>
-            <ShoppingBag className="h-4 w-4 text-oma-beige" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-canela text-oma-plum">
-              {formatNumber(analytics.totalProducts)}
-            </div>
-            <p className="text-xs text-oma-cocoa mt-2">
-              {isBrandOwner
-                ? "Your product collection"
-                : "Total products across all brands"}
-            </p>
-          </CardContent>
-        </Card>
+        {/* Product Analytics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="border-l-4 border-l-oma-beige">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-oma-cocoa">
+                {isBrandOwner ? "Your Products" : "Total Products"}
+              </CardTitle>
+              <ShoppingBag className="h-4 w-4 text-oma-beige" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-canela text-oma-plum">
+                {formatNumber(productAnalytics.totalProducts)}
+              </div>
+              <p className="text-xs text-oma-cocoa mt-2">
+                {isBrandOwner
+                  ? "Your product collection"
+                  : "Products across all brands"}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-l-4 border-l-green-500">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-oma-cocoa">
+                In Stock
+              </CardTitle>
+              <CheckCircle className="h-4 w-4 text-green-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-canela text-oma-plum">
+                {formatNumber(productAnalytics.inStock)}
+              </div>
+              <p className="text-xs text-oma-cocoa mt-2">
+                Available for purchase
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-l-4 border-l-red-500">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-oma-cocoa">
+                Out of Stock
+              </CardTitle>
+              <AlertTriangle className="h-4 w-4 text-red-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-canela text-oma-plum">
+                {formatNumber(productAnalytics.outOfStock)}
+              </div>
+              <p className="text-xs text-oma-cocoa mt-2">
+                Currently unavailable
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-l-4 border-l-pink-500">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-oma-cocoa">
+                Total Favourites
+              </CardTitle>
+              <Heart className="h-4 w-4 text-pink-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-canela text-oma-plum">
+                {formatNumber(productAnalytics.totalFavourites)}
+              </div>
+              <p className="text-xs text-oma-cocoa mt-2">
+                {productAnalytics.mostPopularProduct
+                  ? `${productAnalytics.mostPopularProduct.favourites} for "${productAnalytics.mostPopularProduct.title}"`
+                  : "No favourites yet"}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
         {/* PageViewsCard removed as requested */}
       </div>
 
