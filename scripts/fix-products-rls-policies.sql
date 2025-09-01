@@ -1,8 +1,7 @@
--- Complete rewrite of products RLS policies
--- Brand admins have same rights as super admins, but only for their own products
+-- Simple, bulletproof RLS policies for products
 -- Run this entire script in Supabase SQL Editor
 
--- Step 1: Drop all existing policies explicitly
+-- Step 1: Drop all existing policies
 DROP POLICY IF EXISTS "public_select_policy" ON public.products;
 DROP POLICY IF EXISTS "super_admin_all_policy" ON public.products;
 DROP POLICY IF EXISTS "brand_admin_own_products_policy" ON public.products;
@@ -15,18 +14,18 @@ DROP POLICY IF EXISTS "brand_admin_insert_policy" ON public.products;
 DROP POLICY IF EXISTS "brand_admin_update_policy" ON public.products;
 DROP POLICY IF EXISTS "brand_admin_delete_policy" ON public.products;
 
--- Step 2: Disable and re-enable RLS to ensure clean state
+-- Step 2: Disable and re-enable RLS
 ALTER TABLE public.products DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
 
--- Step 3: Create new policies
+-- Step 3: Create simple policies
 
--- Policy 1: Anyone can view products
-CREATE POLICY "public_select_policy" ON public.products
+-- Anyone can view products
+CREATE POLICY "view_products" ON public.products
 FOR SELECT USING (true);
 
--- Policy 2: Super admins can do anything (full access)
-CREATE POLICY "super_admin_all_policy" ON public.products
+-- Super admins can do everything
+CREATE POLICY "super_admin_access" ON public.products
 FOR ALL USING (
   EXISTS (
     SELECT 1 FROM public.profiles 
@@ -35,8 +34,8 @@ FOR ALL USING (
   )
 );
 
--- Policy 3: Brand admins have full access to their own products (same as super admins)
-CREATE POLICY "brand_admin_own_products_policy" ON public.products
+-- Brand admins can do everything on their own products
+CREATE POLICY "brand_admin_access" ON public.products
 FOR ALL USING (
   EXISTS (
     SELECT 1 FROM public.profiles p
@@ -46,13 +45,7 @@ FOR ALL USING (
   )
 );
 
--- Step 4: Verify the policies
-SELECT 
-  policyname, 
-  cmd,
-  qual,
-  with_check
-FROM pg_policies 
-WHERE tablename = 'products' 
-  AND schemaname = 'public' 
+-- Verify the policies
+SELECT policyname, cmd, qual FROM pg_policies 
+WHERE tablename = 'products' AND schemaname = 'public' 
 ORDER BY policyname;
