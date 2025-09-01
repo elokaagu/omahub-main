@@ -126,8 +126,11 @@ export default function ProductsPage() {
 
       // If brand owner, only get favourites for their products
       if (user?.role === "brand_admin" && products.length > 0) {
-        const productIds = products.map(p => p.id);
-        console.log("🔍 Filtering favourites for brand owner's products:", productIds);
+        const productIds = products.map((p) => p.id);
+        console.log(
+          "🔍 Filtering favourites for brand owner's products:",
+          productIds
+        );
         favouritesQuery = favouritesQuery.in("item_id", productIds);
       } else if (user?.role === "brand_admin") {
         // No products for brand owner, so no favourites
@@ -141,7 +144,8 @@ export default function ProductsPage() {
         console.log("🔍 Super admin - fetching all product favourites");
       }
 
-      const { data: favouritesCountData, error: countError } = await favouritesQuery;
+      const { data: favouritesCountData, error: countError } =
+        await favouritesQuery;
 
       if (countError) {
         console.error("Error fetching favourites count:", countError);
@@ -151,13 +155,14 @@ export default function ProductsPage() {
       console.log(`✅ Fetched ${favouritesCountData?.length || 0} favourites`);
 
       // Count favourites per product
-      const productFavouritesMap = favouritesCountData?.reduce(
-        (acc, fav) => {
-          acc[fav.item_id] = (acc[fav.item_id] || 0) + 1;
-          return acc;
-        },
-        {} as Record<string, number>
-      ) || {};
+      const productFavouritesMap =
+        favouritesCountData?.reduce(
+          (acc, fav) => {
+            acc[fav.item_id] = (acc[fav.item_id] || 0) + 1;
+            return acc;
+          },
+          {} as Record<string, number>
+        ) || {};
 
       console.log("📊 Product favourites breakdown:", productFavouritesMap);
 
@@ -168,7 +173,7 @@ export default function ProductsPage() {
       Object.entries(productFavouritesMap).forEach(([productId, count]) => {
         if (count > maxCount) {
           maxCount = count;
-          mostPopular = { productId, count } as ProductFavourites;
+          mostPopular = { productId, count, productTitle: undefined } as ProductFavourites;
         }
       });
 
@@ -386,7 +391,9 @@ export default function ProductsPage() {
               {products.length}
             </div>
             <p className="text-xs text-oma-cocoa mt-2">
-              {user?.role === "brand_admin" ? "Your product collection" : "Products across all brands"}
+              {user?.role === "brand_admin"
+                ? "Your product collection"
+                : "Products across all brands"}
             </p>
           </CardContent>
         </Card>
@@ -433,7 +440,9 @@ export default function ProductsPage() {
               {favouritesData.totalFavourites}
             </div>
             <p className="text-xs text-oma-cocoa mt-2">
-              {user?.role === "brand_admin" ? "Your products favourited by users" : "Products favourited by users"}
+              {user?.role === "brand_admin"
+                ? "Your products favourited by users"
+                : "Products favourited by users"}
             </p>
           </CardContent>
         </Card>
