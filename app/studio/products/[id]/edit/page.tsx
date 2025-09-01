@@ -36,13 +36,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { supabase } from "@/lib/supabase";
+import { supabase, clearAuthData } from "@/lib/supabase-unified";
 import {
   formatNumberWithCommas,
   parseFormattedNumber,
 } from "@/lib/utils/priceFormatter";
 import { getBrandCurrency } from "@/lib/utils/currencyUtils";
 import { Checkbox } from "@/components/ui/checkbox";
+import { clearMalformedCookies } from "@/lib/utils/cookieUtils";
 
 // Brand categories - now using standardized categories
 const CATEGORIES = [
@@ -79,6 +80,15 @@ export default function EditProductPage() {
   const params = useParams();
   const productId = params.id as string;
 
+  // Function to clear malformed cookies and refresh auth state
+  const clearCorruptedAuth = () => {
+    console.log("🧹 Clearing corrupted authentication data...");
+    clearMalformedCookies();
+    clearAuthData();
+    // Force a page reload to refresh the authentication state
+    window.location.reload();
+  };
+
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingProduct, setIsLoadingProduct] = useState(true);
   const [brands, setBrands] = useState<Brand[]>([]);
@@ -111,7 +121,7 @@ export default function EditProductPage() {
   // Set selected brand currency for display purposes only (no auto-sync)
   useEffect(() => {
     if (formData.brand_id) {
-      const selectedBrand = brands.find(b => b.id === formData.brand_id);
+      const selectedBrand = brands.find((b) => b.id === formData.brand_id);
       if (selectedBrand) {
         if (selectedBrand.currency) {
           setSelectedBrandCurrency(selectedBrand.currency);
@@ -231,7 +241,7 @@ export default function EditProductPage() {
 
         // Set initial currency based on product's brand
         if (productData.brand_id) {
-          const brand = brandsData.find(b => b.id === productData.brand_id);
+          const brand = brandsData.find((b) => b.id === productData.brand_id);
           if (brand && brand.currency) {
             setSelectedBrandCurrency(brand.currency);
           }
@@ -314,9 +324,23 @@ export default function EditProductPage() {
             <p className="text-gray-600 mb-4">
               You don't have permission to edit products.
             </p>
-            <Button asChild>
-              <NavigationLink href="/studio">Go to Studio</NavigationLink>
-            </Button>
+            <div className="space-y-4">
+              <Button asChild>
+                <NavigationLink href="/studio">Go to Studio</NavigationLink>
+              </Button>
+              <div className="mt-4">
+                <p className="text-sm text-gray-500 mb-2">
+                  If you believe this is an error, try clearing your authentication data:
+                </p>
+                <Button 
+                  variant="outline" 
+                  onClick={clearCorruptedAuth}
+                  className="text-sm"
+                >
+                  Clear Auth Data & Reload
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -408,8 +432,6 @@ export default function EditProductPage() {
     return formatNumberWithCommas(numericPrice);
   };
 
-
-
   const handleImageUpload = (url: string, index?: number) => {
     if (index !== undefined) {
       // Handle multiple images
@@ -486,13 +508,15 @@ export default function EditProductPage() {
     }
 
     // 🔒 ENFORCE CURRENCY VALIDATION
-    const selectedBrand = brands.find(brand => brand.id === formData.brand_id);
+    const selectedBrand = brands.find(
+      (brand) => brand.id === formData.brand_id
+    );
     if (selectedBrand) {
       const brandCurrency = getBrandCurrency(selectedBrand);
       if (brandCurrency && formData.currency !== brandCurrency.code) {
         toast.error(
           `Currency mismatch! This brand uses ${brandCurrency.symbol}${brandCurrency.code}. ` +
-          `Please change the product currency to ${brandCurrency.code} or contact support if you need to use a different currency.`
+            `Please change the product currency to ${brandCurrency.code} or contact support if you need to use a different currency.`
         );
         return;
       }
@@ -848,7 +872,9 @@ export default function EditProductPage() {
                     <p className="text-xs text-muted-foreground">
                       Auto-synced with{" "}
                       {brands.find((b) => b.id === formData.brand_id)?.name}{" "}
-                      {selectedBrandCurrency ? `(${selectedBrandCurrency})` : '(Contact designer for pricing)'}
+                      {selectedBrandCurrency
+                        ? `(${selectedBrandCurrency})`
+                        : "(Contact designer for pricing)"}
                     </p>
                   )}
                 </div>
