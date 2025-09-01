@@ -176,15 +176,27 @@ export default function EditProductPage() {
       try {
         setIsLoadingProduct(true);
 
-        const [productData, brandsData, cataloguesData] = await Promise.all([
+        // Add timeout to prevent infinite loading
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error("Request timeout")), 10000); // 10 second timeout
+        });
+
+        const dataPromise = Promise.all([
           getProductById(productId),
           getAllBrands(),
           getAllCollections(),
         ]);
 
+        const result = await Promise.race([
+          dataPromise,
+          timeoutPromise
+        ]) as [Product | null, Brand[], Catalogue[]];
+        
+        const [productData, brandsData, cataloguesData] = result;
+
         if (!productData) {
           toast.error("Product not found");
-          router.push("/studio/products");
+          window.location.href = "/studio/products";
           return;
         }
 
@@ -275,10 +287,19 @@ export default function EditProductPage() {
             setSelectedBrandCurrency(brand.currency);
           }
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error fetching product data:", error);
-        toast.error("Failed to load product data");
-        router.push("/studio/products");
+        
+        if (error.message === "Request timeout") {
+          toast.error("Request timed out. Please try again or refresh the page.");
+        } else {
+          toast.error("Failed to load product data. Please refresh the page.");
+        }
+        
+        // Use window.location.href to ensure clean navigation
+        setTimeout(() => {
+          window.location.href = "/studio/products";
+        }, 2000);
       } finally {
         setIsLoadingProduct(false);
       }
@@ -289,8 +310,21 @@ export default function EditProductPage() {
     }
   }, [user, productId, router]);
 
+  // Add timeout for auth loading to prevent infinite loading
+  const [authTimeout, setAuthTimeout] = useState(false);
+  
+  useEffect(() => {
+    if (authLoading) {
+      const timer = setTimeout(() => {
+        setAuthTimeout(true);
+      }, 8000); // 8 second timeout for auth loading
+      
+      return () => clearTimeout(timer);
+    }
+  }, [authLoading]);
+
   // Show loading state while auth is initializing
-  if (authLoading) {
+  if (authLoading && !authTimeout) {
     return (
       <div className="min-h-screen bg-white">
         <div className="max-w-4xl mx-auto px-6 py-24">
@@ -298,6 +332,41 @@ export default function EditProductPage() {
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-oma-plum mx-auto mb-4"></div>
               <p className="text-gray-600">Loading product edit form...</p>
+              <p className="text-sm text-gray-500 mt-2">If this takes too long, please refresh the page</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show timeout message if auth takes too long
+  if (authTimeout) {
+    return (
+      <div className="min-h-screen bg-white">
+        <div className="max-w-4xl mx-auto px-6 py-24">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-red-600 mb-4">
+              Loading Timeout
+            </h1>
+            <p className="text-gray-600 mb-4">
+              The page is taking too long to load. This might be due to network issues.
+            </p>
+            <div className="space-y-2">
+              <Button 
+                onClick={() => window.location.reload()} 
+                className="bg-black hover:bg-gray-800 text-white"
+              >
+                Refresh Page
+              </Button>
+              <br />
+              <Button 
+                variant="outline"
+                onClick={() => window.location.href = "/studio/products"}
+                className="border-gray-300 text-black hover:bg-gray-100"
+              >
+                Go Back to Products
+              </Button>
             </div>
           </div>
         </div>
@@ -367,8 +436,21 @@ export default function EditProductPage() {
     );
   }
 
+  // Add timeout for product loading to prevent infinite loading
+  const [productTimeout, setProductTimeout] = useState(false);
+  
+  useEffect(() => {
+    if (isLoadingProduct) {
+      const timer = setTimeout(() => {
+        setProductTimeout(true);
+      }, 12000); // 12 second timeout for product loading
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isLoadingProduct]);
+
   // Show loading state while product is being fetched
-  if (isLoadingProduct) {
+  if (isLoadingProduct && !productTimeout) {
     return (
       <div className="min-h-screen bg-white">
         <div className="max-w-4xl mx-auto px-6 py-24">
@@ -376,6 +458,41 @@ export default function EditProductPage() {
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-oma-plum mx-auto mb-4"></div>
               <p className="text-gray-600">Loading product data...</p>
+              <p className="text-sm text-gray-500 mt-2">If this takes too long, please refresh the page</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show timeout message if product loading takes too long
+  if (productTimeout) {
+    return (
+      <div className="min-h-screen bg-white">
+        <div className="max-w-4xl mx-auto px-6 py-24">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-red-600 mb-4">
+              Product Loading Timeout
+            </h1>
+            <p className="text-gray-600 mb-4">
+              The product data is taking too long to load. This might be due to network issues.
+            </p>
+            <div className="space-y-2">
+              <Button 
+                onClick={() => window.location.reload()} 
+                className="bg-black hover:bg-gray-800 text-white"
+              >
+                Refresh Page
+              </Button>
+              <br />
+              <Button 
+                variant="outline"
+                onClick={() => window.location.href = "/studio/products"}
+                className="border-gray-300 text-black hover:bg-gray-100"
+              >
+                Go Back to Products
+              </Button>
             </div>
           </div>
         </div>
@@ -591,10 +708,8 @@ export default function EditProductPage() {
 
       if (updatedProduct) {
         toast.success("Product updated successfully!");
-        // Use window.location.href for a clean redirect that bypasses Next.js router issues
-        setTimeout(() => {
-          window.location.href = "/studio/products";
-        }, 1000); // Small delay to show the success message
+        // Immediate redirect to prevent any chance of getting stuck
+        window.location.href = "/studio/products";
       } else {
         throw new Error("Product update returned null");
       }
