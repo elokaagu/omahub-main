@@ -303,6 +303,16 @@ export default function EditProductPage() {
     );
   }
 
+  // Debug: Log user info
+  console.log("🔍 Product Edit Debug - User:", {
+    id: user.id,
+    email: user.email,
+    role: user.role,
+    hasRole: !!user.role,
+    isSuperAdmin: user.role === "super_admin",
+    isBrandAdmin: user.role === "brand_admin"
+  });
+
   if (user.role !== "super_admin" && user.role !== "brand_admin") {
     return (
       <div className="min-h-screen bg-white">
@@ -313,6 +323,9 @@ export default function EditProductPage() {
             </h1>
             <p className="text-gray-600 mb-4">
               You don't have permission to edit products.
+            </p>
+            <p className="text-sm text-gray-500 mb-4">
+              Debug: User role is "{user.role || 'undefined'}"
             </p>
             <Button asChild>
               <NavigationLink href="/studio">Go to Studio</NavigationLink>
