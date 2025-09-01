@@ -43,65 +43,7 @@ export default function StudioPage() {
           return;
         }
 
-        // For brand owners, ensure we have the owned_brands before proceeding
-        if (
-          user.role === "brand_admin" &&
-          (!user.owned_brands || user.owned_brands.length === 0)
-        ) {
-          console.log(
-            "🔄 Studio Page: Brand owner detected, waiting for profile to load brands..."
-          );
 
-          // Try to refresh the user profile to get the latest data
-          if (user.id) {
-            try {
-              const profileResult = await supabaseHelpers.getProfileById(
-                user.id
-              );
-              if (
-                profileResult.data &&
-                profileResult.data.owned_brands &&
-                profileResult.data.owned_brands.length > 0
-              ) {
-                console.log(
-                  "✅ Studio Page: Profile refreshed with brands:",
-                  profileResult.data.owned_brands
-                );
-                setUserProfile(profileResult.data);
-                setLoading(false);
-                return;
-              } else {
-                console.log(
-                  "⚠️ Studio Page: Profile loaded but no brands found, waiting..."
-                );
-                // Wait a bit more for the profile to be fully populated
-                await new Promise((resolve) => setTimeout(resolve, 2000));
-
-                // Try one more time
-                const retryResult = await supabaseHelpers.getProfileById(
-                  user.id
-                );
-                if (
-                  retryResult.data &&
-                  retryResult.data.owned_brands &&
-                  retryResult.data.owned_brands.length > 0
-                ) {
-                  console.log(
-                    "✅ Studio Page: Brands loaded on retry:",
-                    retryResult.data.owned_brands
-                  );
-                  setUserProfile(retryResult.data);
-                  setLoading(false);
-                  return;
-                }
-              }
-            } catch (error) {
-              console.log(
-                "⚠️ Studio Page: Could not refresh profile, continuing with current data"
-              );
-            }
-          }
-        }
 
         // Get user permissions and profile
         const [permissions, profileResult] = await Promise.all([
@@ -154,41 +96,7 @@ export default function StudioPage() {
     }
   }, [user]);
 
-  // Additional effect to wait for brands to load for brand owners
-  useEffect(() => {
-    if (
-      user &&
-      user.role === "brand_admin" &&
-      userProfile &&
-      (!userProfile.owned_brands || userProfile.owned_brands.length === 0)
-    ) {
-      console.log(
-        "🔄 Studio Page: Brand owner - waiting for brands to load..."
-      );
-      const timer = setTimeout(async () => {
-        if (user.id) {
-          try {
-            const profileResult = await supabaseHelpers.getProfileById(user.id);
-            if (
-              profileResult.data &&
-              profileResult.data.owned_brands &&
-              profileResult.data.owned_brands.length > 0
-            ) {
-              console.log(
-                "✅ Studio Page: Brands loaded after delay:",
-                profileResult.data.owned_brands
-              );
-              setUserProfile(profileResult.data);
-            }
-          } catch (error) {
-            console.log("⚠️ Studio Page: Could not load brands after delay");
-          }
-        }
-      }, 3000); // Wait 3 seconds for brands to load
 
-      return () => clearTimeout(timer);
-    }
-  }, [user, userProfile]);
 
   if (loading) {
     // Special loading state for brand owners
