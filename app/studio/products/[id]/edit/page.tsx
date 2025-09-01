@@ -303,26 +303,48 @@ export default function EditProductPage() {
     );
   }
 
-  // Debug: Log user info
-  console.log("🔍 Product Edit Debug - User:", {
-    id: user.id,
-    email: user.email,
-    role: user.role,
-    hasRole: !!user.role,
-    isSuperAdmin: user.role === "super_admin",
-    isBrandAdmin: user.role === "brand_admin"
-  });
+  // Check user permissions by fetching profile directly
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
 
-  // Wait for profile to be loaded if role is still 'user'
-  if (user.role === "user") {
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (!user?.id) return;
+      
+      try {
+        setProfileLoading(true);
+        const { data: profile, error } = await supabase
+          .from("profiles")
+          .select("role, owned_brands")
+          .eq("id", user.id)
+          .single();
+
+        if (error) {
+          console.error("Error fetching profile:", error);
+          return;
+        }
+
+        console.log("🔍 Product Edit - Actual Profile:", profile);
+        setUserProfile(profile);
+      } catch (error) {
+        console.error("Error fetching user profile:", error);
+      } finally {
+        setProfileLoading(false);
+      }
+    };
+
+    fetchUserProfile();
+  }, [user?.id]);
+
+  // Show loading while fetching profile
+  if (profileLoading) {
     return (
       <div className="min-h-screen bg-white">
         <div className="max-w-4xl mx-auto px-6 py-24">
           <div className="flex items-center justify-center min-h-[400px]">
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-oma-plum mx-auto mb-4"></div>
-              <p className="text-gray-600">Loading user profile...</p>
-              <p className="text-sm text-gray-500 mt-2">Please wait while we verify your permissions</p>
+              <p className="text-gray-600">Loading permissions...</p>
             </div>
           </div>
         </div>
@@ -330,7 +352,10 @@ export default function EditProductPage() {
     );
   }
 
-  if (user.role !== "super_admin" && user.role !== "brand_admin") {
+  // Check permissions based on actual profile
+  const hasPermission = userProfile?.role === "super_admin" || userProfile?.role === "brand_admin";
+
+  if (!hasPermission) {
     return (
       <div className="min-h-screen bg-white">
         <div className="max-w-4xl mx-auto px-6 py-24">
@@ -342,7 +367,7 @@ export default function EditProductPage() {
               You don't have permission to edit products.
             </p>
             <p className="text-sm text-gray-500 mb-4">
-              Debug: User role is "{user.role || 'undefined'}"
+              Your role: {userProfile?.role || 'unknown'}
             </p>
             <Button asChild>
               <NavigationLink href="/studio">Go to Studio</NavigationLink>
