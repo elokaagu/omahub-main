@@ -313,6 +313,23 @@ export default function EditProductPage() {
     isBrandAdmin: user.role === "brand_admin"
   });
 
+  // Wait for profile to be loaded if role is still 'user'
+  if (user.role === "user") {
+    return (
+      <div className="min-h-screen bg-white">
+        <div className="max-w-4xl mx-auto px-6 py-24">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-oma-plum mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading user profile...</p>
+              <p className="text-sm text-gray-500 mt-2">Please wait while we verify your permissions</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (user.role !== "super_admin" && user.role !== "brand_admin") {
     return (
       <div className="min-h-screen bg-white">
