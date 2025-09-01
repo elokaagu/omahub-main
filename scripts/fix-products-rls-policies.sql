@@ -1,14 +1,14 @@
 -- Fix RLS policies for products table to allow brand admins to edit their products
 -- This script should be run in the Supabase SQL Editor
 
--- Drop existing policies
+-- First, drop all existing policies
 DROP POLICY IF EXISTS "Anyone can view products" ON public.products;
 DROP POLICY IF EXISTS "Authenticated users can insert products" ON public.products;
 DROP POLICY IF EXISTS "Users can update their own products" ON public.products;
 DROP POLICY IF EXISTS "Users can delete their own products" ON public.products;
 DROP POLICY IF EXISTS "Allow super_admin to delete products" ON public.products;
 
--- Create proper policies
+-- Create new policies with simpler syntax
 
 -- 1. Anyone can view products (public read access)
 CREATE POLICY "Anyone can view products" 
@@ -21,9 +21,9 @@ CREATE POLICY "Authenticated users can insert products"
   TO authenticated 
   WITH CHECK (
     EXISTS (
-      SELECT 1 FROM public.profiles 
-      WHERE id = auth.uid() 
-      AND role IN ('super_admin', 'brand_admin')
+      SELECT 1 FROM public.profiles p
+      WHERE p.id = auth.uid() 
+      AND p.role IN ('super_admin', 'brand_admin')
     )
   );
 
@@ -33,13 +33,13 @@ CREATE POLICY "Users can update their own products"
   TO authenticated 
   USING (
     EXISTS (
-      SELECT 1 FROM public.profiles 
-      WHERE id = auth.uid() 
+      SELECT 1 FROM public.profiles p
+      WHERE p.id = auth.uid() 
       AND (
-        role = 'super_admin' 
+        p.role = 'super_admin' 
         OR (
-          role = 'brand_admin' 
-          AND brand_id = ANY(owned_brands)
+          p.role = 'brand_admin' 
+          AND brand_id = ANY(p.owned_brands)
         )
       )
     )
@@ -51,13 +51,13 @@ CREATE POLICY "Users can delete their own products"
   TO authenticated 
   USING (
     EXISTS (
-      SELECT 1 FROM public.profiles 
-      WHERE id = auth.uid() 
+      SELECT 1 FROM public.profiles p
+      WHERE p.id = auth.uid() 
       AND (
-        role = 'super_admin' 
+        p.role = 'super_admin' 
         OR (
-          role = 'brand_admin' 
-          AND brand_id = ANY(owned_brands)
+          p.role = 'brand_admin' 
+          AND brand_id = ANY(p.owned_brands)
         )
       )
     )
