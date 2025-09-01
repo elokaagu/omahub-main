@@ -91,13 +91,22 @@ export default function AnalyticsDashboard({
     try {
       if (!supabase || !user) return;
 
+      console.log("🔄 Fetching product analytics:", {
+        isBrandOwner,
+        ownedBrandIds: ownedBrandIds.length,
+        userRole: user.role,
+      });
+
       let productsQuery = supabase
         .from("products")
         .select("id, title, in_stock, brand_id");
 
       // Apply role-based filtering
       if (isBrandOwner && ownedBrandIds.length > 0) {
+        console.log("🔍 Filtering products for brand owner:", ownedBrandIds);
         productsQuery = productsQuery.in("brand_id", ownedBrandIds);
+      } else {
+        console.log("🔍 Super admin - fetching all products");
       }
 
       const { data: products, error: productsError } = await productsQuery;
@@ -107,9 +116,11 @@ export default function AnalyticsDashboard({
         return;
       }
 
+      console.log(`✅ Fetched ${products?.length || 0} products for analytics`);
+
       // Calculate product statistics
       const totalProducts = products?.length || 0;
-      const inStock = products?.filter(p => p.in_stock).length || 0;
+      const inStock = products?.filter((p) => p.in_stock).length || 0;
       const outOfStock = totalProducts - inStock;
 
       // Fetch favourites data
@@ -120,11 +131,17 @@ export default function AnalyticsDashboard({
 
       // If brand owner, only get favourites for their products
       if (isBrandOwner && ownedBrandIds.length > 0) {
-        const productIds = products?.map(p => p.id) || [];
+        const productIds = products?.map((p) => p.id) || [];
+        console.log(
+          `🔍 Filtering favourites for ${productIds.length} products`
+        );
         if (productIds.length > 0) {
           favouritesQuery = favouritesQuery.in("item_id", productIds);
         } else {
           // No products, so no favourites
+          console.log(
+            "⚠️ No products found for brand owner, setting zero favourites"
+          );
           setProductAnalytics({
             totalProducts,
             inStock,
@@ -134,25 +151,37 @@ export default function AnalyticsDashboard({
           });
           return;
         }
+      } else {
+        console.log("🔍 Super admin - fetching all product favourites");
       }
 
-      const { data: favourites, error: favouritesError } = await favouritesQuery;
+      const { data: favourites, error: favouritesError } =
+        await favouritesQuery;
 
       if (favouritesError) {
         console.error("Error fetching favourites:", favouritesError);
         return;
       }
 
+      console.log(
+        `✅ Fetched ${favourites?.length || 0} favourites for analytics`
+      );
+
       // Calculate favourites statistics
       const totalFavourites = favourites?.length || 0;
 
       // Find most popular product
       let mostPopularProduct = null;
-      if (favourites && products) {
-        const productFavouritesCount = favourites.reduce((acc, fav) => {
-          acc[fav.item_id] = (acc[fav.item_id] || 0) + 1;
-          return acc;
-        }, {} as Record<string, number>);
+      if (favourites && products && favourites.length > 0) {
+        const productFavouritesCount = favourites.reduce(
+          (acc, fav) => {
+            acc[fav.item_id] = (acc[fav.item_id] || 0) + 1;
+            return acc;
+          },
+          {} as Record<string, number>
+        );
+
+        console.log("📊 Product favourites breakdown:", productFavouritesCount);
 
         let maxCount = 0;
         let mostPopularId: string | null = null;
@@ -165,15 +194,18 @@ export default function AnalyticsDashboard({
         });
 
         if (mostPopularId && maxCount > 0) {
-          const product = products.find(p => p.id === mostPopularId);
+          const product = products.find((p) => p.id === mostPopularId);
           if (product) {
             mostPopularProduct = {
               id: product.id,
               title: product.title,
               favourites: maxCount,
             };
+            console.log("🏆 Most popular product:", mostPopularProduct);
           }
         }
+      } else {
+        console.log("📊 No favourites found for products");
       }
 
       setProductAnalytics({
@@ -183,7 +215,6 @@ export default function AnalyticsDashboard({
         totalFavourites,
         mostPopularProduct,
       });
-
     } catch (error) {
       console.error("Error fetching product analytics:", error);
     }

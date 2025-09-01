@@ -79,8 +79,6 @@ export default function EditProductPage() {
   const params = useParams();
   const productId = params.id as string;
 
-
-
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingProduct, setIsLoadingProduct] = useState(true);
   const [brands, setBrands] = useState<Brand[]>([]);
