@@ -100,13 +100,49 @@ export default function EditProductPage() {
     sizes: [] as string[],
     colors: [] as string[],
     materials: [] as string[],
+    tags: [] as string[],
     care_instructions: "",
     is_custom: false,
     lead_time: "",
     video_url: "",
     video_thumbnail: "",
-    currency: "USD", // Add currency field
+    currency: "USD",
+    is_featured: false,
+    is_active: true,
   });
+
+  // Check user permissions by fetching profile directly
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (!user?.id) return;
+      
+      try {
+        setProfileLoading(true);
+        const { data: profile, error } = await supabase
+          .from("profiles")
+          .select("role, owned_brands")
+          .eq("id", user.id)
+          .single();
+
+        if (error) {
+          console.error("Error fetching profile:", error);
+          return;
+        }
+
+        console.log("🔍 Product Edit - Actual Profile:", profile);
+        setUserProfile(profile);
+      } catch (error) {
+        console.error("Error fetching user profile:", error);
+      } finally {
+        setProfileLoading(false);
+      }
+    };
+
+    fetchUserProfile();
+  }, [user?.id]);
 
   // Set selected brand currency for display purposes only (no auto-sync)
   useEffect(() => {
@@ -221,12 +257,15 @@ export default function EditProductPage() {
           sizes: productData.sizes || [],
           colors: productData.colors || [],
           materials: productData.materials || [],
+          tags: [],
           care_instructions: productData.care_instructions || "",
           is_custom: productData.is_custom ?? false,
           lead_time: productData.lead_time || "",
           video_url: productData.video_url || "",
           video_thumbnail: productData.video_thumbnail || "",
           currency: productData.currency || "USD", // Set currency from product
+          is_featured: false,
+          is_active: true,
         });
 
         // Set initial currency based on product's brand
@@ -302,39 +341,6 @@ export default function EditProductPage() {
       </div>
     );
   }
-
-  // Check user permissions by fetching profile directly
-  const [userProfile, setUserProfile] = useState<any>(null);
-  const [profileLoading, setProfileLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchUserProfile = async () => {
-      if (!user?.id) return;
-      
-      try {
-        setProfileLoading(true);
-        const { data: profile, error } = await supabase
-          .from("profiles")
-          .select("role, owned_brands")
-          .eq("id", user.id)
-          .single();
-
-        if (error) {
-          console.error("Error fetching profile:", error);
-          return;
-        }
-
-        console.log("🔍 Product Edit - Actual Profile:", profile);
-        setUserProfile(profile);
-      } catch (error) {
-        console.error("Error fetching user profile:", error);
-      } finally {
-        setProfileLoading(false);
-      }
-    };
-
-    fetchUserProfile();
-  }, [user?.id]);
 
   // Show loading while fetching profile
   if (profileLoading) {
