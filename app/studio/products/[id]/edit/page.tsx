@@ -114,6 +114,10 @@ export default function EditProductPage() {
   // Check user permissions by fetching profile directly
   const [userProfile, setUserProfile] = useState<any>(null);
   const [profileLoading, setProfileLoading] = useState(true);
+  
+  // Add timeout states to prevent infinite loading
+  const [authTimeout, setAuthTimeout] = useState(false);
+  const [productTimeout, setProductTimeout] = useState(false);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -311,8 +315,6 @@ export default function EditProductPage() {
   }, [user, productId, router]);
 
   // Add timeout for auth loading to prevent infinite loading
-  const [authTimeout, setAuthTimeout] = useState(false);
-  
   useEffect(() => {
     if (authLoading) {
       const timer = setTimeout(() => {
@@ -322,6 +324,17 @@ export default function EditProductPage() {
       return () => clearTimeout(timer);
     }
   }, [authLoading]);
+
+  // Add timeout for product loading to prevent infinite loading
+  useEffect(() => {
+    if (isLoadingProduct) {
+      const timer = setTimeout(() => {
+        setProductTimeout(true);
+      }, 12000); // 12 second timeout for product loading
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isLoadingProduct]);
 
   // Show loading state while auth is initializing
   if (authLoading && !authTimeout) {
@@ -435,19 +448,6 @@ export default function EditProductPage() {
       </div>
     );
   }
-
-  // Add timeout for product loading to prevent infinite loading
-  const [productTimeout, setProductTimeout] = useState(false);
-  
-  useEffect(() => {
-    if (isLoadingProduct) {
-      const timer = setTimeout(() => {
-        setProductTimeout(true);
-      }, 12000); // 12 second timeout for product loading
-      
-      return () => clearTimeout(timer);
-    }
-  }, [isLoadingProduct]);
 
   // Show loading state while product is being fetched
   if (isLoadingProduct && !productTimeout) {
