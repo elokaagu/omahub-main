@@ -857,16 +857,8 @@ export default function LeadsTrackingDashboard({
                 Loading analytics...
               </div>
             )}
-            {!analyticsLoading && analytics && (
-              <div className="text-sm text-green-600">
-                ✓ Data loaded successfully
-              </div>
-            )}
-            {!analyticsLoading && !analytics && (
-              <div className="text-sm text-amber-600">
-                ⚠ No analytics data available
-              </div>
-            )}
+
+
           </div>
         </div>
 
@@ -913,20 +905,7 @@ export default function LeadsTrackingDashboard({
           </Card>
         </div>
 
-        {/* No Data Message */}
-        {!analyticsLoading && analytics && analytics.total_leads === 0 && (
-          <Card className="p-4 border-l-4 border-l-amber-500 border-amber-200 bg-amber-50 mt-4">
-            <h3 className="text-sm font-medium text-amber-800 mb-2">
-              No Data Available
-            </h3>
-            <p className="text-sm text-amber-700">
-              The dashboard is showing zeros because there are no leads or
-              bookings in the system yet. This is normal for a new installation.
-              Data will appear here once leads are created or the leads tracking
-              system is set up.
-            </p>
-          </Card>
-        )}
+
 
         {/* Analytics Error Display */}
         {analyticsError && (
