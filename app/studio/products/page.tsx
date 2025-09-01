@@ -116,36 +116,50 @@ export default function ProductsPage() {
     try {
       if (!supabase) return;
 
-      // Get total favourites count for products
-      const { data: totalFavouritesData, error: totalError } = await supabase
-        .from("favourites")
-        .select("id")
-        .eq("item_type", "product");
+      console.log("🔄 Fetching favourites data for user role:", user?.role);
 
-      if (totalError) {
-        console.error("Error fetching total favourites:", totalError);
-        return;
-      }
-
-      // Get favourites count per product
-      const { data: favouritesCountData, error: countError } = await supabase
+      // Get favourites count per product - filter by user's products if brand owner
+      let favouritesQuery = supabase
         .from("favourites")
         .select("item_id")
         .eq("item_type", "product");
+
+      // If brand owner, only get favourites for their products
+      if (user?.role === "brand_admin" && products.length > 0) {
+        const productIds = products.map(p => p.id);
+        console.log("🔍 Filtering favourites for brand owner's products:", productIds);
+        favouritesQuery = favouritesQuery.in("item_id", productIds);
+      } else if (user?.role === "brand_admin") {
+        // No products for brand owner, so no favourites
+        console.log("⚠️ Brand owner has no products, setting zero favourites");
+        setFavouritesData({
+          totalFavourites: 0,
+          mostPopular: null,
+        });
+        return;
+      } else {
+        console.log("🔍 Super admin - fetching all product favourites");
+      }
+
+      const { data: favouritesCountData, error: countError } = await favouritesQuery;
 
       if (countError) {
         console.error("Error fetching favourites count:", countError);
         return;
       }
 
+      console.log(`✅ Fetched ${favouritesCountData?.length || 0} favourites`);
+
       // Count favourites per product
-      const productFavouritesMap = favouritesCountData.reduce(
+      const productFavouritesMap = favouritesCountData?.reduce(
         (acc, fav) => {
           acc[fav.item_id] = (acc[fav.item_id] || 0) + 1;
           return acc;
         },
         {} as Record<string, number>
-      );
+      ) || {};
+
+      console.log("📊 Product favourites breakdown:", productFavouritesMap);
 
       // Find most popular product
       let mostPopular: ProductFavourites | null = null;
@@ -159,18 +173,16 @@ export default function ProductsPage() {
       });
 
       // Add product title to most popular
-      // TODO: Fix TypeScript error - temporarily commented out
-      /*
       if (mostPopular && products.length > 0) {
         const product = products.find((p) => p.id === mostPopular!.productId);
         if (product) {
-          mostPopular!.productTitle = product.title;
+          mostPopular.productTitle = product.title;
+          console.log("🏆 Most popular product:", mostPopular);
         }
       }
-      */
 
       setFavouritesData({
-        totalFavourites: totalFavouritesData.length,
+        totalFavourites: favouritesCountData?.length || 0,
         mostPopular,
       });
     } catch (error) {
@@ -374,7 +386,7 @@ export default function ProductsPage() {
               {products.length}
             </div>
             <p className="text-xs text-oma-cocoa mt-2">
-              Products across all brands
+              {user?.role === "brand_admin" ? "Your product collection" : "Products across all brands"}
             </p>
           </CardContent>
         </Card>
@@ -421,7 +433,7 @@ export default function ProductsPage() {
               {favouritesData.totalFavourites}
             </div>
             <p className="text-xs text-oma-cocoa mt-2">
-              Products favourited by users
+              {user?.role === "brand_admin" ? "Your products favourited by users" : "Products favourited by users"}
             </p>
           </CardContent>
         </Card>
