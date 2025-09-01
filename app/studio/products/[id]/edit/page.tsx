@@ -74,7 +74,7 @@ const PRODUCT_CATEGORIES: string[] = [
 ];
 
 export default function EditProductPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const params = useParams();
   const productId = params.id as string;
@@ -122,13 +122,17 @@ export default function EditProductPage() {
     }
   }, [formData.brand_id, brands]);
 
-  // Check if user is super admin or brand owner
-  // useEffect(() => {
-  //   if (user && user.role !== "super_admin" && user.role !== "brand_admin") {
-  //     router.push("/studio");
-  //     return;
-  //   }
-  // }, [user, router]);
+  // Filter catalogues based on selected brand
+  useEffect(() => {
+    if (formData.brand_id) {
+      const brandCatalogues = catalogues.filter(
+        (catalogue) => catalogue.brand_id === formData.brand_id
+      );
+      setFilteredCatalogues(brandCatalogues);
+    } else {
+      setFilteredCatalogues([]);
+    }
+  }, [formData.brand_id, catalogues]);
 
   // Fetch product data and populate form
   useEffect(() => {
@@ -227,14 +231,9 @@ export default function EditProductPage() {
 
         // Set initial currency based on product's brand
         if (productData.brand_id) {
-          const selectedBrand = brandsData.find(
-            (brand) => brand.id === productData.brand_id
-          );
-          if (selectedBrand) {
-            const currency = getBrandCurrency(selectedBrand);
-            if (currency) {
-              setSelectedBrandCurrency(currency.code);
-            }
+          const brand = brandsData.find(b => b.id === productData.brand_id);
+          if (brand && brand.currency) {
+            setSelectedBrandCurrency(brand.currency);
           }
         }
       } catch (error) {
@@ -246,25 +245,103 @@ export default function EditProductPage() {
       }
     };
 
-    if (
-      (user?.role === "super_admin" || user?.role === "brand_admin") &&
-      productId
-    ) {
+    if (user && productId) {
       fetchProductData();
     }
   }, [user, productId, router]);
 
-  // Filter catalogues based on selected brand
-  useEffect(() => {
-    if (formData.brand_id) {
-      const brandCatalogues = catalogues.filter(
-        (catalogue) => catalogue.brand_id === formData.brand_id
-      );
-      setFilteredCatalogues(brandCatalogues);
-    } else {
-      setFilteredCatalogues([]);
-    }
-  }, [formData.brand_id, catalogues]);
+  // Show loading state while auth is initializing
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-white">
+        <div className="max-w-4xl mx-auto px-6 py-24">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-oma-plum mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading product edit form...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error if user is not authenticated or doesn't have proper permissions
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-white">
+        <div className="max-w-4xl mx-auto px-6 py-24">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-red-600 mb-4">
+              Authentication Required
+            </h1>
+            <p className="text-gray-600 mb-4">
+              You must be logged in to edit products.
+            </p>
+            <Button asChild>
+              <NavigationLink href="/login">Go to Login</NavigationLink>
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (user.role !== "super_admin" && user.role !== "brand_admin") {
+    return (
+      <div className="min-h-screen bg-white">
+        <div className="max-w-4xl mx-auto px-6 py-24">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-red-600 mb-4">
+              Insufficient Permissions
+            </h1>
+            <p className="text-gray-600 mb-4">
+              You don't have permission to edit products.
+            </p>
+            <Button asChild>
+              <NavigationLink href="/studio">Go to Studio</NavigationLink>
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading state while product is being fetched
+  if (isLoadingProduct) {
+    return (
+      <div className="min-h-screen bg-white">
+        <div className="max-w-4xl mx-auto px-6 py-24">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-oma-plum mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading product data...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error if product not found
+  if (!product) {
+    return (
+      <div className="min-h-screen bg-white">
+        <div className="max-w-4xl mx-auto px-6 py-24">
+          <div className="text-center">
+            <h1 className="text-2xl font-canela text-black mb-4">
+              Product Not Found
+            </h1>
+            <Button asChild className="bg-black hover:bg-gray-800">
+              <NavigationLink href="/studio/products">
+                Back to Products
+              </NavigationLink>
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const handleInputChange = (name: string, value: string | boolean) => {
     // Handle price formatting for price and sale_price fields
@@ -479,41 +556,6 @@ export default function EditProductPage() {
       setIsLoading(false);
     }
   };
-
-  if (user?.role !== "super_admin" && user?.role !== "brand_admin") {
-    return <Loading />;
-  }
-
-  if (isLoadingProduct) {
-    return (
-      <div className="min-h-screen bg-white">
-        <div className="max-w-4xl mx-auto px-6 py-24">
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin h-8 w-8 border-4 border-gray-400 border-t-transparent rounded-full"></div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!product) {
-    return (
-      <div className="min-h-screen bg-white">
-        <div className="max-w-4xl mx-auto px-6 py-24">
-          <div className="text-center">
-            <h1 className="text-2xl font-canela text-black mb-4">
-              Product Not Found
-            </h1>
-            <Button asChild className="bg-black hover:bg-gray-800">
-              <NavigationLink href="/studio/products">
-                Back to Products
-              </NavigationLink>
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-white">
