@@ -155,7 +155,7 @@ export default function AnalyticsDashboard({
         }, {} as Record<string, number>);
 
         let maxCount = 0;
-        let mostPopularId = null;
+        let mostPopularId: string | null = null;
 
         Object.entries(productFavouritesCount).forEach(([productId, count]) => {
           if (count > maxCount) {
