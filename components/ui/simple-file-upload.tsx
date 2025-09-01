@@ -44,6 +44,8 @@ export function SimpleFileUpload({
   const [preview, setPreview] = useState<string | null>(defaultValue || null);
   const [error, setError] = useState<string | null>(null);
   const [isTemporaryPreview, setIsTemporaryPreview] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Update preview when defaultValue changes
@@ -55,6 +57,16 @@ export function SimpleFileUpload({
   // Simple upload function with better error handling
   const uploadToSupabase = async (file: File): Promise<string> => {
     try {
+      // Prevent multiple simultaneous uploads
+      if (uploading) {
+        console.log("🔄 Upload already in progress, ignoring...");
+        return preview || "";
+      }
+
+      setUploading(true);
+      setUploadProgress(0);
+      setError(null);
+
       // Check if supabase client is available
       if (!supabase) {
         throw new Error("Supabase client not available");
@@ -116,6 +128,14 @@ export function SimpleFileUpload({
         path: filePath,
       });
 
+      // Simulate upload progress
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => {
+          if (prev >= 90) return prev;
+          return prev + Math.random() * 10;
+        });
+      }, 200);
+
       // Upload file
       const { data, error } = await supabase.storage
         .from(bucket)
@@ -123,6 +143,9 @@ export function SimpleFileUpload({
           cacheControl: "3600",
           upsert: false,
         });
+
+      clearInterval(progressInterval);
+      setUploadProgress(100);
 
       if (error) {
         console.error("❌ Upload error:", error);
@@ -334,9 +357,19 @@ export function SimpleFileUpload({
       )}
 
       {uploading && (
-        <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600" />
-          <p className="text-sm text-blue-700">Uploading image...</p>
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600" />
+            <p className="text-sm text-blue-700">Uploading image...</p>
+          </div>
+          {uploadProgress > 0 && (
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div
+                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                style={{ width: `${uploadProgress}%` }}
+              />
+            </div>
+          )}
         </div>
       )}
     </div>

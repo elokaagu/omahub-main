@@ -70,7 +70,7 @@ const CURRENCIES = [
 const CATEGORIES = getAllCategoryNames();
 
 export default function CreateProductPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [brands, setBrands] = useState<Brand[]>([]);
@@ -79,6 +79,7 @@ export default function CreateProductPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [selectedBrandCurrency, setSelectedBrandCurrency] = useState("USD");
+  const [dataFetched, setDataFetched] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -116,25 +117,79 @@ export default function CreateProductPage() {
     service_type: "" as "product" | "service" | "consultation",
   });
 
-  // Check if user is super admin or brand owner
-  // useEffect(() => {
-  //   // Don't redirect if we're still loading or if user is null (temporary state)
-  //   if (!user) return;
+  // Show loading state while auth is initializing
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-oma-beige/30 to-white">
+        <div className="max-w-4xl mx-auto px-6 py-24">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-oma-plum mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading product creation form...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-  //   if (user.role !== "super_admin" && user.role !== "brand_admin") {
-  //     router.push("/studio");
-  //     return;
-  //   }
-  // }, [user, router]);
+  // Show error if user is not authenticated or doesn't have proper permissions
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-oma-beige/30 to-white">
+        <div className="max-w-4xl mx-auto px-6 py-24">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-red-600 mb-4">
+              Authentication Required
+            </h1>
+            <p className="text-gray-600 mb-4">
+              You must be logged in to create products.
+            </p>
+            <Button asChild>
+              <NavigationLink href="/login">Go to Login</NavigationLink>
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-  // Fetch brands and catalogues
+  if (user.role !== "super_admin" && user.role !== "brand_admin") {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-oma-beige/30 to-white">
+        <div className="max-w-4xl mx-auto px-6 py-24">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-red-600 mb-4">
+              Insufficient Permissions
+            </h1>
+            <p className="text-gray-600 mb-4">
+              You don't have permission to create products.
+            </p>
+            <Button asChild>
+              <NavigationLink href="/studio">Go to Studio</NavigationLink>
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Fetch brands and catalogues with improved error handling and loading states
   useEffect(() => {
     const fetchData = async () => {
+      // Prevent multiple simultaneous fetches
+      if (dataFetched || loading) return;
+      
       try {
+        setLoading(true);
+        console.log("🔄 Fetching brands and catalogues...");
+
         const [brandsData, cataloguesData] = await Promise.all([
           getAllBrands(),
           getAllCollections(),
         ]);
+
+        console.log(`✅ Fetched ${brandsData.length} brands and ${cataloguesData.length} catalogues`);
 
         // Filter brands based on user role
         if (user?.role === "super_admin") {
@@ -160,22 +215,27 @@ export default function CreateProductPage() {
               ownedBrandIds.includes(brand.id)
             );
             setBrands(ownedBrands);
+            console.log(`✅ Filtered to ${ownedBrands.length} owned brands`);
           } else {
             setBrands([]);
+            console.log("⚠️ No owned brands found for user");
           }
         }
 
         setCatalogues(cataloguesData);
+        setDataFetched(true);
       } catch (error) {
-        console.error("Error fetching data:", error);
-        toast.error("Failed to load brands and catalogues");
+        console.error("❌ Error fetching data:", error);
+        toast.error("Failed to load brands and catalogues. Please refresh the page.");
+      } finally {
+        setLoading(false);
       }
     };
 
-    if (user?.role === "super_admin" || user?.role === "brand_admin") {
+    if (user && !dataFetched) {
       fetchData();
     }
-  }, [user]);
+  }, [user, dataFetched, loading]);
 
   // Filter catalogues based on selected brand
   useEffect(() => {
@@ -404,13 +464,30 @@ export default function CreateProductPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.title || !formData.description || !formData.brand_id) {
-      toast.error("Please fill in all required fields");
+    // Prevent double submission
+    if (isLoading || submitting) {
+      console.log("🔄 Form submission already in progress, ignoring...");
+      return;
+    }
+
+    // Validate required fields
+    if (!formData.title?.trim()) {
+      toast.error("Please enter a product title");
+      return;
+    }
+
+    if (!formData.description?.trim()) {
+      toast.error("Please enter a product description");
+      return;
+    }
+
+    if (!formData.brand_id) {
+      toast.error("Please select a brand");
       return;
     }
 
     // Validate pricing based on service type
-    if (!formData.contact_for_pricing && !formData.price) {
+    if (!formData.contact_for_pricing && !formData.price?.trim()) {
       toast.error("Please enter a price or enable 'Contact for Pricing'");
       return;
     }
@@ -427,10 +504,10 @@ export default function CreateProductPage() {
       return;
     }
 
-    // Note: Currency is now user-selectable and not enforced to match brand currency
-
     try {
       setIsLoading(true);
+      setSubmitting(true);
+      console.log("🔄 Starting product creation...");
 
       // Prepare product data with only the fields that exist in the database
       const productData = {
@@ -492,18 +569,19 @@ export default function CreateProductPage() {
         }),
       };
 
-      console.log("Creating product with data:", productData);
+      console.log("📦 Creating product with data:", productData);
 
       const newProduct = await createProduct(productData);
 
       if (newProduct) {
-        toast.success("Product created successfully");
+        console.log("✅ Product created successfully:", newProduct.id);
+        toast.success("Product created successfully!");
         router.push("/studio/products");
       } else {
         throw new Error("Product creation returned null");
       }
     } catch (error) {
-      console.error("Error creating product:", error);
+      console.error("❌ Error creating product:", error);
 
       // Provide more specific error messages
       if (
@@ -512,8 +590,10 @@ export default function CreateProductPage() {
           error.message?.includes("column"))
       ) {
         toast.error(
-          "Database schema error. Some fields may not be supported yet."
+          "Database schema error. Some fields may not be supported yet. Please try again with fewer fields."
         );
+      } else if (error instanceof Error && error.message?.includes("currency")) {
+        toast.error(`Currency error: ${error.message}`);
       } else if (error instanceof Error) {
         toast.error(`Failed to create product: ${error.message}`);
       } else {
@@ -521,6 +601,7 @@ export default function CreateProductPage() {
       }
     } finally {
       setIsLoading(false);
+      setSubmitting(false);
     }
   };
 
@@ -531,9 +612,34 @@ export default function CreateProductPage() {
     return formatNumberWithCommas(numericPrice);
   };
 
-  // Don't render the form if user doesn't have proper permissions or is still loading
-  if (!user || (user.role !== "super_admin" && user.role !== "brand_admin")) {
-    return <Loading />;
+  // Show loading state while data is being fetched
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-oma-beige/30 to-white">
+        <div className="max-w-4xl mx-auto px-6 py-24">
+          <div className="flex items-center gap-4 mb-12">
+            <Button variant="outline" size="icon" asChild>
+              <NavigationLink href="/studio/products">
+                <ArrowLeft className="h-4 w-4" />
+              </NavigationLink>
+            </Button>
+            <div>
+              <h1 className="text-4xl font-canela text-black mb-2">
+                Create Product
+              </h1>
+              <p className="text-black/80">Add a new product to the platform</p>
+            </div>
+          </div>
+          
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-oma-plum mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading brands and catalogues...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -1384,7 +1490,7 @@ export default function CreateProductPage() {
               type="button"
               variant="outline"
               onClick={() => router.push("/studio/products")}
-              disabled={isLoading}
+              disabled={isLoading || submitting}
               className="border-oma-cocoa text-black hover:bg-oma-cocoa hover:text-white"
             >
               Cancel
@@ -1392,9 +1498,16 @@ export default function CreateProductPage() {
             <Button
               type="submit"
               className="bg-oma-plum hover:bg-oma-plum/90"
-              disabled={isLoading}
+              disabled={isLoading || submitting}
             >
-              {isLoading ? "Creating..." : "Create Product"}
+              {isLoading || submitting ? (
+                <div className="flex items-center gap-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  Creating Product...
+                </div>
+              ) : (
+                "Create Product"
+              )}
             </Button>
           </div>
         </form>

@@ -367,6 +367,7 @@ export async function createProduct(
   }
 
   try {
+    console.log("🔄 Starting product creation process...");
     // 🔒 ENFORCE CURRENCY VALIDATION - Backend Check
     if (productData.brand_id && productData.currency) {
       const { data: brand, error: brandError } = await supabase
@@ -454,7 +455,7 @@ export async function createProduct(
       }
     });
 
-    console.log("Attempting to create product with data:", finalData);
+    console.log("📦 Attempting to create product with data:", finalData);
 
     const { data, error } = await supabase
       .from("products")
