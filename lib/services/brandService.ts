@@ -181,63 +181,30 @@ export async function getAllBrands(
 
     // Check if we're already loading brands
     if (brandsCache.isLoading) {
-      console.log("🔄 Already fetching brands, waiting for completion...");
-      // Wait for a short period and check cache with timeout
-      try {
-        await Promise.race([
-          new Promise((resolve) => setTimeout(resolve, 5000)), // Wait up to 5 seconds
-          new Promise((_, reject) => setTimeout(() => reject(new Error("Brand loading timeout")), 10000))
-        ]);
-        
-        if (brandsCache.data) {
-          console.log("✅ Got data from cache after waiting");
-          return brandsCache.data;
-        }
-        console.log("⚠️ No data in cache after waiting, using sample data");
-        return getSampleBrandsData();
-      } catch (error) {
-        console.log("⏰ Brand loading timed out, using sample data");
-        return getSampleBrandsData();
+      // Wait for a short period and check cache
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      if (brandsCache.data) {
+        return brandsCache.data;
       }
+      return getSampleBrandsData();
     }
 
     // Check cache first
     const now = Date.now();
     if (brandsCache.data && now - brandsCache.timestamp < CACHE_EXPIRY) {
-      console.log(
-        "🎯 Using cached brands data, age:",
-        (now - brandsCache.timestamp) / 1000,
-        "seconds"
-      );
       return brandsCache.data;
     }
 
     // Set loading state
     brandsCache.isLoading = true;
-    console.log("🔄 Cache expired or empty, fetching fresh data...");
 
-    // Debug Supabase connection
     if (!supabase) {
-      console.error("⛔ ERROR: Supabase client is undefined!");
       brandsCache.isLoading = false;
       throw new Error("Supabase client is not initialized");
     }
 
-    // Test connection with a count query first
-    const { count, error: countError } = await supabase
-      .from("brands")
-      .select("*", { count: "exact", head: true });
-
-    if (countError) {
-      console.error("⛔ Error testing database connection:", countError);
-      brandsCache.isLoading = false;
-      throw new Error(`Database connection error: ${countError.message}`);
-    }
-
-    console.log(`📊 Found ${count} brands in database`);
-
-    // Fetch all brand data with their normalized images with timeout
-    const queryPromise = supabase
+    // Fetch all brand data
+    const { data, error } = await supabase
       .from("brands")
       .select(
         `
@@ -255,21 +222,7 @@ export async function getAllBrands(
       )
       .order("name");
 
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error("Brand query timeout after 15 seconds")), 15000);
-    });
-
-    const { data, error } = await Promise.race([queryPromise, timeoutPromise]) as { data: any[] | null; error: any };
-
     if (error) {
-      console.error(
-        "⛔ Error fetching brands:",
-        error.message,
-        error.details,
-        error.hint,
-        "\nStatus:",
-        error.code
-      );
       brandsCache.isLoading = false;
       throw new Error(`Failed to fetch brands: ${error.message}`);
     }
@@ -281,10 +234,6 @@ export async function getAllBrands(
 
     // Map the data to Brand objects
     const fullBrands: Brand[] = data.map((item: any) => {
-      // Debug: Log the raw currency value from database
-      console.log(
-        `🔍 Brand ${item.name}: raw currency from DB = '${item.currency}'`
-      );
 
       // Clean location data - remove trailing 'O' and '0' characters that might be data entry errors
       const cleanLocation = item.location
@@ -326,7 +275,6 @@ export async function getAllBrands(
       isLoading: false,
     };
 
-    console.log(`✅ Successfully fetched ${fullBrands.length} brands`);
     return fullBrands;
   } catch (err) {
     console.error("⛔ Unexpected error in getAllBrands:", err);

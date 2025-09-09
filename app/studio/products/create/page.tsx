@@ -117,57 +117,24 @@ export default function CreateProductPage() {
     service_type: "" as "product" | "service" | "consultation",
   });
 
-  // Fetch brands and catalogues with improved error handling and loading states
+  // Fetch brands and catalogues
   useEffect(() => {
     const fetchData = async () => {
-      // Prevent multiple simultaneous fetches
-      if (dataFetched || loading) return;
+      if (dataFetched) return;
       
+      setLoading(true);
+
       try {
-        setLoading(true);
-        console.log("🔄 Fetching brands and catalogues...");
-
-        // Add timeout to prevent infinite loading
-        const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error("Data fetching timeout after 30 seconds")), 30000);
-        });
-
-        const dataPromise = Promise.all([
-          (async () => {
-            console.log("🔄 Starting getAllBrands()...");
-            const result = await getAllBrands();
-            console.log("✅ getAllBrands() completed with", result.length, "brands");
-            return result;
-          })().catch(err => {
-            console.error("❌ Error fetching brands:", err);
-            return [];
-          }),
-          (async () => {
-            console.log("🔄 Starting getAllCollections()...");
-            const result = await getAllCollections();
-            console.log("✅ getAllCollections() completed with", result.length, "collections");
-            return result;
-          })().catch(err => {
-            console.error("❌ Error fetching collections:", err);
-            return [];
-          }),
+        const [brandsData, cataloguesData] = await Promise.all([
+          getAllBrands().catch(() => []),
+          getAllCollections().catch(() => []),
         ]);
-
-        const [brandsData, cataloguesData] = await Promise.race([
-          dataPromise,
-          timeoutPromise
-        ]) as [Brand[], Catalogue[]];
-
-        console.log(`✅ Fetched ${brandsData.length} brands and ${cataloguesData.length} catalogues`);
 
         // Filter brands based on user role
         if (user?.role === "super_admin") {
-          // Super admins see all brands
           setBrands(brandsData);
         } else if (user?.role === "brand_admin") {
-          // Brand owners see only their owned brands
           if (!supabase) {
-            console.error("Supabase client not available");
             setBrands([]);
             return;
           }
@@ -179,7 +146,6 @@ export default function CreateProductPage() {
             .maybeSingle();
 
           if (userProfile.error) {
-            console.error("❌ Error fetching user profile:", userProfile.error);
             setBrands([]);
             toast.error("Failed to load user profile. Please refresh the page.");
             return;
@@ -191,37 +157,26 @@ export default function CreateProductPage() {
               ownedBrandIds.includes(brand.id)
             );
             setBrands(ownedBrands);
-            console.log(`✅ Filtered to ${ownedBrands.length} owned brands`);
           } else {
             setBrands([]);
-            console.log("⚠️ No owned brands found for user");
           }
         }
 
         setCatalogues(cataloguesData);
-        setDataFetched(true);
       } catch (error) {
-        console.error("❌ Error fetching data:", error);
-        
-        if (error instanceof Error && error.message.includes("timeout")) {
-          console.log("⏰ Data fetching timed out, using fallback data");
-          // Set empty arrays as fallback to prevent infinite loading
-          setBrands([]);
-          setCatalogues([]);
-          toast.error("Data loading timed out. Please refresh the page to try again.");
-        } else {
-          toast.error("Failed to load brands and catalogues. Please refresh the page.");
-        }
+        setBrands([]);
+        setCatalogues([]);
+        toast.error("Failed to load data. Please refresh the page.");
       } finally {
         setLoading(false);
-        setDataFetched(true); // Ensure we don't get stuck in loading state
+        setDataFetched(true);
       }
     };
 
-    if (user && !dataFetched) {
+    if (user) {
       fetchData();
     }
-  }, [user, dataFetched, loading]);
+  }, [user]);
 
   // Filter catalogues based on selected brand
   useEffect(() => {
