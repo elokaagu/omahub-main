@@ -385,22 +385,25 @@ export async function POST(request: NextRequest) {
 
       // Create inquiry in the inquiries table
       console.log("📝 Creating inquiry in Studio inbox...");
-      
+
       let inquiry;
       try {
         console.log("📧 Creating inquiry in database...");
-        
-        console.log("📝 Attempting to create brand-specific inquiry with data:", {
-          brand_id: brandId,
-          customer_name: name,
-          customer_email: email,
-          subject: `Inquiry from ${name}`,
-          message: message,
-          inquiry_type: "customer_inquiry",
-          priority: "normal",
-          source: "website",
-          status: "new"
-        });
+
+        console.log(
+          "📝 Attempting to create brand-specific inquiry with data:",
+          {
+            brand_id: brandId,
+            customer_name: name,
+            customer_email: email,
+            subject: `Inquiry from ${name}`,
+            message: message,
+            inquiry_type: "customer_inquiry",
+            priority: "normal",
+            source: "website",
+            status: "new",
+          }
+        );
 
         const { data: inquiryData, error: inquiryError } = await supabase
           .from("inquiries")
@@ -424,7 +427,7 @@ export async function POST(request: NextRequest) {
             code: inquiryError.code,
             message: inquiryError.message,
             details: inquiryError.details,
-            hint: inquiryError.hint
+            hint: inquiryError.hint,
           });
           // Don't fail the entire request, continue with mock inquiry
           inquiry = {
@@ -444,7 +447,10 @@ export async function POST(request: NextRequest) {
           console.log("⚠️ Using mock inquiry due to database error");
         } else {
           inquiry = inquiryData;
-          console.log("✅ Inquiry created successfully in database:", inquiry.id);
+          console.log(
+            "✅ Inquiry created successfully in database:",
+            inquiry.id
+          );
         }
       } catch (dbError) {
         console.error("❌ Database error creating inquiry:", dbError);
@@ -469,7 +475,7 @@ export async function POST(request: NextRequest) {
       // Create a lead from this inquiry
       try {
         console.log("📊 Creating lead from inquiry...");
-        
+
         // Create lead in the leads table
         const leadData = {
           brand_id: brandId,
@@ -482,7 +488,7 @@ export async function POST(request: NextRequest) {
           priority: "normal",
           notes: `Contact form inquiry: ${message}`,
           created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         };
 
         const { data: lead, error: leadError } = await supabase
@@ -493,12 +499,14 @@ export async function POST(request: NextRequest) {
 
         if (leadError) {
           console.error("❌ Failed to create lead:", leadError);
-          console.log("⚠️ Lead creation failed, but inquiry was created successfully");
+          console.log(
+            "⚠️ Lead creation failed, but inquiry was created successfully"
+          );
           console.log("🔍 Lead error details:", {
             code: leadError.code,
             message: leadError.message,
             details: leadError.details,
-            hint: leadError.hint
+            hint: leadError.hint,
           });
         } else {
           console.log("✅ Lead created successfully:", lead.id);
@@ -506,12 +514,14 @@ export async function POST(request: NextRequest) {
             id: lead.id,
             customer_name: lead.customer_name,
             status: lead.status,
-            source: lead.source
+            source: lead.source,
           });
         }
       } catch (leadError) {
         console.error("❌ Error creating lead:", leadError);
-        console.log("⚠️ Lead creation failed, but inquiry was created successfully");
+        console.log(
+          "⚠️ Lead creation failed, but inquiry was created successfully"
+        );
       }
 
       // Send email notification to brand contact email
@@ -605,10 +615,10 @@ OmaHub Team`,
       // Create inquiry and lead for general platform contact
       let inquiry = null;
       let lead = null;
-      
+
       try {
         console.log("📝 Creating inquiry for general platform contact...");
-        
+
         const supabase = await getAdminClient();
         if (supabase) {
           // First create an inquiry in the inquiries table
@@ -621,7 +631,7 @@ OmaHub Team`,
             inquiry_type: "platform_contact",
             priority: "normal",
             source: "platform_contact_form",
-            status: "new"
+            status: "new",
           });
 
           const { data: inquiryData, error: inquiryError } = await supabase
@@ -641,11 +651,19 @@ OmaHub Team`,
             .single();
 
           if (inquiryError) {
-            console.error("❌ Failed to create inquiry for general contact:", inquiryError);
-            console.log("⚠️ Inquiry creation failed, but contact form was submitted successfully");
+            console.error(
+              "❌ Failed to create inquiry for general contact:",
+              inquiryError
+            );
+            console.log(
+              "⚠️ Inquiry creation failed, but contact form was submitted successfully"
+            );
           } else {
             inquiry = inquiryData;
-            console.log("✅ Inquiry created successfully for general contact:", inquiry.id);
+            console.log(
+              "✅ Inquiry created successfully for general contact:",
+              inquiry.id
+            );
           }
 
           // Then create a lead in the leads table
@@ -671,22 +689,35 @@ OmaHub Team`,
             .single();
 
           if (leadError) {
-            console.error("❌ Failed to create lead for general contact:", leadError);
-            console.log("⚠️ Lead creation failed, but inquiry was created successfully");
+            console.error(
+              "❌ Failed to create lead for general contact:",
+              leadError
+            );
+            console.log(
+              "⚠️ Lead creation failed, but inquiry was created successfully"
+            );
           } else {
             lead = insertedLead;
-            console.log("✅ Lead created successfully for general contact:", insertedLead.id);
+            console.log(
+              "✅ Lead created successfully for general contact:",
+              insertedLead.id
+            );
             console.log("📊 Lead data:", {
               id: insertedLead.id,
               customer_name: insertedLead.customer_name,
               status: insertedLead.status,
-              source: insertedLead.source
+              source: insertedLead.source,
             });
           }
         }
       } catch (error) {
-        console.error("❌ Error creating inquiry/lead for general contact:", error);
-        console.log("⚠️ Inquiry/lead creation failed, but contact form was submitted successfully");
+        console.error(
+          "❌ Error creating inquiry/lead for general contact:",
+          error
+        );
+        console.log(
+          "⚠️ Inquiry/lead creation failed, but contact form was submitted successfully"
+        );
       }
 
       try {

@@ -111,7 +111,7 @@ export default function CollectionsPage() {
       // Get user permissions and profile
       const [permissions, profileResult] = await Promise.all([
         getUserPermissions(user.id, user.email),
-        supabase.from("profiles").select("*").eq("id", user.id).single(),
+        supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
       ]);
 
       console.log("🔍 ENHANCED DEBUG: Auth data fetched:", {

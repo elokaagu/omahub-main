@@ -75,7 +75,7 @@ export default function BrandsPage() {
       // Get user permissions and profile directly without refreshing
       const [permissions, profileResult] = await Promise.all([
         getUserPermissions(user.id, user.email),
-        supabase.from("profiles").select("*").eq("id", user.id).single(),
+        supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
       ]);
 
       setUserPermissions(permissions);

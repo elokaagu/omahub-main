@@ -150,7 +150,14 @@ export default function CreateProductPage() {
             .from("profiles")
             .select("owned_brands")
             .eq("id", user.id)
-            .single();
+            .maybeSingle();
+
+          if (userProfile.error) {
+            console.error("❌ Error fetching user profile:", userProfile.error);
+            setBrands([]);
+            toast.error("Failed to load user profile. Please refresh the page.");
+            return;
+          }
 
           if (userProfile.data?.owned_brands) {
             const ownedBrandIds = userProfile.data.owned_brands;

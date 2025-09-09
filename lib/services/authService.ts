@@ -144,7 +144,7 @@ export async function getProfile(userId: string): Promise<User | null> {
     // Get user and profile data in parallel for better performance
     const [userResult, profileResult] = await Promise.all([
       supabase.auth.getUser(),
-      supabase.from("profiles").select("*").eq("id", userId).single(),
+      supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
     ]);
 
     const {
@@ -179,7 +179,7 @@ export async function getProfile(userId: string): Promise<User | null> {
             .from("profiles")
             .select("role")
             .eq("email", userEmail)
-            .single();
+            .maybeSingle();
             
           if (!emailError && emailProfile) {
             role = emailProfile.role;

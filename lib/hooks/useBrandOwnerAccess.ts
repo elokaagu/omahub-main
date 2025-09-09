@@ -87,7 +87,7 @@ export function useBrandOwnerAccess(): BrandOwnerAccess {
 
       // Get profile and permissions in parallel
       const [profileData, permissionsData] = await Promise.all([
-        supabase.from("profiles").select("*").eq("id", user.id).single(),
+        supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
         getUserPermissions(user.id),
       ]);
 
