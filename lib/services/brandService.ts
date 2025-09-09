@@ -259,7 +259,7 @@ export async function getAllBrands(
       setTimeout(() => reject(new Error("Brand query timeout after 15 seconds")), 15000);
     });
 
-    const { data, error } = await Promise.race([queryPromise, timeoutPromise]) as any;
+    const { data, error } = await Promise.race([queryPromise, timeoutPromise]) as { data: any[] | null; error: any };
 
     if (error) {
       console.error(
@@ -280,7 +280,7 @@ export async function getAllBrands(
     }
 
     // Map the data to Brand objects
-    const fullBrands: Brand[] = data.map((item) => {
+    const fullBrands: Brand[] = data.map((item: any) => {
       // Debug: Log the raw currency value from database
       console.log(
         `🔍 Brand ${item.name}: raw currency from DB = '${item.currency}'`
