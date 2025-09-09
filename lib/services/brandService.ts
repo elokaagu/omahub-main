@@ -182,14 +182,23 @@ export async function getAllBrands(
     // Check if we're already loading brands
     if (brandsCache.isLoading) {
       console.log("🔄 Already fetching brands, waiting for completion...");
-      // Wait for a short period and check cache
-      await new Promise((resolve) => setTimeout(resolve, 2000)); // Increased to 2 seconds
-      if (brandsCache.data) {
-        console.log("✅ Got data from cache after waiting");
-        return brandsCache.data;
+      // Wait for a short period and check cache with timeout
+      try {
+        await Promise.race([
+          new Promise((resolve) => setTimeout(resolve, 5000)), // Wait up to 5 seconds
+          new Promise((_, reject) => setTimeout(() => reject(new Error("Brand loading timeout")), 10000))
+        ]);
+        
+        if (brandsCache.data) {
+          console.log("✅ Got data from cache after waiting");
+          return brandsCache.data;
+        }
+        console.log("⚠️ No data in cache after waiting, using sample data");
+        return getSampleBrandsData();
+      } catch (error) {
+        console.log("⏰ Brand loading timed out, using sample data");
+        return getSampleBrandsData();
       }
-      console.log("⚠️ No data in cache after waiting, using sample data");
-      return getSampleBrandsData();
     }
 
     // Check cache first
@@ -227,8 +236,8 @@ export async function getAllBrands(
 
     console.log(`📊 Found ${count} brands in database`);
 
-    // Fetch all brand data with their normalized images
-    const { data, error } = await supabase
+    // Fetch all brand data with their normalized images with timeout
+    const queryPromise = supabase
       .from("brands")
       .select(
         `
@@ -245,6 +254,12 @@ export async function getAllBrands(
       `
       )
       .order("name");
+
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error("Brand query timeout after 15 seconds")), 15000);
+    });
+
+    const { data, error } = await Promise.race([queryPromise, timeoutPromise]) as any;
 
     if (error) {
       console.error(

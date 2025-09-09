@@ -127,10 +127,36 @@ export default function CreateProductPage() {
         setLoading(true);
         console.log("🔄 Fetching brands and catalogues...");
 
-        const [brandsData, cataloguesData] = await Promise.all([
-          getAllBrands(),
-          getAllCollections(),
+        // Add timeout to prevent infinite loading
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error("Data fetching timeout after 30 seconds")), 30000);
+        });
+
+        const dataPromise = Promise.all([
+          (async () => {
+            console.log("🔄 Starting getAllBrands()...");
+            const result = await getAllBrands();
+            console.log("✅ getAllBrands() completed with", result.length, "brands");
+            return result;
+          })().catch(err => {
+            console.error("❌ Error fetching brands:", err);
+            return [];
+          }),
+          (async () => {
+            console.log("🔄 Starting getAllCollections()...");
+            const result = await getAllCollections();
+            console.log("✅ getAllCollections() completed with", result.length, "collections");
+            return result;
+          })().catch(err => {
+            console.error("❌ Error fetching collections:", err);
+            return [];
+          }),
         ]);
+
+        const [brandsData, cataloguesData] = await Promise.race([
+          dataPromise,
+          timeoutPromise
+        ]) as [Brand[], Catalogue[]];
 
         console.log(`✅ Fetched ${brandsData.length} brands and ${cataloguesData.length} catalogues`);
 
@@ -176,9 +202,19 @@ export default function CreateProductPage() {
         setDataFetched(true);
       } catch (error) {
         console.error("❌ Error fetching data:", error);
-        toast.error("Failed to load brands and catalogues. Please refresh the page.");
+        
+        if (error instanceof Error && error.message.includes("timeout")) {
+          console.log("⏰ Data fetching timed out, using fallback data");
+          // Set empty arrays as fallback to prevent infinite loading
+          setBrands([]);
+          setCatalogues([]);
+          toast.error("Data loading timed out. Please refresh the page to try again.");
+        } else {
+          toast.error("Failed to load brands and catalogues. Please refresh the page.");
+        }
       } finally {
         setLoading(false);
+        setDataFetched(true); // Ensure we don't get stuck in loading state
       }
     };
 
