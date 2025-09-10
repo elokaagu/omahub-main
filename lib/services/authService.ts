@@ -196,11 +196,16 @@ export async function getProfile(userId: string): Promise<User | null> {
               "eloka.agu96@gmail.com",
               "team@houseofagu.com",
             ];
+            const legacyAdmins = [
+              // Add any admin emails here if needed
+            ];
 
             if (legacySuperAdmins.includes(userEmail)) {
               role = "super_admin";
             } else if (legacyBrandAdmins.includes(userEmail)) {
               role = "brand_admin";
+            } else if (legacyAdmins.includes(userEmail)) {
+              role = "admin";
             }
             
             console.log("🔄 Using legacy role detection for:", userEmail, "role:", role);

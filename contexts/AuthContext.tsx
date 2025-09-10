@@ -50,12 +50,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       "eloka.agu96@gmail.com",
       "team@houseofagu.com"
     ];
+    const legacyAdmins = [
+      // Add any admin emails here if needed
+    ];
 
     if (legacySuperAdmins.includes(email)) {
       return "super_admin";
     }
     if (legacyBrandAdmins.includes(email)) {
       return "brand_admin";
+    }
+    if (legacyAdmins.includes(email)) {
+      return "admin";
     }
     return "user";
   };

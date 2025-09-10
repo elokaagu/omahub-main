@@ -255,11 +255,11 @@ export default function CreateProductPage() {
   console.log("🔍 Product Create: User role check:", {
     user: user ? { id: user.id, email: user.email, role: user.role } : null,
     authLoading,
-    hasPermission: user && (user.role === "super_admin" || user.role === "brand_admin")
+    hasPermission: user && (user.role === "super_admin" || user.role === "brand_admin" || user.role === "admin")
   });
 
   // Check permissions after user is loaded and not in loading state
-  if (user && !authLoading && user.role !== "super_admin" && user.role !== "brand_admin") {
+  if (user && !authLoading && user.role !== "super_admin" && user.role !== "brand_admin" && user.role !== "admin") {
     return (
       <div className="min-h-screen bg-gradient-to-b from-oma-beige/30 to-white">
         <div className="max-w-4xl mx-auto px-6 py-24">
