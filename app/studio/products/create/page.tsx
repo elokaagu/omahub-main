@@ -242,13 +242,6 @@ export default function CreateProductPage() {
     );
   }
 
-  // Debug user role
-  console.log("🔍 Product Create: User role check:", {
-    user: user ? { id: user.id, email: user.email, role: user.role } : null,
-    authLoading,
-    hasPermission: user && (user.role === "super_admin" || user.role === "brand_admin")
-  });
-
   // Force refresh user profile if role is incorrect
   useEffect(() => {
     if (user && !authLoading && user.role === "user" && user.email === "team@houseofagu.com") {
@@ -257,6 +250,13 @@ export default function CreateProductPage() {
       window.location.reload();
     }
   }, [user, authLoading]);
+
+  // Debug user role
+  console.log("🔍 Product Create: User role check:", {
+    user: user ? { id: user.id, email: user.email, role: user.role } : null,
+    authLoading,
+    hasPermission: user && (user.role === "super_admin" || user.role === "brand_admin")
+  });
 
   // Check permissions after user is loaded and not in loading state
   if (user && !authLoading && user.role !== "super_admin" && user.role !== "brand_admin") {
