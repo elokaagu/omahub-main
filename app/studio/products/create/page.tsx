@@ -249,6 +249,15 @@ export default function CreateProductPage() {
     hasPermission: user && (user.role === "super_admin" || user.role === "brand_admin")
   });
 
+  // Force refresh user profile if role is incorrect
+  useEffect(() => {
+    if (user && !authLoading && user.role === "user" && user.email === "team@houseofagu.com") {
+      console.log("🔄 Forcing profile refresh for team@houseofagu.com");
+      // Force a profile refresh by clearing and reloading
+      window.location.reload();
+    }
+  }, [user, authLoading]);
+
   // Check permissions after user is loaded and not in loading state
   if (user && !authLoading && user.role !== "super_admin" && user.role !== "brand_admin") {
     return (

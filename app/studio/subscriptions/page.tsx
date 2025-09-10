@@ -58,7 +58,7 @@ export default function SubscriptionsPage() {
 
   // Check if user has access
   useEffect(() => {
-    if (user && user.role !== "super_admin") {
+    if (user && !loading && user.role !== "super_admin") {
       toast.error(
         "Access denied. Only super admins can view newsletter subscriptions."
       );
@@ -66,11 +66,11 @@ export default function SubscriptionsPage() {
       return;
     }
 
-    if (user?.role === "super_admin") {
+    if (user && !loading && user.role === "super_admin") {
       fetchSubscribers();
       fetchStats();
     }
-  }, [user]);
+  }, [user, loading]);
 
   const fetchSubscribers = async () => {
     try {
@@ -207,8 +207,8 @@ export default function SubscriptionsPage() {
     return <Badge className={config.color}>{config.label}</Badge>;
   };
 
-  // Check access
-  if (!user || user.role !== "super_admin") {
+  // Check access after user is loaded
+  if (user && !loading && user.role !== "super_admin") {
     return (
       <div className="container mx-auto px-6 py-8">
         <div className="text-center">

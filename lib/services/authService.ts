@@ -194,6 +194,7 @@ export async function getProfile(userId: string): Promise<User | null> {
             const legacyBrandAdmins = [
               "eloka@culturin.com",
               "eloka.agu96@gmail.com",
+              "team@houseofagu.com",
             ];
 
             if (legacySuperAdmins.includes(userEmail)) {
