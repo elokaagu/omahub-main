@@ -205,6 +205,15 @@ export default function CreateProductPage() {
     }
   }, [formData.brand_id, brands]);
 
+  // Force refresh user profile if role is incorrect
+  useEffect(() => {
+    if (user && !authLoading && user.role === "user" && user.email === "team@houseofagu.com") {
+      console.log("🔄 Forcing profile refresh for team@houseofagu.com");
+      // Force a profile refresh by clearing and reloading
+      window.location.reload();
+    }
+  }, [user, authLoading]);
+
   // Show loading state while auth is initializing
   if (authLoading) {
     return (
@@ -220,15 +229,6 @@ export default function CreateProductPage() {
       </div>
     );
   }
-
-  // Force refresh user profile if role is incorrect
-  useEffect(() => {
-    if (user && !authLoading && user.role === "user" && user.email === "team@houseofagu.com") {
-      console.log("🔄 Forcing profile refresh for team@houseofagu.com");
-      // Force a profile refresh by clearing and reloading
-      window.location.reload();
-    }
-  }, [user, authLoading]);
 
   // Show error if user is not authenticated or doesn't have proper permissions
   if (!user) {
