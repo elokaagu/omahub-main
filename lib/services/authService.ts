@@ -196,7 +196,7 @@ export async function getProfile(userId: string): Promise<User | null> {
               "eloka.agu96@gmail.com",
               "team@houseofagu.com",
             ];
-            const legacyAdmins = [
+            const legacyAdmins: string[] = [
               // Add any admin emails here if needed
             ];
 
