@@ -55,25 +55,53 @@ export default function SubscriptionsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [itemsPerPage] = useState(20);
+  const [loadingTimeout, setLoadingTimeout] = useState<NodeJS.Timeout | null>(null);
 
-  // Check if user has access
+  // Check if user has access and fetch data
   useEffect(() => {
-    if (user && !loading && user.role !== "super_admin") {
-      toast.error(
-        "Access denied. Only super admins can view newsletter subscriptions."
-      );
-      // Redirect or show access denied message
+    if (!user) {
+      // User not loaded yet, keep loading
       return;
     }
 
-    if (user && !loading && user.role === "super_admin") {
-      fetchSubscribers();
-      fetchStats();
+    if (user.role !== "super_admin") {
+      toast.error(
+        "Access denied. Only super admins can view newsletter subscriptions."
+      );
+      setLoading(false);
+      return;
     }
-  }, [user, loading]);
 
-  const fetchSubscribers = async () => {
+    // User is super admin, fetch data
+    console.log("🔄 Fetching subscribers for super admin:", user.email);
+    fetchSubscribers();
+    fetchStats();
+
+    // Set a timeout to prevent infinite loading
+    const timeout = setTimeout(() => {
+      if (loading) {
+        console.warn("⚠️ Loading timeout reached, stopping loading state");
+        setLoading(false);
+        toast.error("Loading timeout - please try refreshing the page");
+      }
+    }, 30000); // 30 second timeout
+
+    setLoadingTimeout(timeout);
+
+    // Cleanup timeout on unmount
+    return () => {
+      if (timeout) {
+        clearTimeout(timeout);
+      }
+    };
+  }, [user]);
+
+  const fetchSubscribers = async (retryCount = 0): Promise<void> => {
+    const maxRetries = 3;
+    const retryDelay = Math.pow(2, retryCount) * 1000; // Exponential backoff
+
     try {
+      console.log(`🔄 Fetching subscribers (attempt ${retryCount + 1}/${maxRetries + 1})`);
       setLoading(true);
 
       const params = new URLSearchParams({
@@ -85,36 +113,108 @@ export default function SubscriptionsPage() {
       });
 
       const response = await fetch(
-        `/api/studio/newsletter/subscribers?${params}`
+        `/api/studio/newsletter/subscribers?${params}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          // Add timeout
+          signal: AbortSignal.timeout(10000), // 10 second timeout
+        }
       );
 
+      console.log(`📊 Subscribers response status: ${response.status}`);
+
       if (!response.ok) {
-        throw new Error("Failed to fetch subscribers");
+        const errorText = await response.text();
+        console.error(`❌ Subscribers fetch failed:`, errorText);
+        
+        if (response.status === 401 || response.status === 403) {
+          // Auth error - try to refresh session
+          console.log("🔄 Auth error, attempting session refresh...");
+          window.location.reload();
+          return;
+        }
+        
+        throw new Error(`Failed to fetch subscribers (${response.status}): ${errorText}`);
       }
 
       const data = await response.json();
+      console.log(`✅ Subscribers fetched successfully:`, data);
+      
       setSubscribers(data.subscribers || []);
       setTotalPages(Math.ceil((data.total || 0) / itemsPerPage));
+      
+      // Clear timeout on successful load
+      if (loadingTimeout) {
+        clearTimeout(loadingTimeout);
+        setLoadingTimeout(null);
+      }
+      
     } catch (error) {
-      console.error("Error fetching subscribers:", error);
-      toast.error("Failed to fetch subscribers");
+      console.error(`❌ Error fetching subscribers (attempt ${retryCount + 1}):`, error);
+      
+      if (retryCount < maxRetries) {
+        console.log(`🔄 Retrying in ${retryDelay}ms...`);
+        setTimeout(() => {
+          fetchSubscribers(retryCount + 1);
+        }, retryDelay);
+        return;
+      }
+      
+      const errorMessage = error instanceof Error ? error.message : "Failed to fetch subscribers";
+      toast.error(`Failed to fetch subscribers: ${errorMessage}`);
     } finally {
       setLoading(false);
+      // Clear timeout when loading completes (success or failure)
+      if (loadingTimeout) {
+        clearTimeout(loadingTimeout);
+        setLoadingTimeout(null);
+      }
     }
   };
 
-  const fetchStats = async () => {
+  const fetchStats = async (retryCount = 0): Promise<void> => {
+    const maxRetries = 3;
+    const retryDelay = Math.pow(2, retryCount) * 1000; // Exponential backoff
+
     try {
-      const response = await fetch("/api/studio/newsletter/stats");
+      console.log(`📊 Fetching stats (attempt ${retryCount + 1}/${maxRetries + 1})`);
+
+      const response = await fetch("/api/studio/newsletter/stats", {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        signal: AbortSignal.timeout(5000), // 5 second timeout
+      });
+
+      console.log(`📊 Stats response status: ${response.status}`);
 
       if (!response.ok) {
-        throw new Error("Failed to fetch stats");
+        const errorText = await response.text();
+        console.error(`❌ Stats fetch failed:`, errorText);
+        throw new Error(`Failed to fetch stats (${response.status}): ${errorText}`);
       }
 
       const data = await response.json();
+      console.log(`✅ Stats fetched successfully:`, data);
       setStats(data.stats);
+      
     } catch (error) {
-      console.error("Error fetching stats:", error);
+      console.error(`❌ Error fetching stats (attempt ${retryCount + 1}):`, error);
+      
+      if (retryCount < maxRetries) {
+        console.log(`🔄 Retrying stats fetch in ${retryDelay}ms...`);
+        setTimeout(() => {
+          fetchStats(retryCount + 1);
+        }, retryDelay);
+        return;
+      }
+      
+      // Don't show toast for stats as it's not critical
+      console.warn("Stats fetch failed after all retries, continuing without stats");
     }
   };
 
@@ -246,13 +346,15 @@ export default function SubscriptionsPage() {
           </Button>
           <Button
             onClick={() => {
+              console.log("🔄 Manual refresh triggered");
               fetchSubscribers();
               fetchStats();
             }}
             className="flex items-center gap-2"
+            disabled={loading}
           >
-            <RefreshCw className="h-4 w-4" />
-            Refresh
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            {loading ? 'Refreshing...' : 'Refresh'}
           </Button>
         </div>
       </div>
