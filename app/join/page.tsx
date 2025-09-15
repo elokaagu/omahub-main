@@ -16,6 +16,7 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import { fadeIn, staggerChildren, slideIn } from "@/app/utils/animations";
 import { standardCategories } from "@/lib/data/directory";
+import ApplicationConfirmationModal from "@/components/ApplicationConfirmationModal";
 
 export default function Join() {
   const [formData, setFormData] = useState({
@@ -32,6 +33,8 @@ export default function Join() {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+  const [submittedApplicationId, setSubmittedApplicationId] = useState<string | null>(null);
   const { toast } = useToast();
 
   const handleChange = (
@@ -58,11 +61,18 @@ export default function Join() {
       });
 
       if (response.ok) {
-        toast({
-          title: "Application Submitted!",
-          description:
-            "Thank you for your interest in joining OmaHub. We'll review your application and get back to you soon.",
-        });
+        const result = await response.json();
+        console.log("Application submitted successfully:", result);
+        
+        // Store the application ID if available
+        if (result.applicationId) {
+          setSubmittedApplicationId(result.applicationId);
+        }
+        
+        // Show confirmation modal
+        setShowConfirmationModal(true);
+        
+        // Reset form
         setFormData({
           brandName: "",
           designerName: "",
@@ -367,6 +377,16 @@ export default function Join() {
           </div>
         </motion.div>
       </motion.section>
+
+      {/* Application Confirmation Modal */}
+      <ApplicationConfirmationModal
+        isOpen={showConfirmationModal}
+        onClose={() => setShowConfirmationModal(false)}
+        applicationId={submittedApplicationId || undefined}
+        brandName={formData.brandName}
+        designerName={formData.designerName}
+        email={formData.email}
+      />
     </>
   );
 }
