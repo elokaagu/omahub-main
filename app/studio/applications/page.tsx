@@ -43,6 +43,7 @@ export default function ApplicationsPage() {
   const [accessDenied, setAccessDenied] = useState(false);
   const [deletingApplication, setDeletingApplication] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+  const [reviewingApplication, setReviewingApplication] = useState<string | null>(null);
 
   // Check if user has super admin access
   useEffect(() => {
@@ -123,6 +124,9 @@ export default function ApplicationsPage() {
       console.log(`✅ Update successful:`, result);
 
       toast.success("Application status updated successfully");
+      
+      // Clear reviewing state
+      setReviewingApplication(null);
       
       // Refresh applications to ensure data consistency
       await fetchApplications();
@@ -299,7 +303,14 @@ export default function ApplicationsPage() {
           </div>
         ) : (
           filteredApplications.map((application) => (
-            <Card key={application.id} className="hover:shadow-md transition-shadow">
+            <Card 
+              key={application.id} 
+              className={`hover:shadow-md transition-shadow ${
+                reviewingApplication === application.id 
+                  ? 'ring-2 ring-blue-500 bg-blue-50' 
+                  : ''
+              }`}
+            >
               <CardHeader>
                 <div className="flex justify-between items-start">
                   <div>
@@ -372,18 +383,59 @@ export default function ApplicationsPage() {
                   >
                     View Details
                   </Button>
+                  
                   {application.status === "new" && (
-                    <Button
-                      size="sm"
-                      onClick={() => {
-                        console.log(`🔄 Starting review for application: ${application.id}`);
-                        updateApplicationStatus(application.id, "reviewing");
-                      }}
-                      disabled={updatingStatus}
-                    >
-                      {updatingStatus ? "Updating..." : "Start Review"}
-                    </Button>
+                    <>
+                      {reviewingApplication === application.id ? (
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            className="bg-green-600 hover:bg-green-700 text-white"
+                            onClick={() => {
+                              console.log(`✅ Approving application: ${application.id}`);
+                              updateApplicationStatus(application.id, "approved");
+                              setReviewingApplication(null);
+                            }}
+                            disabled={updatingStatus}
+                          >
+                            {updatingStatus ? "Updating..." : "Accept"}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => {
+                              console.log(`❌ Rejecting application: ${application.id}`);
+                              updateApplicationStatus(application.id, "rejected");
+                              setReviewingApplication(null);
+                            }}
+                            disabled={updatingStatus}
+                          >
+                            {updatingStatus ? "Updating..." : "Reject"}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setReviewingApplication(null)}
+                            disabled={updatingStatus}
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      ) : (
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            console.log(`🔄 Starting review for application: ${application.id}`);
+                            setReviewingApplication(application.id);
+                          }}
+                          disabled={updatingStatus}
+                        >
+                          Start Review
+                        </Button>
+                      )}
+                    </>
                   )}
+                  
                   <Button
                     variant="destructive"
                     size="sm"
