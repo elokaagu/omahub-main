@@ -83,6 +83,23 @@ export default function ApplicationsPage() {
       console.log(`🔄 Updating application ${applicationId} to status: ${status}`);
       setUpdatingStatus(true);
       
+      // Optimistic update - update UI immediately
+      setApplications(prev => prev.map(app => 
+        app.id === applicationId 
+          ? { ...app, status: status as any, notes: notes || app.notes, updated_at: new Date().toISOString() }
+          : app
+      ));
+      
+      // Update selected application if it's the one being updated
+      if (selectedApplication?.id === applicationId) {
+        setSelectedApplication(prev => prev ? {
+          ...prev,
+          status: status as any,
+          notes: notes || prev.notes,
+          updated_at: new Date().toISOString()
+        } : null);
+      }
+      
       const response = await fetch(`/api/studio/applications/${applicationId}`, {
         method: "PUT",
         headers: {
@@ -94,6 +111,9 @@ export default function ApplicationsPage() {
       console.log(`📊 Update response status: ${response.status}`);
 
       if (!response.ok) {
+        // Revert optimistic update on error
+        await fetchApplications();
+        
         const errorText = await response.text();
         console.error(`❌ Update failed:`, errorText);
         throw new Error(`Failed to update application: ${errorText}`);
@@ -104,7 +124,7 @@ export default function ApplicationsPage() {
 
       toast.success("Application status updated successfully");
       
-      // Refresh applications
+      // Refresh applications to ensure data consistency
       await fetchApplications();
       
       // Close detail view
@@ -113,6 +133,9 @@ export default function ApplicationsPage() {
       console.error("❌ Update error:", err);
       const errorMessage = err instanceof Error ? err.message : "Failed to update application status";
       toast.error(errorMessage);
+      
+      // Refresh applications to restore correct state
+      await fetchApplications();
     } finally {
       setUpdatingStatus(false);
     }
@@ -124,6 +147,13 @@ export default function ApplicationsPage() {
       setDeletingApplication(applicationId);
       console.log(`🗑️ Attempting to delete application: ${applicationId}`);
       
+      // Optimistic update - remove from UI immediately
+      setApplications(prev => prev.filter(app => app.id !== applicationId));
+      
+      // Close modals immediately for better UX
+      setSelectedApplication(null);
+      setShowDeleteConfirm(null);
+      
       const response = await fetch(`/api/studio/applications/${applicationId}`, {
         method: "DELETE",
       });
@@ -132,6 +162,9 @@ export default function ApplicationsPage() {
       console.log(`🗑️ Delete response URL: ${response.url}`);
 
       if (!response.ok) {
+        // Revert optimistic update on error
+        await fetchApplications();
+        
         const errorText = await response.text();
         console.error(`🗑️ Delete failed with status ${response.status}:`, errorText);
         
@@ -149,20 +182,16 @@ export default function ApplicationsPage() {
 
       toast.success("Application deleted successfully");
       
-      // Refresh applications
+      // Refresh applications to ensure data consistency
       await fetchApplications();
       
-      // Close detail view if it was the deleted application
-      if (selectedApplication?.id === applicationId) {
-        setSelectedApplication(null);
-      }
-      
-      // Hide delete confirmation
-      setShowDeleteConfirm(null);
     } catch (err) {
       console.error("🗑️ Delete error:", err);
       const errorMessage = err instanceof Error ? err.message : "Failed to delete application";
       toast.error(errorMessage);
+      
+      // Refresh applications to restore correct state
+      await fetchApplications();
     } finally {
       setDeletingApplication(null);
     }
