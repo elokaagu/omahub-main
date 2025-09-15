@@ -80,7 +80,9 @@ export default function ApplicationsPage() {
   // Update application status
   const updateApplicationStatus = async (applicationId: string, status: string, notes?: string) => {
     try {
+      console.log(`🔄 Updating application ${applicationId} to status: ${status}`);
       setUpdatingStatus(true);
+      
       const response = await fetch(`/api/studio/applications/${applicationId}`, {
         method: "PUT",
         headers: {
@@ -89,9 +91,16 @@ export default function ApplicationsPage() {
         body: JSON.stringify({ status, notes }),
       });
 
+      console.log(`📊 Update response status: ${response.status}`);
+
       if (!response.ok) {
-        throw new Error("Failed to update application");
+        const errorText = await response.text();
+        console.error(`❌ Update failed:`, errorText);
+        throw new Error(`Failed to update application: ${errorText}`);
       }
+
+      const result = await response.json();
+      console.log(`✅ Update successful:`, result);
 
       toast.success("Application status updated successfully");
       
@@ -101,7 +110,9 @@ export default function ApplicationsPage() {
       // Close detail view
       setSelectedApplication(null);
     } catch (err) {
-      toast.error("Failed to update application status");
+      console.error("❌ Update error:", err);
+      const errorMessage = err instanceof Error ? err.message : "Failed to update application status";
+      toast.error(errorMessage);
     } finally {
       setUpdatingStatus(false);
     }
@@ -335,16 +346,22 @@ export default function ApplicationsPage() {
                   {application.status === "new" && (
                     <Button
                       size="sm"
-                      onClick={() => updateApplicationStatus(application.id, "reviewing")}
+                      onClick={() => {
+                        console.log(`🔄 Starting review for application: ${application.id}`);
+                        updateApplicationStatus(application.id, "reviewing");
+                      }}
                       disabled={updatingStatus}
                     >
-                      Start Review
+                      {updatingStatus ? "Updating..." : "Start Review"}
                     </Button>
                   )}
                   <Button
                     variant="destructive"
                     size="sm"
-                    onClick={() => setShowDeleteConfirm(application.id)}
+                    onClick={() => {
+                      console.log(`🗑️ Delete button clicked for application: ${application.id}`);
+                      setShowDeleteConfirm(application.id);
+                    }}
                     disabled={deletingApplication === application.id}
                   >
                     {deletingApplication === application.id ? "Deleting..." : "Delete"}
@@ -538,7 +555,10 @@ export default function ApplicationsPage() {
                 </Button>
                 <Button
                   variant="destructive"
-                  onClick={() => deleteApplication(showDeleteConfirm)}
+                  onClick={() => {
+                    console.log(`🗑️ Confirming delete for application: ${showDeleteConfirm}`);
+                    deleteApplication(showDeleteConfirm);
+                  }}
                   disabled={deletingApplication === showDeleteConfirm}
                 >
                   {deletingApplication === showDeleteConfirm ? "Deleting..." : "Delete Permanently"}
