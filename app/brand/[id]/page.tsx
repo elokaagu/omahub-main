@@ -44,7 +44,7 @@ export async function generateMetadata({
       type: "profile",
       image: brand.brand_images?.[0]?.storage_path
         ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${brand.brand_images[0].storage_path}`
-        : brand.image,
+        : "/OmaHubBanner.png",
       author: brand.name,
       brand: brand.name,
       category: brand.category,

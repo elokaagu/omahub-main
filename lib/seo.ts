@@ -53,7 +53,7 @@ export function generateSEOMetadata(config: SEOConfig): Metadata {
       canonical: url || "/",
     },
     openGraph: {
-      type,
+      type: type === "product" ? "website" : type,
       title,
       description,
       url: fullUrl,
@@ -94,24 +94,8 @@ export function generateSEOMetadata(config: SEOConfig): Metadata {
     },
   };
 
-  // Add product-specific metadata
-  if (type === "product") {
-    metadata.openGraph = {
-      ...metadata.openGraph,
-      type: "product",
-      ...(price && {
-        product: {
-          price: {
-            amount: price,
-            currency,
-          },
-          availability: availability,
-          ...(brand && { brand }),
-          ...(category && { category }),
-        },
-      }),
-    };
-  }
+  // Note: Product-specific OpenGraph metadata is handled via structured data
+  // OpenGraph doesn't support product type in Next.js metadata API
 
   return metadata;
 }

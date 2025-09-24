@@ -42,7 +42,12 @@ import {
   getBrandReviews,
   getBrandCollections,
 } from "@/lib/services/brandService";
-import { Product, Brand, Review as SupabaseReview, Catalogue } from "@/lib/supabase";
+import {
+  Product,
+  Brand,
+  Review as SupabaseReview,
+  Catalogue,
+} from "@/lib/supabase";
 import { LazyImage } from "@/components/ui/lazy-image";
 import WhatsAppContact from "@/components/ui/whatsapp-contact";
 import {
