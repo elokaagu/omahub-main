@@ -1,169 +1,74 @@
-"use client";
-
-import { useEffect, useState, useCallback } from "react";
-import { useParams } from "next/navigation";
-import {
-  getBrandById,
-  getBrandReviews,
-  getBrandCollections,
-} from "@/lib/services/brandService";
-import { Brand, Review, Catalogue } from "@/lib/supabase";
-
-// Extended brand interface to include all the fields that the database actually returns
-interface ExtendedBrand {
-  id: string;
-  name: string;
-  description?: string | null;
-  long_description?: string | null;
-  logo_url?: string | null;
-  website?: string | null;
-  created_at?: string;
-  updated_at?: string;
-  // Additional fields that exist in the database but aren't in the basic Brand type
-  currency?: string;
-  price_range?: string;
-  location?: string;
-  category?: string;
-  rating?: number;
-  is_verified?: boolean;
-  image?: string;
-  instagram?: string;
-  whatsapp?: string;
-  contact_email?: string;
-  // New normalized image structure
-  brand_images?: Array<{
-    id: string;
-    role: string;
-    storage_path: string;
-    created_at: string;
-    updated_at: string;
-  }>;
-}
+import { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { getBrandById } from "@/lib/services/brandService";
+import { generateMetadata } from "@/lib/seo";
 import ClientBrandProfile from "./ClientBrandProfile";
 
-export default function BrandPage() {
-  const { id } = useParams();
-  const [brand, setBrand] = useState<ExtendedBrand | null>(null);
-  const [reviews, setReviews] = useState<Review[]>([]);
-  const [catalogues, setCatalogues] = useState<Catalogue[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+interface BrandPageProps {
+  params: { id: string };
+}
 
-  // Function to refresh brand data (including reviews)
-  const refreshBrandData = useCallback(async () => {
-    if (!id || typeof id !== "string") return;
+export async function generateMetadata({
+  params,
+}: BrandPageProps): Promise<Metadata> {
+  try {
+    const brand = await getBrandById(params.id);
 
-    try {
-      console.log("🔄 Refreshing brand data after review submission...");
-      const [reviewsData, cataloguesData] = await Promise.all([
-        getBrandReviews(id),
-        getBrandCollections(id),
-      ]);
-
-      setReviews(reviewsData);
-      setCatalogues(cataloguesData);
-      console.log("✅ Brand data refreshed successfully");
-    } catch (err) {
-      console.error("❌ Error refreshing brand data:", err);
-    }
-  }, [id]);
-
-  useEffect(() => {
-    async function fetchBrandData() {
-      if (!id || typeof id !== "string") {
-        console.log("❌ Invalid ID:", id);
-        return;
-      }
-
-      console.log("🔍 Fetching brand data for ID:", id);
-
-      try {
-        // Fetch brand details
-        console.log("📡 Calling getBrandById...");
-        const brandData = await getBrandById(id);
-        console.log("📊 Brand data result:", brandData);
-        setBrand(brandData);
-
-        if (brandData) {
-          console.log("✅ Brand found, fetching additional data...");
-          // Fetch reviews and catalogues in parallel
-          const [reviewsData, cataloguesData] = await Promise.all([
-            getBrandReviews(id),
-            getBrandCollections(id),
-          ]);
-
-          console.log("📝 Reviews data:", reviewsData);
-          console.log("📚 Catalogues data:", cataloguesData);
-          setReviews(reviewsData);
-          setCatalogues(cataloguesData);
-        } else {
-          console.log("❌ No brand data returned");
-        }
-      } catch (err) {
-        console.error("💥 Error fetching brand data:", err);
-        setError(err as Error);
-      } finally {
-        console.log("🏁 Setting loading to false");
-        setLoading(false);
-      }
+    if (!brand) {
+      return {
+        title: "Brand Not Found | OmaHub",
+        description: "The brand you're looking for could not be found.",
+      };
     }
 
-    fetchBrandData();
-  }, [id]);
+    const description =
+      brand.long_description ||
+      brand.description ||
+      `Discover ${brand.name}, a premium fashion brand${brand.location ? ` from ${brand.location}` : ""}. Explore their unique collections and connect with their expert team.`;
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-[50vh]">
-        <div className="animate-spin h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full"></div>
-      </div>
-    );
+    return generateMetadata({
+      title: `${brand.name} - Premium Fashion Brand`,
+      description: description,
+      keywords: [
+        brand.name.toLowerCase(),
+        "fashion brand",
+        "designer",
+        brand.category?.toLowerCase() || "",
+        brand.location?.toLowerCase() || "",
+        "premium fashion",
+        "African fashion",
+        "bespoke clothing",
+        "custom fashion",
+      ].filter(Boolean),
+      url: `/brand/${params.id}`,
+      type: "profile",
+      image: brand.brand_images?.[0]?.storage_path
+        ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${brand.brand_images[0].storage_path}`
+        : brand.image,
+      author: brand.name,
+      brand: brand.name,
+      category: brand.category,
+    });
+  } catch (error) {
+    console.error("Error generating metadata for brand:", error);
+    return {
+      title: "Brand | OmaHub",
+      description: "Discover premium fashion brands on OmaHub.",
+    };
   }
+}
 
-  if (error || !brand) {
-    return (
-      <div className="max-w-7xl mx-auto px-6 py-16 text-center">
-        <h1 className="text-3xl font-canela mb-4">Brand Not Found</h1>
-        <p className="text-oma-cocoa/80 mb-8">
-          Sorry, we couldn't find the brand you're looking for.
-        </p>
-        <button className="bg-oma-plum hover:bg-oma-plum/90 text-white px-6 py-2 rounded-lg">
-          <a href="/directory">Browse All Brands</a>
-        </button>
-      </div>
-    );
+export default async function BrandPage({ params }: BrandPageProps) {
+  try {
+    const brand = await getBrandById(params.id);
+
+    if (!brand) {
+      notFound();
+    }
+
+    return <ClientBrandProfile brandId={params.id} />;
+  } catch (error) {
+    console.error("Error loading brand page:", error);
+    notFound();
   }
-
-  // Format the data for ClientBrandProfile
-  const brandData = {
-    id: brand.id,
-    name: brand.name,
-    description: brand.description || "",
-    longDescription: brand.long_description,
-    location: brand.location,
-    priceRange: brand.price_range,
-    currency: brand.currency,
-    category: brand.category,
-    rating: brand.rating,
-    isVerified: brand.is_verified,
-    image: brand.brand_images?.[0]?.storage_path
-      ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${brand.brand_images[0].storage_path}`
-      : brand.image,
-    website: brand.website,
-    instagram: brand.instagram,
-    whatsapp: brand.whatsapp,
-    contact_email: brand.contact_email,
-    collections: catalogues.map((catalogue) => ({
-      id: catalogue.id,
-      title: catalogue.title,
-      image: catalogue.image,
-      description: catalogue.description || "",
-    })),
-  };
-
-  return (
-    <ClientBrandProfile
-      brandData={brandData}
-      onReviewSubmitted={refreshBrandData}
-    />
-  );
 }

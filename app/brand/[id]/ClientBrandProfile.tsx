@@ -37,7 +37,12 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { NavigationLink } from "@/components/ui/navigation-link";
 import { getProductsByBrand } from "@/lib/services/productService";
-import { Product } from "@/lib/supabase";
+import {
+  getBrandById,
+  getBrandReviews,
+  getBrandCollections,
+} from "@/lib/services/brandService";
+import { Product, Brand, Review, Catalogue } from "@/lib/supabase";
 import { LazyImage } from "@/components/ui/lazy-image";
 import WhatsAppContact from "@/components/ui/whatsapp-contact";
 import {
@@ -82,12 +87,12 @@ interface BrandProfileData {
 }
 
 interface ClientBrandProfileProps {
-  brandData: BrandProfileData;
+  brandId: string;
   onReviewSubmitted?: () => Promise<void>;
 }
 
 export default function ClientBrandProfile({
-  brandData,
+  brandId,
   onReviewSubmitted,
 }: ClientBrandProfileProps) {
   const { user } = useAuth();
@@ -100,11 +105,21 @@ export default function ClientBrandProfile({
         ? params.id[0]
         : null;
 
+  // State for brand data
+  const [brandData, setBrandData] = useState<BrandProfileData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
   console.log("Brand params:", params);
   console.log("Extracted brand ID:", id);
 
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
-  const { reviews: hookReviews, loading, error, fetchReviews } = useReviews(id as string);
+  const {
+    reviews: hookReviews,
+    loading,
+    error,
+    fetchReviews,
+  } = useReviews(id as string);
   const [localReviews, setLocalReviews] = useState<Review[]>([]);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [showAllProducts, setShowAllProducts] = useState(false);
@@ -174,6 +189,58 @@ export default function ClientBrandProfile({
     }
   }, [showAllProducts, products.length, fetchProducts]);
 
+  // Fetch brand data on component mount
+  useEffect(() => {
+    async function fetchBrandData() {
+      if (!brandId) return;
+
+      try {
+        setLoading(true);
+        const [brand, reviews, collections] = await Promise.all([
+          getBrandById(brandId),
+          getBrandReviews(brandId),
+          getBrandCollections(brandId),
+        ]);
+
+        if (brand) {
+          const formattedBrandData: BrandProfileData = {
+            id: brand.id,
+            name: brand.name,
+            description: brand.description || "",
+            longDescription: brand.long_description,
+            location: brand.location,
+            priceRange: brand.price_range,
+            currency: brand.currency,
+            category: brand.category,
+            rating: brand.rating,
+            isVerified: brand.is_verified,
+            image: brand.brand_images?.[0]?.storage_path
+              ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${brand.brand_images[0].storage_path}`
+              : brand.image,
+            website: brand.website,
+            instagram: brand.instagram,
+            whatsapp: brand.whatsapp,
+            contact_email: brand.contact_email,
+            collections: collections.map((catalogue) => ({
+              id: catalogue.id,
+              title: catalogue.title,
+              image: catalogue.image,
+              description: catalogue.description || "",
+            })),
+          };
+          setBrandData(formattedBrandData);
+        }
+      } catch (err) {
+        console.error("Error fetching brand data:", err);
+        setError(err as Error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchBrandData();
+  }, [brandId]);
+
   const handleReviewSubmitted = () => {
     // Hide the review form and refresh reviews
     setShowReviewForm(false);
@@ -196,14 +263,16 @@ export default function ClientBrandProfile({
 
   const handleReviewAdded = (newReview: Review) => {
     // Immediately add the new review to local state for instant display
-    setLocalReviews(prevReviews => [newReview, ...prevReviews]);
-    
+    setLocalReviews((prevReviews) => [newReview, ...prevReviews]);
+
     // Hide the review form
     setShowReviewForm(false);
-    
+
     // Show success message
-    toast.success("Review submitted successfully! Thank you for sharing your experience.");
-    
+    toast.success(
+      "Review submitted successfully! Thank you for sharing your experience."
+    );
+
     // Refresh parent brand data (including reviews)
     if (onReviewSubmitted) {
       onReviewSubmitted();
@@ -227,6 +296,30 @@ export default function ClientBrandProfile({
       setTimeout(() => scrollToProducts(), 100);
     }
   };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-[50vh]">
+        <div className="animate-spin h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error || !brandData) {
+    return (
+      <div className="max-w-7xl mx-auto px-6 py-16 text-center">
+        <h1 className="text-3xl font-canela mb-4">Brand Not Found</h1>
+        <p className="text-oma-cocoa/80 mb-8">
+          Sorry, we couldn't find the brand you're looking for.
+        </p>
+        <button className="bg-oma-plum hover:bg-oma-plum/90 text-white px-6 py-2 rounded-lg">
+          <a href="/directory">Browse All Brands</a>
+        </button>
+      </div>
+    );
+  }
 
   return (
     <section className="pt-20 sm:pt-24 pb-16 px-4 sm:px-6 fade-in">
