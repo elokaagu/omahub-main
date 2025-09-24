@@ -20,7 +20,7 @@ export interface SEOConfig {
   category?: string;
 }
 
-export function generateMetadata(config: SEOConfig): Metadata {
+export function generateSEOMetadata(config: SEOConfig): Metadata {
   const {
     title,
     description,

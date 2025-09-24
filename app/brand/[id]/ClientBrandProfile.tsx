@@ -42,7 +42,7 @@ import {
   getBrandReviews,
   getBrandCollections,
 } from "@/lib/services/brandService";
-import { Product, Brand, Review, Catalogue } from "@/lib/supabase";
+import { Product, Brand, Review as SupabaseReview, Catalogue } from "@/lib/supabase";
 import { LazyImage } from "@/components/ui/lazy-image";
 import WhatsAppContact from "@/components/ui/whatsapp-contact";
 import {
@@ -116,8 +116,8 @@ export default function ClientBrandProfile({
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   const {
     reviews: hookReviews,
-    loading,
-    error,
+    loading: reviewsLoading,
+    error: reviewsError,
     fetchReviews,
   } = useReviews(id as string);
   const [localReviews, setLocalReviews] = useState<Review[]>([]);
@@ -177,10 +177,10 @@ export default function ClientBrandProfile({
 
   // Show products by default if there are no collections
   useEffect(() => {
-    if (brandData.collections.length === 0) {
+    if (brandData && brandData.collections.length === 0) {
       setShowAllProducts(true);
     }
-  }, [brandData.collections]);
+  }, [brandData?.collections]);
 
   // Fetch products when showAllProducts is toggled
   useEffect(() => {
@@ -216,7 +216,7 @@ export default function ClientBrandProfile({
             isVerified: brand.is_verified,
             image: brand.brand_images?.[0]?.storage_path
               ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${brand.brand_images[0].storage_path}`
-              : brand.image,
+              : undefined,
             website: brand.website,
             instagram: brand.instagram,
             whatsapp: brand.whatsapp,
@@ -285,7 +285,7 @@ export default function ClientBrandProfile({
   };
 
   const handleOpenContactModal = () => {
-    console.log("Opening contact modal for brand:", brandData.name);
+    console.log("Opening contact modal for brand:", brandData?.name);
     setIsContactModalOpen(true);
   };
 

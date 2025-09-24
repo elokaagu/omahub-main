@@ -1,7 +1,7 @@
 import { Metadata } from "next";
-import { generateMetadata } from "@/lib/seo";
+import { generateSEOMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = generateMetadata({
+export const metadata: Metadata = generateSEOMetadata({
   title: "Expert Tailors - Premium Tailoring Services",
   description:
     "Connect with expert tailors and seamstresses for bespoke clothing, alterations, and custom fashion pieces. Find verified tailoring professionals for all your fashion needs.",

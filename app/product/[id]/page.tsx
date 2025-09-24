@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getProductById } from "@/lib/services/productService";
 import { getBrandById } from "@/lib/services/brandService";
-import { generateMetadata } from "@/lib/seo";
+import { generateSEOMetadata } from "@/lib/seo";
 import ClientProductPage from "./ClientProductPage";
 
 interface ProductPageProps {
@@ -33,7 +33,7 @@ export async function generateMetadata({
     const images = Array.isArray(product.images) ? product.images : [];
     const mainImage = images.length > 0 ? images[0] : "/OmaHubBanner.png";
 
-    return generateMetadata({
+    return generateSEOMetadata({
       title: `${product.title}${brand ? ` - ${brand.name}` : ""} | Premium Fashion`,
       description: description,
       keywords: [

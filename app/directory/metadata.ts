@@ -1,7 +1,7 @@
 import { Metadata } from "next";
-import { generateMetadata } from "@/lib/seo";
+import { generateSEOMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = generateMetadata({
+export const metadata: Metadata = generateSEOMetadata({
   title: "Fashion Brand Directory - Discover Premium African Designers",
   description:
     "Browse our curated directory of premium African fashion brands and designers. Discover unique styles, connect with verified brands, and explore the finest in contemporary African fashion.",

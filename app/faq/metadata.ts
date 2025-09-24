@@ -1,7 +1,7 @@
 import { Metadata } from "next";
-import { generateMetadata } from "@/lib/seo";
+import { generateSEOMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = generateMetadata({
+export const metadata: Metadata = generateSEOMetadata({
   title: "Frequently Asked Questions - OmaHub Support",
   description:
     "Find answers to common questions about OmaHub, our fashion platform, brand partnerships, tailoring services, and how to get started with premium African fashion.",

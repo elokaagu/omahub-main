@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getBrandById } from "@/lib/services/brandService";
-import { generateMetadata } from "@/lib/seo";
+import { generateSEOMetadata } from "@/lib/seo";
 import ClientBrandProfile from "./ClientBrandProfile";
 
 interface BrandPageProps {
@@ -26,7 +26,7 @@ export async function generateMetadata({
       brand.description ||
       `Discover ${brand.name}, a premium fashion brand${brand.location ? ` from ${brand.location}` : ""}. Explore their unique collections and connect with their expert team.`;
 
-    return generateMetadata({
+    return generateSEOMetadata({
       title: `${brand.name} - Premium Fashion Brand`,
       description: description,
       keywords: [
