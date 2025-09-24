@@ -25,7 +25,7 @@ export function generateMetadata(config: SEOConfig): Metadata {
     title,
     description,
     keywords = [],
-    image = "/og-image.jpg",
+    image = "/OmaHubBanner.png",
     url,
     type = "website",
     publishedTime,

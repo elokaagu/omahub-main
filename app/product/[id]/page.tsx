@@ -31,7 +31,7 @@ export async function generateMetadata({
       `Discover ${product.title}${brand ? ` by ${brand.name}` : ""}. ${product.category ? `Premium ${product.category.toLowerCase()} ` : ""}available on OmaHub.`;
 
     const images = Array.isArray(product.images) ? product.images : [];
-    const mainImage = images.length > 0 ? images[0] : "/og-image.jpg";
+    const mainImage = images.length > 0 ? images[0] : "/OmaHubBanner.png";
 
     return generateMetadata({
       title: `${product.title}${brand ? ` - ${brand.name}` : ""} | Premium Fashion`,

@@ -49,7 +49,7 @@ export const metadata: Metadata = {
     siteName: "OmaHub",
     images: [
       {
-        url: "/og-image.jpg",
+        url: "/OmaHubBanner.png",
         width: 1200,
         height: 630,
         alt: "OmaHub - Premium Fashion & Tailoring Platform",
@@ -61,7 +61,7 @@ export const metadata: Metadata = {
     title: "OmaHub - Premium Fashion & Tailoring Platform",
     description:
       "Discover premium fashion brands, connect with expert tailors, and explore curated collections.",
-    images: ["/twitter-image.jpg"],
+    images: ["/OmaHubBanner.png"],
     creator: "@omahub",
     site: "@omahub",
   },
