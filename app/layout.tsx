@@ -37,7 +37,7 @@ export const metadata: Metadata = {
   },
   metadataBase: new URL("https://www.oma-hub.com"),
   alternates: {
-    canonical: "/",
+    canonical: "https://www.oma-hub.com",
   },
   openGraph: {
     type: "website",

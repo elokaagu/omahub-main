@@ -50,7 +50,7 @@ export function generateSEOMetadata(config: SEOConfig): Metadata {
     keywords: keywords.length > 0 ? keywords : undefined,
     authors: author ? [{ name: author }] : undefined,
     alternates: {
-      canonical: url || "/",
+      canonical: fullUrl,
     },
     openGraph: {
       type: type === "product" ? "website" : type,

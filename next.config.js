@@ -114,6 +114,8 @@ const withPWA = require("next-pwa")({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Ensure consistent trailing slash handling to prevent duplicate content
+  trailingSlash: false,
   // Phase 2C: Advanced webpack optimizations
   webpack: (config, { dev, isServer }) => {
     if (!dev && !isServer) {

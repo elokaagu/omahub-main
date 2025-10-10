@@ -86,9 +86,26 @@ function generateSitemap(
     priority: number;
   }>
 ) {
+  // Remove duplicates and ensure consistent URL formatting
+  const uniquePages = pages.reduce((acc, page) => {
+    const normalizedUrl = page.url.toLowerCase().trim();
+    if (!acc.has(normalizedUrl)) {
+      acc.set(normalizedUrl, page);
+    }
+    return acc;
+  }, new Map());
+
+  const sortedPages = Array.from(uniquePages.values()).sort((a, b) => {
+    // Sort by priority first, then by URL
+    if (a.priority !== b.priority) {
+      return b.priority - a.priority;
+    }
+    return a.url.localeCompare(b.url);
+  });
+
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${pages
+${sortedPages
   .map(
     (page) => `  <url>
     <loc>${page.url}</loc>
@@ -197,6 +214,7 @@ export async function GET(request: NextRequest) {
       headers: {
         "Content-Type": "application/xml",
         "Cache-Control": "public, max-age=3600, stale-while-revalidate=86400", // Cache for 1 hour, stale for 24 hours
+        "X-Robots-Tag": "index, follow",
       },
     });
   } catch (error) {
@@ -210,6 +228,7 @@ export async function GET(request: NextRequest) {
       headers: {
         "Content-Type": "application/xml",
         "Cache-Control": "public, max-age=300, stale-while-revalidate=3600", // Shorter cache on error
+        "X-Robots-Tag": "index, follow",
       },
     });
   }
