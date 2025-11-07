@@ -49,6 +49,7 @@ import {
   getAllCategoryNames,
 } from "@/lib/data/unified-categories";
 import { MultiSelect } from "@/components/ui/multi-select";
+import { useBrandOwnerAccess } from "@/lib/hooks/useBrandOwnerAccess";
 
 // Common currencies used across Africa
 const CURRENCIES = [
@@ -71,6 +72,12 @@ const CATEGORIES = getAllCategoryNames();
 
 export default function CreateProductPage() {
   const { user, loading: authLoading } = useAuth();
+  const {
+    loading: accessLoading,
+    userPermissions,
+    ownedBrandIds,
+    isBrandOwner,
+  } = useBrandOwnerAccess();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [brands, setBrands] = useState<Brand[]>([]);
@@ -80,6 +87,7 @@ export default function CreateProductPage() {
   const [submitting, setSubmitting] = useState(false);
   const [selectedBrandCurrency, setSelectedBrandCurrency] = useState("USD");
   const [dataFetched, setDataFetched] = useState(false);
+  const [permissionGranted, setPermissionGranted] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -214,8 +222,20 @@ export default function CreateProductPage() {
     }
   }, [user, authLoading]);
 
-  // Show loading state while auth is initializing
-  if (authLoading) {
+  const hasProductPermission =
+    userPermissions.includes("studio.products.manage") ||
+    user?.role === "super_admin" ||
+    user?.role === "brand_admin" ||
+    user?.role === "admin";
+
+  useEffect(() => {
+    if (!authLoading && !accessLoading && user && hasProductPermission) {
+      setPermissionGranted(true);
+    }
+  }, [authLoading, accessLoading, user, hasProductPermission]);
+
+  // Show loading state while auth/permissions are initializing
+  if (authLoading || accessLoading || (!permissionGranted && !user)) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-oma-beige/30 to-white">
         <div className="max-w-4xl mx-auto px-6 py-24">
@@ -259,7 +279,7 @@ export default function CreateProductPage() {
   });
 
   // Check permissions after user is loaded and not in loading state
-  if (user && !authLoading && user.role !== "super_admin" && user.role !== "brand_admin" && user.role !== "admin") {
+  if (user && !permissionGranted && !hasProductPermission) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-oma-beige/30 to-white">
         <div className="max-w-4xl mx-auto px-6 py-24">
@@ -269,6 +289,34 @@ export default function CreateProductPage() {
             </h1>
             <p className="text-gray-600 mb-4">
               You don't have permission to create products.
+            </p>
+            <Button asChild>
+              <NavigationLink href="/studio">Go to Studio</NavigationLink>
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Brand owners need to have at least one assigned brand before they can create products
+  if (
+    permissionGranted &&
+    user &&
+    isBrandOwner &&
+    (!ownedBrandIds || ownedBrandIds.length === 0)
+  ) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-oma-beige/30 to-white">
+        <div className="max-w-4xl mx-auto px-6 py-24">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-oma-plum mb-4">
+              Brand Assignment Needed
+            </h1>
+            <p className="text-gray-600 mb-4">
+              Your account is set up as a brand admin, but no brands are assigned
+              yet. Please contact the OmaHub team to assign your brand before
+              creating products.
             </p>
             <Button asChild>
               <NavigationLink href="/studio">Go to Studio</NavigationLink>
