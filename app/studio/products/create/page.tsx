@@ -88,6 +88,7 @@ export default function CreateProductPage() {
   const [selectedBrandCurrency, setSelectedBrandCurrency] = useState("USD");
   const [dataFetched, setDataFetched] = useState(false);
   const [permissionGranted, setPermissionGranted] = useState(false);
+  const [brandAssignmentLatched, setBrandAssignmentLatched] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -234,6 +235,12 @@ export default function CreateProductPage() {
     }
   }, [authLoading, accessLoading, user, hasProductPermission]);
 
+  useEffect(() => {
+    if (ownedBrandIds && ownedBrandIds.length > 0) {
+      setBrandAssignmentLatched(true);
+    }
+  }, [ownedBrandIds?.join(",")]);
+
   // Show loading state while auth/permissions are initializing
   if (authLoading || accessLoading || (!permissionGranted && !user)) {
     return (
@@ -304,6 +311,8 @@ export default function CreateProductPage() {
     permissionGranted &&
     user &&
     isBrandOwner &&
+    !accessLoading &&
+    !brandAssignmentLatched &&
     (!ownedBrandIds || ownedBrandIds.length === 0)
   ) {
     return (
