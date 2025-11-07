@@ -7,6 +7,8 @@ import {
   Permission,
 } from "@/lib/services/permissionsService";
 import { Brand, Catalogue } from "@/lib/supabase";
+import { useStudioInitialData } from "@/contexts/StudioInitialDataContext";
+import type { User as AuthUser } from "@/lib/services/authService";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
@@ -46,8 +48,21 @@ interface BrandOwnerAccess {
 
 export function useBrandOwnerAccess(): BrandOwnerAccess {
   const { user } = useAuth();
+  const initialData = useStudioInitialData();
+  const fallbackUser: AuthUser | null = initialData?.user
+    ? {
+        id: initialData.user.id,
+        email: initialData.user.email ?? "",
+        role: (initialData.user.role as AuthUser["role"]) ?? "user",
+        owned_brands: initialData.user.owned_brands ?? [],
+      }
+    : null;
+  const displayUser = (user as AuthUser | null) ?? fallbackUser;
+
   const supabase = createClientComponentClient<Database>();
-  const [userProfile, setUserProfile] = useState<Profile | null>(null);
+  const [userProfile, setUserProfile] = useState<Profile | null>(
+    initialData?.profile ?? null
+  );
   const [userPermissions, setUserPermissions] = useState<Permission[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -124,10 +139,14 @@ export function useBrandOwnerAccess(): BrandOwnerAccess {
       fetchUserData();
     } else {
       setLoading(false);
-      setUserProfile(null);
+      if (initialData?.profile) {
+        setUserProfile(initialData.profile);
+      } else {
+        setUserProfile(null);
+      }
       setUserPermissions([]);
     }
-  }, [user?.id]); // Only depend on user.id
+  }, [user?.id, fetchUserData, initialData?.profile]); // Only depend on user.id
 
   // Set up real-time subscription for profile updates - simplified
   useEffect(() => {
@@ -168,8 +187,8 @@ export function useBrandOwnerAccess(): BrandOwnerAccess {
 
   // Memoized derived values to prevent unnecessary recalculations
   const effectiveProfile = userProfile || {
-    role: user?.role || "user",
-    owned_brands: user?.owned_brands || [],
+    role: displayUser?.role || "user",
+    owned_brands: displayUser?.owned_brands || [],
   };
 
   const isBrandOwner = effectiveProfile.role === "brand_admin";
@@ -288,7 +307,7 @@ export function useBrandOwnerAccess(): BrandOwnerAccess {
 
   return {
     // User info
-    user,
+    user: displayUser,
     userProfile,
     userPermissions,
 
