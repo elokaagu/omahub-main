@@ -267,7 +267,12 @@ export default function ProductsPage() {
       }
     };
 
-    if (!authLoading && !user && !recoveringSession) {
+    if (
+      !authLoading &&
+      !user &&
+      attemptSessionRecovery &&
+      !recoveringSession
+    ) {
       recoverSession();
     }
   }, [authLoading, user, attemptSessionRecovery, recoveringSession]);
