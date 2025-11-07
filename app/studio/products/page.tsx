@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useStudioInitialData } from "@/contexts/StudioInitialDataContext";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -79,7 +80,9 @@ interface ProductFavourites {
 }
 
 export default function ProductsPage() {
-  const { user, loading: authLoading, attemptSessionRecovery } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const initialData = useStudioInitialData();
+  const effectiveUser = user ?? initialData?.user ?? null;
   const router = useRouter();
   const [products, setProducts] = useState<ProductWithDetails[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<
@@ -102,7 +105,6 @@ export default function ProductsPage() {
   });
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<string | null>(null);
-  const [recoveringSession, setRecoveringSession] = useState(false);
 
   // Check if user is super admin or brand owner
   // useEffect(() => {
@@ -117,7 +119,10 @@ export default function ProductsPage() {
     try {
       if (!supabase) return;
 
-      console.log("🔄 Fetching favourites data for user role:", user?.role);
+      console.log(
+        "🔄 Fetching favourites data for user role:",
+        effectiveUser?.role
+      );
 
       // Get favourites count per product - filter by user's products if brand owner
       let favouritesQuery = supabase
@@ -126,14 +131,14 @@ export default function ProductsPage() {
         .eq("item_type", "product");
 
       // If brand owner, only get favourites for their products
-      if (user?.role === "brand_admin" && products.length > 0) {
+      if (effectiveUser?.role === "brand_admin" && products.length > 0) {
         const productIds = products.map((p) => p.id);
         console.log(
           "🔍 Filtering favourites for brand owner's products:",
           productIds
         );
         favouritesQuery = favouritesQuery.in("item_id", productIds);
-      } else if (user?.role === "brand_admin") {
+      } else if (effectiveUser?.role === "brand_admin") {
         // No products for brand owner, so no favourites
         console.log("⚠️ Brand owner has no products, setting zero favourites");
         setFavouritesData({
@@ -208,11 +213,11 @@ export default function ProductsPage() {
         const productsData = await getAllProductsWithBrandCurrency(); // Use getAllProductsWithBrandCurrency to include portfolio items for admin
 
         // Filter products based on user role
-        if (user?.role === "super_admin") {
+        if (effectiveUser?.role === "super_admin") {
           // Super admins see all products
           setProducts(productsData);
           setFilteredProducts(productsData);
-        } else if (user?.role === "brand_admin") {
+        } else if (effectiveUser?.role === "brand_admin") {
           // Brand owners see only products from their owned brands
           if (!supabase) {
             console.error("Supabase client not available");
@@ -221,16 +226,28 @@ export default function ProductsPage() {
             return;
           }
 
+          const ownedBrandIds =
+            effectiveUser?.owned_brands && effectiveUser.owned_brands.length > 0
+              ? effectiveUser.owned_brands
+              : null;
+
+          let resolvedBrandIds = ownedBrandIds;
+
+          if (!resolvedBrandIds) {
           const userProfile = await supabase
             .from("profiles")
             .select("owned_brands")
-            .eq("id", user.id)
+              .eq("id", effectiveUser.id)
             .single();
 
           if (userProfile.data?.owned_brands) {
-            const ownedBrandIds = userProfile.data.owned_brands;
+              resolvedBrandIds = userProfile.data.owned_brands;
+            }
+          }
+
+          if (resolvedBrandIds && resolvedBrandIds.length > 0) {
             const ownedProducts = productsData.filter((product) =>
-              ownedBrandIds.includes(product.brand_id)
+              resolvedBrandIds!.includes(product.brand_id)
             );
             setProducts(ownedProducts);
             setFilteredProducts(ownedProducts);
@@ -247,30 +264,16 @@ export default function ProductsPage() {
       }
     };
 
-    if (user?.role === "super_admin" || user?.role === "brand_admin") {
+    if (
+      effectiveUser?.role === "super_admin" ||
+      effectiveUser?.role === "brand_admin"
+    ) {
       fetchProducts();
-    } else if (!authLoading && !recoveringSession) {
+    } else if (!authLoading) {
       // User is not authorized or session failed to load
       setLoading(false);
     }
-  }, [user, authLoading, recoveringSession]);
-
-  useEffect(() => {
-    const recoverSession = async () => {
-      setRecoveringSession(true);
-      try {
-        await attemptSessionRecovery();
-      } catch (error) {
-        console.error("ProductsPage: Session recovery failed", error);
-      } finally {
-        setRecoveringSession(false);
-      }
-    };
-
-    if (!authLoading && !user && !recoveringSession) {
-      recoverSession();
-    }
-  }, [authLoading, user, attemptSessionRecovery, recoveringSession]);
+  }, [effectiveUser, authLoading]);
 
   // Fetch favourites data when products are loaded
   useEffect(() => {
@@ -365,7 +368,7 @@ export default function ProductsPage() {
     new Set(products.map((p) => ({ id: p.brand_id, name: p.brand.name })))
   ).sort((a, b) => a.name.localeCompare(b.name));
 
-  if (loading || authLoading || recoveringSession) {
+  if (loading || authLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-oma-beige/30 to-white">
         <div className="max-w-7xl mx-auto px-6 py-24">
@@ -377,7 +380,10 @@ export default function ProductsPage() {
     );
   }
 
-  if (!user || (user.role !== "super_admin" && user.role !== "brand_admin")) {
+  if (
+    !effectiveUser ||
+    (effectiveUser.role !== "super_admin" && effectiveUser.role !== "brand_admin")
+  ) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-oma-beige/30 to-white">
         <div className="max-w-7xl mx-auto px-6 py-24 text-center space-y-4">
@@ -427,7 +433,7 @@ export default function ProductsPage() {
               {products.length}
             </div>
             <p className="text-xs text-oma-cocoa mt-2">
-              {user?.role === "brand_admin"
+              {effectiveUser?.role === "brand_admin"
                 ? "Your product collection"
                 : "Products across all brands"}
             </p>
@@ -476,7 +482,7 @@ export default function ProductsPage() {
               {favouritesData.totalFavourites}
             </div>
             <p className="text-xs text-oma-cocoa mt-2">
-              {user?.role === "brand_admin"
+              {effectiveUser?.role === "brand_admin"
                 ? "Your products favourited by users"
                 : "Products favourited by users"}
             </p>
