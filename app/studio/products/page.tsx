@@ -79,7 +79,7 @@ interface ProductFavourites {
 }
 
 export default function ProductsPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading, attemptSessionRecovery } = useAuth();
   const router = useRouter();
   const [products, setProducts] = useState<ProductWithDetails[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<
@@ -102,6 +102,7 @@ export default function ProductsPage() {
   });
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<string | null>(null);
+  const [recoveringSession, setRecoveringSession] = useState(false);
 
   // Check if user is super admin or brand owner
   // useEffect(() => {
@@ -248,8 +249,33 @@ export default function ProductsPage() {
 
     if (user?.role === "super_admin" || user?.role === "brand_admin") {
       fetchProducts();
+    } else if (!authLoading && !recoveringSession) {
+      // User is not authorized or session failed to load
+      setLoading(false);
     }
-  }, [user]);
+  }, [user, authLoading, recoveringSession]);
+
+  useEffect(() => {
+    const recoverSession = async () => {
+      setRecoveringSession(true);
+      try {
+        await attemptSessionRecovery();
+      } catch (error) {
+        console.error("ProductsPage: Session recovery failed", error);
+      } finally {
+        setRecoveringSession(false);
+      }
+    };
+
+    if (
+      !authLoading &&
+      !user &&
+      attemptSessionRecovery &&
+      !recoveringSession
+    ) {
+      recoverSession();
+    }
+  }, [authLoading, user, attemptSessionRecovery, recoveringSession]);
 
   // Fetch favourites data when products are loaded
   useEffect(() => {
@@ -344,17 +370,28 @@ export default function ProductsPage() {
     new Set(products.map((p) => ({ id: p.brand_id, name: p.brand.name })))
   ).sort((a, b) => a.name.localeCompare(b.name));
 
-  if (user?.role !== "super_admin" && user?.role !== "brand_admin") {
-    return <Loading />;
-  }
-
-  if (loading) {
+  if (loading || authLoading || recoveringSession) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-oma-beige/30 to-white">
         <div className="max-w-7xl mx-auto px-6 py-24">
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full"></div>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user || (user.role !== "super_admin" && user.role !== "brand_admin")) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-oma-beige/30 to-white">
+        <div className="max-w-7xl mx-auto px-6 py-24 text-center space-y-4">
+          <h1 className="text-3xl font-canela text-gray-900">
+            Studio Access Required
+          </h1>
+          <p className="text-oma-cocoa/80">
+            You need a brand admin or super admin account to view products.
+          </p>
         </div>
       </div>
     );
