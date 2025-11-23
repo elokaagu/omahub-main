@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -44,6 +45,12 @@ export default function ApplicationsPage() {
   const [deletingApplication, setDeletingApplication] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [reviewingApplication, setReviewingApplication] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  // Ensure we only render portals on the client
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Check if user has super admin access
   useEffect(() => {
@@ -549,8 +556,8 @@ export default function ApplicationsPage() {
         )}
       </div>
 
-      {/* Application Detail Modal */}
-      {selectedApplication && (
+      {/* Application Detail Modal - Rendered via Portal */}
+      {mounted && selectedApplication && typeof document !== 'undefined' && document.body && createPortal(
         <div 
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999]"
           style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
@@ -742,11 +749,12 @@ export default function ApplicationsPage() {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {/* Delete Confirmation Modal */}
-      {showDeleteConfirm && (
+      {/* Delete Confirmation Modal - Rendered via Portal */}
+      {mounted && showDeleteConfirm && typeof document !== 'undefined' && document.body && createPortal(
         <div 
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999]"
           style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
@@ -801,7 +809,8 @@ export default function ApplicationsPage() {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
