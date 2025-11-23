@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/supabase-admin";
+import { adminEmailServiceServer } from "@/lib/services/adminEmailService.server";
+import { sendNewApplicationNotification } from "@/lib/services/emailService";
 
 export async function POST(request: NextRequest) {
   try {
@@ -89,6 +91,30 @@ export async function POST(request: NextRequest) {
       status: application.status,
       created_at: application.created_at,
     });
+
+    // Send email notification to super admins
+    try {
+      console.log("📧 Fetching super admin emails for notification...");
+      const superAdminEmails = await adminEmailServiceServer.getSuperAdminEmails();
+      
+      if (superAdminEmails && superAdminEmails.length > 0) {
+        console.log(`📧 Sending notification to ${superAdminEmails.length} super admin(s):`, superAdminEmails);
+        
+        const emailResult = await sendNewApplicationNotification(application, superAdminEmails);
+        
+        if (emailResult.success) {
+          console.log(`✅ Application notification sent to ${emailResult.successCount} super admin(s)`);
+        } else {
+          console.warn("⚠️ Failed to send application notification:", emailResult.error);
+          // Don't fail the request if email fails - application is still saved
+        }
+      } else {
+        console.warn("⚠️ No super admin emails found - skipping notification");
+      }
+    } catch (emailError) {
+      console.error("❌ Error sending application notification:", emailError);
+      // Don't fail the request if email fails - application is still saved
+    }
 
     // Return success response
     return NextResponse.json({

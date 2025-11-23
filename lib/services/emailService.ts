@@ -231,6 +231,246 @@ export async function subscribeToNewsletter(email: string) {
   }
 }
 
+export async function sendNewApplicationNotification(
+  application: {
+    id: string;
+    brand_name: string;
+    designer_name: string;
+    email: string;
+    phone?: string;
+    location: string;
+    category: string;
+    description: string;
+    website?: string;
+    instagram?: string;
+    year_founded?: number;
+    created_at: string;
+  },
+  adminEmails: string[]
+) {
+  try {
+    // Check if Resend is properly configured
+    if (!resend) {
+      console.error(
+        "❌ Resend API key not configured - cannot send new application notification"
+      );
+      console.error("💡 Super admins will not receive email notification");
+      console.error("📖 See EMAIL_SERVICE_SETUP.md for setup instructions");
+      return {
+        success: false,
+        error:
+          "Email service not configured. Application saved but admins were not notified via email. Please set up RESEND_API_KEY.",
+      };
+    }
+
+    const applicationDate = new Date(application.created_at).toLocaleString();
+    const studioUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "https://oma-hub.com"}/studio/applications`;
+    const applicationUrl = `${studioUrl}?id=${application.id}`;
+
+    console.log("📧 Sending new application notification to super admins:", adminEmails);
+
+    // Send email to each super admin
+    const emailResults = [];
+    for (const adminEmail of adminEmails) {
+      try {
+        const { data, error } = await resend.emails.send({
+          from: "OmaHub <info@oma-hub.com>",
+          to: [adminEmail],
+          subject: `📝 New Designer Application - ${application.brand_name}`,
+          html: `
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            </head>
+            <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <div style="background: linear-gradient(135deg, #3a1e2d 0%, #a07f68 100%); color: white; padding: 40px; border-radius: 12px 12px 0 0; text-align: center;">
+                <h1 style="margin: 0; font-size: 28px; font-weight: 300; letter-spacing: 2px;">OmaHub</h1>
+                <p style="margin: 8px 0 0 0; opacity: 0.9; font-size: 16px;">New Designer Application</p>
+              </div>
+              
+              <div style="background: white; padding: 40px; border-radius: 0 0 12px 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+                  <h2 style="color: #856404; margin: 0 0 12px 0; font-size: 22px;">📝 New Application Received</h2>
+                  <p style="margin: 0; color: #856404; font-size: 16px;">
+                    A new designer application has been submitted and requires review.
+                  </p>
+                </div>
+
+                <div style="background: #fff; border: 1px solid #e9ecef; border-radius: 8px; padding: 24px; margin-bottom: 30px;">
+                  <h3 style="color: #3a1e2d; margin: 0 0 20px 0; font-size: 18px;">Application Details</h3>
+                  <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                      <td style="padding: 10px 0; color: #666; font-weight: 500; width: 140px;">Brand Name:</td>
+                      <td style="padding: 10px 0; color: #333;"><strong>${application.brand_name}</strong></td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 10px 0; color: #666; font-weight: 500;">Designer:</td>
+                      <td style="padding: 10px 0; color: #333;">${application.designer_name}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 10px 0; color: #666; font-weight: 500;">Email:</td>
+                      <td style="padding: 10px 0; color: #333;">${application.email}</td>
+                    </tr>
+                    ${application.phone ? `
+                    <tr>
+                      <td style="padding: 10px 0; color: #666; font-weight: 500;">Phone:</td>
+                      <td style="padding: 10px 0; color: #333;">${application.phone}</td>
+                    </tr>
+                    ` : ''}
+                    <tr>
+                      <td style="padding: 10px 0; color: #666; font-weight: 500;">Location:</td>
+                      <td style="padding: 10px 0; color: #333;">${application.location}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 10px 0; color: #666; font-weight: 500;">Category:</td>
+                      <td style="padding: 10px 0; color: #333;">
+                        <span style="background: #f8f9fa; padding: 4px 12px; border-radius: 12px; font-size: 14px; display: inline-block;">
+                          ${application.category}
+                        </span>
+                      </td>
+                    </tr>
+                    ${application.website ? `
+                    <tr>
+                      <td style="padding: 10px 0; color: #666; font-weight: 500;">Website:</td>
+                      <td style="padding: 10px 0; color: #333;">
+                        <a href="${application.website}" target="_blank" style="color: #3a1e2d; text-decoration: none;">
+                          ${application.website}
+                        </a>
+                      </td>
+                    </tr>
+                    ` : ''}
+                    ${application.instagram ? `
+                    <tr>
+                      <td style="padding: 10px 0; color: #666; font-weight: 500;">Instagram:</td>
+                      <td style="padding: 10px 0; color: #333;">
+                        <a href="https://instagram.com/${application.instagram.replace(/^@/, '')}" target="_blank" style="color: #3a1e2d; text-decoration: none;">
+                          @${application.instagram.replace(/^@/, '')}
+                        </a>
+                      </td>
+                    </tr>
+                    ` : ''}
+                    ${application.year_founded ? `
+                    <tr>
+                      <td style="padding: 10px 0; color: #666; font-weight: 500;">Founded:</td>
+                      <td style="padding: 10px 0; color: #333;">${application.year_founded}</td>
+                    </tr>
+                    ` : ''}
+                    <tr>
+                      <td style="padding: 10px 0; color: #666; font-weight: 500;">Submitted:</td>
+                      <td style="padding: 10px 0; color: #333;">${applicationDate}</td>
+                    </tr>
+                  </table>
+                </div>
+
+                <div style="background: #f8f9fa; border-left: 4px solid #3a1e2d; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+                  <h3 style="color: #3a1e2d; margin: 0 0 12px 0; font-size: 16px;">Description</h3>
+                  <p style="margin: 0; color: #666; line-height: 1.6; white-space: pre-wrap;">${application.description}</p>
+                </div>
+
+                <div style="text-align: center; margin: 30px 0;">
+                  <a href="${applicationUrl}" 
+                     style="display: inline-block; background: linear-gradient(135deg, #3a1e2d 0%, #a07f68 100%); color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">
+                    Review Application
+                  </a>
+                </div>
+
+                <div style="background: #e8f4f8; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                  <p style="margin: 0; color: #666; font-size: 14px;">
+                    <strong>Quick Access:</strong> You can also view all applications in the 
+                    <a href="${studioUrl}" style="color: #3a1e2d; text-decoration: none; font-weight: 600;">Studio Applications Page</a>
+                  </p>
+                </div>
+
+                <div style="border-top: 1px solid #e9ecef; padding-top: 24px; margin-top: 30px;">
+                  <p style="color: #666; font-size: 14px; margin: 0;">
+                    This is an automated notification from OmaHub.<br>
+                    You're receiving this because you're a super admin.
+                  </p>
+                </div>
+              </div>
+            </body>
+            </html>
+          `,
+          text: `
+New Designer Application - ${application.brand_name}
+
+A new designer application has been submitted and requires review.
+
+Application Details:
+- Brand Name: ${application.brand_name}
+- Designer: ${application.designer_name}
+- Email: ${application.email}
+${application.phone ? `- Phone: ${application.phone}` : ''}
+- Location: ${application.location}
+- Category: ${application.category}
+${application.website ? `- Website: ${application.website}` : ''}
+${application.instagram ? `- Instagram: @${application.instagram.replace(/^@/, '')}` : ''}
+${application.year_founded ? `- Founded: ${application.year_founded}` : ''}
+- Submitted: ${applicationDate}
+
+Description:
+${application.description}
+
+Review this application: ${applicationUrl}
+View all applications: ${studioUrl}
+
+This is an automated notification from OmaHub.
+You're receiving this because you're a super admin.
+          `,
+          replyTo: "info@oma-hub.com",
+        });
+
+        if (error) {
+          console.error(`❌ Failed to send notification to ${adminEmail}:`, error);
+          emailResults.push({ email: adminEmail, success: false, error });
+        } else {
+          console.log(`✅ New application notification sent to ${adminEmail}`);
+          emailResults.push({ email: adminEmail, success: true });
+        }
+      } catch (emailError) {
+        console.error(
+          `❌ Error sending notification to ${adminEmail}:`,
+          emailError
+        );
+        emailResults.push({
+          email: adminEmail,
+          success: false,
+          error: emailError instanceof Error ? emailError.message : "Unknown error",
+        });
+      }
+    }
+
+    const successCount = emailResults.filter((r) => r.success).length;
+    const failureCount = emailResults.filter((r) => !r.success).length;
+
+    if (successCount > 0) {
+      console.log(
+        `✅ Sent new application notifications to ${successCount} admin(s)`
+      );
+    }
+    if (failureCount > 0) {
+      console.warn(
+        `⚠️ Failed to send notifications to ${failureCount} admin(s)`
+      );
+    }
+
+    return {
+      success: successCount > 0,
+      results: emailResults,
+      successCount,
+      failureCount,
+    };
+  } catch (error) {
+    console.error("💥 Error sending new application notifications:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
 export async function sendApplicationApprovalEmail(data: {
   designerName: string;
   brandName: string;
