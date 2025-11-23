@@ -552,7 +552,8 @@ export default function ApplicationsPage() {
       {/* Application Detail Modal */}
       {selectedApplication && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999]"
+          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
           onClick={(e) => {
             // Close modal when clicking on the overlay (not the modal content)
             if (e.target === e.currentTarget) {
@@ -570,7 +571,13 @@ export default function ApplicationsPage() {
           aria-labelledby="modal-title"
         >
           <div 
-            className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-xl"
+            className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-xl relative"
+            style={{ 
+              maxHeight: '90vh', 
+              margin: 'auto',
+              position: 'relative',
+              zIndex: 10000
+            }}
             onClick={(e) => e.stopPropagation()}
             onKeyDown={(e) => {
               // Prevent modal from closing when pressing Escape inside the modal content
@@ -741,7 +748,8 @@ export default function ApplicationsPage() {
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999]"
+          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
           onClick={(e) => {
             // Close modal when clicking on the overlay (not the modal content)
             if (e.target === e.currentTarget) {
@@ -754,10 +762,17 @@ export default function ApplicationsPage() {
               setShowDeleteConfirm(null);
             }
           }}
+          role="dialog"
+          aria-modal="true"
           tabIndex={-1}
         >
           <div 
-            className="bg-white rounded-lg max-w-md w-full p-6"
+            className="bg-white rounded-lg max-w-md w-full p-6 relative"
+            style={{ 
+              margin: 'auto',
+              position: 'relative',
+              zIndex: 10000
+            }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="text-center">
