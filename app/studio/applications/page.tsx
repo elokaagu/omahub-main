@@ -75,6 +75,19 @@ export default function ApplicationsPage() {
     return () => window.removeEventListener('keydown', handleEscape);
   }, [selectedApplication, showDeleteConfirm]);
 
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (selectedApplication || showDeleteConfirm) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [selectedApplication, showDeleteConfirm]);
+
   // Fetch applications
   const fetchApplications = async () => {
     try {
@@ -172,16 +185,36 @@ export default function ApplicationsPage() {
       const result = await response.json();
       console.log(`✅ Update successful:`, result);
 
-      toast.success("Application status updated successfully");
+      // Update the application in state with the response data
+      if (result.application) {
+        setApplications(prev => prev.map(app => 
+          app.id === applicationId 
+            ? { ...app, ...result.application }
+            : app
+        ));
+        
+        // Update selected application if it's the one being updated
+        if (selectedApplication?.id === applicationId) {
+          setSelectedApplication({
+            ...selectedApplication,
+            ...result.application
+          });
+        }
+      }
+
+      toast.success(`Application ${status === 'approved' ? 'approved' : status === 'rejected' ? 'rejected' : 'updated'} successfully`);
       
       // Clear reviewing state
       setReviewingApplication(null);
       
-      // Refresh applications to ensure data consistency
-      await fetchApplications();
+      // Refresh applications to ensure data consistency (but keep optimistic update for better UX)
+      // Only refresh if there was an error or if we need to sync with server
+      // await fetchApplications();
       
-      // Close detail view
-      setSelectedApplication(null);
+      // Close detail view if status was changed
+      if (status === 'approved' || status === 'rejected') {
+        setSelectedApplication(null);
+      }
     } catch (err) {
       console.error("❌ Update error:", err);
       const errorMessage = err instanceof Error ? err.message : "Failed to update application status";
@@ -268,13 +301,13 @@ export default function ApplicationsPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "new":
-        return <Badge variant="secondary">New</Badge>;
+        return <Badge variant="secondary" className="bg-gray-200 text-gray-800">New</Badge>;
       case "reviewing":
-        return <Badge variant="default">Reviewing</Badge>;
+        return <Badge variant="default" className="bg-blue-500 text-white">Reviewing</Badge>;
       case "approved":
-        return <Badge variant="default" className="bg-green-500">Approved</Badge>;
+        return <Badge variant="default" className="bg-green-500 text-white hover:bg-green-600">Approved</Badge>;
       case "rejected":
-        return <Badge variant="destructive">Rejected</Badge>;
+        return <Badge variant="destructive" className="bg-red-500 text-white hover:bg-red-600">Rejected</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -381,7 +414,10 @@ export default function ApplicationsPage() {
                   <div className="flex items-center gap-2">
                     {getStatusBadge(application.status)}
                     <span className="text-sm text-oma-cocoa">
-                      {new Date(application.created_at).toLocaleDateString()}
+                      {application.created_at 
+                        ? new Date(application.created_at).toLocaleDateString()
+                        : 'N/A'
+                      }
                     </span>
                   </div>
                 </div>
@@ -529,16 +565,22 @@ export default function ApplicationsPage() {
               setSelectedApplication(null);
             }
           }}
-          tabIndex={-1}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="modal-title"
         >
           <div 
-            className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-xl"
             onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => {
+              // Prevent modal from closing when pressing Escape inside the modal content
+              e.stopPropagation();
+            }}
           >
             <div className="p-6">
               <div className="flex justify-between items-start mb-6">
                 <div>
-                  <h2 className="text-2xl font-canela text-oma-plum mb-2">
+                  <h2 id="modal-title" className="text-2xl font-canela text-oma-plum mb-2">
                     {selectedApplication.brand_name}
                   </h2>
                   <p className="text-lg text-oma-cocoa">by {selectedApplication.designer_name}</p>
@@ -547,6 +589,8 @@ export default function ApplicationsPage() {
                   variant="ghost"
                   size="sm"
                   onClick={() => setSelectedApplication(null)}
+                  aria-label="Close modal"
+                  className="hover:bg-gray-100 rounded-full p-2"
                 >
                   ✕
                 </Button>
@@ -584,7 +628,7 @@ export default function ApplicationsPage() {
                   {selectedApplication.instagram && (
                     <div>
                       <label className="block text-sm font-medium text-oma-cocoa mb-1">Instagram</label>
-                      <p className="text-sm">@{selectedApplication.instagram}</p>
+                      <p className="text-sm">@{selectedApplication.instagram.replace(/^@/, '')}</p>
                     </div>
                   )}
                   {selectedApplication.year_founded && (
@@ -611,8 +655,8 @@ export default function ApplicationsPage() {
                     {getStatusBadge(selectedApplication.status)}
                     <span className="text-sm text-oma-cocoa">
                       {selectedApplication.reviewed_at 
-                        ? `Reviewed on ${new Date(selectedApplication.reviewed_at).toLocaleDateString()}`
-                        : `Submitted on ${new Date(selectedApplication.created_at).toLocaleDateString()}`
+                        ? `Reviewed on ${selectedApplication.reviewed_at ? new Date(selectedApplication.reviewed_at).toLocaleDateString() : 'N/A'}`
+                        : `Submitted on ${selectedApplication.created_at ? new Date(selectedApplication.created_at).toLocaleDateString() : 'N/A'}`
                       }
                     </span>
                   </div>
