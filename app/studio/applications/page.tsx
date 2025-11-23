@@ -240,6 +240,9 @@ export default function ApplicationsPage() {
       setDeletingApplication(applicationId);
       console.log(`🗑️ Attempting to delete application: ${applicationId}`);
       
+      // Store the application being deleted in case we need to restore it
+      const applicationToDelete = applications.find(app => app.id === applicationId);
+      
       // Optimistic update - remove from UI immediately
       setApplications(prev => prev.filter(app => app.id !== applicationId));
       
@@ -255,8 +258,18 @@ export default function ApplicationsPage() {
       console.log(`🗑️ Delete response URL: ${response.url}`);
 
       if (!response.ok) {
-        // Revert optimistic update on error
-        await fetchApplications();
+        // Revert optimistic update on error - restore the application
+        if (applicationToDelete) {
+          setApplications(prev => {
+            // Check if it's already there to avoid duplicates
+            if (!prev.find(app => app.id === applicationId)) {
+              return [...prev, applicationToDelete].sort((a, b) => 
+                new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+              );
+            }
+            return prev;
+          });
+        }
         
         const errorText = await response.text();
         console.error(`🗑️ Delete failed with status ${response.status}:`, errorText);
@@ -275,8 +288,12 @@ export default function ApplicationsPage() {
 
       toast.success("Application deleted successfully");
       
-      // Refresh applications to ensure data consistency
-      await fetchApplications();
+      // Don't refetch immediately - the optimistic update already removed it
+      // Only refetch in the background to ensure consistency (non-blocking)
+      fetchApplications().catch(err => {
+        console.warn("⚠️ Background refresh after delete failed:", err);
+        // Don't show error to user since delete was successful
+      });
       
     } catch (err) {
       console.error("🗑️ Delete error:", err);

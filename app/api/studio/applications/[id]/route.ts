@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/supabase-admin";
 import { randomUUID } from "crypto";
 import { randomBytes } from "crypto";
+import { sendApplicationApprovalEmail } from "@/lib/services/emailService";
 
 export async function PUT(
   request: NextRequest,
@@ -119,6 +120,28 @@ export async function PUT(
             brandCreated: workflowResult.brandCreated || false,
             userCreated: workflowResult.userCreated || false,
           });
+        }
+
+        // Send approval email notification to the designer
+        try {
+          console.log("📧 Sending approval email notification to:", applicationData.email);
+          const emailResult = await sendApplicationApprovalEmail({
+            designerName: applicationData.designer_name,
+            brandName: applicationData.brand_name,
+            email: applicationData.email,
+            temporaryPassword: workflowResult.temporaryPassword,
+            isNewUser: workflowResult.userCreated || false,
+          });
+
+          if (emailResult.success) {
+            console.log("✅ Approval email sent successfully");
+          } else {
+            console.warn("⚠️ Failed to send approval email:", emailResult.error);
+            // Don't fail the request if email fails
+          }
+        } catch (emailError) {
+          console.error("❌ Error sending approval email:", emailError);
+          // Don't fail the request if email fails
         }
 
         return NextResponse.json({

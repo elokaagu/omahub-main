@@ -230,3 +230,164 @@ export async function subscribeToNewsletter(email: string) {
     return { success: false, error };
   }
 }
+
+export async function sendApplicationApprovalEmail(data: {
+  designerName: string;
+  brandName: string;
+  email: string;
+  temporaryPassword?: string;
+  isNewUser: boolean;
+}) {
+  try {
+    // Check if Resend is properly configured
+    if (!resend) {
+      console.error(
+        "❌ Resend API key not configured - cannot send application approval email"
+      );
+      console.error("💡 Designer will not receive approval notification");
+      console.error("📖 See EMAIL_SERVICE_SETUP.md for setup instructions");
+      console.error("🎯 Approval notification to:", data.email);
+      return {
+        success: false,
+        error:
+          "Email service not configured. Application approved but designer was not notified via email. Please set up RESEND_API_KEY.",
+      };
+    }
+
+    const { designerName, brandName, email, temporaryPassword, isNewUser } = data;
+    const loginUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "https://oma-hub.com"}/login`;
+    const studioUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "https://oma-hub.com"}/studio`;
+
+    const passwordSection = isNewUser && temporaryPassword
+      ? `
+      <div style="background: #f8f9fa; border-left: 4px solid #3a1e2d; padding: 16px; margin: 20px 0; border-radius: 4px;">
+        <p style="margin: 0 0 8px 0; color: #333; font-weight: 600;">Your Login Credentials:</p>
+        <p style="margin: 0; color: #666;">
+          <strong>Email:</strong> ${email}<br>
+          <strong>Temporary Password:</strong> <code style="background: #fff; padding: 4px 8px; border-radius: 4px; font-family: monospace;">${temporaryPassword}</code>
+        </p>
+        <p style="margin: 12px 0 0 0; color: #d32f2f; font-size: 14px;">
+          ⚠️ <strong>Important:</strong> Please change your password after your first login for security.
+        </p>
+      </div>
+      `
+      : `
+      <div style="background: #f8f9fa; border-left: 4px solid #3a1e2d; padding: 16px; margin: 20px 0; border-radius: 4px;">
+        <p style="margin: 0; color: #666;">
+          You can log in using your existing account credentials.
+        </p>
+      </div>
+      `;
+
+    console.log("📧 Sending application approval email to:", email);
+
+    const { data: emailData, error } = await resend.emails.send({
+      from: "OmaHub <info@oma-hub.com>",
+      to: [email],
+      subject: `🎉 Your Application Has Been Approved - Welcome to OmaHub!`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="background: linear-gradient(135deg, #3a1e2d 0%, #a07f68 100%); color: white; padding: 40px; border-radius: 12px 12px 0 0; text-align: center;">
+            <h1 style="margin: 0; font-size: 28px; font-weight: 300; letter-spacing: 2px;">OmaHub</h1>
+            <p style="margin: 8px 0 0 0; opacity: 0.9; font-size: 16px;">Application Approved</p>
+          </div>
+          
+          <div style="background: white; padding: 40px; border-radius: 0 0 12px 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+            <div style="background: #e8f5e9; border-left: 4px solid #4caf50; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+              <h2 style="color: #2e7d32; margin: 0 0 12px 0; font-size: 22px;">🎉 Congratulations, ${designerName}!</h2>
+              <p style="margin: 0; color: #1b5e20; font-size: 16px;">
+                Your application for <strong>${brandName}</strong> has been approved!
+              </p>
+            </div>
+
+            <p style="color: #333; font-size: 16px; margin: 0 0 20px 0;">
+              We're thrilled to welcome you to OmaHub! Your brand has been set up and you now have access to manage your brand profile, products, and customer inquiries.
+            </p>
+
+            ${passwordSection}
+
+            <div style="background: #fff; border: 1px solid #e9ecef; border-radius: 8px; padding: 24px; margin: 30px 0;">
+              <h3 style="color: #3a1e2d; margin: 0 0 16px 0; font-size: 18px;">What's Next?</h3>
+              <ol style="margin: 0; padding-left: 20px; color: #666;">
+                <li style="margin-bottom: 12px;">
+                  <strong>Log in to your Studio:</strong> Visit <a href="${loginUrl}" style="color: #3a1e2d; text-decoration: none; font-weight: 600;">${loginUrl}</a>
+                </li>
+                <li style="margin-bottom: 12px;">
+                  <strong>Access your brand dashboard:</strong> Once logged in, you'll be able to manage your brand from the <a href="${studioUrl}" style="color: #3a1e2d; text-decoration: none; font-weight: 600;">Studio</a>
+                </li>
+                <li style="margin-bottom: 12px;">
+                  <strong>Complete your brand profile:</strong> Add your brand logo, images, and complete product listings
+                </li>
+                <li style="margin-bottom: 0;">
+                  <strong>Start managing:</strong> Respond to customer inquiries, update your catalogue, and grow your presence on OmaHub
+                </li>
+              </ol>
+            </div>
+
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${loginUrl}" style="display: inline-block; background: linear-gradient(135deg, #3a1e2d 0%, #a07f68 100%); color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">
+                Log In to Studio
+              </a>
+            </div>
+
+            <div style="border-top: 1px solid #e9ecef; padding-top: 24px; margin-top: 30px;">
+              <p style="color: #666; font-size: 14px; margin: 0 0 8px 0;">
+                If you have any questions or need assistance, please don't hesitate to reach out to our support team.
+              </p>
+              <p style="color: #666; font-size: 14px; margin: 0;">
+                Welcome aboard!<br>
+                <strong>The OmaHub Team</strong>
+              </p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+      text: `
+Congratulations, ${designerName}!
+
+Your application for ${brandName} has been approved!
+
+We're thrilled to welcome you to OmaHub! Your brand has been set up and you now have access to manage your brand profile, products, and customer inquiries.
+
+${isNewUser && temporaryPassword
+  ? `Your Login Credentials:
+Email: ${email}
+Temporary Password: ${temporaryPassword}
+
+⚠️ Important: Please change your password after your first login for security.`
+  : `You can log in using your existing account credentials.`}
+
+What's Next?
+
+1. Log in to your Studio: ${loginUrl}
+2. Access your brand dashboard: Once logged in, you'll be able to manage your brand from the Studio
+3. Complete your brand profile: Add your brand logo, images, and complete product listings
+4. Start managing: Respond to customer inquiries, update your catalogue, and grow your presence on OmaHub
+
+If you have any questions or need assistance, please don't hesitate to reach out to our support team.
+
+Welcome aboard!
+The OmaHub Team
+      `,
+      replyTo: "info@oma-hub.com",
+    });
+
+    if (error) {
+      console.error("❌ Resend API error:", error);
+      throw error;
+    }
+
+    console.log("✅ Application approval email sent successfully:", emailData?.id);
+    return { success: true, data: emailData };
+  } catch (error) {
+    console.error("💥 Failed to send application approval email:", error);
+    return { success: false, error };
+  }
+}
