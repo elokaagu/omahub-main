@@ -58,6 +58,23 @@ export default function ApplicationsPage() {
     }
   }, [user]);
 
+  // Handle Escape key to close modals
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (selectedApplication) {
+          setSelectedApplication(null);
+        }
+        if (showDeleteConfirm) {
+          setShowDeleteConfirm(null);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [selectedApplication, showDeleteConfirm]);
+
   // Fetch applications
   const fetchApplications = async () => {
     try {
@@ -65,7 +82,14 @@ export default function ApplicationsPage() {
       setError(null);
       console.log("🔄 Fetching applications...");
       
+      // Add timeout to prevent infinite loading
+      const timeoutId = setTimeout(() => {
+        console.warn("⚠️ Fetch timeout - taking longer than expected");
+      }, 10000); // 10 second warning
+      
       const response = await fetch("/api/studio/applications");
+      
+      clearTimeout(timeoutId);
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -98,6 +122,7 @@ export default function ApplicationsPage() {
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
+      // Always ensure loading is set to false
       setLoading(false);
     }
   };
@@ -490,8 +515,26 @@ export default function ApplicationsPage() {
 
       {/* Application Detail Modal */}
       {selectedApplication && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+          onClick={(e) => {
+            // Close modal when clicking on the overlay (not the modal content)
+            if (e.target === e.currentTarget) {
+              setSelectedApplication(null);
+            }
+          }}
+          onKeyDown={(e) => {
+            // Close modal on Escape key
+            if (e.key === 'Escape') {
+              setSelectedApplication(null);
+            }
+          }}
+          tabIndex={-1}
+        >
+          <div 
+            className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="p-6">
               <div className="flex justify-between items-start mb-6">
                 <div>
@@ -653,8 +696,26 @@ export default function ApplicationsPage() {
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-md w-full p-6">
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+          onClick={(e) => {
+            // Close modal when clicking on the overlay (not the modal content)
+            if (e.target === e.currentTarget) {
+              setShowDeleteConfirm(null);
+            }
+          }}
+          onKeyDown={(e) => {
+            // Close modal on Escape key
+            if (e.key === 'Escape') {
+              setShowDeleteConfirm(null);
+            }
+          }}
+          tabIndex={-1}
+        >
+          <div 
+            className="bg-white rounded-lg max-w-md w-full p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="text-center">
               <h3 className="text-lg font-medium text-oma-cocoa mb-4">Delete Application</h3>
               <p className="text-sm text-oma-cocoa mb-6">
