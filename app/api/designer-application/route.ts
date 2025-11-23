@@ -59,13 +59,36 @@ export async function POST(request: NextRequest) {
 
     if (insertError) {
       console.error("❌ Failed to insert application:", insertError);
+      console.error("❌ Insert error details:", {
+        code: insertError.code,
+        message: insertError.message,
+        details: insertError.details,
+        hint: insertError.hint,
+      });
       return NextResponse.json(
-        { error: "Failed to submit application. Please try again." },
+        { 
+          error: "Failed to submit application. Please try again.",
+          details: insertError.message 
+        },
         { status: 500 }
       );
     }
 
-    console.log("✅ Application submitted successfully:", application.id);
+    if (!application) {
+      console.error("❌ Application created but no data returned");
+      return NextResponse.json(
+        { error: "Application submitted but could not be verified. Please contact support." },
+        { status: 500 }
+      );
+    }
+
+    console.log("✅ Application submitted successfully:", {
+      id: application.id,
+      brand_name: application.brand_name,
+      email: application.email,
+      status: application.status,
+      created_at: application.created_at,
+    });
 
     // Return success response
     return NextResponse.json({

@@ -62,17 +62,41 @@ export default function ApplicationsPage() {
   const fetchApplications = async () => {
     try {
       setLoading(true);
+      setError(null);
+      console.log("🔄 Fetching applications...");
+      
       const response = await fetch("/api/studio/applications");
       
       if (!response.ok) {
-        throw new Error("Failed to fetch applications");
+        const errorData = await response.json().catch(() => ({}));
+        console.error("❌ Failed to fetch applications:", {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorData,
+        });
+        throw new Error(errorData.error || "Failed to fetch applications");
       }
       
       const data = await response.json();
+      console.log("✅ Applications fetched:", {
+        count: data.applications?.length || 0,
+        applications: data.applications?.map((app: any) => ({
+          id: app.id,
+          brand_name: app.brand_name,
+          status: app.status,
+        })) || [],
+      });
+      
       setApplications(data.applications || []);
+      
+      if (data.applications && data.applications.length === 0) {
+        console.warn("⚠️ No applications found in database");
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch applications");
-      toast.error("Failed to load applications");
+      const errorMessage = err instanceof Error ? err.message : "Failed to fetch applications";
+      console.error("❌ Error fetching applications:", err);
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -266,9 +290,19 @@ export default function ApplicationsPage() {
 
   return (
     <div className="container mx-auto px-6 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-canela text-oma-plum mb-2">Designer Applications</h1>
-        <p className="text-oma-cocoa">Review and manage designer applications for the platform</p>
+      <div className="mb-8 flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-canela text-oma-plum mb-2">Designer Applications</h1>
+          <p className="text-oma-cocoa">Review and manage designer applications for the platform</p>
+        </div>
+        <Button
+          variant="outline"
+          onClick={fetchApplications}
+          disabled={loading}
+          className="shrink-0"
+        >
+          {loading ? "Refreshing..." : "Refresh"}
+        </Button>
       </div>
 
       {/* Filters and Search */}
