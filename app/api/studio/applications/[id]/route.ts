@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/supabase-admin";
+import { randomUUID } from "crypto";
+import { randomBytes } from "crypto";
 
 export async function PUT(
   request: NextRequest,
@@ -39,6 +41,30 @@ export async function PUT(
       );
     }
 
+    // If approving, fetch the full application data first
+    let applicationData = null;
+    if (status === "approved") {
+      const { data: app, error: fetchError } = await supabase
+        .from("designer_applications")
+        .select("*")
+        .eq("id", id)
+        .single();
+
+      if (fetchError || !app) {
+        console.error("❌ Error fetching application:", fetchError);
+        return NextResponse.json(
+          { error: "Failed to fetch application data" },
+          { status: 500 }
+        );
+      }
+
+      applicationData = app;
+      console.log("📋 Fetched application data for approval:", {
+        brand_name: app.brand_name,
+        email: app.email,
+      });
+    }
+
     // Prepare update data
     const updateData: any = {
       status,
@@ -75,6 +101,46 @@ export async function PUT(
 
     console.log(`✅ Application ${id} updated successfully to status: ${status}`);
 
+    // If approved, create brand and set up user access
+    if (status === "approved" && applicationData) {
+      try {
+        console.log("🚀 Starting brand creation and user setup workflow...");
+        
+        const workflowResult = await setupBrandAndUserAccess(applicationData, supabase);
+        
+        if (!workflowResult.success) {
+          console.error("❌ Brand/user setup failed:", workflowResult.error);
+          // Don't fail the entire request, but log the error
+          return NextResponse.json({
+            success: true,
+            application: updatedApplication,
+            message: "Application approved, but brand/user setup encountered issues",
+            warning: workflowResult.error,
+            brandCreated: workflowResult.brandCreated || false,
+            userCreated: workflowResult.userCreated || false,
+          });
+        }
+
+        return NextResponse.json({
+          success: true,
+          application: updatedApplication,
+          message: "Application approved successfully. Brand and user access have been set up.",
+          brand: workflowResult.brand,
+          user: workflowResult.user ? { email: workflowResult.user.email, role: workflowResult.user.role } : null,
+          temporaryPassword: workflowResult.temporaryPassword ? "A temporary password has been generated. User will need to reset it on first login." : null,
+        });
+      } catch (workflowError) {
+        console.error("💥 Error in brand/user setup workflow:", workflowError);
+        // Don't fail the entire request
+        return NextResponse.json({
+          success: true,
+          application: updatedApplication,
+          message: "Application approved, but brand/user setup encountered an error",
+          warning: workflowError instanceof Error ? workflowError.message : "Unknown error",
+        });
+      }
+    }
+
     return NextResponse.json({
       success: true,
       application: updatedApplication,
@@ -88,6 +154,244 @@ export async function PUT(
       { status: 500 }
     );
   }
+}
+
+/**
+ * Sets up brand and user access when an application is approved
+ */
+async function setupBrandAndUserAccess(
+  application: any,
+  supabase: any
+): Promise<{
+  success: boolean;
+  error?: string;
+  brand?: any;
+  user?: any;
+  brandCreated?: boolean;
+  userCreated?: boolean;
+  temporaryPassword?: string;
+}> {
+  try {
+    // Step 1: Create the brand
+    console.log("📦 Step 1: Creating brand from application data...");
+    
+    const brandId = randomUUID();
+    const brandData = {
+      id: brandId,
+      name: application.brand_name,
+      description: application.description || "",
+      long_description: application.description || "",
+      location: application.location,
+      price_range: "explore brand for prices",
+      currency: "USD", // Default currency, can be updated later
+      category: application.category,
+      categories: [application.category],
+      rating: 5.0,
+      is_verified: false,
+      contact_email: application.email,
+      website: application.website || undefined,
+      instagram: application.instagram ? `@${application.instagram.replace(/^@/, "")}` : undefined,
+      founded_year: application.year_founded?.toString() || undefined,
+    };
+
+    const { data: newBrand, error: brandError } = await supabase
+      .from("brands")
+      .insert(brandData)
+      .select()
+      .single();
+
+    if (brandError) {
+      console.error("❌ Error creating brand:", brandError);
+      return {
+        success: false,
+        error: `Failed to create brand: ${brandError.message}`,
+        brandCreated: false,
+      };
+    }
+
+    console.log("✅ Brand created successfully:", newBrand.id);
+
+    // Step 2: Check if user exists
+    console.log("👤 Step 2: Checking if user exists...");
+    
+    let userId: string | null = null;
+    let userCreated = false;
+    let temporaryPassword: string | undefined = undefined;
+
+    // First, check if profile exists (more efficient than listing all auth users)
+    const { data: existingProfile } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("email", application.email)
+      .single();
+
+    if (existingProfile) {
+      userId = existingProfile.id;
+      console.log("✅ User profile already exists:", userId);
+    } else {
+      // Check if user exists in auth.users (profile might not exist yet)
+      const { data: existingAuthUser } = await supabase.auth.admin.listUsers();
+      const authUser = existingAuthUser?.users?.find((u: any) => u.email === application.email);
+
+      if (authUser) {
+        userId = authUser.id;
+        console.log("✅ User already exists in auth (but no profile):", userId);
+      } else {
+        // Create new auth user
+        console.log("🆕 Creating new auth user...");
+        
+        // Generate a secure temporary password
+        temporaryPassword = generateTemporaryPassword();
+        
+        const { data: newAuthUser, error: createAuthError } = await supabase.auth.admin.createUser({
+          email: application.email,
+          password: temporaryPassword,
+          email_confirm: true, // Auto-confirm email
+        });
+
+        if (createAuthError || !newAuthUser.user) {
+          console.error("❌ Error creating auth user:", createAuthError);
+          return {
+            success: false,
+            error: `Failed to create user account: ${createAuthError?.message || "Unknown error"}`,
+            brandCreated: true,
+            brand: newBrand,
+            userCreated: false,
+          };
+        }
+
+        userId = newAuthUser.user.id;
+        userCreated = true;
+        console.log("✅ Auth user created:", userId);
+      }
+    }
+
+    // Step 3: Create or update profile
+    console.log("📝 Step 3: Creating/updating user profile...");
+    
+    // Check if profile exists (by ID, not email, since we now have userId)
+    const { data: profileById } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", userId)
+      .single();
+
+    let profile;
+    if (profileById) {
+      // Update existing profile
+      console.log("🔄 Updating existing profile...");
+      const currentOwnedBrands = profileById.owned_brands || [];
+      const updatedOwnedBrands = currentOwnedBrands.includes(brandId)
+        ? currentOwnedBrands
+        : [...currentOwnedBrands, brandId];
+
+      const { data: updatedProfile, error: updateError } = await supabase
+        .from("profiles")
+        .update({
+          role: "brand_admin",
+          owned_brands: updatedOwnedBrands,
+          email: application.email, // Ensure email is up to date
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", userId)
+        .select()
+        .single();
+
+      if (updateError) {
+        console.error("❌ Error updating profile:", updateError);
+        return {
+          success: false,
+          error: `Failed to update profile: ${updateError.message}`,
+          brandCreated: true,
+          brand: newBrand,
+          userCreated,
+        };
+      }
+
+      profile = updatedProfile;
+      console.log("✅ Profile updated successfully");
+    } else {
+      // Create new profile
+      console.log("🆕 Creating new profile...");
+      const { data: newProfile, error: createProfileError } = await supabase
+        .from("profiles")
+        .insert({
+          id: userId,
+          email: application.email,
+          role: "brand_admin",
+          owned_brands: [brandId],
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .select()
+        .single();
+
+      if (createProfileError) {
+        console.error("❌ Error creating profile:", createProfileError);
+        return {
+          success: false,
+          error: `Failed to create profile: ${createProfileError.message}`,
+          brandCreated: true,
+          brand: newBrand,
+          userCreated,
+        };
+      }
+
+      profile = newProfile;
+      console.log("✅ Profile created successfully");
+    }
+
+    console.log("🎉 Brand and user setup completed successfully!");
+
+    return {
+      success: true,
+      brand: newBrand,
+      user: profile,
+      brandCreated: true,
+      userCreated,
+      temporaryPassword: userCreated ? temporaryPassword : undefined,
+    };
+  } catch (error) {
+    console.error("💥 Error in setupBrandAndUserAccess:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+/**
+ * Generates a secure temporary password
+ */
+function generateTemporaryPassword(): string {
+  // Generate a random password with:
+  // - 12 characters
+  // - At least one uppercase letter
+  // - At least one lowercase letter
+  // - At least one number
+  // - At least one special character
+  
+  const uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const lowercase = "abcdefghijklmnopqrstuvwxyz";
+  const numbers = "0123456789";
+  const special = "!@#$%^&*";
+  
+  let password = "";
+  
+  // Ensure at least one of each type
+  password += uppercase[Math.floor(Math.random() * uppercase.length)];
+  password += lowercase[Math.floor(Math.random() * lowercase.length)];
+  password += numbers[Math.floor(Math.random() * numbers.length)];
+  password += special[Math.floor(Math.random() * special.length)];
+  
+  // Fill the rest randomly
+  const allChars = uppercase + lowercase + numbers + special;
+  for (let i = password.length; i < 12; i++) {
+    password += allChars[Math.floor(Math.random() * allChars.length)];
+  }
+  
+  // Shuffle the password
+  return password.split("").sort(() => Math.random() - 0.5).join("");
 }
 
 export async function DELETE(
