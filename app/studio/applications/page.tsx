@@ -288,19 +288,16 @@ export default function ApplicationsPage() {
 
       toast.success("Application deleted successfully");
       
-      // Don't refetch immediately - the optimistic update already removed it
-      // Only refetch in the background to ensure consistency (non-blocking)
-      fetchApplications().catch(err => {
-        console.warn("⚠️ Background refresh after delete failed:", err);
-        // Don't show error to user since delete was successful
-      });
+      // Refetch to ensure we have the latest data from the server
+      // This ensures the deletion persists even after page refresh
+      await fetchApplications();
       
     } catch (err) {
       console.error("🗑️ Delete error:", err);
       const errorMessage = err instanceof Error ? err.message : "Failed to delete application";
       toast.error(errorMessage);
       
-      // Refresh applications to restore correct state
+      // Refresh applications to restore correct state if delete failed
       await fetchApplications();
     } finally {
       setDeletingApplication(null);

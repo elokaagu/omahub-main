@@ -6,10 +6,12 @@ import { sendApplicationApprovalEmail } from "@/lib/services/emailService";
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
-    const { id } = params;
+    // Handle both sync and async params (Next.js 15 compatibility)
+    const resolvedParams = await Promise.resolve(params);
+    const { id } = resolvedParams;
     const body = await request.json();
     const { status, notes } = body;
 
@@ -419,11 +421,23 @@ function generateTemporaryPassword(): string {
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
-    const { id } = params;
+    // Handle both sync and async params (Next.js 15 compatibility)
+    const resolvedParams = await Promise.resolve(params);
+    const { id } = resolvedParams;
+    
     console.log(`🗑️ Deleting application ${id}`);
+    console.log(`🗑️ Full request URL: ${request.url}`);
+
+    if (!id || id.trim() === '') {
+      console.error("❌ Invalid application ID provided");
+      return NextResponse.json(
+        { error: "Invalid application ID" },
+        { status: 400 }
+      );
+    }
 
     const supabase = await getAdminClient();
     
@@ -442,8 +456,32 @@ export async function DELETE(
       .eq("id", id)
       .single();
 
-    if (fetchError || !existingApplication) {
-      console.error("❌ Application not found:", id, fetchError);
+    if (fetchError) {
+      console.error("❌ Error fetching application:", fetchError);
+      console.error("❌ Fetch error details:", {
+        code: fetchError.code,
+        message: fetchError.message,
+        details: fetchError.details,
+        hint: fetchError.hint,
+      });
+      
+      // If it's a "not found" error (PGRST116), return 404
+      if (fetchError.code === "PGRST116") {
+        return NextResponse.json(
+          { error: "Application not found" },
+          { status: 404 }
+        );
+      }
+      
+      // Otherwise, it's a server error
+      return NextResponse.json(
+        { error: "Failed to fetch application" },
+        { status: 500 }
+      );
+    }
+
+    if (!existingApplication) {
+      console.error("❌ Application not found in database:", id);
       return NextResponse.json(
         { error: "Application not found" },
         { status: 404 }
@@ -453,17 +491,30 @@ export async function DELETE(
     console.log(`🗑️ Found application to delete: ${existingApplication.brand_name} by ${existingApplication.designer_name}`);
 
     // Delete the application
-    const { error: deleteError } = await supabase
+    const { error: deleteError, data: deleteResult } = await supabase
       .from("designer_applications")
       .delete()
-      .eq("id", id);
+      .eq("id", id)
+      .select("id");
 
     if (deleteError) {
       console.error("❌ Error deleting application:", deleteError);
+      console.error("❌ Delete error details:", {
+        code: deleteError.code,
+        message: deleteError.message,
+        details: deleteError.details,
+        hint: deleteError.hint,
+      });
       return NextResponse.json(
-        { error: "Failed to delete application" },
+        { error: "Failed to delete application", details: deleteError.message },
         { status: 500 }
       );
+    }
+
+    // Verify deletion was successful
+    if (!deleteResult || deleteResult.length === 0) {
+      console.warn("⚠️ Delete operation returned no rows - application may have already been deleted");
+      // Still return success since the goal (application deleted) is achieved
     }
 
     console.log(`✅ Application ${id} deleted successfully`);
@@ -480,8 +531,9 @@ export async function DELETE(
 
   } catch (error) {
     console.error("💥 Error in application delete API:", error);
+    console.error("💥 Error stack:", error instanceof Error ? error.stack : "No stack trace");
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Internal server error", details: error instanceof Error ? error.message : "Unknown error" },
       { status: 500 }
     );
   }

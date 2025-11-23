@@ -10,7 +10,7 @@ import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
 
 export const metadata: Metadata = {
   title: {
-    default: "OmaHub - Premium Fashion & Tailoring Platform",
+    default: "OmaHub",
     template: "%s | OmaHub",
   },
   description:
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     url: "https://www.oma-hub.com",
-    title: "OmaHub - Premium Fashion & Tailoring Platform",
+    title: "OmaHub",
     description:
       "Discover premium fashion brands, connect with expert tailors, and explore curated collections. Your gateway to luxury fashion and bespoke tailoring from Africa's finest designers.",
     siteName: "OmaHub",
@@ -52,13 +52,13 @@ export const metadata: Metadata = {
         url: "/OmaHubBanner.png",
         width: 1200,
         height: 630,
-        alt: "OmaHub - Premium Fashion & Tailoring Platform",
+        alt: "OmaHub",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "OmaHub - Premium Fashion & Tailoring Platform",
+    title: "OmaHub",
     description:
       "Discover premium fashion brands, connect with expert tailors, and explore curated collections.",
     images: ["/OmaHubBanner.png"],
