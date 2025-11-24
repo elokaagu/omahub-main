@@ -107,7 +107,16 @@ export default function ApplicationsPage() {
         console.warn("⚠️ Fetch timeout - taking longer than expected");
       }, 10000); // 10 second warning
       
-      const response = await fetch("/api/studio/applications");
+      // Fetch with cache-busting to ensure fresh data from database
+      // Add timestamp to prevent browser caching
+      const timestamp = new Date().getTime();
+      const response = await fetch(`/api/studio/applications?t=${timestamp}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+        },
+      });
       
       clearTimeout(timeoutId);
       

@@ -214,6 +214,17 @@ async function setupBrandAndUserAccess(
   try {
     // Step 1: Create the brand
     console.log("📦 Step 1: Creating brand from application data...");
+    console.log("📋 Application data to map:", {
+      brand_name: application.brand_name,
+      email: application.email,
+      phone: application.phone,
+      website: application.website,
+      instagram: application.instagram,
+      location: application.location,
+      category: application.category,
+      year_founded: application.year_founded,
+      description_length: application.description?.length || 0,
+    });
     
     const brandId = randomUUID();
     const brandData = {
@@ -231,6 +242,7 @@ async function setupBrandAndUserAccess(
       contact_email: application.email,
       website: application.website || undefined,
       instagram: application.instagram ? `@${application.instagram.replace(/^@/, "")}` : undefined,
+      whatsapp: application.phone || undefined, // Map phone to whatsapp field
       founded_year: application.year_founded?.toString() || undefined,
     };
 
@@ -249,7 +261,17 @@ async function setupBrandAndUserAccess(
       };
     }
 
-    console.log("✅ Brand created successfully:", newBrand.id);
+    console.log("✅ Brand created successfully:", {
+      id: newBrand.id,
+      name: newBrand.name,
+      contact_email: newBrand.contact_email,
+      website: newBrand.website,
+      instagram: newBrand.instagram,
+      whatsapp: newBrand.whatsapp,
+      location: newBrand.location,
+      category: newBrand.category,
+      founded_year: newBrand.founded_year,
+    });
 
     // Step 2: Check if user exists
     console.log("👤 Step 2: Checking if user exists...");
