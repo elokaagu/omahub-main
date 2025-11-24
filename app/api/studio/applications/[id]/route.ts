@@ -127,12 +127,19 @@ export async function PUT(
         // Send approval email notification to the designer
         try {
           console.log("📧 Sending approval email notification to:", applicationData.email);
+          console.log("📧 Email credentials:", {
+            isNewUser: workflowResult.userCreated,
+            hasTemporaryPassword: !!workflowResult.temporaryPassword,
+            hasPasswordResetLink: !!workflowResult.passwordResetLink,
+            temporaryPasswordPreview: workflowResult.temporaryPassword ? `${workflowResult.temporaryPassword.substring(0, 3)}...` : 'none',
+          });
+          
           const emailResult = await sendApplicationApprovalEmail({
             designerName: applicationData.designer_name,
             brandName: applicationData.brand_name,
             email: applicationData.email,
-            temporaryPassword: workflowResult.temporaryPassword, // Fallback for admin visibility
-            passwordResetLink: workflowResult.passwordResetLink, // Primary secure method
+            temporaryPassword: workflowResult.temporaryPassword, // Always included for new users
+            passwordResetLink: workflowResult.passwordResetLink, // Optional secure method
             isNewUser: workflowResult.userCreated || false,
           });
 

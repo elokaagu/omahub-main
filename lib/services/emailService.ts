@@ -499,17 +499,40 @@ export async function sendApplicationApprovalEmail(data: {
     const loginUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "https://oma-hub.com"}/login`;
     const studioUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "https://oma-hub.com"}/studio`;
 
-    // Build password section - include both reset link and temporary password if available
+    // Build password section - ALWAYS include temporary password for new users
     let passwordSection = '';
     
     if (isNewUser) {
+      // For new users, ALWAYS show temporary password (it's always generated)
+      // Also show password reset link if available
       passwordSection = `
         <div style="background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; padding: 24px; margin: 20px 0;">
           <h3 style="color: #3a1e2d; margin: 0 0 20px 0; font-size: 18px;">🔐 Your Login Credentials</h3>
           
+          ${temporaryPassword ? `
+          <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 20px; margin-bottom: ${passwordResetLink ? '16px' : '0'}; border-radius: 4px;">
+            <p style="margin: 0 0 12px 0; color: #856404; font-weight: 600; font-size: 16px;">${passwordResetLink ? 'Option 1: ' : ''}Login with Temporary Password</p>
+            <p style="margin: 0 0 16px 0; color: #666; font-size: 14px;">
+              You can log in immediately using these credentials:
+            </p>
+            <div style="background: #fff; padding: 16px; border-radius: 4px; margin-bottom: 12px;">
+              <p style="margin: 0 0 8px 0; color: #333; font-size: 14px;">
+                <strong>Email:</strong> <span style="font-family: monospace; font-weight: 600;">${email}</span>
+              </p>
+              <p style="margin: 0; color: #333; font-size: 14px;">
+                <strong>Temporary Password:</strong><br>
+                <code style="background: #f8f9fa; padding: 8px 12px; border-radius: 4px; font-family: monospace; font-size: 16px; font-weight: 700; letter-spacing: 1px; display: inline-block; margin-top: 8px; border: 2px solid #ffc107;">${temporaryPassword}</code>
+              </p>
+            </div>
+            <p style="margin: 12px 0 0 0; color: #d32f2f; font-size: 13px; font-weight: 600;">
+              ⚠️ <strong>Important:</strong> Please change your password after your first login for security.
+            </p>
+          </div>
+          ` : ''}
+          
           ${passwordResetLink ? `
-          <div style="background: #e8f5e9; border-left: 4px solid #4caf50; padding: 16px; margin-bottom: 16px; border-radius: 4px;">
-            <p style="margin: 0 0 12px 0; color: #2e7d32; font-weight: 600; font-size: 14px;">Option 1: Set Your Password (Recommended)</p>
+          <div style="background: #e8f5e9; border-left: 4px solid #4caf50; padding: 16px; border-radius: 4px;">
+            <p style="margin: 0 0 12px 0; color: #2e7d32; font-weight: 600; font-size: 14px;">Option 2: Set Your Password (Recommended)</p>
             <p style="margin: 0 0 16px 0; color: #1b5e20; font-size: 13px;">
               Click the button below to set your own secure password. This link expires in 7 days.
             </p>
@@ -525,20 +548,7 @@ export async function sendApplicationApprovalEmail(data: {
           </div>
           ` : ''}
           
-          ${temporaryPassword ? `
-          <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 16px; border-radius: 4px;">
-            <p style="margin: 0 0 12px 0; color: #856404; font-weight: 600; font-size: 14px;">${passwordResetLink ? 'Option 2: ' : ''}Temporary Password</p>
-            <p style="margin: 0; color: #666; font-size: 13px;">
-              <strong>Email:</strong> ${email}<br>
-              <strong>Temporary Password:</strong> <code style="background: #fff; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-size: 13px; font-weight: 600;">${temporaryPassword}</code>
-            </p>
-            <p style="margin: 12px 0 0 0; color: #d32f2f; font-size: 12px;">
-              ⚠️ <strong>Important:</strong> Please change your password after your first login for security.
-            </p>
-          </div>
-          ` : ''}
-          
-          ${!passwordResetLink && !temporaryPassword ? `
+          ${!temporaryPassword && !passwordResetLink ? `
           <p style="margin: 0; color: #666;">
             Your account has been created. Please use the "Forgot Password" feature to set your password.
           </p>
@@ -635,20 +645,22 @@ We're thrilled to welcome you to OmaHub! Your brand has been set up and you now 
 ${isNewUser
   ? `Your Login Credentials:
 
-${passwordResetLink ? `Option 1: Set Your Password (Recommended)
+${temporaryPassword ? `${passwordResetLink ? 'Option 1: ' : ''}Login with Temporary Password
+You can log in immediately using these credentials:
+
+Email: ${email}
+Temporary Password: ${temporaryPassword}
+
+⚠️ Important: Please change your password after your first login for security.
+
+${passwordResetLink ? '\n' : ''}` : ''}${passwordResetLink ? `Option 2: Set Your Password (Recommended)
 Click the link below to set your own secure password. This link expires in 7 days.
 
 Set My Password: ${passwordResetLink}
 
 If the link doesn't work, copy and paste it into your browser.
 
-` : ''}${temporaryPassword ? `${passwordResetLink ? 'Option 2: ' : ''}Temporary Password
-Email: ${email}
-Temporary Password: ${temporaryPassword}
-
-⚠️ Important: Please change your password after your first login for security.
-
-` : ''}${!passwordResetLink && !temporaryPassword ? `Your account has been created. Please use the "Forgot Password" feature to set your password.` : ''}`
+` : ''}${!temporaryPassword && !passwordResetLink ? `Your account has been created. Please use the "Forgot Password" feature to set your password.` : ''}`
   : `You can log in using your existing account credentials.`}
 
 What's Next?
