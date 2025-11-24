@@ -52,7 +52,8 @@ export default function ApplicationsPage() {
     setMounted(true);
   }, []);
 
-  // Check if user has super admin access
+  // Check if user has super admin access and fetch applications
+  // This runs on mount and when user changes, always fetching fresh data from database
   useEffect(() => {
     if (user) {
       // Only super admins can access designer applications
@@ -61,6 +62,7 @@ export default function ApplicationsPage() {
         setLoading(false);
         return;
       }
+      // Always fetch fresh data from database when page loads
       fetchApplications();
     }
   }, [user]);
@@ -297,11 +299,8 @@ export default function ApplicationsPage() {
 
       toast.success("Application deleted successfully");
       
-      // Refetch in the background (non-blocking) to ensure data consistency
+      // No automatic refresh - user can manually refresh if needed
       // The optimistic update already made the UI update immediately
-      fetchApplications().catch(err => {
-        console.warn("Background refetch after delete failed (non-critical):", err);
-      });
       
     } catch (err) {
       console.error("🗑️ Delete error:", err);
