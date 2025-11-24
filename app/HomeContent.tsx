@@ -548,9 +548,8 @@ export default function HomeContent() {
               // Check if brand has image or video uploaded
               const hasImage = brand.brand_images && brand.brand_images.length > 0;
               const hasVideo = brand.video_url && brand.video_url.trim() !== '';
-              const hasLegacyImage = brand.image && brand.image !== '/placeholder-image.jpg' && !brand.image.includes('placeholder');
               
-              const hasMedia = hasImage || hasVideo || hasLegacyImage;
+              const hasMedia = hasImage || hasVideo;
 
               return (brandMatchesCategory || brandHasMatchingProducts) && hasMedia;
             })
@@ -703,9 +702,8 @@ export default function HomeContent() {
             // Check if brand has image or video uploaded
             const hasImage = b.brand_images && b.brand_images.length > 0;
             const hasVideo = b.video_url && b.video_url.trim() !== '';
-            const hasLegacyImage = b.image && b.image !== '/placeholder-image.jpg' && !b.image.includes('placeholder');
             
-            return hasImage || hasVideo || hasLegacyImage;
+            return hasImage || hasVideo;
           });
 
           if (availableBrands.length > 0) {

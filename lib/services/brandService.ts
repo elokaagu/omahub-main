@@ -572,9 +572,8 @@ export async function getBrandsByCategory(category: string): Promise<Brand[]> {
   return data.filter((brand: any) => {
     const hasImage = brand.brand_images && brand.brand_images.length > 0;
     const hasVideo = brand.video_url && brand.video_url.trim() !== '';
-    const hasLegacyImage = brand.image && brand.image !== '/placeholder-image.jpg' && !brand.image?.includes('placeholder');
     
-    return hasImage || hasVideo || hasLegacyImage;
+    return hasImage || hasVideo;
   });
 }
 
