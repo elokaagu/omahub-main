@@ -288,9 +288,11 @@ export default function ApplicationsPage() {
 
       toast.success("Application deleted successfully");
       
-      // Refetch to ensure we have the latest data from the server
-      // This ensures the deletion persists even after page refresh
-      await fetchApplications();
+      // Refetch in the background (non-blocking) to ensure data consistency
+      // The optimistic update already made the UI update immediately
+      fetchApplications().catch(err => {
+        console.warn("Background refetch after delete failed (non-critical):", err);
+      });
       
     } catch (err) {
       console.error("🗑️ Delete error:", err);
