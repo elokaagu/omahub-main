@@ -285,7 +285,7 @@ export async function sendNewApplicationNotification(
               <meta name="viewport" content="width=device-width, initial-scale=1.0">
             </head>
             <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-              <div style="background: linear-gradient(135deg, #3a1e2d 0%, #a07f68 100%); color: white; padding: 40px; border-radius: 12px 12px 0 0; text-align: center;">
+              <div style="background: #3a1e2d; color: white; padding: 40px; border-radius: 12px 12px 0 0; text-align: center;">
                 <h1 style="margin: 0; font-size: 28px; font-weight: 300; letter-spacing: 2px;">OmaHub</h1>
                 <p style="margin: 8px 0 0 0; opacity: 0.9; font-size: 16px;">New Designer Application</p>
               </div>
@@ -371,7 +371,7 @@ export async function sendNewApplicationNotification(
 
                 <div style="text-align: center; margin: 30px 0;">
                   <a href="${applicationUrl}" 
-                     style="display: inline-block; background: linear-gradient(135deg, #3a1e2d 0%, #a07f68 100%); color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">
+                     style="display: inline-block; background: #3a1e2d; color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">
                     Review Application
                   </a>
                 </div>
@@ -515,7 +515,7 @@ export async function sendApplicationApprovalEmail(data: {
             </p>
             <div style="text-align: center; margin: 16px 0;">
               <a href="${passwordResetLink}" 
-                 style="display: inline-block; background: linear-gradient(135deg, #3a1e2d 0%, #a07f68 100%); color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px;">
+                 style="display: inline-block; background: #3a1e2d; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px;">
                 Set My Password
               </a>
             </div>
@@ -569,7 +569,7 @@ export async function sendApplicationApprovalEmail(data: {
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
         </head>
         <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="background: linear-gradient(135deg, #3a1e2d 0%, #a07f68 100%); color: white; padding: 40px; border-radius: 12px 12px 0 0; text-align: center;">
+          <div style="background: #3a1e2d; color: white; padding: 40px; border-radius: 12px 12px 0 0; text-align: center;">
             <h1 style="margin: 0; font-size: 28px; font-weight: 300; letter-spacing: 2px;">OmaHub</h1>
             <p style="margin: 8px 0 0 0; opacity: 0.9; font-size: 16px;">Application Approved</p>
           </div>
@@ -607,7 +607,7 @@ export async function sendApplicationApprovalEmail(data: {
             </div>
 
             <div style="text-align: center; margin: 30px 0;">
-              <a href="${loginUrl}" style="display: inline-block; background: linear-gradient(135deg, #3a1e2d 0%, #a07f68 100%); color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">
+              <a href="${loginUrl}" style="display: inline-block; background: #3a1e2d; color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">
                 Log In to Studio
               </a>
             </div>
