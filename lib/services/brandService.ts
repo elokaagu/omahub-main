@@ -556,7 +556,7 @@ export async function getBrandsByCategory(category: string): Promise<Brand[]> {
 
   const { data, error } = await supabase
     .from("brands")
-    .select("*, brand_images(*)")
+    .select("*, brand_images(*), video_url, video_thumbnail")
     .eq("category", category);
 
   if (error) {
@@ -564,7 +564,18 @@ export async function getBrandsByCategory(category: string): Promise<Brand[]> {
     throw error;
   }
 
-  return data || [];
+  if (!data) {
+    return [];
+  }
+
+  // Filter out brands without images or videos
+  return data.filter((brand: any) => {
+    const hasImage = brand.brand_images && brand.brand_images.length > 0;
+    const hasVideo = brand.video_url && brand.video_url.trim() !== '';
+    const hasLegacyImage = brand.image && brand.image !== '/placeholder-image.jpg' && !brand.image?.includes('placeholder');
+    
+    return hasImage || hasVideo || hasLegacyImage;
+  });
 }
 
 /**

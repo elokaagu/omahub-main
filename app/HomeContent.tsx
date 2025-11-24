@@ -545,7 +545,14 @@ export default function HomeContent() {
               // Check if brand has products that match this category
               const brandHasMatchingProducts = categoryProductIds.has(brand.id);
 
-              return brandMatchesCategory || brandHasMatchingProducts;
+              // Check if brand has image or video uploaded
+              const hasImage = brand.brand_images && brand.brand_images.length > 0;
+              const hasVideo = brand.video_url && brand.video_url.trim() !== '';
+              const hasLegacyImage = brand.image && brand.image !== '/placeholder-image.jpg' && !brand.image.includes('placeholder');
+              
+              const hasMedia = hasImage || hasVideo || hasLegacyImage;
+
+              return (brandMatchesCategory || brandHasMatchingProducts) && hasMedia;
             })
           )
             .slice(0, 8) // Limit all categories to 8 brands for consistent display
@@ -689,8 +696,17 @@ export default function HomeContent() {
 
         try {
           const brands = await getBrandsByCategory(category);
-          // Filter out brands already used for other occasions
-          const availableBrands = brands.filter((b) => !usedBrandIds.has(b.id));
+          // Filter out brands already used for other occasions and brands without images/videos
+          const availableBrands = brands.filter((b) => {
+            if (usedBrandIds.has(b.id)) return false;
+            
+            // Check if brand has image or video uploaded
+            const hasImage = b.brand_images && b.brand_images.length > 0;
+            const hasVideo = b.video_url && b.video_url.trim() !== '';
+            const hasLegacyImage = b.image && b.image !== '/placeholder-image.jpg' && !b.image.includes('placeholder');
+            
+            return hasImage || hasVideo || hasLegacyImage;
+          });
 
           if (availableBrands.length > 0) {
             // Select a random brand from available ones
