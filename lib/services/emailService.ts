@@ -499,57 +499,61 @@ export async function sendApplicationApprovalEmail(data: {
     const loginUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "https://oma-hub.com"}/login`;
     const studioUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "https://oma-hub.com"}/studio`;
 
-    // Determine which password method to use
-    const hasResetLink = isNewUser && passwordResetLink;
-    const hasTempPassword = isNewUser && temporaryPassword;
-
-    const passwordSection = isNewUser
-      ? hasResetLink
-        ? `
-        <div style="background: #e8f5e9; border-left: 4px solid #4caf50; padding: 20px; margin: 20px 0; border-radius: 8px;">
-          <p style="margin: 0 0 12px 0; color: #2e7d32; font-weight: 600; font-size: 16px;">🔐 Set Your Password</p>
-          <p style="margin: 0 0 16px 0; color: #1b5e20; font-size: 14px;">
-            Click the button below to set your password and access your account. This secure link will expire in 7 days.
-          </p>
-          <div style="text-align: center; margin: 20px 0;">
-            <a href="${passwordResetLink}" 
-               style="display: inline-block; background: linear-gradient(135deg, #3a1e2d 0%, #a07f68 100%); color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600;">
-              Set My Password
-            </a>
+    // Build password section - include both reset link and temporary password if available
+    let passwordSection = '';
+    
+    if (isNewUser) {
+      passwordSection = `
+        <div style="background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; padding: 24px; margin: 20px 0;">
+          <h3 style="color: #3a1e2d; margin: 0 0 20px 0; font-size: 18px;">🔐 Your Login Credentials</h3>
+          
+          ${passwordResetLink ? `
+          <div style="background: #e8f5e9; border-left: 4px solid #4caf50; padding: 16px; margin-bottom: 16px; border-radius: 4px;">
+            <p style="margin: 0 0 12px 0; color: #2e7d32; font-weight: 600; font-size: 14px;">Option 1: Set Your Password (Recommended)</p>
+            <p style="margin: 0 0 16px 0; color: #1b5e20; font-size: 13px;">
+              Click the button below to set your own secure password. This link expires in 7 days.
+            </p>
+            <div style="text-align: center; margin: 16px 0;">
+              <a href="${passwordResetLink}" 
+                 style="display: inline-block; background: linear-gradient(135deg, #3a1e2d 0%, #a07f68 100%); color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px;">
+                Set My Password
+              </a>
+            </div>
+            <p style="margin: 12px 0 0 0; color: #666; font-size: 11px; text-align: center;">
+              Or copy: <code style="background: #fff; padding: 2px 6px; border-radius: 3px; font-family: monospace; font-size: 10px; word-break: break-all;">${passwordResetLink}</code>
+            </p>
           </div>
-          <p style="margin: 16px 0 0 0; color: #666; font-size: 12px; text-align: center;">
-            Or copy this link: <br>
-            <code style="background: #f8f9fa; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-size: 11px; word-break: break-all; display: inline-block; max-width: 100%;">${passwordResetLink}</code>
-          </p>
-        </div>
-        `
-        : hasTempPassword
-        ? `
-        <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 16px; margin: 20px 0; border-radius: 4px;">
-          <p style="margin: 0 0 8px 0; color: #333; font-weight: 600;">Your Login Credentials:</p>
-          <p style="margin: 0; color: #666;">
-            <strong>Email:</strong> ${email}<br>
-            <strong>Temporary Password:</strong> <code style="background: #fff; padding: 4px 8px; border-radius: 4px; font-family: monospace;">${temporaryPassword}</code>
-          </p>
-          <p style="margin: 12px 0 0 0; color: #d32f2f; font-size: 14px;">
-            ⚠️ <strong>Important:</strong> Please change your password after your first login for security.
-          </p>
-        </div>
-        `
-        : `
-        <div style="background: #f8f9fa; border-left: 4px solid #3a1e2d; padding: 16px; margin: 20px 0; border-radius: 4px;">
+          ` : ''}
+          
+          ${temporaryPassword ? `
+          <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 16px; border-radius: 4px;">
+            <p style="margin: 0 0 12px 0; color: #856404; font-weight: 600; font-size: 14px;">${passwordResetLink ? 'Option 2: ' : ''}Temporary Password</p>
+            <p style="margin: 0; color: #666; font-size: 13px;">
+              <strong>Email:</strong> ${email}<br>
+              <strong>Temporary Password:</strong> <code style="background: #fff; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-size: 13px; font-weight: 600;">${temporaryPassword}</code>
+            </p>
+            <p style="margin: 12px 0 0 0; color: #d32f2f; font-size: 12px;">
+              ⚠️ <strong>Important:</strong> Please change your password after your first login for security.
+            </p>
+          </div>
+          ` : ''}
+          
+          ${!passwordResetLink && !temporaryPassword ? `
           <p style="margin: 0; color: #666;">
             Your account has been created. Please use the "Forgot Password" feature to set your password.
           </p>
+          ` : ''}
         </div>
-        `
-      : `
-      <div style="background: #f8f9fa; border-left: 4px solid #3a1e2d; padding: 16px; margin: 20px 0; border-radius: 4px;">
-        <p style="margin: 0; color: #666;">
-          You can log in using your existing account credentials.
-        </p>
-      </div>
       `;
+    } else {
+      passwordSection = `
+        <div style="background: #f8f9fa; border-left: 4px solid #3a1e2d; padding: 16px; margin: 20px 0; border-radius: 4px;">
+          <p style="margin: 0; color: #666;">
+            You can log in using your existing account credentials.
+          </p>
+        </div>
+      `;
+    }
 
     console.log("📧 Sending application approval email to:", email);
 
@@ -629,20 +633,22 @@ Your application for ${brandName} has been approved!
 We're thrilled to welcome you to OmaHub! Your brand has been set up and you now have access to manage your brand profile, products, and customer inquiries.
 
 ${isNewUser
-  ? passwordResetLink
-    ? `Set Your Password:
-Click the link below to set your password and access your account. This secure link will expire in 7 days.
+  ? `Your Login Credentials:
+
+${passwordResetLink ? `Option 1: Set Your Password (Recommended)
+Click the link below to set your own secure password. This link expires in 7 days.
 
 Set My Password: ${passwordResetLink}
 
-If the link doesn't work, copy and paste it into your browser.`
-    : temporaryPassword
-    ? `Your Login Credentials:
+If the link doesn't work, copy and paste it into your browser.
+
+` : ''}${temporaryPassword ? `${passwordResetLink ? 'Option 2: ' : ''}Temporary Password
 Email: ${email}
 Temporary Password: ${temporaryPassword}
 
-⚠️ Important: Please change your password after your first login for security.`
-    : `Your account has been created. Please use the "Forgot Password" feature to set your password.`
+⚠️ Important: Please change your password after your first login for security.
+
+` : ''}${!passwordResetLink && !temporaryPassword ? `Your account has been created. Please use the "Forgot Password" feature to set your password.` : ''}`
   : `You can log in using your existing account credentials.`}
 
 What's Next?
