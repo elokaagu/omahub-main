@@ -131,7 +131,8 @@ export async function PUT(
             designerName: applicationData.designer_name,
             brandName: applicationData.brand_name,
             email: applicationData.email,
-            temporaryPassword: workflowResult.temporaryPassword,
+            temporaryPassword: workflowResult.temporaryPassword, // Fallback for admin visibility
+            passwordResetLink: workflowResult.passwordResetLink, // Primary secure method
             isNewUser: workflowResult.userCreated || false,
           });
 
@@ -152,7 +153,13 @@ export async function PUT(
           message: "Application approved successfully. Brand and user access have been set up.",
           brand: workflowResult.brand,
           user: workflowResult.user ? { email: workflowResult.user.email, role: workflowResult.user.role } : null,
-          temporaryPassword: workflowResult.temporaryPassword ? "A temporary password has been generated. User will need to reset it on first login." : null,
+          temporaryPassword: workflowResult.temporaryPassword || null, // Show to admin as fallback
+          passwordResetLink: workflowResult.passwordResetLink || null, // Primary secure method
+          note: workflowResult.userCreated 
+            ? (workflowResult.passwordResetLink 
+                ? "Password reset link sent to user email. Temporary password available as fallback."
+                : "Temporary password generated. Password reset link generation failed - user can use temporary password.")
+            : null,
         });
       } catch (workflowError) {
         console.error("💥 Error in brand/user setup workflow:", workflowError);
@@ -195,6 +202,7 @@ async function setupBrandAndUserAccess(
   brandCreated?: boolean;
   userCreated?: boolean;
   temporaryPassword?: string;
+  passwordResetLink?: string;
 }> {
   try {
     // Step 1: Create the brand
@@ -265,7 +273,7 @@ async function setupBrandAndUserAccess(
         // Create new auth user
         console.log("🆕 Creating new auth user...");
         
-        // Generate a secure temporary password
+        // Generate a secure temporary password (as fallback for admin visibility)
         temporaryPassword = generateTemporaryPassword();
         
         const { data: newAuthUser, error: createAuthError } = await supabase.auth.admin.createUser({
@@ -368,13 +376,42 @@ async function setupBrandAndUserAccess(
 
     console.log("🎉 Brand and user setup completed successfully!");
 
+    // Generate password reset link for new users (more secure than sending password)
+    let passwordResetLink: string | undefined = undefined;
+    if (userCreated && userId) {
+      try {
+        console.log("🔗 Generating password reset link for new user...");
+        // Generate a password reset link that expires in 7 days
+        const resetUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "https://oma-hub.com"}/reset-password`;
+        const { data: resetData, error: resetError } = await supabase.auth.admin.generateLink({
+          type: 'recovery',
+          email: application.email,
+          options: {
+            redirectTo: resetUrl,
+          }
+        });
+
+        if (resetError) {
+          console.warn("⚠️ Failed to generate password reset link:", resetError);
+          // Continue without reset link - temporary password will be used as fallback
+        } else if (resetData?.properties?.action_link) {
+          passwordResetLink = resetData.properties.action_link;
+          console.log("✅ Password reset link generated successfully");
+        }
+      } catch (linkError) {
+        console.warn("⚠️ Error generating password reset link:", linkError);
+        // Continue without reset link - temporary password will be used as fallback
+      }
+    }
+
     return {
       success: true,
       brand: newBrand,
       user: profile,
       brandCreated: true,
       userCreated,
-      temporaryPassword: userCreated ? temporaryPassword : undefined,
+      temporaryPassword: userCreated ? temporaryPassword : undefined, // Keep for admin visibility
+      passwordResetLink: passwordResetLink, // Primary method for user
     };
   } catch (error) {
     console.error("💥 Error in setupBrandAndUserAccess:", error);
