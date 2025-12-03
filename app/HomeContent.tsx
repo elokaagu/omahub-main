@@ -960,12 +960,9 @@ export default function HomeContent() {
               <SlideUp delay={0.2}>
                 <div className="rounded-2xl overflow-hidden relative group">
                   {/* Use LazyImage as fallback if video fails or doesn't exist */}
-                  {spotlightContent.video_url || true ? (
+                  {spotlightContent.video_url ? (
                     <VideoPlayer
-                      videoUrl={
-                        spotlightContent.video_url ||
-                        "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
-                      }
+                      videoUrl={spotlightContent.video_url}
                       thumbnailUrl={
                         spotlightContent.video_thumbnail &&
                         !spotlightContent.video_thumbnail.includes(".mp4") &&
