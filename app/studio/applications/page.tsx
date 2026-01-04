@@ -175,36 +175,6 @@ export default function ApplicationsPage() {
     };
   }, [selectedApplication, showDeleteConfirm]);
 
-  // Handle Escape key to close modals
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        if (selectedApplication) {
-          setSelectedApplication(null);
-        }
-        if (showDeleteConfirm) {
-          setShowDeleteConfirm(null);
-        }
-      }
-    };
-
-    window.addEventListener('keydown', handleEscape);
-    return () => window.removeEventListener('keydown', handleEscape);
-  }, [selectedApplication, showDeleteConfirm]);
-
-  // Prevent body scroll when modal is open
-  useEffect(() => {
-    if (selectedApplication || showDeleteConfirm) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [selectedApplication, showDeleteConfirm]);
-
   // Update application status
   const updateApplicationStatus = async (applicationId: string, status: string, notes?: string) => {
     try {
