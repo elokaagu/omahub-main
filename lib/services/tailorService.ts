@@ -115,10 +115,8 @@ export async function getTailorsWithBrands(): Promise<
   }
 
   // Process the data to construct proper image URLs from brand_images
-  // Also filter out tailors with unverified brands (only show verified brands on frontend)
-  const processedData = (data || [])
-    .filter((tailor) => tailor.brand && tailor.brand.is_verified === true) // Only show tailors with verified brands
-    .map((tailor) => {
+  // Note: Unverified brands are allowed on frontend, only unapproved brands (with pending applications) are hidden
+  const processedData = (data || []).map((tailor) => {
       if (
         tailor.brand &&
         tailor.brand.brand_images &&

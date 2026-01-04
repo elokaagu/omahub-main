@@ -42,6 +42,7 @@ async function hasPermission(
   return false;
 }
 
+
 /**
  * Fetch all brands with product counts
  */
@@ -53,7 +54,7 @@ export async function getAllBrandsWithProductCounts(): Promise<
       throw new Error("Supabase client not available");
     }
 
-    // Get brands with product counts using a join (only verified brands for frontend)
+    // Get brands with product counts using a join (exclude unapproved brands)
     const { data, error } = await supabase
       .from("brands")
       .select(
@@ -63,7 +64,6 @@ export async function getAllBrandsWithProductCounts(): Promise<
         brand_images(*)
       `
       )
-      .eq("is_verified", true) // Only show verified brands on frontend
       .order("name");
 
     if (error) {
@@ -142,7 +142,6 @@ export async function getAllBrands(
       const { data, error } = await supabase
         .from("brands")
         .select("*, video_url, video_thumbnail, brand_images(*)")
-        .eq("is_verified", true) // Only show verified brands on frontend
         .order("name");
       if (error) throw new Error(`Failed to fetch brands: ${error.message}`);
       if (!data || data.length === 0)
@@ -205,7 +204,7 @@ export async function getAllBrands(
       throw new Error("Supabase client is not initialized");
     }
 
-    // Fetch all brand data (only verified brands for frontend)
+    // Fetch all brand data (exclude unapproved brands)
     const { data, error } = await supabase
       .from("brands")
       .select(
@@ -222,7 +221,6 @@ export async function getAllBrands(
         )
       `
       )
-      .eq("is_verified", true) // Only show verified brands on frontend
       .order("name");
 
     if (error) {
@@ -560,8 +558,7 @@ export async function getBrandsByCategory(category: string): Promise<Brand[]> {
   const { data, error } = await supabase
     .from("brands")
     .select("*, brand_images(*), video_url, video_thumbnail")
-    .eq("category", category)
-    .eq("is_verified", true); // Only show verified brands on frontend
+    .eq("category", category);
 
   if (error) {
     console.error(`Error fetching brands in category ${category}:`, error);
@@ -660,7 +657,6 @@ export async function searchBrands(query: string): Promise<Brand[]> {
   const { data, error } = await supabase
     .from("brands")
     .select("*, brand_images(*)")
-    .eq("is_verified", true) // Only show verified brands on frontend
     .or(`name.ilike.%${query}%,description.ilike.%${query}%`);
 
   if (error) {
