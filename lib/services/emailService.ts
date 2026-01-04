@@ -283,111 +283,126 @@ export async function sendNewApplicationNotification(
             <head>
               <meta charset="utf-8">
               <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <link rel="preconnect" href="https://fonts.googleapis.com">
+              <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+              <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
             </head>
-            <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-              <div style="background: #3a1e2d; color: white; padding: 40px; border-radius: 12px 12px 0 0; text-align: center;">
-                <h1 style="margin: 0; font-size: 28px; font-weight: 300; letter-spacing: 2px;">OmaHub</h1>
-                <p style="margin: 8px 0 0 0; opacity: 0.9; font-size: 16px;">New Designer Application</p>
-              </div>
-              
-              <div style="background: white; padding: 40px; border-radius: 0 0 12px 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-                <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
-                  <h2 style="color: #856404; margin: 0 0 12px 0; font-size: 22px;">📝 New Application Received</h2>
-                  <p style="margin: 0; color: #856404; font-size: 16px;">
-                    A new designer application has been submitted and requires review.
-                  </p>
+            <body style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #1E1E1E; background-color: #F6F0E8; margin: 0; padding: 20px;">
+              <div style="max-width: 600px; margin: 0 auto; background-color: #FFFDF8; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 24px rgba(58, 30, 45, 0.12);">
+                <!-- Header -->
+                <div style="background: linear-gradient(135deg, #3A1E2D 0%, #2A1520 100%); color: white; padding: 48px 40px; text-align: center;">
+                  <h1 style="margin: 0; font-size: 36px; font-weight: 700; letter-spacing: 1px; font-family: 'Playfair Display', Georgia, serif;">OmaHub</h1>
+                  <p style="margin: 12px 0 0 0; opacity: 0.95; font-size: 18px; font-weight: 300; letter-spacing: 0.5px;">New Designer Application</p>
                 </div>
+                
+                <!-- Content -->
+                <div style="padding: 40px;">
+                  <!-- Alert Banner -->
+                  <div style="background: linear-gradient(135deg, #F6F0E8 0%, #FFFDF8 100%); border-left: 4px solid #D4B285; padding: 24px; border-radius: 12px; margin-bottom: 32px; box-shadow: 0 2px 8px rgba(58, 30, 45, 0.06);">
+                    <h2 style="color: #3A1E2D; margin: 0 0 12px 0; font-size: 24px; font-weight: 600; font-family: 'Playfair Display', Georgia, serif;">📝 New Application Received</h2>
+                    <p style="margin: 0; color: #A07F68; font-size: 16px; line-height: 1.6;">
+                      A new designer application has been submitted and requires review.
+                    </p>
+                  </div>
 
-                <div style="background: #fff; border: 1px solid #e9ecef; border-radius: 8px; padding: 24px; margin-bottom: 30px;">
-                  <h3 style="color: #3a1e2d; margin: 0 0 20px 0; font-size: 18px;">Application Details</h3>
-                  <table style="width: 100%; border-collapse: collapse;">
-                    <tr>
-                      <td style="padding: 10px 0; color: #666; font-weight: 500; width: 140px;">Brand Name:</td>
-                      <td style="padding: 10px 0; color: #333;"><strong>${application.brand_name}</strong></td>
-                    </tr>
-                    <tr>
-                      <td style="padding: 10px 0; color: #666; font-weight: 500;">Designer:</td>
-                      <td style="padding: 10px 0; color: #333;">${application.designer_name}</td>
-                    </tr>
-                    <tr>
-                      <td style="padding: 10px 0; color: #666; font-weight: 500;">Email:</td>
-                      <td style="padding: 10px 0; color: #333;">${application.email}</td>
-                    </tr>
-                    ${application.phone ? `
-                    <tr>
-                      <td style="padding: 10px 0; color: #666; font-weight: 500;">Phone:</td>
-                      <td style="padding: 10px 0; color: #333;">${application.phone}</td>
-                    </tr>
-                    ` : ''}
-                    <tr>
-                      <td style="padding: 10px 0; color: #666; font-weight: 500;">Location:</td>
-                      <td style="padding: 10px 0; color: #333;">${application.location}</td>
-                    </tr>
-                    <tr>
-                      <td style="padding: 10px 0; color: #666; font-weight: 500;">Category:</td>
-                      <td style="padding: 10px 0; color: #333;">
-                        <span style="background: #f8f9fa; padding: 4px 12px; border-radius: 12px; font-size: 14px; display: inline-block;">
-                          ${application.category}
-                        </span>
-                      </td>
-                    </tr>
-                    ${application.website ? `
-                    <tr>
-                      <td style="padding: 10px 0; color: #666; font-weight: 500;">Website:</td>
-                      <td style="padding: 10px 0; color: #333;">
-                        <a href="${application.website}" target="_blank" style="color: #3a1e2d; text-decoration: none;">
-                          ${application.website}
-                        </a>
-                      </td>
-                    </tr>
-                    ` : ''}
-                    ${application.instagram ? `
-                    <tr>
-                      <td style="padding: 10px 0; color: #666; font-weight: 500;">Instagram:</td>
-                      <td style="padding: 10px 0; color: #333;">
-                        <a href="https://instagram.com/${application.instagram.replace(/^@/, '')}" target="_blank" style="color: #3a1e2d; text-decoration: none;">
-                          @${application.instagram.replace(/^@/, '')}
-                        </a>
-                      </td>
-                    </tr>
-                    ` : ''}
-                    ${application.year_founded ? `
-                    <tr>
-                      <td style="padding: 10px 0; color: #666; font-weight: 500;">Founded:</td>
-                      <td style="padding: 10px 0; color: #333;">${application.year_founded}</td>
-                    </tr>
-                    ` : ''}
-                    <tr>
-                      <td style="padding: 10px 0; color: #666; font-weight: 500;">Submitted:</td>
-                      <td style="padding: 10px 0; color: #333;">${applicationDate}</td>
-                    </tr>
-                  </table>
-                </div>
+                  <!-- Application Details Card -->
+                  <div style="background: #FFFDF8; border: 1px solid #E5D6C6; border-radius: 12px; padding: 32px; margin-bottom: 32px; box-shadow: 0 2px 8px rgba(58, 30, 45, 0.04);">
+                    <h3 style="color: #3A1E2D; margin: 0 0 24px 0; font-size: 20px; font-weight: 600; font-family: 'Playfair Display', Georgia, serif; border-bottom: 2px solid #D4B285; padding-bottom: 12px;">Application Details</h3>
+                    <table style="width: 100%; border-collapse: collapse;">
+                      <tr>
+                        <td style="padding: 12px 0; color: #A07F68; font-weight: 500; width: 140px; font-size: 15px;">Brand Name:</td>
+                        <td style="padding: 12px 0; color: #1E1E1E; font-weight: 600; font-size: 15px;">${application.brand_name}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 12px 0; color: #A07F68; font-weight: 500; font-size: 15px;">Designer:</td>
+                        <td style="padding: 12px 0; color: #1E1E1E; font-size: 15px;">${application.designer_name}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 12px 0; color: #A07F68; font-weight: 500; font-size: 15px;">Email:</td>
+                        <td style="padding: 12px 0; color: #3A1E2D; font-size: 15px;">
+                          <a href="mailto:${application.email}" style="color: #3A1E2D; text-decoration: underline; text-decoration-color: #D4B285;">${application.email}</a>
+                        </td>
+                      </tr>
+                      ${application.phone ? `
+                      <tr>
+                        <td style="padding: 12px 0; color: #A07F68; font-weight: 500; font-size: 15px;">Phone:</td>
+                        <td style="padding: 12px 0; color: #1E1E1E; font-size: 15px;">${application.phone}</td>
+                      </tr>
+                      ` : ''}
+                      <tr>
+                        <td style="padding: 12px 0; color: #A07F68; font-weight: 500; font-size: 15px;">Location:</td>
+                        <td style="padding: 12px 0; color: #1E1E1E; font-size: 15px;">${application.location}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 12px 0; color: #A07F68; font-weight: 500; font-size: 15px;">Category:</td>
+                        <td style="padding: 12px 0; font-size: 15px;">
+                          <span style="background: #F6F0E8; color: #3A1E2D; padding: 6px 16px; border-radius: 20px; font-size: 14px; font-weight: 500; display: inline-block; border: 1px solid #D4B285;">
+                            ${application.category}
+                          </span>
+                        </td>
+                      </tr>
+                      ${application.website ? `
+                      <tr>
+                        <td style="padding: 12px 0; color: #A07F68; font-weight: 500; font-size: 15px;">Website:</td>
+                        <td style="padding: 12px 0; font-size: 15px;">
+                          <a href="${application.website}" target="_blank" style="color: #3A1E2D; text-decoration: underline; text-decoration-color: #D4B285;">
+                            ${application.website}
+                          </a>
+                        </td>
+                      </tr>
+                      ` : ''}
+                      ${application.instagram ? `
+                      <tr>
+                        <td style="padding: 12px 0; color: #A07F68; font-weight: 500; font-size: 15px;">Instagram:</td>
+                        <td style="padding: 12px 0; font-size: 15px;">
+                          <a href="https://instagram.com/${application.instagram.replace(/^@/, '')}" target="_blank" style="color: #3A1E2D; text-decoration: underline; text-decoration-color: #D4B285;">
+                            @${application.instagram.replace(/^@/, '')}
+                          </a>
+                        </td>
+                      </tr>
+                      ` : ''}
+                      ${application.year_founded ? `
+                      <tr>
+                        <td style="padding: 12px 0; color: #A07F68; font-weight: 500; font-size: 15px;">Founded:</td>
+                        <td style="padding: 12px 0; color: #1E1E1E; font-size: 15px;">${application.year_founded}</td>
+                      </tr>
+                      ` : ''}
+                      <tr>
+                        <td style="padding: 12px 0; color: #A07F68; font-weight: 500; font-size: 15px;">Submitted:</td>
+                        <td style="padding: 12px 0; color: #1E1E1E; font-size: 15px;">${applicationDate}</td>
+                      </tr>
+                    </table>
+                  </div>
 
-                <div style="background: #f8f9fa; border-left: 4px solid #3a1e2d; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
-                  <h3 style="color: #3a1e2d; margin: 0 0 12px 0; font-size: 16px;">Description</h3>
-                  <p style="margin: 0; color: #666; line-height: 1.6; white-space: pre-wrap;">${application.description}</p>
-                </div>
+                  <!-- Description Card -->
+                  <div style="background: #F6F0E8; border-left: 4px solid #D4B285; padding: 24px; border-radius: 12px; margin-bottom: 32px;">
+                    <h3 style="color: #3A1E2D; margin: 0 0 16px 0; font-size: 18px; font-weight: 600; font-family: 'Playfair Display', Georgia, serif;">Description</h3>
+                    <p style="margin: 0; color: #1E1E1E; line-height: 1.8; white-space: pre-wrap; font-size: 15px;">${application.description}</p>
+                  </div>
 
-                <div style="text-align: center; margin: 30px 0;">
-                  <a href="${applicationUrl}" 
-                     style="display: inline-block; background: #3a1e2d; color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">
-                    Review Application
-                  </a>
-                </div>
+                  <!-- CTA Button -->
+                  <div style="text-align: center; margin: 40px 0 32px 0;">
+                    <a href="${applicationUrl}" 
+                       style="display: inline-block; background: linear-gradient(135deg, #3A1E2D 0%, #2A1520 100%); color: white; padding: 16px 40px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; letter-spacing: 0.5px; box-shadow: 0 4px 12px rgba(58, 30, 45, 0.3); transition: all 0.3s ease;">
+                      Review Application
+                    </a>
+                  </div>
 
-                <div style="background: #e8f4f8; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-                  <p style="margin: 0; color: #666; font-size: 14px;">
-                    <strong>Quick Access:</strong> You can also view all applications in the 
-                    <a href="${studioUrl}" style="color: #3a1e2d; text-decoration: none; font-weight: 600;">Studio Applications Page</a>
-                  </p>
-                </div>
+                  <!-- Quick Access -->
+                  <div style="background: #FFFDF8; border: 1px solid #E5D6C6; padding: 20px; border-radius: 12px; margin-bottom: 24px;">
+                    <p style="margin: 0; color: #A07F68; font-size: 14px; line-height: 1.6;">
+                      <strong style="color: #3A1E2D;">Quick Access:</strong> You can also view all applications in the 
+                      <a href="${studioUrl}" style="color: #3A1E2D; text-decoration: underline; text-decoration-color: #D4B285; font-weight: 600;">Studio Applications Page</a>
+                    </p>
+                  </div>
 
-                <div style="border-top: 1px solid #e9ecef; padding-top: 24px; margin-top: 30px;">
-                  <p style="color: #666; font-size: 14px; margin: 0;">
-                    This is an automated notification from OmaHub.<br>
-                    You're receiving this because you're a super admin.
-                  </p>
+                  <!-- Footer -->
+                  <div style="border-top: 1px solid #E5D6C6; padding-top: 24px; margin-top: 32px;">
+                    <p style="color: #A07F68; font-size: 13px; margin: 0; line-height: 1.6;">
+                      This is an automated notification from <strong style="color: #3A1E2D;">OmaHub</strong>.<br>
+                      You're receiving this because you're a super admin.
+                    </p>
+                  </div>
                 </div>
               </div>
             </body>
