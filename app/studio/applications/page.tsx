@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -53,53 +53,9 @@ export default function ApplicationsPage() {
     setMounted(true);
   }, []);
 
-  // Check user access and fetch applications
-  useEffect(() => {
-    if (user) {
-      if (user.role !== 'super_admin') {
-        setAccessDenied(true);
-        setLoading(false);
-        return;
-      }
-      fetchApplications();
-    } else if (user === null) {
-      // User is not logged in
-      setLoading(false);
-    }
-  }, [user]);
-
-  // Handle Escape key to close modals
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        if (selectedApplication) {
-          setSelectedApplication(null);
-        }
-        if (showDeleteConfirm) {
-          setShowDeleteConfirm(null);
-        }
-      }
-    };
-
-    window.addEventListener('keydown', handleEscape);
-    return () => window.removeEventListener('keydown', handleEscape);
-  }, [selectedApplication, showDeleteConfirm]);
-
-  // Prevent body scroll when modal is open
-  useEffect(() => {
-    if (selectedApplication || showDeleteConfirm) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [selectedApplication, showDeleteConfirm]);
-
   // Fetch applications - CRITICAL: This must fetch ALL applications without filtering
-  const fetchApplications = async () => {
+  // Memoize to prevent unnecessary re-renders
+  const fetchApplications = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -172,7 +128,129 @@ export default function ApplicationsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []); // Empty dependency array - function doesn't depend on any props/state
+
+  // Check user access and fetch applications
+  useEffect(() => {
+    if (user) {
+      if (user.role !== 'super_admin') {
+        setAccessDenied(true);
+        setLoading(false);
+        return;
+      }
+      fetchApplications();
+    } else if (user === null) {
+      // User is not logged in
+      setLoading(false);
+    }
+  }, [user, fetchApplications]);
+
+  // Handle Escape key to close modals
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (selectedApplication) {
+          setSelectedApplication(null);
+        }
+        if (showDeleteConfirm) {
+          setShowDeleteConfirm(null);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [selectedApplication, showDeleteConfirm]);
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (selectedApplication || showDeleteConfirm) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [selectedApplication, showDeleteConfirm]);
+
+  // Fetch applications - CRITICAL: This must fetch ALL applications without filtering
+  // Memoize to prevent unnecessary re-renders
+  const fetchApplications = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      console.log("🔄 [Applications] Fetching all applications from API...");
+      
+      // Force fresh fetch with cache busting
+      const timestamp = Date.now();
+      const response = await fetch(`/api/studio/applications?t=${timestamp}`, {
+        method: 'GET',
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+        },
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error("❌ [Applications] API Error:", {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorData,
+        });
+        throw new Error(errorData.error || `Failed to fetch applications (${response.status})`);
+      }
+      
+      const data = await response.json();
+      
+      console.log("✅ [Applications] API Response:", {
+        count: data.applications?.length || 0,
+        rawCount: data.rawCount || 0,
+        timestamp: data.timestamp,
+      });
+      
+      // Log each application for debugging
+      if (data.applications && data.applications.length > 0) {
+        console.log("📋 [Applications] All applications received:", 
+          data.applications.map((app: DesignerApplication) => ({
+            id: app.id,
+            brand_name: app.brand_name,
+            designer_name: app.designer_name,
+            email: app.email,
+            status: app.status,
+            created_at: app.created_at,
+          }))
+        );
+      } else {
+        console.warn("⚠️ [Applications] No applications in API response");
+      }
+      
+      // IMPORTANT: Set applications directly from API - no filtering at this stage
+      const apps = data.applications || [];
+      setApplications(apps);
+      
+      console.log(`✅ [Applications] Set ${apps.length} applications in state`);
+      
+      if (apps.length === 0) {
+        console.warn("⚠️ [Applications] No applications found. This could mean:");
+        console.warn("   1. No applications exist in the database");
+        console.warn("   2. Applications are in a different table (check inquiries vs designer_applications)");
+        console.warn("   3. There's an RLS policy blocking access");
+      }
+      
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to fetch applications";
+      console.error("❌ [Applications] Fetch error:", err);
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  }, []); // Empty dependency array - function doesn't depend on any props/state
 
   // Update application status
   const updateApplicationStatus = async (applicationId: string, status: string, notes?: string) => {
@@ -240,6 +318,8 @@ export default function ApplicationsPage() {
 
   // Delete application
   const deleteApplication = async (applicationId: string) => {
+    let response: Response | null = null;
+    
     try {
       setDeletingApplication(applicationId);
       
@@ -256,7 +336,7 @@ export default function ApplicationsPage() {
       setSelectedApplication(null);
       setShowDeleteConfirm(null);
       
-      const response = await fetch(`/api/studio/applications/${applicationId}`, {
+      response = await fetch(`/api/studio/applications/${applicationId}`, {
         method: "DELETE",
       });
 
@@ -282,9 +362,9 @@ export default function ApplicationsPage() {
         // or the ID might be wrong, but we've already removed it from UI
         if (response.status === 404) {
           console.warn(`⚠️ [Applications] Application not found (404) - keeping it removed from UI`);
-          toast.error("Application not found - it may have already been deleted");
+          toast.success("Application removed (was already deleted)");
           // Don't revert optimistic update for 404 - keep it removed
-          // Refresh to sync with server state
+          // Refresh once to sync with server state
           await fetchApplications();
           return;
         }
@@ -310,13 +390,17 @@ export default function ApplicationsPage() {
       
       toast.success("Application deleted successfully");
       
-      // Refresh to ensure UI is in sync with server
+      // Refresh once to ensure UI is in sync with server
       await fetchApplications();
     } catch (err) {
       console.error("❌ [Applications] Delete error:", err);
       toast.error(err instanceof Error ? err.message : "Failed to delete application");
-      // Refresh to sync with server state
-      await fetchApplications();
+      
+      // Only refresh if we need to revert the optimistic update
+      // If it was a 404, we already refreshed above
+      if (response && response.status !== 404) {
+        await fetchApplications();
+      }
     } finally {
       setDeletingApplication(null);
     }
