@@ -82,6 +82,7 @@ export const performanceService = {
       let query = supabase
         .from("brands")
         .select(fields.join(", "))
+        .eq("is_verified", true) // Only show verified brands on frontend
         .limit(limit);
 
       if (category) {
