@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/supabase-admin";
 import { adminEmailServiceServer } from "@/lib/services/adminEmailService.server";
-import { sendNewApplicationNotification } from "@/lib/services/emailService";
+import { sendNewApplicationNotification, sendApplicationConfirmationEmail } from "@/lib/services/emailService";
 import { randomUUID } from "crypto";
 
 export async function POST(request: NextRequest) {
@@ -140,6 +140,26 @@ export async function POST(request: NextRequest) {
     } catch (brandCreationError) {
       console.error("❌ Unexpected error creating brand:", brandCreationError);
       // Don't fail the request - application is still saved
+    }
+
+    // Send confirmation email to applicant
+    try {
+      console.log("📧 Sending confirmation email to applicant:", application.email);
+      const confirmationResult = await sendApplicationConfirmationEmail({
+        designerName: application.designer_name,
+        brandName: application.brand_name,
+        email: application.email,
+      });
+      
+      if (confirmationResult.success) {
+        console.log("✅ Application confirmation email sent to applicant");
+      } else {
+        console.warn("⚠️ Failed to send confirmation email to applicant:", confirmationResult.error);
+        // Don't fail the request if email fails - application is still saved
+      }
+    } catch (confirmationEmailError) {
+      console.error("❌ Error sending confirmation email to applicant:", confirmationEmailError);
+      // Don't fail the request if email fails - application is still saved
     }
 
     // Send email notification to super admins
