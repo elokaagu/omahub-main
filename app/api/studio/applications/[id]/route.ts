@@ -619,12 +619,12 @@ export async function DELETE(
       );
     }
 
-    // First, check if the application exists
+    // First, check if the application exists (include status and email to find associated brand)
     console.log(`🔍 [API] Checking if application exists with ID:`, id);
     
     const { data: existingApplication, error: fetchError } = await supabase
       .from("designer_applications")
-      .select("id, brand_name, designer_name")
+      .select("id, brand_name, designer_name, status, email")
       .eq("id", id)
       .single();
 
@@ -664,8 +664,71 @@ export async function DELETE(
     console.log(`✅ [API] Found application to delete:`, {
       id: existingApplication.id,
       brand_name: existingApplication.brand_name,
-      designer_name: existingApplication.designer_name
+      designer_name: existingApplication.designer_name,
+      status: existingApplication.status,
+      email: existingApplication.email
     });
+
+    // If the application is rejected, delete the associated brand
+    let brandDeleted = false;
+    if (existingApplication.status === "rejected" && existingApplication.brand_name && existingApplication.email) {
+      console.log(`🗑️ [API] Application is rejected - checking for associated brand to delete...`);
+      
+      try {
+        // Find the brand by name and email (matching how brands are created from applications)
+        const { data: associatedBrand, error: brandFetchError } = await supabase
+          .from("brands")
+          .select("id, name, contact_email, is_verified")
+          .eq("name", existingApplication.brand_name)
+          .eq("contact_email", existingApplication.email)
+          .maybeSingle();
+
+        if (brandFetchError) {
+          console.warn("⚠️ [API] Error fetching associated brand:", brandFetchError);
+        } else if (associatedBrand) {
+          // Check if there are other pending applications for this brand
+          const { data: otherApplications, error: otherAppsError } = await supabase
+            .from("designer_applications")
+            .select("id")
+            .eq("brand_name", existingApplication.brand_name)
+            .eq("email", existingApplication.email)
+            .neq("id", id)
+            .neq("status", "approved");
+
+          if (otherAppsError) {
+            console.warn("⚠️ [API] Error checking for other applications:", otherAppsError);
+          }
+
+          // Only delete the brand if there are no other pending applications
+          if (!otherApplications || otherApplications.length === 0) {
+            console.log(`🗑️ [API] No other pending applications found - deleting brand:`, {
+              id: associatedBrand.id,
+              name: associatedBrand.name
+            });
+
+            const { error: brandDeleteError } = await supabase
+              .from("brands")
+              .delete()
+              .eq("id", associatedBrand.id);
+
+            if (brandDeleteError) {
+              console.error("❌ [API] Error deleting associated brand:", brandDeleteError);
+              // Don't fail the application deletion if brand deletion fails
+            } else {
+              brandDeleted = true;
+              console.log(`✅ [API] Associated brand deleted successfully:`, associatedBrand.id);
+            }
+          } else {
+            console.log(`⚠️ [API] Other pending applications exist for this brand - not deleting brand`);
+          }
+        } else {
+          console.log(`ℹ️ [API] No associated brand found for this application`);
+        }
+      } catch (brandDeleteException) {
+        console.error("❌ [API] Exception while attempting to delete brand:", brandDeleteException);
+        // Don't fail the application deletion if brand deletion fails
+      }
+    }
 
     // Delete the application
     console.log(`🗑️ [API] Executing delete query for ID:`, id);
@@ -698,7 +761,7 @@ export async function DELETE(
       console.log(`✅ [API] Delete confirmed - removed ${deleteResult.length} row(s)`);
     }
 
-    console.log(`✅ [API] Application ${id} deleted successfully`);
+    console.log(`✅ [API] Application ${id} deleted successfully${brandDeleted ? ' (brand also deleted)' : ''}`);
 
     return NextResponse.json({
       success: true,
@@ -707,7 +770,8 @@ export async function DELETE(
         id,
         brand_name: existingApplication.brand_name,
         designer_name: existingApplication.designer_name
-      }
+      },
+      brandDeleted: brandDeleted
     });
 
   } catch (error) {
