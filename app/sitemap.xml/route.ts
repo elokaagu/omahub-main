@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase-unified";
 
+// Force dynamic rendering since we use cookies
+export const dynamic = 'force-dynamic';
+
 // Static pages that should always be included
 const staticPages = [
   {

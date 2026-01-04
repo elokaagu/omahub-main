@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { performanceService } from "@/lib/services/performanceService";
 
+// Force dynamic rendering since we use request.url
+export const dynamic = 'force-dynamic';
+
 // Cache for 5 minutes
 export const revalidate = 300;
 
