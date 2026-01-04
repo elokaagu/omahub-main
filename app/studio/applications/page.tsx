@@ -243,7 +243,13 @@ export default function ApplicationsPage() {
       
       const applicationToDelete = applications.find(app => app.id === applicationId);
       
-      // Optimistic update
+      console.log(`🗑️ [Applications] Attempting to delete application:`, {
+        id: applicationId,
+        brand_name: applicationToDelete?.brand_name,
+        url: `/api/studio/applications/${applicationId}`
+      });
+      
+      // Optimistic update - remove from UI immediately
       setApplications(prev => prev.filter(app => app.id !== applicationId));
       setSelectedApplication(null);
       setShowDeleteConfirm(null);
@@ -252,9 +258,38 @@ export default function ApplicationsPage() {
         method: "DELETE",
       });
 
+      console.log(`🗑️ [Applications] Delete response:`, {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok
+      });
+
       if (!response.ok) {
-        // Revert on error
+        const errorData = await response.json().catch(async () => {
+          // Try to get error text if JSON parsing fails
+          return { error: await response.text() };
+        });
+        
+        console.error(`❌ [Applications] Delete failed:`, {
+          status: response.status,
+          error: errorData,
+          applicationId
+        });
+        
+        // If 404 (not found), don't revert - it might have been deleted by someone else
+        // or the ID might be wrong, but we've already removed it from UI
+        if (response.status === 404) {
+          console.warn(`⚠️ [Applications] Application not found (404) - keeping it removed from UI`);
+          toast.error("Application not found - it may have already been deleted");
+          // Don't revert optimistic update for 404 - keep it removed
+          // Refresh to sync with server state
+          await fetchApplications();
+          return;
+        }
+        
+        // For other errors, revert the optimistic update
         if (applicationToDelete) {
+          console.log(`🔄 [Applications] Reverting optimistic delete for application:`, applicationToDelete.brand_name);
           setApplications(prev => {
             if (!prev.find(app => app.id === applicationId)) {
               return [...prev, applicationToDelete].sort((a, b) => 
@@ -265,14 +300,20 @@ export default function ApplicationsPage() {
           });
         }
         
-        const errorText = await response.text();
-        throw new Error(`Failed to delete: ${errorText}`);
+        throw new Error(errorData.error || `Failed to delete: ${response.statusText}`);
       }
 
+      const result = await response.json();
+      console.log(`✅ [Applications] Delete successful:`, result);
+      
       toast.success("Application deleted successfully");
+      
+      // Refresh to ensure UI is in sync with server
+      await fetchApplications();
     } catch (err) {
-      console.error("❌ Delete error:", err);
+      console.error("❌ [Applications] Delete error:", err);
       toast.error(err instanceof Error ? err.message : "Failed to delete application");
+      // Refresh to sync with server state
       await fetchApplications();
     } finally {
       setDeletingApplication(null);

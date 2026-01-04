@@ -4,6 +4,9 @@ import { randomUUID } from "crypto";
 import { randomBytes } from "crypto";
 import { sendApplicationApprovalEmail } from "@/lib/services/emailService";
 
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic';
+
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> | { id: string } }
@@ -494,11 +497,16 @@ export async function DELETE(
     const resolvedParams = await Promise.resolve(params);
     const { id } = resolvedParams;
     
-    console.log(`🗑️ Deleting application ${id}`);
-    console.log(`🗑️ Full request URL: ${request.url}`);
+    console.log(`🗑️ [API] Deleting application:`, {
+      id,
+      idType: typeof id,
+      idLength: id?.length,
+      url: request.url,
+      method: request.method
+    });
 
     if (!id || id.trim() === '') {
-      console.error("❌ Invalid application ID provided");
+      console.error("❌ [API] Invalid application ID provided:", { id });
       return NextResponse.json(
         { error: "Invalid application ID" },
         { status: 400 }
@@ -516,6 +524,8 @@ export async function DELETE(
     }
 
     // First, check if the application exists
+    console.log(`🔍 [API] Checking if application exists with ID:`, id);
+    
     const { data: existingApplication, error: fetchError } = await supabase
       .from("designer_applications")
       .select("id, brand_name, designer_name")
@@ -523,16 +533,17 @@ export async function DELETE(
       .single();
 
     if (fetchError) {
-      console.error("❌ Error fetching application:", fetchError);
-      console.error("❌ Fetch error details:", {
+      console.error("❌ [API] Error fetching application:", {
         code: fetchError.code,
         message: fetchError.message,
         details: fetchError.details,
         hint: fetchError.hint,
+        searchedId: id
       });
       
       // If it's a "not found" error (PGRST116), return 404
       if (fetchError.code === "PGRST116") {
+        console.warn(`⚠️ [API] Application not found (PGRST116) for ID:`, id);
         return NextResponse.json(
           { error: "Application not found" },
           { status: 404 }
@@ -541,22 +552,28 @@ export async function DELETE(
       
       // Otherwise, it's a server error
       return NextResponse.json(
-        { error: "Failed to fetch application" },
+        { error: "Failed to fetch application", details: fetchError.message },
         { status: 500 }
       );
     }
 
     if (!existingApplication) {
-      console.error("❌ Application not found in database:", id);
+      console.error("❌ [API] Application not found in database (no data returned):", id);
       return NextResponse.json(
         { error: "Application not found" },
         { status: 404 }
       );
     }
 
-    console.log(`🗑️ Found application to delete: ${existingApplication.brand_name} by ${existingApplication.designer_name}`);
+    console.log(`✅ [API] Found application to delete:`, {
+      id: existingApplication.id,
+      brand_name: existingApplication.brand_name,
+      designer_name: existingApplication.designer_name
+    });
 
     // Delete the application
+    console.log(`🗑️ [API] Executing delete query for ID:`, id);
+    
     const { error: deleteError, data: deleteResult } = await supabase
       .from("designer_applications")
       .delete()
@@ -564,12 +581,12 @@ export async function DELETE(
       .select("id");
 
     if (deleteError) {
-      console.error("❌ Error deleting application:", deleteError);
-      console.error("❌ Delete error details:", {
+      console.error("❌ [API] Error deleting application:", {
         code: deleteError.code,
         message: deleteError.message,
         details: deleteError.details,
         hint: deleteError.hint,
+        id
       });
       return NextResponse.json(
         { error: "Failed to delete application", details: deleteError.message },
@@ -579,11 +596,13 @@ export async function DELETE(
 
     // Verify deletion was successful
     if (!deleteResult || deleteResult.length === 0) {
-      console.warn("⚠️ Delete operation returned no rows - application may have already been deleted");
+      console.warn("⚠️ [API] Delete operation returned no rows - application may have already been deleted");
       // Still return success since the goal (application deleted) is achieved
+    } else {
+      console.log(`✅ [API] Delete confirmed - removed ${deleteResult.length} row(s)`);
     }
 
-    console.log(`✅ Application ${id} deleted successfully`);
+    console.log(`✅ [API] Application ${id} deleted successfully`);
 
     return NextResponse.json({
       success: true,
