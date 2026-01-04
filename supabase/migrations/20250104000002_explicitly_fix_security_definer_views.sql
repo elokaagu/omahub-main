@@ -12,10 +12,8 @@ BEGIN
     IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'leads')
        AND EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'brands') THEN
         
-        -- Create view with explicit security settings
-        CREATE VIEW public.leads_with_brand_details
-        WITH (security_invoker = true)  -- Explicitly set to use invoker's permissions
-        AS
+        -- Create view (views don't support SECURITY DEFINER, only functions do)
+        CREATE VIEW public.leads_with_brand_details AS
         SELECT 
           l.id,
           l.brand_id,
@@ -67,9 +65,9 @@ BEGIN
         
         -- Add comment
         COMMENT ON VIEW public.leads_with_brand_details IS 
-            'View combining leads with brand details. Uses security_invoker=true to ensure proper RLS enforcement.';
+            'View combining leads with brand details. Access controlled through RLS on underlying tables.';
         
-        RAISE NOTICE 'Successfully recreated leads_with_brand_details view with security_invoker=true';
+        RAISE NOTICE 'Successfully recreated leads_with_brand_details view';
     ELSE
         RAISE WARNING 'Cannot create leads_with_brand_details: required tables (leads, brands) do not exist';
     END IF;
@@ -85,10 +83,8 @@ BEGIN
     IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'reviews')
        AND EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'brands') THEN
         
-        -- Create view with explicit security settings
-        CREATE VIEW public.reviews_with_details
-        WITH (security_invoker = true)  -- Explicitly set to use invoker's permissions
-        AS
+        -- Create view (views don't support SECURITY DEFINER, only functions do)
+        CREATE VIEW public.reviews_with_details AS
         SELECT 
           r.id,
           r.brand_id,
@@ -128,9 +124,9 @@ BEGIN
         
         -- Add comment
         COMMENT ON VIEW public.reviews_with_details IS 
-            'View combining reviews with brand details and replies. Uses security_invoker=true to ensure proper RLS enforcement.';
+            'View combining reviews with brand details and replies. Access controlled through RLS on underlying tables.';
         
-        RAISE NOTICE 'Successfully recreated reviews_with_details view with security_invoker=true';
+        RAISE NOTICE 'Successfully recreated reviews_with_details view';
     ELSE
         RAISE WARNING 'Cannot create reviews_with_details: required tables (reviews, brands) do not exist';
     END IF;
