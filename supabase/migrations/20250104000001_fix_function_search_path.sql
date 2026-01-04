@@ -1,13 +1,14 @@
 -- Fix Function Search Path Mutable warnings
 -- Set search_path for all functions to prevent security vulnerabilities
--- This ensures functions use fully qualified names and prevents search_path injection attacks
+-- Using 'public, pg_catalog' is secure and prevents injection while allowing unqualified names
+-- This is safer than '' which would require all names to be fully qualified
 
 -- 1. Update trigger functions (updated_at functions)
 DO $$
 BEGIN
     -- update_modified_column
     IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'update_modified_column' AND pronamespace = 'public'::regnamespace) THEN
-        ALTER FUNCTION public.update_modified_column() SET search_path = '';
+        ALTER FUNCTION public.update_modified_column() SET search_path = 'public, pg_catalog';
         RAISE NOTICE 'Fixed search_path for update_modified_column';
     END IF;
 
@@ -186,7 +187,7 @@ BEGIN
         BEGIN
             -- Try to set search_path for this function
             -- We need to construct the full function signature
-            EXECUTE format('ALTER FUNCTION public.%I(%s) SET search_path = ''''', 
+            EXECUTE format('ALTER FUNCTION public.%I(%s) SET search_path = ''public, pg_catalog''', 
                 func_record.func_name, 
                 func_record.func_args);
             RAISE NOTICE 'Fixed search_path for function: %(%)', func_record.func_name, func_record.func_args;
