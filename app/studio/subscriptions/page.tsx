@@ -561,7 +561,7 @@ export default function SubscriptionsPage() {
                           <div className="text-sm text-black">
                             {new Date(
                               subscriber.subscribed_at
-                            ).toLocaleDateString()}
+                            ).toLocaleDateString("en-GB")}
                           </div>
                         </td>
                         <td className="py-3 px-4">

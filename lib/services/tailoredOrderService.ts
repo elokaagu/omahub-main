@@ -191,7 +191,7 @@ export function generateOrderInvoice(
 ) {
   return {
     orderNumber: `OMH-${order.id.slice(-8).toUpperCase()}`,
-    orderDate: new Date(order.created_at).toLocaleDateString(),
+    orderDate: new Date(order.created_at).toLocaleDateString("en-GB"),
     customerInfo: {
       name: order.delivery_address.full_name,
       email: order.delivery_address.email,
@@ -237,7 +237,7 @@ export function formatOrderDataForEmail(
     productTitle: product.title,
     brandName: brand.name,
     totalAmount: order.total_amount,
-    orderDate: new Date(order.created_at).toLocaleDateString(),
+    orderDate: new Date(order.created_at).toLocaleDateString("en-GB"),
     specialRequests: order.customer_notes || "None",
     deliveryAddress: {
       line1: order.delivery_address.address_line_1,

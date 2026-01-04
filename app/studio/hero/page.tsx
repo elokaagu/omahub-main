@@ -277,7 +277,7 @@ export default function HeroManagementPage() {
                         <p>Display Order: {slide.display_order}</p>
                         <p>
                           Created:{" "}
-                          {new Date(slide.created_at).toLocaleDateString()}
+                          {new Date(slide.created_at).toLocaleDateString("en-GB")}
                         </p>
                       </div>
                     </div>

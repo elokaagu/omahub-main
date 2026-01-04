@@ -498,7 +498,7 @@ export default function ApplicationsPage() {
                     {getStatusBadge(application.status)}
                     <span className="text-sm text-oma-cocoa whitespace-nowrap">
                       {application.created_at 
-                        ? new Date(application.created_at).toLocaleDateString()
+                        ? new Date(application.created_at).toLocaleDateString("en-GB")
                         : 'N/A'
                       }
                     </span>
@@ -693,8 +693,8 @@ export default function ApplicationsPage() {
                     {getStatusBadge(selectedApplication.status)}
                     <span className="text-sm text-oma-cocoa">
                       {selectedApplication.reviewed_at 
-                        ? `Reviewed on ${new Date(selectedApplication.reviewed_at).toLocaleDateString()}`
-                        : `Submitted on ${new Date(selectedApplication.created_at).toLocaleDateString()}`
+                        ? `Reviewed on ${new Date(selectedApplication.reviewed_at).toLocaleDateString("en-GB")}`
+                        : `Submitted on ${new Date(selectedApplication.created_at).toLocaleDateString("en-GB")}`
                       }
                     </span>
                   </div>

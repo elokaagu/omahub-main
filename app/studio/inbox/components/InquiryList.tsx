@@ -329,7 +329,7 @@ export default function InquiryList({
                   )}
                 </div>
                 <p className="text-xs text-oma-cocoa">
-                  {new Date(inquiry.created_at).toLocaleDateString("en-US", {
+                  {new Date(inquiry.created_at).toLocaleDateString("en-GB", {
                     month: "short",
                     day: "numeric",
                     hour: "2-digit",

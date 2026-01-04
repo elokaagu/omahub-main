@@ -276,7 +276,7 @@ export async function GET(request: NextRequest) {
               now.getMonth() - i,
               1
             );
-            const monthName = monthDate.toLocaleDateString("en-US", {
+            const monthName = monthDate.toLocaleDateString("en-GB", {
               month: "short",
               year: "numeric",
             });

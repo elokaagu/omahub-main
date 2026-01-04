@@ -66,7 +66,7 @@ export default function TermsOfServicePage() {
                 Version {doc.version}
               </span>
               <span>
-                Effective {new Date(doc.effective_date).toLocaleDateString()}
+                Effective {new Date(doc.effective_date).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
               </span>
             </div>
           )}
@@ -127,7 +127,7 @@ export default function TermsOfServicePage() {
 
         {/* Footer */}
         <div className="mt-8 text-center text-sm text-oma-cocoa">
-          <p className="mb-2">Last updated: January 1, 2025</p>
+          <p className="mb-2">Last updated: 1 January 2026</p>
           <p>
             These Terms work together with our{" "}
             <Link

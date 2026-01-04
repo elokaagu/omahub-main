@@ -466,7 +466,7 @@ export default function StudioInboxPage() {
                     </p>
                     <div className="flex items-center justify-between mt-3 text-xs text-oma-cocoa/70">
                       <span>Source: {inquiry.source}</span>
-                      <span>{new Date(inquiry.created_at).toLocaleDateString()}</span>
+                      <span>{new Date(inquiry.created_at).toLocaleDateString("en-GB")}</span>
                     </div>
                   </CardContent>
                 </Card>
@@ -511,7 +511,7 @@ export default function StudioInboxPage() {
                   <CardContent>
                     <div className="flex items-center justify-between text-xs text-oma-cocoa/70">
                       <span>Type: {notification.type}</span>
-                      <span>{new Date(notification.created_at).toLocaleDateString()}</span>
+                      <span>{new Date(notification.created_at).toLocaleDateString("en-GB")}</span>
                     </div>
                   </CardContent>
                 </Card>
@@ -577,7 +577,7 @@ export default function StudioInboxPage() {
               <p className="text-oma-cocoa">{selectedNotification?.message}</p>
               <div className="text-sm text-oma-cocoa/70">
                 <p>Type: {selectedNotification?.type}</p>
-                <p>Date: {selectedNotification ? new Date(selectedNotification.created_at).toLocaleDateString() : ""}</p>
+                <p>Date: {selectedNotification ? new Date(selectedNotification.created_at).toLocaleDateString("en-GB") : ""}</p>
               </div>
             </div>
           </DialogContent>

@@ -93,7 +93,7 @@ export default function OfflinePage() {
         {lastSync && (
           <div className="bg-blue-50 rounded-lg p-4 mb-6">
             <p className="text-sm text-blue-800">
-              Last synced: {lastSync.toLocaleString()}
+              Last synced: {lastSync.toLocaleString("en-GB")}
             </p>
           </div>
         )}

@@ -377,7 +377,7 @@ export default function InquiryDetail({
               )}
               <span className="flex items-center gap-1">
                 <CalendarIcon className="h-4 w-4" />
-                {new Date(inquiry.created_at).toLocaleDateString("en-US", {
+                {new Date(inquiry.created_at).toLocaleDateString("en-GB", {
                   year: "numeric",
                   month: "long",
                   day: "numeric",

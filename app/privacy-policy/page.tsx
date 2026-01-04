@@ -58,7 +58,7 @@ export default function PrivacyPolicyPage() {
                 Version {doc.version}
               </span>
               <span>
-                Effective {new Date(doc.effective_date).toLocaleDateString()}
+                Effective {new Date(doc.effective_date).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
               </span>
             </div>
           )}

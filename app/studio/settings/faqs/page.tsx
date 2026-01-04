@@ -576,8 +576,8 @@ export default function FAQManagementPage() {
                   {faq.answer}
                 </p>
                 <div className="mt-4 text-xs text-gray-500">
-                  Created: {new Date(faq.created_at).toLocaleDateString()} •
-                  Updated: {new Date(faq.updated_at).toLocaleDateString()}
+                  Created: {new Date(faq.created_at).toLocaleDateString("en-GB")} •
+                  Updated: {new Date(faq.updated_at).toLocaleDateString("en-GB")}
                 </div>
               </CardContent>
             </Card>

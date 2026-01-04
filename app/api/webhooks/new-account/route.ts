@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
     console.log(`Email: ${newUser.email}`);
     console.log(`Role: ${newUser.role}`);
     console.log(`User ID: ${newUser.id}`);
-    console.log(`Created: ${new Date(newUser.created_at).toLocaleString()}`);
+    console.log(`Created: ${new Date(newUser.created_at).toLocaleString("en-GB")}`);
     console.log(`Notifying admins: ${adminEmails.join(', ')}`);
     console.log("============================");
 
@@ -79,7 +79,7 @@ async function sendNewAccountNotification(user: any, adminEmails: string[]) {
     const { Resend } = await import("resend");
     const resend = new Resend(process.env.RESEND_API_KEY);
 
-    const userCreatedDate = new Date(user.created_at).toLocaleString();
+    const userCreatedDate = new Date(user.created_at).toLocaleString("en-GB");
     const roleDisplay = user.role.replace("_", " ").toUpperCase();
 
     // Send email to each admin

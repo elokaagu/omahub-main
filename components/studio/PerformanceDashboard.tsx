@@ -359,7 +359,7 @@ export default function PerformanceDashboard() {
                   Export Performance Data
                 </Button>
                 <div className="text-xs text-muted-foreground">
-                  Last updated: {lastUpdate.toLocaleTimeString()}
+                  Last updated: {lastUpdate.toLocaleTimeString("en-GB")}
                 </div>
               </CardContent>
             </Card>

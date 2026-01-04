@@ -445,7 +445,7 @@ export async function getBrandGrowthData(): Promise<BrandGrowthData[]> {
     const monthlyData: { [key: string]: number } = {};
 
     (brands || []).forEach((brand) => {
-      const month = new Date(brand.created_at).toLocaleDateString("en-US", {
+      const month = new Date(brand.created_at).toLocaleDateString("en-GB", {
         year: "numeric",
         month: "short",
       });
@@ -457,7 +457,7 @@ export async function getBrandGrowthData(): Promise<BrandGrowthData[]> {
     for (let i = 5; i >= 0; i--) {
       const date = new Date();
       date.setMonth(date.getMonth() - i);
-      const month = date.toLocaleDateString("en-US", {
+      const month = date.toLocaleDateString("en-GB", {
         year: "numeric",
         month: "short",
       });
@@ -503,7 +503,7 @@ export async function getReviewTrendsData(): Promise<ReviewTrendsData[]> {
       {};
 
     (reviews || []).forEach((review) => {
-      const month = new Date(review.created_at).toLocaleDateString("en-US", {
+      const month = new Date(review.created_at).toLocaleDateString("en-GB", {
         year: "numeric",
         month: "short",
       });
@@ -519,7 +519,7 @@ export async function getReviewTrendsData(): Promise<ReviewTrendsData[]> {
     for (let i = 5; i >= 0; i--) {
       const date = new Date();
       date.setMonth(date.getMonth() - i);
-      const month = date.toLocaleDateString("en-US", {
+      const month = date.toLocaleDateString("en-GB", {
         year: "numeric",
         month: "short",
       });
@@ -723,7 +723,7 @@ export async function getBrandOwnerGrowthData(
       const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
       months.push({
         date,
-        month: date.toLocaleDateString("en-US", { month: "short" }),
+        month: date.toLocaleDateString("en-GB", { month: "short" }),
         products: 0,
       });
     }
@@ -791,7 +791,7 @@ export async function getBrandOwnerReviewTrends(
       const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
       months.push({
         date,
-        month: date.toLocaleDateString("en-US", { month: "short" }),
+        month: date.toLocaleDateString("en-GB", { month: "short" }),
         reviews: [],
       });
     }

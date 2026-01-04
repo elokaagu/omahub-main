@@ -429,7 +429,7 @@ This ${orderType.toLowerCase()} has been completed and saved to your leads dashb
                 <p><strong>Product:</strong> ${product.title}</p>
                 <p><strong>Brand:</strong> ${brand.name}</p>
                 <p><strong>Price:</strong> ${extractCurrencyFromPriceRange(brand.price_range)} ${total_amount || product.sale_price || product.price}</p>
-                <p><strong>Order Date:</strong> ${new Date().toLocaleDateString()}</p>
+                <p><strong>Order Date:</strong> ${new Date().toLocaleDateString("en-GB")}</p>
               </div>
 
               <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0;">
@@ -486,7 +486,7 @@ This ${orderType.toLowerCase()} has been completed and saved to your leads dashb
                     <p><strong>Product:</strong> ${product.title}</p>
                     <p><strong>Brand:</strong> ${brand.name}</p>
                     <p><strong>Price:</strong> ${extractCurrencyFromPriceRange(brand.price_range)} ${total_amount || product.sale_price || product.price}</p>
-                    <p><strong>Order Date:</strong> ${new Date().toLocaleDateString()}</p>
+                    <p><strong>Order Date:</strong> ${new Date().toLocaleDateString("en-GB")}</p>
                   </div>
 
                   <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0;">
@@ -567,7 +567,7 @@ This ${orderType.toLowerCase()} has been completed and saved to your leads dashb
                 <p><strong>Product:</strong> ${product.title}</p>
                 <p><strong>Brand:</strong> ${brand.name}</p>
                 <p><strong>Price:</strong> ${extractCurrencyFromPriceRange(brand.price_range)} ${total_amount || product.sale_price || product.price}</p>
-                <p><strong>Order Date:</strong> ${new Date().toLocaleDateString()}</p>
+                <p><strong>Order Date:</strong> ${new Date().toLocaleDateString("en-GB")}</p>
               </div>
 
               <div style="background-color: #e8f4f8; padding: 20px; border-radius: 8px; margin: 20px 0;">

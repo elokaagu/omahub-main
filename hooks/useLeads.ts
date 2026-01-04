@@ -935,7 +935,7 @@ export function useCommissionMutations() {
 
 // Utility functions
 export const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString("en-US", {
+  return new Date(dateString).toLocaleDateString("en-GB", {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -943,7 +943,7 @@ export const formatDate = (dateString: string) => {
 };
 
 export const formatDateTime = (dateString: string) => {
-  return new Date(dateString).toLocaleString("en-US", {
+  return new Date(dateString).toLocaleString("en-GB", {
     year: "numeric",
     month: "short",
     day: "numeric",

@@ -936,7 +936,7 @@ export default function UsersPage() {
                         </div>
                       </TableCell>
                       <TableCell className="text-oma-cocoa/70">
-                        {new Date(user.created_at).toLocaleDateString()}
+                        {new Date(user.created_at).toLocaleDateString("en-GB")}
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-2">
@@ -978,7 +978,7 @@ export default function UsersPage() {
                         {user.role.replace("_", " ").toUpperCase()}
                       </Badge>
                       <span className="text-xs text-oma-cocoa/60 ml-2">
-                        {new Date(user.created_at).toLocaleDateString()}
+                        {new Date(user.created_at).toLocaleDateString("en-GB")}
                       </span>
                     </div>
                     <div className="space-y-2">

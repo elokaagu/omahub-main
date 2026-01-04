@@ -125,11 +125,11 @@ function SessionDebugInfo() {
         <p>
           <strong>Session Expires:</strong>{" "}
           {supabaseSession?.expires_at
-            ? new Date(supabaseSession.expires_at * 1000).toLocaleString()
+            ? new Date(supabaseSession.expires_at * 1000).toLocaleString("en-GB")
             : "N/A"}
         </p>
         <p className="text-xs text-gray-500">
-          Last checked: {new Date(lastCheck).toLocaleTimeString()}
+          Last checked: {new Date(lastCheck).toLocaleTimeString("en-GB")}
         </p>
       </div>
     </div>
@@ -1132,7 +1132,7 @@ export default function LeadsTrackingDashboard({
                     </td>
                     <td className="p-4">
                       <div className="text-sm text-oma-cocoa">
-                        {new Date(lead.created_at!).toLocaleDateString()}
+                        {new Date(lead.created_at!).toLocaleDateString("en-GB")}
                       </div>
                     </td>
                   </tr>
@@ -1360,7 +1360,7 @@ export default function LeadsTrackingDashboard({
                           analytics.monthly_trends[
                             analytics.monthly_trends.length - 1
                           ].month
-                        ).toLocaleDateString()
+                        ).toLocaleDateString("en-GB")
                       : "2 days ago"}
                   </span>
                 </div>

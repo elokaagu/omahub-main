@@ -263,7 +263,7 @@ export async function sendNewApplicationNotification(
       };
     }
 
-    const applicationDate = new Date(application.created_at).toLocaleString();
+    const applicationDate = new Date(application.created_at).toLocaleString("en-GB");
     const studioUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "https://oma-hub.com"}/studio/applications`;
     const applicationUrl = `${studioUrl}?id=${application.id}`;
 

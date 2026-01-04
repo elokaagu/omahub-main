@@ -381,7 +381,7 @@ export default function LegalDocumentsPage() {
                   {activeDocument
                     ? `Active version ${activeDocument.version} (effective ${new Date(
                         activeDocument.effective_date
-                      ).toLocaleDateString()})`
+                      ).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })})`
                     : "No active version"}
                 </CardDescription>
               </CardHeader>
@@ -409,7 +409,7 @@ export default function LegalDocumentsPage() {
                               <Calendar className="h-3 w-3" />
                               {new Date(
                                 doc.effective_date
-                              ).toLocaleDateString()}
+                              ).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
                             </div>
                             <div className="flex items-center gap-1">
                               <Hash className="h-3 w-3" />
