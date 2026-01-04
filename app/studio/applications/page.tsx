@@ -252,6 +252,51 @@ export default function ApplicationsPage() {
     }
   }, []); // Empty dependency array - function doesn't depend on any props/state
 
+  // Check user access and fetch applications
+  useEffect(() => {
+    if (user) {
+      if (user.role !== 'super_admin') {
+        setAccessDenied(true);
+        setLoading(false);
+        return;
+      }
+      fetchApplications();
+    } else if (user === null) {
+      // User is not logged in
+      setLoading(false);
+    }
+  }, [user, fetchApplications]);
+
+  // Handle Escape key to close modals
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (selectedApplication) {
+          setSelectedApplication(null);
+        }
+        if (showDeleteConfirm) {
+          setShowDeleteConfirm(null);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [selectedApplication, showDeleteConfirm]);
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (selectedApplication || showDeleteConfirm) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [selectedApplication, showDeleteConfirm]);
+
   // Update application status
   const updateApplicationStatus = async (applicationId: string, status: string, notes?: string) => {
     try {
@@ -349,7 +394,7 @@ export default function ApplicationsPage() {
       if (!response.ok) {
         const errorData = await response.json().catch(async () => {
           // Try to get error text if JSON parsing fails
-          return { error: await response.text() };
+          return { error: response ? await response.text() : 'Unknown error' };
         });
         
         console.error(`❌ [Applications] Delete failed:`, {
