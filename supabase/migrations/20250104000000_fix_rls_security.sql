@@ -160,8 +160,7 @@ DO $$
 BEGIN
     IF EXISTS (SELECT 1 FROM information_schema.views WHERE table_schema = 'public' AND table_name = 'leads_with_brand_details') THEN
         COMMENT ON VIEW public.leads_with_brand_details IS 
-            'View combining leads with brand details. Uses SECURITY DEFINER to allow proper access control. ' ||
-            'Access is controlled through RLS policies on underlying tables.';
+            'View combining leads with brand details. Uses SECURITY DEFINER to allow proper access control. Access is controlled through RLS policies on underlying tables.';
         RAISE NOTICE 'Added documentation comment to leads_with_brand_details view';
     END IF;
 END $$;
@@ -171,8 +170,7 @@ DO $$
 BEGIN
     IF EXISTS (SELECT 1 FROM information_schema.views WHERE table_schema = 'public' AND table_name = 'reviews_with_details') THEN
         COMMENT ON VIEW public.reviews_with_details IS 
-            'View combining reviews with brand details and replies. Uses SECURITY DEFINER to allow proper access control. ' ||
-            'Access is controlled through RLS policies on underlying tables.';
+            'View combining reviews with brand details and replies. Uses SECURITY DEFINER to allow proper access control. Access is controlled through RLS policies on underlying tables.';
         RAISE NOTICE 'Added documentation comment to reviews_with_details view';
     END IF;
 END $$;
