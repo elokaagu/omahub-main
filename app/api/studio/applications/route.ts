@@ -69,8 +69,27 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // For each application, find the associated brand (if it exists)
+    const applicationsWithBrands = await Promise.all(
+      (applications || []).map(async (app: any) => {
+        // Try to find the brand by name and email
+        const { data: brand } = await supabase
+          .from("brands")
+          .select("id, name, is_verified")
+          .eq("name", app.brand_name)
+          .eq("contact_email", app.email)
+          .maybeSingle(); // Use maybeSingle() to return null if not found instead of error
+
+        return {
+          ...app,
+          brand_id: brand?.id || null,
+          brand_verified: brand?.is_verified || false,
+        };
+      })
+    );
+
     // Ensure all applications have required fields, fill in defaults if missing
-    const normalizedApplications = (applications || []).map((app: any) => ({
+    const normalizedApplications = applicationsWithBrands.map((app: any) => ({
       ...app,
       created_at: app.created_at || app.updated_at || new Date().toISOString(),
       updated_at: app.updated_at || app.created_at || new Date().toISOString(),

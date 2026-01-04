@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Mail, MapPin, Globe, Instagram, Phone, Building, RefreshCw, Search, X } from "lucide-react";
+import { Mail, MapPin, Globe, Instagram, Phone, Building, RefreshCw, Search, X, ExternalLink, CheckCircle } from "lucide-react";
 
 interface DesignerApplication {
   id: string;
@@ -30,6 +30,8 @@ interface DesignerApplication {
   reviewed_at?: string;
   created_at: string;
   updated_at: string;
+  brand_id?: string | null;
+  brand_verified?: boolean;
 }
 
 export default function ApplicationsPage() {
@@ -699,6 +701,31 @@ export default function ApplicationsPage() {
                     </span>
                   </div>
                 </div>
+
+                {selectedApplication.brand_id && (
+                  <div className="bg-oma-beige/50 border border-oma-gold/30 rounded-lg p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="h-5 w-5 text-oma-gold" />
+                        <div>
+                          <label className="block text-sm font-medium text-oma-plum mb-1">Brand Created</label>
+                          <p className="text-xs text-oma-cocoa">
+                            {selectedApplication.brand_verified ? "Verified" : "Unverified"} • Brand is ready for approval
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => window.open(`/studio/brands/${selectedApplication.brand_id}`, '_blank')}
+                        className="flex items-center gap-2"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                        View Brand
+                      </Button>
+                    </div>
+                  </div>
+                )}
 
                 {selectedApplication.notes && (
                   <div>
