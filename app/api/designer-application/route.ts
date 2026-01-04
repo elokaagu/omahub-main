@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/supabase-admin";
 import { adminEmailServiceServer } from "@/lib/services/adminEmailService.server";
 import { sendNewApplicationNotification } from "@/lib/services/emailService";
+import { randomUUID } from "crypto";
 
 export async function POST(request: NextRequest) {
   try {
@@ -91,6 +92,55 @@ export async function POST(request: NextRequest) {
       status: application.status,
       created_at: application.created_at,
     });
+
+    // Create brand immediately so it's visible in the studio for approval
+    console.log("📦 Creating brand from application data...");
+    try {
+      const brandId = randomUUID();
+      const brandData = {
+        id: brandId,
+        name: application.brand_name,
+        description: application.description || "",
+        long_description: application.description || "",
+        location: application.location,
+        price_range: "explore brand for prices",
+        currency: "USD",
+        category: application.category,
+        categories: [application.category],
+        rating: 5.0,
+        is_verified: false, // Brand is not verified until application is approved
+        contact_email: application.email,
+        website: application.website || undefined,
+        instagram: application.instagram ? `@${application.instagram.replace(/^@/, "")}` : undefined,
+        whatsapp: application.phone || undefined,
+        founded_year: application.year_founded?.toString() || undefined,
+      };
+
+      const { data: newBrand, error: brandError } = await supabase
+        .from("brands")
+        .insert(brandData)
+        .select()
+        .single();
+
+      if (brandError) {
+        console.error("❌ Error creating brand:", brandError);
+        // Don't fail the request - application is still saved
+        // Admin can create brand manually if needed
+        console.warn("⚠️ Brand creation failed, but application was saved. Brand can be created manually during approval.");
+      } else {
+        console.log("✅ Brand created successfully:", {
+          id: newBrand.id,
+          name: newBrand.name,
+          is_verified: newBrand.is_verified,
+        });
+
+        // Update application with brand_id for reference (if we add this column later)
+        // For now, we'll find the brand by name/email when approving
+      }
+    } catch (brandCreationError) {
+      console.error("❌ Unexpected error creating brand:", brandCreationError);
+      // Don't fail the request - application is still saved
+    }
 
     // Send email notification to super admins
     try {

@@ -215,8 +215,8 @@ async function setupBrandAndUserAccess(
   passwordResetLink?: string;
 }> {
   try {
-    // Step 1: Create the brand
-    console.log("📦 Step 1: Creating brand from application data...");
+    // Step 1: Check if brand already exists (created during application submission)
+    console.log("📦 Step 1: Checking for existing brand from application...");
     console.log("📋 Application data to map:", {
       brand_name: application.brand_name,
       email: application.email,
@@ -229,52 +229,107 @@ async function setupBrandAndUserAccess(
       description_length: application.description?.length || 0,
     });
     
-    const brandId = randomUUID();
-    const brandData = {
-      id: brandId,
-      name: application.brand_name,
-      description: application.description || "",
-      long_description: application.description || "",
-      location: application.location,
-      price_range: "explore brand for prices",
-      currency: "USD", // Default currency, can be updated later
-      category: application.category,
-      categories: [application.category],
-      rating: 5.0,
-      is_verified: false,
-      contact_email: application.email,
-      website: application.website || undefined,
-      instagram: application.instagram ? `@${application.instagram.replace(/^@/, "")}` : undefined,
-      whatsapp: application.phone || undefined, // Map phone to whatsapp field
-      founded_year: application.year_founded?.toString() || undefined,
-    };
-
-    const { data: newBrand, error: brandError } = await supabase
+    // Check if a brand already exists for this application (by name and email)
+    const { data: existingBrand } = await supabase
       .from("brands")
-      .insert(brandData)
-      .select()
+      .select("*")
+      .eq("name", application.brand_name)
+      .eq("contact_email", application.email)
+      .eq("is_verified", false) // Only match unverified brands (created during submission)
       .single();
 
-    if (brandError) {
-      console.error("❌ Error creating brand:", brandError);
-      return {
-        success: false,
-        error: `Failed to create brand: ${brandError.message}`,
-        brandCreated: false,
-      };
-    }
+    let newBrand;
+    let brandId: string;
+    let brandCreated = false;
 
-    console.log("✅ Brand created successfully:", {
-      id: newBrand.id,
-      name: newBrand.name,
-      contact_email: newBrand.contact_email,
-      website: newBrand.website,
-      instagram: newBrand.instagram,
-      whatsapp: newBrand.whatsapp,
-      location: newBrand.location,
-      category: newBrand.category,
-      founded_year: newBrand.founded_year,
-    });
+    if (existingBrand) {
+      // Brand already exists (was created during application submission)
+      console.log("✅ Found existing brand (created during application submission):", {
+        id: existingBrand.id,
+        name: existingBrand.name,
+        is_verified: existingBrand.is_verified,
+      });
+      newBrand = existingBrand;
+      brandId = existingBrand.id;
+      
+      // Update the brand with any additional information from the application
+      const brandUpdates: any = {
+        description: application.description || existingBrand.description || "",
+        long_description: application.description || existingBrand.long_description || "",
+        location: application.location || existingBrand.location,
+        category: application.category || existingBrand.category,
+        categories: [application.category] || existingBrand.categories || [],
+        website: application.website || existingBrand.website,
+        instagram: application.instagram ? `@${application.instagram.replace(/^@/, "")}` : existingBrand.instagram,
+        whatsapp: application.phone || existingBrand.whatsapp,
+        founded_year: application.year_founded?.toString() || existingBrand.founded_year,
+      };
+
+      const { data: updatedBrand, error: updateError } = await supabase
+        .from("brands")
+        .update(brandUpdates)
+        .eq("id", brandId)
+        .select()
+        .single();
+
+      if (updateError) {
+        console.warn("⚠️ Failed to update existing brand, but continuing:", updateError);
+      } else if (updatedBrand) {
+        newBrand = updatedBrand;
+        console.log("✅ Brand updated with application data");
+      }
+    } else {
+      // Brand doesn't exist, create it now
+      console.log("🆕 Creating new brand (not found from application submission)...");
+      brandId = randomUUID();
+      const brandData = {
+        id: brandId,
+        name: application.brand_name,
+        description: application.description || "",
+        long_description: application.description || "",
+        location: application.location,
+        price_range: "explore brand for prices",
+        currency: "USD", // Default currency, can be updated later
+        category: application.category,
+        categories: [application.category],
+        rating: 5.0,
+        is_verified: false,
+        contact_email: application.email,
+        website: application.website || undefined,
+        instagram: application.instagram ? `@${application.instagram.replace(/^@/, "")}` : undefined,
+        whatsapp: application.phone || undefined, // Map phone to whatsapp field
+        founded_year: application.year_founded?.toString() || undefined,
+      };
+
+      const { data: createdBrand, error: brandError } = await supabase
+        .from("brands")
+        .insert(brandData)
+        .select()
+        .single();
+
+      if (brandError) {
+        console.error("❌ Error creating brand:", brandError);
+        return {
+          success: false,
+          error: `Failed to create brand: ${brandError.message}`,
+          brandCreated: false,
+        };
+      }
+
+      newBrand = createdBrand;
+      brandCreated = true;
+      console.log("✅ Brand created successfully:", {
+        id: newBrand.id,
+        name: newBrand.name,
+        contact_email: newBrand.contact_email,
+        website: newBrand.website,
+        instagram: newBrand.instagram,
+        whatsapp: newBrand.whatsapp,
+        location: newBrand.location,
+        category: newBrand.category,
+        founded_year: newBrand.founded_year,
+      });
+    }
 
     // Step 2: Check if user exists
     console.log("👤 Step 2: Checking if user exists...");
@@ -406,6 +461,23 @@ async function setupBrandAndUserAccess(
       console.log("✅ Profile created successfully");
     }
 
+    // Step 4: Verify the brand (set is_verified to true)
+    console.log("✅ Step 4: Verifying brand...");
+    const { error: verifyError } = await supabase
+      .from("brands")
+      .update({ is_verified: true })
+      .eq("id", brandId);
+
+    if (verifyError) {
+      console.warn("⚠️ Failed to verify brand, but continuing:", verifyError);
+    } else {
+      console.log("✅ Brand verified successfully");
+      // Update the brand object to reflect verification
+      if (newBrand) {
+        newBrand.is_verified = true;
+      }
+    }
+
     console.log("🎉 Brand and user setup completed successfully!");
 
     // Generate password reset link for new users (more secure than sending password)
@@ -440,7 +512,7 @@ async function setupBrandAndUserAccess(
       success: true,
       brand: newBrand,
       user: profile,
-      brandCreated: true,
+      brandCreated: brandCreated, // Use the actual flag
       userCreated,
       temporaryPassword: userCreated ? temporaryPassword : undefined, // Keep for admin visibility
       passwordResetLink: passwordResetLink, // Primary method for user
