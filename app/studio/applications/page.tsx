@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Calendar, Mail, MapPin, Globe, Instagram, Phone, Building } from "lucide-react";
+import { Mail, MapPin, Globe, Instagram, Phone, Building, RefreshCw, Search, X } from "lucide-react";
 
 interface DesignerApplication {
   id: string;
@@ -44,7 +44,6 @@ export default function ApplicationsPage() {
   const [accessDenied, setAccessDenied] = useState(false);
   const [deletingApplication, setDeletingApplication] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
-  const [reviewingApplication, setReviewingApplication] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
 
   // Ensure we only render portals on the client
@@ -52,18 +51,18 @@ export default function ApplicationsPage() {
     setMounted(true);
   }, []);
 
-  // Check if user has super admin access and fetch applications
-  // This runs on mount and when user changes, always fetching fresh data from database
+  // Check user access and fetch applications
   useEffect(() => {
     if (user) {
-      // Only super admins can access designer applications
       if (user.role !== 'super_admin') {
         setAccessDenied(true);
         setLoading(false);
         return;
       }
-      // Always fetch fresh data from database when page loads
       fetchApplications();
+    } else if (user === null) {
+      // User is not logged in
+      setLoading(false);
     }
   }, [user]);
 
@@ -97,22 +96,18 @@ export default function ApplicationsPage() {
     };
   }, [selectedApplication, showDeleteConfirm]);
 
-  // Fetch applications
+  // Fetch applications - CRITICAL: This must fetch ALL applications without filtering
   const fetchApplications = async () => {
     try {
       setLoading(true);
       setError(null);
-      console.log("🔄 Fetching applications...");
       
-      // Add timeout to prevent infinite loading
-      const timeoutId = setTimeout(() => {
-        console.warn("⚠️ Fetch timeout - taking longer than expected");
-      }, 10000); // 10 second warning
+      console.log("🔄 [Applications] Fetching all applications from API...");
       
-      // Fetch with cache-busting to ensure fresh data from database
-      // Add timestamp to prevent browser caching
-      const timestamp = new Date().getTime();
+      // Force fresh fetch with cache busting
+      const timestamp = Date.now();
       const response = await fetch(`/api/studio/applications?t=${timestamp}`, {
+        method: 'GET',
         cache: 'no-store',
         headers: {
           'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -120,40 +115,59 @@ export default function ApplicationsPage() {
         },
       });
       
-      clearTimeout(timeoutId);
-      
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        console.error("❌ Failed to fetch applications:", {
+        console.error("❌ [Applications] API Error:", {
           status: response.status,
           statusText: response.statusText,
           error: errorData,
         });
-        throw new Error(errorData.error || "Failed to fetch applications");
+        throw new Error(errorData.error || `Failed to fetch applications (${response.status})`);
       }
       
       const data = await response.json();
-      console.log("✅ Applications fetched:", {
+      
+      console.log("✅ [Applications] API Response:", {
         count: data.applications?.length || 0,
-        applications: data.applications?.map((app: any) => ({
-          id: app.id,
-          brand_name: app.brand_name,
-          status: app.status,
-        })) || [],
+        rawCount: data.rawCount || 0,
+        timestamp: data.timestamp,
       });
       
-      setApplications(data.applications || []);
-      
-      if (data.applications && data.applications.length === 0) {
-        console.warn("⚠️ No applications found in database");
+      // Log each application for debugging
+      if (data.applications && data.applications.length > 0) {
+        console.log("📋 [Applications] All applications received:", 
+          data.applications.map((app: DesignerApplication) => ({
+            id: app.id,
+            brand_name: app.brand_name,
+            designer_name: app.designer_name,
+            email: app.email,
+            status: app.status,
+            created_at: app.created_at,
+          }))
+        );
+      } else {
+        console.warn("⚠️ [Applications] No applications in API response");
       }
+      
+      // IMPORTANT: Set applications directly from API - no filtering at this stage
+      const apps = data.applications || [];
+      setApplications(apps);
+      
+      console.log(`✅ [Applications] Set ${apps.length} applications in state`);
+      
+      if (apps.length === 0) {
+        console.warn("⚠️ [Applications] No applications found. This could mean:");
+        console.warn("   1. No applications exist in the database");
+        console.warn("   2. Applications are in a different table (check inquiries vs designer_applications)");
+        console.warn("   3. There's an RLS policy blocking access");
+      }
+      
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to fetch applications";
-      console.error("❌ Error fetching applications:", err);
+      console.error("❌ [Applications] Fetch error:", err);
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
-      // Always ensure loading is set to false
       setLoading(false);
     }
   };
@@ -161,17 +175,15 @@ export default function ApplicationsPage() {
   // Update application status
   const updateApplicationStatus = async (applicationId: string, status: string, notes?: string) => {
     try {
-      console.log(`🔄 Updating application ${applicationId} to status: ${status}`);
       setUpdatingStatus(true);
       
-      // Optimistic update - update UI immediately
+      // Optimistic update
       setApplications(prev => prev.map(app => 
         app.id === applicationId 
           ? { ...app, status: status as any, notes: notes || app.notes, updated_at: new Date().toISOString() }
           : app
       ));
       
-      // Update selected application if it's the one being updated
       if (selectedApplication?.id === applicationId) {
         setSelectedApplication(prev => prev ? {
           ...prev,
@@ -189,29 +201,19 @@ export default function ApplicationsPage() {
         body: JSON.stringify({ status, notes }),
       });
 
-      console.log(`📊 Update response status: ${response.status}`);
-
       if (!response.ok) {
-        // Revert optimistic update on error
-        await fetchApplications();
-        
+        await fetchApplications(); // Revert on error
         const errorText = await response.text();
-        console.error(`❌ Update failed:`, errorText);
-        throw new Error(`Failed to update application: ${errorText}`);
+        throw new Error(`Failed to update: ${errorText}`);
       }
 
       const result = await response.json();
-      console.log(`✅ Update successful:`, result);
-
-      // Update the application in state with the response data
+      
       if (result.application) {
         setApplications(prev => prev.map(app => 
-          app.id === applicationId 
-            ? { ...app, ...result.application }
-            : app
+          app.id === applicationId ? { ...app, ...result.application } : app
         ));
         
-        // Update selected application if it's the one being updated
         if (selectedApplication?.id === applicationId) {
           setSelectedApplication({
             ...selectedApplication,
@@ -222,23 +224,12 @@ export default function ApplicationsPage() {
 
       toast.success(`Application ${status === 'approved' ? 'approved' : status === 'rejected' ? 'rejected' : 'updated'} successfully`);
       
-      // Clear reviewing state
-      setReviewingApplication(null);
-      
-      // Refresh applications to ensure data consistency (but keep optimistic update for better UX)
-      // Only refresh if there was an error or if we need to sync with server
-      // await fetchApplications();
-      
-      // Close detail view if status was changed
       if (status === 'approved' || status === 'rejected') {
         setSelectedApplication(null);
       }
     } catch (err) {
       console.error("❌ Update error:", err);
-      const errorMessage = err instanceof Error ? err.message : "Failed to update application status";
-      toast.error(errorMessage);
-      
-      // Refresh applications to restore correct state
+      toast.error(err instanceof Error ? err.message : "Failed to update application");
       await fetchApplications();
     } finally {
       setUpdatingStatus(false);
@@ -249,15 +240,11 @@ export default function ApplicationsPage() {
   const deleteApplication = async (applicationId: string) => {
     try {
       setDeletingApplication(applicationId);
-      console.log(`🗑️ Attempting to delete application: ${applicationId}`);
       
-      // Store the application being deleted in case we need to restore it
       const applicationToDelete = applications.find(app => app.id === applicationId);
       
-      // Optimistic update - remove from UI immediately
+      // Optimistic update
       setApplications(prev => prev.filter(app => app.id !== applicationId));
-      
-      // Close modals immediately for better UX
       setSelectedApplication(null);
       setShowDeleteConfirm(null);
       
@@ -265,14 +252,10 @@ export default function ApplicationsPage() {
         method: "DELETE",
       });
 
-      console.log(`🗑️ Delete response status: ${response.status}`);
-      console.log(`🗑️ Delete response URL: ${response.url}`);
-
       if (!response.ok) {
-        // Revert optimistic update on error - restore the application
+        // Revert on error
         if (applicationToDelete) {
           setApplications(prev => {
-            // Check if it's already there to avoid duplicates
             if (!prev.find(app => app.id === applicationId)) {
               return [...prev, applicationToDelete].sort((a, b) => 
                 new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
@@ -283,52 +266,39 @@ export default function ApplicationsPage() {
         }
         
         const errorText = await response.text();
-        console.error(`🗑️ Delete failed with status ${response.status}:`, errorText);
-        
-        if (response.status === 404) {
-          throw new Error("API route not found. Please check if the route is deployed correctly.");
-        } else if (response.status === 500) {
-          throw new Error("Server error occurred while deleting the application.");
-        } else {
-          throw new Error(`Failed to delete application (${response.status}): ${errorText}`);
-        }
+        throw new Error(`Failed to delete: ${errorText}`);
       }
 
-      const result = await response.json();
-      console.log(`🗑️ Delete successful:`, result);
-
       toast.success("Application deleted successfully");
-      
-      // No automatic refresh - user can manually refresh if needed
-      // The optimistic update already made the UI update immediately
-      
     } catch (err) {
-      console.error("🗑️ Delete error:", err);
-      const errorMessage = err instanceof Error ? err.message : "Failed to delete application";
-      toast.error(errorMessage);
-      
-      // Refresh applications to restore correct state if delete failed
+      console.error("❌ Delete error:", err);
+      toast.error(err instanceof Error ? err.message : "Failed to delete application");
       await fetchApplications();
     } finally {
       setDeletingApplication(null);
     }
   };
 
-  // Filter applications based on search and status
+  // Filter applications - ONLY for display, not for fetching
   const filteredApplications = applications.filter(app => {
+    // Search filter
+    const searchLower = searchTerm.toLowerCase();
     const matchesSearch = 
-      app.brand_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      app.designer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      app.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      app.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      app.category.toLowerCase().includes(searchTerm.toLowerCase());
+      !searchTerm ||
+      app.brand_name.toLowerCase().includes(searchLower) ||
+      app.designer_name.toLowerCase().includes(searchLower) ||
+      app.email.toLowerCase().includes(searchLower) ||
+      app.location.toLowerCase().includes(searchLower) ||
+      app.category.toLowerCase().includes(searchLower) ||
+      app.description.toLowerCase().includes(searchLower);
     
+    // Status filter
     const matchesStatus = statusFilter === "all" || app.status === statusFilter;
     
     return matchesSearch && matchesStatus;
   });
 
-  // Get status badge color
+  // Status badge component
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "new":
@@ -344,6 +314,7 @@ export default function ApplicationsPage() {
     }
   };
 
+  // Loading state
   if (loading) {
     return (
       <div className="container mx-auto px-6 py-8">
@@ -355,17 +326,22 @@ export default function ApplicationsPage() {
     );
   }
 
+  // Error state
   if (error) {
     return (
       <div className="container mx-auto px-6 py-8">
         <div className="text-center">
           <p className="text-red-500 mb-4">{error}</p>
-          <Button onClick={fetchApplications}>Try Again</Button>
+          <Button onClick={fetchApplications}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Try Again
+          </Button>
         </div>
       </div>
     );
   }
 
+  // Access denied state
   if (accessDenied) {
     return (
       <div className="container mx-auto px-6 py-8">
@@ -379,10 +355,18 @@ export default function ApplicationsPage() {
 
   return (
     <div className="container mx-auto px-6 py-8">
+      {/* Header */}
       <div className="mb-8 flex justify-between items-start">
         <div>
           <h1 className="text-3xl font-canela text-oma-plum mb-2">Designer Applications</h1>
-          <p className="text-oma-cocoa">Review and manage designer applications for the platform</p>
+          <p className="text-oma-cocoa">
+            Review and manage designer applications for the platform
+            {applications.length > 0 && (
+              <span className="ml-2 text-sm">
+                ({applications.length} total{filteredApplications.length !== applications.length && `, ${filteredApplications.length} shown`})
+              </span>
+            )}
+          </p>
         </div>
         <Button
           variant="outline"
@@ -390,19 +374,29 @@ export default function ApplicationsPage() {
           disabled={loading}
           className="shrink-0"
         >
+          <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
           {loading ? "Refreshing..." : "Refresh"}
         </Button>
       </div>
 
-      {/* Filters and Search */}
+      {/* Filters */}
       <div className="mb-6 flex flex-col sm:flex-row gap-4">
-        <div className="flex-1">
+        <div className="flex-1 relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
             placeholder="Search applications..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="max-w-md"
+            className="pl-10 pr-10 max-w-md"
           />
+          {searchTerm && (
+            <button
+              onClick={() => setSearchTerm("")}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-full sm:w-48">
@@ -418,33 +412,50 @@ export default function ApplicationsPage() {
         </Select>
       </div>
 
-      {/* Applications Grid */}
+      {/* Applications List */}
       <div className="grid gap-6">
         {filteredApplications.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-oma-cocoa">No applications found</p>
+            {applications.length === 0 ? (
+              <>
+                <p className="text-oma-cocoa mb-2">No applications found in the database.</p>
+                <p className="text-sm text-gray-500">
+                  Applications submitted through the join form will appear here.
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="text-oma-cocoa mb-2">No applications match your filters.</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSearchTerm("");
+                    setStatusFilter("all");
+                  }}
+                >
+                  Clear Filters
+                </Button>
+              </>
+            )}
           </div>
         ) : (
           filteredApplications.map((application) => (
             <Card 
               key={application.id} 
-              className={`hover:shadow-md transition-shadow ${
-                reviewingApplication === application.id 
-                  ? 'ring-2 ring-blue-500 bg-blue-50' 
-                  : ''
-              }`}
+              className="hover:shadow-md transition-shadow"
             >
               <CardHeader>
                 <div className="flex justify-between items-start">
-                  <div>
+                  <div className="flex-1">
                     <CardTitle className="text-xl text-oma-plum">
                       {application.brand_name}
                     </CardTitle>
                     <p className="text-oma-cocoa mt-1">by {application.designer_name}</p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 ml-4">
                     {getStatusBadge(application.status)}
-                    <span className="text-sm text-oma-cocoa">
+                    <span className="text-sm text-oma-cocoa whitespace-nowrap">
                       {application.created_at 
                         ? new Date(application.created_at).toLocaleDateString()
                         : 'N/A'
@@ -456,27 +467,27 @@ export default function ApplicationsPage() {
               <CardContent>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                   <div className="flex items-center gap-2 text-sm">
-                    <Mail className="h-4 w-4 text-oma-gold" />
-                    <span>{application.email}</span>
+                    <Mail className="h-4 w-4 text-oma-gold shrink-0" />
+                    <span className="truncate">{application.email}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
-                    <MapPin className="h-4 w-4 text-oma-gold" />
+                    <MapPin className="h-4 w-4 text-oma-gold shrink-0" />
                     <span>{application.location}</span>
                   </div>
                   {application.phone && (
                     <div className="flex items-center gap-2 text-sm">
-                      <Phone className="h-4 w-4 text-oma-gold" />
+                      <Phone className="h-4 w-4 text-oma-gold shrink-0" />
                       <span>{application.phone}</span>
                     </div>
                   )}
                   {application.website && (
                     <div className="flex items-center gap-2 text-sm">
-                      <Globe className="h-4 w-4 text-oma-gold" />
+                      <Globe className="h-4 w-4 text-oma-gold shrink-0" />
                       <a 
                         href={application.website} 
                         target="_blank" 
                         rel="noopener noreferrer"
-                        className="text-oma-plum hover:underline"
+                        className="text-oma-plum hover:underline truncate"
                       >
                         {application.website}
                       </a>
@@ -484,13 +495,13 @@ export default function ApplicationsPage() {
                   )}
                   {application.instagram && (
                     <div className="flex items-center gap-2 text-sm">
-                      <Instagram className="h-4 w-4 text-oma-gold" />
-                      <span>@{application.instagram}</span>
+                      <Instagram className="h-4 w-4 text-oma-gold shrink-0" />
+                      <span>@{application.instagram.replace(/^@/, '')}</span>
                     </div>
                   )}
                   {application.year_founded && (
                     <div className="flex items-center gap-2 text-sm">
-                      <Building className="h-4 w-4 text-oma-gold" />
+                      <Building className="h-4 w-4 text-oma-gold shrink-0" />
                       <span>Founded {application.year_founded}</span>
                     </div>
                   )}
@@ -501,7 +512,7 @@ export default function ApplicationsPage() {
                   <p className="text-sm text-oma-cocoa line-clamp-3">{application.description}</p>
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   <Button
                     variant="outline"
                     size="sm"
@@ -512,63 +523,29 @@ export default function ApplicationsPage() {
                   
                   {application.status === "new" && (
                     <>
-                      {reviewingApplication === application.id ? (
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            className="bg-green-600 hover:bg-green-700 text-white"
-                            onClick={() => {
-                              console.log(`✅ Approving application: ${application.id}`);
-                              updateApplicationStatus(application.id, "approved");
-                              setReviewingApplication(null);
-                            }}
-                            disabled={updatingStatus}
-                          >
-                            {updatingStatus ? "Updating..." : "Accept"}
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => {
-                              console.log(`❌ Rejecting application: ${application.id}`);
-                              updateApplicationStatus(application.id, "rejected");
-                              setReviewingApplication(null);
-                            }}
-                            disabled={updatingStatus}
-                          >
-                            {updatingStatus ? "Updating..." : "Reject"}
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => setReviewingApplication(null)}
-                            disabled={updatingStatus}
-                          >
-                            Cancel
-                          </Button>
-                        </div>
-                      ) : (
-                        <Button
-                          size="sm"
-                          onClick={() => {
-                            console.log(`🔄 Starting review for application: ${application.id}`);
-                            setReviewingApplication(application.id);
-                          }}
-                          disabled={updatingStatus}
-                        >
-                          Start Review
-                        </Button>
-                      )}
+                      <Button
+                        size="sm"
+                        className="bg-green-600 hover:bg-green-700 text-white"
+                        onClick={() => updateApplicationStatus(application.id, "approved")}
+                        disabled={updatingStatus}
+                      >
+                        {updatingStatus ? "Updating..." : "Approve"}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => updateApplicationStatus(application.id, "rejected")}
+                        disabled={updatingStatus}
+                      >
+                        {updatingStatus ? "Updating..." : "Reject"}
+                      </Button>
                     </>
                   )}
                   
                   <Button
                     variant="destructive"
                     size="sm"
-                    onClick={() => {
-                      console.log(`🗑️ Delete button clicked for application: ${application.id}`);
-                      setShowDeleteConfirm(application.id);
-                    }}
+                    onClick={() => setShowDeleteConfirm(application.id)}
                     disabled={deletingApplication === application.id}
                   >
                     {deletingApplication === application.id ? "Deleting..." : "Delete"}
@@ -580,20 +557,12 @@ export default function ApplicationsPage() {
         )}
       </div>
 
-      {/* Application Detail Modal - Rendered via Portal */}
+      {/* Detail Modal */}
       {mounted && selectedApplication && typeof document !== 'undefined' && document.body && createPortal(
         <div 
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999]"
-          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
           onClick={(e) => {
-            // Close modal when clicking on the overlay (not the modal content)
             if (e.target === e.currentTarget) {
-              setSelectedApplication(null);
-            }
-          }}
-          onKeyDown={(e) => {
-            // Close modal on Escape key
-            if (e.key === 'Escape') {
               setSelectedApplication(null);
             }
           }}
@@ -602,18 +571,8 @@ export default function ApplicationsPage() {
           aria-labelledby="modal-title"
         >
           <div 
-            className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-xl relative"
-            style={{ 
-              maxHeight: '90vh', 
-              margin: 'auto',
-              position: 'relative',
-              zIndex: 10000
-            }}
+            className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-xl"
             onClick={(e) => e.stopPropagation()}
-            onKeyDown={(e) => {
-              // Prevent modal from closing when pressing Escape inside the modal content
-              e.stopPropagation();
-            }}
           >
             <div className="p-6">
               <div className="flex justify-between items-start mb-6">
@@ -630,7 +589,7 @@ export default function ApplicationsPage() {
                   aria-label="Close modal"
                   className="hover:bg-gray-100 rounded-full p-2"
                 >
-                  ✕
+                  <X className="h-5 w-5" />
                 </Button>
               </div>
 
@@ -684,17 +643,17 @@ export default function ApplicationsPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-oma-cocoa mb-1">Description</label>
-                  <p className="text-sm">{selectedApplication.description}</p>
+                  <p className="text-sm whitespace-pre-wrap">{selectedApplication.description}</p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-oma-cocoa mb-1">Current Status</label>
+                  <label className="block text-sm font-medium text-oma-cocoa mb-1">Status</label>
                   <div className="flex items-center gap-2">
                     {getStatusBadge(selectedApplication.status)}
                     <span className="text-sm text-oma-cocoa">
                       {selectedApplication.reviewed_at 
-                        ? `Reviewed on ${selectedApplication.reviewed_at ? new Date(selectedApplication.reviewed_at).toLocaleDateString() : 'N/A'}`
-                        : `Submitted on ${selectedApplication.created_at ? new Date(selectedApplication.created_at).toLocaleDateString() : 'N/A'}`
+                        ? `Reviewed on ${new Date(selectedApplication.reviewed_at).toLocaleDateString()}`
+                        : `Submitted on ${new Date(selectedApplication.created_at).toLocaleDateString()}`
                       }
                     </span>
                   </div>
@@ -703,7 +662,7 @@ export default function ApplicationsPage() {
                 {selectedApplication.notes && (
                   <div>
                     <label className="block text-sm font-medium text-oma-cocoa mb-1">Notes</label>
-                    <p className="text-sm bg-oma-beige/30 p-3 rounded">{selectedApplication.notes}</p>
+                    <p className="text-sm bg-oma-beige/30 p-3 rounded whitespace-pre-wrap">{selectedApplication.notes}</p>
                   </div>
                 )}
               </div>
@@ -744,7 +703,7 @@ export default function ApplicationsPage() {
                     rows={3}
                   />
 
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-wrap">
                     <Button
                       onClick={() => updateApplicationStatus(
                         selectedApplication.id, 
@@ -766,7 +725,7 @@ export default function ApplicationsPage() {
                       onClick={() => setShowDeleteConfirm(selectedApplication.id)}
                       disabled={deletingApplication === selectedApplication.id}
                     >
-                      {deletingApplication === selectedApplication.id ? "Deleting..." : "Delete Application"}
+                      {deletingApplication === selectedApplication.id ? "Deleting..." : "Delete"}
                     </Button>
                   </div>
                 </div>
@@ -777,40 +736,26 @@ export default function ApplicationsPage() {
         document.body
       )}
 
-      {/* Delete Confirmation Modal - Rendered via Portal */}
+      {/* Delete Confirmation Modal */}
       {mounted && showDeleteConfirm && typeof document !== 'undefined' && document.body && createPortal(
         <div 
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999]"
-          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
           onClick={(e) => {
-            // Close modal when clicking on the overlay (not the modal content)
             if (e.target === e.currentTarget) {
-              setShowDeleteConfirm(null);
-            }
-          }}
-          onKeyDown={(e) => {
-            // Close modal on Escape key
-            if (e.key === 'Escape') {
               setShowDeleteConfirm(null);
             }
           }}
           role="dialog"
           aria-modal="true"
-          tabIndex={-1}
         >
           <div 
-            className="bg-white rounded-lg max-w-md w-full p-6 relative"
-            style={{ 
-              margin: 'auto',
-              position: 'relative',
-              zIndex: 10000
-            }}
+            className="bg-white rounded-lg max-w-md w-full p-6"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="text-center">
               <h3 className="text-lg font-medium text-oma-cocoa mb-4">Delete Application</h3>
               <p className="text-sm text-oma-cocoa mb-6">
-                Are you sure you want to delete this application? This action cannot be undone and will permanently remove the application from the database.
+                Are you sure you want to delete this application? This action cannot be undone.
               </p>
               <div className="flex gap-3 justify-center">
                 <Button
@@ -823,7 +768,6 @@ export default function ApplicationsPage() {
                 <Button
                   variant="destructive"
                   onClick={() => {
-                    console.log(`🗑️ Confirming delete for application: ${showDeleteConfirm}`);
                     deleteApplication(showDeleteConfirm);
                   }}
                   disabled={deletingApplication === showDeleteConfirm}

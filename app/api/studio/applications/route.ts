@@ -15,9 +15,11 @@ export async function GET(request: NextRequest) {
 
     // Fetch all designer applications, ordered by creation date (newest first)
     // Note: We fetch all and sort in memory to handle NULL created_at values properly
+    // Using admin client bypasses RLS, so we should get all applications
     const { data: applications, error } = await supabase
       .from("designer_applications")
-      .select("*");
+      .select("*")
+      .order("created_at", { ascending: false, nullsFirst: false });
 
     if (error) {
       console.error("❌ Error fetching applications:", error);
@@ -36,11 +38,13 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.log(`✅ Fetched ${applications?.length || 0} designer applications`);
+    console.log(`✅ Fetched ${applications?.length || 0} designer applications from database`);
     if (applications && applications.length > 0) {
-      console.log("📋 Application IDs:", applications.map((app: any) => ({
+      console.log("📋 All applications in database:", applications.map((app: any) => ({
         id: app.id,
         brand_name: app.brand_name,
+        designer_name: app.designer_name,
+        email: app.email,
         status: app.status,
         created_at: app.created_at,
         has_created_at: !!app.created_at,
@@ -93,10 +97,13 @@ export async function GET(request: NextRequest) {
       console.log("📋 All application IDs in results:", normalizedApplications.map((app: any) => app.id));
     }
 
+    console.log(`📤 Returning ${normalizedApplications.length} normalized applications to frontend`);
+    
     return NextResponse.json({
       applications: normalizedApplications,
       count: normalizedApplications.length,
-      rawCount: applications?.length || 0
+      rawCount: applications?.length || 0,
+      timestamp: new Date().toISOString()
     });
 
   } catch (error) {
