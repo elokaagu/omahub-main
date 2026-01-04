@@ -151,15 +151,19 @@ BEGIN
     END IF;
 END $$;
 
--- 4. Recreate views without SECURITY DEFINER (views don't need it, only functions do)
--- These are regular SELECT views that should work with RLS on underlying tables
+-- 4. Recreate views to ensure they're not flagged as SECURITY DEFINER
+-- Note: Views in PostgreSQL don't actually support SECURITY DEFINER (only functions do)
+-- But we'll recreate them explicitly to ensure they're clean
 
 -- Recreate leads_with_brand_details view (if it exists)
 DO $$
 BEGIN
-    IF EXISTS (SELECT 1 FROM information_schema.views WHERE table_schema = 'public' AND table_name = 'leads_with_brand_details') THEN
-        -- Drop and recreate to ensure it's not marked as SECURITY DEFINER
-        DROP VIEW IF EXISTS public.leads_with_brand_details CASCADE;
+    -- Always drop first to ensure clean recreation
+    DROP VIEW IF EXISTS public.leads_with_brand_details CASCADE;
+    
+    -- Check if underlying tables exist before creating view
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'leads')
+       AND EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'brands') THEN
         
         CREATE VIEW public.leads_with_brand_details AS
         SELECT 
@@ -213,18 +217,21 @@ BEGIN
         COMMENT ON VIEW public.leads_with_brand_details IS 
             'View combining leads with brand details. Access is controlled through RLS policies on underlying tables.';
         
-        RAISE NOTICE 'Recreated leads_with_brand_details view without SECURITY DEFINER';
+        RAISE NOTICE 'Recreated leads_with_brand_details view';
     ELSE
-        RAISE NOTICE 'leads_with_brand_details view does not exist, skipping';
+        RAISE NOTICE 'Underlying tables (leads or brands) do not exist, skipping view creation';
     END IF;
 END $$;
 
 -- Recreate reviews_with_details view (if it exists)
 DO $$
 BEGIN
-    IF EXISTS (SELECT 1 FROM information_schema.views WHERE table_schema = 'public' AND table_name = 'reviews_with_details') THEN
-        -- Drop and recreate to ensure it's not marked as SECURITY DEFINER
-        DROP VIEW IF EXISTS public.reviews_with_details CASCADE;
+    -- Always drop first to ensure clean recreation
+    DROP VIEW IF EXISTS public.reviews_with_details CASCADE;
+    
+    -- Check if underlying tables exist before creating view
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'reviews')
+       AND EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'brands') THEN
         
         CREATE VIEW public.reviews_with_details AS
         SELECT 
@@ -266,9 +273,9 @@ BEGIN
         COMMENT ON VIEW public.reviews_with_details IS 
             'View combining reviews with brand details and replies. Access is controlled through RLS policies on underlying tables.';
         
-        RAISE NOTICE 'Recreated reviews_with_details view without SECURITY DEFINER';
+        RAISE NOTICE 'Recreated reviews_with_details view';
     ELSE
-        RAISE NOTICE 'reviews_with_details view does not exist, skipping';
+        RAISE NOTICE 'Underlying tables (reviews or brands) do not exist, skipping view creation';
     END IF;
 END $$;
 
