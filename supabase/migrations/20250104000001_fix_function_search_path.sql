@@ -7,157 +7,407 @@
 DO $$
 BEGIN
     -- update_modified_column
-    IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'update_modified_column' AND pronamespace = 'public'::regnamespace) THEN
-        ALTER FUNCTION public.update_modified_column() SET search_path = 'public, pg_catalog';
-        RAISE NOTICE 'Fixed search_path for update_modified_column';
+    IF EXISTS (
+        SELECT 1 FROM pg_proc p
+        JOIN pg_namespace n ON p.pronamespace = n.oid
+        WHERE n.nspname = 'public'
+        AND p.proname = 'update_modified_column'
+        AND pg_get_function_identity_arguments(p.oid) = ''
+    ) THEN
+        BEGIN
+            ALTER FUNCTION public.update_modified_column() SET search_path = 'public, pg_catalog';
+            RAISE NOTICE 'Fixed search_path for update_modified_column';
+        EXCEPTION WHEN OTHERS THEN
+            RAISE WARNING 'Could not fix update_modified_column: %', SQLERRM;
+        END;
     END IF;
 
     -- update_updated_at_column
-    IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'update_updated_at_column' AND pronamespace = 'public'::regnamespace) THEN
-        ALTER FUNCTION public.update_updated_at_column() SET search_path = 'public, pg_catalog';
-        RAISE NOTICE 'Fixed search_path for update_updated_at_column';
+    IF EXISTS (
+        SELECT 1 FROM pg_proc p
+        JOIN pg_namespace n ON p.pronamespace = n.oid
+        WHERE n.nspname = 'public'
+        AND p.proname = 'update_updated_at_column'
+        AND pg_get_function_identity_arguments(p.oid) = ''
+    ) THEN
+        BEGIN
+            ALTER FUNCTION public.update_updated_at_column() SET search_path = 'public, pg_catalog';
+            RAISE NOTICE 'Fixed search_path for update_updated_at_column';
+        EXCEPTION WHEN OTHERS THEN
+            RAISE WARNING 'Could not fix update_updated_at_column: %', SQLERRM;
+        END;
     END IF;
 
     -- update_designer_applications_updated_at
-    IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'update_designer_applications_updated_at' AND pronamespace = 'public'::regnamespace) THEN
-        ALTER FUNCTION public.update_designer_applications_updated_at() SET search_path = 'public, pg_catalog';
-        RAISE NOTICE 'Fixed search_path for update_designer_applications_updated_at';
+    IF EXISTS (
+        SELECT 1 FROM pg_proc p
+        JOIN pg_namespace n ON p.pronamespace = n.oid
+        WHERE n.nspname = 'public'
+        AND p.proname = 'update_designer_applications_updated_at'
+        AND pg_get_function_identity_arguments(p.oid) = ''
+    ) THEN
+        BEGIN
+            ALTER FUNCTION public.update_designer_applications_updated_at() SET search_path = 'public, pg_catalog';
+            RAISE NOTICE 'Fixed search_path for update_designer_applications_updated_at';
+        EXCEPTION WHEN OTHERS THEN
+            RAISE WARNING 'Could not fix update_designer_applications_updated_at: %', SQLERRM;
+        END;
     END IF;
 
     -- update_tailors_updated_at
-    IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'update_tailors_updated_at' AND pronamespace = 'public'::regnamespace) THEN
-        ALTER FUNCTION public.update_tailors_updated_at() SET search_path = 'public, pg_catalog';
-        RAISE NOTICE 'Fixed search_path for update_tailors_updated_at';
+    IF EXISTS (
+        SELECT 1 FROM pg_proc p
+        JOIN pg_namespace n ON p.pronamespace = n.oid
+        WHERE n.nspname = 'public'
+        AND p.proname = 'update_tailors_updated_at'
+        AND pg_get_function_identity_arguments(p.oid) = ''
+    ) THEN
+        BEGIN
+            ALTER FUNCTION public.update_tailors_updated_at() SET search_path = 'public, pg_catalog';
+            RAISE NOTICE 'Fixed search_path for update_tailors_updated_at';
+        EXCEPTION WHEN OTHERS THEN
+            RAISE WARNING 'Could not fix update_tailors_updated_at: %', SQLERRM;
+        END;
     END IF;
 
     -- update_spotlight_updated_at
-    IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'update_spotlight_updated_at' AND pronamespace = 'public'::regnamespace) THEN
-        ALTER FUNCTION public.update_spotlight_updated_at() SET search_path = 'public, pg_catalog';
-        RAISE NOTICE 'Fixed search_path for update_spotlight_updated_at';
+    IF EXISTS (
+        SELECT 1 FROM pg_proc p
+        JOIN pg_namespace n ON p.pronamespace = n.oid
+        WHERE n.nspname = 'public'
+        AND p.proname = 'update_spotlight_updated_at'
+        AND pg_get_function_identity_arguments(p.oid) = ''
+    ) THEN
+        BEGIN
+            ALTER FUNCTION public.update_spotlight_updated_at() SET search_path = 'public, pg_catalog';
+            RAISE NOTICE 'Fixed search_path for update_spotlight_updated_at';
+        EXCEPTION WHEN OTHERS THEN
+            RAISE WARNING 'Could not fix update_spotlight_updated_at: %', SQLERRM;
+        END;
     END IF;
 
     -- update_leads_updated_at
-    IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'update_leads_updated_at' AND pronamespace = 'public'::regnamespace) THEN
-        ALTER FUNCTION public.update_leads_updated_at() SET search_path = 'public, pg_catalog';
-        RAISE NOTICE 'Fixed search_path for update_leads_updated_at';
+    IF EXISTS (
+        SELECT 1 FROM pg_proc p
+        JOIN pg_namespace n ON p.pronamespace = n.oid
+        WHERE n.nspname = 'public'
+        AND p.proname = 'update_leads_updated_at'
+        AND pg_get_function_identity_arguments(p.oid) = ''
+    ) THEN
+        BEGIN
+            ALTER FUNCTION public.update_leads_updated_at() SET search_path = 'public, pg_catalog';
+            RAISE NOTICE 'Fixed search_path for update_leads_updated_at';
+        EXCEPTION WHEN OTHERS THEN
+            RAISE WARNING 'Could not fix update_leads_updated_at: %', SQLERRM;
+        END;
     END IF;
 
     -- update_faqs_updated_at
-    IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'update_faqs_updated_at' AND pronamespace = 'public'::regnamespace) THEN
-        ALTER FUNCTION public.update_faqs_updated_at() SET search_path = 'public, pg_catalog';
-        RAISE NOTICE 'Fixed search_path for update_faqs_updated_at';
+    IF EXISTS (
+        SELECT 1 FROM pg_proc p
+        JOIN pg_namespace n ON p.pronamespace = n.oid
+        WHERE n.nspname = 'public'
+        AND p.proname = 'update_faqs_updated_at'
+        AND pg_get_function_identity_arguments(p.oid) = ''
+    ) THEN
+        BEGIN
+            ALTER FUNCTION public.update_faqs_updated_at() SET search_path = 'public, pg_catalog';
+            RAISE NOTICE 'Fixed search_path for update_faqs_updated_at';
+        EXCEPTION WHEN OTHERS THEN
+            RAISE WARNING 'Could not fix update_faqs_updated_at: %', SQLERRM;
+        END;
     END IF;
 
     -- update_tailored_orders_updated_at
-    IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'update_tailored_orders_updated_at' AND pronamespace = 'public'::regnamespace) THEN
-        ALTER FUNCTION public.update_tailored_orders_updated_at() SET search_path = 'public, pg_catalog';
-        RAISE NOTICE 'Fixed search_path for update_tailored_orders_updated_at';
+    IF EXISTS (
+        SELECT 1 FROM pg_proc p
+        JOIN pg_namespace n ON p.pronamespace = n.oid
+        WHERE n.nspname = 'public'
+        AND p.proname = 'update_tailored_orders_updated_at'
+        AND pg_get_function_identity_arguments(p.oid) = ''
+    ) THEN
+        BEGIN
+            ALTER FUNCTION public.update_tailored_orders_updated_at() SET search_path = 'public, pg_catalog';
+            RAISE NOTICE 'Fixed search_path for update_tailored_orders_updated_at';
+        EXCEPTION WHEN OTHERS THEN
+            RAISE WARNING 'Could not fix update_tailored_orders_updated_at: %', SQLERRM;
+        END;
     END IF;
 
     -- update_newsletter_updated_at
-    IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'update_newsletter_updated_at' AND pronamespace = 'public'::regnamespace) THEN
-        ALTER FUNCTION public.update_newsletter_updated_at() SET search_path = 'public, pg_catalog';
-        RAISE NOTICE 'Fixed search_path for update_newsletter_updated_at';
+    IF EXISTS (
+        SELECT 1 FROM pg_proc p
+        JOIN pg_namespace n ON p.pronamespace = n.oid
+        WHERE n.nspname = 'public'
+        AND p.proname = 'update_newsletter_updated_at'
+        AND pg_get_function_identity_arguments(p.oid) = ''
+    ) THEN
+        BEGIN
+            ALTER FUNCTION public.update_newsletter_updated_at() SET search_path = 'public, pg_catalog';
+            RAISE NOTICE 'Fixed search_path for update_newsletter_updated_at';
+        EXCEPTION WHEN OTHERS THEN
+            RAISE WARNING 'Could not fix update_newsletter_updated_at: %', SQLERRM;
+        END;
     END IF;
 
     -- update_inquiries_updated_at
-    IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'update_inquiries_updated_at' AND pronamespace = 'public'::regnamespace) THEN
-        ALTER FUNCTION public.update_inquiries_updated_at() SET search_path = 'public, pg_catalog';
-        RAISE NOTICE 'Fixed search_path for update_inquiries_updated_at';
+    IF EXISTS (
+        SELECT 1 FROM pg_proc p
+        JOIN pg_namespace n ON p.pronamespace = n.oid
+        WHERE n.nspname = 'public'
+        AND p.proname = 'update_inquiries_updated_at'
+        AND pg_get_function_identity_arguments(p.oid) = ''
+    ) THEN
+        BEGIN
+            ALTER FUNCTION public.update_inquiries_updated_at() SET search_path = 'public, pg_catalog';
+            RAISE NOTICE 'Fixed search_path for update_inquiries_updated_at';
+        EXCEPTION WHEN OTHERS THEN
+            RAISE WARNING 'Could not fix update_inquiries_updated_at: %', SQLERRM;
+        END;
     END IF;
 
     -- update_notifications_updated_at
-    IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'update_notifications_updated_at' AND pronamespace = 'public'::regnamespace) THEN
-        ALTER FUNCTION public.update_notifications_updated_at() SET search_path = 'public, pg_catalog';
-        RAISE NOTICE 'Fixed search_path for update_notifications_updated_at';
+    IF EXISTS (
+        SELECT 1 FROM pg_proc p
+        JOIN pg_namespace n ON p.pronamespace = n.oid
+        WHERE n.nspname = 'public'
+        AND p.proname = 'update_notifications_updated_at'
+        AND pg_get_function_identity_arguments(p.oid) = ''
+    ) THEN
+        BEGIN
+            ALTER FUNCTION public.update_notifications_updated_at() SET search_path = 'public, pg_catalog';
+            RAISE NOTICE 'Fixed search_path for update_notifications_updated_at';
+        EXCEPTION WHEN OTHERS THEN
+            RAISE WARNING 'Could not fix update_notifications_updated_at: %', SQLERRM;
+        END;
     END IF;
 
     -- update_brand_images_updated_at
-    IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'update_brand_images_updated_at' AND pronamespace = 'public'::regnamespace) THEN
-        ALTER FUNCTION public.update_brand_images_updated_at() SET search_path = 'public, pg_catalog';
-        RAISE NOTICE 'Fixed search_path for update_brand_images_updated_at';
+    IF EXISTS (
+        SELECT 1 FROM pg_proc p
+        JOIN pg_namespace n ON p.pronamespace = n.oid
+        WHERE n.nspname = 'public'
+        AND p.proname = 'update_brand_images_updated_at'
+        AND pg_get_function_identity_arguments(p.oid) = ''
+    ) THEN
+        BEGIN
+            ALTER FUNCTION public.update_brand_images_updated_at() SET search_path = 'public, pg_catalog';
+            RAISE NOTICE 'Fixed search_path for update_brand_images_updated_at';
+        EXCEPTION WHEN OTHERS THEN
+            RAISE WARNING 'Could not fix update_brand_images_updated_at: %', SQLERRM;
+        END;
     END IF;
 
     -- update_collection_images_updated_at
-    IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'update_collection_images_updated_at' AND pronamespace = 'public'::regnamespace) THEN
-        ALTER FUNCTION public.update_collection_images_updated_at() SET search_path = 'public, pg_catalog';
-        RAISE NOTICE 'Fixed search_path for update_collection_images_updated_at';
+    IF EXISTS (
+        SELECT 1 FROM pg_proc p
+        JOIN pg_namespace n ON p.pronamespace = n.oid
+        WHERE n.nspname = 'public'
+        AND p.proname = 'update_collection_images_updated_at'
+        AND pg_get_function_identity_arguments(p.oid) = ''
+    ) THEN
+        BEGIN
+            ALTER FUNCTION public.update_collection_images_updated_at() SET search_path = 'public, pg_catalog';
+            RAISE NOTICE 'Fixed search_path for update_collection_images_updated_at';
+        EXCEPTION WHEN OTHERS THEN
+            RAISE WARNING 'Could not fix update_collection_images_updated_at: %', SQLERRM;
+        END;
     END IF;
 
     -- update_hero_slides_updated_at
-    IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'update_hero_slides_updated_at' AND pronamespace = 'public'::regnamespace) THEN
-        ALTER FUNCTION public.update_hero_slides_updated_at() SET search_path = 'public, pg_catalog';
-        RAISE NOTICE 'Fixed search_path for update_hero_slides_updated_at';
+    IF EXISTS (
+        SELECT 1 FROM pg_proc p
+        JOIN pg_namespace n ON p.pronamespace = n.oid
+        WHERE n.nspname = 'public'
+        AND p.proname = 'update_hero_slides_updated_at'
+        AND pg_get_function_identity_arguments(p.oid) = ''
+    ) THEN
+        BEGIN
+            ALTER FUNCTION public.update_hero_slides_updated_at() SET search_path = 'public, pg_catalog';
+            RAISE NOTICE 'Fixed search_path for update_hero_slides_updated_at';
+        EXCEPTION WHEN OTHERS THEN
+            RAISE WARNING 'Could not fix update_hero_slides_updated_at: %', SQLERRM;
+        END;
     END IF;
 END $$;
 
 -- 2. Update business logic functions
 DO $$
 BEGIN
-    -- search_products_by_categories
-    IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'search_products_by_categories' AND pronamespace = 'public'::regnamespace) THEN
-        ALTER FUNCTION public.search_products_by_categories(search_categories TEXT[]) SET search_path = 'public, pg_catalog';
-        RAISE NOTICE 'Fixed search_path for search_products_by_categories';
+    -- search_products_by_categories (check with specific signature)
+    IF EXISTS (
+        SELECT 1 FROM pg_proc p
+        JOIN pg_namespace n ON p.pronamespace = n.oid
+        WHERE n.nspname = 'public'
+        AND p.proname = 'search_products_by_categories'
+        AND pg_get_function_identity_arguments(p.oid) = 'search_categories text[]'
+    ) THEN
+        BEGIN
+            ALTER FUNCTION public.search_products_by_categories(search_categories TEXT[]) SET search_path = 'public, pg_catalog';
+            RAISE NOTICE 'Fixed search_path for search_products_by_categories';
+        EXCEPTION WHEN OTHERS THEN
+            RAISE WARNING 'Could not fix search_products_by_categories: %', SQLERRM;
+        END;
     END IF;
 
-    -- calculate_commission
-    IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'calculate_commission' AND pronamespace = 'public'::regnamespace) THEN
-        ALTER FUNCTION public.calculate_commission() SET search_path = 'public, pg_catalog';
-        RAISE NOTICE 'Fixed search_path for calculate_commission';
+    -- calculate_commission (check with specific signature)
+    IF EXISTS (
+        SELECT 1 FROM pg_proc p
+        JOIN pg_namespace n ON p.pronamespace = n.oid
+        WHERE n.nspname = 'public'
+        AND p.proname = 'calculate_commission'
+        AND pg_get_function_identity_arguments(p.oid) = ''
+    ) THEN
+        BEGIN
+            ALTER FUNCTION public.calculate_commission() SET search_path = 'public, pg_catalog';
+            RAISE NOTICE 'Fixed search_path for calculate_commission';
+        EXCEPTION WHEN OTHERS THEN
+            RAISE WARNING 'Could not fix calculate_commission: %', SQLERRM;
+        END;
     END IF;
 
-    -- update_lead_on_booking
-    IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'update_lead_on_booking' AND pronamespace = 'public'::regnamespace) THEN
-        ALTER FUNCTION public.update_lead_on_booking() SET search_path = 'public, pg_catalog';
-        RAISE NOTICE 'Fixed search_path for update_lead_on_booking';
+    -- update_lead_on_booking (check with specific signature)
+    IF EXISTS (
+        SELECT 1 FROM pg_proc p
+        JOIN pg_namespace n ON p.pronamespace = n.oid
+        WHERE n.nspname = 'public'
+        AND p.proname = 'update_lead_on_booking'
+        AND pg_get_function_identity_arguments(p.oid) = ''
+    ) THEN
+        BEGIN
+            ALTER FUNCTION public.update_lead_on_booking() SET search_path = 'public, pg_catalog';
+            RAISE NOTICE 'Fixed search_path for update_lead_on_booking';
+        EXCEPTION WHEN OTHERS THEN
+            RAISE WARNING 'Could not fix update_lead_on_booking: %', SQLERRM;
+        END;
     END IF;
 
-    -- update_brand_rating
-    IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'update_brand_rating' AND pronamespace = 'public'::regnamespace) THEN
-        ALTER FUNCTION public.update_brand_rating() SET search_path = 'public, pg_catalog';
-        RAISE NOTICE 'Fixed search_path for update_brand_rating';
+    -- update_brand_rating (check with specific signature)
+    IF EXISTS (
+        SELECT 1 FROM pg_proc p
+        JOIN pg_namespace n ON p.pronamespace = n.oid
+        WHERE n.nspname = 'public'
+        AND p.proname = 'update_brand_rating'
+        AND pg_get_function_identity_arguments(p.oid) = ''
+    ) THEN
+        BEGIN
+            ALTER FUNCTION public.update_brand_rating() SET search_path = 'public, pg_catalog';
+            RAISE NOTICE 'Fixed search_path for update_brand_rating';
+        EXCEPTION WHEN OTHERS THEN
+            RAISE WARNING 'Could not fix update_brand_rating: %', SQLERRM;
+        END;
     END IF;
 
-    -- update_brand_financial_metrics
-    IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'update_brand_financial_metrics' AND pronamespace = 'public'::regnamespace) THEN
-        ALTER FUNCTION public.update_brand_financial_metrics(brand_id TEXT, month_date DATE) SET search_path = 'public, pg_catalog';
-        RAISE NOTICE 'Fixed search_path for update_brand_financial_metrics';
+    -- update_brand_financial_metrics (check with specific signature)
+    IF EXISTS (
+        SELECT 1 FROM pg_proc p
+        JOIN pg_namespace n ON p.pronamespace = n.oid
+        WHERE n.nspname = 'public'
+        AND p.proname = 'update_brand_financial_metrics'
+        AND pg_get_function_identity_arguments(p.oid) = 'brand_id text, month_date date'
+    ) THEN
+        BEGIN
+            ALTER FUNCTION public.update_brand_financial_metrics(brand_id TEXT, month_date DATE) SET search_path = 'public, pg_catalog';
+            RAISE NOTICE 'Fixed search_path for update_brand_financial_metrics';
+        EXCEPTION WHEN OTHERS THEN
+            RAISE WARNING 'Could not fix update_brand_financial_metrics: %', SQLERRM;
+        END;
     END IF;
 
-    -- get_inbox_stats
-    IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'get_inbox_stats' AND pronamespace = 'public'::regnamespace) THEN
-        ALTER FUNCTION public.get_inbox_stats(user_id UUID) SET search_path = 'public, pg_catalog';
-        RAISE NOTICE 'Fixed search_path for get_inbox_stats';
+    -- get_inbox_stats (check with specific signature)
+    IF EXISTS (
+        SELECT 1 FROM pg_proc p
+        JOIN pg_namespace n ON p.pronamespace = n.oid
+        WHERE n.nspname = 'public'
+        AND p.proname = 'get_inbox_stats'
+        AND pg_get_function_identity_arguments(p.oid) = 'user_id uuid'
+    ) THEN
+        BEGIN
+            ALTER FUNCTION public.get_inbox_stats(user_id UUID) SET search_path = 'public, pg_catalog';
+            RAISE NOTICE 'Fixed search_path for get_inbox_stats';
+        EXCEPTION WHEN OTHERS THEN
+            RAISE WARNING 'Could not fix get_inbox_stats: %', SQLERRM;
+        END;
     END IF;
 
-    -- get_leads_analytics
-    IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'get_leads_analytics' AND pronamespace = 'public'::regnamespace) THEN
-        ALTER FUNCTION public.get_leads_analytics() SET search_path = 'public, pg_catalog';
-        RAISE NOTICE 'Fixed search_path for get_leads_analytics';
+    -- get_leads_analytics (check with specific signature)
+    IF EXISTS (
+        SELECT 1 FROM pg_proc p
+        JOIN pg_namespace n ON p.pronamespace = n.oid
+        WHERE n.nspname = 'public'
+        AND p.proname = 'get_leads_analytics'
+        AND pg_get_function_identity_arguments(p.oid) = ''
+    ) THEN
+        BEGIN
+            ALTER FUNCTION public.get_leads_analytics() SET search_path = 'public, pg_catalog';
+            RAISE NOTICE 'Fixed search_path for get_leads_analytics';
+        EXCEPTION WHEN OTHERS THEN
+            RAISE WARNING 'Could not fix get_leads_analytics: %', SQLERRM;
+        END;
     END IF;
 
-    -- get_user_baskets_summary
-    IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'get_user_baskets_summary' AND pronamespace = 'public'::regnamespace) THEN
-        ALTER FUNCTION public.get_user_baskets_summary(user_id UUID) SET search_path = 'public, pg_catalog';
-        RAISE NOTICE 'Fixed search_path for get_user_baskets_summary';
+    -- get_user_baskets_summary (check with specific signature)
+    IF EXISTS (
+        SELECT 1 FROM pg_proc p
+        JOIN pg_namespace n ON p.pronamespace = n.oid
+        WHERE n.nspname = 'public'
+        AND p.proname = 'get_user_baskets_summary'
+        AND pg_get_function_identity_arguments(p.oid) = 'user_id uuid'
+    ) THEN
+        BEGIN
+            ALTER FUNCTION public.get_user_baskets_summary(user_id UUID) SET search_path = 'public, pg_catalog';
+            RAISE NOTICE 'Fixed search_path for get_user_baskets_summary';
+        EXCEPTION WHEN OTHERS THEN
+            RAISE WARNING 'Could not fix get_user_baskets_summary: %', SQLERRM;
+        END;
     END IF;
 
-    -- handle_legal_document_update
-    IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'handle_legal_document_update' AND pronamespace = 'public'::regnamespace) THEN
-        ALTER FUNCTION public.handle_legal_document_update() SET search_path = 'public, pg_catalog';
-        RAISE NOTICE 'Fixed search_path for handle_legal_document_update';
+    -- handle_legal_document_update (check with specific signature)
+    IF EXISTS (
+        SELECT 1 FROM pg_proc p
+        JOIN pg_namespace n ON p.pronamespace = n.oid
+        WHERE n.nspname = 'public'
+        AND p.proname = 'handle_legal_document_update'
+        AND pg_get_function_identity_arguments(p.oid) = ''
+    ) THEN
+        BEGIN
+            ALTER FUNCTION public.handle_legal_document_update() SET search_path = 'public, pg_catalog';
+            RAISE NOTICE 'Fixed search_path for handle_legal_document_update';
+        EXCEPTION WHEN OTHERS THEN
+            RAISE WARNING 'Could not fix handle_legal_document_update: %', SQLERRM;
+        END;
     END IF;
 
-    -- setup_super_admin
-    IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'setup_super_admin' AND pronamespace = 'public'::regnamespace) THEN
-        ALTER FUNCTION public.setup_super_admin() SET search_path = 'public, pg_catalog';
-        RAISE NOTICE 'Fixed search_path for setup_super_admin';
+    -- setup_super_admin (check with specific signature - may not exist)
+    IF EXISTS (
+        SELECT 1 FROM pg_proc p
+        JOIN pg_namespace n ON p.pronamespace = n.oid
+        WHERE n.nspname = 'public'
+        AND p.proname = 'setup_super_admin'
+        AND pg_get_function_identity_arguments(p.oid) = ''
+    ) THEN
+        BEGIN
+            ALTER FUNCTION public.setup_super_admin() SET search_path = 'public, pg_catalog';
+            RAISE NOTICE 'Fixed search_path for setup_super_admin';
+        EXCEPTION WHEN OTHERS THEN
+            RAISE WARNING 'Could not fix setup_super_admin: %', SQLERRM;
+        END;
     END IF;
 
-    -- create_profile_for_user
-    IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'create_profile_for_user' AND pronamespace = 'public'::regnamespace) THEN
-        ALTER FUNCTION public.create_profile_for_user() SET search_path = 'public, pg_catalog';
-        RAISE NOTICE 'Fixed search_path for create_profile_for_user';
+    -- create_profile_for_user (check with specific signature)
+    IF EXISTS (
+        SELECT 1 FROM pg_proc p
+        JOIN pg_namespace n ON p.pronamespace = n.oid
+        WHERE n.nspname = 'public'
+        AND p.proname = 'create_profile_for_user'
+        AND pg_get_function_identity_arguments(p.oid) = ''
+    ) THEN
+        BEGIN
+            ALTER FUNCTION public.create_profile_for_user() SET search_path = 'public, pg_catalog';
+            RAISE NOTICE 'Fixed search_path for create_profile_for_user';
+        EXCEPTION WHEN OTHERS THEN
+            RAISE WARNING 'Could not fix create_profile_for_user: %', SQLERRM;
+        END;
     END IF;
 END $$;
 
