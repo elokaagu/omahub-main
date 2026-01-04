@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/supabase-admin";
 import { randomUUID } from "crypto";
 import { randomBytes } from "crypto";
-import { sendApplicationApprovalEmail } from "@/lib/services/emailService";
+import { sendApplicationApprovalEmail, sendApplicationRejectionEmail } from "@/lib/services/emailService";
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic';
@@ -47,9 +47,9 @@ export async function PUT(
       );
     }
 
-    // If approving, fetch the full application data first
+    // If approving or rejecting, fetch the full application data first
     let applicationData = null;
-    if (status === "approved") {
+    if (status === "approved" || status === "rejected") {
       const { data: app, error: fetchError } = await supabase
         .from("designer_applications")
         .select("*")
@@ -65,7 +65,7 @@ export async function PUT(
       }
 
       applicationData = app;
-      console.log("📋 Fetched application data for approval:", {
+      console.log(`📋 Fetched application data for ${status}:`, {
         brand_name: app.brand_name,
         email: app.email,
       });
@@ -180,6 +180,30 @@ export async function PUT(
           message: "Application approved, but brand/user setup encountered an error",
           warning: workflowError instanceof Error ? workflowError.message : "Unknown error",
         });
+      }
+    }
+
+    // If rejected, send rejection email notification to the designer
+    if (status === "rejected" && applicationData) {
+      try {
+        console.log("📧 Sending rejection email notification to:", applicationData.email);
+        
+        const emailResult = await sendApplicationRejectionEmail({
+          designerName: applicationData.designer_name,
+          brandName: applicationData.brand_name,
+          email: applicationData.email,
+          notes: notes || undefined,
+        });
+
+        if (emailResult.success) {
+          console.log("✅ Rejection email sent successfully");
+        } else {
+          console.warn("⚠️ Failed to send rejection email:", emailResult.error);
+          // Don't fail the request if email fails
+        }
+      } catch (emailError) {
+        console.error("❌ Error sending rejection email:", emailError);
+        // Don't fail the request if email fails
       }
     }
 

@@ -705,3 +705,138 @@ The OmaHub Team
     return { success: false, error };
   }
 }
+
+export async function sendApplicationRejectionEmail(data: {
+  designerName: string;
+  brandName: string;
+  email: string;
+  notes?: string;
+}) {
+  try {
+    // Check if Resend is properly configured
+    if (!resend) {
+      console.error(
+        "❌ Resend API key not configured - cannot send application rejection email"
+      );
+      console.error("💡 Designer will not receive rejection notification");
+      console.error("📖 See EMAIL_SERVICE_SETUP.md for setup instructions");
+      console.error("🎯 Rejection notification to:", data.email);
+      return {
+        success: false,
+        error:
+          "Email service not configured. Application rejected but designer was not notified via email. Please set up RESEND_API_KEY.",
+      };
+    }
+
+    const { designerName, brandName, email, notes } = data;
+    const joinUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "https://oma-hub.com"}/join`;
+
+    console.log("📧 Sending application rejection email to:", email);
+
+    const { data: emailData, error } = await resend.emails.send({
+      from: "OmaHub <info@oma-hub.com>",
+      to: [email],
+      subject: `Update on Your Application - ${brandName}`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <link rel="preconnect" href="https://fonts.googleapis.com">
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+          <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+        </head>
+        <body style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #1E1E1E; background-color: #F6F0E8; margin: 0; padding: 20px;">
+          <div style="max-width: 600px; margin: 0 auto; background-color: #FFFDF8; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 24px rgba(58, 30, 45, 0.12);">
+            <!-- Header -->
+            <div style="background: linear-gradient(135deg, #3A1E2D 0%, #2A1520 100%); color: white; padding: 48px 40px; text-align: center;">
+              <h1 style="margin: 0; font-size: 36px; font-weight: 700; letter-spacing: 1px; font-family: 'Playfair Display', Georgia, serif;">OmaHub</h1>
+              <p style="margin: 12px 0 0 0; opacity: 0.95; font-size: 18px; font-weight: 300; letter-spacing: 0.5px;">Application Update</p>
+            </div>
+            
+            <!-- Content -->
+            <div style="padding: 40px;">
+              <!-- Notification Banner -->
+              <div style="background: linear-gradient(135deg, #FFF5F5 0%, #FFFDF8 100%); border-left: 4px solid #D4B285; padding: 24px; border-radius: 12px; margin-bottom: 32px; box-shadow: 0 2px 8px rgba(58, 30, 45, 0.06);">
+                <h2 style="color: #3A1E2D; margin: 0 0 12px 0; font-size: 24px; font-weight: 600; font-family: 'Playfair Display', Georgia, serif;">Thank You, ${designerName}</h2>
+                <p style="margin: 0; color: #A07F68; font-size: 16px; line-height: 1.6;">
+                  We've reviewed your application for <strong>${brandName}</strong> and unfortunately, we're unable to proceed at this time.
+                </p>
+              </div>
+
+              <p style="color: #1E1E1E; font-size: 16px; margin: 0 0 20px 0; line-height: 1.8;">
+                We appreciate the time and effort you put into your application. After careful consideration, we've decided not to move forward with your application at this moment.
+              </p>
+
+              ${notes ? `
+              <div style="background: #F6F0E8; border-left: 4px solid #D4B285; padding: 20px; border-radius: 12px; margin: 24px 0;">
+                <h3 style="color: #3A1E2D; margin: 0 0 12px 0; font-size: 18px; font-weight: 600; font-family: 'Playfair Display', Georgia, serif;">Feedback</h3>
+                <p style="margin: 0; color: #1E1E1E; line-height: 1.8; white-space: pre-wrap; font-size: 15px;">${notes}</p>
+              </div>
+              ` : ''}
+
+              <div style="background: #FFFDF8; border: 1px solid #E5D6C6; border-radius: 12px; padding: 24px; margin: 32px 0;">
+                <h3 style="color: #3A1E2D; margin: 0 0 16px 0; font-size: 18px; font-weight: 600; font-family: 'Playfair Display', Georgia, serif;">What's Next?</h3>
+                <p style="margin: 0 0 16px 0; color: #1E1E1E; font-size: 15px; line-height: 1.8;">
+                  We encourage you to continue developing your brand and portfolio. You're welcome to apply again in the future when your brand has evolved or meets our current criteria.
+                </p>
+                <p style="margin: 0; color: #1E1E1E; font-size: 15px; line-height: 1.8;">
+                  If you have any questions or would like to discuss your application further, please don't hesitate to reach out to our support team.
+                </p>
+              </div>
+
+              <div style="text-align: center; margin: 40px 0 32px 0;">
+                <a href="${joinUrl}" 
+                   style="display: inline-block; background: linear-gradient(135deg, #3A1E2D 0%, #2A1520 100%); color: white; padding: 16px 40px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; letter-spacing: 0.5px; box-shadow: 0 4px 12px rgba(58, 30, 45, 0.3);">
+                  Visit Our Website
+                </a>
+              </div>
+
+              <!-- Footer -->
+              <div style="border-top: 1px solid #E5D6C6; padding-top: 24px; margin-top: 32px;">
+                <p style="color: #A07F68; font-size: 13px; margin: 0; line-height: 1.6;">
+                  Thank you for your interest in OmaHub.<br>
+                  <strong style="color: #3A1E2D;">The OmaHub Team</strong>
+                </p>
+              </div>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+      text: `
+Dear ${designerName},
+
+Thank you for your interest in OmaHub and for taking the time to submit your application for ${brandName}.
+
+After careful consideration, we've decided not to move forward with your application at this time.
+
+${notes ? `\nFeedback:\n${notes}\n` : ''}
+
+We encourage you to continue developing your brand and portfolio. You're welcome to apply again in the future when your brand has evolved or meets our current criteria.
+
+If you have any questions or would like to discuss your application further, please don't hesitate to reach out to our support team.
+
+Thank you for your interest in OmaHub.
+
+Best regards,
+The OmaHub Team
+
+Visit us: ${joinUrl}
+      `,
+      replyTo: "info@oma-hub.com",
+    });
+
+    if (error) {
+      console.error("❌ Resend API error:", error);
+      throw error;
+    }
+
+    console.log("✅ Application rejection email sent successfully:", emailData?.id);
+    return { success: true, data: emailData };
+  } catch (error) {
+    console.error("💥 Failed to send application rejection email:", error);
+    return { success: false, error };
+  }
+}
