@@ -1,9 +1,18 @@
 import { Resend } from "resend";
 
-// Initialize Resend only if API key is available
-const resend = process.env.RESEND_API_KEY
-  ? new Resend(process.env.RESEND_API_KEY)
-  : null;
+// Lazy initialization helper - get Resend instance when needed
+function getResendInstance(): Resend | null {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    return null;
+  }
+  try {
+    return new Resend(apiKey);
+  } catch (error) {
+    console.error("❌ Failed to initialize Resend:", error);
+    return null;
+  }
+}
 
 export async function sendContactEmail(formData: {
   name: string;
@@ -13,7 +22,8 @@ export async function sendContactEmail(formData: {
   to?: string; // Optional recipient email
 }) {
   try {
-    // Check if Resend is properly configured
+    // Get Resend instance (lazy initialization)
+    const resend = getResendInstance();
     if (!resend) {
       console.error(
         "❌ Resend API key not configured - email service unavailable"
@@ -24,6 +34,11 @@ export async function sendContactEmail(formData: {
       console.error(
         "📖 See EMAIL_SERVICE_SETUP.md for detailed setup instructions"
       );
+      console.error("🔍 RESEND_API_KEY check:", {
+        exists: !!process.env.RESEND_API_KEY,
+        length: process.env.RESEND_API_KEY?.length || 0,
+        startsWith: process.env.RESEND_API_KEY?.substring(0, 3) || "N/A"
+      });
       return {
         success: false,
         error:
@@ -74,7 +89,8 @@ export async function sendInquiryReplyEmail(replyData: {
   isFromSuperAdmin?: boolean;
 }) {
   try {
-    // Check if Resend is properly configured
+    // Get Resend instance (lazy initialization)
+    const resend = getResendInstance();
     if (!resend) {
       console.error(
         "❌ Resend API key not configured - cannot send inquiry reply email"
@@ -82,6 +98,11 @@ export async function sendInquiryReplyEmail(replyData: {
       console.error("💡 Customer will not receive email notification of reply");
       console.error("📖 See EMAIL_SERVICE_SETUP.md for setup instructions");
       console.error("🎯 Reply to:", replyData.customerEmail);
+      console.error("🔍 RESEND_API_KEY check:", {
+        exists: !!process.env.RESEND_API_KEY,
+        length: process.env.RESEND_API_KEY?.length || 0,
+        startsWith: process.env.RESEND_API_KEY?.substring(0, 3) || "N/A"
+      });
       return {
         success: false,
         error:
@@ -148,7 +169,8 @@ export async function sendNewsletterConfirmationEmail(formData: {
   isReactivation?: boolean;
 }) {
   try {
-    // Check if Resend is properly configured
+    // Get Resend instance (lazy initialization)
+    const resend = getResendInstance();
     if (!resend) {
       console.error(
         "❌ Resend API key not configured - cannot send newsletter confirmation email"
@@ -156,6 +178,11 @@ export async function sendNewsletterConfirmationEmail(formData: {
       console.error("💡 Subscriber will not receive confirmation email");
       console.error("📖 See EMAIL_SERVICE_SETUP.md for setup instructions");
       console.error("🎯 Confirmation to:", formData.email);
+      console.error("🔍 RESEND_API_KEY check:", {
+        exists: !!process.env.RESEND_API_KEY,
+        length: process.env.RESEND_API_KEY?.length || 0,
+        startsWith: process.env.RESEND_API_KEY?.substring(0, 3) || "N/A"
+      });
       return {
         success: false,
         error:
@@ -249,13 +276,19 @@ export async function sendNewApplicationNotification(
   adminEmails: string[]
 ) {
   try {
-    // Check if Resend is properly configured
+    // Get Resend instance (lazy initialization)
+    const resend = getResendInstance();
     if (!resend) {
       console.error(
         "❌ Resend API key not configured - cannot send new application notification"
       );
       console.error("💡 Super admins will not receive email notification");
       console.error("📖 See EMAIL_SERVICE_SETUP.md for setup instructions");
+      console.error("🔍 RESEND_API_KEY check:", {
+        exists: !!process.env.RESEND_API_KEY,
+        length: process.env.RESEND_API_KEY?.length || 0,
+        startsWith: process.env.RESEND_API_KEY?.substring(0, 3) || "N/A"
+      });
       return {
         success: false,
         error:
@@ -550,7 +583,8 @@ export async function sendApplicationApprovalEmail(data: {
   isNewUser: boolean;
 }) {
   try {
-    // Check if Resend is properly configured
+    // Get Resend instance (lazy initialization)
+    const resend = getResendInstance();
     if (!resend) {
       console.error(
         "❌ Resend API key not configured - cannot send application approval email"
@@ -558,6 +592,11 @@ export async function sendApplicationApprovalEmail(data: {
       console.error("💡 Designer will not receive approval notification");
       console.error("📖 See EMAIL_SERVICE_SETUP.md for setup instructions");
       console.error("🎯 Approval notification to:", data.email);
+      console.error("🔍 RESEND_API_KEY check:", {
+        exists: !!process.env.RESEND_API_KEY,
+        length: process.env.RESEND_API_KEY?.length || 0,
+        startsWith: process.env.RESEND_API_KEY?.substring(0, 3) || "N/A"
+      });
       return {
         success: false,
         error:
@@ -768,7 +807,8 @@ export async function sendApplicationRejectionEmail(data: {
   notes?: string;
 }) {
   try {
-    // Check if Resend is properly configured
+    // Get Resend instance (lazy initialization)
+    const resend = getResendInstance();
     if (!resend) {
       console.error(
         "❌ Resend API key not configured - cannot send application rejection email"
@@ -776,6 +816,11 @@ export async function sendApplicationRejectionEmail(data: {
       console.error("💡 Designer will not receive rejection notification");
       console.error("📖 See EMAIL_SERVICE_SETUP.md for setup instructions");
       console.error("🎯 Rejection notification to:", data.email);
+      console.error("🔍 RESEND_API_KEY check:", {
+        exists: !!process.env.RESEND_API_KEY,
+        length: process.env.RESEND_API_KEY?.length || 0,
+        startsWith: process.env.RESEND_API_KEY?.substring(0, 3) || "N/A"
+      });
       return {
         success: false,
         error:
@@ -902,7 +947,8 @@ export async function sendApplicationConfirmationEmail(data: {
   email: string;
 }) {
   try {
-    // Check if Resend is properly configured
+    // Get Resend instance (lazy initialization)
+    const resend = getResendInstance();
     if (!resend) {
       console.error(
         "❌ Resend API key not configured - cannot send application confirmation email"
@@ -910,6 +956,11 @@ export async function sendApplicationConfirmationEmail(data: {
       console.error("💡 Designer will not receive confirmation notification");
       console.error("📖 See EMAIL_SERVICE_SETUP.md for setup instructions");
       console.error("🎯 Confirmation notification to:", data.email);
+      console.error("🔍 RESEND_API_KEY check:", {
+        exists: !!process.env.RESEND_API_KEY,
+        length: process.env.RESEND_API_KEY?.length || 0,
+        startsWith: process.env.RESEND_API_KEY?.substring(0, 3) || "N/A"
+      });
       return {
         success: false,
         error:
