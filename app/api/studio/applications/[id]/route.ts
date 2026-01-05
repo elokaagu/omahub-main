@@ -362,29 +362,48 @@ async function setupBrandAndUserAccess(
 
     // Step 2: Check if user exists
     console.log("👤 Step 2: Checking if user exists...");
+    console.log("🔍 Looking for user with email:", application.email);
     
     let userId: string | null = null;
     let userCreated = false;
     let temporaryPassword: string | undefined = undefined;
 
     // First, check if profile exists (more efficient than listing all auth users)
-    const { data: existingProfile } = await supabase
+    const { data: existingProfile, error: profileError } = await supabase
       .from("profiles")
-      .select("id")
+      .select("id, role, owned_brands")
       .eq("email", application.email)
-      .single();
+      .maybeSingle();
+
+    if (profileError) {
+      console.warn("⚠️ Error checking for existing profile:", profileError);
+    }
 
     if (existingProfile) {
       userId = existingProfile.id;
-      console.log("✅ User profile already exists:", userId);
+      console.log("✅ User profile already exists:", {
+        id: userId,
+        currentRole: existingProfile.role,
+        currentOwnedBrands: existingProfile.owned_brands || [],
+        brandToAdd: brandId
+      });
     } else {
       // Check if user exists in auth.users (profile might not exist yet)
-      const { data: existingAuthUser } = await supabase.auth.admin.listUsers();
+      console.log("🔍 Profile not found, checking auth.users...");
+      const { data: existingAuthUser, error: authListError } = await supabase.auth.admin.listUsers();
+      
+      if (authListError) {
+        console.error("❌ Error listing auth users:", authListError);
+      }
+      
       const authUser = existingAuthUser?.users?.find((u: any) => u.email === application.email);
 
       if (authUser) {
         userId = authUser.id;
-        console.log("✅ User already exists in auth (but no profile):", userId);
+        console.log("✅ User already exists in auth (but no profile):", {
+          id: userId,
+          email: authUser.email
+        });
       } else {
         // Create new auth user
         console.log("🆕 Creating new auth user...");
@@ -411,33 +430,69 @@ async function setupBrandAndUserAccess(
 
         userId = newAuthUser.user.id;
         userCreated = true;
-        console.log("✅ Auth user created:", userId);
+        console.log("✅ Auth user created:", {
+          id: userId,
+          email: application.email
+        });
       }
     }
 
-    // Step 3: Create or update profile
+    if (!userId) {
+      console.error("❌ Failed to find or create user - userId is null");
+      return {
+        success: false,
+        error: "Failed to find or create user account",
+        brandCreated: true,
+        brand: newBrand,
+        userCreated: false,
+      };
+    }
+
+    // Step 3: Create or update profile - ALWAYS ensure user is brand_admin for this brand
     console.log("📝 Step 3: Creating/updating user profile...");
+    console.log("🎯 Ensuring user is assigned as brand_admin for brand:", brandId);
     
     // Check if profile exists (by ID, not email, since we now have userId)
-    const { data: profileById } = await supabase
+    const { data: profileById, error: profileFetchError } = await supabase
       .from("profiles")
       .select("*")
       .eq("id", userId)
-      .single();
+      .maybeSingle();
+
+    if (profileFetchError) {
+      console.error("❌ Error fetching profile by ID:", profileFetchError);
+    }
 
     let profile;
     if (profileById) {
-      // Update existing profile
+      // Update existing profile - ALWAYS add brand to owned_brands and ensure role is brand_admin
       console.log("🔄 Updating existing profile...");
+      console.log("📋 Current profile state:", {
+        id: profileById.id,
+        email: profileById.email,
+        currentRole: profileById.role,
+        currentOwnedBrands: profileById.owned_brands || [],
+        brandToAdd: brandId
+      });
+      
       const currentOwnedBrands = profileById.owned_brands || [];
-      const updatedOwnedBrands = currentOwnedBrands.includes(brandId)
+      const brandAlreadyAssigned = currentOwnedBrands.includes(brandId);
+      
+      // Always add the brand if it's not already there
+      const updatedOwnedBrands = brandAlreadyAssigned
         ? currentOwnedBrands
         : [...currentOwnedBrands, brandId];
+
+      console.log("📝 Updating profile with:", {
+        role: "brand_admin", // Always set to brand_admin
+        owned_brands: updatedOwnedBrands,
+        brandWasAlreadyAssigned: brandAlreadyAssigned
+      });
 
       const { data: updatedProfile, error: updateError } = await supabase
         .from("profiles")
         .update({
-          role: "brand_admin",
+          role: "brand_admin", // Always ensure role is brand_admin
           owned_brands: updatedOwnedBrands,
           email: application.email, // Ensure email is up to date
           updated_at: new Date().toISOString(),
@@ -458,17 +513,29 @@ async function setupBrandAndUserAccess(
       }
 
       profile = updatedProfile;
-      console.log("✅ Profile updated successfully");
+      console.log("✅ Profile updated successfully:", {
+        id: profile.id,
+        email: profile.email,
+        role: profile.role,
+        owned_brands: profile.owned_brands
+      });
     } else {
-      // Create new profile
+      // Create new profile - ALWAYS set as brand_admin with this brand
       console.log("🆕 Creating new profile...");
+      console.log("📝 Creating profile with:", {
+        id: userId,
+        email: application.email,
+        role: "brand_admin",
+        owned_brands: [brandId]
+      });
+      
       const { data: newProfile, error: createProfileError } = await supabase
         .from("profiles")
         .insert({
           id: userId,
           email: application.email,
-          role: "brand_admin",
-          owned_brands: [brandId],
+          role: "brand_admin", // Always set as brand_admin
+          owned_brands: [brandId], // Always include this brand
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         })
@@ -487,7 +554,34 @@ async function setupBrandAndUserAccess(
       }
 
       profile = newProfile;
-      console.log("✅ Profile created successfully");
+      console.log("✅ Profile created successfully:", {
+        id: profile.id,
+        email: profile.email,
+        role: profile.role,
+        owned_brands: profile.owned_brands
+      });
+    }
+
+    // Final verification: Ensure the brand is in owned_brands
+    if (!profile.owned_brands || !profile.owned_brands.includes(brandId)) {
+      console.error("❌ CRITICAL: Brand not found in owned_brands after update!");
+      console.error("📋 Profile owned_brands:", profile.owned_brands);
+      console.error("📋 Expected brand ID:", brandId);
+      // Try to fix it
+      const fixedOwnedBrands = [...(profile.owned_brands || []), brandId];
+      const { error: fixError } = await supabase
+        .from("profiles")
+        .update({ owned_brands: fixedOwnedBrands })
+        .eq("id", userId);
+      
+      if (fixError) {
+        console.error("❌ Failed to fix owned_brands:", fixError);
+      } else {
+        console.log("✅ Fixed owned_brands - brand added");
+        profile.owned_brands = fixedOwnedBrands;
+      }
+    } else {
+      console.log("✅ Verification passed: Brand is in owned_brands");
     }
 
     // Step 4: Verify the brand (set is_verified to true)
