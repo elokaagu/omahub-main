@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { Suspense, useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   getUserPermissions,
@@ -29,6 +30,7 @@ const LeadsTrackingDashboard = dynamic(
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
 export default function StudioPage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [userPermissions, setUserPermissions] = useState<Permission[]>([]);
   const [userProfile, setUserProfile] = useState<Profile | null>(null);
@@ -81,6 +83,14 @@ export default function StudioPage() {
           });
           setUserProfile(profile);
         }
+
+        // Redirect brand admins to their brands page
+        const effectiveRole = profile?.role || user.role;
+        if (effectiveRole === "brand_admin") {
+          console.log("🔄 Studio Page: Brand admin detected, redirecting to /studio/brands");
+          router.replace("/studio/brands");
+          return;
+        }
       } catch (error) {
         console.error("❌ Studio Page: Error in fetchData:", error);
       } finally {
@@ -94,7 +104,7 @@ export default function StudioPage() {
     } else {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, router]);
 
 
 
