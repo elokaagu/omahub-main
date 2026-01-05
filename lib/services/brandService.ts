@@ -1,5 +1,6 @@
 import { supabase, Brand, Review, Catalogue, Product } from "../supabase";
 import { getProfile, isAdmin } from "./authService";
+import { getAdminClient } from "../supabase-admin";
 
 import { clearCollectionsCache } from "./collectionService";
 
@@ -19,6 +20,99 @@ const CACHE_EXPIRY = 30 * 1000; // 30 seconds for stable performance
 
 // Define essential fields to reduce payload size
 const ESSENTIAL_BRAND_FIELDS = "*";
+
+/**
+ * Get set of brand keys (name + email) that have unapproved applications
+ * A brand is unapproved if it has an application with status != 'approved'
+ */
+async function getUnapprovedBrandKeys(): Promise<Set<string>> {
+  try {
+    const supabaseAdmin = await getAdminClient();
+    if (!supabaseAdmin) {
+      console.warn("⚠️ Cannot get admin client, skipping unapproved brand filter");
+      return new Set();
+    }
+
+    // Get all applications that are NOT approved
+    const { data: unapprovedApps, error } = await supabaseAdmin
+      .from("designer_applications")
+      .select("brand_name, email")
+      .neq("status", "approved");
+
+    if (error) {
+      console.error("❌ Error fetching unapproved applications:", error);
+      return new Set();
+    }
+
+    if (!unapprovedApps || unapprovedApps.length === 0) {
+      return new Set();
+    }
+
+    // Create a set of keys (brand_name + email) for quick lookup
+    const unapprovedKeys = new Set(
+      unapprovedApps.map((app) => `${app.brand_name}::${app.email}`)
+    );
+
+    console.log(
+      `🚫 Found ${unapprovedKeys.size} unapproved brand(s) to filter from frontend`
+    );
+    return unapprovedKeys;
+  } catch (error) {
+    console.error("❌ Error in getUnapprovedBrandKeys:", error);
+    return new Set();
+  }
+}
+
+/**
+ * Check if a brand matches an unapproved application
+ */
+async function isBrandUnapproved(
+  brandName: string,
+  brandEmail: string | null | undefined
+): Promise<boolean> {
+  if (!brandEmail) {
+    // If brand has no email, it can't match an application
+    return false;
+  }
+
+  const unapprovedKeys = await getUnapprovedBrandKeys();
+  const brandKey = `${brandName}::${brandEmail}`;
+  return unapprovedKeys.has(brandKey);
+}
+
+/**
+ * Filter out brands that have unapproved applications
+ */
+async function filterUnapprovedBrands<T extends { name: string; contact_email?: string | null }>(
+  brands: T[]
+): Promise<T[]> {
+  if (brands.length === 0) {
+    return brands;
+  }
+
+  const unapprovedKeys = await getUnapprovedBrandKeys();
+  if (unapprovedKeys.size === 0) {
+    // No unapproved brands, return all
+    return brands;
+  }
+
+  const filtered = brands.filter((brand) => {
+    if (!brand.contact_email) {
+      // Brand has no email, so it can't match an application - allow it
+      return true;
+    }
+    const brandKey = `${brand.name}::${brand.contact_email}`;
+    const isUnapproved = unapprovedKeys.has(brandKey);
+    if (isUnapproved) {
+      console.log(
+        `🚫 Filtering out unapproved brand: ${brand.name} (${brand.contact_email})`
+      );
+    }
+    return !isUnapproved;
+  });
+
+  return filtered;
+}
 
 /**
  * Check if user has permission to modify a brand
@@ -110,10 +204,14 @@ export async function getAllBrandsWithProductCounts(): Promise<
         // Include video fields
         video_url: item.video_url || undefined,
         video_thumbnail: item.video_thumbnail || undefined,
+        contact_email: item.contact_email || undefined,
       })
     );
 
-    return brandsWithCounts;
+    // Filter out brands with unapproved applications
+    const filteredBrands = await filterUnapprovedBrands(brandsWithCounts);
+
+    return filteredBrands;
   } catch (err) {
     console.error("Error in getAllBrandsWithProductCounts:", err);
     throw err;
@@ -146,7 +244,7 @@ export async function getAllBrands(
       if (error) throw new Error(`Failed to fetch brands: ${error.message}`);
       if (!data || data.length === 0)
         throw new Error("No brands found in the database");
-      return data.map((item) => {
+      const mappedBrands = data.map((item) => {
         // Clean location data - remove trailing 'O' and '0' characters that might be data entry errors
         const cleanLocation = item.location
           ? item.location.replace(/[O0]+$/, "")
@@ -176,8 +274,12 @@ export async function getAllBrands(
             : item.image || "/placeholder-image.jpg", // Fallback to old image field for backward compatibility
           video_url: item.video_url || undefined,
           video_thumbnail: item.video_thumbnail || undefined,
+          contact_email: item.contact_email || undefined,
         };
       });
+
+      // Filter out brands with unapproved applications
+      return await filterUnapprovedBrands(mappedBrands);
     }
 
     // Check if we're already loading brands
@@ -234,7 +336,7 @@ export async function getAllBrands(
     }
 
     // Map the data to Brand objects
-    const fullBrands: Brand[] = data.map((item: any) => {
+    const mappedBrands: Brand[] = data.map((item: any) => {
 
       // Clean location data - remove trailing 'O' and '0' characters that might be data entry errors
       const cleanLocation = item.location
@@ -266,8 +368,12 @@ export async function getAllBrands(
         video_thumbnail: item.video_thumbnail || undefined,
         // Include the new normalized images
         brand_images: item.brand_images || [],
+        contact_email: item.contact_email || undefined,
       };
     });
+
+    // Filter out brands with unapproved applications
+    const fullBrands = await filterUnapprovedBrands(mappedBrands);
 
     // Update cache
     brandsCache = {
@@ -570,12 +676,15 @@ export async function getBrandsByCategory(category: string): Promise<Brand[]> {
   }
 
   // Filter out brands without images or videos
-  return data.filter((brand: any) => {
+  const brandsWithMedia = data.filter((brand: any) => {
     const hasImage = brand.brand_images && brand.brand_images.length > 0;
     const hasVideo = brand.video_url && brand.video_url.trim() !== '';
     
     return hasImage || hasVideo;
   });
+
+  // Filter out brands with unapproved applications
+  return await filterUnapprovedBrands(brandsWithMedia);
 }
 
 /**
@@ -664,7 +773,12 @@ export async function searchBrands(query: string): Promise<Brand[]> {
     throw error;
   }
 
-  return data || [];
+  if (!data || data.length === 0) {
+    return [];
+  }
+
+  // Filter out brands with unapproved applications
+  return await filterUnapprovedBrands(data);
 }
 
 /**

@@ -1,4 +1,5 @@
 import { supabase, Tailor, Brand } from "../supabase";
+import { getAdminClient } from "../supabase-admin";
 
 /**
  * Fetch all tailors from the database
@@ -129,6 +130,48 @@ export async function getTailorsWithBrands(): Promise<
       // If no brand_images, keep the existing brands.image field as fallback
       return tailor;
     });
+
+  // Filter out tailors with unapproved brands
+  // Need to fetch full brand data to check contact_email
+  const supabaseAdmin = await getAdminClient();
+  if (supabaseAdmin) {
+    const { data: unapprovedApps } = await supabaseAdmin
+      .from("designer_applications")
+      .select("brand_name, email")
+      .neq("status", "approved");
+
+    if (unapprovedApps && unapprovedApps.length > 0) {
+      const unapprovedKeys = new Set(
+        unapprovedApps.map((app) => `${app.brand_name}::${app.email}`)
+      );
+
+      // Fetch brands to get contact_email for matching
+      const brandIds = processedData
+        .map((t) => t.brand?.id)
+        .filter(Boolean) as string[];
+      
+      if (brandIds.length > 0) {
+        const { data: brands } = await supabaseAdmin
+          .from("brands")
+          .select("id, name, contact_email")
+          .in("id", brandIds);
+
+        const unapprovedBrandIds = new Set(
+          (brands || [])
+            .filter((b) => {
+              if (!b.contact_email) return false;
+              const key = `${b.name}::${b.contact_email}`;
+              return unapprovedKeys.has(key);
+            })
+            .map((b) => b.id)
+        );
+
+        return processedData.filter(
+          (tailor) => !tailor.brand || !unapprovedBrandIds.has(tailor.brand.id)
+        );
+      }
+    }
+  }
 
   return processedData;
 }

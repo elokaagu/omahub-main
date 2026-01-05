@@ -1,6 +1,7 @@
 // Performance optimization service
 import { supabase } from "../supabase";
 import { normalizeProductImages } from "../utils/productImageUtils";
+import { getAdminClient } from "../supabase-admin";
 
 // Cache configuration
 const CACHE_DURATION = {
@@ -91,6 +92,54 @@ export const performanceService = {
       const { data, error } = await query;
 
       if (error) throw error;
+
+      if (!data || data.length === 0) {
+        return [];
+      }
+
+      // Filter out brands with unapproved applications
+      const supabaseAdmin = await getAdminClient();
+      if (supabaseAdmin) {
+        const { data: unapprovedApps } = await supabaseAdmin
+          .from("designer_applications")
+          .select("brand_name, email")
+          .neq("status", "approved");
+
+        if (unapprovedApps && unapprovedApps.length > 0) {
+          const unapprovedKeys = new Set(
+            unapprovedApps.map((app) => `${app.brand_name}::${app.email}`)
+          );
+
+          // Fetch brands to get contact_email for matching
+          const brandIds = data.map((b: any) => b.id).filter(Boolean);
+          if (brandIds.length > 0) {
+            const { data: brands } = await supabaseAdmin
+              .from("brands")
+              .select("id, name, contact_email")
+              .in("id", brandIds);
+
+            const unapprovedBrandIds = new Set(
+              (brands || [])
+                .filter((b) => {
+                  if (!b.contact_email) return false;
+                  const key = `${b.name}::${b.contact_email}`;
+                  return unapprovedKeys.has(key);
+                })
+                .map((b) => b.id)
+            );
+
+            const filtered = data.filter(
+              (brand: any) => !unapprovedBrandIds.has(brand.id)
+            );
+
+            if (useCache) {
+              cacheUtils.set(cacheKey, filtered, CACHE_DURATION.MEDIUM);
+            }
+
+            return filtered;
+          }
+        }
+      }
 
       if (useCache) {
         cacheUtils.set(cacheKey, data, CACHE_DURATION.MEDIUM);
