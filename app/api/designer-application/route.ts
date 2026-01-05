@@ -167,22 +167,32 @@ export async function POST(request: NextRequest) {
       console.log("📧 Fetching super admin emails for notification...");
       const superAdminEmails = await adminEmailServiceServer.getSuperAdminEmails();
       
+      console.log(`📊 Retrieved ${superAdminEmails?.length || 0} super admin email(s) from database`);
+      
       if (superAdminEmails && superAdminEmails.length > 0) {
-        console.log(`📧 Sending notification to ${superAdminEmails.length} super admin(s):`, superAdminEmails);
+        console.log(`📧 Super admin emails to notify:`, superAdminEmails);
         
         const emailResult = await sendNewApplicationNotification(application, superAdminEmails);
         
         if (emailResult.success) {
-          console.log(`✅ Application notification sent to ${emailResult.successCount} super admin(s)`);
+          console.log(`✅ Application notification sent to ${emailResult.successCount} out of ${superAdminEmails.length} super admin(s)`);
+          if (emailResult.failureCount > 0) {
+            console.warn(`⚠️ ${emailResult.failureCount} email(s) failed to send. Check logs above for details.`);
+          }
         } else {
           console.warn("⚠️ Failed to send application notification:", emailResult.error);
+          if (emailResult.results) {
+            console.warn("📋 Detailed results:", emailResult.results);
+          }
           // Don't fail the request if email fails - application is still saved
         }
       } else {
         console.warn("⚠️ No super admin emails found - skipping notification");
+        console.warn("💡 Check platform_settings table for 'super_admin_emails' key");
       }
     } catch (emailError) {
       console.error("❌ Error sending application notification:", emailError);
+      console.error("❌ Error stack:", emailError instanceof Error ? emailError.stack : "No stack trace");
       // Don't fail the request if email fails - application is still saved
     }
 

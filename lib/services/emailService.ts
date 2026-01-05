@@ -268,11 +268,47 @@ export async function sendNewApplicationNotification(
     const applicationUrl = `${studioUrl}?id=${application.id}`;
 
     console.log("📧 Sending new application notification to super admins:", adminEmails);
+    console.log(`📊 Total super admins to notify: ${adminEmails.length}`);
+
+    // Validate that we have emails to send to
+    if (!adminEmails || adminEmails.length === 0) {
+      console.error("❌ No super admin emails provided - cannot send notification");
+      return {
+        success: false,
+        error: "No super admin emails provided",
+        results: [],
+        successCount: 0,
+        failureCount: 0,
+      };
+    }
+
+    // Filter out any invalid emails
+    const validEmails = adminEmails.filter(email => {
+      if (!email || typeof email !== 'string' || !email.includes('@')) {
+        console.warn(`⚠️ Invalid email address skipped: ${email}`);
+        return false;
+      }
+      return true;
+    });
+
+    if (validEmails.length === 0) {
+      console.error("❌ No valid super admin emails found after filtering");
+      return {
+        success: false,
+        error: "No valid super admin emails found",
+        results: [],
+        successCount: 0,
+        failureCount: 0,
+      };
+    }
+
+    console.log(`✅ Sending to ${validEmails.length} valid super admin email(s):`, validEmails);
 
     // Send email to each super admin
     const emailResults = [];
-    for (const adminEmail of adminEmails) {
+    for (const adminEmail of validEmails) {
       try {
+        console.log(`📧 Attempting to send notification to: ${adminEmail}`);
         const { data, error } = await resend.emails.send({
           from: "OmaHub <info@oma-hub.com>",
           to: [adminEmail],
@@ -438,11 +474,20 @@ You're receiving this because you're a super admin.
         });
 
         if (error) {
-          console.error(`❌ Failed to send notification to ${adminEmail}:`, error);
-          emailResults.push({ email: adminEmail, success: false, error });
+          console.error(`❌ Failed to send notification to ${adminEmail}:`, {
+            error,
+            message: error.message,
+            code: error.code,
+            details: error
+          });
+          emailResults.push({ 
+            email: adminEmail, 
+            success: false, 
+            error: error.message || JSON.stringify(error) 
+          });
         } else {
-          console.log(`✅ New application notification sent to ${adminEmail}`);
-          emailResults.push({ email: adminEmail, success: true });
+          console.log(`✅ New application notification sent successfully to ${adminEmail}`);
+          emailResults.push({ email: adminEmail, success: true, data });
         }
       } catch (emailError) {
         console.error(
@@ -460,14 +505,24 @@ You're receiving this because you're a super admin.
     const successCount = emailResults.filter((r) => r.success).length;
     const failureCount = emailResults.filter((r) => !r.success).length;
 
+    // Log detailed results
+    console.log(`📊 Email sending results: ${successCount} successful, ${failureCount} failed`);
+    
     if (successCount > 0) {
+      const successfulEmails = emailResults.filter(r => r.success).map(r => r.email);
       console.log(
-        `✅ Sent new application notifications to ${successCount} admin(s)`
+        `✅ Sent new application notifications to ${successCount} admin(s):`,
+        successfulEmails
       );
     }
     if (failureCount > 0) {
+      const failedEmails = emailResults.filter(r => !r.success).map(r => ({
+        email: r.email,
+        error: r.error
+      }));
       console.warn(
-        `⚠️ Failed to send notifications to ${failureCount} admin(s)`
+        `⚠️ Failed to send notifications to ${failureCount} admin(s):`,
+        failedEmails
       );
     }
 
