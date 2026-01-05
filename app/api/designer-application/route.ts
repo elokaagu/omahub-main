@@ -37,6 +37,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Prepare data for database insertion
+    // Parse year_founded safely - handle empty strings and invalid values
+    let yearFounded: number | null = null;
+    if (formData.yearFounded && formData.yearFounded.trim()) {
+      const parsed = parseInt(formData.yearFounded.trim(), 10);
+      if (!isNaN(parsed) && parsed > 0) {
+        yearFounded = parsed;
+      }
+    }
+
     const applicationData = {
       brand_name: formData.brandName.trim(),
       designer_name: formData.designerName.trim(),
@@ -47,7 +56,7 @@ export async function POST(request: NextRequest) {
       location: formData.location.trim(),
       category: formData.category.trim(),
       description: formData.description.trim(),
-      year_founded: formData.yearFounded ? parseInt(formData.yearFounded) : null,
+      year_founded: yearFounded,
       status: "new" // Default status for new applications
     };
 
@@ -163,8 +172,24 @@ export async function POST(request: NextRequest) {
     }
 
     // Send email notification to super admins
+    // IMPORTANT: This must happen regardless of brand creation success
     try {
       console.log("📧 [SUPER ADMIN EMAIL] Starting notification process...");
+      console.log("📧 [SUPER ADMIN EMAIL] Application object:", {
+        id: application.id,
+        brand_name: application.brand_name,
+        designer_name: application.designer_name,
+        email: application.email,
+        has_phone: !!application.phone,
+        has_website: !!application.website,
+        has_instagram: !!application.instagram,
+        has_year_founded: !!application.year_founded,
+        location: application.location,
+        category: application.category,
+        has_description: !!application.description,
+        created_at: application.created_at
+      });
+      
       console.log("📧 [SUPER ADMIN EMAIL] Fetching super admin emails for notification...");
       
       const superAdminEmails = await adminEmailServiceServer.getSuperAdminEmails();
@@ -174,11 +199,31 @@ export async function POST(request: NextRequest) {
       console.log(`📋 [SUPER ADMIN EMAIL] Email list type:`, typeof superAdminEmails);
       console.log(`📋 [SUPER ADMIN EMAIL] Is array:`, Array.isArray(superAdminEmails));
       
-      if (superAdminEmails && superAdminEmails.length > 0) {
+      if (!superAdminEmails || !Array.isArray(superAdminEmails) || superAdminEmails.length === 0) {
+        console.error("❌ [SUPER ADMIN EMAIL] No super admin emails found - skipping notification");
+        console.error("💡 [SUPER ADMIN EMAIL] Check platform_settings table for 'super_admin_emails' key");
+        console.error("💡 [SUPER ADMIN EMAIL] Using fallback emails if database query failed");
+      } else {
         console.log(`✅ [SUPER ADMIN EMAIL] Found ${superAdminEmails.length} super admin email(s) to notify:`, superAdminEmails);
         
-        console.log("📧 [SUPER ADMIN EMAIL] Calling sendNewApplicationNotification...");
-        const emailResult = await sendNewApplicationNotification(application, superAdminEmails);
+        // Ensure application object has all required fields for email
+        const emailApplicationData = {
+          id: application.id,
+          brand_name: application.brand_name || "",
+          designer_name: application.designer_name || "",
+          email: application.email || "",
+          phone: application.phone || undefined,
+          website: application.website || undefined,
+          instagram: application.instagram || undefined,
+          location: application.location || "",
+          category: application.category || "",
+          description: application.description || "",
+          year_founded: application.year_founded || undefined,
+          created_at: application.created_at || new Date().toISOString(),
+        };
+        
+        console.log("📧 [SUPER ADMIN EMAIL] Calling sendNewApplicationNotification with data:", emailApplicationData);
+        const emailResult = await sendNewApplicationNotification(emailApplicationData, superAdminEmails);
         
         console.log("📊 [SUPER ADMIN EMAIL] Email result:", {
           success: emailResult.success,
@@ -205,10 +250,6 @@ export async function POST(request: NextRequest) {
           }
           // Don't fail the request if email fails - application is still saved
         }
-      } else {
-        console.error("❌ [SUPER ADMIN EMAIL] No super admin emails found - skipping notification");
-        console.error("💡 [SUPER ADMIN EMAIL] Check platform_settings table for 'super_admin_emails' key");
-        console.error("💡 [SUPER ADMIN EMAIL] Using fallback emails if database query failed");
       }
     } catch (emailError) {
       console.error("❌ [SUPER ADMIN EMAIL] Error sending application notification:", emailError);

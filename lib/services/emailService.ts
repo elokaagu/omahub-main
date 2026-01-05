@@ -368,53 +368,53 @@ export async function sendNewApplicationNotification(
                 <div style="padding: 40px;">
                   <!-- Alert Banner -->
                   <div style="background: linear-gradient(135deg, #F6F0E8 0%, #FFFDF8 100%); border-left: 4px solid #D4B285; padding: 24px; border-radius: 12px; margin-bottom: 32px; box-shadow: 0 2px 8px rgba(58, 30, 45, 0.06);">
-                    <h2 style="color: #3A1E2D; margin: 0 0 12px 0; font-size: 24px; font-weight: 600; font-family: 'Playfair Display', Georgia, serif;">📝 New Application Received</h2>
-                    <p style="margin: 0; color: #A07F68; font-size: 16px; line-height: 1.6;">
+                    <h2 style="color: #1E1E1E; margin: 0 0 12px 0; font-size: 24px; font-weight: 600; font-family: 'Playfair Display', Georgia, serif;">📝 New Application Received</h2>
+                    <p style="margin: 0; color: #1E1E1E; font-size: 16px; line-height: 1.6;">
                       A new designer application has been submitted and requires review.
                     </p>
                   </div>
 
                   <!-- Application Details Card -->
                   <div style="background: #FFFDF8; border: 1px solid #E5D6C6; border-radius: 12px; padding: 32px; margin-bottom: 32px; box-shadow: 0 2px 8px rgba(58, 30, 45, 0.04);">
-                    <h3 style="color: #3A1E2D; margin: 0 0 24px 0; font-size: 20px; font-weight: 600; font-family: 'Playfair Display', Georgia, serif; border-bottom: 2px solid #D4B285; padding-bottom: 12px;">Application Details</h3>
+                    <h3 style="color: #1E1E1E; margin: 0 0 24px 0; font-size: 20px; font-weight: 600; font-family: 'Playfair Display', Georgia, serif; border-bottom: 2px solid #D4B285; padding-bottom: 12px;">Application Details</h3>
                     <table style="width: 100%; border-collapse: collapse;">
                       <tr>
-                        <td style="padding: 12px 0; color: #A07F68; font-weight: 500; width: 140px; font-size: 15px;">Brand Name:</td>
+                        <td style="padding: 12px 0; color: #1E1E1E; font-weight: 500; width: 140px; font-size: 15px;">Brand Name:</td>
                         <td style="padding: 12px 0; color: #1E1E1E; font-weight: 600; font-size: 15px;">${application.brand_name}</td>
                       </tr>
                       <tr>
-                        <td style="padding: 12px 0; color: #A07F68; font-weight: 500; font-size: 15px;">Designer:</td>
+                        <td style="padding: 12px 0; color: #1E1E1E; font-weight: 500; font-size: 15px;">Designer:</td>
                         <td style="padding: 12px 0; color: #1E1E1E; font-size: 15px;">${application.designer_name}</td>
                       </tr>
                       <tr>
-                        <td style="padding: 12px 0; color: #A07F68; font-weight: 500; font-size: 15px;">Email:</td>
-                        <td style="padding: 12px 0; color: #3A1E2D; font-size: 15px;">
-                          <a href="mailto:${application.email}" style="color: #3A1E2D; text-decoration: underline; text-decoration-color: #D4B285;">${application.email}</a>
+                        <td style="padding: 12px 0; color: #1E1E1E; font-weight: 500; font-size: 15px;">Email:</td>
+                        <td style="padding: 12px 0; font-size: 15px;">
+                          <a href="mailto:${application.email}" style="color: #1E1E1E; text-decoration: underline; text-decoration-color: #D4B285;">${application.email}</a>
                         </td>
                       </tr>
                       ${application.phone ? `
                       <tr>
-                        <td style="padding: 12px 0; color: #A07F68; font-weight: 500; font-size: 15px;">Phone:</td>
+                        <td style="padding: 12px 0; color: #1E1E1E; font-weight: 500; font-size: 15px;">Phone:</td>
                         <td style="padding: 12px 0; color: #1E1E1E; font-size: 15px;">${application.phone}</td>
                       </tr>
                       ` : ''}
                       <tr>
-                        <td style="padding: 12px 0; color: #A07F68; font-weight: 500; font-size: 15px;">Location:</td>
+                        <td style="padding: 12px 0; color: #1E1E1E; font-weight: 500; font-size: 15px;">Location:</td>
                         <td style="padding: 12px 0; color: #1E1E1E; font-size: 15px;">${application.location}</td>
                       </tr>
                       <tr>
-                        <td style="padding: 12px 0; color: #A07F68; font-weight: 500; font-size: 15px;">Category:</td>
+                        <td style="padding: 12px 0; color: #1E1E1E; font-weight: 500; font-size: 15px;">Category:</td>
                         <td style="padding: 12px 0; font-size: 15px;">
-                          <span style="background: #F6F0E8; color: #3A1E2D; padding: 6px 16px; border-radius: 20px; font-size: 14px; font-weight: 500; display: inline-block; border: 1px solid #D4B285;">
+                          <span style="background: #F6F0E8; color: #1E1E1E; padding: 6px 16px; border-radius: 20px; font-size: 14px; font-weight: 500; display: inline-block; border: 1px solid #D4B285;">
                             ${application.category}
                           </span>
                         </td>
                       </tr>
                       ${application.website ? `
                       <tr>
-                        <td style="padding: 12px 0; color: #A07F68; font-weight: 500; font-size: 15px;">Website:</td>
+                        <td style="padding: 12px 0; color: #1E1E1E; font-weight: 500; font-size: 15px;">Website:</td>
                         <td style="padding: 12px 0; font-size: 15px;">
-                          <a href="${application.website}" target="_blank" style="color: #3A1E2D; text-decoration: underline; text-decoration-color: #D4B285;">
+                          <a href="${application.website}" target="_blank" style="color: #1E1E1E; text-decoration: underline; text-decoration-color: #D4B285;">
                             ${application.website}
                           </a>
                         </td>
@@ -422,9 +422,9 @@ export async function sendNewApplicationNotification(
                       ` : ''}
                       ${application.instagram ? `
                       <tr>
-                        <td style="padding: 12px 0; color: #A07F68; font-weight: 500; font-size: 15px;">Instagram:</td>
+                        <td style="padding: 12px 0; color: #1E1E1E; font-weight: 500; font-size: 15px;">Instagram:</td>
                         <td style="padding: 12px 0; font-size: 15px;">
-                          <a href="https://instagram.com/${application.instagram.replace(/^@/, '')}" target="_blank" style="color: #3A1E2D; text-decoration: underline; text-decoration-color: #D4B285;">
+                          <a href="https://instagram.com/${application.instagram.replace(/^@/, '')}" target="_blank" style="color: #1E1E1E; text-decoration: underline; text-decoration-color: #D4B285;">
                             @${application.instagram.replace(/^@/, '')}
                           </a>
                         </td>
@@ -432,12 +432,12 @@ export async function sendNewApplicationNotification(
                       ` : ''}
                       ${application.year_founded ? `
                       <tr>
-                        <td style="padding: 12px 0; color: #A07F68; font-weight: 500; font-size: 15px;">Founded:</td>
+                        <td style="padding: 12px 0; color: #1E1E1E; font-weight: 500; font-size: 15px;">Founded:</td>
                         <td style="padding: 12px 0; color: #1E1E1E; font-size: 15px;">${application.year_founded}</td>
                       </tr>
                       ` : ''}
                       <tr>
-                        <td style="padding: 12px 0; color: #A07F68; font-weight: 500; font-size: 15px;">Submitted:</td>
+                        <td style="padding: 12px 0; color: #1E1E1E; font-weight: 500; font-size: 15px;">Submitted:</td>
                         <td style="padding: 12px 0; color: #1E1E1E; font-size: 15px;">${applicationDate}</td>
                       </tr>
                     </table>
@@ -445,7 +445,7 @@ export async function sendNewApplicationNotification(
 
                   <!-- Description Card -->
                   <div style="background: #F6F0E8; border-left: 4px solid #D4B285; padding: 24px; border-radius: 12px; margin-bottom: 32px;">
-                    <h3 style="color: #3A1E2D; margin: 0 0 16px 0; font-size: 18px; font-weight: 600; font-family: 'Playfair Display', Georgia, serif;">Description</h3>
+                    <h3 style="color: #1E1E1E; margin: 0 0 16px 0; font-size: 18px; font-weight: 600; font-family: 'Playfair Display', Georgia, serif;">Description</h3>
                     <p style="margin: 0; color: #1E1E1E; line-height: 1.8; white-space: pre-wrap; font-size: 15px;">${application.description}</p>
                   </div>
 
@@ -459,16 +459,16 @@ export async function sendNewApplicationNotification(
 
                   <!-- Quick Access -->
                   <div style="background: #FFFDF8; border: 1px solid #E5D6C6; padding: 20px; border-radius: 12px; margin-bottom: 24px;">
-                    <p style="margin: 0; color: #A07F68; font-size: 14px; line-height: 1.6;">
-                      <strong style="color: #3A1E2D;">Quick Access:</strong> You can also view all applications in the 
-                      <a href="${studioUrl}" style="color: #3A1E2D; text-decoration: underline; text-decoration-color: #D4B285; font-weight: 600;">Studio Applications Page</a>
+                    <p style="margin: 0; color: #1E1E1E; font-size: 14px; line-height: 1.6;">
+                      <strong style="color: #1E1E1E;">Quick Access:</strong> You can also view all applications in the 
+                      <a href="${studioUrl}" style="color: #1E1E1E; text-decoration: underline; text-decoration-color: #D4B285; font-weight: 600;">Studio Applications Page</a>
                     </p>
                   </div>
 
                   <!-- Footer -->
                   <div style="border-top: 1px solid #E5D6C6; padding-top: 24px; margin-top: 32px;">
-                    <p style="color: #A07F68; font-size: 13px; margin: 0; line-height: 1.6;">
-                      This is an automated notification from <strong style="color: #3A1E2D;">OmaHub</strong>.<br>
+                    <p style="color: #1E1E1E; font-size: 13px; margin: 0; line-height: 1.6;">
+                      This is an automated notification from <strong style="color: #1E1E1E;">OmaHub</strong>.<br>
                       You're receiving this because you're a super admin.
                     </p>
                   </div>
@@ -616,24 +616,24 @@ export async function sendApplicationApprovalEmail(data: {
       // Also show password reset link if available
       passwordSection = `
         <div style="background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; padding: 24px; margin: 20px 0;">
-          <h3 style="color: #3a1e2d; margin: 0 0 20px 0; font-size: 18px;">🔐 Your Login Credentials</h3>
+          <h3 style="color: #1E1E1E; margin: 0 0 20px 0; font-size: 18px;">🔐 Your Login Credentials</h3>
           
           ${temporaryPassword ? `
           <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 20px; margin-bottom: ${passwordResetLink ? '16px' : '0'}; border-radius: 4px;">
-            <p style="margin: 0 0 12px 0; color: #856404; font-weight: 600; font-size: 16px;">${passwordResetLink ? 'Option 1: ' : ''}Login with Temporary Password</p>
-            <p style="margin: 0 0 16px 0; color: #666; font-size: 14px;">
+            <p style="margin: 0 0 12px 0; color: #1E1E1E; font-weight: 600; font-size: 16px;">${passwordResetLink ? 'Option 1: ' : ''}Login with Temporary Password</p>
+            <p style="margin: 0 0 16px 0; color: #1E1E1E; font-size: 14px;">
               You can log in immediately using these credentials:
             </p>
             <div style="background: #fff; padding: 16px; border-radius: 4px; margin-bottom: 12px;">
-              <p style="margin: 0 0 8px 0; color: #333; font-size: 14px;">
+              <p style="margin: 0 0 8px 0; color: #1E1E1E; font-size: 14px;">
                 <strong>Email:</strong> <span style="font-family: monospace; font-weight: 600;">${email}</span>
               </p>
-              <p style="margin: 0; color: #333; font-size: 14px;">
+              <p style="margin: 0; color: #1E1E1E; font-size: 14px;">
                 <strong>Temporary Password:</strong><br>
                 <code style="background: #f8f9fa; padding: 8px 12px; border-radius: 4px; font-family: monospace; font-size: 16px; font-weight: 700; letter-spacing: 1px; display: inline-block; margin-top: 8px; border: 2px solid #ffc107;">${temporaryPassword}</code>
               </p>
             </div>
-            <p style="margin: 12px 0 0 0; color: #d32f2f; font-size: 13px; font-weight: 600;">
+            <p style="margin: 12px 0 0 0; color: #1E1E1E; font-size: 13px; font-weight: 600;">
               ⚠️ <strong>Important:</strong> Please change your password after your first login for security.
             </p>
           </div>
@@ -641,8 +641,8 @@ export async function sendApplicationApprovalEmail(data: {
           
           ${passwordResetLink ? `
           <div style="background: #e8f5e9; border-left: 4px solid #4caf50; padding: 16px; border-radius: 4px;">
-            <p style="margin: 0 0 12px 0; color: #2e7d32; font-weight: 600; font-size: 14px;">Option 2: Set Your Password (Recommended)</p>
-            <p style="margin: 0 0 16px 0; color: #1b5e20; font-size: 13px;">
+            <p style="margin: 0 0 12px 0; color: #1E1E1E; font-weight: 600; font-size: 14px;">Option 2: Set Your Password (Recommended)</p>
+            <p style="margin: 0 0 16px 0; color: #1E1E1E; font-size: 13px;">
               Click the button below to set your own secure password. This link expires in 7 days.
             </p>
             <div style="text-align: center; margin: 16px 0;">
@@ -651,14 +651,14 @@ export async function sendApplicationApprovalEmail(data: {
                 Set My Password
               </a>
             </div>
-            <p style="margin: 12px 0 0 0; color: #666; font-size: 11px; text-align: center;">
+            <p style="margin: 12px 0 0 0; color: #1E1E1E; font-size: 11px; text-align: center;">
               Or copy: <code style="background: #fff; padding: 2px 6px; border-radius: 3px; font-family: monospace; font-size: 10px; word-break: break-all;">${passwordResetLink}</code>
             </p>
           </div>
           ` : ''}
           
           ${!temporaryPassword && !passwordResetLink ? `
-          <p style="margin: 0; color: #666;">
+          <p style="margin: 0; color: #1E1E1E;">
             Your account has been created. Please use the "Forgot Password" feature to set your password.
           </p>
           ` : ''}
@@ -667,7 +667,7 @@ export async function sendApplicationApprovalEmail(data: {
     } else {
       passwordSection = `
         <div style="background: #f8f9fa; border-left: 4px solid #3a1e2d; padding: 16px; margin: 20px 0; border-radius: 4px;">
-          <p style="margin: 0; color: #666;">
+          <p style="margin: 0; color: #1E1E1E;">
             You can log in using your existing account credentials.
           </p>
         </div>
@@ -687,7 +687,7 @@ export async function sendApplicationApprovalEmail(data: {
           <meta charset="utf-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
         </head>
-        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #1E1E1E; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="background: #3a1e2d; color: white; padding: 40px; border-radius: 12px 12px 0 0; text-align: center;">
             <h1 style="margin: 0; font-size: 28px; font-weight: 300; letter-spacing: 2px;">OmaHub</h1>
             <p style="margin: 8px 0 0 0; opacity: 0.9; font-size: 16px;">Application Approved</p>
@@ -695,26 +695,26 @@ export async function sendApplicationApprovalEmail(data: {
           
           <div style="background: white; padding: 40px; border-radius: 0 0 12px 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
             <div style="background: #e8f5e9; border-left: 4px solid #4caf50; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
-              <h2 style="color: #2e7d32; margin: 0 0 12px 0; font-size: 22px;">🎉 Congratulations, ${designerName}!</h2>
-              <p style="margin: 0; color: #1b5e20; font-size: 16px;">
+              <h2 style="color: #1E1E1E; margin: 0 0 12px 0; font-size: 22px;">🎉 Congratulations, ${designerName}!</h2>
+              <p style="margin: 0; color: #1E1E1E; font-size: 16px;">
                 Your application for <strong>${brandName}</strong> has been approved!
               </p>
             </div>
 
-            <p style="color: #333; font-size: 16px; margin: 0 0 20px 0;">
+            <p style="color: #1E1E1E; font-size: 16px; margin: 0 0 20px 0;">
               We're thrilled to welcome you to OmaHub! Your brand has been set up and you now have access to manage your brand profile, products, and customer inquiries.
             </p>
 
             ${passwordSection}
 
             <div style="background: #fff; border: 1px solid #e9ecef; border-radius: 8px; padding: 24px; margin: 30px 0;">
-              <h3 style="color: #3a1e2d; margin: 0 0 16px 0; font-size: 18px;">What's Next?</h3>
-              <ol style="margin: 0; padding-left: 20px; color: #666;">
+              <h3 style="color: #1E1E1E; margin: 0 0 16px 0; font-size: 18px;">What's Next?</h3>
+              <ol style="margin: 0; padding-left: 20px; color: #1E1E1E;">
                 <li style="margin-bottom: 12px;">
-                  <strong>Log in to your Studio:</strong> Visit <a href="${loginUrl}" style="color: #3a1e2d; text-decoration: none; font-weight: 600;">${loginUrl}</a>
+                  <strong>Log in to your Studio:</strong> Visit <a href="${loginUrl}" style="color: #1E1E1E; text-decoration: none; font-weight: 600;">${loginUrl}</a>
                 </li>
                 <li style="margin-bottom: 12px;">
-                  <strong>Access your brand dashboard:</strong> Once logged in, you'll be able to manage your brand from the <a href="${studioUrl}" style="color: #3a1e2d; text-decoration: none; font-weight: 600;">Studio</a>
+                  <strong>Access your brand dashboard:</strong> Once logged in, you'll be able to manage your brand from the <a href="${studioUrl}" style="color: #1E1E1E; text-decoration: none; font-weight: 600;">Studio</a>
                 </li>
                 <li style="margin-bottom: 12px;">
                   <strong>Complete your brand profile:</strong> Add your brand logo, images, and complete product listings
@@ -732,10 +732,10 @@ export async function sendApplicationApprovalEmail(data: {
             </div>
 
             <div style="border-top: 1px solid #e9ecef; padding-top: 24px; margin-top: 30px;">
-              <p style="color: #666; font-size: 14px; margin: 0 0 8px 0;">
+              <p style="color: #1E1E1E; font-size: 14px; margin: 0 0 8px 0;">
                 If you have any questions or need assistance, please don't hesitate to reach out to our support team.
               </p>
-              <p style="color: #666; font-size: 14px; margin: 0;">
+              <p style="color: #1E1E1E; font-size: 14px; margin: 0;">
                 Welcome aboard!<br>
                 <strong>The OmaHub Team</strong>
               </p>
@@ -859,8 +859,8 @@ export async function sendApplicationRejectionEmail(data: {
             <div style="padding: 40px;">
               <!-- Notification Banner -->
               <div style="background: linear-gradient(135deg, #FFF5F5 0%, #FFFDF8 100%); border-left: 4px solid #D4B285; padding: 24px; border-radius: 12px; margin-bottom: 32px; box-shadow: 0 2px 8px rgba(58, 30, 45, 0.06);">
-                <h2 style="color: #3A1E2D; margin: 0 0 12px 0; font-size: 24px; font-weight: 600; font-family: 'Playfair Display', Georgia, serif;">Thank You, ${designerName}</h2>
-                <p style="margin: 0; color: #A07F68; font-size: 16px; line-height: 1.6;">
+                <h2 style="color: #1E1E1E; margin: 0 0 12px 0; font-size: 24px; font-weight: 600; font-family: 'Playfair Display', Georgia, serif;">Thank You, ${designerName}</h2>
+                <p style="margin: 0; color: #1E1E1E; font-size: 16px; line-height: 1.6;">
                   We've reviewed your application for <strong>${brandName}</strong> and unfortunately, we're unable to proceed at this time.
                 </p>
               </div>
@@ -871,13 +871,13 @@ export async function sendApplicationRejectionEmail(data: {
 
               ${notes ? `
               <div style="background: #F6F0E8; border-left: 4px solid #D4B285; padding: 20px; border-radius: 12px; margin: 24px 0;">
-                <h3 style="color: #3A1E2D; margin: 0 0 12px 0; font-size: 18px; font-weight: 600; font-family: 'Playfair Display', Georgia, serif;">Feedback</h3>
+                <h3 style="color: #1E1E1E; margin: 0 0 12px 0; font-size: 18px; font-weight: 600; font-family: 'Playfair Display', Georgia, serif;">Feedback</h3>
                 <p style="margin: 0; color: #1E1E1E; line-height: 1.8; white-space: pre-wrap; font-size: 15px;">${notes}</p>
               </div>
               ` : ''}
 
               <div style="background: #FFFDF8; border: 1px solid #E5D6C6; border-radius: 12px; padding: 24px; margin: 32px 0;">
-                <h3 style="color: #3A1E2D; margin: 0 0 16px 0; font-size: 18px; font-weight: 600; font-family: 'Playfair Display', Georgia, serif;">What's Next?</h3>
+                <h3 style="color: #1E1E1E; margin: 0 0 16px 0; font-size: 18px; font-weight: 600; font-family: 'Playfair Display', Georgia, serif;">What's Next?</h3>
                 <p style="margin: 0 0 16px 0; color: #1E1E1E; font-size: 15px; line-height: 1.8;">
                   We encourage you to continue developing your brand and portfolio. You're welcome to apply again in the future when your brand has evolved or meets our current criteria.
                 </p>
@@ -895,9 +895,9 @@ export async function sendApplicationRejectionEmail(data: {
 
               <!-- Footer -->
               <div style="border-top: 1px solid #E5D6C6; padding-top: 24px; margin-top: 32px;">
-                <p style="color: #A07F68; font-size: 13px; margin: 0; line-height: 1.6;">
+                <p style="color: #1E1E1E; font-size: 13px; margin: 0; line-height: 1.6;">
                   Thank you for your interest in OmaHub.<br>
-                  <strong style="color: #3A1E2D;">The OmaHub Team</strong>
+                  <strong style="color: #1E1E1E;">The OmaHub Team</strong>
                 </p>
               </div>
             </div>
@@ -1000,8 +1000,8 @@ export async function sendApplicationConfirmationEmail(data: {
             <div style="padding: 40px;">
               <!-- Notification Banner -->
               <div style="background: linear-gradient(135deg, #F6F0E8 0%, #FFFDF8 100%); border-left: 4px solid #D4B285; padding: 24px; border-radius: 12px; margin-bottom: 32px; box-shadow: 0 2px 8px rgba(58, 30, 45, 0.06);">
-                <h2 style="color: #3A1E2D; margin: 0 0 12px 0; font-size: 24px; font-weight: 600; font-family: 'Playfair Display', Georgia, serif;">Thank You, ${designerName}</h2>
-                <p style="margin: 0; color: #A07F68; font-size: 16px; line-height: 1.6;">
+                <h2 style="color: #1E1E1E; margin: 0 0 12px 0; font-size: 24px; font-weight: 600; font-family: 'Playfair Display', Georgia, serif;">Thank You, ${designerName}</h2>
+                <p style="margin: 0; color: #1E1E1E; font-size: 16px; line-height: 1.6;">
                   We've successfully received your application for <strong>${brandName}</strong>.
                 </p>
               </div>
@@ -1011,9 +1011,9 @@ export async function sendApplicationConfirmationEmail(data: {
               </p>
 
               <div style="background: #FFFDF8; border: 1px solid #E5D6C6; border-radius: 12px; padding: 24px; margin: 32px 0;">
-                <h3 style="color: #3A1E2D; margin: 0 0 16px 0; font-size: 18px; font-weight: 600; font-family: 'Playfair Display', Georgia, serif;">What Happens Next?</h3>
+                <h3 style="color: #1E1E1E; margin: 0 0 16px 0; font-size: 18px; font-weight: 600; font-family: 'Playfair Display', Georgia, serif;">What Happens Next?</h3>
                 <p style="margin: 0 0 16px 0; color: #1E1E1E; font-size: 15px; line-height: 1.8;">
-                  Our team will carefully review your application. We'll get back to you within <strong>5-7 business days</strong> with an update on your application status.
+                  Our team will carefully review your application. We'll get back to you within <strong>3-5 days</strong> with an update on your application status.
                 </p>
                 <p style="margin: 0; color: #1E1E1E; font-size: 15px; line-height: 1.8;">
                   If you have any questions or need to update your application, please don't hesitate to reach out to our support team.
@@ -1029,9 +1029,9 @@ export async function sendApplicationConfirmationEmail(data: {
 
               <!-- Footer -->
               <div style="border-top: 1px solid #E5D6C6; padding-top: 24px; margin-top: 32px;">
-                <p style="color: #A07F68; font-size: 13px; margin: 0; line-height: 1.6;">
+                <p style="color: #1E1E1E; font-size: 13px; margin: 0; line-height: 1.6;">
                   Thank you for your interest in OmaHub.<br>
-                  <strong style="color: #3A1E2D;">The OmaHub Team</strong>
+                  <strong style="color: #1E1E1E;">The OmaHub Team</strong>
                 </p>
               </div>
             </div>
@@ -1048,7 +1048,7 @@ We've successfully received your application and appreciate you sharing your bra
 
 What Happens Next?
 
-Our team will carefully review your application. We'll get back to you within 5-7 business days with an update on your application status.
+Our team will carefully review your application. We'll get back to you within 3-5 days with an update on your application status.
 
 If you have any questions or need to update your application, please don't hesitate to reach out to our support team.
 
