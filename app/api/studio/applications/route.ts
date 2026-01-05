@@ -15,7 +15,6 @@ export async function GET(request: NextRequest) {
         { status: 500 }
       );
     }
-
     // Fetch all designer applications, ordered by creation date (newest first)
     // Note: We fetch all and sort in memory to handle NULL created_at values properly
     // Using admin client bypasses RLS, so we should get all applications
