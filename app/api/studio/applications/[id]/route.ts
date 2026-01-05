@@ -109,54 +109,59 @@ export async function PUT(
 
     // If approved, create brand and set up user access
     if (status === "approved" && applicationData) {
+      let workflowResult: any = null;
       try {
         console.log("🚀 Starting brand creation and user setup workflow...");
         
-        const workflowResult = await setupBrandAndUserAccess(applicationData, supabase);
+        workflowResult = await setupBrandAndUserAccess(applicationData, supabase);
         
         if (!workflowResult.success) {
           console.error("❌ Brand/user setup failed:", workflowResult.error);
-          // Don't fail the entire request, but log the error
-          return NextResponse.json({
-            success: true,
-            application: updatedApplication,
-            message: "Application approved, but brand/user setup encountered issues",
-            warning: workflowResult.error,
-            brandCreated: workflowResult.brandCreated || false,
-            userCreated: workflowResult.userCreated || false,
-          });
+          // Continue to send approval email even if setup failed
         }
+      } catch (workflowError) {
+        console.error("💥 Error in brand/user setup workflow:", workflowError);
+        // Continue to send approval email even if setup failed
+        workflowResult = {
+          success: false,
+          error: workflowError instanceof Error ? workflowError.message : "Unknown error",
+          brandCreated: false,
+          userCreated: false,
+        };
+      }
 
-        // Send approval email notification to the designer
-        try {
-          console.log("📧 Sending approval email notification to:", applicationData.email);
-          console.log("📧 Email credentials:", {
-            isNewUser: workflowResult.userCreated,
-            hasTemporaryPassword: !!workflowResult.temporaryPassword,
-            hasPasswordResetLink: !!workflowResult.passwordResetLink,
-            temporaryPasswordPreview: workflowResult.temporaryPassword ? `${workflowResult.temporaryPassword.substring(0, 3)}...` : 'none',
-          });
-          
-          const emailResult = await sendApplicationApprovalEmail({
-            designerName: applicationData.designer_name,
-            brandName: applicationData.brand_name,
-            email: applicationData.email,
-            temporaryPassword: workflowResult.temporaryPassword, // Always included for new users
-            passwordResetLink: workflowResult.passwordResetLink, // Optional secure method
-            isNewUser: workflowResult.userCreated || false,
-          });
+      // ALWAYS send approval email when application is approved, regardless of setup success
+      try {
+        console.log("📧 Sending approval email notification to:", applicationData.email);
+        console.log("📧 Email credentials:", {
+          isNewUser: workflowResult?.userCreated || false,
+          hasTemporaryPassword: !!workflowResult?.temporaryPassword,
+          hasPasswordResetLink: !!workflowResult?.passwordResetLink,
+          temporaryPasswordPreview: workflowResult?.temporaryPassword ? `${workflowResult.temporaryPassword.substring(0, 3)}...` : 'none',
+        });
+        
+        const emailResult = await sendApplicationApprovalEmail({
+          designerName: applicationData.designer_name,
+          brandName: applicationData.brand_name,
+          email: applicationData.email,
+          temporaryPassword: workflowResult?.temporaryPassword, // Included for new users if available
+          passwordResetLink: workflowResult?.passwordResetLink, // Optional secure method
+          isNewUser: workflowResult?.userCreated || false,
+        });
 
-          if (emailResult.success) {
-            console.log("✅ Approval email sent successfully");
-          } else {
-            console.warn("⚠️ Failed to send approval email:", emailResult.error);
-            // Don't fail the request if email fails
-          }
-        } catch (emailError) {
-          console.error("❌ Error sending approval email:", emailError);
+        if (emailResult.success) {
+          console.log("✅ Approval email sent successfully");
+        } else {
+          console.warn("⚠️ Failed to send approval email:", emailResult.error);
           // Don't fail the request if email fails
         }
+      } catch (emailError) {
+        console.error("❌ Error sending approval email:", emailError);
+        // Don't fail the request if email fails
+      }
 
+      // Return response based on whether setup succeeded
+      if (workflowResult?.success) {
         return NextResponse.json({
           success: true,
           application: updatedApplication,
@@ -171,14 +176,14 @@ export async function PUT(
                 : "Temporary password generated. Password reset link generation failed - user can use temporary password.")
             : null,
         });
-      } catch (workflowError) {
-        console.error("💥 Error in brand/user setup workflow:", workflowError);
-        // Don't fail the entire request
+      } else {
         return NextResponse.json({
           success: true,
           application: updatedApplication,
-          message: "Application approved, but brand/user setup encountered an error",
-          warning: workflowError instanceof Error ? workflowError.message : "Unknown error",
+          message: "Application approved successfully. Approval email sent. Brand/user setup encountered issues.",
+          warning: workflowResult?.error || "Unknown error during brand/user setup",
+          brandCreated: workflowResult?.brandCreated || false,
+          userCreated: workflowResult?.userCreated || false,
         });
       }
     }
