@@ -175,8 +175,8 @@ export async function POST(request: NextRequest) {
         const emailResult = await sendNewApplicationNotification(application, superAdminEmails);
         
         if (emailResult.success) {
-          console.log(`✅ Application notification sent to ${emailResult.successCount} out of ${superAdminEmails.length} super admin(s)`);
-          if (emailResult.failureCount > 0) {
+          console.log(`✅ Application notification sent to ${emailResult.successCount || 0} out of ${superAdminEmails.length} super admin(s)`);
+          if (emailResult.failureCount && emailResult.failureCount > 0) {
             console.warn(`⚠️ ${emailResult.failureCount} email(s) failed to send. Check logs above for details.`);
           }
         } else {
