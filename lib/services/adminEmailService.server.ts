@@ -28,9 +28,11 @@ export class AdminEmailServiceServer {
     const cached = this.cache.get(cacheKey);
 
     if (cached && Date.now() - cached.timestamp < this.CACHE_DURATION) {
+      console.log("📦 [ADMIN EMAIL SERVICE] Using cached admin email config");
       return cached.data;
     }
 
+    console.log("🔍 [ADMIN EMAIL SERVICE] Fetching admin email config from database...");
     try {
       const supabase = await createServerSupabaseClient();
 
@@ -44,9 +46,12 @@ export class AdminEmailServiceServer {
         ]);
 
       if (error) {
-        console.error("Error fetching admin email config:", error);
+        console.error("❌ [ADMIN EMAIL SERVICE] Error fetching admin email config:", error);
         throw error;
       }
+
+      console.log(`📊 [ADMIN EMAIL SERVICE] Retrieved ${data?.length || 0} platform setting(s) from database`);
+      console.log("📋 [ADMIN EMAIL SERVICE] Raw data:", data);
 
       const config: AdminEmailConfig = {
         super_admin_emails: [],
@@ -56,13 +61,24 @@ export class AdminEmailServiceServer {
 
       data?.forEach((setting) => {
         try {
+          console.log(`🔍 [ADMIN EMAIL SERVICE] Parsing ${setting.key}:`, setting.value);
           const emails = JSON.parse(setting.value);
           if (Array.isArray(emails)) {
             config[setting.key as keyof AdminEmailConfig] = emails;
+            console.log(`✅ [ADMIN EMAIL SERVICE] Parsed ${setting.key}:`, emails);
+          } else {
+            console.warn(`⚠️ [ADMIN EMAIL SERVICE] ${setting.key} is not an array:`, emails);
           }
         } catch (parseError) {
-          console.error(`Error parsing ${setting.key}:`, parseError);
+          console.error(`❌ [ADMIN EMAIL SERVICE] Error parsing ${setting.key}:`, parseError);
         }
+      });
+
+      console.log("📋 [ADMIN EMAIL SERVICE] Final config:", {
+        super_admin_emails: config.super_admin_emails,
+        super_admin_count: config.super_admin_emails.length,
+        brand_admin_emails: config.brand_admin_emails,
+        webhook_admin_emails: config.webhook_admin_emails
       });
 
       // Cache the result
@@ -73,9 +89,10 @@ export class AdminEmailServiceServer {
 
       return config;
     } catch (error) {
-      console.error("Failed to fetch admin email config:", error);
+      console.error("❌ [ADMIN EMAIL SERVICE] Failed to fetch admin email config:", error);
+      console.warn("⚠️ [ADMIN EMAIL SERVICE] Using fallback configuration");
       // Return fallback configuration
-      return {
+      const fallbackConfig = {
         super_admin_emails: [
           "eloka.agu@icloud.com",
           "shannonalisa@oma-hub.com",
@@ -87,6 +104,8 @@ export class AdminEmailServiceServer {
           "eloka@satellitelabs.xyz",
         ],
       };
+      console.log("📋 [ADMIN EMAIL SERVICE] Fallback config:", fallbackConfig);
+      return fallbackConfig;
     }
   }
 
@@ -110,8 +129,19 @@ export class AdminEmailServiceServer {
    * Get all super admin emails
    */
   async getSuperAdminEmails(): Promise<string[]> {
-    const config = await this.getAdminEmailConfig();
-    return config.super_admin_emails;
+    console.log("🔍 [ADMIN EMAIL SERVICE] getSuperAdminEmails() called");
+    try {
+      const config = await this.getAdminEmailConfig();
+      console.log("🔍 [ADMIN EMAIL SERVICE] Config retrieved:", {
+        super_admin_emails: config.super_admin_emails,
+        count: config.super_admin_emails?.length || 0,
+        isArray: Array.isArray(config.super_admin_emails)
+      });
+      return config.super_admin_emails;
+    } catch (error) {
+      console.error("❌ [ADMIN EMAIL SERVICE] Error in getSuperAdminEmails():", error);
+      throw error;
+    }
   }
 
   /**

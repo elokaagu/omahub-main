@@ -164,35 +164,57 @@ export async function POST(request: NextRequest) {
 
     // Send email notification to super admins
     try {
-      console.log("📧 Fetching super admin emails for notification...");
+      console.log("📧 [SUPER ADMIN EMAIL] Starting notification process...");
+      console.log("📧 [SUPER ADMIN EMAIL] Fetching super admin emails for notification...");
+      
       const superAdminEmails = await adminEmailServiceServer.getSuperAdminEmails();
       
-      console.log(`📊 Retrieved ${superAdminEmails?.length || 0} super admin email(s) from database`);
+      console.log(`📊 [SUPER ADMIN EMAIL] Retrieved ${superAdminEmails?.length || 0} super admin email(s) from database`);
+      console.log(`📋 [SUPER ADMIN EMAIL] Email list:`, superAdminEmails);
+      console.log(`📋 [SUPER ADMIN EMAIL] Email list type:`, typeof superAdminEmails);
+      console.log(`📋 [SUPER ADMIN EMAIL] Is array:`, Array.isArray(superAdminEmails));
       
       if (superAdminEmails && superAdminEmails.length > 0) {
-        console.log(`📧 Super admin emails to notify:`, superAdminEmails);
+        console.log(`✅ [SUPER ADMIN EMAIL] Found ${superAdminEmails.length} super admin email(s) to notify:`, superAdminEmails);
         
+        console.log("📧 [SUPER ADMIN EMAIL] Calling sendNewApplicationNotification...");
         const emailResult = await sendNewApplicationNotification(application, superAdminEmails);
         
+        console.log("📊 [SUPER ADMIN EMAIL] Email result:", {
+          success: emailResult.success,
+          successCount: emailResult.successCount,
+          failureCount: emailResult.failureCount,
+          error: emailResult.error,
+          hasResults: !!emailResult.results,
+          resultsLength: emailResult.results?.length || 0
+        });
+        
         if (emailResult.success) {
-          console.log(`✅ Application notification sent to ${emailResult.successCount || 0} out of ${superAdminEmails.length} super admin(s)`);
+          console.log(`✅ [SUPER ADMIN EMAIL] Application notification sent to ${emailResult.successCount || 0} out of ${superAdminEmails.length} super admin(s)`);
           if (emailResult.failureCount && emailResult.failureCount > 0) {
-            console.warn(`⚠️ ${emailResult.failureCount} email(s) failed to send. Check logs above for details.`);
+            console.warn(`⚠️ [SUPER ADMIN EMAIL] ${emailResult.failureCount} email(s) failed to send. Check logs above for details.`);
+            if (emailResult.results) {
+              const failedEmails = emailResult.results.filter(r => !r.success);
+              console.warn(`⚠️ [SUPER ADMIN EMAIL] Failed emails:`, failedEmails);
+            }
           }
         } else {
-          console.warn("⚠️ Failed to send application notification:", emailResult.error);
+          console.error("❌ [SUPER ADMIN EMAIL] Failed to send application notification:", emailResult.error);
           if (emailResult.results) {
-            console.warn("📋 Detailed results:", emailResult.results);
+            console.error("❌ [SUPER ADMIN EMAIL] Detailed results:", JSON.stringify(emailResult.results, null, 2));
           }
           // Don't fail the request if email fails - application is still saved
         }
       } else {
-        console.warn("⚠️ No super admin emails found - skipping notification");
-        console.warn("💡 Check platform_settings table for 'super_admin_emails' key");
+        console.error("❌ [SUPER ADMIN EMAIL] No super admin emails found - skipping notification");
+        console.error("💡 [SUPER ADMIN EMAIL] Check platform_settings table for 'super_admin_emails' key");
+        console.error("💡 [SUPER ADMIN EMAIL] Using fallback emails if database query failed");
       }
     } catch (emailError) {
-      console.error("❌ Error sending application notification:", emailError);
-      console.error("❌ Error stack:", emailError instanceof Error ? emailError.stack : "No stack trace");
+      console.error("❌ [SUPER ADMIN EMAIL] Error sending application notification:", emailError);
+      console.error("❌ [SUPER ADMIN EMAIL] Error type:", emailError instanceof Error ? emailError.constructor.name : typeof emailError);
+      console.error("❌ [SUPER ADMIN EMAIL] Error message:", emailError instanceof Error ? emailError.message : String(emailError));
+      console.error("❌ [SUPER ADMIN EMAIL] Error stack:", emailError instanceof Error ? emailError.stack : "No stack trace");
       // Don't fail the request if email fails - application is still saved
     }
 
