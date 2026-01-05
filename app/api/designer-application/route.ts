@@ -153,21 +153,40 @@ export async function POST(request: NextRequest) {
 
     // Send confirmation email to applicant
     try {
-      console.log("📧 Sending confirmation email to applicant:", application.email);
+      console.log("📧 [CONFIRMATION EMAIL] Starting confirmation email process...");
+      console.log("📧 [CONFIRMATION EMAIL] Application data:", {
+        designerName: application.designer_name,
+        brandName: application.brand_name,
+        email: application.email,
+      });
+      
       const confirmationResult = await sendApplicationConfirmationEmail({
         designerName: application.designer_name,
         brandName: application.brand_name,
         email: application.email,
       });
       
+      console.log("📊 [CONFIRMATION EMAIL] Email result:", {
+        success: confirmationResult.success,
+        hasError: !!confirmationResult.error,
+        error: confirmationResult.error,
+        hasData: !!confirmationResult.data,
+        dataId: confirmationResult.data?.id,
+      });
+      
       if (confirmationResult.success) {
-        console.log("✅ Application confirmation email sent to applicant");
+        console.log("✅ [CONFIRMATION EMAIL] Application confirmation email sent successfully to applicant:", application.email);
+        console.log("✅ [CONFIRMATION EMAIL] Email ID:", confirmationResult.data?.id);
       } else {
-        console.warn("⚠️ Failed to send confirmation email to applicant:", confirmationResult.error);
+        console.error("❌ [CONFIRMATION EMAIL] Failed to send confirmation email to applicant:", application.email);
+        console.error("❌ [CONFIRMATION EMAIL] Error details:", confirmationResult.error);
         // Don't fail the request if email fails - application is still saved
       }
     } catch (confirmationEmailError) {
-      console.error("❌ Error sending confirmation email to applicant:", confirmationEmailError);
+      console.error("❌ [CONFIRMATION EMAIL] Exception sending confirmation email to applicant:", application.email);
+      console.error("❌ [CONFIRMATION EMAIL] Error type:", confirmationEmailError instanceof Error ? confirmationEmailError.constructor.name : typeof confirmationEmailError);
+      console.error("❌ [CONFIRMATION EMAIL] Error message:", confirmationEmailError instanceof Error ? confirmationEmailError.message : String(confirmationEmailError));
+      console.error("❌ [CONFIRMATION EMAIL] Error stack:", confirmationEmailError instanceof Error ? confirmationEmailError.stack : "No stack trace");
       // Don't fail the request if email fails - application is still saved
     }
 

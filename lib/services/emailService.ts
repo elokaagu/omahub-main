@@ -1063,14 +1063,27 @@ Visit us: ${websiteUrl}
     });
 
     if (error) {
-      console.error("❌ Resend API error:", error);
-      throw error;
+      console.error("❌ [CONFIRMATION EMAIL] Resend API error:", error);
+      console.error("❌ [CONFIRMATION EMAIL] Error type:", error?.constructor?.name || typeof error);
+      console.error("❌ [CONFIRMATION EMAIL] Error details:", JSON.stringify(error, null, 2));
+      const errorMessage = error instanceof Error ? error.message : (error as any)?.message || String(error);
+      return { 
+        success: false, 
+        error: errorMessage 
+      };
     }
 
-    console.log("✅ Application confirmation email sent successfully:", emailData?.id);
+    console.log("✅ [CONFIRMATION EMAIL] Application confirmation email sent successfully:", emailData?.id);
+    console.log("✅ [CONFIRMATION EMAIL] Email sent to:", email);
     return { success: true, data: emailData };
   } catch (error) {
-    console.error("💥 Failed to send application confirmation email:", error);
-    return { success: false, error };
+    console.error("💥 [CONFIRMATION EMAIL] Failed to send application confirmation email:", error);
+    console.error("💥 [CONFIRMATION EMAIL] Error type:", error instanceof Error ? error.constructor.name : typeof error);
+    console.error("💥 [CONFIRMATION EMAIL] Error message:", error instanceof Error ? error.message : String(error));
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    return { 
+      success: false, 
+      error: errorMessage 
+    };
   }
 }
