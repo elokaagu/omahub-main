@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -53,10 +53,30 @@ export default function ApplicationsPage() {
     setMounted(true);
   }, []);
 
+  // Add refs to prevent multiple simultaneous fetches
+  const isFetchingRef = useRef(false);
+  const lastFetchTimeRef = useRef(0);
+  const FETCH_DEBOUNCE_MS = 2000; // 2 seconds minimum between fetches
+
   // Fetch applications - CRITICAL: This must fetch ALL applications without filtering
   // Memoize to prevent unnecessary re-renders
   const fetchApplications = useCallback(async () => {
+    // Prevent multiple simultaneous fetches
+    if (isFetchingRef.current) {
+      console.log("⏸️ [Applications] Fetch already in progress, skipping...");
+      return;
+    }
+
+    // Debounce rapid successive calls
+    const now = Date.now();
+    if (now - lastFetchTimeRef.current < FETCH_DEBOUNCE_MS) {
+      console.log("⏸️ [Applications] Fetch debounced, too soon since last fetch");
+      return;
+    }
+
     try {
+      isFetchingRef.current = true;
+      lastFetchTimeRef.current = now;
       setLoading(true);
       setError(null);
       
@@ -127,10 +147,12 @@ export default function ApplicationsPage() {
       toast.error(errorMessage);
     } finally {
       setLoading(false);
+      isFetchingRef.current = false;
     }
   }, []); // Empty dependency array - function doesn't depend on any props/state
 
   // Check user access and fetch applications
+  // Only depend on user.id and user.role to prevent unnecessary re-runs
   useEffect(() => {
     if (user) {
       if (user.role !== 'super_admin') {
@@ -143,7 +165,7 @@ export default function ApplicationsPage() {
       // User is not logged in
       setLoading(false);
     }
-  }, [user, fetchApplications]);
+  }, [user?.id, user?.role, fetchApplications]);
 
   // Handle Escape key to close modals
   useEffect(() => {
