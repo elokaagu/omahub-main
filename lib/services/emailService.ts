@@ -477,7 +477,7 @@ You're receiving this because you're a super admin.
           console.error(`❌ Failed to send notification to ${adminEmail}:`, {
             error,
             message: error.message,
-            code: error.code,
+            code: (error as any).code,
             details: error
           });
           emailResults.push({ 
