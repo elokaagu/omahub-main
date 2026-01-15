@@ -55,13 +55,13 @@ export default function ApplicationConfirmationModal({
           onClick={(e) => e.stopPropagation()}
         >
           <Card className="relative overflow-hidden">
-            <CardHeader className="text-center pb-4">
-              <div className="flex justify-end">
+            <CardHeader className="text-center pb-4 bg-gradient-to-r from-oma-plum to-oma-plum/90 p-6">
+              <div className="flex justify-end mb-4">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={handleClose}
-                  className="h-8 w-8 p-0 hover:bg-gray-100"
+                  className="h-8 w-8 p-0 hover:bg-white/20 text-white"
                 >
                   <X className="h-4 w-4" />
                 </Button>
@@ -73,6 +73,15 @@ export default function ApplicationConfirmationModal({
                 animate="visible"
                 className="flex flex-col items-center space-y-4"
               >
+                {/* OmaHub Banner */}
+                <div className="mb-4">
+                  <img
+                    src="/omahub-banner.png"
+                    alt="OmaHub"
+                    className="h-auto w-auto max-w-[200px]"
+                  />
+                </div>
+                
                 <div className="relative">
                   <div className="h-16 w-16 bg-green-100 rounded-full flex items-center justify-center">
                     <CheckCircle className="h-8 w-8 text-green-600" />
@@ -83,10 +92,10 @@ export default function ApplicationConfirmationModal({
                 </div>
                 
                 <div>
-                  <CardTitle className="text-2xl font-bold text-gray-900 mb-2">
+                  <CardTitle className="text-2xl font-bold text-white mb-2">
                     Application Submitted!
                   </CardTitle>
-                  <p className="text-gray-600 text-sm">
+                  <p className="text-white/90 text-sm">
                     Your designer application has been successfully submitted
                   </p>
                 </div>

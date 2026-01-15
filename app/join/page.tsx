@@ -35,6 +35,11 @@ export default function Join() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [submittedApplicationId, setSubmittedApplicationId] = useState<string | null>(null);
+  const [submittedFormData, setSubmittedFormData] = useState<{
+    brandName: string;
+    designerName: string;
+    email: string;
+  } | null>(null);
   const { toast } = useToast();
 
   const handleChange = (
@@ -48,6 +53,67 @@ export default function Join() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Prevent double submission
+    if (isSubmitting) {
+      return;
+    }
+
+    // Client-side validation
+    if (!formData.brandName?.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Brand name is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!formData.designerName?.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Designer name is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!formData.email?.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Email address is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!formData.location?.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Location is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!formData.category?.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Category is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!formData.description?.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Brand description is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -60,14 +126,22 @@ export default function Join() {
         body: JSON.stringify(formData),
       });
 
+      const result = await response.json();
+
       if (response.ok) {
-        const result = await response.json();
         console.log("Application submitted successfully:", result);
         
-        // Store the application ID if available
-        if (result.applicationId) {
-          setSubmittedApplicationId(result.applicationId);
+        // Store the application ID if available (API returns 'id' not 'applicationId')
+        if (result.id) {
+          setSubmittedApplicationId(result.id);
         }
+        
+        // Store submitted form data for confirmation modal
+        setSubmittedFormData({
+          brandName: formData.brandName,
+          designerName: formData.designerName,
+          email: formData.email,
+        });
         
         // Show confirmation modal
         setShowConfirmationModal(true);
@@ -86,14 +160,31 @@ export default function Join() {
           yearFounded: "",
         });
       } else {
-        throw new Error("Failed to submit application");
+        // Extract error message from API response
+        const errorMessage = result.error || result.details || "Failed to submit application";
+        console.error("API Error:", {
+          status: response.status,
+          error: errorMessage,
+          details: result.details,
+        });
+        
+        toast({
+          title: "Submission Error",
+          description: errorMessage,
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error("Error submitting application:", error);
+      
+      // Handle network errors or JSON parsing errors
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : "There was an error submitting your application. Please check your connection and try again.";
+      
       toast({
         title: "Submission Error",
-        description:
-          "There was an error submitting your application. Please try again or contact support.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -381,11 +472,16 @@ export default function Join() {
       {/* Application Confirmation Modal */}
       <ApplicationConfirmationModal
         isOpen={showConfirmationModal}
-        onClose={() => setShowConfirmationModal(false)}
+        onClose={() => {
+          setShowConfirmationModal(false);
+          // Clear submitted data when modal closes
+          setSubmittedFormData(null);
+          setSubmittedApplicationId(null);
+        }}
         applicationId={submittedApplicationId || undefined}
-        brandName={formData.brandName}
-        designerName={formData.designerName}
-        email={formData.email}
+        brandName={submittedFormData?.brandName}
+        designerName={submittedFormData?.designerName}
+        email={submittedFormData?.email}
       />
     </>
   );
