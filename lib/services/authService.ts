@@ -301,10 +301,15 @@ export async function resetPassword(email: string) {
     throw new Error("Supabase client not available");
   }
 
-  const redirectUrl =
+  // Use environment variable if available, otherwise use current origin
+  const baseUrl =
     typeof window !== "undefined"
-      ? `${window.location.origin}/reset-password`
-      : "http://localhost:3001/reset-password";
+      ? window.location.origin
+      : process.env.NEXT_PUBLIC_SITE_URL || "https://oma-hub.com";
+  
+  const redirectUrl = `${baseUrl}/reset-password`;
+
+  console.log("🔗 Sending password reset email with redirect URL:", redirectUrl);
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: redirectUrl,

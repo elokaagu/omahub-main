@@ -52,6 +52,90 @@ export function FileUpload({
           .map(([mimeType, extensions]) => extensions.join(", "))
           .join(", ");
 
+  // Helper function to ensure valid session before upload
+  const ensureValidSession = async (retries = 2): Promise<void> => {
+    if (!supabase) {
+      throw new Error("Supabase client not available");
+    }
+
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      try {
+        // First, check current session
+        const {
+          data: { session: currentSession },
+          error: sessionCheckError,
+        } = await supabase.auth.getSession();
+
+        // If we have a valid session, verify it's still active
+        if (currentSession && !sessionCheckError) {
+          const {
+            data: { user },
+            error: userError,
+          } = await supabase.auth.getUser();
+
+          if (!userError && user) {
+            console.log("✅ Valid session confirmed:", {
+              userId: user.id,
+              email: user.email,
+            });
+            return; // Session is valid, proceed
+          }
+        }
+
+        // If no session or invalid, try to refresh
+        console.log(`🔄 Attempting session refresh (attempt ${attempt + 1}/${retries + 1})...`);
+        const { data: refreshData, error: refreshError } =
+          await supabase.auth.refreshSession();
+
+        if (refreshError) {
+          console.error("Session refresh failed:", refreshError);
+          
+          // If this is the last attempt, throw error
+          if (attempt === retries) {
+            throw new Error(
+              `Session expired. Please refresh the page and sign in again. ${refreshError.message}`
+            );
+          }
+          
+          // Wait a bit before retrying
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+          continue;
+        }
+
+        // Verify the refreshed session
+        if (refreshData.session) {
+          const {
+            data: { user },
+            error: userError,
+          } = await supabase.auth.getUser();
+
+          if (!userError && user) {
+            console.log("✅ Session refreshed successfully:", {
+              userId: user.id,
+              email: user.email,
+            });
+            return; // Session refreshed successfully
+          }
+        }
+
+        // If we get here, session refresh didn't work
+        if (attempt === retries) {
+          throw new Error(
+            "Unable to maintain session. Please refresh the page and sign in again."
+          );
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      } catch (error) {
+        if (attempt === retries) {
+          throw error;
+        }
+        console.warn(`⚠️ Session check attempt ${attempt + 1} failed, retrying...`);
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+    }
+  };
+
   // Simplified upload to Supabase with timeout
   const uploadToSupabase = async (file: File): Promise<string> => {
     // Check if supabase client is available
@@ -59,24 +143,17 @@ export function FileUpload({
       throw new Error("Supabase client not available");
     }
 
-    // Force session refresh to ensure we have a valid token
-    console.log("🔄 Refreshing session for upload...");
-    const { data: sessionData, error: sessionError } =
-      await supabase.auth.refreshSession();
+    // Ensure we have a valid session before starting upload
+    await ensureValidSession();
 
-    if (sessionError) {
-      console.error("Session refresh failed:", sessionError);
-      throw new Error(`Session refresh failed: ${sessionError.message}`);
-    }
-
-    // Check if user is authenticated after refresh
+    // Double-check user authentication after session validation
     const {
       data: { user },
       error: authError,
     } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      console.error("Authentication check failed:", {
+      console.error("Authentication check failed after session validation:", {
         authError,
         hasUser: !!user,
       });

@@ -542,6 +542,26 @@ export default function CreateProductPage() {
       return;
     }
 
+    // Validate session before proceeding
+    try {
+      const sessionCheck = await fetch("/api/auth/validate");
+      if (!sessionCheck.ok) {
+        toast.error(
+          "Your session has expired. Please refresh the page and sign in again."
+        );
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
+        return;
+      }
+    } catch (sessionError) {
+      console.error("Session validation failed:", sessionError);
+      toast.error(
+        "Unable to verify your session. Please refresh the page and try again."
+      );
+      return;
+    }
+
     // Validate required fields
     if (!formData.title?.trim()) {
       toast.error("Please enter a product title");
@@ -664,6 +684,19 @@ export default function CreateProductPage() {
         toast.error(
           "Database schema error. Some fields may not be supported yet. Please try again with fewer fields."
         );
+      } else if (
+        error instanceof Error &&
+        (error.message?.includes("Authentication") ||
+          error.message?.includes("session") ||
+          error.message?.includes("401") ||
+          error.message?.includes("403"))
+      ) {
+        toast.error(
+          "Your session has expired. Please refresh the page and sign in again."
+        );
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
       } else if (error instanceof Error && error.message?.includes("currency")) {
         toast.error(`Currency error: ${error.message}`);
       } else if (error instanceof Error) {

@@ -24,15 +24,40 @@ function ResetPasswordForm() {
   useEffect(() => {
     const checkSession = async () => {
       try {
-        // First check URL parameters
-        const accessToken = searchParams.get("access_token");
-        const refreshToken = searchParams.get("refresh_token");
-        const type = searchParams.get("type");
+        // Helper function to parse hash fragments (Supabase uses #access_token=...)
+        const parseHashParams = () => {
+          const hash = window.location.hash.substring(1);
+          if (!hash) return {};
+          const params: Record<string, string> = {};
+          hash.split("&").forEach((param) => {
+            const [key, value] = param.split("=");
+            if (key && value) {
+              params[key] = decodeURIComponent(value);
+            }
+          });
+          return params;
+        };
+
+        // Check both query parameters and hash fragments
+        const queryAccessToken = searchParams.get("access_token");
+        const queryRefreshToken = searchParams.get("refresh_token");
+        const queryType = searchParams.get("type");
+
+        const hashParams = parseHashParams();
+        const hashAccessToken = hashParams.access_token;
+        const hashRefreshToken = hashParams.refresh_token;
+        const hashType = hashParams.type;
+
+        // Prefer hash params (Supabase default) but fall back to query params
+        const accessToken = hashAccessToken || queryAccessToken;
+        const refreshToken = hashRefreshToken || queryRefreshToken;
+        const type = hashType || queryType;
 
         console.log("🔍 Reset password URL params:", {
           hasAccessToken: !!accessToken,
           hasRefreshToken: !!refreshToken,
           type: type,
+          source: hashAccessToken ? "hash" : queryAccessToken ? "query" : "none",
         });
 
         // If we have tokens in URL, set the session
@@ -54,6 +79,10 @@ function ResetPasswordForm() {
 
           if (data.session) {
             console.log("✅ Session set successfully");
+            // Clear hash from URL for security
+            if (window.location.hash) {
+              window.history.replaceState(null, "", window.location.pathname + window.location.search);
+            }
             setIsValidSession(true);
             return;
           }
