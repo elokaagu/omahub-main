@@ -1,11 +1,73 @@
 import { createClient } from "@supabase/supabase-js";
 
 // Create a Supabase client with admin privileges
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-// Create a client with admin privileges (service role key)
-export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+// Helper function to validate environment variables
+function validateAdminEnvVars() {
+  if (!supabaseUrl || !supabaseServiceKey) {
+    const error = new Error("Missing required Supabase admin environment variables");
+    console.error("❌ Supabase admin configuration error:", {
+      hasUrl: !!supabaseUrl,
+      hasServiceKey: !!supabaseServiceKey,
+      env: process.env.NODE_ENV,
+    });
+    throw error;
+  }
+}
+
+// Create admin client function - lazy initialization
+function createAdminClient() {
+  validateAdminEnvVars();
+  return createClient(supabaseUrl!, supabaseServiceKey!, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
+  });
+}
+
+// Lazy initialization to avoid errors at module load time
+let supabaseAdminInstance: ReturnType<typeof createAdminClient> | null = null;
+
+function getSupabaseAdminInstance() {
+  if (!supabaseAdminInstance) {
+    try {
+      supabaseAdminInstance = createAdminClient();
+    } catch (error) {
+      console.error("Failed to initialize Supabase admin client:", error);
+      throw error;
+    }
+  }
+  return supabaseAdminInstance;
+}
+
+// Export supabaseAdmin as a getter that lazily initializes
+export const supabaseAdmin = new Proxy({} as ReturnType<typeof createAdminClient>, {
+  get(target, prop) {
+    try {
+      const instance = getSupabaseAdminInstance();
+      const value = instance[prop as keyof typeof instance];
+      if (typeof value === 'function') {
+        return value.bind(instance);
+      }
+      return value;
+    } catch (error) {
+      // Return a no-op function for methods to prevent crashes
+      if (typeof prop === 'string' && prop.includes('auth')) {
+        console.error("Supabase admin client not available:", error);
+        return () => Promise.resolve({ data: null, error: error });
+      }
+      throw error;
+    }
+  },
+  set(target, prop, value) {
+    const instance = getSupabaseAdminInstance();
+    (instance as any)[prop] = value;
+    return true;
+  }
+});
 
 // Check if we're in a build process
 const isBuildTime =
@@ -209,12 +271,8 @@ export async function createProductsTable() {
 // Get a client with admin privileges (reusable function)
 export async function getAdminClient() {
   try {
-    if (!supabaseUrl || !supabaseServiceKey) {
-      console.error("Missing Supabase configuration");
-      return null;
-    }
-
-    return createClient(supabaseUrl, supabaseServiceKey, {
+    validateAdminEnvVars();
+    return createClient(supabaseUrl!, supabaseServiceKey!, {
       auth: {
         persistSession: false,
         autoRefreshToken: false,

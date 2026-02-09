@@ -5,7 +5,6 @@ import { Preloader } from "@/components/ui/preloader";
 import { suisseIntl, canela } from "./fonts";
 import { Toaster } from "sonner";
 import { Analytics } from "@vercel/analytics/react";
-import Head from "next/head";
 import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
 
 export const metadata: Metadata = {
@@ -81,6 +80,13 @@ export const metadata: Metadata = {
     yandex: "your-yandex-verification-code",
     yahoo: "your-yahoo-verification-code",
   },
+  manifest: "/manifest.json",
+  themeColor: "#2D1921",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "OmaHub",
+  },
 };
 
 export default function RootLayout({
@@ -90,11 +96,6 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${suisseIntl.variable} ${canela.variable}`}>
-      <Head>
-        <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#2D1921" />
-        <link rel="apple-touch-icon" href="/favicon.png" />
-      </Head>
       <body>
         <Preloader>
           <RootLayoutClient>{children}</RootLayoutClient>

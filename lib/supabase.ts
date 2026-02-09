@@ -66,8 +66,37 @@ const createClient = () => {
   });
 };
 
-// Create the client instance
-export const supabase = createClient();
+// Create the client instance - lazy initialization to avoid errors at module load time
+let supabaseInstance: ReturnType<typeof createClient> | null = null;
+
+function getSupabaseInstance() {
+  if (!supabaseInstance) {
+    try {
+      supabaseInstance = createClient();
+    } catch (error) {
+      console.error("Failed to initialize Supabase client:", error);
+      throw new Error("Supabase client not initialized. Check environment variables: NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY");
+    }
+  }
+  return supabaseInstance;
+}
+
+// Export supabase as a getter that lazily initializes
+export const supabase = new Proxy({} as ReturnType<typeof createClient>, {
+  get(target, prop) {
+    const instance = getSupabaseInstance();
+    const value = instance[prop as keyof typeof instance];
+    if (typeof value === 'function') {
+      return value.bind(instance);
+    }
+    return value;
+  },
+  set(target, prop, value) {
+    const instance = getSupabaseInstance();
+    (instance as any)[prop] = value;
+    return true;
+  }
+});
 
 // Export a function to get a fresh client instance if needed
 export const getSupabaseClient = () => createClient();

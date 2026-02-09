@@ -3,12 +3,21 @@ import { createServerClient } from "@supabase/ssr";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
 // Environment variables with validation
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error("Missing required Supabase environment variables");
+// Helper function to validate environment variables
+function validateEnvVars() {
+  if (!supabaseUrl || !supabaseAnonKey) {
+    const error = new Error("Missing required Supabase environment variables");
+    console.error("❌ Supabase configuration error:", {
+      hasUrl: !!supabaseUrl,
+      hasKey: !!supabaseAnonKey,
+      env: process.env.NODE_ENV,
+    });
+    throw error;
+  }
 }
 
 // Enhanced client configuration with robust session handling
@@ -30,16 +39,18 @@ const clientConfig = {
 
 // Browser client for client-side operations
 export function createClient() {
-  return createBrowserClient(supabaseUrl, supabaseAnonKey, clientConfig);
+  validateEnvVars();
+  return createBrowserClient(supabaseUrl!, supabaseAnonKey!, clientConfig);
 }
 
 // Server client for server-side operations with cookies
 export async function createServerSupabaseClient() {
+  validateEnvVars();
   // Dynamically import cookies only when this function is called in a server context
   const { cookies } = await import("next/headers");
   const cookieStore = cookies();
 
-  return createServerClient(supabaseUrl, supabaseAnonKey, {
+  return createServerClient(supabaseUrl!, supabaseAnonKey!, {
     ...clientConfig,
     cookies: {
       get(name: string) {
@@ -68,13 +79,14 @@ export async function createServerSupabaseClient() {
 
 // Admin client with service role key (bypasses RLS)
 export function createAdminClient() {
+  validateEnvVars();
   if (!supabaseServiceKey) {
     throw new Error(
       "SUPABASE_SERVICE_ROLE_KEY is required for admin operations"
     );
   }
 
-  return createSupabaseClient(supabaseUrl, supabaseAnonKey, {
+  return createSupabaseClient(supabaseUrl!, supabaseAnonKey!, {
     auth: {
       persistSession: false,
       autoRefreshToken: false,
@@ -84,7 +96,8 @@ export function createAdminClient() {
 
 // API route client for server-side operations with request cookies
 export function createApiRouteSupabaseClient(request: Request) {
-  return createServerClient(supabaseUrl, supabaseAnonKey, {
+  validateEnvVars();
+  return createServerClient(supabaseUrl!, supabaseAnonKey!, {
     ...clientConfig,
     cookies: {
       get(name: string) {
@@ -115,11 +128,68 @@ export function createApiRouteSupabaseClient(request: Request) {
 }
 
 // Single source of truth for browser client
-export const supabase = createClient();
+// Lazy initialization to avoid errors at module load time
+let supabaseInstance: ReturnType<typeof createClient> | null = null;
+
+function getSupabaseInstance() {
+  if (!supabaseInstance) {
+    // Check if we're in browser and environment variables are available
+    if (typeof window !== "undefined") {
+      const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      
+      if (!url || !key) {
+        console.error("❌ Supabase environment variables not available in browser:", {
+          hasUrl: !!url,
+          hasKey: !!key,
+          allEnvKeys: Object.keys(process.env).filter(k => k.includes('SUPABASE')),
+        });
+        throw new Error(
+          "Supabase environment variables not available. " +
+          "Please ensure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are set."
+        );
+      }
+    }
+    
+    try {
+      supabaseInstance = createClient();
+    } catch (error) {
+      console.error("Failed to initialize Supabase client:", error);
+      throw error;
+    }
+  }
+  return supabaseInstance;
+}
+
+// Export supabase as a getter that lazily initializes
+export const supabase = new Proxy({} as ReturnType<typeof createClient>, {
+  get(target, prop) {
+    try {
+      const instance = getSupabaseInstance();
+      const value = instance[prop as keyof typeof instance];
+      if (typeof value === 'function') {
+        return value.bind(instance);
+      }
+      return value;
+    } catch (error) {
+      // Return a no-op function for methods to prevent crashes
+      if (typeof prop === 'string' && prop.includes('auth')) {
+        console.error("Supabase client not available:", error);
+        return () => Promise.resolve({ data: null, error: error });
+      }
+      throw error;
+    }
+  },
+  set(target, prop, value) {
+    const instance = getSupabaseInstance();
+    (instance as any)[prop] = value;
+    return true;
+  }
+});
 
 // Helper to clear corrupted auth data
 export function clearAuthData() {
-  if (typeof window !== "undefined") {
+  if (typeof window !== "undefined" && supabaseUrl) {
     // Clear all possible auth storage keys including the new consistent one
     const baseKey = `sb-${new URL(supabaseUrl).hostname.split(".")[0]}-auth-token`;
     const keysToRemove = [
