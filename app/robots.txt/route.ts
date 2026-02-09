@@ -9,7 +9,6 @@ Disallow: /studio/
 Disallow: /api/
 Disallow: /auth/
 Disallow: /admin/
-Disallow: /password-gate/
 Disallow: /offline/
 Disallow: /test-contact-form/
 

@@ -17,59 +17,8 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Skip password gate for the password gate page itself
-  if (request.nextUrl.pathname === "/password-gate") {
-    return NextResponse.next();
-  }
-
-  // Check platform_visibility from the database (Supabase)
-  let isPublic = false;
-  try {
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          get(name: string) {
-            return request.cookies.get(name)?.value;
-          },
-          set() {},
-          remove() {},
-        },
-      }
-    );
-    const { data, error } = await supabase
-      .from("platform_settings")
-      .select("value")
-      .eq("key", "platform_visibility")
-      .single();
-    if (!error && data?.value === "public") {
-      isPublic = true;
-    }
-  } catch (err) {
-    // If DB check fails, fallback to cookie for legacy support
-    isPublic = request.cookies.get("omahub-public")?.value === "true";
-  }
-
-  // TEMPORARY: Bypass password gate for development
-  // TODO: Remove this bypass when going to production
-  const isDevelopment = process.env.NODE_ENV === "development";
-
-  if (!isPublic && !isDevelopment) {
-    // Check for password gate access
-    const hasPasswordAccess =
-      request.cookies.get("omahub-access")?.value === "granted";
-
-    if (!hasPasswordAccess) {
-      // Redirect to password gate with the current path as redirect parameter
-      const passwordGateUrl = new URL("/password-gate", request.url);
-      passwordGateUrl.searchParams.set(
-        "redirect",
-        request.nextUrl.pathname + request.nextUrl.search
-      );
-      return NextResponse.redirect(passwordGateUrl);
-    }
-  }
+  // Platform is now live - no password gate needed
+  // All routes are publicly accessible except /studio which requires authentication
 
   // Only protect /studio routes with Supabase auth - let everything else pass through
   if (!request.nextUrl.pathname.startsWith("/studio")) {

@@ -5,9 +5,9 @@
 -- 1. Add admin email settings to platform_settings table
 INSERT INTO platform_settings (key, value, description, created_at, updated_at)
 VALUES 
-  ('super_admin_emails', '["eloka.agu@icloud.com", "shannonalisa@oma-hub.com"]', 'Array of super admin email addresses', NOW(), NOW()),
+  ('super_admin_emails', '["eloka.agu@icloud.com", "info@oma-hub.com"]', 'Array of super admin email addresses', NOW(), NOW()),
   ('brand_admin_emails', '["eloka@culturin.com"]', 'Array of brand admin email addresses', NOW(), NOW()),
-  ('webhook_admin_emails', '["eloka.agu@icloud.com", "shannonalisa@oma-hub.com", "eloka@satellitelabs.xyz"]', 'Array of admin emails for webhook notifications', NOW(), NOW())
+  ('webhook_admin_emails', '["eloka.agu@icloud.com", "info@oma-hub.com", "eloka@satellitelabs.xyz"]', 'Array of admin emails for webhook notifications', NOW(), NOW())
 ON CONFLICT (key) 
 DO UPDATE SET 
   value = EXCLUDED.value,
@@ -108,9 +108,9 @@ SELECT
   is_brand_admin('eloka.agu@icloud.com') as is_brand_admin;
 
 SELECT 
-  'shannonalisa@oma-hub.com' as email,
-  is_super_admin('shannonalisa@oma-hub.com') as is_super_admin,
-  is_brand_admin('shannonalisa@oma-hub.com') as is_brand_admin;
+  'info@oma-hub.com' as email,
+  is_super_admin('info@oma-hub.com') as is_super_admin,
+  is_brand_admin('info@oma-hub.com') as is_brand_admin;
 
 SELECT 
   'eloka@culturin.com' as email,

@@ -84,12 +84,12 @@ export class AdminEmailService {
       return {
         super_admin_emails: [
           "eloka.agu@icloud.com",
-          "shannonalisa@oma-hub.com",
+          "info@oma-hub.com",
         ],
         brand_admin_emails: ["eloka@culturin.com"],
         webhook_admin_emails: [
           "eloka.agu@icloud.com",
-          "shannonalisa@oma-hub.com",
+          "info@oma-hub.com",
           "eloka@satellitelabs.xyz",
         ],
       };
