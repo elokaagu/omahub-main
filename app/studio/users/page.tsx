@@ -48,6 +48,7 @@ import {
   Search,
   Filter,
   RefreshCw,
+  Download,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -63,6 +64,45 @@ interface UserProfile {
 interface UserWithBrands extends UserProfile {
   brand_names: string[];
   expanded?: boolean;
+}
+
+function escapeCsvField(value: string): string {
+  const s = String(value ?? "");
+  if (/[",\r\n]/.test(s)) {
+    return `"${s.replace(/"/g, '""')}"`;
+  }
+  return s;
+}
+
+function buildUsersCsv(rows: UserWithBrands[]): string {
+  const headers = ["email", "role", "brands", "created_at", "user_id"];
+  const lines = [
+    headers.join(","),
+    ...rows.map((u) =>
+      [
+        escapeCsvField(u.email),
+        escapeCsvField(u.role),
+        escapeCsvField(u.brand_names.join("; ")),
+        escapeCsvField(u.created_at),
+        escapeCsvField(u.id),
+      ].join(",")
+    ),
+  ];
+  return lines.join("\r\n");
+}
+
+function triggerCsvDownload(filename: string, csvContent: string) {
+  const blob = new Blob([`\uFEFF${csvContent}`], {
+    type: "text/csv;charset=utf-8;",
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
 }
 
 export default function UsersPage() {
@@ -361,6 +401,22 @@ export default function UsersPage() {
   const clearFilters = () => {
     setSearchTerm("");
     setRoleFilter("all");
+  };
+
+  const handleExportCsv = () => {
+    if (filteredUsers.length === 0) {
+      toast.error("No users to export");
+      return;
+    }
+    const roleSlug =
+      roleFilter === "all" ? "all-roles" : roleFilter.replace(/_/g, "-");
+    const searchSlug = searchTerm
+      ? `-search-${searchTerm.slice(0, 40).replace(/[^\w-]+/g, "-")}`
+      : "";
+    const date = new Date().toISOString().slice(0, 10);
+    const filename = `omahub-users-${roleSlug}${searchSlug}-${date}.csv`;
+    triggerCsvDownload(filename, buildUsersCsv(filteredUsers));
+    toast.success(`Exported ${filteredUsers.length} row(s)`);
   };
 
   const handleSyncSuperAdminBrands = async () => {
@@ -741,6 +797,15 @@ export default function UsersPage() {
               Clear Filters
             </Button>
           )}
+          <Button
+            variant="outline"
+            onClick={handleExportCsv}
+            disabled={filteredUsers.length === 0}
+            className="text-oma-plum border-oma-plum hover:bg-oma-plum/10"
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Export CSV
+          </Button>
         </div>
       </div>
 
