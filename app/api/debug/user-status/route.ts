@@ -1,60 +1,105 @@
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
+import { requireSuperAdmin } from "@/lib/auth/requireSuperAdmin";
+import { isDebugApiAllowed } from "@/lib/debug/debugApiAccess";
+import { createServerSupabaseClient } from "@/lib/supabase-unified";
 
-// Force dynamic rendering since we use cookies
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
-export async function GET(request: NextRequest) {
+type Check = "ok" | "fail";
+
+/**
+ * Super-admin-only coarse health checks for session DB paths (no PII or row payloads).
+ *
+ * `checks.profile_row` — can read own `profiles.id` under RLS.
+ * `checks.brands_probe` — can run a minimal `brands` read (RLS as super_admin).
+ *
+ * Production: set `ENABLE_DEBUG_USER_STATUS=true` or returns 404.
+ */
+export async function GET() {
+  if (!isDebugApiAllowed("ENABLE_DEBUG_USER_STATUS")) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
+  const auth = await requireSuperAdmin();
+  if (!auth.ok) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
+  }
+
+  const { supabase, userId } = auth;
+
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const profile_row = await probeProfileRow(supabase, userId);
+    const brands_probe = await probeBrandsReadable(supabase);
 
-    // Get the current user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    const checks = {
+      profile_row,
+      brands_probe,
+    };
 
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: "Authentication required", authError: authError?.message },
-        { status: 401 }
-      );
-    }
+    const ok = profile_row === "ok" && brands_probe === "ok";
 
-    // Get user profile
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", user.id)
-      .single();
-
-    // Get all brands to see what's available
-    const { data: allBrands, error: brandsError } = await supabase
-      .from("brands")
-      .select("id, name")
-      .limit(10);
-
-    return NextResponse.json({
-      user: {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-      },
-      profile: profile || null,
-      profileError: profileError?.message || null,
-      allBrands: allBrands || [],
-      brandsError: brandsError?.message || null,
-      timestamp: new Date().toISOString(),
+    const res = NextResponse.json({
+      ok,
+      checkedAt: new Date().toISOString(),
+      checks,
     });
-  } catch (error) {
-    console.error("Error in user status debug:", error);
+    res.headers.set("Cache-Control", "private, no-store");
+    return res;
+  } catch (e) {
+    console.error(
+      JSON.stringify({
+        event: "debug_user_status_unhandled",
+        name: e instanceof Error ? e.name : "unknown",
+      })
+    );
     return NextResponse.json(
-      {
-        error: "Internal server error",
-        details: error instanceof Error ? error.message : String(error),
-      },
-      { status: 500 }
+      { ok: false, error: "Internal server error" },
+      { status: 500, headers: { "Cache-Control": "private, no-store" } }
     );
   }
+}
+
+async function probeProfileRow(
+  supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>,
+  userId: string
+): Promise<Check> {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (error) {
+    console.error(
+      JSON.stringify({
+        event: "debug_user_status_profile_probe",
+        code: error.code ?? "unknown",
+      })
+    );
+    return "fail";
+  }
+  if (!data) {
+    console.error(
+      JSON.stringify({ event: "debug_user_status_profile_probe", code: "no_row" })
+    );
+    return "fail";
+  }
+  return "ok";
+}
+
+async function probeBrandsReadable(
+  supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>
+): Promise<Check> {
+  const { error } = await supabase.from("brands").select("id").limit(1);
+
+  if (error) {
+    console.error(
+      JSON.stringify({
+        event: "debug_user_status_brands_probe",
+        code: error.code ?? "unknown",
+      })
+    );
+    return "fail";
+  }
+  return "ok";
 }
