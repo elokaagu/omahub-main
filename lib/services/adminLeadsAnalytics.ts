@@ -3,6 +3,13 @@ import type { createServerSupabaseClient } from "@/lib/supabase-unified";
 
 type Supabase = Awaited<ReturnType<typeof createServerSupabaseClient>>;
 
+type BrandRevenueAggregate = {
+  brand_id: string;
+  total_revenue: number;
+  total_commission: number;
+  booking_count: number;
+};
+
 /**
  * Client-side aggregation when `get_leads_analytics` RPC fails.
  * Mirrors previous route behaviour (including monthly trend labelling).
@@ -204,15 +211,7 @@ export async function computeFallbackLeadsAnalytics(
         acc[brandId].booking_count += 1;
         return acc;
       },
-      {} as Record<
-        string,
-        {
-          brand_id: string;
-          total_revenue: number;
-          total_commission: number;
-          booking_count: number;
-        }
-      >
+      {} as Record<string, BrandRevenueAggregate>
     );
 
     const brandIds = Object.keys(brandRevenue);
@@ -222,7 +221,9 @@ export async function computeFallbackLeadsAnalytics(
         .select("id, name")
         .in("id", brandIds);
 
-      topPerformingBrands = Object.values(brandRevenue)
+      topPerformingBrands = brandIds
+        .map((id) => brandRevenue[id])
+        .filter((b): b is BrandRevenueAggregate => b != null)
         .map((brand) => {
           const brandInfo = brandsData?.find((b) => b.id === brand.brand_id);
           return {
