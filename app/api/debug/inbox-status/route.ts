@@ -38,21 +38,12 @@ export async function GET(request: NextRequest) {
         .from("profiles")
         .select("role, owned_brands")
         .eq("id", session.user.id)
-        .single();
+        .maybeSingle();
 
       if (profileError) {
         debug.checks.profile = `❌ profile error: ${profileError.message}`;
-
-        // Fallback: Check if user email indicates super_admin access (legacy support)
-        const legacySuperAdmins = [
-          "eloka.agu@icloud.com",
-          "shannonalisa@oma-hub.com",
-        ];
-        
-        if (legacySuperAdmins.includes(session.user.email || "")) {
-          debug.checks.profile += " (super admin fallback available)";
-          debug.profile = { role: "super_admin", owned_brands: [] };
-        }
+      } else if (!profile) {
+        debug.checks.profile = "❌ no profile row (studio requires profiles.role)";
       } else {
         debug.checks.profile = "✅ profile found";
         debug.profile = profile;

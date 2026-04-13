@@ -49,7 +49,7 @@ export default function StudioPage() {
 
         // Get user permissions and profile
         const [permissions, profileResult] = await Promise.all([
-          getUserPermissions(user.id, user.email),
+          getUserPermissions(user.id),
           supabaseHelpers.getProfileById(user.id),
         ]);
 

@@ -1,57 +1,56 @@
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { createServerSupabaseClient } from "@/lib/supabase-unified";
+import { SELF_PROFILE_SELECT } from "@/lib/auth/selfProfile";
+import {
+  corruptedSessionResponse,
+  isJwtLikeAuthError,
+} from "@/lib/auth/sessionInvalidation";
 
+export const dynamic = "force-dynamic";
+
+/** Current user's profile row (narrow columns). Session from unified SSR client. */
 export async function GET() {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
-
-    // Get authenticated user with better error handling
+    const supabase = await createServerSupabaseClient();
     const {
       data: { user },
       error: authError,
     } = await supabase.auth.getUser();
 
     if (authError) {
-      console.log("🔧 Auth error in profile API:", authError.message);
-
-      // Handle specific JWT errors
-      if (
-        authError.message.includes("JWT") ||
-        authError.message.includes("token")
-      ) {
-        return NextResponse.json(
-          { error: "Invalid session - please sign in again" },
-          {
-            status: 401,
-            headers: {
-              "Clear-Site-Data": '"cookies"',
-              "Set-Cookie": [
-                "sb-access-token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax",
-                "sb-refresh-token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax",
-              ].join(", "),
-            },
-          }
-        );
+      if (isJwtLikeAuthError(authError.message)) {
+        return corruptedSessionResponse(supabase);
       }
-
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      console.error(
+        JSON.stringify({
+          event: "profile_get_user_failed",
+          message: authError.message,
+        })
+      );
+      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
-    if (!user) {
-      return NextResponse.json({ error: "No user found" }, { status: 401 });
+    if (!user?.id) {
+      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
-    // Get user profile
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("*")
+      .select(SELF_PROFILE_SELECT)
       .eq("id", user.id)
       .maybeSingle();
 
     if (profileError) {
-      console.error("Error fetching profile:", profileError);
-      return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+      console.error(
+        JSON.stringify({
+          event: "profile_row_fetch_failed",
+          code: profileError.code,
+        })
+      );
+      return NextResponse.json(
+        { error: "Failed to load profile" },
+        { status: 500 }
+      );
     }
 
     if (!profile) {
@@ -60,21 +59,25 @@ export async function GET() {
 
     return NextResponse.json(profile);
   } catch (error) {
-    console.error("Profile API error:", error);
-
-    // Handle cookie parsing errors specifically
-    if (error instanceof Error && error.message.includes("cookie")) {
-      return NextResponse.json(
-        { error: "Session corrupted - please clear cookies and sign in again" },
-        {
-          status: 401,
-          headers: {
-            "Clear-Site-Data": '"cookies"',
-          },
-        }
-      );
+    const msg = error instanceof Error ? error.message : String(error);
+    if (msg.toLowerCase().includes("cookie")) {
+      try {
+        const supabase = await createServerSupabaseClient();
+        return await corruptedSessionResponse(supabase);
+      } catch {
+        return NextResponse.json(
+          { error: "Session invalid. Please sign in again." },
+          {
+            status: 401,
+            headers: { "Clear-Site-Data": '"cookies"' },
+          }
+        );
+      }
     }
 
+    console.error(
+      JSON.stringify({ event: "profile_route_unexpected", message: msg })
+    );
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

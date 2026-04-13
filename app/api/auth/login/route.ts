@@ -1,57 +1,51 @@
-import { createServerClient } from "@supabase/ssr";
+import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { parseLoginCredentials } from "@/lib/validation/loginCredentials";
 
-// Database-driven role detection - no more hardcoded emails!
-async function getUserRoleFromDatabase(email: string): Promise<string> {
-  try {
-    const { data: profile, error } = await supabaseAdmin
-      .from("profiles")
-      .select("role")
-      .eq("email", email)
-      .single();
+type ProfileRoleResult =
+  | { ok: true; role: string }
+  | { ok: false; reason: "not_found" }
+  | { ok: false; reason: "db_error" };
 
-    if (error || !profile) {
-      console.log("⚠️ Login: No profile found for email:", email, "defaulting to user");
-      return "user";
-    }
+/**
+ * Role from `profiles` for the authenticated auth user id (not request email).
+ */
+async function getProfileRoleByUserId(userId: string): Promise<ProfileRoleResult> {
+  const { data, error } = await supabaseAdmin
+    .from("profiles")
+    .select("role")
+    .eq("id", userId)
+    .maybeSingle();
 
-    console.log("✅ Login: Found role in database:", profile.role, "for email:", email);
-    return profile.role;
-  } catch (error) {
-    console.error("❌ Login: Error fetching user role from database:", error);
-    return "user"; // Safe fallback
+  if (error) {
+    console.error("Login: profile role query failed", error.code, error.message);
+    return { ok: false, reason: "db_error" };
   }
-}
 
-// Legacy fallback for backward compatibility
-function getLegacyUserRole(email: string): string {
-  const legacySuperAdmins = [
-    "eloka.agu@icloud.com",
-    "shannonalisa@oma-hub.com",
-    "nnamdiohaka@gmail.com",
-  ];
-  const legacyBrandAdmins = [
-    "eloka@culturin.com",
-    "eloka.agu96@gmail.com",
-  ];
+  if (!data?.role) {
+    return { ok: false, reason: "not_found" };
+  }
 
-  if (legacySuperAdmins.includes(email)) return "super_admin";
-  if (legacyBrandAdmins.includes(email)) return "brand_admin";
-  return "user";
+  return { ok: true, role: data.role };
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password } = await request.json();
-
-    if (!email || !password) {
-      return NextResponse.json(
-        { error: "Email and password are required" },
-        { status: 400 }
-      );
+    let json: unknown;
+    try {
+      json = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
     }
+
+    const parsed = parseLoginCredentials(json);
+    if (!parsed.ok) {
+      return NextResponse.json({ error: parsed.error }, { status: 400 });
+    }
+
+    const { email, password } = parsed.value;
 
     const cookieStore = cookies();
     const supabase = createServerClient(
@@ -62,24 +56,23 @@ export async function POST(request: NextRequest) {
           get(name: string) {
             return cookieStore.get(name)?.value;
           },
-          set(name: string, value: string, options: any) {
+          set(name: string, value: string, options: CookieOptions) {
             cookieStore.set({ name, value, ...options });
           },
-          remove(name: string, options: any) {
+          remove(name: string, options: CookieOptions) {
             cookieStore.set({ name, value: "", ...options });
           },
         },
       }
     );
 
-    // Attempt to sign in
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
     if (error) {
-      console.error("❌ Login error:", error);
+      console.error("Login: signInWithPassword failed", error.message);
       return NextResponse.json(
         { error: "Invalid credentials" },
         { status: 401 }
@@ -93,31 +86,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get user role dynamically from database
-    let userRole = await getUserRoleFromDatabase(email);
-    
-    // If database lookup failed, fall back to legacy method
-    if (userRole === "user" && getLegacyUserRole(email) !== "user") {
-      console.log("🔄 Login: Database lookup failed, using legacy role detection for:", email);
-      userRole = getLegacyUserRole(email);
+    const roleResult = await getProfileRoleByUserId(data.user.id);
+
+    if (roleResult.ok === false && roleResult.reason === "db_error") {
+      return NextResponse.json(
+        { error: "Internal server error" },
+        { status: 500 }
+      );
     }
 
-    console.log("✅ Login: User authenticated successfully:", {
-      email,
-      role: userRole,
-      userId: data.user.id
-    });
+    const missingProfile = roleResult.ok === false && roleResult.reason === "not_found";
+    const role = roleResult.ok ? roleResult.role : null;
 
-    // Create response with user data
     const response = NextResponse.json({
-      user: data.user,
-      role: userRole,
+      success: true,
+      user: {
+        id: data.user.id,
+        email: data.user.email ?? email,
+      },
+      role,
+      missingProfile,
       message: "Login successful",
-      session: data.session, // Include the session data
-      refreshSession: true, // Signal frontend to refresh session
+      refreshSession: true,
     });
 
-    // Set additional headers to help with session sync
     response.headers.set(
       "Cache-Control",
       "no-cache, no-store, must-revalidate"
@@ -127,7 +119,7 @@ export async function POST(request: NextRequest) {
 
     return response;
   } catch (error) {
-    console.error("❌ Login: Unexpected error:", error);
+    console.error("Login: unexpected error", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

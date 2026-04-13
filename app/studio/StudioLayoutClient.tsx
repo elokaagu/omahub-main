@@ -212,7 +212,7 @@ export default function StudioLayoutClient({
         console.log("🔍 Studio Layout: User email:", user.email);
         console.log("🔍 Studio Layout: About to call getUserPermissions...");
 
-        const userPermissions = await getUserPermissions(user.id, user.email);
+        const userPermissions = await getUserPermissions(user.id);
 
         console.log(
           "👤 Studio Layout: User permissions received:",

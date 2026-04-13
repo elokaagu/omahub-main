@@ -1,5 +1,4 @@
 import { supabase } from "../supabase";
-import { adminEmailService } from "./adminEmailService";
 
 export type Permission =
   | "studio.access"
@@ -42,7 +41,7 @@ async function getUserRoleFromDatabase(userId: string): Promise<Role | null> {
       .from("profiles")
       .select("role")
       .eq("id", userId)
-      .single();
+      .maybeSingle();
 
     if (error || !profile) {
       console.warn("⚠️ No profile found for user:", userId);
@@ -56,38 +55,23 @@ async function getUserRoleFromDatabase(userId: string): Promise<Role | null> {
   }
 }
 
-export async function getUserPermissions(
-  userId: string,
-  userEmail?: string
-): Promise<Permission[]> {
+/** Role from `profiles` only — no email-list fallback. */
+export async function getUserPermissions(userId: string): Promise<Permission[]> {
   try {
     console.log("🔍 Dynamic Permissions: Getting permissions for user:", userId);
 
-    // First, try to get role from database (most reliable)
     const dbRole = await getUserRoleFromDatabase(userId);
-    
+
     if (dbRole) {
       console.log("✅ Dynamic Permissions: Found role in database:", dbRole);
       return rolePermissions[dbRole] || [];
-    }
-
-    // Fallback: Check if user email indicates super_admin access (legacy support)
-    if (userEmail && await adminEmailService.isSuperAdmin(userEmail)) {
-      console.log("✅ Dynamic Permissions: Super admin email detected, returning super admin permissions");
-      return rolePermissions.super_admin;
-    }
-
-    // Fallback: Check if user email indicates brand admin access (legacy support)
-    if (userEmail && await adminEmailService.isBrandAdmin(userEmail)) {
-      console.log("✅ Dynamic Permissions: Brand admin email detected, returning brand admin permissions");
-      return rolePermissions.brand_admin;
     }
 
     console.log("⚠️ Dynamic Permissions: No role found, returning user permissions");
     return rolePermissions.user;
   } catch (error) {
     console.error("❌ Dynamic Permissions: Error getting permissions:", error);
-    return rolePermissions.user; // Safe fallback
+    return rolePermissions.user;
   }
 }
 

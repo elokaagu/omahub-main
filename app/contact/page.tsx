@@ -15,6 +15,8 @@ export default function ContactPage() {
     subject: "",
     message: "",
   });
+  /** Honeypot — must stay empty for legitimate submissions */
+  const [hpField, setHpField] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubscribing, setIsSubscribing] = useState(false);
@@ -73,47 +75,40 @@ export default function ContactPage() {
     setIsSubmitting(true);
 
     try {
-      console.log("📧 Submitting contact form:", formData);
-
       const response = await fetch("/api/contact", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          name: formData.name.trim(),
+          email: formData.email.trim(),
+          subject: formData.subject.trim(),
+          message: formData.message.trim(),
+          _contact_hp: hpField,
+        }),
       });
 
-      console.log("📡 Contact API response status:", response.status);
-      console.log(
-        "📡 Contact API response headers:",
-        Object.fromEntries(response.headers.entries())
-      );
-
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error("❌ Contact API error:", response.status, errorText);
-        throw new Error(
-          `Failed to send message: ${response.status} ${response.statusText}`
-        );
+        let errMsg = "Failed to send message. Please try again.";
+        try {
+          const errJson = await response.json();
+          if (typeof errJson.error === "string") errMsg = errJson.error;
+        } catch {
+          /* ignore */
+        }
+        throw new Error(errMsg);
       }
 
       const result = await response.json();
-      console.log("✅ Contact API success:", result);
 
-      // Validate the response
       if (result.success) {
         toast.success(
           result.message || "Your message has been sent successfully!"
         );
         setFormData({ name: "", email: "", subject: "", message: "" });
-        setErrors({}); // Clear any previous errors
-
-        // Log success details
-        console.log("📧 Message sent successfully:", {
-          type: result.type,
-          inquiry: result.inquiry?.id,
-          notification_sent: result.notification_sent,
-        });
+        setHpField("");
+        setErrors({});
       } else {
         throw new Error(result.error || "Unknown error occurred");
       }
@@ -127,12 +122,8 @@ export default function ContactPage() {
         if (error.message.includes("Failed to fetch")) {
           errorMessage =
             "Network error. Please check your connection and try again.";
-        } else if (error.message.includes("500")) {
-          errorMessage =
-            "Server error. Please try again later or contact support.";
-        } else if (error.message.includes("400")) {
-          errorMessage =
-            "Invalid form data. Please check your inputs and try again.";
+        } else if (error.message.includes("Too many")) {
+          errorMessage = error.message;
         } else {
           errorMessage = error.message;
         }
@@ -307,6 +298,17 @@ export default function ContactPage() {
                 <p className="text-sm text-red-500">{errors.message}</p>
               )}
             </div>
+
+            <input
+              type="text"
+              name="_contact_hp"
+              value={hpField}
+              onChange={(e) => setHpField(e.target.value)}
+              tabIndex={-1}
+              autoComplete="off"
+              aria-hidden
+              className="absolute -left-[9999px] h-px w-px overflow-hidden opacity-0"
+            />
 
             <Button
               type="submit"

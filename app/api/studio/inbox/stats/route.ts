@@ -1,70 +1,22 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createServerSupabaseClient } from "@/lib/supabase-unified";
+import { NextResponse } from "next/server";
+import { requireStudioInboxAccess } from "@/lib/auth/requireStudioInboxAccess";
 
 // Force dynamic rendering since we use cookies
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    const supabase = await createServerSupabaseClient();
-
-    // Get authenticated user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const auth = await requireStudioInboxAccess();
+    if (!auth.ok) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
-    // Get user profile with fallback for super_admin users
-    let profile;
-    const { data: profileData, error: profileError } = await supabase
-      .from("profiles")
-      .select("role, owned_brands")
-      .eq("id", user.id)
-      .single();
-
-    if (profileError || !profileData) {
-      console.log(
-        "⚠️ Profile not found, checking user email for super_admin access"
-      );
-
-      // Fallback: Check if user email indicates super_admin access (legacy support)
-      const legacySuperAdmins = [
-        "eloka.agu@icloud.com",
-        "shannonalisa@oma-hub.com",
-      ];
-
-      if (legacySuperAdmins.includes(user.email || "")) {
-        profile = {
-          role: "super_admin",
-          owned_brands: [],
-        };
-        console.log(
-          "✅ Granted super_admin access based on email:",
-          user.email
-        );
-      } else {
-        console.error("Profile error:", profileError);
-        return NextResponse.json(
-          { error: "Profile not found" },
-          { status: 404 }
-        );
-      }
-    } else {
-      profile = profileData;
-    }
-
-    // Check permissions
-    if (!["super_admin", "brand_admin"].includes(profile.role)) {
-      return NextResponse.json({ error: "Access denied" }, { status: 403 });
-    }
+    const { userId, profile, supabase } = auth;
 
     // Use the database function to get stats
     const { data: stats, error: statsError } = await supabase.rpc(
       "get_inbox_stats",
-      { admin_user_id: user.id }
+      { admin_user_id: userId }
     );
 
     if (statsError) {
@@ -120,7 +72,7 @@ export async function GET(request: NextRequest) {
       .from("inquiries")
       .select("inquiry_type, priority, status");
 
-    if (profile.role === "brand_admin") {
+    if (profile.role === "brand_admin" && profile.owned_brands?.length) {
       detailQuery = detailQuery.in("brand_id", profile.owned_brands);
     }
 

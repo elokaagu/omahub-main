@@ -1,4 +1,5 @@
 // Performance optimization service
+import { ALLOWED_BRAND_PUBLIC_FIELDS } from "@/lib/validation/brandsOptimizedQuery";
 import { supabase } from "../supabase";
 import { normalizeProductImages } from "../utils/productImageUtils";
 import { getAdminClient } from "../supabase-admin";
@@ -62,19 +63,33 @@ export const performanceService = {
       useCache?: boolean;
     } = {}
   ) {
-    const {
-      fields = ["id", "name", "image", "category", "location", "is_verified"],
-      limit = 50,
-      category,
-      useCache = true,
-    } = options;
+    const DEFAULT_FIELDS = [
+      "id",
+      "name",
+      "image",
+      "category",
+      "location",
+      "is_verified",
+    ];
+
+    const rawFields = options.fields;
+    let fields =
+      rawFields && rawFields.length > 0
+        ? rawFields.filter((f) => ALLOWED_BRAND_PUBLIC_FIELDS.has(f))
+        : DEFAULT_FIELDS;
+    if (fields.length === 0) {
+      fields = DEFAULT_FIELDS;
+    }
+
+    const limit = options.limit ?? 50;
+    const category = options.category;
+    const useCache = options.useCache ?? true;
 
     const cacheKey = `brands_${category || "all"}_${limit}_${fields.join(",")}`;
 
     if (useCache) {
       const cached = cacheUtils.get(cacheKey);
       if (cached) {
-        console.log("🎯 Using cached brands data");
         return cached;
       }
     }
@@ -334,12 +349,20 @@ export const performanceService = {
       const end = performance.now();
       const duration = end - start;
 
-      console.log(`⏱️ ${label}: ${Math.round(duration)}ms`);
-
-      // Log slow operations
-      if (duration > 1000) {
+      if (process.env.NODE_ENV !== "production") {
+        console.log(`⏱️ ${label}: ${Math.round(duration)}ms`);
+        if (duration > 1000) {
+          console.warn(
+            `🐌 Slow operation detected: ${label} took ${Math.round(duration)}ms`
+          );
+        }
+      } else if (duration > 3000) {
         console.warn(
-          `🐌 Slow operation detected: ${label} took ${Math.round(duration)}ms`
+          JSON.stringify({
+            event: "slow_operation",
+            label,
+            ms: Math.round(duration),
+          })
         );
       }
 
@@ -348,8 +371,12 @@ export const performanceService = {
       const end = performance.now();
       const duration = end - start;
       console.error(
-        `❌ ${label} failed after ${Math.round(duration)}ms:`,
-        error
+        JSON.stringify({
+          event: "operation_failed",
+          label,
+          ms: Math.round(duration),
+          message: error instanceof Error ? error.message : String(error),
+        })
       );
       throw error;
     }

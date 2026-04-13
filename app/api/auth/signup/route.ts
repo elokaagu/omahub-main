@@ -1,97 +1,34 @@
-import { createServerClient } from "@supabase/ssr";
 import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
+import { createServerSupabaseClient } from "@/lib/supabase-unified";
+import { notifyAdminsOfNewProfile } from "@/lib/services/newAccountAdminNotification";
+import {
+  parseSignupCredentials,
+  publicSignUpErrorMessage,
+} from "@/lib/validation/signupCredentials";
 
-// Function to trigger new account notification
-async function triggerNewAccountNotification(user: any) {
-  try {
-    const webhookUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/api/webhooks/new-account`;
-    const webhookSecret = process.env.WEBHOOK_SECRET || "your-webhook-secret";
+export const dynamic = "force-dynamic";
 
-    const payload = {
-      type: "INSERT",
-      table: "profiles",
-      record: {
-        id: user.id,
-        email: user.email,
-        role: "user",
-        created_at: new Date().toISOString(),
-      },
-    };
-
-    const response = await fetch(webhookUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${webhookSecret}`,
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (response.ok) {
-      console.log("✅ New account notification triggered successfully");
-    } else {
-      console.error(
-        "❌ Failed to trigger new account notification:",
-        response.status
-      );
-    }
-  } catch (error) {
-    console.error("❌ Error triggering new account notification:", error);
-    // Don't fail signup if notification fails
-  }
-}
-
+/**
+ * Server-side signup: Supabase Auth + ensure `profiles` row (idempotent insert).
+ * Admin email uses `notifyAdminsOfNewProfile` (no self-HTTP, no default webhook secret).
+ */
 export async function POST(request: NextRequest) {
-  const { email, password } = await request.json();
-
-  if (!email || !password) {
-    return NextResponse.json(
-      { error: "Email and password are required" },
-      { status: 400 }
-    );
+  let json: unknown;
+  try {
+    json = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  if (password.length < 6) {
-    return NextResponse.json(
-      { error: "Password must be at least 6 characters long" },
-      { status: 400 }
-    );
+  const parsed = parseSignupCredentials(json);
+  if (!parsed.ok) {
+    return NextResponse.json({ error: parsed.error }, { status: 400 });
   }
 
-  const cookieStore = cookies();
-  const response = NextResponse.json({ success: true });
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value;
-        },
-        set(name: string, value: string, options: any) {
-          try {
-            cookieStore.set({ name, value, ...options });
-            response.cookies.set({ name, value, ...options });
-          } catch (error) {
-            console.error(`❌ Error setting cookie ${name}:`, error);
-          }
-        },
-        remove(name: string, options: any) {
-          try {
-            cookieStore.set({ name, value: "", ...options });
-            response.cookies.set({ name, value: "", ...options });
-          } catch (error) {
-            console.error(`❌ Error removing cookie ${name}:`, error);
-          }
-        },
-      },
-    }
-  );
+  const { email, password } = parsed.value;
 
   try {
-    console.log("🔐 Attempting email/password signup for:", email);
+    const supabase = await createServerSupabaseClient();
 
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -99,84 +36,77 @@ export async function POST(request: NextRequest) {
     });
 
     if (error) {
-      console.error("❌ Signup failed:", error.message);
-      return NextResponse.json({ error: error.message }, { status: 400 });
+      console.error(
+        JSON.stringify({
+          event: "signup_auth_rejected",
+          code: error.status,
+        })
+      );
+      return NextResponse.json(
+        { error: publicSignUpErrorMessage(error.message) },
+        { status: 400 }
+      );
     }
 
-    if (!data.user) {
-      console.error("❌ No user created");
-      return NextResponse.json({ error: "No user created" }, { status: 400 });
+    if (!data.user?.id) {
+      return NextResponse.json(
+        { error: "Unable to create account. Please try again." },
+        { status: 400 }
+      );
     }
 
-    console.log("✅ Signup successful for:", data.user.email);
+    const userId = data.user.id;
+    const userEmail = data.user.email ?? email;
+    const createdAt = new Date().toISOString();
 
-    // Create user profile explicitly as a fallback
-    // The database trigger should handle this, but we'll ensure it exists
-    let profileCreated = false;
-    try {
-      const { data: existingProfile, error: profileCheckError } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("id", data.user.id)
-        .single();
+    const { error: profileError } = await supabase.from("profiles").insert({
+      id: userId,
+      email: userEmail,
+      role: "user",
+      owned_brands: [],
+      created_at: createdAt,
+      updated_at: createdAt,
+    });
 
-      if (profileCheckError && profileCheckError.code === "PGRST116") {
-        // Profile doesn't exist, create it
-        console.log("🔧 Creating profile for new user:", data.user.email);
-
-        const { error: profileCreateError } = await supabase
-          .from("profiles")
-          .insert({
-            id: data.user.id,
-            email: data.user.email,
-            role: "user",
-            owned_brands: [],
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          });
-
-        if (profileCreateError) {
-          console.error("❌ Profile creation error:", profileCreateError);
-          // Don't fail the signup if profile creation fails
-          // The user can still be authenticated
-        } else {
-          console.log("✅ Profile created successfully");
-          profileCreated = true;
-        }
-      } else if (profileCheckError) {
-        console.error("❌ Profile check error:", profileCheckError);
-      } else {
-        console.log("✅ Profile already exists (created by trigger)");
-        profileCreated = true;
-      }
-    } catch (profileError) {
-      console.error("❌ Profile handling error:", profileError);
-      // Don't fail the signup process
+    if (
+      profileError &&
+      profileError.code !== "23505" /* duplicate: trigger or retry */
+    ) {
+      console.error(
+        JSON.stringify({
+          event: "signup_profile_insert_failed",
+          code: profileError.code,
+        })
+      );
     }
 
-    // Trigger new account notification
-    if (profileCreated || data.user) {
-      console.log("🔔 Triggering new account notification...");
-      await triggerNewAccountNotification(data.user);
-    }
+    await notifyAdminsOfNewProfile({
+      id: userId,
+      email: userEmail,
+      role: "user",
+      created_at: createdAt,
+    });
 
-    // Return success response
+    const sessionEstablished = Boolean(data.session);
+
     return NextResponse.json(
       {
         success: true,
-        user: data.user,
-        session: data.session,
-        message: data.session
-          ? "Account created and logged in successfully"
-          : "Account created successfully. Please check your email for confirmation.",
+        user: { id: userId, email: userEmail },
+        sessionEstablished,
+        message: sessionEstablished
+          ? "Account created and signed in."
+          : "Account created. Check your email to confirm before signing in.",
       },
-      {
-        status: 201,
-        headers: response.headers,
-      }
+      { status: 201 }
     );
   } catch (error) {
-    console.error("❌ Signup error:", error);
+    console.error(
+      JSON.stringify({
+        event: "signup_unexpected",
+        message: error instanceof Error ? error.message : String(error),
+      })
+    );
     return NextResponse.json(
       { error: "An unexpected error occurred" },
       { status: 500 }

@@ -37,6 +37,7 @@ export default function SettingsPage() {
   const [platformStatus, setPlatformStatus] = useState<{
     isPublic: boolean;
     status: string;
+    fallback?: string;
   } | null>(null);
   const [isLoadingStatus, setIsLoadingStatus] = useState(true);
   const [aboutText, setAboutText] = useState("");
@@ -110,6 +111,8 @@ export default function SettingsPage() {
         setPlatformStatus({
           isPublic: data.isPublic,
           status: data.status,
+          fallback:
+            typeof data.fallback === "string" ? data.fallback : undefined,
         });
       } else {
         console.error("Failed to fetch platform status:", data.error);
@@ -330,6 +333,22 @@ export default function SettingsPage() {
                         ? "The platform is currently accessible to all visitors without a password. Anyone can browse and explore your content."
                         : "The platform is currently password-protected for internal testing. Visitors need the access password to view content."}
                     </p>
+
+                    {platformStatus?.fallback ===
+                      "missing_row_defaults_to_private" && (
+                      <p className="text-xs text-oma-cocoa/75 mb-3 rounded-md bg-oma-beige/50 px-2.5 py-2">
+                        No database row for platform visibility yet — effective
+                        status is private until you use Make Public or Make
+                        Private.
+                      </p>
+                    )}
+                    {platformStatus?.fallback ===
+                      "unrecognised_stored_value_treated_as_private" && (
+                      <p className="text-xs text-amber-900/90 mb-3 rounded-md border border-amber-200 bg-amber-50 px-2.5 py-2">
+                        Stored value is not recognised; treated as private. Use
+                        the buttons below to set public or private explicitly.
+                      </p>
+                    )}
 
                     <div className="space-y-2 text-xs text-oma-cocoa/70">
                       <div className="flex items-center gap-2">

@@ -80,18 +80,10 @@ export class AdminEmailService {
       return config;
     } catch (error) {
       console.error("Failed to fetch admin email config:", error);
-      // Return fallback configuration
       return {
-        super_admin_emails: [
-          "eloka.agu@icloud.com",
-          "info@oma-hub.com",
-        ],
-        brand_admin_emails: ["eloka@culturin.com"],
-        webhook_admin_emails: [
-          "eloka.agu@icloud.com",
-          "info@oma-hub.com",
-          "eloka@satellitelabs.xyz",
-        ],
+        super_admin_emails: [],
+        brand_admin_emails: [],
+        webhook_admin_emails: [],
       };
     }
   }

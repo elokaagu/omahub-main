@@ -104,26 +104,15 @@ function LoginForm() {
     setError(null);
 
     try {
-      const { session, refreshSession, clientSession } = await signIn(
-        email,
-        password
-      );
-      if (session || clientSession) {
-        // Save or clear remember me preference
-        saveRememberMe(email, rememberMe);
+      const { refreshSession } = await signIn(email, password);
 
-        // Immediate redirect without delays - let AuthContext handle the state updates
-        if (clientSession) {
-          console.log(
-            "✅ Client session available, redirecting immediately..."
-          );
-          window.location.href = "/";
-        } else if (refreshSession) {
-          console.log("🔄 Using session refresh redirect");
-          window.location.href = "/?session_refresh=true";
-        } else {
-          window.location.href = "/";
-        }
+      saveRememberMe(email, rememberMe);
+
+      // Session cookies are set by the server; JSON body intentionally omits raw session.
+      if (refreshSession) {
+        window.location.href = "/?session_refresh=true";
+      } else {
+        window.location.href = "/";
       }
     } catch (err) {
       console.error("Login error:", err);

@@ -37,7 +37,7 @@ export default function ProfilePage() {
       try {
         const [profileData, userPermissions] = await Promise.all([
           getProfile(user.id),
-          getUserPermissions(user.id, user.email ?? undefined),
+          getUserPermissions(user.id),
         ]);
         setPermissions(userPermissions);
         if (profileData) {

@@ -90,7 +90,7 @@ const fallbackNavigationItems: NavigationItem[] = [
 
 export default function Header() {
   const { user, signOut } = useAuth();
-  const { hasStudioAccess } = useStudioPermissions(user?.id, user?.email);
+  const { hasStudioAccess } = useStudioPermissions(user?.id);
   const showStudioInNav =
     user?.role === "admin" ||
     user?.role === "super_admin" ||

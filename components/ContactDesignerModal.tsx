@@ -31,6 +31,7 @@ export default function ContactDesignerModal({
     email: "",
     message: "",
   });
+  const [hpField, setHpField] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleInputChange = (
@@ -66,8 +67,6 @@ export default function ContactDesignerModal({
     setIsSubmitting(true);
 
     try {
-      console.log("📧 Sending contact form:", { brandName, brandId });
-
       const response = await fetch("/api/contact", {
         method: "POST",
         headers: {
@@ -80,6 +79,7 @@ export default function ContactDesignerModal({
           message: formData.message.trim(),
           brandId: brandId,
           brandName: brandName,
+          _contact_hp: hpField,
         }),
       });
 
@@ -89,20 +89,17 @@ export default function ContactDesignerModal({
         throw new Error(data.error || "Failed to send message");
       }
 
-      console.log("✅ Contact form sent successfully:", data);
-
-      // Show success message
       toast.success(
         data.message ||
           `Your message to ${brandName} has been sent successfully!`
       );
 
-      // Reset form and close modal
       setFormData({
         name: "",
         email: "",
         message: "",
       });
+      setHpField("");
       onClose();
     } catch (error) {
       console.error("❌ Contact form error:", error);
@@ -171,6 +168,16 @@ export default function ContactDesignerModal({
               placeholder="Introduce yourself and ask about their designs, availability, pricing, or any questions you have..."
             />
           </div>
+          <input
+            type="text"
+            name="_contact_hp"
+            value={hpField}
+            onChange={(e) => setHpField(e.target.value)}
+            tabIndex={-1}
+            autoComplete="off"
+            aria-hidden
+            className="absolute -left-[9999px] h-px w-px overflow-hidden opacity-0"
+          />
           <div className="flex justify-end gap-4">
             <Button
               type="button"

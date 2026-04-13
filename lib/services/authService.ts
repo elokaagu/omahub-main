@@ -80,14 +80,8 @@ export async function signIn(email: string, password: string) {
       throw new Error(data.error || "Login failed");
     }
 
-    console.log("✅ Login successful, session data received");
-
-    // Don't manually manipulate the session - let Supabase handle it naturally
-    // The server-side login should have already set the proper cookies
-    
-    // If the API signals to refresh the session, reload the page to ensure context is correct
+    // Server sets Supabase auth cookies; response is a minimal payload (no raw session).
     if (data.refreshSession) {
-      console.log("🔄 Refreshing page to sync session state...");
       window.location.reload();
     }
 
@@ -165,86 +159,58 @@ export async function getProfile(userId: string): Promise<User | null> {
     });
 
     if (profileError) {
-      if (profileError.code === "PGRST116") {
-        console.log("⚠️ Profile not found, creating new profile");
-        // Profile not found, create a new one with optimized role detection
-        const userEmail = user?.email || "";
-        
-        // Try to get role from database first
-        let role: string = "user";
-        
-        try {
-          // Check if there's a profile with this email (in case of mismatch)
-          const { data: emailProfile, error: emailError } = await supabase
-            .from("profiles")
-            .select("role")
-            .eq("email", userEmail)
-            .maybeSingle();
-            
-          if (!emailError && emailProfile) {
-            role = emailProfile.role;
-            console.log("✅ Found existing profile by email, using role:", role);
-          } else {
-            // Fallback to legacy email-based role detection
-            const legacySuperAdmins = [
-              "eloka.agu@icloud.com",
-              "shannonalisa@oma-hub.com",
-              "nnamdiohaka@gmail.com",
-            ];
-            const legacyBrandAdmins = [
-              "eloka@culturin.com",
-              "eloka.agu96@gmail.com",
-              "team@houseofagu.com",
-            ];
-            const legacyAdmins: string[] = [
-              // Add any admin emails here if needed
-            ];
-
-            if (legacySuperAdmins.includes(userEmail)) {
-              role = "super_admin";
-            } else if (legacyBrandAdmins.includes(userEmail)) {
-              role = "brand_admin";
-            } else if (legacyAdmins.includes(userEmail)) {
-              role = "admin";
-            }
-            
-            console.log("🔄 Using legacy role detection for:", userEmail, "role:", role);
-          }
-        } catch (error) {
-          console.warn("⚠️ Error in role detection, using default 'user' role");
-        }
-
-        const { data: newProfile, error: createError } = await supabase
-          .from("profiles")
-          .insert({
-            id: userId,
-            email: userEmail,
-            role: role,
-            owned_brands: [],
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          })
-          .select()
-          .single();
-
-        if (createError) {
-          console.error("❌ Error creating profile:", createError);
-          return null;
-        }
-
-        console.log("✅ New profile created:", newProfile);
-        return {
-          id: newProfile.id,
-          email: newProfile.email || userEmail,
-          first_name: newProfile.first_name || "",
-          last_name: newProfile.last_name || "",
-          avatar_url: newProfile.avatar_url || "",
-          role: newProfile.role || "user",
-          owned_brands: newProfile.owned_brands || [],
-        };
-      }
       console.error("❌ Error fetching profile:", profileError);
       return null;
+    }
+
+    if (!profileData) {
+      console.log("⚠️ Profile not found, creating new profile");
+      const userEmail = user?.email || "";
+      let role: string = "user";
+
+      try {
+        const { data: emailProfile, error: emailError } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("email", userEmail)
+          .maybeSingle();
+
+        if (!emailError && emailProfile) {
+          role = emailProfile.role;
+          console.log("✅ Found existing profile by email, using role:", role);
+        }
+      } catch {
+        console.warn("⚠️ Error in role detection, using default 'user' role");
+      }
+
+      const { data: newProfile, error: createError } = await supabase
+        .from("profiles")
+        .insert({
+          id: userId,
+          email: userEmail,
+          role,
+          owned_brands: [],
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .select()
+        .single();
+
+      if (createError) {
+        console.error("❌ Error creating profile:", createError);
+        return null;
+      }
+
+      console.log("✅ New profile created:", newProfile);
+      return {
+        id: newProfile.id,
+        email: newProfile.email || userEmail,
+        first_name: newProfile.first_name || "",
+        last_name: newProfile.last_name || "",
+        avatar_url: newProfile.avatar_url || "",
+        role: newProfile.role || "user",
+        owned_brands: newProfile.owned_brands || [],
+      };
     }
 
     console.log("✅ Profile fetched successfully:", {

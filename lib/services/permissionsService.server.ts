@@ -39,7 +39,7 @@ async function getUserRoleFromDatabase(userId: string): Promise<Role | null> {
       .from("profiles")
       .select("role")
       .eq("id", userId)
-      .single();
+      .maybeSingle();
 
     if (error || !profile) {
       console.warn("⚠️ Server Permissions: No profile found for user:", userId);
@@ -53,57 +53,24 @@ async function getUserRoleFromDatabase(userId: string): Promise<Role | null> {
   }
 }
 
-export async function getUserPermissions(
-  userId: string,
-  userEmail?: string
-): Promise<Permission[]> {
+/** Role from `profiles` only — no email-based privilege fallback. */
+export async function getUserPermissions(userId: string): Promise<Permission[]> {
   try {
     console.log("🔍 Server Permissions: Getting permissions for user:", userId);
 
-    // First, try to get role from database (most reliable)
     const dbRole = await getUserRoleFromDatabase(userId);
-    
+
     if (dbRole) {
       console.log("✅ Server Permissions: Found role in database:", dbRole);
       return rolePermissions[dbRole] || [];
-    }
-
-    // Fallback: Check if user email indicates super_admin access (legacy support)
-    if (userEmail && isSuperAdminEmail(userEmail)) {
-      console.log("✅ Server Permissions: Super admin email detected, returning super admin permissions");
-      return rolePermissions.super_admin;
-    }
-
-    // Fallback: Check if user email indicates brand admin access (legacy support)
-    if (userEmail && isBrandAdminEmail(userEmail)) {
-      console.log("✅ Server Permissions: Brand admin email detected, returning brand admin permissions");
-      return rolePermissions.brand_admin;
     }
 
     console.log("⚠️ Server Permissions: No role found, returning user permissions");
     return rolePermissions.user;
   } catch (error) {
     console.error("❌ Server Permissions: Error getting permissions:", error);
-    return rolePermissions.user; // Safe fallback
+    return rolePermissions.user;
   }
-}
-
-// Legacy fallback functions (kept for backward compatibility)
-function isSuperAdminEmail(email: string): boolean {
-  const legacySuperAdmins = [
-    "eloka.agu@icloud.com",
-    "shannonalisa@oma-hub.com",
-    "nnamdiohaka@gmail.com",
-  ];
-  return legacySuperAdmins.includes(email);
-}
-
-function isBrandAdminEmail(email: string): boolean {
-  const legacyBrandAdmins = [
-    "eloka@culturin.com",
-    "eloka.agu96@gmail.com",
-  ];
-  return legacyBrandAdmins.includes(email);
 }
 
 export async function getUserRole(userId: string): Promise<Role> {

@@ -23,10 +23,7 @@ export default function UserProfile() {
   const router = useRouter();
   const pathname = usePathname();
   const [isSigningOut, setIsSigningOut] = useState(false);
-  const { hasStudioAccess } = useStudioPermissions(
-    user?.id,
-    user?.email ?? session?.user?.email
-  );
+  const { hasStudioAccess } = useStudioPermissions(user?.id);
 
   const showStudioInMenu =
     hasStudioAccess ||

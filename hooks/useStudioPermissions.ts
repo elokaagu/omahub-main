@@ -10,10 +10,7 @@ import {
  * Loads DB-backed permissions for the signed-in user so UI can reflect
  * studio.access even when AuthContext role is briefly stale.
  */
-export function useStudioPermissions(
-  userId: string | undefined,
-  email: string | undefined
-) {
+export function useStudioPermissions(userId: string | undefined) {
   const [permissions, setPermissions] = useState<Permission[] | null>(null);
 
   useEffect(() => {
@@ -22,7 +19,7 @@ export function useStudioPermissions(
       return;
     }
     let cancelled = false;
-    getUserPermissions(userId, email)
+    getUserPermissions(userId)
       .then((p) => {
         if (!cancelled) setPermissions(p);
       })
@@ -32,7 +29,7 @@ export function useStudioPermissions(
     return () => {
       cancelled = true;
     };
-  }, [userId, email]);
+  }, [userId]);
 
   const hasStudioAccess = Boolean(permissions?.includes("studio.access"));
   const loading = permissions === null;

@@ -10,7 +10,7 @@ import React, {
 } from "react";
 import { Session } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase-unified";
-import { getProfile, User, UserRole } from "@/lib/services/authService";
+import { getProfile, User } from "@/lib/services/authService";
 import { AuthDebug } from "@/lib/utils/debug";
 import { toast } from "sonner";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
@@ -36,44 +36,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const isRefreshingRef = useRef(false);
   const lastRefreshTimeRef = useRef(0);
   const REFRESH_DEBOUNCE_MS = 5000; // 5 seconds minimum between refreshes
-
-  // Helper function to determine role based on email (legacy fallback only)
-  const getRoleFromEmail = (email: string): UserRole => {
-    // This is now only used as a fallback when database lookup fails
-    const legacySuperAdmins = [
-      "eloka.agu@icloud.com",
-      "shannonalisa@oma-hub.com",
-      "nnamdiohaka@gmail.com",
-    ];
-    const legacyBrandAdmins = [
-      "eloka@culturin.com", 
-      "eloka.agu96@gmail.com",
-      "team@houseofagu.com"
-    ];
-    const legacyAdmins: string[] = [
-      // Add any admin emails here if needed
-    ];
-
-    if (legacySuperAdmins.includes(email)) {
-      return "super_admin";
-    }
-    if (legacyBrandAdmins.includes(email)) {
-      return "brand_admin";
-    }
-    if (legacyAdmins.includes(email)) {
-      return "admin";
-    }
-    return "user";
-  };
-
-  // Helper function to get owned brands based on email (legacy fallback only)
-  const getOwnedBrandsFromEmail = (email: string): string[] => {
-    // This is now only used as a fallback when database lookup fails
-    if (email === "eloka@culturin.com") {
-      return ["ehbs-couture"];
-    }
-    return [];
-  };
 
   // Ensure we're on the client side
   useEffect(() => {
@@ -188,20 +150,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         const userEmail = email || "";
-        const role = getRoleFromEmail(userEmail);
         const basicUser: User = {
           id: userId,
           email: userEmail,
           first_name: "",
           last_name: "",
           avatar_url: "",
-          role: role,
+          role: "user",
           owned_brands: [],
         };
         setUser(basicUser);
         AuthDebug.log(
-          "⚠️ No profile found after retries, created basic user with role:",
-          role,
+          "⚠️ No profile found after retries; using basic user (role user) until profile exists:",
           userEmail
         );
         return;
@@ -225,20 +185,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         AuthDebug.error("❌ Error loading user profile:", error);
         if (retryable) {
           const userEmail = email || "";
-          const role = getRoleFromEmail(userEmail);
           const basicUser: User = {
             id: userId,
             email: userEmail,
             first_name: "",
             last_name: "",
             avatar_url: "",
-            role: role,
+            role: "user",
             owned_brands: [],
           };
           setUser(basicUser);
           AuthDebug.log(
-            "⚠️ Profile loading failed after retries, using basic user:",
-            role,
+            "⚠️ Profile loading failed after retries; using basic user (role user):",
             userEmail
           );
           return;

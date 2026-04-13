@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServerSupabaseClient } from "@/lib/supabase-unified";
+import { requireStudioInboxAccess } from "@/lib/auth/requireStudioInboxAccess";
 import { sendInquiryReplyEmail } from "@/lib/services/emailService";
 
 export async function GET(
@@ -9,81 +9,12 @@ export async function GET(
   try {
     console.log("🔍 GET Replies - Starting request for inquiry:", params.id);
 
-    const supabase = await createServerSupabaseClient();
+    const auth = await requireStudioInboxAccess();
+    if (!auth.ok) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const { profile, supabase } = auth;
     const inquiryId = params.id;
-
-    console.log("✅ Supabase client created successfully");
-
-    // Get authenticated user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    console.log("🔐 Auth check result:", {
-      hasUser: !!user,
-      userEmail: user?.email,
-      authError: authError?.message,
-    });
-
-    if (authError || !user) {
-      console.error("❌ Authentication failed:", authError);
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Get user profile with fallback for super_admin users
-    let profile;
-    const { data: profileData, error: profileError } = await supabase
-      .from("profiles")
-      .select("role, owned_brands")
-      .eq("id", user.id)
-      .single();
-
-    console.log("👤 Profile check result:", {
-      hasProfile: !!profileData,
-      role: profileData?.role,
-      ownedBrands: profileData?.owned_brands,
-      profileError: profileError?.message,
-    });
-
-    if (profileError || !profileData) {
-      console.log(
-        "⚠️ Profile not found, checking user email for super_admin access"
-      );
-
-      // Fallback: Check if user email indicates super_admin access (legacy support)
-      const legacySuperAdmins = [
-        "eloka.agu@icloud.com",
-        "shannonalisa@oma-hub.com",
-      ];
-      
-      if (legacySuperAdmins.includes(user.email || "")) {
-        profile = {
-          role: "super_admin",
-          owned_brands: [],
-        };
-        console.log(
-          "✅ Granted super_admin access based on email:",
-          user.email
-        );
-      } else {
-        console.error("Profile error:", profileError);
-        return NextResponse.json(
-          { error: "Profile not found" },
-          { status: 404 }
-        );
-      }
-    } else {
-      profile = profileData;
-    }
-
-    // Check permissions
-    if (!["super_admin", "brand_admin"].includes(profile.role)) {
-      console.error("❌ Access denied for role:", profile.role);
-      return NextResponse.json({ error: "Access denied" }, { status: 403 });
-    }
-
-    console.log("✅ Permission check passed for role:", profile.role);
 
     // Verify inquiry exists and user has access
     let verifyQuery = supabase
@@ -132,11 +63,6 @@ export async function GET(
       );
     }
 
-    console.log("✅ Inquiry verified:", {
-      brandId: inquiry.brand_id,
-      customerEmail: inquiry.customer_email,
-    });
-
     // Get replies
     console.log("📨 Fetching replies...");
     const { data: replies, error: repliesError } = await supabase
@@ -174,65 +100,13 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = await createServerSupabaseClient();
+    const auth = await requireStudioInboxAccess();
+    if (!auth.ok) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const { userId, userEmail, profile, supabase } = auth;
     const inquiryId = params.id;
     const body = await request.json();
-
-    // Get authenticated user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Get user profile with fallback for super_admin users
-    let profile;
-    const { data: profileData, error: profileError } = await supabase
-      .from("profiles")
-      .select("role, owned_brands, first_name, last_name, email")
-      .eq("id", user.id)
-      .single();
-
-    if (profileError || !profileData) {
-      console.log(
-        "⚠️ Profile not found, checking user email for super_admin access"
-      );
-
-      // Fallback: Check if user email indicates super_admin access (legacy support)
-      const legacySuperAdmins = [
-        "eloka.agu@icloud.com",
-        "shannonalisa@oma-hub.com",
-      ];
-      
-      if (legacySuperAdmins.includes(user.email || "")) {
-        profile = {
-          role: "super_admin",
-          owned_brands: [],
-          first_name: null,
-          last_name: null,
-          email: user.email,
-        };
-        console.log(
-          "✅ Granted super_admin access based on email:",
-          user.email
-        );
-      } else {
-        console.error("Profile error:", profileError);
-        return NextResponse.json(
-          { error: "Profile not found" },
-          { status: 404 }
-        );
-      }
-    } else {
-      profile = profileData;
-    }
-
-    // Check permissions
-    if (!["super_admin", "brand_admin"].includes(profile.role)) {
-      return NextResponse.json({ error: "Access denied" }, { status: 403 });
-    }
 
     const { message, isInternalNote = false } = body;
 
@@ -288,7 +162,7 @@ export async function POST(
       .from("inquiry_replies")
       .insert({
         inquiry_id: inquiryId,
-        admin_id: user.id,
+        admin_id: userId,
         message: message.trim(),
         is_internal_note: isInternalNote,
       })
@@ -322,7 +196,7 @@ export async function POST(
         const adminName =
           profile.first_name && profile.last_name
             ? `${profile.first_name} ${profile.last_name}`
-            : profile.email || "OmaHub Team";
+            : profile.email || userEmail || "OmaHub Team";
 
         const emailResult = await sendInquiryReplyEmail({
           customerName: inquiry.customer_name,

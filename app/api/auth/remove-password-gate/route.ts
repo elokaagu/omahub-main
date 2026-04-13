@@ -1,86 +1,65 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServerSupabaseClient } from "@/lib/supabase-unified";
+import { requireSuperAdmin } from "@/lib/auth/requireSuperAdmin";
+import { setPlatformVisibility } from "@/lib/services/platformVisibilityControl";
+import { requireEmptyOrEmptyObjectBody } from "@/lib/validation/passwordGatePostBody";
 
+export const dynamic = "force-dynamic";
+
+/**
+ * Super-admin only. Sets `platform_settings.platform_visibility` to `public`
+ * (password gate off). Authoritative state lives in the database; the
+ * `omahub-public` cookie is a secondary hint for legacy middleware/clients only.
+ */
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient();
-
-    // Get authenticated user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const bodyError = await requireEmptyOrEmptyObjectBody(request);
+    if (bodyError) {
+      return bodyError;
     }
 
-    // Check if user is super admin
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-
-    let isSuperAdmin = false;
-
-    if (profileError || !profile) {
-      // Fallback: Check if user email indicates super_admin access (legacy support)
-      const legacySuperAdmins = [
-        "eloka.agu@icloud.com",
-        "shannonalisa@oma-hub.com",
-      ];
-      
-      if (legacySuperAdmins.includes(user.email || "")) {
-        isSuperAdmin = true;
-        console.log(
-          "✅ Granted super_admin access based on email:",
-          user.email
-        );
-      } else {
-        console.error("Profile error:", profileError);
-        return NextResponse.json(
-          { error: "Profile not found" },
-          { status: 404 }
-        );
-      }
-    } else {
-      isSuperAdmin = profile.role === "super_admin";
+    const auth = await requireSuperAdmin();
+    if (!auth.ok) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
-    if (!isSuperAdmin) {
-      return NextResponse.json({ error: "Access denied" }, { status: 403 });
-    }
-
-    // Set platform_visibility to 'public' in the database
-    const { error: dbError } = await supabase.from("platform_settings").upsert(
-      [
-        {
-          key: "platform_visibility",
-          value: "public",
-          updated_at: new Date().toISOString(),
-        },
-      ],
-      { onConflict: "key" }
+    const result = await setPlatformVisibility(
+      auth.supabase,
+      "public",
+      auth.userId,
+      "disable_password_gate"
     );
-    if (dbError) {
-      return NextResponse.json({ error: dbError.message }, { status: 500 });
+
+    if (!result.ok) {
+      return NextResponse.json({ error: result.error }, { status: 500 });
     }
-    // (Optional) Set a cookie to disable the password gate for legacy support
+
     const response = NextResponse.json({
       success: true,
-      message: "Password gate disabled. Platform is now public.",
+      message: result.changed
+        ? "Password gate disabled. Platform is now public."
+        : "Platform visibility was already public.",
+      previousValue: result.previousValue,
+      newValue: result.newValue,
+      changed: result.changed,
     });
+
+    // Secondary to DB — keep middleware/legacy paths in sync after successful write.
     response.cookies.set("omahub-public", "true", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 365, // 1 year
+      maxAge: 60 * 60 * 24 * 365,
       path: "/",
     });
+
     return response;
   } catch (error) {
-    console.error("Remove password gate API error:", error);
+    console.error(
+      JSON.stringify({
+        event: "remove_password_gate_unexpected",
+        message: error instanceof Error ? error.message : String(error),
+      })
+    );
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
