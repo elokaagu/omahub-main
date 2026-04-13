@@ -1,6 +1,9 @@
 import { createBrowserClient } from "@supabase/ssr";
 import { createServerClient } from "@supabase/ssr";
-import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import {
+  createClient as createSupabaseClient,
+  type SupabaseClient,
+} from "@supabase/supabase-js";
 
 // Environment variables with validation
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -78,7 +81,7 @@ export async function createServerSupabaseClient() {
 }
 
 // Admin client with service role key (bypasses RLS)
-export function createAdminClient() {
+export function createAdminClient(): SupabaseClient {
   validateEnvVars();
   if (!supabaseServiceKey) {
     throw new Error(

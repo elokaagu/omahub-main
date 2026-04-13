@@ -45,10 +45,14 @@ export async function POST() {
     syncInFlight = true;
 
     try {
-      let adminDb;
-      try {
-        adminDb = createAdminClient();
-      } catch {
+      const adminDb = (() => {
+        try {
+          return createAdminClient();
+        } catch {
+          return null;
+        }
+      })();
+      if (!adminDb) {
         return NextResponse.json(
           { error: "Server configuration error" },
           { status: 503 }
