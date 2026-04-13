@@ -113,8 +113,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [session?.user?.id]); // Only depend on user ID, not the entire session
 
   const loadUserProfile = async (userId: string, email?: string) => {
-    const PROFILE_TIMEOUT_MS = 8000;
-    const MAX_ATTEMPTS = 3;
+    const PROFILE_TIMEOUT_MS = 4000;
+    const MAX_ATTEMPTS = 2;
 
     const loadOnce = async (): Promise<User | null> => {
       const timeoutPromise = new Promise<never>((_, reject) => {

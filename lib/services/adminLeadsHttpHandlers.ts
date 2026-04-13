@@ -539,6 +539,119 @@ export async function handlePutCommissionStructure(
   return NextResponse.json({ commission_structure: updatedCommission });
 }
 
+type CommissionLeadRow = {
+  id: string;
+  created_at: string;
+  estimated_value: number | null;
+  brand: { name: string | null; commission_rate: number | null } | null;
+};
+
+function normalizeCommissionLeadRows(raw: unknown): CommissionLeadRow[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.map((item) => {
+    const r = item as Record<string, unknown>;
+    let brandRaw = r.brand;
+    if (Array.isArray(brandRaw) && brandRaw[0] && typeof brandRaw[0] === "object") {
+      brandRaw = brandRaw[0];
+    }
+    const b =
+      brandRaw && typeof brandRaw === "object" && !Array.isArray(brandRaw)
+        ? (brandRaw as { name?: unknown; commission_rate?: unknown })
+        : null;
+    return {
+      id: String(r.id),
+      created_at: String(r.created_at),
+      estimated_value:
+        typeof r.estimated_value === "number" ? r.estimated_value : null,
+      brand: b
+        ? {
+            name: typeof b.name === "string" ? b.name : null,
+            commission_rate:
+              typeof b.commission_rate === "number" ? b.commission_rate : null,
+          }
+        : null,
+    };
+  });
+}
+
+/** GET legacy ?action=commission — converted leads with estimated commission (scoped by role). */
+export async function handleLeadsCommissionGET(
+  ctx: LeadsAdminContext
+): Promise<NextResponse> {
+  const { supabase, profile } = ctx;
+  let query = supabase
+    .from("leads")
+    .select(
+      "id, status, created_at, estimated_value, brand_id, brand:brands(name, commission_rate)"
+    )
+    .eq("status", "converted");
+
+  if (profile.role === "brand_admin") {
+    if (profile.owned_brands.length === 0) {
+      return NextResponse.json({
+        success: true,
+        commission: {
+          totalCommission: 0,
+          convertedLeads: [],
+          summary: {
+            totalLeads: 0,
+            totalValue: 0,
+            averageCommissionRate: 0,
+          },
+        },
+      });
+    }
+    query = query.in("brand_id", profile.owned_brands);
+  }
+
+  const { data: convertedLeads, error } = await query;
+
+  if (error) {
+    console.error("Commission fetch error:", error.code, error.message);
+    return NextResponse.json(
+      { error: "Failed to fetch commission data" },
+      { status: 500 }
+    );
+  }
+
+  const rows = normalizeCommissionLeadRows(convertedLeads);
+
+  const commissionData = rows.map((lead) => {
+    const rate = lead.brand?.commission_rate ?? 0;
+    const value = lead.estimated_value ?? 0;
+    return {
+      leadId: lead.id,
+      brandName: lead.brand?.name ?? "Unknown Brand",
+      estimatedValue: value,
+      commissionRate: rate,
+      commissionAmount: (value * rate) / 100,
+      convertedAt: lead.created_at,
+    };
+  });
+
+  const totalCommission = commissionData.reduce(
+    (s, i) => s + i.commissionAmount,
+    0
+  );
+
+  return NextResponse.json({
+    success: true,
+    commission: {
+      totalCommission,
+      convertedLeads: commissionData,
+      summary: {
+        totalLeads: commissionData.length,
+        totalValue: commissionData.reduce((s, i) => s + i.estimatedValue, 0),
+        averageCommissionRate:
+          commissionData.length > 0
+            ? commissionData.reduce((s, i) => s + i.commissionRate, 0) /
+              commissionData.length
+            : 0,
+      },
+    },
+  });
+}
+
 export async function handleDeleteLead(
   searchParams: URLSearchParams,
   ctx: LeadsAdminContext

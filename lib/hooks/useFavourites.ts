@@ -41,11 +41,11 @@ export default function useFavourites() {
       }
 
       const data = await response.json();
-      setFavourites(data.favourites || []);
-      console.log(
-        "✅ Favourites fetched successfully:",
-        data.favourites?.length || 0
-      );
+      const list = Array.isArray(data.favourites)
+        ? data.favourites
+        : data.favourites?.items ?? [];
+      setFavourites(list);
+      console.log("✅ Favourites fetched successfully:", list.length);
     } catch (error) {
       console.error("❌ Error fetching favourites:", error);
       toast.error("Failed to load favourites", {

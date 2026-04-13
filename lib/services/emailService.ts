@@ -78,6 +78,60 @@ ${formData.message}
   }
 }
 
+/** Notify brand contact when a new public lead is captured (server-side; no HTTP self-call). */
+export async function sendNewLeadNotificationToBrand(params: {
+  to: string;
+  brandName: string;
+  customerName: string;
+  customerEmail: string;
+  source: string;
+  leadType: string;
+  notes?: string | null;
+}): Promise<{ success: boolean; error?: string }> {
+  try {
+    const resend = getResendInstance();
+    if (!resend) {
+      return { success: false, error: "Email not configured" };
+    }
+
+    const notesBlock = params.notes?.trim()
+      ? `\nNotes:\n${params.notes.trim()}\n`
+      : "";
+
+    const { error } = await resend.emails.send({
+      from: "OmaHub <info@oma-hub.com>",
+      to: [params.to],
+      subject: `New lead — ${params.brandName}`,
+      replyTo: params.customerEmail,
+      text: `You have a new lead on OmaHub.
+
+Brand: ${params.brandName}
+Name: ${params.customerName}
+Email: ${params.customerEmail}
+Source: ${params.source}
+Type: ${params.leadType}${notesBlock}
+Reply directly to this email to reach the customer.`,
+    });
+
+    if (error) {
+      console.error(
+        "New lead notification email error:",
+        typeof error === "object" && error !== null && "message" in error
+          ? String((error as { message?: string }).message)
+          : String(error)
+      );
+      return { success: false, error: "Send failed" };
+    }
+    return { success: true };
+  } catch (e) {
+    console.error(
+      "New lead notification exception:",
+      e instanceof Error ? e.message : e
+    );
+    return { success: false, error: "Send failed" };
+  }
+}
+
 export async function sendInquiryReplyEmail(replyData: {
   customerName: string;
   customerEmail: string;

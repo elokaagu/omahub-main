@@ -1,18 +1,13 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { Suspense, useState, useEffect } from "react";
+import { Suspense, useState, useEffect, useLayoutEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import {
-  getUserPermissions,
-  Permission,
-} from "@/lib/services/permissionsService";
+import { useStudioInitialData } from "@/contexts/StudioInitialDataContext";
 import { supabaseHelpers } from "@/lib/utils/supabase-helpers";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-// Phase 2B: Selective icon imports instead of large lucide-react bundle
-import { BarChart3 } from "@/lib/utils/iconImports";
 import Link from "next/link";
 import type { Database } from "@/lib/types/supabase";
 
@@ -31,39 +26,50 @@ type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
 export default function StudioPage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [userPermissions, setUserPermissions] = useState<Permission[]>([]);
-  const [userProfile, setUserProfile] = useState<Profile | null>(null);
-  const { user } = useAuth();
+  const initialData = useStudioInitialData();
+  const initialProfile = initialData?.profile ?? null;
+  const { user, loading: authLoading } = useAuth();
+
+  useLayoutEffect(() => {
+    if (initialProfile?.role === "brand_admin") {
+      router.replace("/studio/brands");
+    }
+  }, [initialProfile?.role, router]);
+
+  const [syncingProfile, setSyncingProfile] = useState(() => {
+    if (initialProfile?.role === "brand_admin") return false;
+    return initialProfile == null;
+  });
+  const [userProfile, setUserProfile] = useState<Profile | null>(
+    () => initialProfile
+  );
 
   useEffect(() => {
-    async function fetchData() {
+    if (initialProfile?.role === "brand_admin") return;
+
+    if (!user?.id) {
+      if (initialProfile != null) {
+        setSyncingProfile(false);
+      } else if (!authLoading) {
+        setSyncingProfile(false);
+      }
+      return;
+    }
+
+    if (initialProfile?.id === user.id) {
+      setUserProfile(initialProfile);
+      setSyncingProfile(false);
+      return;
+    }
+
+    let cancelled = false;
+    setSyncingProfile(true);
+    void (async () => {
       try {
-        if (!user) {
-          console.log("👤 Studio Page: No user found");
-          setLoading(false);
-          return;
-        }
-
-
-
-        // Get user permissions and profile
-        const [permissions, profileResult] = await Promise.all([
-          getUserPermissions(user.id),
-          supabaseHelpers.getProfileById(user.id),
-        ]);
-
-        setUserPermissions(permissions);
-
+        const profileResult = await supabaseHelpers.getProfileById(user.id);
+        if (cancelled) return;
         let profile = profileResult.data;
-
-        if (profileResult.error) {
-          console.error(
-            "❌ Studio Page: Error fetching profile:",
-            profileResult.error
-          );
-          console.log("🔄 Studio Page: Using user context as fallback");
-          // Use user context as fallback
+        if (profileResult.error || !profile) {
           profile = {
             id: user.id,
             email: user.email,
@@ -75,40 +81,31 @@ export default function StudioPage() {
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
           } as Profile;
-          setUserProfile(profile);
-        } else {
-          console.log("👤 Studio Page: Profile fetched:", {
-            role: profile?.role,
-            ownedBrands: profile?.owned_brands,
-          });
-          setUserProfile(profile);
         }
-
-        // Redirect brand admins to their brands page
-        const effectiveRole = profile?.role || user.role;
-        if (effectiveRole === "brand_admin") {
-          console.log("🔄 Studio Page: Brand admin detected, redirecting to /studio/brands");
+        setUserProfile(profile);
+        if (profile?.role === "brand_admin") {
           router.replace("/studio/brands");
-          return;
         }
       } catch (error) {
-        console.error("❌ Studio Page: Error in fetchData:", error);
+        console.error("Studio Page: profile sync failed", error);
       } finally {
-        setLoading(false);
+        if (!cancelled) setSyncingProfile(false);
       }
-    }
+    })();
 
-    // Only fetch data when user changes
-    if (user) {
-      fetchData();
-    } else {
-      setLoading(false);
-    }
-  }, [user, router]);
+    return () => {
+      cancelled = true;
+    };
+  }, [user, initialProfile, router, authLoading]);
 
+  const waitingForAuth = authLoading && initialProfile == null;
+  const showLoadingUI = syncingProfile || waitingForAuth;
 
+  if (initialProfile?.role === "brand_admin") {
+    return null;
+  }
 
-  if (loading) {
+  if (showLoadingUI) {
     // Special loading state for brand owners
     if (
       user?.role === "brand_admin" &&
@@ -198,7 +195,7 @@ export default function StudioPage() {
     );
   }
 
-  if (!user) {
+  if (!authLoading && !user) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="text-center">

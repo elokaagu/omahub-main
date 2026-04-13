@@ -34,6 +34,15 @@ const rolePermissions: Record<Role, Permission[]> = {
   ],
 };
 
+/** Sync permission list from a profile role (no network). */
+export function permissionsForProfileRole(
+  role: string | null | undefined
+): Permission[] {
+  if (!role) return rolePermissions.user;
+  const key = role as Role;
+  return rolePermissions[key] ?? rolePermissions.user;
+}
+
 // Database-driven permission checking - no more hardcoded emails!
 async function getUserRoleFromDatabase(userId: string): Promise<Role | null> {
   try {
@@ -58,17 +67,8 @@ async function getUserRoleFromDatabase(userId: string): Promise<Role | null> {
 /** Role from `profiles` only — no email-list fallback. */
 export async function getUserPermissions(userId: string): Promise<Permission[]> {
   try {
-    console.log("🔍 Dynamic Permissions: Getting permissions for user:", userId);
-
     const dbRole = await getUserRoleFromDatabase(userId);
-
-    if (dbRole) {
-      console.log("✅ Dynamic Permissions: Found role in database:", dbRole);
-      return rolePermissions[dbRole] || [];
-    }
-
-    console.log("⚠️ Dynamic Permissions: No role found, returning user permissions");
-    return rolePermissions.user;
+    return permissionsForProfileRole(dbRole);
   } catch (error) {
     console.error("❌ Dynamic Permissions: Error getting permissions:", error);
     return rolePermissions.user;

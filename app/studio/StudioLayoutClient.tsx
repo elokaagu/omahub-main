@@ -1,7 +1,5 @@
 "use client";
 
-import dynamic from "next/dynamic";
-import { Suspense } from "react";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
@@ -10,8 +8,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import {
   getUserPermissions,
   Permission,
+  permissionsForProfileRole,
 } from "@/lib/services/permissionsService";
-import { supabaseHelpers } from "@/lib/utils/supabase-helpers";
 import { Button } from "@/components/ui/button";
 import { NavigationLink } from "@/components/ui/navigation-link";
 import UserProfile from "@/components/auth/UserProfile";
@@ -36,7 +34,6 @@ import {
 } from "@/lib/utils/iconImports";
 import { TailoringEventProvider } from "@/contexts/NavigationContext";
 import ErrorBoundary from "../components/ErrorBoundary";
-import { useStudioOptimization } from "@/lib/hooks/useStudioOptimization";
 import type { Database } from "@/lib/types/supabase";
 import { StudioInitialDataProvider } from "@/contexts/StudioInitialDataContext";
 
@@ -52,67 +49,6 @@ type StudioLayoutClientProps = {
     owned_brands?: string[] | null;
   } | null;
 };
-
-// Dynamic imports for heavy Studio pages
-const StudioBrandsPage = dynamic(() => import("./brands/page"), {
-  loading: () => <div className="h-64 bg-gray-200 rounded-lg animate-pulse" />,
-  ssr: false,
-});
-
-const StudioCollectionsPage = dynamic(() => import("./collections/page"), {
-  loading: () => <div className="h-64 bg-gray-200 rounded-lg animate-pulse" />,
-  ssr: false,
-});
-
-const StudioProductsPage = dynamic(() => import("./products/page"), {
-  loading: () => <div className="h-64 bg-gray-200 rounded-lg animate-pulse" />,
-  ssr: false,
-});
-
-const StudioServicesPage = dynamic(() => import("./services/page"), {
-  loading: () => <div className="h-64 bg-gray-200 rounded-lg animate-pulse" />,
-  ssr: false,
-});
-
-const StudioPortfolioPage = dynamic(() => import("./portfolio/page"), {
-  loading: () => <div className="h-64 bg-gray-200 rounded-lg animate-pulse" />,
-  ssr: false,
-});
-
-const StudioHeroPage = dynamic(() => import("./hero/page"), {
-  loading: () => <div className="h-64 bg-gray-200 rounded-lg animate-pulse" />,
-  ssr: false,
-});
-
-const StudioSpotlightPage = dynamic(() => import("./spotlight/page"), {
-  loading: () => <div className="h-64 bg-gray-200 rounded-lg animate-pulse" />,
-  ssr: false,
-});
-
-const StudioUsersPage = dynamic(() => import("./users/page"), {
-  loading: () => <div className="h-64 bg-gray-200 rounded-lg animate-pulse" />,
-  ssr: false,
-});
-
-const StudioReviewsPage = dynamic(() => import("./reviews/page"), {
-  loading: () => <div className="h-64 bg-gray-200 rounded-lg animate-pulse" />,
-  ssr: false,
-});
-
-const StudioInboxPage = dynamic(() => import("./inbox/page"), {
-  loading: () => <div className="h-64 bg-gray-200 rounded-lg animate-pulse" />,
-  ssr: false,
-});
-
-const StudioProfilePage = dynamic(() => import("./profile/page"), {
-  loading: () => <div className="h-64 bg-gray-200 rounded-lg animate-pulse" />,
-  ssr: false,
-});
-
-const StudioSettingsPage = dynamic(() => import("./settings/page"), {
-  loading: () => <div className="h-64 bg-gray-200 rounded-lg animate-pulse" />,
-  ssr: false,
-});
 
 export default function StudioLayoutClient({
   children,
@@ -136,22 +72,17 @@ export default function StudioLayoutClient({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
-  const [permissions, setPermissions] = useState<Permission[]>([]);
+  const serverRole = initialProfile?.role ?? initialUser?.role ?? null;
+  const bootstrapPerms = permissionsForProfileRole(serverRole);
+
+  const [permissions, setPermissions] = useState<Permission[]>(bootstrapPerms);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [isCheckingAccess, setIsCheckingAccess] = useState(true);
-
-  // Use optimization hook to prevent constant reloading
-  const { debouncedFetch, controlledRefresh, forceRefresh, trackFetch } =
-    useStudioOptimization({
-      debounceMs: 1000, // 1 second debounce
-      maxRefreshIntervalMs: 30000, // 30 seconds max between checks
-      enableRealTimeUpdates: true,
-    });
-
-  // Add refs to prevent multiple simultaneous access checks
-  const isCheckingAccessRef = useRef(false);
-  const lastAccessCheckRef = useRef(0);
-  const ACCESS_CHECK_DEBOUNCE_MS = 10000; // Increased to 10 seconds debounce
+  /** When SSR already authenticated with studio access, do not block the shell on client auth hydration. */
+  const [isCheckingAccess, setIsCheckingAccess] = useState(() => {
+    const hasAccess = bootstrapPerms.includes("studio.access");
+    if (hasAccess && initialUser) return false;
+    return true;
+  });
 
   // Trigger fade-in animation when content is ready
   useEffect(() => {
@@ -160,7 +91,6 @@ export default function StudioLayoutClient({
       !isCheckingAccess &&
       permissions.includes("studio.access")
     ) {
-      // Small delay to ensure smooth transition
       const timer = setTimeout(() => {
         setFadeIn(true);
       }, 100);
@@ -169,112 +99,38 @@ export default function StudioLayoutClient({
   }, [loading, isCheckingAccess, permissions]);
 
   useEffect(() => {
-    const checkAccess = async () => {
-      // Prevent multiple simultaneous access checks
-      if (isCheckingAccessRef.current) {
-        console.log(
-          "⏳ Studio Layout: Access check already in progress, skipping..."
-        );
-        return;
-      }
-
-      // Debounce access checks to prevent excessive calls
-      const now = Date.now();
-      if (now - lastAccessCheckRef.current < ACCESS_CHECK_DEBOUNCE_MS) {
-        console.log("⏳ Studio Layout: Access check debounced, skipping...");
-        return;
-      }
-
-      try {
-        isCheckingAccessRef.current = true;
-        lastAccessCheckRef.current = now;
-
-        console.log("🔒 Studio Layout: Access check starting...");
-        console.log("Studio Layout: Current auth state:", {
-          userId: user?.id,
-          userEmail: user?.email,
-          isLoading: loading,
-        });
-
-        if (loading) {
-          console.log("⏳ Studio Layout: Auth is still loading...");
-          return;
-        }
-
-        if (!user) {
-          console.log("❌ Studio Layout: No user found, redirecting to login");
-          router.push("/login?redirect=/studio");
-          return;
-        }
-
-        // Get user permissions with detailed logging
-        console.log("🔍 Studio Layout: Getting permissions for user:", user.id);
-        console.log("🔍 Studio Layout: User email:", user.email);
-        console.log("🔍 Studio Layout: About to call getUserPermissions...");
-
-        const userPermissions = await getUserPermissions(user.id);
-
-        console.log(
-          "👤 Studio Layout: User permissions received:",
-          userPermissions
-        );
-        console.log(
-          "👤 Studio Layout: Permissions array length:",
-          userPermissions.length
-        );
-        console.log(
-          "👤 Studio Layout: Permissions array contents:",
-          JSON.stringify(userPermissions)
-        );
-        console.log(
-          "🔐 Studio Layout: Checking for studio.access permission..."
-        );
-        console.log(
-          "🔐 Studio Layout: Has studio.access?",
-          userPermissions.includes("studio.access")
-        );
-
-        if (!userPermissions.includes("studio.access")) {
-          console.log(
-            "⛔ Studio Layout: User does not have studio access, redirecting to home"
-          );
-          console.log(
-            "⛔ Studio Layout: Available permissions:",
-            userPermissions
-          );
-          router.push("/");
-          return;
-        }
-
-        console.log("✅ Studio Layout: Access granted, setting permissions");
-        setPermissions(userPermissions);
-      } catch (error) {
-        console.error("❌ Studio Layout: Error checking access:", error);
-        console.error(
-          "❌ Studio Layout: Error stack:",
-          (error as Error)?.stack
-        );
-        router.push("/");
-      } finally {
-        console.log("🏁 Studio Layout: Setting isCheckingAccess to false");
-        setIsCheckingAccess(false);
-        isCheckingAccessRef.current = false;
-      }
-    };
-
-    // Skip access check if already completed and permissions are set
-    if (permissions.includes("studio.access") && !isCheckingAccess) {
-      console.log("✅ Studio Layout: Access already verified, skipping check");
+    if (loading) {
       return;
     }
 
-    console.log("🚀 Studio Layout: useEffect triggered with:", {
-      user: !!user,
-      loading,
-      isCheckingAccess,
-    });
-    checkAccess();
-  }, [user, loading, permissions, isCheckingAccess]);
+    const run = async () => {
+      if (!user?.id) {
+        setIsCheckingAccess(false);
+        router.push("/login?redirect=/studio");
+        return;
+      }
+
+      const effectiveRole =
+        user.role ??
+        (user.id === initialUser?.id
+          ? (initialProfile?.role ?? initialUser?.role ?? null)
+          : null);
+
+      let next = permissionsForProfileRole(effectiveRole);
+      if (!next.includes("studio.access")) {
+        next = await getUserPermissions(user.id);
+      }
+
+      setPermissions(next);
+      setIsCheckingAccess(false);
+
+      if (!next.includes("studio.access")) {
+        router.push("/");
+      }
+    };
+
+    void run();
+  }, [loading, user?.id, user?.role, router, initialUser?.id, initialProfile?.role, initialUser?.role]);
 
   // Enhanced error handling and performance monitoring
   useEffect(() => {
@@ -346,8 +202,11 @@ export default function StudioLayoutClient({
     setSidebarOpen(!sidebarOpen);
   };
 
+  const showGlobalLoader =
+    isCheckingAccess || (loading && initialUser == null);
+
   // Show loading state while checking authentication and access
-  if (loading || isCheckingAccess) {
+  if (showGlobalLoader) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white flex items-center justify-center">
         <div className="text-center space-y-6">

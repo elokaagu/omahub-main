@@ -1,111 +1,61 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase-unified";
+import {
+  enrichUserFavourites,
+  partitionFavouritesByType,
+  tryRefreshFavouritesCache,
+} from "@/lib/services/userFavouritesService";
+import {
+  parseFavouriteDeleteQuery,
+  parseFavouritePostBody,
+} from "@/lib/validation/userFavourites";
 
-export async function GET(request: NextRequest) {
+export const dynamic = "force-dynamic";
+
+function logFavouriteEvent(
+  event: string,
+  fields: Record<string, string | number | undefined>
+) {
+  console.error(JSON.stringify({ event, ...fields }));
+}
+
+export async function GET() {
   try {
     const supabase = await createServerSupabaseClient();
     const {
-      data: { session },
-      error: sessionError,
-    } = await supabase.auth.getSession();
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
-    if (sessionError || !session) {
+    if (authError || !user?.id) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
-    const userId = session.user.id;
+    const userId = user.id;
 
-    // Force fresh data with cache control
     const { data: favourites, error: favouritesError } = await supabase
       .from("favourites")
-      .select("*")
+      .select("id, item_id, item_type, created_at")
       .eq("user_id", userId)
       .order("created_at", { ascending: false });
 
     if (favouritesError) {
-      console.error("Error fetching favourites:", favouritesError);
+      logFavouriteEvent("favourites_list_failed", {
+        code: favouritesError.code ?? "unknown",
+      });
       return NextResponse.json(
         { error: "Failed to fetch favourites" },
         { status: 500 }
       );
     }
 
-    // Enrich favourites with item data
-    const enrichedFavourites = [];
-    for (const favourite of favourites || []) {
-      try {
-        let itemData = null;
-        switch (favourite.item_type) {
-          case "brand":
-            const { data: brand } = await supabase
-              .from("brands")
-              .select(
-                "id, name, image, category, location, is_verified, rating"
-              )
-              .eq("id", favourite.item_id)
-              .single();
-            if (brand) {
-              itemData = {
-                ...brand,
-                item_type: "brand",
-                favourite_id: favourite.id,
-              };
-            }
-            break;
-          case "catalogue":
-            const { data: catalogue } = await supabase
-              .from("catalogues")
-              .select("id, title, image, brand_id, description")
-              .eq("id", favourite.item_id)
-              .single();
-            if (catalogue) {
-              itemData = {
-                ...catalogue,
-                item_type: "catalogue",
-                favourite_id: favourite.id,
-              };
-            }
-            break;
-          case "product":
-            const { data: product } = await supabase
-              .from("products")
-              .select(
-                `id, title, image, brand_id, price, sale_price, category, brand:brands(id, name, location, price_range, currency)`
-              )
-              .eq("id", favourite.item_id)
-              .single();
-            if (product) {
-              itemData = {
-                ...product,
-                item_type: "product",
-                favourite_id: favourite.id,
-                price: product.sale_price || product.price,
-                brand: product.brand,
-              };
-            }
-            break;
-        }
-        if (itemData) {
-          enrichedFavourites.push(itemData);
-        }
-      } catch (itemError) {
-        console.error(`Error fetching item ${favourite.item_id}:`, itemError);
-      }
-    }
-
-    const brands = enrichedFavourites.filter(
-      (item: any) => item.name && !item.brand_id && !item.price
-    );
-    const collections = enrichedFavourites.filter(
-      (item: any) => item.title && item.brand_id && !item.price
-    );
-    const products = enrichedFavourites.filter(
-      (item: any) => item.title && item.price
-    );
+    const rows = favourites ?? [];
+    const enrichedFavourites = await enrichUserFavourites(supabase, rows);
+    const { brands, collections, products } =
+      partitionFavouritesByType(enrichedFavourites);
 
     return NextResponse.json(
       {
-        user: { id: userId },
         favourites: {
           total: enrichedFavourites.length,
           brands: brands.length,
@@ -129,8 +79,8 @@ export async function GET(request: NextRequest) {
         },
       }
     );
-  } catch (error) {
-    console.error("Error in favourites API:", error);
+  } catch {
+    logFavouriteEvent("favourites_get_unhandled", {});
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
@@ -142,83 +92,29 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = await createServerSupabaseClient();
     const {
-      data: { session },
-      error: sessionError,
-    } = await supabase.auth.getSession();
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
-    if (sessionError || !session) {
+    if (authError || !user?.id) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
-    const userId = session.user.id;
-    const body = await request.json();
+    const userId = user.id;
 
-    // Handle both parameter naming conventions
-    const item_id = body.item_id || body.itemId;
-    const item_type = body.item_type || body.itemType;
-
-    if (!item_id || !item_type) {
-      return NextResponse.json(
-        { error: "Missing required fields" },
-        { status: 400 }
-      );
-    }
-
-    // Check if already favourited
-    const { data: existingFavourite } = await supabase
-      .from("favourites")
-      .select("id")
-      .eq("user_id", userId)
-      .eq("item_id", item_id)
-      .eq("item_type", item_type)
-      .single();
-
-    if (existingFavourite) {
-      return NextResponse.json(
-        { error: "Already favourited" },
-        { status: 400 }
-      );
-    }
-
-    // Get item name for the favourite
-    let itemName = "Unknown";
+    let raw: unknown;
     try {
-      switch (item_type) {
-        case "brand":
-          const { data: brand } = await supabase
-            .from("brands")
-            .select("name")
-            .eq("id", item_id)
-            .single();
-          itemName = brand?.name || "Unknown Brand";
-          break;
-        case "catalogue":
-          const { data: catalogue } = await supabase
-            .from("catalogues")
-            .select("title")
-            .eq("id", item_id)
-            .single();
-          itemName = catalogue?.title || "Unknown Collection";
-          break;
-        case "product":
-          const { data: product } = await supabase
-            .from("products")
-            .select("title")
-            .eq("id", item_id)
-            .single();
-          itemName = product?.title || "Unknown Product";
-          break;
-      }
-    } catch (nameError) {
-      console.error("Error fetching item name:", nameError);
+      raw = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
     }
 
-    // Insert new favourite
-    console.log("🔄 Attempting to insert favourite:", {
-      user_id: userId,
-      item_id,
-      item_type,
-    });
+    const parsed = parseFavouritePostBody(raw);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+    }
+
+    const { item_id, item_type } = parsed.data;
 
     const { data: favourite, error: insertError } = await supabase
       .from("favourites")
@@ -231,26 +127,22 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (insertError) {
-      console.error("❌ Error inserting favourite:", insertError);
-      console.error("❌ Error details:", {
-        message: insertError.message,
-        details: insertError.details,
-        hint: insertError.hint,
-        code: insertError.code,
+      if (insertError.code === "23505") {
+        return NextResponse.json(
+          { error: "Already favourited" },
+          { status: 409 }
+        );
+      }
+      logFavouriteEvent("favourites_insert_failed", {
+        code: insertError.code ?? "unknown",
       });
       return NextResponse.json(
-        { error: "Failed to add favourite", details: insertError.message },
+        { error: "Failed to add favourite" },
         { status: 500 }
       );
     }
 
-    // Force database refresh by querying immediately
-    try {
-      await supabase.rpc("refresh_favourites_cache", { user_id: userId });
-    } catch (rpcError) {
-      // Ignore if RPC doesn't exist
-      console.log("RPC refresh_favourites_cache not available, continuing...");
-    }
+    await tryRefreshFavouritesCache(supabase, userId);
 
     return NextResponse.json(
       {
@@ -265,8 +157,8 @@ export async function POST(request: NextRequest) {
         },
       }
     );
-  } catch (error) {
-    console.error("Error in favourites POST API:", error);
+  } catch {
+    logFavouriteEvent("favourites_post_unhandled", {});
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
@@ -278,28 +170,26 @@ export async function DELETE(request: NextRequest) {
   try {
     const supabase = await createServerSupabaseClient();
     const {
-      data: { session },
-      error: sessionError,
-    } = await supabase.auth.getSession();
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
-    if (sessionError || !session) {
-      return NextResponse.json({ error: "Not authenticated" }, { status: 400 });
+    if (authError || !user?.id) {
+      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
-    const userId = session.user.id;
+    const userId = user.id;
     const { searchParams } = new URL(request.url);
-    const item_id = searchParams.get("itemId") || searchParams.get("item_id");
-    const item_type =
-      searchParams.get("itemType") || searchParams.get("item_type");
-
-    if (!item_id || !item_type) {
+    const parsed = parseFavouriteDeleteQuery(searchParams);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: "Missing required parameters" },
+        { error: "Missing or invalid parameters" },
         { status: 400 }
       );
     }
 
-    // Delete favourite
+    const { item_id, item_type } = parsed.data;
+
     const { error: deleteError } = await supabase
       .from("favourites")
       .delete()
@@ -308,20 +198,16 @@ export async function DELETE(request: NextRequest) {
       .eq("item_type", item_type);
 
     if (deleteError) {
-      console.error("Error deleting favourite:", deleteError);
+      logFavouriteEvent("favourites_delete_failed", {
+        code: deleteError.code ?? "unknown",
+      });
       return NextResponse.json(
         { error: "Failed to remove favourite" },
         { status: 500 }
       );
     }
 
-    // Force database refresh
-    try {
-      await supabase.rpc("refresh_favourites_cache", { user_id: userId });
-    } catch (rpcError) {
-      // Ignore if RPC doesn't exist
-      console.log("RPC refresh_favourites_cache not available, continuing...");
-    }
+    await tryRefreshFavouritesCache(supabase, userId);
 
     return NextResponse.json(
       {
@@ -335,8 +221,8 @@ export async function DELETE(request: NextRequest) {
         },
       }
     );
-  } catch (error) {
-    console.error("Error in favourites DELETE API:", error);
+  } catch {
+    logFavouriteEvent("favourites_delete_unhandled", {});
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
