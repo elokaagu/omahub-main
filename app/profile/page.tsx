@@ -1,11 +1,16 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { updateProfile, getProfile } from "@/lib/services/authService";
 import { Button } from "@/components/ui/button";
 import { User } from "@/lib/services/authService";
+import {
+  getUserPermissions,
+  type Permission,
+} from "@/lib/services/permissionsService";
 
 export default function ProfilePage() {
   const { user, signOut } = useAuth();
@@ -15,6 +20,7 @@ export default function ProfilePage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [profile, setProfile] = useState<User | null>(null);
+  const [permissions, setPermissions] = useState<Permission[] | null>(null);
   const [formData, setFormData] = useState({
     first_name: "",
     last_name: "",
@@ -29,7 +35,11 @@ export default function ProfilePage() {
       }
 
       try {
-        const profileData = await getProfile(user.id);
+        const [profileData, userPermissions] = await Promise.all([
+          getProfile(user.id),
+          getUserPermissions(user.id, user.email ?? undefined),
+        ]);
+        setPermissions(userPermissions);
         if (profileData) {
           setProfile(profileData);
           setFormData({
@@ -41,6 +51,7 @@ export default function ProfilePage() {
       } catch (err) {
         console.error("Error loading profile:", err);
         setError("Failed to load profile data");
+        setPermissions([]);
       } finally {
         setLoading(false);
       }
@@ -198,6 +209,69 @@ export default function ProfilePage() {
             </div>
           </form>
         </div>
+
+        {permissions !== null && (
+          <div className="bg-white rounded-lg shadow-md p-8 mb-8 border border-oma-plum/10">
+            <h2 className="text-xl font-canela text-oma-plum mb-2">
+              Brands &amp; collections
+            </h2>
+            {permissions.includes("studio.access") ? (
+              <>
+                <p className="text-sm text-oma-cocoa/80 mb-4">
+                  Your profile is separate from the studio where you manage
+                  brands and upload collections. Open Studio to continue, then
+                  use{" "}
+                  <span className="text-oma-cocoa font-medium">Collections</span>{" "}
+                  in the sidebar to create or edit a collection.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3 sm:flex-wrap">
+                  <Button
+                    asChild
+                    className="bg-oma-plum hover:bg-oma-plum/90 w-full sm:w-auto"
+                  >
+                    <Link href="/studio">Open Studio</Link>
+                  </Button>
+                  {(permissions.includes("studio.catalogues.manage") ||
+                    permissions.includes("studio.catalogues.create")) && (
+                    <Button
+                      asChild
+                      variant="outline"
+                      className="border-oma-plum text-oma-plum hover:bg-oma-plum/5 w-full sm:w-auto"
+                    >
+                      <Link href="/studio/collections/create">
+                        Create a collection
+                      </Link>
+                    </Button>
+                  )}
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="text-sm text-oma-cocoa/80 mb-3">
+                  There isn&apos;t another step on this page after you save your
+                  name. Uploading a collection happens in{" "}
+                  <span className="text-oma-cocoa font-medium">Studio</span>,
+                  which is enabled when your account is set up as a brand or
+                  creator on our side.
+                </p>
+                <p className="text-sm text-oma-cocoa/80 mb-4">
+                  If you&apos;re joining as a brand or creator and expected
+                  studio access already, please{" "}
+                  <Link
+                    href="/contact"
+                    className="text-oma-plum underline underline-offset-2 hover:text-oma-plum/90"
+                  >
+                    contact us
+                  </Link>{" "}
+                  so we can enable the right permissions for your email.
+                </p>
+                <Button asChild variant="outline" className="border-oma-cocoa/30">
+                  <Link href="/how-it-works">How OmaHub works</Link>
+                </Button>
+              </>
+            )}
+          </div>
+        )}
 
         <div className="bg-white rounded-lg shadow-md p-8">
           <h2 className="text-xl font-semibold mb-4">Account Settings</h2>

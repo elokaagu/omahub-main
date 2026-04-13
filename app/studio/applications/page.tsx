@@ -226,13 +226,16 @@ export default function ApplicationsPage() {
         body: JSON.stringify({ status, notes }),
       });
 
+      const result = await response.json().catch(() => ({}));
+
       if (!response.ok) {
         await fetchApplications(); // Revert on error
-        const errorText = await response.text();
-        throw new Error(`Failed to update: ${errorText}`);
+        const message =
+          typeof result?.error === "string"
+            ? result.error
+            : `Failed to update (${response.status})`;
+        throw new Error(message);
       }
-
-      const result = await response.json();
       
       if (result.application) {
         setApplications(prev => prev.map(app => 

@@ -151,28 +151,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [session?.user?.id]); // Only depend on user ID, not the entire session
 
   const loadUserProfile = async (userId: string, email?: string) => {
-    try {
-      AuthDebug.log("🔄 Loading user profile for:", userId);
+    const PROFILE_TIMEOUT_MS = 8000;
+    const MAX_ATTEMPTS = 3;
 
-      // Reduce timeout to prevent hanging but allow reasonable time for loading
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error("Profile loading timeout")), 3000);
+    const loadOnce = async (): Promise<User | null> => {
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(
+          () => reject(new Error("Profile loading timeout")),
+          PROFILE_TIMEOUT_MS
+        );
       });
-
-      const profilePromise = getProfile(userId);
-      const profile = (await Promise.race([
-        profilePromise,
+      return (await Promise.race([
+        getProfile(userId),
         timeoutPromise,
       ])) as User | null;
+    };
 
-      if (profile) {
-        setUser(profile);
-        AuthDebug.log("✅ User profile loaded:", profile.email);
-      } else {
-        // If no profile exists, create a basic user object with proper role detection
+    let lastError: unknown = null;
+
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      try {
+        AuthDebug.log(
+          `🔄 Loading user profile for: ${userId} (attempt ${attempt}/${MAX_ATTEMPTS})`
+        );
+        const profile = await loadOnce();
+
+        if (profile) {
+          setUser(profile);
+          AuthDebug.log("✅ User profile loaded:", profile.email);
+          return;
+        }
+
+        if (attempt < MAX_ATTEMPTS) {
+          await new Promise((r) => setTimeout(r, 400 * attempt));
+          continue;
+        }
+
         const userEmail = email || "";
         const role = getRoleFromEmail(userEmail);
-
         const basicUser: User = {
           id: userId,
           email: userEmail,
@@ -180,48 +196,61 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           last_name: "",
           avatar_url: "",
           role: role,
-          owned_brands: [], // Start with empty array, will be populated from database
+          owned_brands: [],
         };
         setUser(basicUser);
         AuthDebug.log(
-          "⚠️ No profile found, created basic user with role:",
+          "⚠️ No profile found after retries, created basic user with role:",
           role,
           userEmail
         );
-      }
-    } catch (error) {
-      AuthDebug.error("❌ Error loading user profile:", error);
-      // Don't set user to null on timeout or temporary errors - create basic user with proper role instead
-      if (
-        error instanceof Error &&
-        (error.message === "Profile loading timeout" ||
-          error.message.includes("network") ||
-          error.message.includes("timeout"))
-      ) {
-        const userEmail = email || "";
-        const role = getRoleFromEmail(userEmail);
+        return;
+      } catch (error) {
+        lastError = error;
+        const retryable =
+          error instanceof Error &&
+          (error.message === "Profile loading timeout" ||
+            error.message.includes("network") ||
+            error.message.includes("timeout"));
 
-        const basicUser: User = {
-          id: userId,
-          email: userEmail,
-          first_name: "",
-          last_name: "",
-          avatar_url: "",
-          role: role,
-          owned_brands: [], // Start with empty array, will be populated from database
-        };
-        setUser(basicUser);
-        AuthDebug.log(
-          "⚠️ Profile loading error, created basic user with role:",
-          role,
-          userEmail
-        );
-      } else {
-        // Only set user to null for actual authentication errors
+        if (retryable && attempt < MAX_ATTEMPTS) {
+          AuthDebug.log(
+            `⚠️ Profile load attempt ${attempt} failed, retrying...`,
+            error
+          );
+          await new Promise((r) => setTimeout(r, 500 * attempt));
+          continue;
+        }
+
+        AuthDebug.error("❌ Error loading user profile:", error);
+        if (retryable) {
+          const userEmail = email || "";
+          const role = getRoleFromEmail(userEmail);
+          const basicUser: User = {
+            id: userId,
+            email: userEmail,
+            first_name: "",
+            last_name: "",
+            avatar_url: "",
+            role: role,
+            owned_brands: [],
+          };
+          setUser(basicUser);
+          AuthDebug.log(
+            "⚠️ Profile loading failed after retries, using basic user:",
+            role,
+            userEmail
+          );
+          return;
+        }
+
         AuthDebug.log("❌ Authentication error, setting user to null");
         setUser(null);
+        return;
       }
     }
+
+    AuthDebug.error("❌ Unexpected profile load exit", lastError);
   };
 
   // Memoized handleAuthStateChange to prevent infinite loops

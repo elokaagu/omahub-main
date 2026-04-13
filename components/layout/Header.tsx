@@ -37,6 +37,7 @@ import { supabase } from "@/lib/supabase";
 import { getBrandsByCategory } from "@/lib/services/brandService";
 import { checkCategoryHasBrands } from "@/lib/services/categoryService";
 import { triggerSearchModal } from "@/components/ui/search-modal";
+import { useStudioPermissions } from "@/hooks/useStudioPermissions";
 
 const collectionItems = collections.map((category) => ({
   name: category,
@@ -89,6 +90,12 @@ const fallbackNavigationItems: NavigationItem[] = [
 
 export default function Header() {
   const { user, signOut } = useAuth();
+  const { hasStudioAccess } = useStudioPermissions(user?.id, user?.email);
+  const showStudioInNav =
+    user?.role === "admin" ||
+    user?.role === "super_admin" ||
+    user?.role === "brand_admin" ||
+    hasStudioAccess;
   const { setIsNavigating } = useNavigation();
   const router = useRouter();
   const pathname = usePathname();
@@ -150,7 +157,8 @@ export default function Header() {
     const hasAdminAccess =
       user?.role === "admin" ||
       user?.role === "super_admin" ||
-      user?.role === "brand_admin";
+      user?.role === "brand_admin" ||
+      hasStudioAccess;
     console.log("Header user state:", {
       userId: user?.id,
       userRole: user?.role,
@@ -167,7 +175,7 @@ export default function Header() {
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [user]);
+  }, [user, hasStudioAccess]);
 
   useEffect(() => {
     async function loadDynamicNavigation() {
@@ -441,9 +449,7 @@ export default function Header() {
                             </NavigationLink>
                           </NavigationMenuLink>
                         </li>
-                        {(user?.role === "admin" ||
-                          user?.role === "super_admin" ||
-                          user?.role === "brand_admin") && (
+                        {showStudioInNav && (
                           <li>
                             <NavigationMenuLink asChild>
                               <button
@@ -706,9 +712,7 @@ export default function Header() {
                       </NavigationLink>
 
                       {/* Studio Access for Admins */}
-                      {(user?.role === "admin" ||
-                        user?.role === "super_admin" ||
-                        user?.role === "brand_admin") && (
+                      {showStudioInNav && (
                         <button
                           onClick={() => {
                             setMobileMenuOpen(false);

@@ -7,6 +7,61 @@ import { sendApplicationApprovalEmail, sendApplicationRejectionEmail } from "@/l
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic';
 
+function normalizeApplicantEmail(email: unknown): string {
+  if (typeof email !== "string") return "";
+  return email.trim().toLowerCase();
+}
+
+/** Paginate through auth users — listUsers() defaults to a single page only. */
+async function findAuthUserIdByEmail(
+  supabase: NonNullable<Awaited<ReturnType<typeof getAdminClient>>>,
+  emailNorm: string
+): Promise<string | null> {
+  if (!emailNorm) return null;
+  const perPage = 1000;
+  for (let page = 1; page <= 50; page++) {
+    const { data, error } = await supabase.auth.admin.listUsers({
+      page,
+      perPage,
+    });
+    if (error) {
+      console.error("❌ listUsers error:", error);
+      return null;
+    }
+    const users = data?.users ?? [];
+    const match = users.find(
+      (u) => (u.email ?? "").trim().toLowerCase() === emailNorm
+    );
+    if (match?.id) return match.id;
+    if (users.length < perPage) break;
+  }
+  return null;
+}
+
+async function broadcastProfileRefreshed(
+  supabase: NonNullable<Awaited<ReturnType<typeof getAdminClient>>>,
+  profile: { id: string; email: string | null; role: string | null; owned_brands: unknown }
+) {
+  try {
+    await supabase
+      .channel(`profile_updates_${profile.id}`)
+      .send({
+        type: "broadcast",
+        event: "profile_updated",
+        payload: {
+          user_id: profile.id,
+          email: profile.email,
+          role: profile.role,
+          owned_brands: profile.owned_brands,
+          updated_at: new Date().toISOString(),
+          trigger: "application_approved",
+        },
+      });
+  } catch (e) {
+    console.warn("⚠️ Failed to broadcast profile update:", e);
+  }
+}
+
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> | { id: string } }
@@ -71,6 +126,56 @@ export async function PUT(
       });
     }
 
+    let approvalWorkflowResult: {
+      success: boolean;
+      error?: string;
+      brand?: unknown;
+      user?: unknown;
+      brandCreated?: boolean;
+      userCreated?: boolean;
+      temporaryPassword?: string;
+      passwordResetLink?: string;
+    } | null = null;
+
+    if (status === "approved" && applicationData) {
+      try {
+        console.log(
+          "🚀 Brand/user setup runs before marking the application approved (avoids false “access granted” emails)..."
+        );
+        approvalWorkflowResult = await setupBrandAndUserAccess(
+          applicationData,
+          supabase
+        );
+        if (!approvalWorkflowResult.success) {
+          console.error(
+            "❌ Brand/user setup failed:",
+            approvalWorkflowResult.error
+          );
+          return NextResponse.json(
+            {
+              success: false,
+              error:
+                approvalWorkflowResult.error ||
+                "Could not assign studio access or create the brand for this applicant. The application was not marked approved.",
+            },
+            { status: 422 }
+          );
+        }
+      } catch (workflowError) {
+        console.error("💥 Error in brand/user setup workflow:", workflowError);
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              workflowError instanceof Error
+                ? workflowError.message
+                : "Unknown error during brand/user setup",
+          },
+          { status: 422 }
+        );
+      }
+    }
+
     // Prepare update data
     const updateData: any = {
       status,
@@ -107,85 +212,59 @@ export async function PUT(
 
     console.log(`✅ Application ${id} updated successfully to status: ${status}`);
 
-    // If approved, create brand and set up user access
-    if (status === "approved" && applicationData) {
-      let workflowResult: any = null;
+    if (status === "approved" && applicationData && approvalWorkflowResult) {
       try {
-        console.log("🚀 Starting brand creation and user setup workflow...");
-        
-        workflowResult = await setupBrandAndUserAccess(applicationData, supabase);
-        
-        if (!workflowResult.success) {
-          console.error("❌ Brand/user setup failed:", workflowResult.error);
-          // Continue to send approval email even if setup failed
-        }
-      } catch (workflowError) {
-        console.error("💥 Error in brand/user setup workflow:", workflowError);
-        // Continue to send approval email even if setup failed
-        workflowResult = {
-          success: false,
-          error: workflowError instanceof Error ? workflowError.message : "Unknown error",
-          brandCreated: false,
-          userCreated: false,
-        };
-      }
-
-      // ALWAYS send approval email when application is approved, regardless of setup success
-      try {
-        console.log("📧 Sending approval email notification to:", applicationData.email);
+        console.log(
+          "📧 Sending approval email notification to:",
+          applicationData.email
+        );
         console.log("📧 Email credentials:", {
-          isNewUser: workflowResult?.userCreated || false,
-          hasTemporaryPassword: !!workflowResult?.temporaryPassword,
-          hasPasswordResetLink: !!workflowResult?.passwordResetLink,
-          temporaryPasswordPreview: workflowResult?.temporaryPassword ? `${workflowResult.temporaryPassword.substring(0, 3)}...` : 'none',
+          isNewUser: approvalWorkflowResult.userCreated || false,
+          hasTemporaryPassword: !!approvalWorkflowResult.temporaryPassword,
+          hasPasswordResetLink: !!approvalWorkflowResult.passwordResetLink,
+          temporaryPasswordPreview: approvalWorkflowResult.temporaryPassword
+            ? `${approvalWorkflowResult.temporaryPassword.substring(0, 3)}...`
+            : "none",
         });
-        
+
         const emailResult = await sendApplicationApprovalEmail({
           designerName: applicationData.designer_name,
           brandName: applicationData.brand_name,
           email: applicationData.email,
-          temporaryPassword: workflowResult?.temporaryPassword, // Included for new users if available
-          passwordResetLink: workflowResult?.passwordResetLink, // Optional secure method
-          isNewUser: workflowResult?.userCreated || false,
+          temporaryPassword: approvalWorkflowResult.temporaryPassword,
+          passwordResetLink: approvalWorkflowResult.passwordResetLink,
+          isNewUser: approvalWorkflowResult.userCreated || false,
         });
 
         if (emailResult.success) {
           console.log("✅ Approval email sent successfully");
         } else {
           console.warn("⚠️ Failed to send approval email:", emailResult.error);
-          // Don't fail the request if email fails
         }
       } catch (emailError) {
         console.error("❌ Error sending approval email:", emailError);
-        // Don't fail the request if email fails
       }
 
-      // Return response based on whether setup succeeded
-      if (workflowResult?.success) {
-        return NextResponse.json({
-          success: true,
-          application: updatedApplication,
-          message: "Application approved successfully. Brand and user access have been set up.",
-          brand: workflowResult.brand,
-          user: workflowResult.user ? { email: workflowResult.user.email, role: workflowResult.user.role } : null,
-          temporaryPassword: workflowResult.temporaryPassword || null, // Show to admin as fallback
-          passwordResetLink: workflowResult.passwordResetLink || null, // Primary secure method
-          note: workflowResult.userCreated 
-            ? (workflowResult.passwordResetLink 
-                ? "Password reset link sent to user email. Temporary password available as fallback."
-                : "Temporary password generated. Password reset link generation failed - user can use temporary password.")
-            : null,
-        });
-      } else {
-        return NextResponse.json({
-          success: true,
-          application: updatedApplication,
-          message: "Application approved successfully. Approval email sent. Brand/user setup encountered issues.",
-          warning: workflowResult?.error || "Unknown error during brand/user setup",
-          brandCreated: workflowResult?.brandCreated || false,
-          userCreated: workflowResult?.userCreated || false,
-        });
-      }
+      return NextResponse.json({
+        success: true,
+        application: updatedApplication,
+        message:
+          "Application approved successfully. Brand and user access have been set up.",
+        brand: approvalWorkflowResult.brand,
+        user: approvalWorkflowResult.user
+          ? {
+              email: (approvalWorkflowResult.user as { email?: string }).email,
+              role: (approvalWorkflowResult.user as { role?: string }).role,
+            }
+          : null,
+        temporaryPassword: approvalWorkflowResult.temporaryPassword || null,
+        passwordResetLink: approvalWorkflowResult.passwordResetLink || null,
+        note: approvalWorkflowResult.userCreated
+          ? approvalWorkflowResult.passwordResetLink
+            ? "Password reset link sent to user email. Temporary password available as fallback."
+            : "Temporary password generated. Password reset link generation failed - user can use temporary password."
+          : null,
+      });
     }
 
     // If rejected, send rejection email notification to the designer
@@ -244,11 +323,24 @@ async function setupBrandAndUserAccess(
   passwordResetLink?: string;
 }> {
   try {
+    const emailNorm = normalizeApplicantEmail(application.email);
+    if (!emailNorm || !emailNorm.includes("@")) {
+      return {
+        success: false,
+        error: "Invalid or missing applicant email on the application",
+      };
+    }
+
+    const brandName =
+      typeof application.brand_name === "string"
+        ? application.brand_name.trim()
+        : String(application.brand_name ?? "");
+
     // Step 1: Check if brand already exists (created during application submission)
     console.log("📦 Step 1: Checking for existing brand from application...");
     console.log("📋 Application data to map:", {
-      brand_name: application.brand_name,
-      email: application.email,
+      brand_name: brandName,
+      email: emailNorm,
       phone: application.phone,
       website: application.website,
       instagram: application.instagram,
@@ -257,15 +349,26 @@ async function setupBrandAndUserAccess(
       year_founded: application.year_founded,
       description_length: application.description?.length || 0,
     });
-    
-    // Check if a brand already exists for this application (by name and email)
-    const { data: existingBrand } = await supabase
+
+    const { data: unverifiedBrandRows } = await supabase
       .from("brands")
       .select("*")
-      .eq("name", application.brand_name)
-      .eq("contact_email", application.email)
-      .eq("is_verified", false) // Only match unverified brands (created during submission)
-      .single();
+      .eq("name", brandName)
+      .ilike("contact_email", emailNorm)
+      .eq("is_verified", false)
+      .limit(1);
+
+    let existingBrand = unverifiedBrandRows?.[0] ?? null;
+
+    if (!existingBrand) {
+      const { data: anyBrandRows } = await supabase
+        .from("brands")
+        .select("*")
+        .eq("name", brandName)
+        .ilike("contact_email", emailNorm)
+        .limit(1);
+      existingBrand = anyBrandRows?.[0] ?? null;
+    }
 
     let newBrand;
     let brandId: string;
@@ -313,7 +416,7 @@ async function setupBrandAndUserAccess(
       brandId = randomUUID();
       const brandData = {
         id: brandId,
-        name: application.brand_name,
+        name: brandName,
         description: application.description || "",
         long_description: application.description || "",
         location: application.location,
@@ -323,7 +426,7 @@ async function setupBrandAndUserAccess(
         categories: [application.category],
         rating: 5.0,
         is_verified: false,
-        contact_email: application.email,
+        contact_email: emailNorm,
         website: application.website || undefined,
         instagram: application.instagram ? `@${application.instagram.replace(/^@/, "")}` : undefined,
         whatsapp: application.phone || undefined, // Map phone to whatsapp field
@@ -362,22 +465,23 @@ async function setupBrandAndUserAccess(
 
     // Step 2: Check if user exists
     console.log("👤 Step 2: Checking if user exists...");
-    console.log("🔍 Looking for user with email:", application.email);
-    
+    console.log("🔍 Looking for user with email:", emailNorm);
+
     let userId: string | null = null;
     let userCreated = false;
     let temporaryPassword: string | undefined = undefined;
 
-    // First, check if profile exists (more efficient than listing all auth users)
-    const { data: existingProfile, error: profileError } = await supabase
+    const { data: profileRows, error: profileLookupError } = await supabase
       .from("profiles")
       .select("id, role, owned_brands")
-      .eq("email", application.email)
-      .maybeSingle();
+      .ilike("email", emailNorm)
+      .limit(1);
 
-    if (profileError) {
-      console.warn("⚠️ Error checking for existing profile:", profileError);
+    if (profileLookupError) {
+      console.warn("⚠️ Error checking for existing profile:", profileLookupError);
     }
+
+    const existingProfile = profileRows?.[0] ?? null;
 
     if (existingProfile) {
       userId = existingProfile.id;
@@ -385,37 +489,28 @@ async function setupBrandAndUserAccess(
         id: userId,
         currentRole: existingProfile.role,
         currentOwnedBrands: existingProfile.owned_brands || [],
-        brandToAdd: brandId
+        brandToAdd: brandId,
       });
     } else {
-      // Check if user exists in auth.users (profile might not exist yet)
-      console.log("🔍 Profile not found, checking auth.users...");
-      const { data: existingAuthUser, error: authListError } = await supabase.auth.admin.listUsers();
-      
-      if (authListError) {
-        console.error("❌ Error listing auth users:", authListError);
-      }
-      
-      const authUser = existingAuthUser?.users?.find((u: any) => u.email === application.email);
+      console.log("🔍 Profile not found, checking auth.users (paginated)...");
+      const authId = await findAuthUserIdByEmail(supabase, emailNorm);
 
-      if (authUser) {
-        userId = authUser.id;
-        console.log("✅ User already exists in auth (but no profile):", {
+      if (authId) {
+        userId = authId;
+        console.log("✅ User already exists in auth (profile row missing or email casing differed):", {
           id: userId,
-          email: authUser.email
         });
       } else {
-        // Create new auth user
         console.log("🆕 Creating new auth user...");
-        
-        // Generate a secure temporary password (as fallback for admin visibility)
+
         temporaryPassword = generateTemporaryPassword();
-        
-        const { data: newAuthUser, error: createAuthError } = await supabase.auth.admin.createUser({
-          email: application.email,
-          password: temporaryPassword,
-          email_confirm: true, // Auto-confirm email
-        });
+
+        const { data: newAuthUser, error: createAuthError } =
+          await supabase.auth.admin.createUser({
+            email: emailNorm,
+            password: temporaryPassword,
+            email_confirm: true,
+          });
 
         if (createAuthError || !newAuthUser.user) {
           console.error("❌ Error creating auth user:", createAuthError);
@@ -432,7 +527,7 @@ async function setupBrandAndUserAccess(
         userCreated = true;
         console.log("✅ Auth user created:", {
           id: userId,
-          email: application.email
+          email: emailNorm,
         });
       }
     }
@@ -494,7 +589,7 @@ async function setupBrandAndUserAccess(
         .update({
           role: "brand_admin", // Always ensure role is brand_admin
           owned_brands: updatedOwnedBrands,
-          email: application.email, // Ensure email is up to date
+          email: emailNorm, // Ensure email is up to date
           updated_at: new Date().toISOString(),
         })
         .eq("id", userId)
@@ -524,16 +619,16 @@ async function setupBrandAndUserAccess(
       console.log("🆕 Creating new profile...");
       console.log("📝 Creating profile with:", {
         id: userId,
-        email: application.email,
+        email: emailNorm,
         role: "brand_admin",
-        owned_brands: [brandId]
+        owned_brands: [brandId],
       });
-      
+
       const { data: newProfile, error: createProfileError } = await supabase
         .from("profiles")
         .insert({
           id: userId,
-          email: application.email,
+          email: emailNorm,
           role: "brand_admin", // Always set as brand_admin
           owned_brands: [brandId], // Always include this brand
           created_at: new Date().toISOString(),
@@ -584,6 +679,13 @@ async function setupBrandAndUserAccess(
       console.log("✅ Verification passed: Brand is in owned_brands");
     }
 
+    await broadcastProfileRefreshed(supabase, {
+      id: profile.id,
+      email: profile.email,
+      role: profile.role,
+      owned_brands: profile.owned_brands,
+    });
+
     // Step 4: Verify the brand (set is_verified to true)
     console.log("✅ Step 4: Verifying brand...");
     const { error: verifyError } = await supabase
@@ -611,11 +713,11 @@ async function setupBrandAndUserAccess(
         // Generate a password reset link that expires in 7 days
         const resetUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "https://oma-hub.com"}/reset-password`;
         const { data: resetData, error: resetError } = await supabase.auth.admin.generateLink({
-          type: 'recovery',
-          email: application.email,
+          type: "recovery",
+          email: emailNorm,
           options: {
             redirectTo: resetUrl,
-          }
+          },
         });
 
         if (resetError) {

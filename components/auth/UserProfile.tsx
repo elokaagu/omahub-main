@@ -14,14 +14,25 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AuthImage } from "@/components/ui/auth-image";
-import { LogOut, User, Settings } from "lucide-react";
+import { LogOut, User, Settings, LayoutDashboard } from "lucide-react";
 import { toast } from "sonner";
+import { useStudioPermissions } from "@/hooks/useStudioPermissions";
 
 export default function UserProfile() {
   const { user, session, signOut } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const { hasStudioAccess } = useStudioPermissions(
+    user?.id,
+    user?.email ?? session?.user?.email
+  );
+
+  const showStudioInMenu =
+    hasStudioAccess ||
+    user?.role === "admin" ||
+    user?.role === "super_admin" ||
+    user?.role === "brand_admin";
 
   const handleSignOut = async () => {
     try {
@@ -43,6 +54,10 @@ export default function UserProfile() {
     } else {
       router.push("/profile");
     }
+  };
+
+  const handleStudioClick = () => {
+    router.push("/studio");
   };
 
   const handleSettingsClick = () => {
@@ -117,6 +132,15 @@ export default function UserProfile() {
         >
           <span>Profile</span>
         </DropdownMenuItem>
+        {showStudioInMenu && (
+          <DropdownMenuItem
+            onClick={handleStudioClick}
+            className="cursor-pointer flex items-center gap-0"
+          >
+            <LayoutDashboard className="mr-2 h-4 w-4 shrink-0" />
+            <span>Studio</span>
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem
           onClick={handleSettingsClick}
           className="cursor-pointer"
