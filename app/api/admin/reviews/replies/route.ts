@@ -1,67 +1,49 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import {
+  formatAdminDisplayName,
+  requireReviewsAdmin,
+  type ReviewsAdminProfile,
+} from "@/lib/auth/requireAdminSession";
+import { createAdminClient, createServerSupabaseClient } from "@/lib/supabase-unified";
+import {
+  parseReviewReplyDeleteQuery,
+  reviewReplyCreateSchema,
+  reviewReplyUpdateSchema,
+} from "@/lib/validation/reviewReplies";
 
-// Initialize Supabase client with service role key for admin operations
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+export const dynamic = "force-dynamic";
 
-// Helper function to verify admin permissions
-async function verifyAdminPermissions(request: NextRequest) {
-  const authHeader = request.headers.get("authorization");
-  if (!authHeader?.startsWith("Bearer ")) {
-    return { error: "Missing or invalid authorization header", status: 401 };
-  }
+type UserSupabase = Awaited<ReturnType<typeof createServerSupabaseClient>>;
 
-  const token = authHeader.split(" ")[1];
-
-  const {
-    data: { user },
-    error: userError,
-  } = await supabaseAdmin.auth.getUser(token);
-  if (userError || !user) {
-    return { error: "Invalid authentication token", status: 401 };
-  }
-
-  // Get user profile to check role
-  const { data: profile, error: profileError } = await supabaseAdmin
-    .from("profiles")
-    .select("role, owned_brands, first_name, last_name, email")
-    .eq("id", user.id)
-    .single();
-
-  if (profileError || !profile) {
-    return { error: "User profile not found", status: 404 };
-  }
-
-  if (!["super_admin", "brand_admin"].includes(profile.role)) {
-    return { error: "Insufficient permissions", status: 403 };
-  }
-
-  return { user, profile };
+function jsonValidationError(error: { flatten: () => unknown }) {
+  return NextResponse.json(
+    { error: "Invalid request", details: error.flatten() },
+    { status: 400 }
+  );
 }
 
-// Helper function to check if user can access a review
+/**
+ * Brand admins may only act on reviews for brands in owned_brands.
+ * Super admins may act on any review.
+ */
 async function canAccessReview(
-  userId: string,
+  supabaseUser: UserSupabase,
   reviewId: string,
   userRole: string,
-  ownedBrands: string[] = []
-) {
+  ownedBrands: string[]
+): Promise<boolean> {
   if (userRole === "super_admin") {
     return true;
   }
 
   if (userRole === "brand_admin") {
-    // Get the review's brand_id
-    const { data: review, error } = await supabaseAdmin
+    const { data: review, error } = await supabaseUser
       .from("reviews")
       .select("brand_id")
       .eq("id", reviewId)
-      .single();
+      .maybeSingle();
 
-    if (error || !review) {
+    if (error || !review?.brand_id) {
       return false;
     }
 
@@ -71,49 +53,93 @@ async function canAccessReview(
   return false;
 }
 
+/**
+ * PUT/DELETE: super_admin always; brand_admin only if they authored the reply
+ * and still have access to the parent review's brand.
+ */
+async function canMutateReply(
+  supabaseUser: UserSupabase,
+  profile: ReviewsAdminProfile,
+  userId: string,
+  existingReply: { admin_id: string; review_id: string }
+): Promise<boolean> {
+  if (profile.role === "super_admin") {
+    return true;
+  }
+  if (existingReply.admin_id !== userId) {
+    return false;
+  }
+  if (profile.role === "brand_admin") {
+    return canAccessReview(
+      supabaseUser,
+      existingReply.review_id,
+      profile.role,
+      profile.owned_brands
+    );
+  }
+  return false;
+}
+
+function getAdminDb() {
+  try {
+    return createAdminClient();
+  } catch {
+    return null;
+  }
+}
+
 // POST - Create a new reply to a review
 export async function POST(request: NextRequest) {
   try {
-    const authResult = await verifyAdminPermissions(request);
-    if ("error" in authResult) {
-      return NextResponse.json(
-        { error: authResult.error },
-        { status: authResult.status }
-      );
+    const auth = await requireReviewsAdmin();
+    if (!auth.ok) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
-    const { user, profile } = authResult;
-    const body = await request.json();
-    const { reviewId, replyText } = body;
+    const { userId, supabase: supabaseUser, profile } = auth;
 
-    if (!reviewId || !replyText?.trim()) {
-      return NextResponse.json(
-        { error: "Review ID and reply text are required" },
-        { status: 400 }
-      );
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
     }
 
-    // Check if user can access this review
-    const canAccess = await canAccessReview(
-      user.id,
+    const parsed = reviewReplyCreateSchema.safeParse(body);
+    if (!parsed.success) {
+      return jsonValidationError(parsed.error);
+    }
+
+    const { reviewId, replyText } = parsed.data;
+
+    const allowed = await canAccessReview(
+      supabaseUser,
       reviewId,
       profile.role,
       profile.owned_brands
     );
-    if (!canAccess) {
+    if (!allowed) {
       return NextResponse.json(
         { error: "Access denied to this review" },
         { status: 403 }
       );
     }
 
-    // Create the reply
-    const { data: reply, error: createError } = await supabaseAdmin
+    const adminDb = getAdminDb();
+    if (!adminDb) {
+      console.error("review-replies POST: admin client unavailable");
+      return NextResponse.json(
+        { error: "Server configuration error" },
+        { status: 503 }
+      );
+    }
+
+    const { data: reply, error: createError } = await adminDb
       .from("review_replies")
       .insert({
         review_id: reviewId,
-        admin_id: user.id,
-        reply_text: replyText.trim(),
+        admin_id: userId,
+        reply_text: replyText,
       })
       .select(
         `
@@ -128,32 +154,23 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (createError) {
-      console.error("Error creating reply:", createError);
+      console.error("review-replies POST:", createError.code, createError.message);
       return NextResponse.json(
         { error: "Failed to create reply" },
         { status: 500 }
       );
     }
 
-    // Add admin name to the response
-    const adminName =
-      profile.first_name && profile.last_name
-        ? `${profile.first_name} ${profile.last_name}`
-        : profile.email;
-
     return NextResponse.json({
       success: true,
       message: "Reply created successfully",
       reply: {
         ...reply,
-        admin_name: adminName,
+        admin_name: formatAdminDisplayName(profile),
       },
     });
   } catch (error) {
-    console.error(
-      "Unexpected error in POST /api/admin/reviews/replies:",
-      error
-    );
+    console.error("POST /api/admin/reviews/replies:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
@@ -164,52 +181,62 @@ export async function POST(request: NextRequest) {
 // PUT - Update an existing reply
 export async function PUT(request: NextRequest) {
   try {
-    const authResult = await verifyAdminPermissions(request);
-    if ("error" in authResult) {
+    const auth = await requireReviewsAdmin();
+    if (!auth.ok) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+
+    const { userId, supabase: supabaseUser, profile } = auth;
+
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
+
+    const parsed = reviewReplyUpdateSchema.safeParse(body);
+    if (!parsed.success) {
+      return jsonValidationError(parsed.error);
+    }
+
+    const { replyId, replyText } = parsed.data;
+
+    const adminDb = getAdminDb();
+    if (!adminDb) {
+      console.error("review-replies PUT: admin client unavailable");
       return NextResponse.json(
-        { error: authResult.error },
-        { status: authResult.status }
+        { error: "Server configuration error" },
+        { status: 503 }
       );
     }
 
-    const { user, profile } = authResult;
-    const body = await request.json();
-    const { replyId, replyText } = body;
-
-    if (!replyId || !replyText?.trim()) {
-      return NextResponse.json(
-        { error: "Reply ID and reply text are required" },
-        { status: 400 }
-      );
-    }
-
-    // Get the reply to check permissions
-    const { data: existingReply, error: fetchError } = await supabaseAdmin
+    const { data: existingReply, error: fetchError } = await adminDb
       .from("review_replies")
       .select("id, admin_id, review_id")
       .eq("id", replyId)
-      .single();
+      .maybeSingle();
 
     if (fetchError || !existingReply) {
       return NextResponse.json({ error: "Reply not found" }, { status: 404 });
     }
 
-    // Check if user can update this reply
-    const canUpdate =
-      profile.role === "super_admin" || existingReply.admin_id === user.id;
+    const canUpdate = await canMutateReply(
+      supabaseUser,
+      profile,
+      userId,
+      existingReply
+    );
     if (!canUpdate) {
       return NextResponse.json(
-        { error: "You can only update your own replies" },
+        { error: "You cannot update this reply" },
         { status: 403 }
       );
     }
 
-    // Update the reply
-    const { data: updatedReply, error: updateError } = await supabaseAdmin
+    const { data: updatedReply, error: updateError } = await adminDb
       .from("review_replies")
-      .update({
-        reply_text: replyText.trim(),
-      })
+      .update({ reply_text: replyText })
       .eq("id", replyId)
       .select(
         `
@@ -224,29 +251,23 @@ export async function PUT(request: NextRequest) {
       .single();
 
     if (updateError) {
-      console.error("Error updating reply:", updateError);
+      console.error("review-replies PUT:", updateError.code, updateError.message);
       return NextResponse.json(
         { error: "Failed to update reply" },
         { status: 500 }
       );
     }
 
-    // Add admin name to the response
-    const adminName =
-      profile.first_name && profile.last_name
-        ? `${profile.first_name} ${profile.last_name}`
-        : profile.email;
-
     return NextResponse.json({
       success: true,
       message: "Reply updated successfully",
       reply: {
         ...updatedReply,
-        admin_name: adminName,
+        admin_name: formatAdminDisplayName(profile),
       },
     });
   } catch (error) {
-    console.error("Unexpected error in PUT /api/admin/reviews/replies:", error);
+    console.error("PUT /api/admin/reviews/replies:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
@@ -257,54 +278,60 @@ export async function PUT(request: NextRequest) {
 // DELETE - Delete a reply
 export async function DELETE(request: NextRequest) {
   try {
-    const authResult = await verifyAdminPermissions(request);
-    if ("error" in authResult) {
+    const auth = await requireReviewsAdmin();
+    if (!auth.ok) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+
+    const { userId, supabase: supabaseUser, profile } = auth;
+
+    const parsedQ = parseReviewReplyDeleteQuery(
+      new URL(request.url).searchParams
+    );
+    if (!parsedQ.success) {
+      return jsonValidationError(parsedQ.error);
+    }
+    const replyId = parsedQ.data.id;
+
+    const adminDb = getAdminDb();
+    if (!adminDb) {
+      console.error("review-replies DELETE: admin client unavailable");
       return NextResponse.json(
-        { error: authResult.error },
-        { status: authResult.status }
+        { error: "Server configuration error" },
+        { status: 503 }
       );
     }
 
-    const { user, profile } = authResult;
-    const { searchParams } = new URL(request.url);
-    const replyId = searchParams.get("id");
-
-    if (!replyId) {
-      return NextResponse.json(
-        { error: "Reply ID is required" },
-        { status: 400 }
-      );
-    }
-
-    // Get the reply to check permissions
-    const { data: existingReply, error: fetchError } = await supabaseAdmin
+    const { data: existingReply, error: fetchError } = await adminDb
       .from("review_replies")
       .select("id, admin_id, review_id")
       .eq("id", replyId)
-      .single();
+      .maybeSingle();
 
     if (fetchError || !existingReply) {
       return NextResponse.json({ error: "Reply not found" }, { status: 404 });
     }
 
-    // Check if user can delete this reply
-    const canDelete =
-      profile.role === "super_admin" || existingReply.admin_id === user.id;
+    const canDelete = await canMutateReply(
+      supabaseUser,
+      profile,
+      userId,
+      existingReply
+    );
     if (!canDelete) {
       return NextResponse.json(
-        { error: "You can only delete your own replies" },
+        { error: "You cannot delete this reply" },
         { status: 403 }
       );
     }
 
-    // Delete the reply
-    const { error: deleteError } = await supabaseAdmin
+    const { error: deleteError } = await adminDb
       .from("review_replies")
       .delete()
       .eq("id", replyId);
 
     if (deleteError) {
-      console.error("Error deleting reply:", deleteError);
+      console.error("review-replies DELETE:", deleteError.code, deleteError.message);
       return NextResponse.json(
         { error: "Failed to delete reply" },
         { status: 500 }
@@ -316,10 +343,7 @@ export async function DELETE(request: NextRequest) {
       message: "Reply deleted successfully",
     });
   } catch (error) {
-    console.error(
-      "Unexpected error in DELETE /api/admin/reviews/replies:",
-      error
-    );
+    console.error("DELETE /api/admin/reviews/replies:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

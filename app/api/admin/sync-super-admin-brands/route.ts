@@ -1,172 +1,203 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
+import { NextResponse } from "next/server";
+import { requireSuperAdmin } from "@/lib/auth/requireSuperAdmin";
+import { createAdminClient } from "@/lib/supabase-unified";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+export const dynamic = "force-dynamic";
 
-// Service role client (bypasses RLS)
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+/**
+ * Backfills `profiles.owned_brands` for every super_admin with all brand IDs.
+ * Prefer RBAC where super_admin bypasses brand scope so this stays unnecessary — see product/auth design.
+ */
 
-// Helper function to create authenticated supabase client
-function createAuthenticatedClient() {
-  const cookieStore = cookies();
+/** Best-effort lock per server instance; not distributed across lambdas. */
+let syncInFlight = false;
 
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value;
-        },
-      },
-    }
-  );
-}
+export type SuperAdminBrandSyncDetail =
+  | { success: true; userId: string; brandsAdded: number }
+  | { success: false; userId: string; error: string };
 
-export async function POST(request: NextRequest) {
+export type SuperAdminBrandSyncSummary = {
+  totalSuperAdmins: number;
+  totalBrands: number;
+  successful: number;
+  failed: number;
+  totalBrandsAdded: number;
+  details: SuperAdminBrandSyncDetail[];
+};
+
+export async function POST() {
   try {
-    // Create authenticated client
-    const supabase = createAuthenticatedClient();
-
-    // Get the current user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    const auth = await requireSuperAdmin();
+    if (!auth.ok) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
+    const actorUserId = auth.userId;
 
-    // Get user profile to check permissions
-    const { data: profile, error: profileError } = await supabaseAdmin
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-
-    if (profileError || profile?.role !== "super_admin") {
+    if (syncInFlight) {
       return NextResponse.json(
-        { error: "Insufficient permissions" },
-        { status: 403 }
+        {
+          error: "Super admin brand sync already in progress",
+          code: "SYNC_IN_PROGRESS",
+        },
+        { status: 409 }
       );
     }
+    syncInFlight = true;
 
-    console.log("🔄 Starting super admin brand sync...");
-
-    // Get all brands
-    const { data: allBrands, error: brandsError } = await supabaseAdmin
-      .from("brands")
-      .select("id");
-
-    if (brandsError) {
-      console.error("❌ Error fetching brands:", brandsError);
-      return NextResponse.json(
-        { error: "Failed to fetch brands" },
-        { status: 500 }
-      );
-    }
-
-    const allBrandIds = allBrands.map((brand) => brand.id);
-    console.log(`📦 Found ${allBrandIds.length} brands to assign`);
-
-    // Get all super admins
-    const { data: superAdmins, error: superAdminsError } = await supabaseAdmin
-      .from("profiles")
-      .select("id, email, owned_brands")
-      .eq("role", "super_admin");
-
-    if (superAdminsError) {
-      console.error("❌ Error fetching super admins:", superAdminsError);
-      return NextResponse.json(
-        { error: "Failed to fetch super admins" },
-        { status: 500 }
-      );
-    }
-
-    console.log(`👑 Found ${superAdmins.length} super admins to sync`);
-
-    // Update each super admin to have all brands
-    const updatePromises = superAdmins.map(async (admin) => {
-      const currentBrands = admin.owned_brands || [];
-      const missingBrands = allBrandIds.filter(
-        (brandId) => !currentBrands.includes(brandId)
-      );
-
-      if (missingBrands.length === 0) {
-        console.log(`✅ ${admin.email} already has all brands`);
-        return { success: true, email: admin.email, added: 0 };
+    try {
+      let adminDb;
+      try {
+        adminDb = createAdminClient();
+      } catch {
+        return NextResponse.json(
+          { error: "Server configuration error" },
+          { status: 503 }
+        );
       }
 
-      const updatedBrands = [...new Set([...currentBrands, ...allBrandIds])]; // Remove duplicates
+      const { data: allBrands, error: brandsError } = await adminDb
+        .from("brands")
+        .select("id");
 
-      const { error: updateError } = await supabaseAdmin
+      if (brandsError) {
+        console.error(
+          "sync-super-admin-brands: brands fetch failed:",
+          brandsError.code,
+          brandsError.message
+        );
+        return NextResponse.json(
+          { error: "Failed to fetch brands" },
+          { status: 500 }
+        );
+      }
+
+      const allBrandIds = (allBrands ?? []).map((b: { id: string }) => b.id);
+
+      const { data: superAdmins, error: superAdminsError } = await adminDb
         .from("profiles")
-        .update({
-          owned_brands: updatedBrands,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", admin.id);
+        .select("id, owned_brands")
+        .eq("role", "super_admin");
 
-      if (updateError) {
-        console.error(`❌ Error updating ${admin.email}:`, updateError);
-        return {
-          success: false,
-          email: admin.email,
-          error: updateError.message,
-        };
+      if (superAdminsError) {
+        console.error(
+          "sync-super-admin-brands: profiles fetch failed:",
+          superAdminsError.code,
+          superAdminsError.message
+        );
+        return NextResponse.json(
+          { error: "Failed to fetch super admins" },
+          { status: 500 }
+        );
       }
 
-      console.log(
-        `✅ Updated ${admin.email}: added ${missingBrands.length} brands`
-      );
-      return { success: true, email: admin.email, added: missingBrands.length };
-    });
+      const admins = superAdmins ?? [];
 
-    const results = await Promise.allSettled(updatePromises);
+      const updatePromises = admins.map(
+        async (admin: {
+          id: string;
+          owned_brands: string[] | null;
+        }): Promise<SuperAdminBrandSyncDetail> => {
+        const currentBrands = Array.isArray(admin.owned_brands)
+          ? admin.owned_brands
+          : [];
+        const missingBrands = allBrandIds.filter(
+          (brandId: string) => !currentBrands.includes(brandId)
+        );
 
-    const summary = {
-      totalSuperAdmins: superAdmins.length,
-      totalBrands: allBrandIds.length,
-      successful: 0,
-      failed: 0,
-      totalBrandsAdded: 0,
-      details: [] as any[],
-    };
+        if (missingBrands.length === 0) {
+          return {
+            success: true as const,
+            userId: admin.id,
+            brandsAdded: 0,
+          };
+        }
 
-    results.forEach((result, index) => {
-      if (result.status === "fulfilled") {
-        const value = result.value;
-        summary.details.push(value);
-        if (value.success) {
-          summary.successful++;
-          summary.totalBrandsAdded += value.added || 0;
+        const updatedBrands = [...new Set([...currentBrands, ...allBrandIds])];
+
+        const { error: updateError } = await adminDb
+          .from("profiles")
+          .update({
+            owned_brands: updatedBrands,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", admin.id);
+
+        if (updateError) {
+          console.error(
+            "sync-super-admin-brands: profile update failed:",
+            admin.id,
+            updateError.code,
+            updateError.message
+          );
+          return {
+            success: false as const,
+            userId: admin.id,
+            error: updateError.message,
+          };
+        }
+
+        return {
+          success: true as const,
+          userId: admin.id,
+          brandsAdded: missingBrands.length,
+        };
+      });
+
+      const settled = await Promise.allSettled(updatePromises);
+
+      const summary: SuperAdminBrandSyncSummary = {
+        totalSuperAdmins: admins.length,
+        totalBrands: allBrandIds.length,
+        successful: 0,
+        failed: 0,
+        totalBrandsAdded: 0,
+        details: [],
+      };
+
+      settled.forEach(
+        (result: PromiseSettledResult<SuperAdminBrandSyncDetail>, index: number) => {
+        if (result.status === "fulfilled") {
+          const value = result.value;
+          summary.details.push(value);
+          if (value.success) {
+            summary.successful++;
+            summary.totalBrandsAdded += value.brandsAdded;
+          } else {
+            summary.failed++;
+          }
         } else {
           summary.failed++;
+          const fallbackId = admins[index]?.id ?? "unknown";
+          summary.details.push({
+            success: false,
+            userId: fallbackId,
+            error:
+              result.reason instanceof Error
+                ? result.reason.message
+                : String(result.reason),
+          });
         }
-      } else {
-        summary.failed++;
-        summary.details.push({
-          success: false,
-          email: superAdmins[index]?.email || "unknown",
-          error: result.reason,
-        });
       }
-    });
+      );
 
-    console.log(
-      `🎉 Sync complete: ${summary.successful}/${summary.totalSuperAdmins} super admins updated`
-    );
+      console.log("sync-super-admin-brands complete", {
+        actorUserId,
+        totalSuperAdmins: summary.totalSuperAdmins,
+        totalBrands: summary.totalBrands,
+        successful: summary.successful,
+        failed: summary.failed,
+        totalBrandsAdded: summary.totalBrandsAdded,
+      });
 
-    return NextResponse.json({
-      message: "Super admin brand sync completed",
-      summary,
-    });
+      return NextResponse.json({
+        message: "Super admin brand sync completed",
+        summary,
+      });
+    } finally {
+      syncInFlight = false;
+    }
   } catch (error) {
-    console.error("Error in super admin sync API:", error);
+    console.error("sync-super-admin-brands:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

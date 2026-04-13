@@ -1,24 +1,39 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getAllBrands } from "@/lib/services/brandService";
-import { getProfile } from "@/lib/services/authService";
+import { revalidatePath } from "next/cache";
+import { NextResponse } from "next/server";
+import { requireSuperAdmin } from "@/lib/auth/requireSuperAdmin";
+import {
+  clearAllBrandDependentCaches,
+  forceRefreshBrands,
+} from "@/lib/services/brandService";
 
-// POST: Refresh homepage brands (super admin only)
-export async function POST(req: NextRequest) {
+export const dynamic = "force-dynamic";
+
+/**
+ * Super-admin only: clear in-memory brand/collection caches on this server,
+ * warm fresh brand data into the server-side cache, and revalidate `/`.
+ *
+ * Client-only homepage (`HomeContent` with ssr: false) still needs a full
+ * reload for visitors to pick up new data; revalidation covers the app route
+ * shell and any future server-cached segments.
+ */
+export async function POST() {
   try {
-    const { user } = await req.json();
-    const profile = await getProfile(user?.id);
-    if (!profile || profile.role !== "super_admin") {
-      return NextResponse.json({ error: "Permission denied" }, { status: 403 });
+    const auth = await requireSuperAdmin();
+    if (!auth.ok) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
-    // Simulate refresh: fetch all brands (in real use, could update a cache or trigger a revalidation)
-    await getAllBrands(false, true);
+    clearAllBrandDependentCaches();
+    await forceRefreshBrands(false);
+    revalidatePath("/");
 
     return NextResponse.json({
       success: true,
-      message: "Homepage brands refreshed.",
+      message:
+        "Brand caches cleared, data refreshed on the server, and homepage path revalidated.",
     });
-  } catch (err) {
+  } catch (error) {
+    console.error("refresh-homepage-brands failed:", error);
     return NextResponse.json(
       { error: "Failed to refresh homepage brands" },
       { status: 500 }

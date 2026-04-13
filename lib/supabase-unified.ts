@@ -86,7 +86,7 @@ export function createAdminClient() {
     );
   }
 
-  return createSupabaseClient(supabaseUrl!, supabaseAnonKey!, {
+  return createSupabaseClient(supabaseUrl!, supabaseServiceKey, {
     auth: {
       persistSession: false,
       autoRefreshToken: false,

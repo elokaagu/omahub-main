@@ -1,23 +1,14 @@
-import { Metadata } from "next";
+import type { Metadata } from "next";
 import { generateSEOMetadata } from "@/lib/seo";
+import { ABOUT_DESCRIPTION } from "./seo-copy";
 
 export const metadata: Metadata = generateSEOMetadata({
-  title: "About OmaHub - Our Mission & Vision",
-  description:
-    "Learn about OmaHub's mission to connect Africa's innovative fashion talent with a global audience. Discover how we're revolutionizing the fashion industry by bridging cultures and creating opportunities for African designers worldwide.",
-  keywords: [
-    "about omahub",
-    "African fashion",
-    "fashion platform",
-    "designer showcase",
-    "fashion mission",
-    "global fashion",
-    "African designers",
-    "fashion innovation",
-  ],
+  title: "About OmaHub — Our Mission & Vision",
+  description: ABOUT_DESCRIPTION,
+  // Path only; canonical + openGraph.url are built in generateSEOMetadata (baseUrl + url).
   url: "/about",
   type: "article",
   author: "OmaHub Team",
   section: "Company",
-  tags: ["about", "mission", "vision", "African fashion", "platform"],
+  tags: ["African fashion", "designers", "platform"],
 });

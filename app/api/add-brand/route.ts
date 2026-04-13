@@ -1,82 +1,89 @@
 import { NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase-unified";
+import { createServerSupabaseClient } from "@/lib/supabase-unified";
+import { getAdminClient } from "@/lib/supabase-admin";
+import { getProfile } from "@/lib/services/authService";
+import { EBHS_COUTURE_BRAND_UPSERT } from "@/lib/seed/ebhs-couture-brand";
 
+export const dynamic = "force-dynamic";
+
+/** Legacy misuse: mutations must not use GET (crawlers, prefetch). */
 export async function GET() {
+  return NextResponse.json(
+    {
+      error:
+        "Method not allowed. Use POST with an authenticated super-admin session.",
+    },
+    { status: 405, headers: { Allow: "POST" } }
+  );
+}
+
+/**
+ * Idempotent upsert of the Ebhs Couture seed brand (super-admin only).
+ * Not a general-purpose brand API — see studio/admin flows for that.
+ */
+export async function POST() {
   try {
-    const supabase = createAdminClient();
+    const sessionClient = await createServerSupabaseClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await sessionClient.auth.getUser();
 
-    console.log("🏷️ Adding Ebhs Couture brand to database...");
-
-    const brandData = {
-      id: "ebhs-couture",
-      name: "Ebhs Couture",
-      description:
-        "Exquisite couture designs for the modern woman, blending traditional craftsmanship with contemporary elegance.",
-      long_description:
-        "Ebhs Couture creates show stopping pieces that celebrate the modern woman. Our designs blend traditional African craftsmanship with contemporary silhouettes, using luxurious fabrics and intricate details. Each piece is meticulously crafted to make you feel confident and beautiful for any special occasion.",
-      category: "Fashion Designer",
-      location: "Abuja, Nigeria",
-      price_range: "₦50,000 - ₦500,000",
-      contact_email: "hello@ebhscouture.com",
-      contact_phone: "+234-803-123-4567",
-      website: "https://ebhscouture.com",
-      instagram: "@ebhscouture",
-      rating: 4.8,
-      is_verified: true,
-      image:
-        "https://gqwduyodzqgucjscilvz.supabase.co/storage/v1/object/public/brand-assets/brands/ebhs-couture-hero.jpg",
-      created_at: new Date().toISOString(),
-    };
-
-    // Check if brand already exists
-    const { data: existingBrand } = await supabase
-      .from("brands")
-      .select("id, name")
-      .eq("id", "ebhs-couture")
-      .single();
-
-    if (existingBrand) {
-      console.log("✅ Brand already exists:", existingBrand.name);
-      return NextResponse.json({
-        success: true,
-        message: "Ebhs Couture brand already exists!",
-        brand: existingBrand,
-        action: "already_exists",
-      });
+    if (authError || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const profile = await getProfile(user.id);
+    if (!profile || profile.role !== "super_admin") {
+      return NextResponse.json({ error: "Permission denied" }, { status: 403 });
+    }
+
+    const supabase = await getAdminClient();
+    if (!supabase) {
+      console.error("[api/add-brand] Admin client unavailable");
+      return NextResponse.json(
+        { error: "Service temporarily unavailable" },
+        { status: 503 }
+      );
+    }
+
+    const payload = {
+      ...EBHS_COUTURE_BRAND_UPSERT,
+    } as Record<string, unknown>;
 
     const { data, error } = await supabase
       .from("brands")
-      .insert(brandData)
-      .select()
+      .upsert(payload, { onConflict: "id" })
+      .select("id, name")
       .single();
 
     if (error) {
-      console.error("❌ Error adding brand:", error);
+      console.error("[api/add-brand] Upsert failed", {
+        route: "POST /api/add-brand",
+        brandId: EBHS_COUTURE_BRAND_UPSERT.id,
+        code: error.code,
+      });
       return NextResponse.json(
-        {
-          error: "Failed to add brand: " + error.message,
-          details: error,
-        },
+        { error: "Failed to save brand" },
         { status: 500 }
       );
     }
 
-    console.log("✅ Brand added successfully:", data.name);
-
-    return NextResponse.json({
-      success: true,
-      message: "Ebhs Couture brand added successfully!",
-      brand: data,
-      action: "created",
-    });
-  } catch (error) {
-    console.error("❌ Add brand API error:", error);
     return NextResponse.json(
       {
-        error: "Internal server error",
-        details: error instanceof Error ? error.message : "Unknown error",
+        success: true,
+        message: "Brand saved successfully",
+        brand: data,
       },
+      { status: 200 }
+    );
+  } catch (err) {
+    console.error("[api/add-brand] Unexpected error", {
+      route: "POST /api/add-brand",
+      err,
+    });
+    return NextResponse.json(
+      { error: "Internal server error" },
       { status: 500 }
     );
   }

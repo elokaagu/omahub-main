@@ -33,9 +33,15 @@ export default function PageViewsCard({
   const fetchPageViews = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/analytics/pageviews");
+      const res = await fetch("/api/analytics/pageviews", {
+        credentials: "include",
+      });
       const data = await res.json();
-      if (res.ok && typeof data.pageViews === "number" && data.pageViews > 0) {
+      if (
+        res.ok &&
+        typeof data.pageViews === "number" &&
+        data.source === "vercel"
+      ) {
         setPageViews(data.pageViews);
         setIsReal(true);
       } else {

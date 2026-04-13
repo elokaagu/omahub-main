@@ -141,7 +141,7 @@ export default function UsersPage() {
         // Fetch users and brand names in parallel for better performance
         // Use getBrandNamesMap for lighter payload since we only need names
         const [usersResponse, brandNamesMap, brandsData] = await Promise.all([
-          fetch("/api/admin/users", {
+          fetch("/api/admin/users?page=1&limit=2000", {
             credentials: "include",
           }),
           getBrandNamesMap(), // Lightweight brand names only
@@ -155,7 +155,8 @@ export default function UsersPage() {
           return;
         }
 
-        const { users: usersData } = await usersResponse.json();
+        const usersPayload = await usersResponse.json();
+        const usersData = usersPayload.users ?? [];
         setBrands(brandsData); // Full brand data for form
 
         // Map users with brand names using the pre-built Map for O(1) performance

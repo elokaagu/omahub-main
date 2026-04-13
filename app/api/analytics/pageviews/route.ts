@@ -1,79 +1,43 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
+import { requireSuperAdmin } from "@/lib/auth/requireSuperAdmin";
+import { fetchVercelPageviewsLast30Days } from "@/lib/integrations/vercel-analytics-pageviews";
+
+export const dynamic = "force-dynamic";
 
 /**
- * API route to fetch page views from Vercel Analytics
- * Requires VERCEL_ACCESS_TOKEN and VERCEL_TEAM_ID environment variables
+ * Site-wide Vercel Analytics pageviews (last 30 days). Super-admin only.
+ * Env: VERCEL_ACCESS_TOKEN; optional VERCEL_TEAM_ID, VERCEL_PROJECT_ID.
  */
-export async function GET(request: NextRequest) {
+export async function GET() {
+  const auth = await requireSuperAdmin();
+  if (!auth.ok) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
+  }
+
   try {
-    const accessToken = process.env.VERCEL_ACCESS_TOKEN;
-    const teamId = process.env.VERCEL_TEAM_ID;
-    const projectId = process.env.VERCEL_PROJECT_ID;
+    const result = await fetchVercelPageviewsLast30Days();
 
-    if (!accessToken) {
-      console.warn("VERCEL_ACCESS_TOKEN not configured");
+    if (!result.ok) {
       return NextResponse.json({
-        pageViews: null,
-        message: "Vercel Analytics not configured. Using estimated page views.",
-        source: "estimated",
+        pageViews: result.pageViews,
+        message: result.message,
+        source: result.source,
       });
     }
 
-    // Get the last 30 days of analytics data
-    const endDate = new Date();
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - 30);
-
-    const params = new URLSearchParams({
-      since: startDate.toISOString(),
-      until: endDate.toISOString(),
-      ...(teamId && { teamId }),
-      ...(projectId && { projectId }),
-    });
-
-    // Fetch analytics data from Vercel API
-    const response = await fetch(
-      `https://api.vercel.com/v1/analytics/pageviews?${params}`,
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Vercel Analytics API error:", response.status, errorText);
-
-      return NextResponse.json({
-        pageViews: null,
-        message: `Vercel Analytics API error: ${response.status}`,
-        source: "estimated",
+    if (process.env.NODE_ENV === "development") {
+      console.log("Vercel Analytics page views (30d)", {
+        totalPageViews: result.pageViews,
+        entries: result.entryCount,
       });
     }
-
-    const data = await response.json();
-
-    // Sum up all page views from the response
-    const totalPageViews =
-      data.pageviews?.reduce(
-        (total: number, entry: any) => total + (entry.count || 0),
-        0
-      ) || 0;
-
-    console.log("✅ Fetched Vercel Analytics data:", {
-      totalPageViews,
-      period: "30 days",
-      entries: data.pageviews?.length || 0,
-    });
 
     return NextResponse.json({
-      pageViews: totalPageViews,
+      pageViews: result.pageViews,
       message: "Real page views from Vercel Analytics",
-      source: "vercel",
-      period: "30 days",
-      lastUpdated: new Date().toISOString(),
+      source: result.source,
+      period: result.period,
+      lastUpdated: result.lastUpdated,
     });
   } catch (error) {
     console.error("Error fetching Vercel analytics:", error);
@@ -82,7 +46,7 @@ export async function GET(request: NextRequest) {
         error: "Failed to fetch analytics data",
         pageViews: null,
         source: "estimated",
-        message: error instanceof Error ? error.message : "Unknown error",
+        message: "An unexpected error occurred while loading analytics.",
       },
       { status: 500 }
     );

@@ -1,497 +1,73 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServerSupabaseClient } from "@/lib/supabase-unified";
+import { requireLeadsAdmin } from "@/lib/auth/requireLeadsAdmin";
+import { computeFallbackLeadsAnalytics } from "@/lib/services/adminLeadsAnalytics";
+import {
+  brandAdminOwnsBrand,
+  fetchBookingBrandId,
+  fetchInteractionLeadBrandId,
+  fetchLeadBrandId,
+} from "@/lib/services/adminLeadsAccess";
+import {
+  normalizeBookingUpdatePatch,
+  normalizeCommissionStructureUpdatePatch,
+  normalizeLeadCreateForDb,
+  normalizeLeadUpdatePatch,
+  parseDeleteLeadsQuery,
+  parseLeadsListQuery,
+  postLeadsBodySchema,
+  putLeadsBodySchema,
+  sanitizeLeadSearch,
+} from "@/lib/validation/adminLeads";
 
-// Types for the leads tracking system
-export interface Lead {
-  id?: string;
-  brand_id: string;
-  customer_name: string;
-  customer_email: string;
-  customer_phone?: string;
-  source:
-    | "website"
-    | "whatsapp"
-    | "instagram"
-    | "email"
-    | "phone"
-    | "referral"
-    | "direct";
-  lead_type:
-    | "inquiry"
-    | "quote_request"
-    | "booking_intent"
-    | "consultation"
-    | "product_interest";
-  status: "new" | "contacted" | "qualified" | "converted" | "lost" | "closed";
-  priority?: "low" | "normal" | "high" | "urgent";
-  estimated_value?: number;
-  estimated_budget?: number;
-  project_timeline?: string;
-  notes?: string;
-  created_at?: string;
-  updated_at?: string;
-  contacted_at?: string;
-  qualified_at?: string;
-  converted_at?: string;
-}
+export type { Booking, Lead, LeadsAnalytics } from "@/lib/types/admin-leads";
 
-export interface Booking {
-  id?: string;
-  lead_id?: string;
-  brand_id: string;
-  customer_name: string;
-  customer_email: string;
-  customer_phone?: string;
-  booking_type:
-    | "custom_order"
-    | "ready_to_wear"
-    | "consultation"
-    | "fitting"
-    | "alteration"
-    | "rental";
-  status: "confirmed" | "in_progress" | "completed" | "cancelled" | "refunded";
-  booking_value: number;
-  commission_rate?: number;
-  commission_amount?: number;
-  currency?: string;
-  booking_date?: string;
-  delivery_date?: string;
-  completion_date?: string;
-  notes?: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface LeadsAnalytics {
-  total_leads: number;
-  qualified_leads: number;
-  converted_leads: number;
-  total_bookings: number;
-  total_booking_value: number;
-  total_commission_earned: number;
-  average_booking_value: number;
-  conversion_rate: number;
-  this_month_leads: number;
-  this_month_bookings: number;
-  this_month_revenue: number;
-  this_month_commission: number;
-  top_performing_brands: any[];
-  leads_by_source: Record<string, number>;
-  bookings_by_type: Record<string, number>;
-  monthly_trends: any[];
-}
-
-// Helper function to check user permissions
-async function checkUserPermissions(userId: string) {
-  const supabase = await createServerSupabaseClient();
-  const { data: profile, error } = await supabase
-    .from("profiles")
-    .select("role, owned_brands")
-    .eq("id", userId)
-    .single();
-
-  if (error || !profile) {
-    throw new Error("User profile not found");
-  }
-
-  return profile;
+function jsonValidationError(error: { flatten: () => unknown }) {
+  return NextResponse.json(
+    { error: "Invalid request", details: error.flatten() },
+    { status: 400 }
+  );
 }
 
 // GET /api/admin/leads - Fetch leads and analytics
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient();
+    const auth = await requireLeadsAdmin();
+    if (!auth.ok) return auth.response;
 
-    // Enhanced authentication with better error handling
-    const {
-      data: { session },
-      error: sessionError,
-    } = await supabase.auth.getSession();
-
-    if (sessionError) {
-      console.error("Session error:", sessionError);
-      return NextResponse.json(
-        { error: "Session invalid - please sign in again" },
-        { status: 401 }
-      );
-    }
-
-    if (!session?.user) {
-      console.error("No session or user found");
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const user = session.user;
-    console.log("✅ Leads API: User authenticated:", user.email);
-
-    // Get user profile with fallback for super_admin users
-    let profile;
-    const { data: profileData, error: profileError } = await supabase
-      .from("profiles")
-      .select("role, owned_brands")
-      .eq("id", user.id)
-      .single();
-
-    if (profileError || !profileData) {
-      console.log(
-        "⚠️ Profile not found, checking user email for super_admin access"
-      );
-
-      // Fallback: Check if user email indicates super_admin access (legacy support)
-      const legacySuperAdmins = [
-        "eloka.agu@icloud.com",
-        "shannonalisa@oma-hub.com",
-      ];
-
-      if (legacySuperAdmins.includes(user.email || "")) {
-        profile = {
-          role: "super_admin",
-          owned_brands: [],
-        };
-        console.log(
-          "✅ Granted super_admin access based on email:",
-          user.email
-        );
-      } else {
-        console.error("Profile error:", profileError);
-        return NextResponse.json(
-          { error: "Profile not found" },
-          { status: 404 }
-        );
-      }
-    } else {
-      profile = profileData;
-    }
-
-    // Check if user has admin access
-    if (!["super_admin", "brand_admin"].includes(profile.role)) {
-      console.log("❌ Access denied for role:", profile.role);
-      return NextResponse.json({ error: "Access denied" }, { status: 403 });
-    }
-
-    console.log("✅ Access granted for role:", profile.role);
-
+    const { supabase, userId, profile } = auth.ctx;
     const { searchParams } = new URL(request.url);
-    const action = searchParams.get("action");
+    const parsedQuery = parseLeadsListQuery(searchParams);
+    if (!parsedQuery.success) {
+      return jsonValidationError(parsedQuery.error);
+    }
+    const q = parsedQuery.data;
 
-    if (action === "analytics") {
+    if (q.action === "analytics") {
       try {
-        console.log(
-          "📊 Fetching analytics data for user:",
-          user.email,
-          "role:",
-          profile.role
-        );
-
-        // Call the analytics function with the user ID
         const { data: analyticsData, error: analyticsError } =
           await supabase.rpc("get_leads_analytics", {
-            admin_user_id: user.id,
+            admin_user_id: userId,
           });
 
         if (analyticsError) {
-          console.error("Analytics function error:", analyticsError);
-
-          // Fallback to basic analytics if function fails
-          console.log(
-            "⚠️ Analytics function failed, using fallback calculation"
-          );
-
-          // Build the appropriate query based on user role
-          let leadsQuery = supabase.from("leads").select("*");
-
-          // Apply role-based filtering for fallback as well
-          if (profile.role === "brand_admin") {
-            if (!profile.owned_brands || profile.owned_brands.length === 0) {
-              const emptyAnalytics = {
-                total_leads: 0,
-                qualified_leads: 0,
-                converted_leads: 0,
-                total_bookings: 0,
-                total_booking_value: 0,
-                total_commission_earned: 0,
-                average_booking_value: 0,
-                conversion_rate: 0,
-                this_month_leads: 0,
-                this_month_bookings: 0,
-                this_month_revenue: 0,
-                this_month_commission: 0,
-                top_performing_brands: [],
-                leads_by_source: {},
-                bookings_by_type: {},
-                monthly_trends: [],
-              };
-              console.log(
-                "✅ Returning empty analytics for brand admin with no brands"
-              );
-              return NextResponse.json({ analytics: emptyAnalytics });
-            }
-            leadsQuery = leadsQuery.in("brand_id", profile.owned_brands);
-          }
-
-          const { data: leads, error: leadsError } = await leadsQuery;
-
-          if (leadsError) {
-            console.error("Fallback leads query error:", leadsError);
+          const fallback = await computeFallbackLeadsAnalytics(supabase, profile);
+          if ("error" in fallback && fallback.error) {
+            console.error("Admin leads analytics fallback failed:", fallback.error.message);
             return NextResponse.json(
               { error: "Failed to fetch analytics data" },
               { status: 500 }
             );
           }
-
-          // Calculate basic analytics from the filtered leads
-          const totalLeads = leads?.length || 0;
-          const qualifiedLeads =
-            leads?.filter((lead) => lead.status === "qualified").length || 0;
-          const convertedLeads =
-            leads?.filter((lead) => lead.status === "converted").length || 0;
-
-          const thisMonthLeads =
-            leads?.filter((lead) => {
-              const leadDate = new Date(lead.created_at);
-              const now = new Date();
-              return (
-                leadDate.getMonth() === now.getMonth() &&
-                leadDate.getFullYear() === now.getFullYear()
-              );
-            }).length || 0;
-
-          // Calculate leads by source
-          const leadsBySource =
-            leads?.reduce(
-              (acc, lead) => {
-                acc[lead.source] = (acc[lead.source] || 0) + 1;
-                return acc;
-              },
-              {} as Record<string, number>
-            ) || {};
-
-          // Calculate monthly trends for the last 6 months
-          const monthlyTrends = [];
-          const now = new Date();
-
-          for (let i = 5; i >= 0; i--) {
-            const monthDate = new Date(
-              now.getFullYear(),
-              now.getMonth() - i,
-              1
-            );
-            const monthName = monthDate.toLocaleDateString("en-GB", {
-              month: "short",
-              year: "numeric",
-            });
-
-            const monthLeads =
-              leads?.filter((lead) => {
-                const leadDate = new Date(lead.created_at);
-                return (
-                  leadDate.getMonth() === monthDate.getMonth() &&
-                  leadDate.getFullYear() === monthDate.getFullYear()
-                );
-              }).length || 0;
-
-            const monthBookings = 0; // We'll get this from bookings table if available
-
-            monthlyTrends.push({
-              month: monthName,
-              leads: monthLeads,
-              bookings: monthBookings,
-              revenue: 0,
-              commission: 0,
-            });
-          }
-
-          // Get bookings data for complete analytics
-          console.log("📊 Fetching bookings data for revenue metrics...");
-          let bookingsQuery = supabase.from("bookings").select("*");
-
-          // Apply role-based filtering for bookings
-          if (profile.role === "brand_admin" && profile.owned_brands) {
-            bookingsQuery = bookingsQuery.in("brand_id", profile.owned_brands);
-          }
-
-          const { data: bookings, error: bookingsError } = await bookingsQuery;
-
-          if (bookingsError) {
-            console.warn("⚠️ Bookings fetch error:", bookingsError.message);
-            // Continue with empty bookings array if table doesn't exist yet
-          }
-
-          const validBookings =
-            bookings?.filter(
-              (b) => b.status && !["cancelled", "refunded"].includes(b.status)
-            ) || [];
-
-          console.log(
-            `📊 Found ${validBookings.length} valid bookings for revenue calculation`
-          );
-
-          // Calculate revenue metrics from real bookings data
-          const totalBookings = validBookings.length;
-          const totalBookingValue = validBookings.reduce(
-            (sum, b) => sum + (b.booking_value || 0),
-            0
-          );
-          const totalCommissionEarned = validBookings.reduce(
-            (sum, b) => sum + (b.commission_amount || 0),
-            0
-          );
-          const averageBookingValue =
-            totalBookings > 0 ? totalBookingValue / totalBookings : 0;
-
-          // Calculate this month's revenue
-          const currentMonthStart = new Date();
-          currentMonthStart.setDate(1);
-          currentMonthStart.setHours(0, 0, 0, 0);
-
-          const thisMonthBookings = validBookings.filter(
-            (b) => new Date(b.booking_date || b.created_at) >= currentMonthStart
-          );
-
-          const thisMonthBookingsCount = thisMonthBookings.length;
-          const thisMonthRevenue = thisMonthBookings.reduce(
-            (sum, b) => sum + (b.booking_value || 0),
-            0
-          );
-          const thisMonthCommission = thisMonthBookings.reduce(
-            (sum, b) => sum + (b.commission_amount || 0),
-            0
-          );
-
-          console.log("💰 Revenue metrics calculated:", {
-            totalBookings,
-            totalBookingValue,
-            totalCommissionEarned,
-            averageBookingValue,
-            thisMonthBookingsCount,
-            thisMonthRevenue,
-            thisMonthCommission,
-          });
-
-          // Update monthly trends with real booking data
-          monthlyTrends.forEach((trend) => {
-            const trendDate = new Date(trend.month + "-01");
-            const monthStart = new Date(
-              trendDate.getFullYear(),
-              trendDate.getMonth(),
-              1
-            );
-            const monthEnd = new Date(
-              trendDate.getFullYear(),
-              trendDate.getMonth() + 1,
-              0
-            );
-
-            const monthBookings = validBookings.filter((b) => {
-              const bookingDate = new Date(b.booking_date || b.created_at);
-              return bookingDate >= monthStart && bookingDate <= monthEnd;
-            });
-
-            trend.bookings = monthBookings.length;
-            trend.revenue = monthBookings.reduce(
-              (sum, b) => sum + (b.booking_value || 0),
-              0
-            );
-            trend.commission = monthBookings.reduce(
-              (sum, b) => sum + (b.commission_amount || 0),
-              0
-            );
-          });
-
-          // Calculate bookings by type from real data
-          const bookingsByType = validBookings.reduce(
-            (acc, booking) => {
-              const type = booking.booking_type || "unknown";
-              acc[type] = (acc[type] || 0) + 1;
-              return acc;
-            },
-            {} as Record<string, number>
-          );
-
-          // Calculate top performing brands (for super admin only)
-          let topPerformingBrands: any[] = [];
-          if (profile.role === "super_admin") {
-            const brandRevenue = validBookings.reduce(
-              (acc, booking) => {
-                const brandId = booking.brand_id;
-                if (!acc[brandId]) {
-                  acc[brandId] = {
-                    brand_id: brandId,
-                    total_revenue: 0,
-                    total_commission: 0,
-                    booking_count: 0,
-                  };
-                }
-                acc[brandId].total_revenue += booking.booking_value || 0;
-                acc[brandId].total_commission += booking.commission_amount || 0;
-                acc[brandId].booking_count += 1;
-                return acc;
-              },
-              {} as Record<string, any>
-            );
-
-            // Get brand names for top performers
-            const brandIds = Object.keys(brandRevenue);
-            if (brandIds.length > 0) {
-              const { data: brandsData } = await supabase
-                .from("brands")
-                .select("id, name")
-                .in("id", brandIds);
-
-              topPerformingBrands = Object.values(brandRevenue)
-                .map((brand: any) => {
-                  const brandInfo = brandsData?.find(
-                    (b) => b.id === brand.brand_id
-                  );
-                  return {
-                    ...brand,
-                    brand_name: brandInfo?.name || "Unknown Brand",
-                  };
-                })
-                .sort((a, b) => b.total_revenue - a.total_revenue)
-                .slice(0, 10);
-            }
-          }
-
-          const fallbackData = {
-            total_leads: totalLeads,
-            qualified_leads: qualifiedLeads,
-            converted_leads: convertedLeads,
-            total_bookings: totalBookings,
-            total_booking_value: totalBookingValue,
-            total_commission_earned: totalCommissionEarned,
-            average_booking_value: Math.round(averageBookingValue),
-            conversion_rate:
-              totalLeads > 0
-                ? Math.round((convertedLeads / totalLeads) * 100)
-                : 0,
-            this_month_leads: thisMonthLeads,
-            this_month_bookings: thisMonthBookingsCount,
-            this_month_revenue: thisMonthRevenue,
-            this_month_commission: thisMonthCommission,
-            top_performing_brands: topPerformingBrands,
-            leads_by_source: leadsBySource,
-            bookings_by_type: bookingsByType,
-            monthly_trends: monthlyTrends,
-          };
-
-          console.log("✅ Returning fallback analytics data:", fallbackData);
-          return NextResponse.json({ analytics: fallbackData });
+          return NextResponse.json({ analytics: fallback });
         }
 
-        console.log(
-          "✅ Analytics data fetched successfully from function:",
-          analyticsData
-        );
-
-        // The function returns an array, so we need to get the first item
         const analytics = Array.isArray(analyticsData)
           ? analyticsData[0]
           : analyticsData;
 
         return NextResponse.json({ analytics });
       } catch (error) {
-        console.error("Analytics error:", error);
+        console.error("Admin leads analytics error:", error);
         return NextResponse.json(
           { error: "Failed to fetch analytics" },
           { status: 500 }
@@ -499,18 +75,11 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Default: Fetch leads list
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "20");
-    const status = searchParams.get("status");
-    const source = searchParams.get("source");
-    const priority = searchParams.get("priority");
-    const brandId = searchParams.get("brandId");
-    const search = searchParams.get("search");
-
+    const page = q.page ?? 1;
+    const limit = q.limit ?? 20;
     const offset = (page - 1) * limit;
+    const search = sanitizeLeadSearch(q.search);
 
-    // Build query with count
     let query = supabase.from("leads").select(
       `
         *,
@@ -523,9 +92,8 @@ export async function GET(request: NextRequest) {
       { count: "exact" }
     );
 
-    // Apply role-based filtering
     if (profile.role === "brand_admin") {
-      if (!profile.owned_brands || profile.owned_brands.length === 0) {
+      if (profile.owned_brands.length === 0) {
         return NextResponse.json({
           leads: [],
           totalCount: 0,
@@ -536,18 +104,24 @@ export async function GET(request: NextRequest) {
       query = query.in("brand_id", profile.owned_brands);
     }
 
-    // Apply filters
-    if (status) query = query.eq("status", status);
-    if (source) query = query.eq("source", source);
-    if (priority) query = query.eq("priority", priority);
-    if (brandId) query = query.eq("brand_id", brandId);
+    if (q.status) query = query.eq("status", q.status);
+    if (q.source) query = query.eq("source", q.source);
+    if (q.priority) query = query.eq("priority", q.priority);
+    if (q.brandId) {
+      if (
+        profile.role === "brand_admin" &&
+        !profile.owned_brands.includes(q.brandId)
+      ) {
+        return NextResponse.json({ error: "Access denied" }, { status: 403 });
+      }
+      query = query.eq("brand_id", q.brandId);
+    }
     if (search) {
       query = query.or(
         `customer_name.ilike.%${search}%,customer_email.ilike.%${search}%,notes.ilike.%${search}%`
       );
     }
 
-    // Apply pagination
     query = query
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1);
@@ -555,7 +129,7 @@ export async function GET(request: NextRequest) {
     const { data: leads, error: fetchError, count } = await query;
 
     if (fetchError) {
-      console.error("Error fetching leads:", fetchError);
+      console.error("Admin leads list error:", fetchError.code, fetchError.message);
       return NextResponse.json(
         { error: "Failed to fetch leads" },
         { status: 500 }
@@ -564,11 +138,8 @@ export async function GET(request: NextRequest) {
 
     const totalPages = Math.ceil((count || 0) / limit);
 
-    console.log(`✅ Fetched ${leads?.length || 0} leads for ${user.email}`);
-
-    // Map database field names to frontend field names
     const mappedLeads =
-      leads?.map((lead) => {
+      leads?.map((lead: Record<string, unknown>) => {
         const mappedLead = { ...lead };
         if (mappedLead.project_timeline) {
           mappedLead.timeline = mappedLead.project_timeline;
@@ -583,7 +154,7 @@ export async function GET(request: NextRequest) {
       currentPage: page,
     });
   } catch (error) {
-    console.error("Leads API error:", error);
+    console.error("Admin leads GET error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
@@ -594,105 +165,41 @@ export async function GET(request: NextRequest) {
 // POST /api/admin/leads - Create new lead or booking
 export async function POST(request: NextRequest) {
   try {
-    const supabaseClient = await createServerSupabaseClient();
+    const auth = await requireLeadsAdmin();
+    if (!auth.ok) return auth.response;
 
-    // Enhanced authentication with better error handling (same as GET endpoint)
-    const {
-      data: { session },
-      error: sessionError,
-    } = await supabaseClient.auth.getSession();
+    const { supabase, userId, profile } = auth.ctx;
 
-    if (sessionError) {
-      console.error("Session error:", sessionError);
-      return NextResponse.json(
-        { error: "Session invalid - please sign in again" },
-        { status: 401 }
-      );
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
     }
 
-    if (!session?.user) {
-      console.error("No session or user found");
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const parsed = postLeadsBodySchema.safeParse(body);
+    if (!parsed.success) {
+      return jsonValidationError(parsed.error);
     }
 
-    const user = session.user;
-    console.log("✅ POST Leads API: User authenticated:", user.email);
-
-    // Get user profile with fallback for super_admin users (same as GET endpoint)
-    let profile;
-    const { data: profileData, error: profileError } = await supabaseClient
-      .from("profiles")
-      .select("role, owned_brands")
-      .eq("id", user.id)
-      .single();
-
-    if (profileError || !profileData) {
-      console.log(
-        "⚠️ Profile not found, checking user email for super_admin access"
-      );
-
-      // Fallback: Check if user email indicates super_admin access (legacy support)
-      const legacySuperAdmins = [
-        "eloka.agu@icloud.com",
-        "shannonalisa@oma-hub.com",
-      ];
-
-      if (legacySuperAdmins.includes(user.email || "")) {
-        profile = {
-          role: "super_admin",
-          owned_brands: [],
-        };
-        console.log(
-          "✅ Granted super_admin access based on email:",
-          user.email
-        );
-      } else {
-        console.error("Profile error:", profileError);
-        return NextResponse.json(
-          { error: "Profile not found" },
-          { status: 404 }
-        );
-      }
-    } else {
-      profile = profileData;
-    }
-
-    // Check if user has admin access
-    if (!["super_admin", "brand_admin"].includes(profile.role)) {
-      console.log("❌ Access denied for role:", profile.role);
-      return NextResponse.json({ error: "Access denied" }, { status: 403 });
-    }
-
-    console.log("✅ Access granted for role:", profile.role);
-
-    const body = await request.json();
-    const { type, data } = body;
-
-    console.log("🔍 POST Request Debug:", { type, data });
-
-    switch (type) {
-      case "lead":
-        // Create new lead
-        const leadData: Lead = data;
-
-        // Check if brand admin is trying to create lead for their brand
-        if (profile.role === "brand_admin" && profile.owned_brands) {
-          if (!profile.owned_brands.includes(leadData.brand_id)) {
-            return NextResponse.json(
-              { error: "Cannot create lead for this brand" },
-              { status: 403 }
-            );
-          }
+    switch (parsed.data.type) {
+      case "lead": {
+        const leadData = normalizeLeadCreateForDb(parsed.data.data);
+        if (!brandAdminOwnsBrand(profile, leadData.brand_id)) {
+          return NextResponse.json(
+            { error: "Cannot create lead for this brand" },
+            { status: 403 }
+          );
         }
 
-        const { data: newLead, error: leadError } = await supabaseClient
+        const { data: newLead, error: leadError } = await supabase
           .from("leads")
           .insert([leadData])
           .select()
           .single();
 
         if (leadError) {
-          console.error("Lead creation error:", leadError);
+          console.error("Lead creation error:", leadError.code, leadError.message);
           return NextResponse.json(
             { error: "Failed to create lead" },
             { status: 500 }
@@ -700,24 +207,20 @@ export async function POST(request: NextRequest) {
         }
 
         return NextResponse.json({ lead: newLead }, { status: 201 });
+      }
 
-      case "booking":
-        // Create new booking
-        const bookingData: Booking = data;
+      case "booking": {
+        let bookingData = parsed.data.data;
 
-        // Check if brand admin is trying to create booking for their brand
-        if (profile.role === "brand_admin" && profile.owned_brands) {
-          if (!profile.owned_brands.includes(bookingData.brand_id)) {
-            return NextResponse.json(
-              { error: "Cannot create booking for this brand" },
-              { status: 403 }
-            );
-          }
+        if (!brandAdminOwnsBrand(profile, bookingData.brand_id)) {
+          return NextResponse.json(
+            { error: "Cannot create booking for this brand" },
+            { status: 403 }
+          );
         }
 
-        // Get commission rate from commission structure if not provided
         if (!bookingData.commission_rate) {
-          const { data: commissionData } = await supabaseClient
+          const { data: commissionData } = await supabase
             .from("commission_structure")
             .select("commission_rate")
             .eq("booking_type", bookingData.booking_type)
@@ -727,10 +230,12 @@ export async function POST(request: NextRequest) {
             .single();
 
           if (commissionData) {
-            bookingData.commission_rate = commissionData.commission_rate;
+            bookingData = {
+              ...bookingData,
+              commission_rate: commissionData.commission_rate,
+            };
           } else {
-            // Fallback to default commission structure
-            const { data: defaultCommission } = await supabaseClient
+            const { data: defaultCommission } = await supabase
               .from("commission_structure")
               .select("commission_rate")
               .eq("booking_type", bookingData.booking_type)
@@ -739,57 +244,73 @@ export async function POST(request: NextRequest) {
               .single();
 
             if (defaultCommission) {
-              bookingData.commission_rate = defaultCommission.commission_rate;
+              bookingData = {
+                ...bookingData,
+                commission_rate: defaultCommission.commission_rate,
+              };
             }
           }
         }
 
-        const { data: newBooking, error: bookingError } = await supabaseClient
+        const { data: newBooking, error: bookingError } = await supabase
           .from("bookings")
           .insert([bookingData])
           .select()
           .single();
 
         if (bookingError) {
-          console.error("Booking creation error:", bookingError);
+          console.error("Booking creation error:", bookingError.code, bookingError.message);
           return NextResponse.json(
             { error: "Failed to create booking" },
             { status: 500 }
           );
         }
 
-        // Update financial metrics for the brand
         try {
-          await supabaseClient.rpc("update_brand_financial_metrics", {
+          await supabase.rpc("update_brand_financial_metrics", {
             target_brand_id: bookingData.brand_id,
             target_month_year: new Date().toISOString().slice(0, 7) + "-01",
           });
         } catch (metricsError) {
-          console.warn("Failed to update financial metrics:", metricsError);
+          console.warn("update_brand_financial_metrics failed:", metricsError);
         }
 
         return NextResponse.json({ booking: newBooking }, { status: 201 });
+      }
 
-      case "interaction":
-        // Add lead interaction
-        const { lead_id, interaction_type, description } = data;
+      case "interaction": {
+        const { lead_id, interaction_type, description } = parsed.data.data;
 
-        const { data: newInteraction, error: interactionError } =
-          await supabaseClient
-            .from("lead_interactions")
-            .insert([
-              {
-                lead_id,
-                interaction_type,
-                description,
-                admin_id: user.id,
-              },
-            ])
-            .select()
-            .single();
+        const leadBrandId = await fetchLeadBrandId(supabase, lead_id);
+        if (!leadBrandId) {
+          return NextResponse.json({ error: "Lead not found" }, { status: 404 });
+        }
+        if (!brandAdminOwnsBrand(profile, leadBrandId)) {
+          return NextResponse.json(
+            { error: "Cannot add interaction for this lead" },
+            { status: 403 }
+          );
+        }
+
+        const { data: newInteraction, error: interactionError } = await supabase
+          .from("lead_interactions")
+          .insert([
+            {
+              lead_id,
+              interaction_type,
+              description,
+              admin_id: userId,
+            },
+          ])
+          .select()
+          .single();
 
         if (interactionError) {
-          console.error("Interaction creation error:", interactionError);
+          console.error(
+            "Interaction creation error:",
+            interactionError.code,
+            interactionError.message
+          );
           return NextResponse.json(
             { error: "Failed to create interaction" },
             { status: 500 }
@@ -800,6 +321,7 @@ export async function POST(request: NextRequest) {
           { interaction: newInteraction },
           { status: 201 }
         );
+      }
 
       default:
         return NextResponse.json(
@@ -808,7 +330,7 @@ export async function POST(request: NextRequest) {
         );
     }
   } catch (error) {
-    console.error("Error in leads POST:", error);
+    console.error("Admin leads POST error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
@@ -819,172 +341,124 @@ export async function POST(request: NextRequest) {
 // PUT /api/admin/leads - Update lead or booking
 export async function PUT(request: NextRequest) {
   try {
-    const supabaseClient = await createServerSupabaseClient();
+    const auth = await requireLeadsAdmin();
+    if (!auth.ok) return auth.response;
 
-    // Enhanced authentication with better error handling (same as GET endpoint)
-    const {
-      data: { session },
-      error: sessionError,
-    } = await supabaseClient.auth.getSession();
+    const { supabase, profile } = auth.ctx;
 
-    if (sessionError) {
-      console.error("Session error:", sessionError);
-      return NextResponse.json(
-        { error: "Session invalid - please sign in again" },
-        { status: 401 }
-      );
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
     }
 
-    if (!session?.user) {
-      console.error("No session or user found");
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const parsed = putLeadsBodySchema.safeParse(body);
+    if (!parsed.success) {
+      return jsonValidationError(parsed.error);
     }
 
-    const user = session.user;
-    console.log("✅ PUT Leads API: User authenticated:", user.email);
+    const payload = parsed.data;
 
-    // Get user profile with fallback for super_admin users (same as GET endpoint)
-    let profile;
-    const { data: profileData, error: profileError } = await supabaseClient
-      .from("profiles")
-      .select("role, owned_brands")
-      .eq("id", user.id)
-      .single();
-
-    if (profileError || !profileData) {
-      console.log(
-        "⚠️ Profile not found, checking user email for super_admin access"
-      );
-
-      // Fallback: Check if user email indicates super_admin access (legacy support)
-      const legacySuperAdmins = [
-        "eloka.agu@icloud.com",
-        "shannonalisa@oma-hub.com",
-      ];
-
-      if (legacySuperAdmins.includes(user.email || "")) {
-        profile = {
-          role: "super_admin",
-          owned_brands: [],
-        };
-        console.log(
-          "✅ Granted super_admin access based on email:",
-          user.email
-        );
-      } else {
-        console.error("Profile error:", profileError);
-        return NextResponse.json(
-          { error: "Profile not found" },
-          { status: 404 }
-        );
-      }
-    } else {
-      profile = profileData;
-    }
-
-    // Check if user has admin access
-    if (!["super_admin", "brand_admin"].includes(profile.role)) {
-      console.log("❌ Access denied for role:", profile.role);
-      return NextResponse.json({ error: "Access denied" }, { status: 403 });
-    }
-
-    console.log("✅ Access granted for role:", profile.role);
-
-    const body = await request.json();
-    const { type, id, data } = body;
-
-    console.log("🔍 PUT Request Debug:", { type, id, data });
-
-    switch (type) {
-      case "lead":
-        // Update lead
-        console.log("📝 Updating lead with data:", data);
-
-        // Map frontend field names to database column names
-        const mappedData = { ...data };
-        if (mappedData.timeline) {
-          mappedData.project_timeline = mappedData.timeline;
-          delete mappedData.timeline;
+    switch (payload.type) {
+      case "lead": {
+        const patch = normalizeLeadUpdatePatch(payload.data);
+        if (Object.keys(patch).length === 0) {
+          return NextResponse.json(
+            { error: "At least one field is required to update" },
+            { status: 400 }
+          );
         }
 
-        console.log("📝 Mapped data for database:", mappedData);
+        const brandId = await fetchLeadBrandId(supabase, payload.id);
+        if (!brandId) {
+          return NextResponse.json({ error: "Lead not found" }, { status: 404 });
+        }
+        if (!brandAdminOwnsBrand(profile, brandId)) {
+          return NextResponse.json({ error: "Access denied" }, { status: 403 });
+        }
 
-        const { data: updatedLead, error: leadError } = await supabaseClient
+        const { data: updatedLead, error: leadError } = await supabase
           .from("leads")
-          .update(mappedData)
-          .eq("id", id)
+          .update(patch)
+          .eq("id", payload.id)
           .select()
           .single();
 
         if (leadError) {
-          console.error("❌ Lead update error:", leadError);
-          console.error("❌ Error details:", {
-            message: leadError.message,
-            details: leadError.details,
-            hint: leadError.hint,
-            code: leadError.code,
-          });
+          console.error("Lead update error:", leadError.code, leadError.message);
           return NextResponse.json(
             { error: `Failed to update lead: ${leadError.message}` },
             { status: 500 }
           );
         }
 
-        console.log("✅ Lead updated successfully:", updatedLead);
-
-        // Map database field names back to frontend field names
         const responseData = { ...updatedLead };
         if (responseData.project_timeline) {
-          responseData.timeline = responseData.project_timeline;
+          (responseData as { timeline?: string }).timeline =
+            responseData.project_timeline;
         }
 
         return NextResponse.json({ lead: responseData });
+      }
 
-      case "booking":
-        // Update booking
-        const { data: updatedBooking, error: bookingError } =
-          await supabaseClient
-            .from("bookings")
-            .update(data)
-            .eq("id", id)
-            .select()
-            .single();
+      case "booking": {
+        const patch = normalizeBookingUpdatePatch(payload.data);
+        if (Object.keys(patch).length === 0) {
+          return NextResponse.json(
+            { error: "At least one field is required to update" },
+            { status: 400 }
+          );
+        }
+
+        const brandId = await fetchBookingBrandId(supabase, payload.id);
+        if (!brandId) {
+          return NextResponse.json({ error: "Booking not found" }, { status: 404 });
+        }
+        if (!brandAdminOwnsBrand(profile, brandId)) {
+          return NextResponse.json({ error: "Access denied" }, { status: 403 });
+        }
+
+        const { data: updatedBooking, error: bookingError } = await supabase
+          .from("bookings")
+          .update(patch)
+          .eq("id", payload.id)
+          .select()
+          .single();
 
         if (bookingError) {
-          console.error("Booking update error:", bookingError);
+          console.error("Booking update error:", bookingError.code, bookingError.message);
           return NextResponse.json(
             { error: "Failed to update booking" },
             { status: 500 }
           );
         }
 
-        // Update financial metrics if booking value or status changed
-        if (data.booking_value || data.status) {
-          const { data: booking } = await supabaseClient
+        if ("booking_value" in patch || "status" in patch) {
+          const { data: booking } = await supabase
             .from("bookings")
             .select("brand_id, booking_date")
-            .eq("id", id)
+            .eq("id", payload.id)
             .single();
 
-          if (booking) {
+          if (booking?.brand_id) {
             try {
               const monthYear =
-                new Date(booking.booking_date).toISOString().slice(0, 7) +
-                "-01";
-              await supabaseClient.rpc("update_brand_financial_metrics", {
+                new Date(booking.booking_date).toISOString().slice(0, 7) + "-01";
+              await supabase.rpc("update_brand_financial_metrics", {
                 target_brand_id: booking.brand_id,
                 target_month_year: monthYear,
               });
             } catch (metricsError) {
-              console.warn("Failed to update financial metrics:", metricsError);
+              console.warn("update_brand_financial_metrics failed:", metricsError);
             }
           }
         }
 
         return NextResponse.json({ booking: updatedBooking });
+      }
 
-      case "commission_structure":
-        // Update commission structure (super admin only)
+      case "commission_structure": {
         if (profile.role !== "super_admin") {
           return NextResponse.json(
             { error: "Super admin access required" },
@@ -992,16 +466,28 @@ export async function PUT(request: NextRequest) {
           );
         }
 
+        const patch = normalizeCommissionStructureUpdatePatch(payload.data);
+        if (Object.keys(patch).length === 0) {
+          return NextResponse.json(
+            { error: "At least one field is required to update" },
+            { status: 400 }
+          );
+        }
+
         const { data: updatedCommission, error: commissionError } =
-          await supabaseClient
+          await supabase
             .from("commission_structure")
-            .update(data)
-            .eq("id", id)
+            .update(patch)
+            .eq("id", payload.id)
             .select()
             .single();
 
         if (commissionError) {
-          console.error("Commission update error:", commissionError);
+          console.error(
+            "Commission update error:",
+            commissionError.code,
+            commissionError.message
+          );
           return NextResponse.json(
             { error: "Failed to update commission structure" },
             { status: 500 }
@@ -1009,6 +495,7 @@ export async function PUT(request: NextRequest) {
         }
 
         return NextResponse.json({ commission_structure: updatedCommission });
+      }
 
       default:
         return NextResponse.json(
@@ -1017,7 +504,7 @@ export async function PUT(request: NextRequest) {
         );
     }
   } catch (error) {
-    console.error("❌ Error in leads PUT:", error);
+    console.error("Admin leads PUT error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
@@ -1028,49 +515,35 @@ export async function PUT(request: NextRequest) {
 // DELETE /api/admin/leads - Delete lead or booking
 export async function DELETE(request: NextRequest) {
   try {
-    const supabaseClient = await createServerSupabaseClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabaseClient.auth.getUser();
+    const auth = await requireLeadsAdmin();
+    if (!auth.ok) return auth.response;
 
-    if (authError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const { supabase, profile } = auth.ctx;
+
+    const parsed = parseDeleteLeadsQuery(new URL(request.url).searchParams);
+    if (!parsed.success) {
+      return jsonValidationError(parsed.error);
     }
 
-    const profile = await checkUserPermissions(user.id);
-
-    if (
-      !profile.role ||
-      !["super_admin", "brand_admin"].includes(profile.role)
-    ) {
-      return NextResponse.json(
-        { error: "Insufficient permissions" },
-        { status: 403 }
-      );
-    }
-
-    const { searchParams } = new URL(request.url);
-    const type = searchParams.get("type");
-    const id = searchParams.get("id");
-
-    if (!type || !id) {
-      return NextResponse.json(
-        { error: "Type and ID are required" },
-        { status: 400 }
-      );
-    }
+    const { type, id } = parsed.data;
 
     switch (type) {
-      case "lead":
-        // Delete lead (this will cascade to interactions)
-        const { error: leadError } = await supabaseClient
+      case "lead": {
+        const brandId = await fetchLeadBrandId(supabase, id);
+        if (!brandId) {
+          return NextResponse.json({ error: "Lead not found" }, { status: 404 });
+        }
+        if (!brandAdminOwnsBrand(profile, brandId)) {
+          return NextResponse.json({ error: "Access denied" }, { status: 403 });
+        }
+
+        const { error: leadError } = await supabase
           .from("leads")
           .delete()
           .eq("id", id);
 
         if (leadError) {
-          console.error("Lead deletion error:", leadError);
+          console.error("Lead deletion error:", leadError.code, leadError.message);
           return NextResponse.json(
             { error: "Failed to delete lead" },
             { status: 500 }
@@ -1078,16 +551,24 @@ export async function DELETE(request: NextRequest) {
         }
 
         return NextResponse.json({ message: "Lead deleted successfully" });
+      }
 
-      case "booking":
-        // Delete booking
-        const { error: bookingError } = await supabaseClient
+      case "booking": {
+        const brandId = await fetchBookingBrandId(supabase, id);
+        if (!brandId) {
+          return NextResponse.json({ error: "Booking not found" }, { status: 404 });
+        }
+        if (!brandAdminOwnsBrand(profile, brandId)) {
+          return NextResponse.json({ error: "Access denied" }, { status: 403 });
+        }
+
+        const { error: bookingError } = await supabase
           .from("bookings")
           .delete()
           .eq("id", id);
 
         if (bookingError) {
-          console.error("Booking deletion error:", bookingError);
+          console.error("Booking deletion error:", bookingError.code, bookingError.message);
           return NextResponse.json(
             { error: "Failed to delete booking" },
             { status: 500 }
@@ -1095,16 +576,31 @@ export async function DELETE(request: NextRequest) {
         }
 
         return NextResponse.json({ message: "Booking deleted successfully" });
+      }
 
-      case "interaction":
-        // Delete interaction
-        const { error: interactionError } = await supabaseClient
+      case "interaction": {
+        const brandId = await fetchInteractionLeadBrandId(supabase, id);
+        if (!brandId) {
+          return NextResponse.json(
+            { error: "Interaction not found" },
+            { status: 404 }
+          );
+        }
+        if (!brandAdminOwnsBrand(profile, brandId)) {
+          return NextResponse.json({ error: "Access denied" }, { status: 403 });
+        }
+
+        const { error: interactionError } = await supabase
           .from("lead_interactions")
           .delete()
           .eq("id", id);
 
         if (interactionError) {
-          console.error("Interaction deletion error:", interactionError);
+          console.error(
+            "Interaction deletion error:",
+            interactionError.code,
+            interactionError.message
+          );
           return NextResponse.json(
             { error: "Failed to delete interaction" },
             { status: 500 }
@@ -1114,6 +610,7 @@ export async function DELETE(request: NextRequest) {
         return NextResponse.json({
           message: "Interaction deleted successfully",
         });
+      }
 
       default:
         return NextResponse.json(
@@ -1122,7 +619,7 @@ export async function DELETE(request: NextRequest) {
         );
     }
   } catch (error) {
-    console.error("Error in leads DELETE:", error);
+    console.error("Admin leads DELETE error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

@@ -1,23 +1,56 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
+import { requireSuperAdmin } from "@/lib/auth/requireSuperAdmin";
 import { getAdminClient } from "@/lib/supabase-admin";
-import { syncAllBrandCurrencies, checkCurrencyInconsistencies } from "@/lib/utils/currencySync";
+import {
+  checkCurrencyInconsistencies,
+  syncAllBrandCurrencies,
+} from "@/lib/utils/currencySync";
 
-export async function GET(request: NextRequest) {
+export const dynamic = "force-dynamic";
+
+/**
+ * Best-effort single-flight lock for this server instance (one sync at a time per warm lambda/process).
+ * Not a distributed lock across multiple instances.
+ */
+let currencySyncInFlight = false;
+
+function summarizeSyncFailures(
+  results: Array<{
+    brandId: string;
+    brandName: string;
+    success: boolean;
+    error?: string;
+  }>
+) {
+  return results
+    .filter((r) => !r.success)
+    .map((r) => ({
+      brandId: r.brandId,
+      brandName: r.brandName,
+      ...(r.error ? { error: r.error } : {}),
+    }));
+}
+
+// GET — super_admin: inspect brand/product currency mismatches (uses service client inside util)
+export async function GET() {
   try {
-    // Check if this is an admin request
-    const supabase = await getAdminClient();
-    if (!supabase) {
+    const auth = await requireSuperAdmin();
+    if (!auth.ok) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+
+    const admin = await getAdminClient();
+    if (!admin) {
       return NextResponse.json(
-        { error: "Admin client not available" },
-        { status: 500 }
+        { error: "Server configuration error" },
+        { status: 503 }
       );
     }
 
-    // Check for inconsistencies first
-    console.log("🔍 Checking for currency inconsistencies...");
     const inconsistencies = await checkCurrencyInconsistencies();
-    
+
     if (!inconsistencies.success) {
+      console.error("sync-currencies GET: inconsistency check failed");
       return NextResponse.json(
         { error: "Failed to check currency inconsistencies" },
         { status: 500 }
@@ -26,12 +59,11 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       message: "Currency inconsistency check completed",
+      totalInconsistencies: inconsistencies.inconsistencies.length,
       inconsistencies: inconsistencies.inconsistencies,
-      totalInconsistencies: inconsistencies.inconsistencies.length
     });
-
   } catch (error) {
-    console.error("❌ Error in currency inconsistency check:", error);
+    console.error("sync-currencies GET:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
@@ -39,42 +71,66 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
+// POST — super_admin: sync all product currencies to match brand currency (mutating)
+export async function POST() {
   try {
-    // Check if this is an admin request
-    const supabase = await getAdminClient();
-    if (!supabase) {
-      return NextResponse.json(
-        { error: "Admin client not available" },
-        { status: 500 }
-      );
+    const auth = await requireSuperAdmin();
+    if (!auth.ok) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
-    // Trigger the currency sync
-    console.log("🔄 Starting currency sync for all brands...");
-    const syncResult = await syncAllBrandCurrencies();
-    
-    if (!syncResult.success) {
+    if (currencySyncInFlight) {
       return NextResponse.json(
-        { error: "Currency sync failed", results: syncResult.results },
-        { status: 500 }
+        {
+          error: "Currency sync already in progress",
+          code: "SYNC_IN_PROGRESS",
+        },
+        { status: 409 }
       );
     }
+    currencySyncInFlight = true;
 
-    const successfulSyncs = syncResult.results.filter(r => r.success);
-    const failedSyncs = syncResult.results.filter(r => !r.success);
+    try {
+      const admin = await getAdminClient();
+      if (!admin) {
+        return NextResponse.json(
+          { error: "Server configuration error" },
+          { status: 503 }
+        );
+      }
 
-    return NextResponse.json({
-      message: "Currency sync completed",
-      overallSuccess: syncResult.success,
-      totalBrands: syncResult.results.length,
-      successfulSyncs: successfulSyncs.length,
-      failedSyncs: failedSyncs.length,
-      results: syncResult.results
-    });
+      const syncResult = await syncAllBrandCurrencies();
 
+      const successfulSyncs = syncResult.results.filter((r) => r.success).length;
+      const failedSyncs = syncResult.results.filter((r) => !r.success).length;
+      const totalBrands = syncResult.results.length;
+
+      if (!syncResult.success) {
+        return NextResponse.json(
+          {
+            error: "Currency sync completed with failures",
+            code: "SYNC_PARTIAL_OR_FAILED",
+            totalBrands,
+            successfulSyncs,
+            failedSyncs,
+            failures: summarizeSyncFailures(syncResult.results),
+          },
+          { status: 500 }
+        );
+      }
+
+      return NextResponse.json({
+        message: "Currency sync completed",
+        overallSuccess: true,
+        totalBrands,
+        successfulSyncs,
+        failedSyncs,
+      });
+    } finally {
+      currencySyncInFlight = false;
+    }
   } catch (error) {
-    console.error("❌ Error in currency sync:", error);
+    console.error("sync-currencies POST:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

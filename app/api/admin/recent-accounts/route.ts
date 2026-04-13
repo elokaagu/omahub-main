@@ -1,84 +1,81 @@
-import { createClient } from "@supabase/supabase-js";
-import { createServerClient } from "@supabase/ssr";
 import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
+import { requireSuperAdmin } from "@/lib/auth/requireSuperAdmin";
+import { createAdminClient } from "@/lib/supabase-unified";
+import { recentAccountsQuerySchema } from "@/lib/validation/recentAccounts";
 
-// Force dynamic rendering since we use cookies
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
-// Create service role client for admin operations
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
+/**
+ * Super-admin dashboard: recent profile signups in a bounded time window.
+ * Query: `days` (1–90, default 7), `limit` (1–50, default 10).
+ */
 export async function GET(request: NextRequest) {
   try {
-    // Check if user is authenticated and is super admin
-    const cookieStore = cookies();
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          get(name: string) {
-            return cookieStore.get(name)?.value;
-          },
-          set(name: string, value: string, options: any) {},
-          remove(name: string, options: any) {},
-        },
-      }
-    );
-
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const auth = await requireSuperAdmin();
+    if (!auth.ok) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
-    // Get user profile to check role
-    const { data: profile, error: profileError } = await supabaseAdmin
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-
-    if (profileError || !profile || profile.role !== "super_admin") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    const { searchParams } = new URL(request.url);
+    const parsed = recentAccountsQuerySchema.safeParse({
+      days: searchParams.get("days") ?? undefined,
+      limit: searchParams.get("limit") ?? undefined,
+    });
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Invalid query", details: parsed.error.flatten() },
+        { status: 400 }
+      );
     }
 
-    // Fetch recent accounts using service role
-    const sevenDaysAgo = new Date(
-      Date.now() - 7 * 24 * 60 * 60 * 1000
+    const { days, limit } = parsed.data;
+
+    let admin;
+    try {
+      admin = createAdminClient();
+    } catch (e) {
+      console.error("Recent accounts: admin client unavailable:", e);
+      return NextResponse.json(
+        { error: "Server configuration error" },
+        { status: 503 }
+      );
+    }
+
+    const since = new Date(
+      Date.now() - days * 24 * 60 * 60 * 1000
     ).toISOString();
 
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await admin
       .from("profiles")
       .select("id, email, role, created_at")
-      .gte("created_at", sevenDaysAgo)
+      .gte("created_at", since)
       .order("created_at", { ascending: false })
-      .limit(10);
+      .limit(limit);
 
     if (error) {
-      console.error("Error fetching recent accounts:", error);
+      console.error("Recent accounts fetch error:", error.code, error.message);
       return NextResponse.json(
         { error: "Failed to fetch recent accounts" },
         { status: 500 }
       );
     }
 
-    // Calculate hours_since_creation
-    const processedData = data.map((account) => ({
-      ...account,
-      hours_since_creation:
-        (Date.now() - new Date(account.created_at).getTime()) /
-        (1000 * 60 * 60),
-    }));
-
-    return NextResponse.json({ data: processedData });
+    type Row = {
+      id: string;
+      email: string | null;
+      role: string | null;
+      created_at: string;
+    };
+    const rows = (data ?? []) as Row[];
+    return NextResponse.json({
+      data: rows.map((account) => ({
+        ...account,
+        hours_since_creation: Math.round(
+          (Date.now() - new Date(account.created_at).getTime()) /
+            (1000 * 60 * 60)
+        ),
+      })),
+    });
   } catch (error) {
     console.error("Recent accounts API error:", error);
     return NextResponse.json(

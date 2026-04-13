@@ -1,4 +1,4 @@
-import { Metadata } from "next";
+import type { Metadata } from "next";
 
 // SEO utility functions for generating dynamic metadata
 export interface SEOConfig {
@@ -40,8 +40,9 @@ export function generateSEOMetadata(config: SEOConfig): Metadata {
     category,
   } = config;
 
+  /** Production site origin; joined with `url` when `url` is a path (e.g. "/about"). */
   const baseUrl = "https://www.oma-hub.com";
-  const fullUrl = url ? `${baseUrl}${url}` : baseUrl;
+  const fullUrl = url ? `${baseUrl}${url.startsWith("/") ? url : `/${url}`}` : baseUrl;
   const fullImageUrl = image.startsWith("http") ? image : `${baseUrl}${image}`;
 
   const metadata: Metadata = {
@@ -116,7 +117,9 @@ export function generateStructuredData(
         url: baseUrl,
         logo: `${baseUrl}/logo.png`,
         description:
-          "Premium fashion and tailoring platform connecting Africa's finest designers with a global audience",
+          typeof data?.description === "string" && data.description.trim()
+            ? data.description
+            : "Premium fashion and tailoring platform connecting Africa's finest designers with a global audience",
         sameAs: [
           "https://twitter.com/omahub",
           "https://instagram.com/omahub",

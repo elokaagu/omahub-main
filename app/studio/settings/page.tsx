@@ -26,7 +26,6 @@ import {
   Edit3,
   Save,
   X,
-  RefreshCw,
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -46,8 +45,6 @@ export default function SettingsPage() {
   const [ourStoryText, setOurStoryText] = useState("");
   const [ourStoryLoading, setOurStoryLoading] = useState(false);
   const [ourStorySaving, setOurStorySaving] = useState(false);
-  const [refreshingHomepageBrands, setRefreshingHomepageBrands] =
-    useState(false);
 
   // Inline editing states
   const [isEditingAbout, setIsEditingAbout] = useState(false);
@@ -248,28 +245,6 @@ export default function SettingsPage() {
     setTempOurStoryText("");
   };
 
-  // Super admin: Refresh homepage brands
-  const handleRefreshHomepageBrands = async () => {
-    setRefreshingHomepageBrands(true);
-    try {
-      const res = await fetch("/api/admin/refresh-homepage-brands", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user }),
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        toast.success("Homepage brands refreshed successfully");
-      } else {
-        toast.error(data.error || "Failed to refresh homepage brands");
-      }
-    } catch {
-      toast.error("Failed to refresh homepage brands");
-    } finally {
-      setRefreshingHomepageBrands(false);
-    }
-  };
-
   if (!user) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -296,8 +271,6 @@ export default function SettingsPage() {
           <p className="text-oma-cocoa mt-2">
             Manage your studio configuration and content
           </p>
-          {/* Super admin only: Refresh homepage brands button */}
-          {/* Removed Refresh Homepage Brands button and description */}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

@@ -1,3 +1,4 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase-unified";
 
 export interface AnalyticsData {
@@ -196,12 +197,17 @@ function handleDatabaseError(error: any, operation: string) {
 }
 
 /**
- * Get comprehensive analytics data for the dashboard
+ * Get comprehensive analytics data for the dashboard.
+ * @param serverClient — When provided (e.g. from `requireSuperAdmin().supabase`), skips client `checkAuth` and uses this server session for queries (API routes).
  */
-export async function getAnalyticsData(): Promise<AnalyticsData> {
+export async function getAnalyticsData(
+  serverClient?: SupabaseClient
+): Promise<AnalyticsData> {
   try {
-    // Check authentication first
-    await checkAuth();
+    if (!serverClient) {
+      await checkAuth();
+    }
+    const db = serverClient ?? supabase;
 
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
@@ -215,7 +221,7 @@ export async function getAnalyticsData(): Promise<AnalyticsData> {
       recentReviewsResult,
     ] = await Promise.all([
       // All brands with their review counts
-      supabase.from("brands").select(`
+      db.from("brands").select(`
           id, 
           name, 
           rating, 
@@ -225,19 +231,19 @@ export async function getAnalyticsData(): Promise<AnalyticsData> {
         `),
 
       // All reviews
-      supabase.from("reviews").select("id, rating, created_at, brand_id"),
+      db.from("reviews").select("id, rating, created_at, brand_id"),
 
       // Products with stock information
-      supabase.from("products").select("id, in_stock"),
+      db.from("products").select("id, in_stock"),
 
       // Recent brands (last 30 days)
-      supabase
+      db
         .from("brands")
         .select("id", { count: "exact", head: true })
         .gte("created_at", thirtyDaysAgoISO),
 
       // Recent reviews (last 30 days)
-      supabase
+      db
         .from("reviews")
         .select("id", { count: "exact", head: true })
         .gte("created_at", thirtyDaysAgoISO),

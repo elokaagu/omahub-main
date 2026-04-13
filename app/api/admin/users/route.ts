@@ -1,85 +1,126 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
+import { requireSuperAdmin } from "@/lib/auth/requireSuperAdmin";
+import { findAuthUserIdByEmail } from "@/lib/services/adminAuthLookup";
+import { createAdminClient } from "@/lib/supabase-unified";
+import {
+  adminUserUpsertBodySchema,
+  parseAdminUserDeleteQuery,
+  parseAdminUsersListQuery,
+  sanitizeIlikeSearch,
+} from "@/lib/validation/adminUsers";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+export const dynamic = "force-dynamic";
 
-// Service role client (bypasses RLS)
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
-
-// Helper function to create authenticated supabase client
-function createAuthenticatedClient() {
-  const cookieStore = cookies();
-
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value;
-        },
-      },
-    }
+function jsonValidationError(error: { flatten: () => unknown }) {
+  return NextResponse.json(
+    { error: "Invalid request", details: error.flatten() },
+    { status: 400 }
   );
+}
+
+async function tryBroadcastProfileUpdate(
+  adminDb: ReturnType<typeof createAdminClient>,
+  updatedUser: {
+    id: string;
+    email: string | null;
+    role: string | null;
+    owned_brands: string[] | null;
+    updated_at: string | null;
+  },
+  currentAdminId: string
+) {
+  if (updatedUser.id === currentAdminId) return;
+  try {
+    await adminDb
+      .channel(`profile_updates_${updatedUser.id}`)
+      .send({
+        type: "broadcast",
+        event: "profile_updated",
+        payload: {
+          user_id: updatedUser.id,
+          email: updatedUser.email,
+          role: updatedUser.role,
+          owned_brands: updatedUser.owned_brands,
+          updated_at: updatedUser.updated_at,
+          trigger: "admin_update",
+        },
+      });
+  } catch (e) {
+    console.warn("admin/users: profile broadcast failed:", e);
+  }
 }
 
 export async function GET(request: NextRequest) {
   try {
-    // Create authenticated client
-    const supabase = createAuthenticatedClient();
-
-    // Get the current user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    const auth = await requireSuperAdmin();
+    if (!auth.ok) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
-    // Get user profile to check role
-    const { data: profile, error: profileError } = await supabaseAdmin
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
+    const parsed = parseAdminUsersListQuery(
+      new URL(request.url).searchParams
+    );
+    if (!parsed.success) {
+      return jsonValidationError(parsed.error);
+    }
 
-    if (profileError || profile?.role !== "super_admin") {
+    const { page, limit, search, role: roleFilter } = parsed.data;
+    const offset = (page - 1) * limit;
+
+    let adminDb;
+    try {
+      adminDb = createAdminClient();
+    } catch {
       return NextResponse.json(
-        { error: "Insufficient permissions" },
-        { status: 403 }
+        { error: "Server configuration error" },
+        { status: 503 }
       );
     }
 
-    // Fetch all users using service role (bypasses RLS)
-    // Only select essential fields to reduce payload size
-    const { data: users, error: usersError } = await supabaseAdmin
+    let query = adminDb
       .from("profiles")
-      .select("id, email, role, owned_brands, created_at, updated_at")
-      .order("created_at", { ascending: false });
+      .select("id, email, role, owned_brands, created_at, updated_at", {
+        count: "exact",
+      });
+
+    if (search && search.length > 0) {
+      const safe = sanitizeIlikeSearch(search);
+      query = query.ilike("email", `%${safe}%`);
+    }
+    if (roleFilter) {
+      query = query.eq("role", roleFilter);
+    }
+
+    query = query
+      .order("created_at", { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    const { data: users, error: usersError, count } = await query;
 
     if (usersError) {
-      console.error("Error fetching users:", usersError);
+      console.error(
+        "admin/users GET:",
+        usersError.code,
+        usersError.message
+      );
       return NextResponse.json(
-        { error: "Failed to fetch users", details: usersError.message },
+        { error: "Failed to fetch users" },
         { status: 500 }
       );
     }
 
-    // Add basic validation
-    if (!users || users.length === 0) {
-      console.log("No users found in database");
-      return NextResponse.json({ users: [] });
-    }
+    const totalCount = count ?? 0;
+    const totalPages = Math.ceil(totalCount / limit) || 1;
 
-    console.log(`✅ Successfully fetched ${users.length} users`);
-    return NextResponse.json({ users });
+    return NextResponse.json({
+      users: users ?? [],
+      totalCount,
+      totalPages,
+      currentPage: page,
+      limit,
+    });
   } catch (error) {
-    console.error("Error in admin users API:", error);
+    console.error("GET /api/admin/users:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
@@ -89,210 +130,246 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { email, role, owned_brands } = body;
-
-    // Create authenticated client
-    const supabase = createAuthenticatedClient();
-
-    // Get the current user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    const auth = await requireSuperAdmin();
+    if (!auth.ok) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
-    // Get user profile to check role
-    const { data: profile, error: profileError } = await supabaseAdmin
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
 
-    if (profileError || profile?.role !== "super_admin") {
+    const parsed = adminUserUpsertBodySchema.safeParse(body);
+    if (!parsed.success) {
+      return jsonValidationError(parsed.error);
+    }
+
+    const { email, role, owned_brands } = parsed.data;
+
+    let adminDb;
+    try {
+      adminDb = createAdminClient();
+    } catch {
       return NextResponse.json(
-        { error: "Insufficient permissions" },
-        { status: 403 }
+        { error: "Server configuration error" },
+        { status: 503 }
       );
     }
 
-    // If the user is being assigned super_admin role, automatically assign all brands
-    // IMPORTANT: For super_admin, we ALWAYS assign all brands regardless of form input
     let finalOwnedBrands: string[] = [];
 
     if (role === "super_admin") {
-      // Fetch all brand IDs
-      const { data: allBrands, error: brandsError } = await supabaseAdmin
+      const { data: allBrands, error: brandsError } = await adminDb
         .from("brands")
         .select("id");
 
       if (brandsError) {
         console.error(
-          "❌ Error fetching brands for auto-assignment:",
-          brandsError
+          "admin/users POST: brands fetch failed:",
+          brandsError.code,
+          brandsError.message
         );
         return NextResponse.json(
           { error: "Failed to fetch brands for super admin assignment" },
           { status: 500 }
         );
-      } else {
-        const allBrandIds = allBrands.map((brand) => brand.id);
-        finalOwnedBrands = allBrandIds;
       }
+      finalOwnedBrands = (allBrands ?? []).map((b: { id: string }) => b.id);
     } else {
-      // For non-super-admin roles, use the brands from the form
-      finalOwnedBrands = owned_brands || [];
+      finalOwnedBrands = owned_brands ?? [];
     }
 
-    // Check if user already exists
-    const { data: existingUser, error: checkError } = await supabaseAdmin
+    const { data: existingRows, error: checkError } = await adminDb
       .from("profiles")
-      .select("*")
-      .eq("email", email)
-      .single();
+      .select("id, email")
+      .ilike("email", email)
+      .limit(2);
 
-    if (checkError && checkError.code !== "PGRST116") {
-      console.error("Error checking user:", checkError);
+    if (checkError) {
+      console.error(
+        "admin/users POST: existing check failed:",
+        checkError.code,
+        checkError.message
+      );
       return NextResponse.json(
         { error: "Error checking if user exists" },
         { status: 500 }
       );
     }
 
+    if (existingRows && existingRows.length > 1) {
+      return NextResponse.json(
+        { error: "Multiple profiles match this email" },
+        { status: 409 }
+      );
+    }
+
+    const existingUser = existingRows?.[0];
+
+    const { count: brandCount } = await adminDb
+      .from("brands")
+      .select("id", { count: "exact", head: true });
+
+    const validateSuperAdminBrands = () => {
+      if (role !== "super_admin") return true;
+      if (brandCount == null) return true;
+      return finalOwnedBrands.length === brandCount;
+    };
+
     if (existingUser) {
-      // Update existing user
-      const { data: updatedUser, error: updateError } = await supabaseAdmin
+      const { data: updatedUser, error: updateError } = await adminDb
         .from("profiles")
         .update({
           role,
           owned_brands: finalOwnedBrands,
           updated_at: new Date().toISOString(),
         })
-        .eq("email", email)
+        .eq("id", existingUser.id)
         .select()
         .single();
 
       if (updateError) {
-        console.error("Error updating user:", updateError);
+        console.error(
+          "admin/users POST: update failed:",
+          updateError.code,
+          updateError.message
+        );
         return NextResponse.json(
           { error: "Failed to update user" },
           { status: 500 }
         );
       }
 
-      // Trigger real-time profile refresh for the updated user
-      // Only send real-time notification if the updated user is not the current admin
-      // This prevents the admin from logging themselves out when assigning roles
-      if (updatedUser.id !== user.id) {
-        try {
-          await supabaseAdmin
-            .channel(`profile_updates_${updatedUser.id}`)
-            .send({
-              type: "broadcast",
-              event: "profile_updated",
-              payload: {
-                user_id: updatedUser.id,
-                email: updatedUser.email,
-                role: updatedUser.role,
-                owned_brands: updatedUser.owned_brands,
-                updated_at: updatedUser.updated_at,
-                trigger: "admin_update",
-              },
-            });
-        } catch (realtimeError) {
-          console.warn(
-            "⚠️ Failed to send real-time profile update:",
-            realtimeError
-          );
-          // Don't fail the request if real-time notification fails
-        }
-      }
-
-      // Validate that super_admin users have all brands assigned
-      if (role === "super_admin") {
-        const { data: totalBrands, error: countError } = await supabaseAdmin
-          .from("brands")
-          .select("id", { count: "exact" });
-
-        if (
-          !countError &&
-          totalBrands &&
-          finalOwnedBrands.length !== totalBrands.length
-        ) {
-          console.error(
-            `🚨 Super admin validation failed: Expected ${totalBrands.length} brands, got ${finalOwnedBrands.length}`
-          );
-          return NextResponse.json(
-            { error: "Super admin brand assignment validation failed" },
-            { status: 500 }
-          );
-        }
-      }
-
-      return NextResponse.json({
-        user: updatedUser,
-        action: "updated",
-        autoAssignedBrands:
-          role === "super_admin" ? finalOwnedBrands.length : 0,
-        profileRefreshTriggered: true,
-        validation: role === "super_admin" ? "passed" : "not_applicable",
-      });
-    } else {
-      // Create new user profile
-      const { data: newUser, error: createError } = await supabaseAdmin
-        .from("profiles")
-        .insert({
-          email,
-          role,
-          owned_brands: finalOwnedBrands,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        })
-        .select()
-        .single();
-
-      if (createError) {
-        console.error("Error creating user:", createError);
+      if (!validateSuperAdminBrands()) {
+        console.error(
+          "admin/users POST: super_admin brand count mismatch",
+          finalOwnedBrands.length,
+          brandCount
+        );
         return NextResponse.json(
-          { error: "Failed to create user" },
+          { error: "Super admin brand assignment validation failed" },
           { status: 500 }
         );
       }
 
-      // Validate that super_admin users have all brands assigned
-      if (role === "super_admin") {
-        const { data: totalBrands, error: countError } = await supabaseAdmin
-          .from("brands")
-          .select("id", { count: "exact" });
-
-        if (
-          !countError &&
-          totalBrands &&
-          finalOwnedBrands.length !== totalBrands.length
-        ) {
-          console.error(
-            `🚨 Super admin validation failed: Expected ${totalBrands.length} brands, got ${finalOwnedBrands.length}`
-          );
-          return NextResponse.json(
-            { error: "Super admin brand assignment validation failed" },
-            { status: 500 }
-          );
-        }
-      }
+      await tryBroadcastProfileUpdate(adminDb, updatedUser, auth.userId);
 
       return NextResponse.json({
-        user: newUser,
-        action: "created",
+        user: updatedUser,
+        action: "updated" as const,
         autoAssignedBrands:
           role === "super_admin" ? finalOwnedBrands.length : 0,
+        profileRefreshTriggered: updatedUser.id !== auth.userId,
         validation: role === "super_admin" ? "passed" : "not_applicable",
       });
     }
+
+    const authUserId = await findAuthUserIdByEmail(adminDb, email);
+    if (!authUserId) {
+      return NextResponse.json(
+        {
+          error:
+            "No authentication account exists for this email. The user must sign up before a profile can be created.",
+          code: "AUTH_USER_REQUIRED",
+        },
+        { status: 400 }
+      );
+    }
+
+    const { data: profileByAuthId } = await adminDb
+      .from("profiles")
+      .select("id")
+      .eq("id", authUserId)
+      .maybeSingle();
+
+    if (profileByAuthId) {
+      const { data: updatedUser, error: updateError } = await adminDb
+        .from("profiles")
+        .update({
+          email,
+          role,
+          owned_brands: finalOwnedBrands,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", authUserId)
+        .select()
+        .single();
+
+      if (updateError) {
+        console.error(
+          "admin/users POST: update by auth id failed:",
+          updateError.code,
+          updateError.message
+        );
+        return NextResponse.json(
+          { error: "Failed to update user" },
+          { status: 500 }
+        );
+      }
+
+      if (!validateSuperAdminBrands()) {
+        return NextResponse.json(
+          { error: "Super admin brand assignment validation failed" },
+          { status: 500 }
+        );
+      }
+
+      await tryBroadcastProfileUpdate(adminDb, updatedUser, auth.userId);
+
+      return NextResponse.json({
+        user: updatedUser,
+        action: "updated" as const,
+        autoAssignedBrands:
+          role === "super_admin" ? finalOwnedBrands.length : 0,
+        profileRefreshTriggered: updatedUser.id !== auth.userId,
+        validation: role === "super_admin" ? "passed" : "not_applicable",
+      });
+    }
+
+    const { data: newUser, error: createError } = await adminDb
+      .from("profiles")
+      .insert({
+        id: authUserId,
+        email,
+        role,
+        owned_brands: finalOwnedBrands,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .select()
+      .single();
+
+    if (createError) {
+      console.error(
+        "admin/users POST: insert failed:",
+        createError.code,
+        createError.message
+      );
+      return NextResponse.json(
+        { error: "Failed to create user profile" },
+        { status: 500 }
+      );
+    }
+
+    if (!validateSuperAdminBrands()) {
+      return NextResponse.json(
+        { error: "Super admin brand assignment validation failed" },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      user: newUser,
+      action: "created" as const,
+      autoAssignedBrands:
+        role === "super_admin" ? finalOwnedBrands.length : 0,
+      validation: role === "super_admin" ? "passed" : "not_applicable",
+    });
   } catch (error) {
-    console.error("Error in admin users POST API:", error);
+    console.error("POST /api/admin/users:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
@@ -302,88 +379,80 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get("id");
+    const auth = await requireSuperAdmin();
+    if (!auth.ok) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
 
-    if (!userId) {
+    const parsed = parseAdminUserDeleteQuery(
+      new URL(request.url).searchParams
+    );
+    if (!parsed.success) {
+      return jsonValidationError(parsed.error);
+    }
+    const userId = parsed.data.id;
+
+    if (userId === auth.userId) {
       return NextResponse.json(
-        { error: "User ID is required" },
+        { error: "Cannot delete your own account" },
         { status: 400 }
       );
     }
 
-    // Create authenticated client
-    const supabase = createAuthenticatedClient();
-
-    // Get the current user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
-    }
-
-    // Get user profile to check role
-    const { data: profile, error: profileError } = await supabaseAdmin
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-
-    if (profileError || profile?.role !== "super_admin") {
+    let adminDb;
+    try {
+      adminDb = createAdminClient();
+    } catch {
       return NextResponse.json(
-        { error: "Insufficient permissions" },
-        { status: 403 }
+        { error: "Server configuration error" },
+        { status: 503 }
       );
     }
 
-    // Get the user's email before deletion for logging
-    const { data: userToDelete, error: getUserError } = await supabaseAdmin
+    const { data: userToDelete, error: getUserError } = await adminDb
       .from("profiles")
-      .select("email")
+      .select("id")
       .eq("id", userId)
-      .single();
+      .maybeSingle();
 
-    if (getUserError) {
-      console.error("Error fetching user to delete:", getUserError);
+    if (getUserError || !userToDelete) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Delete from auth.users table first (this will cascade to profiles due to foreign key)
     const { error: authDeleteError } =
-      await supabaseAdmin.auth.admin.deleteUser(userId);
+      await adminDb.auth.admin.deleteUser(userId);
 
     if (authDeleteError) {
-      console.error("Error deleting user from auth:", authDeleteError);
+      console.error(
+        "admin/users DELETE: auth delete failed:",
+        authDeleteError.message
+      );
       return NextResponse.json(
         { error: "Failed to delete user from authentication system" },
         { status: 500 }
       );
     }
 
-    // The profiles record should be automatically deleted due to CASCADE foreign key,
-    // but let's ensure it's deleted just in case
-    const { error: profileDeleteError } = await supabaseAdmin
+    const { error: profileDeleteError } = await adminDb
       .from("profiles")
       .delete()
       .eq("id", userId);
 
     if (profileDeleteError) {
       console.warn(
-        "Warning: Profile deletion error (may already be deleted by CASCADE):",
-        profileDeleteError
+        "admin/users DELETE: profile cleanup:",
+        profileDeleteError.code,
+        profileDeleteError.message
       );
-      // Don't fail the request since the auth deletion succeeded
     }
 
     return NextResponse.json({
       success: true,
-      message: `User ${userToDelete.email} has been completely deleted from both authentication and profile systems`,
+      message: "User has been removed from authentication and profile data.",
+      deletedUserId: userId,
     });
   } catch (error) {
-    console.error("Error in admin users DELETE API:", error);
+    console.error("DELETE /api/admin/users:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

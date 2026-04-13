@@ -1,15 +1,14 @@
-import { Metadata } from "next";
+import type { ReactNode } from "react";
+import { AboutOrganizationJsonLd } from "./organization-json-ld";
 
-export const metadata: Metadata = {
-  title: "About OmaHub",
-  description:
-    "Learn about OmaHub's mission to connect Africa's innovative fashion talent with a global audience.",
-};
+// Single source of truth for route metadata; /about/page is client-only.
+export { metadata } from "./metadata";
 
-export default function AboutLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return <>{children}</>;
+export default function AboutLayout({ children }: { children: ReactNode }) {
+  return (
+    <>
+      <AboutOrganizationJsonLd />
+      {children}
+    </>
+  );
 }
