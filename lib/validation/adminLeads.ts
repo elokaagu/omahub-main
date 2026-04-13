@@ -2,6 +2,13 @@ import { z } from "zod";
 
 const uuid = z.string().uuid();
 
+/** When present, must be exactly 3 letters (normalized to uppercase). */
+export const iso4217CurrencySchema = z
+  .string()
+  .trim()
+  .regex(/^[A-Za-z]{3}$/, "Currency must be exactly 3 letters (ISO 4217)")
+  .transform((c) => c.toUpperCase());
+
 export const leadSourceSchema = z.enum([
   "website",
   "whatsapp",
@@ -51,8 +58,8 @@ export const bookingStatusSchema = z.enum([
 const pageSchema = z.coerce.number().int().min(1).max(10_000).catch(1);
 const limitSchema = z.coerce.number().int().min(1).max(100).catch(20);
 
+/** GET /api/admin/leads (list only; analytics lives under /api/admin/leads/analytics). */
 export const leadsListQuerySchema = z.object({
-  action: z.enum(["analytics"]).optional(),
   page: pageSchema.optional(),
   limit: limitSchema.optional(),
   status: leadStatusSchema.optional(),
@@ -64,7 +71,6 @@ export const leadsListQuerySchema = z.object({
 
 export function parseLeadsListQuery(searchParams: URLSearchParams) {
   const raw = {
-    action: searchParams.get("action") ?? undefined,
     page: searchParams.get("page") ?? undefined,
     limit: searchParams.get("limit") ?? undefined,
     status: searchParams.get("status") ?? undefined,
@@ -134,7 +140,7 @@ export const bookingCreateSchema = z
     booking_value: z.number().nonnegative(),
     commission_rate: z.number().nonnegative().max(100).optional(),
     commission_amount: z.number().nonnegative().optional(),
-    currency: z.string().length(3).optional(),
+    currency: iso4217CurrencySchema.optional(),
     booking_date: z.string().max(50).optional(),
     delivery_date: z.string().max(50).optional(),
     completion_date: z.string().max(50).optional(),
@@ -213,7 +219,7 @@ export const bookingUpdateInputSchema = z
     booking_value: z.number().nonnegative().optional(),
     commission_rate: z.number().nonnegative().max(100).optional().nullable(),
     commission_amount: z.number().nonnegative().optional().nullable(),
-    currency: z.string().length(3).optional().nullable(),
+    currency: z.union([z.null(), iso4217CurrencySchema]).optional(),
     booking_date: z.string().max(50).optional().nullable(),
     delivery_date: z.string().max(50).optional().nullable(),
     completion_date: z.string().max(50).optional().nullable(),
@@ -236,7 +242,7 @@ export const commissionStructureUpdateInputSchema = z
     min_booking_value: z.number().nonnegative().optional(),
     max_booking_value: z.number().nonnegative().optional().nullable(),
     commission_rate: z.number().nonnegative().max(100).optional(),
-    currency: z.string().length(3).optional(),
+    currency: iso4217CurrencySchema.optional(),
     is_active: z.boolean().optional(),
     effective_date: z.string().max(50).optional(),
   })
@@ -281,3 +287,51 @@ export function parseDeleteLeadsQuery(searchParams: URLSearchParams) {
     id: searchParams.get("id") ?? undefined,
   });
 }
+
+/** POST /api/admin/leads — flat body, strict (no unknown keys). */
+export const postAdminLeadBodySchema = leadCreateInputSchema;
+
+/** PUT /api/admin/leads */
+export const putAdminLeadBodySchema = z
+  .object({
+    id: uuid,
+    data: leadUpdateInputSchema,
+  })
+  .strict();
+
+/** DELETE /api/admin/leads?id= */
+export const deleteAdminLeadQuerySchema = z.object({ id: uuid });
+export function parseDeleteAdminLeadQuery(searchParams: URLSearchParams) {
+  return deleteAdminLeadQuerySchema.safeParse({
+    id: searchParams.get("id") ?? undefined,
+  });
+}
+
+/** POST /api/admin/bookings */
+export const postAdminBookingBodySchema = bookingCreateSchema;
+
+/** PUT /api/admin/bookings */
+export const putAdminBookingBodySchema = z
+  .object({
+    id: uuid,
+    data: bookingUpdateInputSchema,
+  })
+  .strict();
+
+export const deleteAdminEntityQuerySchema = z.object({ id: uuid });
+export function parseDeleteAdminEntityQuery(searchParams: URLSearchParams) {
+  return deleteAdminEntityQuerySchema.safeParse({
+    id: searchParams.get("id") ?? undefined,
+  });
+}
+
+/** POST /api/admin/lead-interactions */
+export const postAdminLeadInteractionBodySchema = interactionCreateSchema;
+
+/** PUT /api/admin/commission-structure */
+export const putAdminCommissionStructureBodySchema = z
+  .object({
+    id: uuid,
+    data: commissionStructureUpdateInputSchema,
+  })
+  .strict();

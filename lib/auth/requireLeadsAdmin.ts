@@ -19,7 +19,12 @@ export type RequireLeadsAdminResult =
 
 /**
  * Authenticate via session, load profile, require super_admin or brand_admin.
- * No email-based fallbacks — users must have a valid profiles row and role.
+ *
+ * Breaking change vs legacy email allowlists: callers must have a `profiles` row.
+ * Super-admins need `profiles.role = 'super_admin'` (not only Auth metadata).
+ * Brand admins need `role = 'brand_admin'` and correct `owned_brands` for scoped RLS.
+ *
+ * Stricter request bodies: Zod `.strict()` on admin payloads rejects unknown keys (400 + flatten).
  */
 export async function requireLeadsAdmin(): Promise<RequireLeadsAdminResult> {
   const supabase = await createServerSupabaseClient();
