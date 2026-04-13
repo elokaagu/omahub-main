@@ -3,8 +3,12 @@
 import { motion, useReducedMotion } from "framer-motion";
 import type { ReactNode } from "react";
 
-function instantIfReduced(reduce: boolean, transition: Record<string, unknown>) {
-  return reduce ? { duration: 0 } : transition;
+/** `useReducedMotion()` can be `null` until the client has resolved the preference. */
+function instantIfReduced(
+  reduce: boolean | null,
+  transition: Record<string, unknown>
+) {
+  return reduce === true ? { duration: 0 } : transition;
 }
 
 // Basic page transition
