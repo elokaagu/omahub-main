@@ -708,6 +708,64 @@ export async function getBrandReviews(brandId: string): Promise<Review[]> {
   return data || [];
 }
 
+const REVIEW_RATING_PAGE_SIZE = 1000;
+const BRAND_IDS_IN_CHUNK = 120;
+
+/**
+ * Average review rating per brand in one (chunked) round-trip instead of N× getBrandReviews.
+ */
+export async function getAverageRatingsByBrandIds(
+  brandIds: string[]
+): Promise<Record<string, number>> {
+  if (!supabase) {
+    throw new Error("Supabase client not available");
+  }
+
+  const unique = [...new Set(brandIds.filter(Boolean))];
+  if (unique.length === 0) {
+    return {};
+  }
+
+  const sums: Record<string, { sum: number; count: number }> = {};
+
+  for (let c = 0; c < unique.length; c += BRAND_IDS_IN_CHUNK) {
+    const chunk = unique.slice(c, c + BRAND_IDS_IN_CHUNK);
+    let from = 0;
+
+    for (;;) {
+      const { data, error } = await supabase
+        .from("reviews")
+        .select("brand_id, rating")
+        .in("brand_id", chunk)
+        .range(from, from + REVIEW_RATING_PAGE_SIZE - 1);
+
+      if (error) {
+        console.error("Error batch-fetching review ratings:", error);
+        throw error;
+      }
+
+      const rows = data ?? [];
+      for (const row of rows) {
+        const bid = row.brand_id as string;
+        const r = Number(row.rating) || 0;
+        if (!sums[bid]) sums[bid] = { sum: 0, count: 0 };
+        sums[bid].sum += r;
+        sums[bid].count += 1;
+      }
+
+      if (rows.length < REVIEW_RATING_PAGE_SIZE) break;
+      from += REVIEW_RATING_PAGE_SIZE;
+    }
+  }
+
+  const out: Record<string, number> = {};
+  for (const bid of unique) {
+    const s = sums[bid];
+    out[bid] = s && s.count > 0 ? s.sum / s.count : 0;
+  }
+  return out;
+}
+
 /**
  * Fetch catalogues for a brand
  */

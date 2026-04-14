@@ -16,6 +16,7 @@ interface DatabaseFAQ {
 interface UseFAQsOptions {
   page_location?: string;
   category?: string;
+  /** Ignored: `/api/faqs` only returns active rows. Use `/api/admin/faqs` in studio. */
   include_inactive?: boolean;
 }
 
@@ -46,11 +47,7 @@ export function useFAQs(options: UseFAQsOptions = {}): UseFAQsReturn {
         params.append("category", options.category);
       }
 
-      if (options.include_inactive) {
-        params.append("include_inactive", "true");
-      }
-
-      const response = await fetch(`/api/admin/faqs?${params}`);
+      const response = await fetch(`/api/faqs?${params}`);
       const data = await response.json();
 
       if (!response.ok) {
@@ -77,7 +74,7 @@ export function useFAQs(options: UseFAQsOptions = {}): UseFAQsReturn {
 
   useEffect(() => {
     fetchFAQs();
-  }, [options.page_location, options.category, options.include_inactive]);
+  }, [options.page_location, options.category]);
 
   return {
     faqs,

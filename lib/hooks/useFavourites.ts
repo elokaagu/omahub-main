@@ -1,21 +1,19 @@
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import type { FavouriteItem } from "@/lib/types/favouriteItem";
 
-interface FavouriteItem {
-  id: string;
-  item_type: "brand" | "catalogue" | "product";
-  favourite_id: string;
-  [key: string]: any;
-}
-
+/**
+ * Standalone favourites hook (auth + fetch only). The live app uses
+ * `useFavourites` from `@/contexts/FavouritesContext` for a single in-memory source of truth.
+ * Both use the same {@link FavouriteItem} model from `@/lib/types/favouriteItem`.
+ */
 export default function useFavourites() {
   const { user } = useAuth();
   const [favourites, setFavourites] = useState<FavouriteItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [initialized, setInitialized] = useState(false);
 
-  // Check if an item is favourited
   const isFavourite = useCallback(
     (itemId: string, itemType: string): boolean => {
       return favourites.some(
@@ -25,7 +23,6 @@ export default function useFavourites() {
     [favourites]
   );
 
-  // Fetch favourites from the API
   const fetchFavourites = useCallback(async () => {
     if (!user) return;
 
@@ -41,13 +38,13 @@ export default function useFavourites() {
       }
 
       const data = await response.json();
-      const list = Array.isArray(data.favourites)
+      const raw = Array.isArray(data.favourites)
         ? data.favourites
         : data.favourites?.items ?? [];
-      setFavourites(list);
-      console.log("✅ Favourites fetched successfully:", list.length);
+      const list = Array.isArray(raw) ? raw : [];
+      setFavourites(list as FavouriteItem[]);
     } catch (error) {
-      console.error("❌ Error fetching favourites:", error);
+      console.error("Error fetching favourites:", error);
       toast.error("Failed to load favourites", {
         duration: 3000,
       });
@@ -56,7 +53,6 @@ export default function useFavourites() {
     }
   }, [user]);
 
-  // Add item to favourites with smart optimistic update
   const addFavourite = useCallback(
     async (
       itemId: string,
@@ -69,15 +65,15 @@ export default function useFavourites() {
         return false;
       }
 
-      // Create optimistic item for immediate UI update
       const optimisticItem: FavouriteItem = {
         id: itemId,
         item_type: itemType,
-        favourite_id: `temp-${Date.now()}`, // Temporary ID
-        name: "Loading...", // Placeholder data
+        favourite_id: `temp-${Date.now()}`,
+        name: itemType === "brand" ? "Loading…" : undefined,
+        title: itemType !== "brand" ? "Loading…" : undefined,
+        created_at: new Date().toISOString(),
       };
 
-      // Update UI immediately for this specific item
       setFavourites((prev) => [...prev, optimisticItem]);
 
       try {
@@ -95,32 +91,31 @@ export default function useFavourites() {
           throw new Error(errorData.error || "Failed to add to favourites");
         }
 
-        const data = await response.json();
-        console.log("✅ Added to favourites:", data);
+        const data = (await response.json()) as {
+          favourite?: { id?: string };
+        };
+        const rowId =
+          typeof data.favourite?.id === "string" ? data.favourite.id : undefined;
 
-        // Replace optimistic item with real data from database
         setFavourites((prev) =>
           prev.map((item) =>
             item.id === itemId && item.item_type === itemType
               ? {
                   ...item,
-                  favourite_id: data.favourite.id,
-                  name: data.favourite.name || "Unknown",
+                  ...(rowId ? { favourite_id: rowId } : {}),
                 }
               : item
           )
         );
 
-        // Show success toast
         toast.success("Added to favourites", {
           duration: 1500,
         });
 
         return true;
       } catch (error) {
-        console.error("❌ Error adding favourite:", error);
+        console.error("Error adding favourite:", error);
 
-        // Revert optimistic update on error
         setFavourites((prev) =>
           prev.filter(
             (item) => !(item.id === itemId && item.item_type === itemType)
@@ -141,7 +136,6 @@ export default function useFavourites() {
     [user]
   );
 
-  // Remove item from favourites with smart optimistic update
   const removeFavourite = useCallback(
     async (
       itemId: string,
@@ -154,12 +148,10 @@ export default function useFavourites() {
         return false;
       }
 
-      // Store the item being removed for potential restoration
       const itemToRemove = favourites.find(
         (item) => item.id === itemId && item.item_type === itemType
       );
 
-      // Remove from UI immediately
       setFavourites((prev) =>
         prev.filter(
           (item) => !(item.id === itemId && item.item_type === itemType)
@@ -168,7 +160,7 @@ export default function useFavourites() {
 
       try {
         const response = await fetch(
-          `/api/favourites?itemId=${itemId}&itemType=${itemType}`,
+          `/api/favourites?itemId=${encodeURIComponent(itemId)}&itemType=${encodeURIComponent(itemType)}`,
           {
             method: "DELETE",
             credentials: "include",
@@ -182,19 +174,14 @@ export default function useFavourites() {
           );
         }
 
-        const data = await response.json();
-        console.log("✅ Removed from favourites:", data);
-
-        // Show success toast
         toast.success("Removed from favourites", {
           duration: 1500,
         });
 
         return true;
       } catch (error) {
-        console.error("❌ Error removing favourite:", error);
+        console.error("Error removing favourite:", error);
 
-        // Restore item on error
         if (itemToRemove) {
           setFavourites((prev) => [...prev, itemToRemove]);
         }
@@ -213,7 +200,6 @@ export default function useFavourites() {
     [user, favourites]
   );
 
-  // Toggle favourite status with smart optimistic updates
   const toggleFavourite = useCallback(
     async (
       itemId: string,
@@ -223,14 +209,12 @@ export default function useFavourites() {
 
       if (currentlyFavourited) {
         return await removeFavourite(itemId, itemType);
-      } else {
-        return await addFavourite(itemId, itemType);
       }
+      return await addFavourite(itemId, itemType);
     },
     [isFavourite, addFavourite, removeFavourite]
   );
 
-  // Initialize favourites when user changes
   useEffect(() => {
     if (user && !initialized) {
       fetchFavourites();
@@ -241,7 +225,6 @@ export default function useFavourites() {
     }
   }, [user, initialized, fetchFavourites]);
 
-  // Refresh favourites when user changes
   useEffect(() => {
     if (user) {
       fetchFavourites();

@@ -1,65 +1,122 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { resetPassword } from "@/lib/services/authService";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { ArrowLeft, Mail } from "lucide-react";
 import { toast } from "sonner";
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function classifyResetError(err: unknown): "rate_limit" | "connectivity" | "other" {
+  const msg =
+    err instanceof Error ? err.message : typeof err === "string" ? err : "";
+  const lower = msg.toLowerCase();
+  if (
+    lower.includes("rate") ||
+    lower.includes("too many") ||
+    lower.includes("429") ||
+    lower.includes("over_email_send_rate_limit")
+  ) {
+    return "rate_limit";
+  }
+  if (
+    lower.includes("failed to fetch") ||
+    lower.includes("network") ||
+    lower.includes("supabase client not available") ||
+    lower.includes("load failed")
+  ) {
+    return "connectivity";
+  }
+  return "other";
+}
+
 export default function ForgotPasswordPage() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
+
+    const normalized = email.trim().toLowerCase();
+    if (!normalized) {
+      toast.error("Please enter your email address.");
+      return;
+    }
+    if (!EMAIL_REGEX.test(normalized)) {
+      toast.error("Please enter a valid email address.");
+      return;
+    }
+
     setLoading(true);
 
     try {
-      await resetPassword(email);
-      setEmailSent(true);
-      toast.success("Password reset email sent! Check your inbox.");
-    } catch (error) {
-      console.error("Error sending reset email:", error);
-      toast.error("Failed to send reset email. Please try again.");
+      await resetPassword(normalized);
+    } catch (err) {
+      console.error("Password reset request:", err);
+      const kind = classifyResetError(err);
+      if (kind === "rate_limit") {
+        toast.error(
+          "Too many attempts. Please wait a few minutes and try again."
+        );
+        return;
+      }
+      if (kind === "connectivity") {
+        toast.error(
+          "We couldn’t reach the server. Check your connection and try again."
+        );
+        return;
+      }
+      // Do not reveal whether the account exists — same outcome as success
     } finally {
       setLoading(false);
     }
+
+    setEmail(normalized);
+    setEmailSent(true);
+    toast.success(
+      "If an account exists for that address, we’ve sent reset instructions."
+    );
   };
 
   if (emailSent) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-oma-beige/50 to-white flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <div className="flex min-h-screen flex-col justify-center bg-gradient-to-b from-oma-beige/50 to-white py-12 sm:px-6 lg:px-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
           <div className="text-center">
-            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
-              <Mail className="h-6 w-6 text-green-600" />
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
+              <Mail className="h-6 w-6 text-green-600" aria-hidden />
             </div>
-            <h1 className="mt-6 text-center text-3xl font-canela text-oma-plum">
+            <h1 className="mt-6 text-center font-canela text-3xl text-oma-plum">
               Check your email
             </h1>
             <p className="mt-2 text-center text-sm text-oma-cocoa">
-              We've sent a password reset link to{" "}
-              <span className="font-medium">{email}</span>
+              If an account exists for{" "}
+              <span className="font-medium">{email}</span>, we&apos;ve sent
+              password reset instructions. It may take a minute to arrive.
             </p>
           </div>
         </div>
 
         <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-          <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+          <div className="bg-white px-4 py-8 shadow sm:rounded-lg sm:px-10">
             <div className="space-y-6">
               <div className="text-center">
                 <p className="text-sm text-oma-cocoa">
-                  Didn't receive the email? Check your spam folder or{" "}
+                  Didn&apos;t see anything? Check your spam folder, or{" "}
                   <button
+                    type="button"
                     onClick={() => setEmailSent(false)}
                     className="font-medium text-oma-plum hover:text-oma-plum/80"
                   >
                     try again
-                  </button>
+                  </button>{" "}
+                  with the same or another email.
                 </p>
               </div>
 
@@ -68,7 +125,7 @@ export default function ForgotPasswordPage() {
                   href="/login"
                   className="inline-flex items-center text-sm font-medium text-oma-plum hover:text-oma-plum/80"
                 >
-                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  <ArrowLeft className="mr-2 h-4 w-4" aria-hidden />
                   Back to sign in
                 </Link>
               </div>
@@ -80,40 +137,34 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-oma-beige/50 to-white flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="flex min-h-screen flex-col justify-center bg-gradient-to-b from-oma-beige/50 to-white py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h1 className="text-center text-3xl font-canela text-oma-plum">
+        <h1 className="text-center font-canela text-3xl text-oma-plum">
           Forgot your password?
         </h1>
         <p className="mt-2 text-center text-sm text-oma-cocoa">
-          Enter your email address and we'll send you a link to reset your
-          password.
+          Enter your email and we&apos;ll send you a link to reset your password
+          if an account exists for that address.
         </p>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-oma-cocoa"
-              >
+        <div className="bg-white px-4 py-8 shadow sm:rounded-lg sm:px-10">
+          <form className="space-y-6" onSubmit={handleSubmit} noValidate>
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-oma-cocoa">
                 Email address
-              </label>
-              <div className="mt-1">
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-oma-plum focus:border-oma-plum"
-                  placeholder="Enter your email address"
-                />
-              </div>
+              </Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email address"
+                className="border-oma-gold/30 focus-visible:ring-oma-plum"
+              />
             </div>
 
             <div>
@@ -122,7 +173,7 @@ export default function ForgotPasswordPage() {
                 className="w-full bg-oma-plum hover:bg-oma-plum/90"
                 disabled={loading}
               >
-                {loading ? "Sending..." : "Send reset link"}
+                {loading ? "Sending…" : "Send reset link"}
               </Button>
             </div>
           </form>
@@ -132,7 +183,7 @@ export default function ForgotPasswordPage() {
               href="/login"
               className="inline-flex items-center text-sm font-medium text-oma-plum hover:text-oma-plum/80"
             >
-              <ArrowLeft className="h-4 w-4 mr-2" />
+              <ArrowLeft className="mr-2 h-4 w-4" aria-hidden />
               Back to sign in
             </Link>
           </div>

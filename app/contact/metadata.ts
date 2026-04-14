@@ -2,21 +2,19 @@ import { Metadata } from "next";
 import { generateSEOMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = generateSEOMetadata({
-  title: "Contact Us - Get in Touch with OmaHub",
+  title: "Contact OmaHub | Support, Partnerships & Inquiries",
   description:
-    "Contact OmaHub for brand partnerships, customer support, or general inquiries. We're here to help you connect with Africa's finest fashion designers and tailors.",
+    "Reach out to the OmaHub team for partnerships, customer support, or general enquiries. Connect with Africa's leading fashion marketplace and collaborate with curated designers and brands.",
   keywords: [
     "contact OmaHub",
-    "customer service",
-    "brand partnerships",
-    "fashion platform support",
-    "African fashion",
-    "designer contact",
-    "tailor services",
+    "OmaHub support",
+    "OmaHub partnerships",
+    "customer support OmaHub",
     "business inquiries",
+    "fashion platform contact",
   ],
   url: "/contact",
-  type: "article",
+  type: "website",
   author: "OmaHub Team",
   section: "Contact",
   tags: ["contact", "support", "partnerships", "inquiries"],

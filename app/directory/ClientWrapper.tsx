@@ -1,22 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import DirectoryClient from "./DirectoryClient";
-import ErrorBoundary from "../components/ErrorBoundary";
 
 export default function ClientWrapper() {
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  if (!isClient) {
-    return null;
-  }
-
   return (
-    <ErrorBoundary>
+    <ErrorBoundary sectionName="directory">
       <DirectoryClient />
     </ErrorBoundary>
   );

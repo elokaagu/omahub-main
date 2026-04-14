@@ -9,19 +9,9 @@ import React, {
 } from "react";
 import { useAuth } from "./AuthContext";
 import { toast } from "sonner";
+import type { FavouriteItem } from "@/lib/types/favouriteItem";
 
-interface FavouriteItem {
-  id: string;
-  item_type: "brand" | "catalogue" | "product";
-  name?: string;
-  title?: string;
-  image?: string;
-  category?: string;
-  location?: string;
-  price?: string;
-  brand_id?: string;
-  created_at: string;
-}
+export type { FavouriteItem } from "@/lib/types/favouriteItem";
 
 interface FavouritesContextType {
   favourites: FavouriteItem[];

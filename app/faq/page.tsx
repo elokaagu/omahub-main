@@ -1,150 +1,118 @@
-"use client";
-
-import { useState, useEffect } from "react";
 import Link from "next/link";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { ChevronDown, ArrowLeft, ArrowRight } from "lucide-react";
+import { FAQStructuredData } from "@/components/seo/StructuredData";
+import { getPublicFaqs } from "@/lib/services/publicFaqService";
+import { faqAnswerPlainText } from "@/lib/faqAnswerRendering";
+import { FaqList } from "./FaqList";
 
-export default function FAQPage() {
-  const [openFaq, setOpenFaq] = useState<string | null>(null);
-  const [faqs, setFaqs] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [listVisible, setListVisible] = useState(false);
+export { metadata } from "./metadata";
 
-  useEffect(() => {
-    setListVisible(true);
-  }, []);
+export default async function FAQPage() {
+  const { faqs, error } = await getPublicFaqs();
 
-  useEffect(() => {
-    async function fetchFaqs() {
-      setLoading(true);
-      setError(null);
-      try {
-        const response = await fetch("/api/admin/faqs");
-        const data = await response.json();
-        if (response.ok) {
-          setFaqs((data.faqs || []).filter((faq: any) => faq.is_active));
-        } else {
-          setError(data.error || "Failed to load FAQs");
-        }
-      } catch (err: any) {
-        setError(err.message || "Failed to load FAQs");
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchFaqs();
-  }, []);
-
-  const toggleFaq = (id: string) => {
-    setOpenFaq(openFaq === id ? null : id);
-  };
+  const structuredFaqs = faqs.map((f) => ({
+    question: f.question,
+    answer: faqAnswerPlainText(f.answer),
+  }));
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-oma-cream via-white to-oma-beige">
-      <div className="max-w-4xl mx-auto px-6 pt-40 pb-24">
-        {/* Header */}
-        <div className="bg-white/80 backdrop-blur-sm border-b border-oma-gold/20 rounded-t-2xl">
-          <div className="px-6 py-6">
-            <Link
-              href="/"
-              className="inline-flex items-center gap-2 text-oma-plum hover:text-oma-plum/80 transition-colors mb-8"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Back to Home
-            </Link>
-            <h1 className="text-5xl md:text-6xl font-canela text-oma-plum mb-6">
-              Frequently Asked Questions
-            </h1>
-            <p className="text-xl text-oma-cocoa max-w-2xl mb-2">
-              Everything you need to know about OmaHub, from how to order to
-              joining as a designer.
-            </p>
-          </div>
-        </div>
+    <>
+      {structuredFaqs.length > 0 ? (
+        <FAQStructuredData faqs={structuredFaqs} />
+      ) : null}
 
-        {/* FAQ List Card */}
-        <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-oma-gold/20 overflow-hidden mt-8">
-          <div className="p-8 lg:p-12">
-            <div
-              className={`space-y-4 transition-all duration-700 ${listVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
-            >
-              {loading ? (
-                <div className="text-center text-oma-plum py-8">
-                  Loading FAQs...
-                </div>
-              ) : error ? (
-                <div className="text-center text-red-600 py-8">{error}</div>
-              ) : faqs.length === 0 ? (
-                <div className="text-center text-black/60 py-8">
-                  No FAQs found.
+      <div className="min-h-screen bg-gradient-to-br from-oma-cream via-white to-oma-beige">
+        <div className="mx-auto max-w-4xl px-6 pb-24 pt-40">
+          <div className="rounded-t-2xl border-b border-oma-gold/20 bg-white/80 backdrop-blur-sm">
+            <div className="px-6 py-6">
+              <Link
+                href="/"
+                className="mb-8 inline-flex items-center gap-2 text-oma-plum transition-colors hover:text-oma-plum/80"
+              >
+                <ArrowLeft className="h-4 w-4" aria-hidden />
+                Back to Home
+              </Link>
+              <h1 className="mb-6 font-canela text-5xl text-oma-plum md:text-6xl">
+                Frequently Asked Questions
+              </h1>
+              <p className="mb-2 max-w-2xl text-xl text-oma-cocoa">
+                Everything you need to know about OmaHub, from how to order to
+                joining as a designer.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-8 overflow-hidden rounded-2xl border border-oma-gold/20 bg-white/90 shadow-xl backdrop-blur-sm">
+            <div className="p-8 lg:p-12">
+              {error ? (
+                <div
+                  className="rounded-xl border border-red-200 bg-red-50/90 px-6 py-10 text-center"
+                  role="alert"
+                >
+                  <p className="font-canela text-lg text-red-800">
+                    We couldn&apos;t load FAQs right now
+                  </p>
+                  <p className="mt-2 text-sm text-red-700/90">
+                    Please refresh the page or reach out via contact—we&apos;re
+                    happy to help.
+                  </p>
+                  <div className="mt-6 flex flex-wrap justify-center gap-3">
+                    <Button
+                      asChild
+                      variant="outline"
+                      className="border-oma-plum text-oma-plum hover:bg-oma-plum/10"
+                    >
+                      <Link href="/faq">Try again</Link>
+                    </Button>
+                    <Button
+                      asChild
+                      className="bg-oma-plum text-white hover:bg-oma-plum/90"
+                    >
+                      <Link href="/contact">Contact us</Link>
+                    </Button>
+                  </div>
                 </div>
               ) : (
-                faqs.map((faq) => (
-                  <Collapsible
-                    key={faq.id}
-                    open={openFaq === faq.id}
-                    onOpenChange={() => toggleFaq(faq.id)}
-                  >
-                    <CollapsibleTrigger className="w-full flex items-center justify-between p-6 bg-white/80 backdrop-blur-sm rounded-xl border border-oma-plum/20 hover:border-oma-plum/40 transition-all duration-300 group focus:shadow-lg hover:shadow-lg">
-                      <h3 className="text-lg font-canela font-semibold text-oma-plum text-left pr-4">
-                        {faq.question}
-                      </h3>
-                      <ChevronDown
-                        className={`w-5 h-5 text-oma-plum transition-transform duration-500 ease-cubic-bezier[.4,0,.2,1] ${openFaq === faq.id ? "rotate-180" : "rotate-0"}`}
-                      />
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="px-6 pb-6 transition-all duration-700 ease-cubic-bezier[.4,0,.2,1]">
-                      <div className="markdown-content pt-4 text-oma-cocoa font-source leading-relaxed">
-                        {faq.answer}
-                      </div>
-                    </CollapsibleContent>
-                  </Collapsible>
-                ))
+                <FaqList faqs={faqs} />
               )}
             </div>
           </div>
-        </div>
 
-        {/* CTA Section */}
-        <div className="text-center mt-16 pt-12 border-t border-oma-plum/20">
-          <h2 className="text-2xl font-canela text-black mb-4">
-            Still have questions?
-          </h2>
-          <p className="text-black/70 mb-8">
-            Can't find what you're looking for? We're here to help.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button
-              asChild
-              size="lg"
-              className="bg-oma-plum hover:bg-oma-plum/90 text-white px-8 py-4 text-lg group"
-            >
-              <Link href="/contact" className="flex items-center gap-3">
-                Contact Support
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </Link>
-            </Button>
-            <Button
-              asChild
-              variant="outline"
-              size="lg"
-              className="border-oma-plum text-oma-plum hover:bg-oma-plum/10 px-8 py-4 text-lg group"
-            >
-              <Link href="/directory" className="flex items-center gap-3">
-                Explore Designers
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </Link>
-            </Button>
+          <div className="mt-16 border-t border-oma-plum/20 pt-12 text-center">
+            <h2 className="mb-4 font-canela text-2xl text-black">
+              Still have questions?
+            </h2>
+            <p className="mb-8 text-black/70">
+              Can&apos;t find what you&apos;re looking for? We&apos;re here to
+              help.
+            </p>
+            <div className="flex flex-col justify-center gap-4 sm:flex-row">
+              <Button
+                asChild
+                size="lg"
+                className="group bg-oma-plum px-8 py-4 text-lg text-white hover:bg-oma-plum/90"
+              >
+                <Link href="/contact" className="flex items-center gap-3">
+                  Contact Support
+                  <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+                </Link>
+              </Button>
+              <Button
+                asChild
+                variant="outline"
+                size="lg"
+                className="border-oma-plum px-8 py-4 text-lg text-oma-plum hover:bg-oma-plum/10"
+              >
+                <Link href="/directory" className="flex items-center gap-3">
+                  Explore Designers
+                  <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+                </Link>
+              </Button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
