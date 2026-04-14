@@ -81,10 +81,8 @@ export async function signIn(email: string, password: string) {
     }
 
     // Server sets Supabase auth cookies; response is a minimal payload (no raw session).
-    if (data.refreshSession) {
-      window.location.reload();
-    }
-
+    // Callers (e.g. `/login`) perform a full navigation so `session_refresh` and layout
+    // auth state stay in sync; modals call `refreshUserProfile()` after `signIn()`.
     return data;
   } catch (error) {
     console.error("Error signing in:", error);

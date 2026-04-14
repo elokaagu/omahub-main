@@ -187,6 +187,7 @@ export async function POST(request: NextRequest) {
     const res = NextResponse.json({
       success: true,
       id: application.id,
+      applicationId: application.id,
       message:
         "Application submitted successfully! We'll review your portfolio and get back to you within 5-7 business days.",
     });
