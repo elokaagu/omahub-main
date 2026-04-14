@@ -109,8 +109,49 @@ export async function getAllSpotlightContent(): Promise<SpotlightContent[]> {
 }
 
 /**
- * Get spotlight content by ID
+ * Find active spotlight video for a brand by name (case-insensitive).
+ * Fetches at most 40 recent active rows with video, then matches in memory.
  */
+export async function getSpotlightVideoForBrandName(
+  brandName: string
+): Promise<{ url: string; thumbnail?: string } | null> {
+  const trimmed = brandName.trim();
+  if (!trimmed || !supabase) {
+    return null;
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from("spotlight_content")
+      .select("video_url, video_thumbnail, brand_name")
+      .eq("is_active", true)
+      .not("video_url", "is", null)
+      .order("created_at", { ascending: false })
+      .limit(40);
+
+    if (error) {
+      console.error("getSpotlightVideoForBrandName:", error.message);
+      return null;
+    }
+
+    const lower = trimmed.toLowerCase();
+    const row = (data ?? []).find(
+      (s) => s.brand_name?.toLowerCase() === lower && s.video_url
+    );
+
+    if (!row?.video_url) return null;
+
+    return {
+      url: row.video_url,
+      thumbnail: row.video_thumbnail ?? undefined,
+    };
+  } catch (e) {
+    console.error("getSpotlightVideoForBrandName:", e);
+    return null;
+  }
+}
+
+/** Get spotlight content by ID (e.g. studio editor). */
 export async function getSpotlightContent(
   id: string
 ): Promise<SpotlightContent | null> {

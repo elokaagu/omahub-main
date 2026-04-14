@@ -1,89 +1,95 @@
-"use client";
-
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { getActiveLegalDocument } from "@/lib/legal/getActiveLegalDocument";
+import { formatLegalEffectiveDate } from "@/lib/legal/formatLegalEffectiveDate";
 
-export default function PrivacyPolicyPage() {
-  const [doc, setDoc] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export { metadata } from "./metadata";
 
-  useEffect(() => {
-    async function fetchDoc() {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await fetch("/api/legal-documents?type=privacy_policy");
-        const data = await res.json();
-        if (res.ok && data.documents) {
-          const active = data.documents.find((d: any) => d.is_active);
-          setDoc(active || null);
-        } else {
-          setError(data.error || "Failed to load document");
-        }
-      } catch (err: any) {
-        setError(err.message || "Failed to load document");
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchDoc();
-  }, []);
+const SUPPORT_EMAIL = "info@oma-hub.com";
+const SUPPORT_MAILTO = `mailto:${SUPPORT_EMAIL}?subject=Privacy%20policy%20request`;
+
+export default async function PrivacyPolicyPage() {
+  const result = await getActiveLegalDocument("privacy_policy");
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-oma-cream via-white to-oma-beige">
-      {/* Header */}
-      <div className="bg-white/80 backdrop-blur-sm border-b border-oma-gold/20 rounded-t-2xl">
-        <div className="max-w-4xl mx-auto px-6 py-6">
-          <Link href="/">
-            <Button
-              variant="ghost"
-              className="mb-4 hover:bg-oma-beige/50 text-oma-plum"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
+      <header className="border-b border-oma-gold/20 bg-white/80 backdrop-blur-sm">
+        <div className="mx-auto max-w-4xl px-6 py-6">
+          <Button
+            variant="ghost"
+            className="mb-4 text-oma-plum hover:bg-oma-beige/50"
+            asChild
+          >
+            <Link href="/">
+              <ArrowLeft className="mr-2 h-4 w-4" />
               Back to Home
-            </Button>
-          </Link>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-oma-plum/10 rounded-lg">
-              <Shield className="h-6 w-6 text-oma-plum" />
+            </Link>
+          </Button>
+          <div className="mb-2 flex items-center gap-3">
+            <div className="rounded-lg bg-oma-plum/10 p-2">
+              <Shield className="h-6 w-6 text-oma-plum" aria-hidden />
             </div>
             <h1 className="heading-lg text-oma-plum">Privacy Policy</h1>
           </div>
-          {doc && (
-            <div className="flex items-center gap-4 text-sm text-oma-cocoa">
-              <span className="bg-oma-beige px-3 py-1 rounded-full">
-                Version {doc.version}
+          {result.status !== "error" && (
+            <div className="flex flex-wrap items-center gap-4 text-sm text-oma-cocoa">
+              <span className="rounded-full bg-oma-beige px-3 py-1">
+                Version {result.doc.version}
               </span>
               <span>
-                Effective {new Date(doc.effective_date).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
+                Effective{" "}
+                {formatLegalEffectiveDate(result.doc.effective_date)}
               </span>
             </div>
           )}
         </div>
-      </div>
+      </header>
 
-      {/* Content */}
-      <div className="max-w-4xl mx-auto px-6 lg:px-8 py-12">
-        <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-oma-gold/20 overflow-hidden">
+      <div className="mx-auto max-w-4xl px-6 py-12 lg:px-8">
+        <div className="overflow-hidden rounded-2xl border border-oma-gold/20 bg-white/90 shadow-xl backdrop-blur-sm">
           <div className="p-8 lg:p-12">
-            {loading ? (
-              <div className="text-center text-oma-plum py-8">
-                Loading Privacy Policy...
+            {result.status === "error" ? (
+              <div className="space-y-4 text-center text-oma-cocoa">
+                <p className="text-red-700">{result.message}</p>
+                <p className="text-sm">
+                  You can request a copy of our privacy policy by email. We
+                  will respond as soon as we can.
+                </p>
+                <p>
+                  <a
+                    href={SUPPORT_MAILTO}
+                    className="font-medium text-oma-plum underline-offset-4 hover:underline"
+                  >
+                    {SUPPORT_EMAIL}
+                  </a>
+                </p>
               </div>
-            ) : error ? (
-              <div className="text-center text-red-600 py-8">{error}</div>
-            ) : doc ? (
-              <div
-                className="markdown-content"
-                dangerouslySetInnerHTML={{ __html: doc.content }}
-              />
             ) : (
-              <div className="text-center text-black/60 py-8">
-                No Privacy Policy found.
-              </div>
+              <>
+                {result.status === "fallback" && result.notice && (
+                  <p
+                    className="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+                    role="status"
+                  >
+                    {result.notice}
+                  </p>
+                )}
+                <div
+                  className="markdown-content"
+                  dangerouslySetInnerHTML={{ __html: result.doc.contentHtml }}
+                />
+                <p className="mt-10 border-t border-oma-gold/20 pt-6 text-center text-sm text-oma-cocoa/90">
+                  Questions about this policy?{" "}
+                  <a
+                    href={SUPPORT_MAILTO}
+                    className="font-medium text-oma-plum underline-offset-4 hover:underline"
+                  >
+                    Contact {SUPPORT_EMAIL}
+                  </a>
+                  .
+                </p>
+              </>
             )}
           </div>
         </div>

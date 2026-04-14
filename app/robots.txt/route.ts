@@ -1,10 +1,16 @@
 import { NextResponse } from "next/server";
 
+/**
+ * Robots.txt is a blocklist: everything is allowed unless Disallow matches.
+ * We do not use Allow: (except for rare overrides); omitting paths implies crawlable.
+ *
+ * `Disallow: /*?*` reduces duplicate/filter URLs; ensure important URLs in sitemap
+ * are canonical (no query) or accept that those query variants won’t be crawled.
+ */
 export async function GET() {
   const robotsTxt = `User-agent: *
-Allow: /
 
-# Disallow admin and private areas
+# Private, auth, and non-indexable areas
 Disallow: /studio/
 Disallow: /api/
 Disallow: /auth/
@@ -12,26 +18,17 @@ Disallow: /admin/
 Disallow: /offline/
 Disallow: /test-contact-form/
 
-# Allow important pages
-Allow: /brand/
-Allow: /product/
-Allow: /collection/
-Allow: /tailor/
-Allow: /directory/
-Allow: /collections/
-Allow: /tailors/
+# Limit duplicate / filtered listings via query strings (crawl budget)
+Disallow: /*?*
 
-# Sitemap location
 Sitemap: https://www.oma-hub.com/sitemap.xml
-
-# Crawl delay (optional)
-Crawl-delay: 1`;
+`;
 
   return new NextResponse(robotsTxt, {
     status: 200,
     headers: {
-      "Content-Type": "text/plain",
-      "Cache-Control": "public, max-age=86400", // Cache for 24 hours
+      "Content-Type": "text/plain; charset=utf-8",
+      "Cache-Control": "public, max-age=86400",
     },
   });
 }

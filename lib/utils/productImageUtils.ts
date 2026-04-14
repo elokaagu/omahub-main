@@ -1,4 +1,5 @@
 import { Product } from "@/lib/supabase";
+import { isImageLikeUrl } from "@/lib/product/mediaUrl";
 
 /**
  * Normalize product images to ensure the first image from the images array
@@ -38,6 +39,33 @@ export function getProductMainImage(product: Product): string {
 
   // Fallback to the main image field
   return product.image || "";
+}
+
+/**
+ * Image URL for Open Graph / Twitter cards: same priority as gallery stills,
+ * then a non-video video thumbnail, then site default.
+ */
+/** Ordered list of still images for the product gallery (matches main-image priority). */
+export function getProductGalleryImageList(product: Product): string[] {
+  if (product.images && product.images.length > 0) {
+    return product.images;
+  }
+  if (product.image) {
+    return [product.image];
+  }
+  return [];
+}
+
+export function getProductOgImageUrl(product: Product): string {
+  const main = getProductMainImage(product);
+  if (main && isImageLikeUrl(main)) {
+    return main;
+  }
+  const thumb = product.video_thumbnail;
+  if (thumb && isImageLikeUrl(thumb)) {
+    return thumb;
+  }
+  return "/OmaHubBanner.png";
 }
 
 /**

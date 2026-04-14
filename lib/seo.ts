@@ -34,7 +34,7 @@ export function generateSEOMetadata(config: SEOConfig): Metadata {
     section,
     tags = [],
     price,
-    currency = "USD",
+    currency,
     availability = "in stock",
     brand,
     category,

@@ -1,61 +1,83 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getProductById } from "@/lib/services/productService";
-import { getBrandById } from "@/lib/services/brandService";
+import type { Product } from "@/lib/supabase";
 import { generateSEOMetadata } from "@/lib/seo";
+import { getCachedProductWithBrand } from "@/lib/product/getProductWithBrandCached";
+import { getProductOgImageUrl } from "@/lib/utils/productImageUtils";
 import ClientProductPage from "./ClientProductPage";
 
 interface ProductPageProps {
   params: { id: string };
 }
 
+function metaKeywords(
+  product: Product,
+  brandName: string,
+  brandLocation: string | null | undefined
+): string[] {
+  const materials = Array.isArray(product.materials) ? product.materials : [];
+  const colors = Array.isArray(product.colors) ? product.colors : [];
+
+  return [
+    product.title.toLowerCase(),
+    product.category?.toLowerCase() || "",
+    brandName.toLowerCase(),
+    (brandLocation ?? "").toLowerCase(),
+    "fashion",
+    "premium",
+    "designer",
+    "clothing",
+    ...materials.map((m) => String(m).toLowerCase()),
+    ...colors.map((c) => String(c).toLowerCase()),
+  ].filter(Boolean);
+}
+
 export async function generateMetadata({
   params,
 }: ProductPageProps): Promise<Metadata> {
   try {
-    const product = await getProductById(params.id);
+    const data = await getCachedProductWithBrand(params.id);
 
-    if (!product) {
+    if (!data) {
       return {
         title: "Product Not Found | OmaHub",
         description: "The product you're looking for could not be found.",
       };
     }
 
-    const brand = product.brand_id
-      ? await getBrandById(product.brand_id)
-      : null;
+    const { product, brand } = data;
 
     const description =
       product.description ||
-      `Discover ${product.title}${brand ? ` by ${brand.name}` : ""}. ${product.category ? `Premium ${product.category.toLowerCase()} ` : ""}available on OmaHub.`;
+      `Discover ${product.title} by ${brand.name}. ${product.category ? `Premium ${product.category.toLowerCase()} ` : ""}available on OmaHub.`;
 
-    const images = Array.isArray(product.images) ? product.images : [];
-    const mainImage = images.length > 0 ? images[0] : "/OmaHubBanner.png";
+    const mainImage = getProductOgImageUrl(product);
+
+    const currency =
+      (product.currency && String(product.currency).trim()) ||
+      (brand.currency && String(brand.currency).trim()) ||
+      "";
+
+    const displayPrice =
+      product.sale_price != null ? product.sale_price : product.price;
+    const hasVerifiedOffer =
+      currency !== "" &&
+      typeof displayPrice === "number" &&
+      !Number.isNaN(displayPrice);
 
     return generateSEOMetadata({
-      title: `${product.title}${brand ? ` - ${brand.name}` : ""} | Premium Fashion`,
-      description: description,
-      keywords: [
-        product.title.toLowerCase(),
-        product.category?.toLowerCase() || "",
-        brand?.name.toLowerCase() || "",
-        brand?.location?.toLowerCase() || "",
-        "fashion",
-        "premium",
-        "designer",
-        "clothing",
-        ...(product.materials || []).map((m) => m.toLowerCase()),
-        ...(product.colors || []).map((c) => c.toLowerCase()),
-      ].filter(Boolean),
+      title: `${product.title} - ${brand.name} | Premium Fashion`,
+      description,
+      keywords: metaKeywords(product, brand.name, brand.location),
       url: `/product/${params.id}`,
       type: "product",
       image: mainImage,
-      author: brand?.name,
-      brand: brand?.name,
+      author: brand.name,
+      brand: brand.name,
       category: product.category,
-      price: product.price,
-      currency: product.currency || brand?.currency || "USD",
+      ...(hasVerifiedOffer
+        ? { price: displayPrice, currency }
+        : {}),
       availability: product.in_stock ? "in stock" : "out of stock",
     });
   } catch (error) {
@@ -69,15 +91,21 @@ export async function generateMetadata({
 
 export default async function ProductPage({ params }: ProductPageProps) {
   try {
-    const product = await getProductById(params.id);
+    const data = await getCachedProductWithBrand(params.id);
 
-    if (!product) {
+    if (!data) {
       notFound();
     }
 
-    return <ClientProductPage productId={params.id} />;
+    return (
+      <ClientProductPage
+        productId={params.id}
+        initialProduct={data.product}
+        initialBrand={data.brand}
+      />
+    );
   } catch (error) {
-    console.error("Error loading product page:", error);
+    console.error("Error loading product page (treating as not found):", error);
     notFound();
   }
 }
