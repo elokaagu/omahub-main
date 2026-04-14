@@ -17,10 +17,7 @@ type InquiryBreakdownRow = {
   status: string | null;
 };
 
-function applyBrandScope<T extends { in: (column: string, values: string[]) => T }>(
-  query: T,
-  profile: { role: string; owned_brands?: string[] | null }
-): T {
+function applyBrandScope(query: any, profile: { role: string; owned_brands?: string[] | null }) {
   if (profile.role === "brand_admin") {
     return query.in("brand_id", profile.owned_brands ?? []);
   }
@@ -35,6 +32,8 @@ export async function GET() {
     }
 
     const { userId, profile, supabase } = auth;
+    // Narrow typing: PostgREST builder generics hit TS2589 on chained .from().select() here.
+    const db = supabase as any;
 
     // Use the database function to get stats
     const { data: stats, error: statsError } = await supabase.rpc(
@@ -71,7 +70,7 @@ export async function GET() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const todayQuery = applyBrandScope(
-      supabase
+      db
         .from("inquiries")
         .select("id", { count: "exact", head: true })
         .gte("created_at", today.toISOString()),
@@ -91,7 +90,7 @@ export async function GET() {
     weekStart.setDate(weekStart.getDate() - weekStart.getDay());
     weekStart.setHours(0, 0, 0, 0);
     const weekQuery = applyBrandScope(
-      supabase
+      db
         .from("inquiries")
         .select("id", { count: "exact", head: true })
         .gte("created_at", weekStart.toISOString()),
@@ -108,7 +107,7 @@ export async function GET() {
 
     // Get breakdown by type, priority, and status
     const detailQuery = applyBrandScope(
-      supabase.from("inquiries").select("inquiry_type, priority, status"),
+      db.from("inquiries").select("inquiry_type, priority, status"),
       profile
     );
 
