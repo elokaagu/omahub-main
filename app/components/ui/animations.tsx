@@ -1,15 +1,20 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
+import type { Transition } from "framer-motion";
 import type { ReactNode } from "react";
 
 /** `useReducedMotion()` can be `null` until the client has resolved the preference. */
-function instantIfReduced(
-  reduce: boolean | null,
-  transition: Record<string, unknown>
-) {
+function instantIfReduced(reduce: boolean | null, transition: Transition) {
   return reduce === true ? { duration: 0 } : transition;
 }
+
+type MotionWrapperProps = {
+  children: ReactNode;
+  delay?: number;
+  duration?: number;
+  className?: string;
+};
 
 // Basic page transition
 export function PageFade({ children }: { children: ReactNode }) {
@@ -32,12 +37,7 @@ export function FadeIn({
   delay = 0,
   duration = 0.5,
   className = "",
-}: {
-  children: ReactNode;
-  delay?: number;
-  duration?: number;
-  className?: string;
-}) {
+}: MotionWrapperProps) {
   const reduce = useReducedMotion();
   return (
     <motion.div
@@ -57,12 +57,7 @@ export function SlideUp({
   delay = 0,
   duration = 0.5,
   className = "",
-}: {
-  children: ReactNode;
-  delay?: number;
-  duration?: number;
-  className?: string;
-}) {
+}: MotionWrapperProps) {
   const reduce = useReducedMotion();
   return (
     <motion.div
@@ -82,12 +77,7 @@ export function ScaleIn({
   delay = 0,
   duration = 0.5,
   className = "",
-}: {
-  children: ReactNode;
-  delay?: number;
-  duration?: number;
-  className?: string;
-}) {
+}: MotionWrapperProps) {
   const reduce = useReducedMotion();
   return (
     <motion.div
@@ -114,13 +104,17 @@ export function StaggerContainer({
   className?: string;
 }) {
   const reduce = useReducedMotion();
+  if (reduce === true) {
+    return <div className={className}>{children}</div>;
+  }
+
   const container = {
-    hidden: { opacity: reduce ? 1 : 0 },
+    hidden: { opacity: 0 },
     show: {
       opacity: 1,
       transition: {
-        staggerChildren: reduce ? 0 : staggerDelay,
-        delayChildren: reduce ? 0 : delay,
+        staggerChildren: staggerDelay,
+        delayChildren: delay,
       },
     },
   };
@@ -149,8 +143,12 @@ export function StaggerItem({
   className?: string;
 }) {
   const reduce = useReducedMotion();
+  if (reduce === true) {
+    return <div className={className}>{children}</div>;
+  }
+
   const item = {
-    hidden: { opacity: reduce ? 1 : 0, y: reduce ? 0 : 20 },
+    hidden: { opacity: 0, y: 20 },
     show: {
       opacity: 1,
       y: 0,

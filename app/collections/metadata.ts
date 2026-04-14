@@ -2,24 +2,26 @@ import { Metadata } from "next";
 import { generateSEOMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = generateSEOMetadata({
-  title: "Fashion Collections - Curated Premium Collections",
+  title: "OmaHub Collections — Discover Africa's Next Generation of Designers",
   description:
-    "Explore curated fashion collections from Africa's finest designers. Discover seasonal collections, limited editions, and exclusive pieces from verified premium brands.",
+    "Explore curated collections from emerging and established African designers. Seasonal edits, limited drops, and pieces from verified studios you won't find on generic marketplaces.",
   keywords: [
+    "OmaHub",
+    "African designers",
     "fashion collections",
-    "curated collections",
-    "premium fashion",
-    "African fashion collections",
-    "seasonal fashion",
-    "limited edition",
-    "exclusive fashion",
-    "designer collections",
-    "luxury collections",
-    "contemporary fashion",
+    "curated fashion",
+    "emerging designers",
+    "bespoke fashion",
   ],
   url: "/collections",
   type: "website",
   author: "OmaHub",
   section: "Collections",
-  tags: ["collections", "fashion", "curated", "premium", "exclusive"],
+  tags: [
+    "OmaHub",
+    "African fashion",
+    "designer collections",
+    "curated",
+    "discovery",
+  ],
 });
