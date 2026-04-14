@@ -7,6 +7,7 @@ import { LazyImage } from "@/components/ui/lazy-image";
 import { ShoppingBag } from "lucide-react";
 import { getProductMainImage } from "@/lib/utils/productImageUtils";
 import { formatProductPrice } from "@/lib/utils/priceFormatter";
+import type { Product } from "@/lib/supabase";
 import type { BrandProfileData, BrandProduct } from "./types";
 
 interface BrandProductsSectionProps {
@@ -60,7 +61,10 @@ export function BrandProductsSection({
               >
                 <div className="aspect-square relative overflow-hidden">
                   <LazyImage
-                    src={getProductMainImage(product) || "/placeholder.png"}
+                    src={
+                      getProductMainImage(product as Product) ||
+                      "/placeholder.png"
+                    }
                     alt={(product.title as string) || "Product"}
                     fill
                     className="object-cover group-hover:scale-105 transition-transform duration-300"

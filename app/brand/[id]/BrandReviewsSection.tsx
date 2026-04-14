@@ -41,7 +41,7 @@ export function BrandReviewsSection({
         <h2 className="text-2xl sm:text-3xl font-canela font-normal">
           Customer Reviews
         </h2>
-        {user && !showReviewForm && (
+        {Boolean(user) && !showReviewForm && (
           <Button
             onClick={onShowReviewForm}
             className="bg-oma-plum hover:bg-oma-plum/90 text-white w-full sm:w-auto min-h-[44px] text-sm sm:text-base"
@@ -49,7 +49,7 @@ export function BrandReviewsSection({
             Write a Review
           </Button>
         )}
-        {!user && (
+        {!Boolean(user) && (
           <div className="text-center sm:text-right">
             <p className="text-sm text-oma-cocoa mb-2">Sign in to write a review</p>
             <Link href="/login">
@@ -64,7 +64,7 @@ export function BrandReviewsSection({
         )}
       </div>
 
-      {showReviewForm && user && (
+      {showReviewForm && Boolean(user) && (
         <div className="mb-8">
           <ReviewForm
             brandId={brandId}
