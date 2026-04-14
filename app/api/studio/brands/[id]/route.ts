@@ -3,17 +3,111 @@ import { createServerSupabaseClient } from "@/lib/supabase-unified";
 import { syncProductCurrencies } from "@/lib/utils/currencySync";
 import { clearBrandsCache } from "@/lib/services/brandService";
 
+const BRAND_SELECT_FIELDS = [
+  "id",
+  "name",
+  "description",
+  "long_description",
+  "location",
+  "price_range",
+  "currency",
+  "category",
+  "categories",
+  "image",
+  "website",
+  "instagram",
+  "whatsapp",
+  "founded_year",
+  "is_verified",
+  "contact_email",
+  "updated_at",
+  "created_at",
+].join(", ");
+
+const ALLOWED_UPDATE_FIELDS = new Set([
+  "name",
+  "description",
+  "long_description",
+  "location",
+  "price_range",
+  "currency",
+  "category",
+  "categories",
+  "image",
+  "website",
+  "instagram",
+  "whatsapp",
+  "founded_year",
+]);
+
+type ProfileAccess = {
+  role: string | null;
+  owned_brands: string[] | null;
+};
+
+type AuthzResult =
+  | { ok: true }
+  | { ok: false; response: NextResponse };
+
+async function requireBrandAccess(
+  supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>,
+  brandId: string
+): Promise<AuthzResult> {
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user?.id) {
+    return {
+      ok: false,
+      response: NextResponse.json({ error: "Not authenticated" }, { status: 401 }),
+    };
+  }
+
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("role, owned_brands")
+    .eq("id", user.id)
+    .single();
+
+  if (profileError || !profile) {
+    return {
+      ok: false,
+      response: NextResponse.json(
+        { error: "Unable to resolve user permissions" },
+        { status: 403 }
+      ),
+    };
+  }
+
+  const typedProfile = profile as ProfileAccess;
+  const isAdmin = ["admin", "super_admin"].includes(typedProfile.role ?? "");
+  const isBrandOwner = (typedProfile.owned_brands ?? []).includes(brandId);
+  if (!isAdmin && !isBrandOwner) {
+    return {
+      ok: false,
+      response: NextResponse.json({ error: "Insufficient permissions" }, { status: 403 }),
+    };
+  }
+
+  return { ok: true };
+}
+
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
     const supabase = await createServerSupabaseClient();
     const brandId = params.id;
 
+    const authz = await requireBrandAccess(supabase, brandId);
+    if (!authz.ok) return authz.response;
+
     const { data: brand, error } = await supabase
       .from("brands")
-      .select("*")
+      .select(BRAND_SELECT_FIELDS)
       .eq("id", brandId)
       .single();
 
@@ -35,104 +129,29 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    console.log("🔄 Brand update request received for ID:", params.id);
-
     const supabase = await createServerSupabaseClient();
     const brandId = params.id;
 
-    // Get the current user with enhanced error handling
-    console.log("🔍 Checking user authentication...");
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-    console.log("👤 Authentication result:", {
-      hasUser: !!user,
-      userId: user?.id,
-      userEmail: user?.email,
-      error: userError?.message,
-    });
-
-    if (userError) {
-      console.log("❌ Authentication error:", userError.message);
-      return NextResponse.json(
-        { error: "Authentication failed", details: userError.message },
-        { status: 401 }
-      );
-    }
-
-    if (!user) {
-      console.log("❌ No user session found");
-      return NextResponse.json(
-        { error: "No active session. Please log in first." },
-        { status: 401 }
-      );
-    }
-
-    // Check if user has permission to update this brand
-    console.log("🔍 Checking user permissions...");
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("role, owned_brands")
-      .eq("id", user.id)
-      .single();
-
-    console.log("👤 Profile result:", {
-      hasProfile: !!profile,
-      role: profile?.role,
-      ownedBrands: profile?.owned_brands,
-      error: profileError?.message,
-    });
-
-    if (profileError) {
-      console.log("❌ Profile fetch error:", profileError.message);
-      return NextResponse.json(
-        {
-          error: "Failed to fetch user profile",
-          details: profileError.message,
-        },
-        { status: 500 }
-      );
-    }
-
-    if (!profile) {
-      console.log("❌ User profile not found");
-      return NextResponse.json(
-        { error: "User profile not found. Please contact support." },
-        { status: 404 }
-      );
-    }
-
-    const isAdmin = ["admin", "super_admin"].includes(profile.role);
-    const isBrandOwner = profile.owned_brands?.includes(brandId);
-
-    console.log("🔐 Permission check:", {
-      isAdmin,
-      isBrandOwner,
-      brandId,
-      userRole: profile.role,
-      ownedBrands: profile.owned_brands,
-    });
-
-    if (!isAdmin && !isBrandOwner) {
-      console.log("❌ Insufficient permissions");
-      return NextResponse.json(
-        {
-          error: "Insufficient permissions to update this brand",
-          userRole: profile.role,
-          requiredRole: "admin, super_admin, or brand owner",
-        },
-        { status: 403 }
-      );
-    }
+    const authz = await requireBrandAccess(supabase, brandId);
+    if (!authz.ok) return authz.response;
 
     // Get the update data
-    const updateData = await request.json();
-    console.log("📝 Update data received:", Object.keys(updateData));
+    const updateData = await request.json().catch(() => null);
+    if (!updateData || typeof updateData !== "object" || Array.isArray(updateData)) {
+      return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+    }
+
+    const updateKeys = Object.keys(updateData);
+    const invalidKeys = updateKeys.filter((key) => !ALLOWED_UPDATE_FIELDS.has(key));
+    if (invalidKeys.length > 0) {
+      return NextResponse.json(
+        { error: "Request contains unsupported fields" },
+        { status: 400 }
+      );
+    }
 
     // Validate brand name length if it's being updated
-    if (updateData.name && updateData.name.length > 50) {
+    if (typeof updateData.name === "string" && updateData.name.length > 50) {
       return NextResponse.json(
         { error: "Brand name must be 50 characters or less" },
         { status: 400 }
@@ -140,15 +159,30 @@ export async function PUT(
     }
 
     // Validate description length if it's being updated
-    if (updateData.description && updateData.description.length > 150) {
+    if (
+      typeof updateData.description === "string" &&
+      updateData.description.length > 150
+    ) {
       return NextResponse.json(
         { error: "Brand description must be 150 characters or less" },
         { status: 400 }
       );
     }
 
+    if (
+      updateData.categories !== undefined &&
+      !(
+        Array.isArray(updateData.categories) &&
+        updateData.categories.every((item: unknown) => typeof item === "string")
+      )
+    ) {
+      return NextResponse.json(
+        { error: "Categories must be an array of strings" },
+        { status: 400 }
+      );
+    }
+
     // Get the current brand data to check if name or currency is changing
-    console.log("🔍 Fetching current brand data...");
     const { data: currentBrand, error: fetchError } = await supabase
       .from("brands")
       .select("name, currency")
@@ -156,18 +190,11 @@ export async function PUT(
       .single();
 
     if (fetchError) {
-      console.log("❌ Brand not found:", fetchError.message);
       return NextResponse.json({ error: "Brand not found" }, { status: 404 });
     }
 
     const isNameChanging =
       updateData.name && updateData.name !== currentBrand.name;
-
-    console.log("📊 Brand name changing:", isNameChanging);
-
-    // Update the brand
-    console.log("💾 Updating brand in database...");
-    console.log("📝 Full update data:", updateData);
 
     // Filter out undefined/null values to avoid overwriting with null
     const cleanUpdateData = Object.fromEntries(
@@ -176,8 +203,6 @@ export async function PUT(
       )
     );
 
-    console.log("🧹 Cleaned update data:", cleanUpdateData);
-
     const { data: updatedBrand, error: updateError } = await supabase
       .from("brands")
       .update({
@@ -185,29 +210,19 @@ export async function PUT(
         updated_at: new Date().toISOString(),
       })
       .eq("id", brandId)
-      .select()
+      .select(BRAND_SELECT_FIELDS)
       .single();
 
     if (updateError) {
-      console.error("❌ Error updating brand:", updateError);
-      console.error("❌ Update error details:", {
-        code: updateError.code,
-        message: updateError.message,
-        details: updateError.details,
-        hint: updateError.hint,
-      });
+      console.error("❌ Error updating brand:", updateError.code);
       return NextResponse.json(
-        { error: "Failed to update brand", details: updateError.message },
+        { error: "Failed to update brand" },
         { status: 500 }
       );
     }
 
-    console.log("✅ Brand updated successfully");
-
     // If an image was updated, also update the brand_images table
     if (updateData.image) {
-      console.log("🖼️ Image updated, syncing brand_images table...");
-
       try {
         // Extract storage path from the image URL
         const imageUrl = updateData.image;
@@ -220,8 +235,6 @@ export async function PUT(
           )[1];
         }
 
-        console.log("📁 Extracted storage path:", storagePath);
-
         // First, delete any existing brand_images entries for this brand
         const { error: deleteError } = await supabase
           .from("brand_images")
@@ -233,8 +246,6 @@ export async function PUT(
             "⚠️ Warning: Failed to delete existing brand_images:",
             deleteError
           );
-        } else {
-          console.log("✅ Existing brand_images entries deleted");
         }
 
         // Then insert the new entry
@@ -253,11 +264,7 @@ export async function PUT(
             "⚠️ Warning: Failed to insert new brand_image:",
             insertError
           );
-        } else {
-          console.log("✅ New brand_image entry created:", newBrandImage);
         }
-
-        console.log("✅ Brand_images table synchronized");
       } catch (imageSyncError) {
         console.warn("⚠️ Warning: Image sync failed:", imageSyncError);
         // Don't fail the entire operation for this
@@ -266,20 +273,12 @@ export async function PUT(
 
     // If the brand currency changed, sync product currencies
     if (updateData.currency && updateData.currency !== currentBrand.currency) {
-      console.log(
-        `🔄 Brand currency changed to ${updateData.currency}, syncing product currencies...`
-      );
-
       try {
         const syncResult = await syncProductCurrencies(
           brandId,
           updateData.currency
         );
-        if (syncResult.success) {
-          console.log(
-            `✅ Successfully synced ${syncResult.updatedCount} products to currency ${updateData.currency}`
-          );
-        } else {
+        if (!syncResult.success) {
           console.warn(
             `⚠️ Warning: Product currency sync failed: ${syncResult.error}`
           );
@@ -293,10 +292,6 @@ export async function PUT(
 
     // If the brand name changed, update related tables
     if (isNameChanging) {
-      console.log(
-        `🔄 Brand name changed from "${currentBrand.name}" to "${updateData.name}"`
-      );
-
       // Update spotlight content that references this brand by name
       const { error: spotlightError } = await supabase
         .from("spotlight_content")
@@ -306,23 +301,17 @@ export async function PUT(
       if (spotlightError) {
         console.warn("⚠️ Error updating spotlight content:", spotlightError);
         // Don't fail the entire operation for this
-      } else {
-        console.log("✅ Spotlight content updated");
       }
-
-      console.log("✅ Brand name propagation completed");
     }
 
     // Clear the brands cache to ensure fresh data after update
     try {
       clearBrandsCache();
-      console.log("🔄 Brands cache cleared after brand update");
     } catch (cacheError) {
       console.warn("⚠️ Warning: Failed to clear brands cache:", cacheError);
       // Don't fail the entire operation for this
     }
 
-    console.log("🎉 Brand update operation completed successfully");
     return NextResponse.json({
       success: true,
       brand: updatedBrand,
@@ -331,10 +320,7 @@ export async function PUT(
   } catch (error) {
     console.error("❌ Brand update API error:", error);
     return NextResponse.json(
-      {
-        error: "Internal server error",
-        details: error instanceof Error ? error.message : "Unknown error",
-      },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }

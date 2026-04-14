@@ -2,31 +2,36 @@ import { createServerClient } from "@supabase/ssr";
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
+function getSafeRedirectPath(input: string | null | undefined): string {
+  if (!input) return "/studio";
+  if (!input.startsWith("/")) return "/studio";
+  if (input.startsWith("//")) return "/studio";
+  return input;
+}
+
+function toLoginErrorUrl(origin: string, code: string, message: string): string {
+  const errorUrl = new URL("/login", origin);
+  errorUrl.searchParams.set("error", code);
+  errorUrl.searchParams.set("message", message);
+  return errorUrl.toString();
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
   const error = searchParams.get("error");
-  const errorDescription = searchParams.get("error_description");
 
   // Handle redirect destination - check both 'next' and 'redirect_to' parameters
-  const next =
-    searchParams.get("next") ?? searchParams.get("redirect_to") ?? "/studio";
-
-  console.log("🔄 OAuth callback received:", {
-    hasCode: !!code,
-    hasError: !!error,
-    redirectTo: next,
-    error: error,
-    errorDescription: errorDescription,
-  });
+  const next = getSafeRedirectPath(
+    searchParams.get("next") ?? searchParams.get("redirect_to")
+  );
 
   // Handle OAuth errors
   if (error) {
-    console.error("❌ OAuth error:", error, errorDescription);
-    const errorUrl = new URL("/login", origin);
-    errorUrl.searchParams.set("error", "callback_error");
-    errorUrl.searchParams.set("message", errorDescription || error);
-    return NextResponse.redirect(errorUrl.toString());
+    console.error("OAuth callback returned error:", error);
+    return NextResponse.redirect(
+      toLoginErrorUrl(origin, "callback_error", "Sign-in failed. Please try again.")
+    );
   }
 
   if (code) {
@@ -54,27 +59,22 @@ export async function GET(request: NextRequest) {
         await supabase.auth.exchangeCodeForSession(code);
 
       if (exchangeError) {
-        console.error("❌ Session exchange error:", exchangeError);
-        const errorUrl = new URL("/login", origin);
-        errorUrl.searchParams.set("error", "session_error");
-        errorUrl.searchParams.set("message", exchangeError.message);
-        return NextResponse.redirect(errorUrl.toString());
+        console.error("OAuth session exchange error:", exchangeError.code);
+        return NextResponse.redirect(
+          toLoginErrorUrl(origin, "session_error", "Unable to complete sign-in.")
+        );
       }
 
       if (data.user) {
-        console.log("✅ OAuth session created for:", data.user.email);
-
         // Check if profile exists, create if not (especially important for OAuth users)
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
-          .select("*")
+          .select("id")
           .eq("id", data.user.id)
           .single();
 
         if (profileError && profileError.code === "PGRST116") {
           // Profile doesn't exist, create it
-          console.log("🔧 Creating profile for OAuth user:", data.user.email);
-
           const { error: insertError } = await supabase
             .from("profiles")
             .insert({
@@ -92,46 +92,35 @@ export async function GET(request: NextRequest) {
             });
 
           if (insertError) {
-            console.error("❌ Profile creation error:", insertError);
-            // Don't fail the OAuth flow if profile creation fails
-            // The user can still be authenticated even without a profile
-            console.log(
-              "⚠️ Continuing OAuth flow despite profile creation error"
-            );
-          } else {
-            console.log("✅ Profile created successfully");
+            console.error("Profile creation error during OAuth:", insertError.code);
           }
         } else if (profileError) {
-          console.error("❌ Profile check error:", profileError);
-          // Log the error but don't fail the OAuth flow
-          console.log("⚠️ Continuing OAuth flow despite profile check error");
-        } else {
-          console.log("✅ Profile already exists for user:", data.user.email);
+          console.error("Profile lookup error during OAuth:", profileError.code);
         }
 
         // Create redirect URL with session refresh signal
         const redirectUrl = new URL(next, origin);
         redirectUrl.searchParams.set("session_refresh", "true");
 
-        console.log("🔄 Redirecting to:", redirectUrl.toString());
         return NextResponse.redirect(redirectUrl.toString());
       }
     } catch (error) {
-      console.error("❌ Unexpected OAuth callback error:", error);
-      const errorUrl = new URL("/login", origin);
-      errorUrl.searchParams.set("error", "unexpected_error");
-      errorUrl.searchParams.set(
-        "message",
-        "An unexpected error occurred during sign-in"
+      console.error(
+        "Unexpected OAuth callback error:",
+        error instanceof Error ? error.name : "unknown"
       );
-      return NextResponse.redirect(errorUrl.toString());
+      return NextResponse.redirect(
+        toLoginErrorUrl(
+          origin,
+          "unexpected_error",
+          "An unexpected error occurred during sign-in."
+        )
+      );
     }
   }
 
   // No code provided - redirect to login with error
-  console.error("❌ No authorization code provided");
-  const errorUrl = new URL("/login", origin);
-  errorUrl.searchParams.set("error", "no_code");
-  errorUrl.searchParams.set("message", "Authorization code missing");
-  return NextResponse.redirect(errorUrl.toString());
+  return NextResponse.redirect(
+    toLoginErrorUrl(origin, "no_code", "Authorization code missing.")
+  );
 }

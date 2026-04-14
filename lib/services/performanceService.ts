@@ -272,24 +272,6 @@ export const performanceService = {
     }
   },
 
-  // Prefetch critical data
-  async prefetchCriticalData() {
-    console.log("🚀 Prefetching critical data...");
-
-    try {
-      // Prefetch in parallel
-      await Promise.allSettled([
-        this.getBrandsOptimized({ limit: 20, useCache: true }),
-        this.getCollectionsOptimized({ limit: 10, useCache: true }),
-        this.getProductsOptimized({ limit: 12, useCache: true }),
-      ]);
-
-      console.log("✅ Critical data prefetched successfully");
-    } catch (error) {
-      console.error("❌ Error prefetching critical data:", error);
-    }
-  },
-
   // Optimize image URLs for better performance
   optimizeImageUrl(
     url: string,

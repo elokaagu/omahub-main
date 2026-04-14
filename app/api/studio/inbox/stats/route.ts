@@ -4,6 +4,29 @@ import { requireStudioInboxAccess } from "@/lib/auth/requireStudioInboxAccess";
 // Force dynamic rendering since we use cookies
 export const dynamic = "force-dynamic";
 
+type InboxStatsRpcRow = {
+  total_inquiries: number | null;
+  unread_inquiries: number | null;
+  replied_inquiries: number | null;
+  urgent_inquiries: number | null;
+};
+
+type InquiryBreakdownRow = {
+  inquiry_type: string | null;
+  priority: string | null;
+  status: string | null;
+};
+
+function applyBrandScope<T extends { in: (column: string, values: string[]) => T }>(
+  query: T,
+  profile: { role: string; owned_brands?: string[] | null }
+): T {
+  if (profile.role === "brand_admin") {
+    return query.in("brand_id", profile.owned_brands ?? []);
+  }
+  return query;
+}
+
 export async function GET() {
   try {
     const auth = await requireStudioInboxAccess();
@@ -20,7 +43,7 @@ export async function GET() {
     );
 
     if (statsError) {
-      console.error("Error fetching inbox stats:", statsError);
+      console.error("Error fetching inbox stats:", statsError.code);
       return NextResponse.json(
         { error: "Failed to fetch statistics" },
         { status: 500 }
@@ -28,11 +51,6 @@ export async function GET() {
     }
 
     // Get additional stats manually for more detailed breakdown
-    let baseQuery = supabase
-      .from("inquiries")
-      .select("*", { count: "exact", head: true });
-
-    // Apply role-based filtering
     if (profile.role === "brand_admin") {
       if (!profile.owned_brands || profile.owned_brands.length === 0) {
         return NextResponse.json({
@@ -47,39 +65,57 @@ export async function GET() {
           inquiriesByStatus: {},
         });
       }
-      baseQuery = baseQuery.in("brand_id", profile.owned_brands);
     }
 
     // Get today's inquiries
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const { count: todayCount } = await baseQuery.gte(
-      "created_at",
-      today.toISOString()
+    const todayQuery = applyBrandScope(
+      supabase
+        .from("inquiries")
+        .select("id", { count: "exact", head: true })
+        .gte("created_at", today.toISOString()),
+      profile
     );
+    const { count: todayCount, error: todayCountError } = await todayQuery;
+    if (todayCountError) {
+      console.error("Error fetching today's inquiry count:", todayCountError.code);
+      return NextResponse.json(
+        { error: "Failed to fetch statistics" },
+        { status: 500 }
+      );
+    }
 
     // Get this week's inquiries
     const weekStart = new Date();
     weekStart.setDate(weekStart.getDate() - weekStart.getDay());
     weekStart.setHours(0, 0, 0, 0);
-    const { count: weekCount } = await baseQuery.gte(
-      "created_at",
-      weekStart.toISOString()
+    const weekQuery = applyBrandScope(
+      supabase
+        .from("inquiries")
+        .select("id", { count: "exact", head: true })
+        .gte("created_at", weekStart.toISOString()),
+      profile
     );
+    const { count: weekCount, error: weekCountError } = await weekQuery;
+    if (weekCountError) {
+      console.error("Error fetching weekly inquiry count:", weekCountError.code);
+      return NextResponse.json(
+        { error: "Failed to fetch statistics" },
+        { status: 500 }
+      );
+    }
 
     // Get breakdown by type, priority, and status
-    let detailQuery = supabase
-      .from("inquiries")
-      .select("inquiry_type, priority, status");
-
-    if (profile.role === "brand_admin" && profile.owned_brands?.length) {
-      detailQuery = detailQuery.in("brand_id", profile.owned_brands);
-    }
+    const detailQuery = applyBrandScope(
+      supabase.from("inquiries").select("inquiry_type, priority, status"),
+      profile
+    );
 
     const { data: breakdownData, error: breakdownError } = await detailQuery;
 
     if (breakdownError) {
-      console.error("Error fetching breakdown data:", breakdownError);
+      console.error("Error fetching breakdown data:", breakdownError.code);
     }
 
     // Process breakdown data
@@ -88,26 +124,29 @@ export async function GET() {
     const inquiriesByStatus: Record<string, number> = {};
 
     if (breakdownData) {
-      breakdownData.forEach((inquiry) => {
+      (breakdownData as InquiryBreakdownRow[]).forEach((inquiry) => {
         // Count by type
-        inquiriesByType[inquiry.inquiry_type] =
-          (inquiriesByType[inquiry.inquiry_type] || 0) + 1;
+        const typeKey = inquiry.inquiry_type || "unknown";
+        inquiriesByType[typeKey] = (inquiriesByType[typeKey] || 0) + 1;
 
         // Count by priority
-        inquiriesByPriority[inquiry.priority] =
-          (inquiriesByPriority[inquiry.priority] || 0) + 1;
+        const priorityKey = inquiry.priority || "unknown";
+        inquiriesByPriority[priorityKey] =
+          (inquiriesByPriority[priorityKey] || 0) + 1;
 
         // Count by status
-        inquiriesByStatus[inquiry.status] =
-          (inquiriesByStatus[inquiry.status] || 0) + 1;
+        const statusKey = inquiry.status || "unknown";
+        inquiriesByStatus[statusKey] = (inquiriesByStatus[statusKey] || 0) + 1;
       });
     }
 
+    const statsRow = ((stats as InboxStatsRpcRow[] | null) ?? [])[0];
+
     const result = {
-      totalInquiries: stats?.[0]?.total_inquiries || 0,
-      unreadInquiries: stats?.[0]?.unread_inquiries || 0,
-      repliedInquiries: stats?.[0]?.replied_inquiries || 0,
-      urgentInquiries: stats?.[0]?.urgent_inquiries || 0,
+      totalInquiries: statsRow?.total_inquiries ?? 0,
+      unreadInquiries: statsRow?.unread_inquiries ?? 0,
+      repliedInquiries: statsRow?.replied_inquiries ?? 0,
+      urgentInquiries: statsRow?.urgent_inquiries ?? 0,
       todayInquiries: todayCount || 0,
       thisWeekInquiries: weekCount || 0,
       inquiriesByType,
@@ -117,7 +156,7 @@ export async function GET() {
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error("Inbox stats error:", error);
+    console.error("Inbox stats error:", error instanceof Error ? error.name : "unknown");
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

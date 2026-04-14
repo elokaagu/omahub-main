@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect } from "react";
-import { performanceService } from "@/lib/services/performanceService";
 
 interface PreloaderProps {
   children: React.ReactNode;
@@ -12,8 +11,11 @@ export function Preloader({ children }: PreloaderProps) {
     // Prefetch critical data on app load
     const prefetchData = async () => {
       try {
-        // Start prefetching critical data
-        await performanceService.prefetchCriticalData();
+        // Warm server cache + run admin-only filtering on the server — never import
+        // performanceService/getAdminClient in the browser bundle.
+        await fetch("/api/brands/optimized?limit=20", {
+          credentials: "same-origin",
+        }).catch(() => {});
 
         // Preload critical images
         const criticalImages = [

@@ -1,5 +1,6 @@
-import { createBrowserClient } from "@supabase/ssr";
-import { AuthDebug } from "./utils/debug";
+import { createClient, supabase } from "./supabase-unified";
+
+export { createClient, supabase };
 
 // Check if we're in a build process
 const isBuildTime =
@@ -7,115 +8,14 @@ const isBuildTime =
   process.env.NODE_ENV === "production" &&
   !process.env.NEXT_PUBLIC_SUPABASE_URL;
 
-// Safely access environment variables with fallbacks
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+/** Same browser singleton as AuthContext (`supabase-unified`) — avoids multiple GoTrue clients. */
+export const getSupabaseClient = () => supabase;
 
-// Validate environment variables
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error("❌ Missing Supabase environment variables:", {
-    hasUrl: !!supabaseUrl,
-    hasKey: !!supabaseAnonKey,
-    env: process.env.NODE_ENV,
-  });
-
-  // In production, we need these to be defined
-  if (process.env.NODE_ENV === "production") {
-    throw new Error("Missing required Supabase environment variables");
-  }
-}
-
-console.log("🔄 Initializing Supabase client:", {
-  hasUrl: !!supabaseUrl,
-  hasKey: !!supabaseAnonKey
-    ? supabaseAnonKey.substring(0, 10) + "..."
-    : "undefined",
-  env: process.env.NODE_ENV,
-  isBuildTime,
-});
-
-// Create a function to initialize the Supabase client
-const createClient = () => {
-  if (typeof window === "undefined") {
-    console.log("🖥️ Server-side rendering, creating client for hydration");
-  }
-
-  // Ensure environment variables are available
-  if (!supabaseUrl || !supabaseAnonKey) {
-    console.error(
-      "❌ Cannot create Supabase client - missing environment variables"
-    );
-    throw new Error("Supabase environment variables not configured");
-  }
-
-  return createBrowserClient(supabaseUrl, supabaseAnonKey, {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true,
-      flowType: "pkce",
-      debug: false, // Disable debug to reduce console noise
-      // Remove custom storageKey to let Supabase handle cookies naturally
-    },
-    global: {
-      fetch: fetch,
-      headers: {
-        "x-application-name": "omahub",
-      },
-    },
-  });
-};
-
-// Create the client instance - lazy initialization to avoid errors at module load time
-let supabaseInstance: ReturnType<typeof createClient> | null = null;
-
-function getSupabaseInstance() {
-  if (!supabaseInstance) {
-    try {
-      supabaseInstance = createClient();
-    } catch (error) {
-      console.error("Failed to initialize Supabase client:", error);
-      throw new Error("Supabase client not initialized. Check environment variables: NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY");
-    }
-  }
-  return supabaseInstance;
-}
-
-// Export supabase as a getter that lazily initializes
-export const supabase = new Proxy({} as ReturnType<typeof createClient>, {
-  get(target, prop) {
-    const instance = getSupabaseInstance();
-    const value = instance[prop as keyof typeof instance];
-    if (typeof value === 'function') {
-      return value.bind(instance);
-    }
-    return value;
-  },
-  set(target, prop, value) {
-    const instance = getSupabaseInstance();
-    (instance as any)[prop] = value;
-    return true;
-  }
-});
-
-// Export a function to get a fresh client instance if needed
-export const getSupabaseClient = () => createClient();
-
-// Helper function to check if client is available
 export const isSupabaseAvailable = () => !!supabase;
 
-// Debug logging for development
-if (process.env.NODE_ENV === "development") {
-  console.log("🔧 Supabase client initialized");
-}
-
-// Set up auth state change listener if in browser environment
-if (supabase && typeof window !== "undefined") {
-  // Set up auth state change listener
+if (process.env.NODE_ENV === "development" && typeof window !== "undefined") {
   supabase.auth.onAuthStateChange((event, session) => {
-    if (process.env.NODE_ENV === "development") {
-      console.log("Auth state changed:", event, !!session);
-    }
+    console.log("Auth state changed:", event, !!session);
   });
 }
 

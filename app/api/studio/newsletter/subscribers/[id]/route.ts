@@ -1,5 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/supabase-admin";
+import { requireSuperAdmin } from "@/lib/auth/requireSuperAdmin";
+
+const SUBSCRIBER_SELECT_FIELDS =
+  "id, email, first_name, last_name, subscription_status, preferences, subscribed_at, unsubscribed_at, created_at, updated_at";
+const VALID_SUBSCRIPTION_STATUSES = [
+  "active",
+  "unsubscribed",
+  "bounced",
+  "pending",
+] as const;
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function isValidUuid(value: unknown): value is string {
+  return typeof value === "string" && UUID_REGEX.test(value.trim());
+}
 
 export async function PATCH(
   request: NextRequest,
@@ -7,9 +23,19 @@ export async function PATCH(
 ) {
   try {
     const { id } = params;
-    const body = await request.json();
-    
-    console.log("📝 Updating newsletter subscriber:", id, body);
+    if (!isValidUuid(id)) {
+      return NextResponse.json({ error: "Invalid subscriber ID" }, { status: 400 });
+    }
+
+    const authz = await requireSuperAdmin();
+    if (!authz.ok) {
+      return NextResponse.json({ error: authz.error }, { status: authz.status });
+    }
+
+    const body = await request.json().catch(() => null);
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+    }
 
     const supabase = await getAdminClient();
     
@@ -22,21 +48,45 @@ export async function PATCH(
     }
 
     // Validate the update data
-    const { subscription_status, preferences, notes } = body;
-    
-    if (subscription_status && !['active', 'unsubscribed', 'bounced', 'pending'].includes(subscription_status)) {
+    const { subscription_status, preferences } = body as {
+      subscription_status?: unknown;
+      preferences?: unknown;
+    };
+
+    if (
+      subscription_status !== undefined &&
+      (typeof subscription_status !== "string" ||
+        !VALID_SUBSCRIPTION_STATUSES.includes(
+          subscription_status as (typeof VALID_SUBSCRIPTION_STATUSES)[number]
+        ))
+    ) {
       return NextResponse.json(
         { error: "Invalid subscription status" },
         { status: 400 }
       );
     }
+    if (
+      preferences !== undefined &&
+      (typeof preferences !== "object" || preferences === null || Array.isArray(preferences))
+    ) {
+      return NextResponse.json(
+        { error: "Preferences must be an object" },
+        { status: 400 }
+      );
+    }
+    if (subscription_status === undefined && preferences === undefined) {
+      return NextResponse.json(
+        { error: "No valid update fields provided" },
+        { status: 400 }
+      );
+    }
 
     // Prepare update data
-    const updateData: any = {
+    const updateData: Record<string, unknown> = {
       updated_at: new Date().toISOString()
     };
 
-    if (subscription_status) {
+    if (subscription_status !== undefined) {
       updateData.subscription_status = subscription_status;
       
       // Set unsubscribed_at if status is unsubscribed
@@ -47,7 +97,7 @@ export async function PATCH(
       }
     }
 
-    if (preferences) {
+    if (preferences !== undefined) {
       updateData.preferences = preferences;
     }
 
@@ -56,18 +106,21 @@ export async function PATCH(
       .from("newsletter_subscribers")
       .update(updateData)
       .eq("id", id)
-      .select()
+      .select(SUBSCRIBER_SELECT_FIELDS)
       .single();
 
     if (updateError) {
-      console.error("❌ Error updating subscriber:", updateError);
+      console.error("❌ Error updating subscriber:", updateError.code);
       return NextResponse.json(
         { error: "Failed to update subscriber" },
         { status: 500 }
       );
     }
 
-    console.log("✅ Subscriber updated successfully:", updatedSubscriber.id);
+    console.info("Newsletter subscriber updated", {
+      actorUserId: authz.userId,
+      subscriberId: updatedSubscriber.id,
+    });
 
     return NextResponse.json({
       success: true,
@@ -85,13 +138,19 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
     const { id } = params;
-    
-    console.log("🗑️ Deleting newsletter subscriber:", id);
+    if (!isValidUuid(id)) {
+      return NextResponse.json({ error: "Invalid subscriber ID" }, { status: 400 });
+    }
+
+    const authz = await requireSuperAdmin();
+    if (!authz.ok) {
+      return NextResponse.json({ error: authz.error }, { status: authz.status });
+    }
 
     const supabase = await getAdminClient();
     
@@ -103,25 +162,37 @@ export async function DELETE(
       );
     }
 
-    // Delete the subscriber
-    const { error: deleteError } = await supabase
+    // Soft-delete behavior: suppress subscriber rather than hard-delete the row.
+    const { data: updatedSubscriber, error: deleteError } = await supabase
       .from("newsletter_subscribers")
-      .delete()
-      .eq("id", id);
+      .update({
+        subscription_status: "unsubscribed",
+        unsubscribed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id)
+      .select("id")
+      .single();
 
     if (deleteError) {
-      console.error("❌ Error deleting subscriber:", deleteError);
+      if (deleteError.code === "PGRST116") {
+        return NextResponse.json({ error: "Subscriber not found" }, { status: 404 });
+      }
+      console.error("❌ Error suppressing subscriber:", deleteError.code);
       return NextResponse.json(
-        { error: "Failed to delete subscriber" },
+        { error: "Failed to update subscriber status" },
         { status: 500 }
       );
     }
 
-    console.log("✅ Subscriber deleted successfully:", id);
+    console.info("Newsletter subscriber suppressed", {
+      actorUserId: authz.userId,
+      subscriberId: updatedSubscriber.id,
+    });
 
     return NextResponse.json({
       success: true,
-      message: "Subscriber deleted successfully"
+      message: "Subscriber unsubscribed successfully"
     });
 
   } catch (error) {

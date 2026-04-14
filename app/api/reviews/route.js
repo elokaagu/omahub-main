@@ -1,129 +1,131 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createApiRouteSupabaseClient } from "@/lib/supabase-unified";
+import {
+  parsePublicReviewGet,
+  parsePublicReviewPost,
+} from "@/lib/validation/publicReviews";
+
+function resolveAuthorDisplayName(profile, fallbackEmail) {
+  const first = typeof profile?.first_name === "string" ? profile.first_name.trim() : "";
+  const last = typeof profile?.last_name === "string" ? profile.last_name.trim() : "";
+  const full = `${first} ${last}`.trim();
+  if (full) return full;
+  if (typeof profile?.username === "string" && profile.username.trim()) {
+    return profile.username.trim();
+  }
+  if (fallbackEmail && typeof fallbackEmail === "string") {
+    return fallbackEmail.split("@")[0] || "Verified User";
+  }
+  return "Verified User";
+}
 
 export async function POST(request) {
-  console.log("POST /api/reviews received");
   try {
-    // Check authentication first using the proper API route client
     const supabase = createApiRouteSupabaseClient(request);
 
-    // Get the session from the request
     const {
       data: { session },
       error: sessionError,
     } = await supabase.auth.getSession();
 
     if (sessionError || !session?.user) {
-      console.error("❌ Authentication failed:", sessionError);
       return NextResponse.json(
         { error: "Authentication required to submit reviews" },
         { status: 401 }
       );
     }
 
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
+
+    const parsed = parsePublicReviewPost(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid review payload" }, { status: 400 });
+    }
+
     const userId = session.user.id;
-    console.log("✅ User authenticated:", userId);
+    const { brandId, comment, rating } = parsed.data;
+    const date = parsed.data.date || new Date().toISOString().split("T")[0];
 
-    const body = await request.json();
-    console.log("Review submission data:", body);
-
-    const {
-      brandId,
-      author,
-      comment,
-      rating,
-      date = new Date().toISOString().split("T")[0],
-    } = body;
-
-    // Validate required fields
-    if (!brandId || !author || !comment || !rating) {
-      console.error("Missing required fields:", {
-        brandId,
-        author,
-        comment,
-        rating,
-      });
-      return NextResponse.json(
-        { error: "Brand ID, author, comment, and rating are required" },
-        { status: 400 }
-      );
-    }
-
-    console.log(
-      `Adding review for brand ${brandId} by ${author} (user: ${userId})`
-    );
-
-    // First, check if the user_id column exists in the reviews table
-    const { data: tableInfo, error: tableError } = await supabase
-      .from("information_schema.columns")
-      .select("column_name")
-      .eq("table_name", "reviews")
-      .eq("column_name", "user_id");
-
-    const hasUserIdColumn = tableInfo && tableInfo.length > 0;
-    console.log("Reviews table has user_id column:", hasUserIdColumn);
-
-    // Prepare the review data
-    const reviewData = {
-      brand_id: brandId,
-      author,
-      comment,
-      rating: parseFloat(rating),
-      date,
-    };
-
-    // Add user_id only if the column exists
-    if (hasUserIdColumn && userId) {
-      reviewData.user_id = userId;
-    }
-
-    console.log("Inserting review data:", reviewData);
-
-    // Add review
-    const { data, error } = await supabase
+    // One review per user per brand policy.
+    const { data: existingReview, error: existingError } = await supabase
       .from("reviews")
-      .insert([reviewData])
-      .select()
-      .single();
+      .select("id")
+      .eq("brand_id", brandId)
+      .eq("user_id", userId)
+      .limit(1)
+      .maybeSingle();
 
-    if (error) {
-      console.error("Error adding review:", error);
+    if (existingError) {
+      console.error("reviews_duplicate_check_failed", existingError.message);
       return NextResponse.json(
-        { error: "Failed to add review", details: error.message },
+        { error: "Failed to submit review" },
         { status: 500 }
       );
     }
 
-    console.log("Review added successfully:", data);
-
-    // Create inbox notification for the brand owner
-    try {
-      const { data: inboxData, error: inboxError } = await supabase
-        .from("inquiries")
-        .insert([{
-          brand_id: brandId,
-          customer_name: author,
-          customer_email: `review-${userId}@oma-hub.com`, // Use a placeholder email for reviews
-          subject: `New ${rating}-Star Review Received`,
-          message: `Customer "${author}" left a ${rating}-star review: "${comment}"`,
-          inquiry_type: "review_notification",
-          status: "unread",
-          priority: "normal",
-          source: "website_review"
-        }])
-        .select()
-        .single();
-
-      if (inboxError) {
-        console.warn("⚠️ Failed to create inbox notification:", inboxError);
-      } else {
-        console.log("✅ Inbox notification created:", inboxData);
-      }
-    } catch (inboxError) {
-      console.warn("⚠️ Error creating inbox notification:", inboxError);
+    if (existingReview) {
+      return NextResponse.json(
+        { error: "You have already reviewed this brand" },
+        { status: 409 }
+      );
     }
 
-    // Update the brand's average rating
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("first_name, last_name, username")
+      .eq("id", userId)
+      .maybeSingle();
+
+    const author = resolveAuthorDisplayName(profile, session.user.email || "");
+
+    const reviewData = {
+      brand_id: brandId,
+      author,
+      comment,
+      rating,
+      date,
+      user_id: userId,
+    };
+
+    const { data, error } = await supabase
+      .from("reviews")
+      .insert([reviewData])
+      .select("id, brand_id, author, comment, rating, date, user_id, created_at")
+      .single();
+
+    if (error) {
+      console.error("review_insert_failed", error.message);
+      return NextResponse.json({ error: "Failed to add review" }, { status: 500 });
+    }
+
+    // Notify brand owner via notifications table (avoid fake inquiry records).
+    const { data: brandOwner } = await supabase
+      .from("brands")
+      .select("user_id")
+      .eq("id", brandId)
+      .maybeSingle();
+
+    if (brandOwner?.user_id) {
+      void supabase.from("notifications").insert({
+        user_id: brandOwner.user_id,
+        brand_id: brandId,
+        type: "new_review",
+        title: "New Review Received",
+        message: `A ${rating}-star review was posted for your brand`,
+        data: {
+          review_id: data.id,
+          rating,
+        },
+        is_read: false,
+        created_at: new Date().toISOString(),
+      });
+    }
+
     await updateBrandRating(supabase, brandId);
 
     return NextResponse.json({
@@ -132,101 +134,72 @@ export async function POST(request) {
       review: data,
     });
   } catch (error) {
-    console.error("Unexpected error:", error);
+    console.error(
+      "reviews_post_unexpected",
+      error instanceof Error ? error.message : String(error)
+    );
     return NextResponse.json(
-      { error: "An unexpected error occurred", details: error.message },
+      { error: "An unexpected error occurred" },
       { status: 500 }
     );
   }
 }
 
-// GET endpoint to retrieve reviews for a brand
 export async function GET(request) {
-  console.log("GET /api/reviews received");
   try {
     const supabase = createApiRouteSupabaseClient(request);
     const { searchParams } = new URL(request.url);
-    const brandId = searchParams.get("brandId");
 
-    console.log("Fetching reviews for brandId:", brandId);
-
-    if (!brandId) {
-      console.error("Brand ID is required");
-      return NextResponse.json(
-        { error: "Brand ID is required" },
-        { status: 400 }
-      );
+    const parsed = parsePublicReviewGet(searchParams);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Brand ID is required" }, { status: 400 });
     }
 
-    // Get reviews with replies for the brand, ordered by most recent
+    const { brandId } = parsed.data;
+
     const { data, error } = await supabase
       .from("reviews_with_details")
-      .select("*")
+      .select(
+        "id, brand_id, author, comment, rating, date, user_id, created_at, brand_name, brand_category, replies"
+      )
       .eq("brand_id", brandId)
       .order("created_at", { ascending: false });
 
     if (error) {
-      console.error(`Error fetching reviews for brand ${brandId}:`, error);
-      return NextResponse.json(
-        { error: "Failed to fetch reviews", details: error.message },
-        { status: 500 }
-      );
+      console.error("reviews_fetch_failed", error.message);
+      return NextResponse.json({ error: "Failed to fetch reviews" }, { status: 500 });
     }
 
-    console.log(`Found ${data?.length || 0} reviews for brand ${brandId}`);
     return NextResponse.json({ reviews: data || [] });
   } catch (error) {
-    console.error("Unexpected error:", error);
+    console.error(
+      "reviews_get_unexpected",
+      error instanceof Error ? error.message : String(error)
+    );
     return NextResponse.json(
-      { error: "An unexpected error occurred", details: error.message },
+      { error: "An unexpected error occurred" },
       { status: 500 }
     );
   }
 }
 
-// Function to update brand rating based on reviews
 async function updateBrandRating(supabase, brandId) {
   try {
-    console.log(`Updating rating for brand ${brandId}`);
-
-    // Get all reviews for this brand
     const { data: reviews, error: reviewsError } = await supabase
       .from("reviews")
       .select("rating")
       .eq("brand_id", brandId);
 
-    if (reviewsError) {
-      console.error("Error fetching reviews for rating update:", reviewsError);
-      return;
-    }
+    if (reviewsError || !reviews || reviews.length === 0) return;
 
-    if (!reviews || reviews.length === 0) {
-      console.log("No reviews found for brand, skipping rating update");
-      return;
-    }
-
-    // Calculate average rating
-    const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
+    const totalRating = reviews.reduce((sum, review) => sum + Number(review.rating || 0), 0);
     const averageRating = totalRating / reviews.length;
 
-    console.log(
-      `Calculated average rating: ${averageRating} from ${reviews.length} reviews`
-    );
-
-    // Update brand rating
-    const { error: updateError } = await supabase
-      .from("brands")
-      .update({ rating: averageRating })
-      .eq("id", brandId);
-
-    if (updateError) {
-      console.error("Error updating brand rating:", updateError);
-    } else {
-      console.log(
-        `Successfully updated brand ${brandId} rating to ${averageRating}`
-      );
-    }
+    await supabase.from("brands").update({ rating: averageRating }).eq("id", brandId);
   } catch (error) {
-    console.error("Error in updateBrandRating:", error);
+    console.error(
+      "reviews_rating_update_failed",
+      error instanceof Error ? error.message : String(error)
+    );
   }
 }

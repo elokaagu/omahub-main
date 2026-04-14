@@ -4,6 +4,13 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
+function getSafeRedirectPath(input: string | null): string {
+  if (!input) return "/studio";
+  if (!input.startsWith("/")) return "/studio";
+  if (input.startsWith("//")) return "/studio";
+  return input;
+}
+
 export default function AuthSuccessPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -13,6 +20,9 @@ export default function AuthSuccessPage() {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
+    let isCancelled = false;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
     const handleAuthSuccess = async () => {
       try {
         // Check if we have an active session
@@ -22,54 +32,64 @@ export default function AuthSuccessPage() {
         } = await supabase.auth.getSession();
 
         if (error) {
-          console.error("❌ Session check failed:", error);
+          console.error("Session check failed:", error.message);
+          if (isCancelled) return;
           setStatus("error");
-          setMessage("Failed to verify authentication session");
+          setMessage("We couldn't verify your sign-in session.");
           return;
         }
 
         if (session) {
-          console.log("✅ Authentication successful:", {
-            userId: session.user.id,
-            email: session.user.email,
-            provider: session.user.app_metadata?.provider,
-          });
-
+          if (isCancelled) return;
           setStatus("success");
-          setMessage(`Welcome, ${session.user.email}!`);
+          setMessage("Sign-in successful.");
 
           // Redirect to the intended destination after a short delay
-          setTimeout(() => {
-            const redirectTo = searchParams.get("redirect_to") || "/studio";
+          timeoutId = setTimeout(() => {
+            const redirectTo = getSafeRedirectPath(
+              searchParams.get("redirect_to")
+            );
             router.push(redirectTo);
           }, 2000);
         } else {
-          console.error("❌ No active session found");
+          console.error("No active session found after auth callback");
+          if (isCancelled) return;
           setStatus("error");
-          setMessage("No active session found");
+          setMessage("No active session was found.");
 
           // Redirect to login after a short delay
-          setTimeout(() => {
+          timeoutId = setTimeout(() => {
             router.push(
-              "/login?error=no_session&message=Authentication session not found"
+              "/login?error=no_session&message=Please sign in again."
             );
           }, 3000);
         }
       } catch (error) {
-        console.error("❌ Auth success check failed:", error);
+        console.error(
+          "Auth success check failed:",
+          error instanceof Error ? error.message : "unknown"
+        );
+        if (isCancelled) return;
         setStatus("error");
-        setMessage("Failed to verify authentication");
+        setMessage("We couldn't complete sign-in.");
 
         // Redirect to login after a short delay
-        setTimeout(() => {
+        timeoutId = setTimeout(() => {
           router.push(
-            "/login?error=auth_check_failed&message=Authentication verification failed"
+            "/login?error=auth_check_failed&message=Please try signing in again."
           );
         }, 3000);
       }
     };
 
     handleAuthSuccess();
+
+    return () => {
+      isCancelled = true;
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
   }, [router, searchParams]);
 
   return (

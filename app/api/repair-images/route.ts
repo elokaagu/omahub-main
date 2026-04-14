@@ -1,279 +1,146 @@
-import { NextRequest } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { NextRequest, NextResponse } from "next/server";
+import { createAdminClient } from "@/lib/supabase-unified";
+import { requireSuperAdmin } from "@/lib/auth/requireSuperAdmin";
 
-// Improved build time detection with multiple checks
-const isBuildTime =
-  process.env.NODE_ENV === "production" &&
-  (process.env.NEXT_PHASE === "phase-production-build" ||
-    (process.env.VERCEL_ENV === "production" &&
-      process.env.VERCEL_BUILD_STEP === "true"));
-
-// Mark this route as server-side only
 export const dynamic = "force-dynamic";
-// Disable static generation for this route
 export const fetchCache = "force-no-store";
 export const revalidate = 0;
 
-// Simple CORS headers
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization, Accept",
-  "Cache-Control": "no-store, max-age=0",
-  "Content-Type": "application/json",
+type RepairResult = {
+  brands: number;
+  collections: number;
+  products: number;
+  profiles: number;
+  total: number;
+  dryRun: boolean;
 };
 
-// Handler for CORS preflight requests
-export async function OPTIONS() {
-  return new Response(null, {
-    status: 200,
-    headers: corsHeaders,
-  });
+let repairInProgress = false;
+
+function makeStorageUrl(folder: string, fileName: string) {
+  return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${folder}/${fileName}`;
 }
 
-export async function GET(request: NextRequest) {
-  console.log("Repair images API called");
+async function repairTableField(
+  admin: ReturnType<typeof createAdminClient>,
+  table: "brands" | "collections" | "products",
+  field: "image",
+  folder: string,
+  dryRun: boolean
+) {
+  const { data, error } = await admin.from(table).select(`id, ${field}`);
+  if (error || !data) return 0;
 
-  // During build time, just return a dummy response
-  if (isBuildTime) {
-    console.log("Running in build process - skipping actual image repair");
-    return new Response(
-      JSON.stringify({
-        success: true,
-        message: "Build-time dummy response - actual repair runs at runtime",
-        result: {
-          brands: 0,
-          collections: 0,
-          products: 0,
-          profiles: 0,
-          total: 0,
-        },
-      }),
-      {
-        status: 200,
-        headers: corsHeaders,
-      }
+  let fixed = 0;
+  for (const row of data as Array<{ id: string; image: string | null }>) {
+    if (!row.image || !row.image.includes("/lovable-uploads/")) continue;
+    const fileName = row.image.split("/").pop();
+    if (!fileName) continue;
+
+    fixed++;
+    if (dryRun) continue;
+
+    const newUrl = makeStorageUrl(folder, fileName);
+    await admin.from(table).update({ [field]: newUrl }).eq("id", row.id);
+  }
+  return fixed;
+}
+
+async function repairProfileAvatars(
+  admin: ReturnType<typeof createAdminClient>,
+  dryRun: boolean
+) {
+  const { data, error } = await admin.from("profiles").select("id, avatar_url");
+  if (error || !data) return 0;
+
+  let fixed = 0;
+  for (const row of data as Array<{ id: string; avatar_url: string | null }>) {
+    if (!row.avatar_url || !row.avatar_url.includes("/lovable-uploads/")) continue;
+    const fileName = row.avatar_url.split("/").pop();
+    if (!fileName) continue;
+
+    fixed++;
+    if (dryRun) continue;
+
+    const newUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${fileName}`;
+    await admin.from("profiles").update({ avatar_url: newUrl }).eq("id", row.id);
+  }
+  return fixed;
+}
+
+function maintenanceEnabled() {
+  return process.env.NODE_ENV !== "production" || process.env.ENABLE_REPAIR_IMAGES_ENDPOINT === "true";
+}
+
+export async function OPTIONS() {
+  return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
+}
+
+export async function GET() {
+  return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
+}
+
+export async function POST(request: NextRequest) {
+  if (!maintenanceEnabled()) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
+  const auth = await requireSuperAdmin();
+  if (!auth.ok) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
+  }
+
+  if (repairInProgress) {
+    return NextResponse.json(
+      { error: "Image repair already in progress" },
+      { status: 409 }
     );
   }
 
+  let dryRun = false;
   try {
-    // Setup storage to ensure buckets exist
-    try {
-      console.log("Setting up storage buckets...");
-      
-      console.log("Storage setup completed");
-    } catch (storageError) {
-      console.warn(
-        "Storage setup failed, but continuing with image repair:",
-        storageError
-      );
-    }
+    const body = await request.json().catch(() => ({}));
+    dryRun = Boolean((body as { dryRun?: boolean }).dryRun);
+  } catch {
+    dryRun = false;
+  }
 
-    console.log("Starting image URL repair...");
+  repairInProgress = true;
+  try {
+    const admin = createAdminClient();
 
-    let result = {
-      brands: 0,
-      collections: 0,
-      products: 0,
-      profiles: 0,
+    const result: RepairResult = {
+      brands: await repairTableField(admin, "brands", "image", "brands", dryRun),
+      collections: await repairTableField(
+        admin,
+        "collections",
+        "image",
+        "collections",
+        dryRun
+      ),
+      products: await repairTableField(admin, "products", "image", "products", dryRun),
+      profiles: await repairProfileAvatars(admin, dryRun),
       total: 0,
+      dryRun,
     };
-
-    // Process brands
-    try {
-      console.log("Fetching brands...");
-      const brands = await supabase.from("brands").select("id, image");
-
-      if (brands.error) {
-        console.warn(`Error fetching brands: ${brands.error.message}`);
-      } else if (brands.data && brands.data.length > 0) {
-        console.log(`Found ${brands.data.length} brands to check`);
-        let brandFixCount = 0;
-        for (const brand of brands.data) {
-          if (brand.image && brand.image.includes("/lovable-uploads/")) {
-            // Get file name from URL
-            const fileName = brand.image.split("/").pop();
-            if (!fileName) continue;
-
-            // Create proper Supabase URL
-            const newUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/brands/${fileName}`;
-            console.log(
-              `Updating brand ${brand.id} image from "${brand.image}" to "${newUrl}"`
-            );
-
-            // Update the record
-            const updateResult = await supabase
-              .from("brands")
-              .update({ image: newUrl })
-              .eq("id", brand.id);
-
-            if (updateResult.error) {
-              console.warn(
-                `Error updating brand ${brand.id}:`,
-                updateResult.error
-              );
-            } else {
-              console.log(`Successfully updated brand ${brand.id}`);
-              brandFixCount++;
-            }
-          }
-        }
-        console.log(`Updated ${brandFixCount} brand images`);
-        result.brands = brandFixCount;
-      } else {
-        console.log("No brands found or no brands to update");
-      }
-    } catch (brandsError) {
-      console.warn("Error processing brands:", brandsError);
-    }
-
-    // Process collections
-    try {
-      console.log("Fetching collections...");
-      const collections = await supabase
-        .from("collections")
-        .select("id, image");
-
-      if (collections.error) {
-        console.warn(
-          `Error fetching collections: ${collections.error.message}`
-        );
-      } else if (collections.data && collections.data.length > 0) {
-        console.log(`Found ${collections.data.length} collections to check`);
-        let collectionFixCount = 0;
-        for (const collection of collections.data) {
-          if (
-            collection.image &&
-            collection.image.includes("/lovable-uploads/")
-          ) {
-            // Get file name from URL
-            const fileName = collection.image.split("/").pop();
-            if (!fileName) continue;
-
-            // Create proper Supabase URL
-            const newUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/collections/${fileName}`;
-
-            // Update the record
-            const updateResult = await supabase
-              .from("collections")
-              .update({ image: newUrl })
-              .eq("id", collection.id);
-
-            if (!updateResult.error) collectionFixCount++;
-          }
-        }
-        result.collections = collectionFixCount;
-      }
-    } catch (collectionsError) {
-      console.warn("Error processing collections:", collectionsError);
-    }
-
-    // Process products
-    try {
-      console.log("Fetching products...");
-      const products = await supabase.from("products").select("id, image");
-
-      if (products.error) {
-        console.warn(`Error fetching products: ${products.error.message}`);
-      } else if (products.data && products.data.length > 0) {
-        console.log(`Found ${products.data.length} products to check`);
-        let productFixCount = 0;
-        for (const product of products.data) {
-          if (product.image && product.image.includes("/lovable-uploads/")) {
-            // Get file name from URL
-            const fileName = product.image.split("/").pop();
-            if (!fileName) continue;
-
-            // Create proper Supabase URL
-            const newUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/products/${fileName}`;
-
-            // Update the record
-            const updateResult = await supabase
-              .from("products")
-              .update({ image: newUrl })
-              .eq("id", product.id);
-
-            if (!updateResult.error) productFixCount++;
-          }
-        }
-        console.log(`Updated ${productFixCount} product images`);
-        result.products = productFixCount;
-      } else {
-        console.log("No products found or no products to update");
-      }
-    } catch (productsError) {
-      console.warn("Error processing products:", productsError);
-    }
-
-    // Process profiles
-    try {
-      console.log("Fetching profiles...");
-      const profiles = await supabase.from("profiles").select("id, avatar_url");
-
-      if (profiles.error) {
-        console.warn(`Error fetching profiles: ${profiles.error.message}`);
-      } else if (profiles.data && profiles.data.length > 0) {
-        console.log(`Found ${profiles.data.length} profiles to check`);
-        let profileFixCount = 0;
-        for (const profile of profiles.data) {
-          if (
-            profile.avatar_url &&
-            profile.avatar_url.includes("/lovable-uploads/")
-          ) {
-            // Get file name from URL
-            const fileName = profile.avatar_url.split("/").pop();
-            if (!fileName) continue;
-
-            // Create proper Supabase URL
-            const newUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${fileName}`;
-
-            // Update the record
-            const updateResult = await supabase
-              .from("profiles")
-              .update({ avatar_url: newUrl })
-              .eq("id", profile.id);
-
-            if (!updateResult.error) profileFixCount++;
-          }
-        }
-        console.log(`Updated ${profileFixCount} profile images`);
-        result.profiles = profileFixCount;
-      } else {
-        console.log("No profiles found or no profiles to update");
-      }
-    } catch (profilesError) {
-      console.warn("Error processing profiles:", profilesError);
-    }
-
     result.total =
       result.brands + result.collections + result.products + result.profiles;
-    console.log("Image repair completed:", result);
 
-    // Return a simple Response object
-    return new Response(
-      JSON.stringify({
-        success: true,
-        message: "Image URLs repaired successfully",
-        result,
-      }),
-      {
-        status: 200,
-        headers: corsHeaders,
-      }
-    );
+    return NextResponse.json({
+      success: true,
+      message: dryRun ? "Dry run completed" : "Image repair completed",
+      result,
+    });
   } catch (error) {
-    console.error("Error repairing images:", error);
-
-    return new Response(
-      JSON.stringify({
-        success: false,
-        error: "Image repair failed",
-        details: error instanceof Error ? error.message : String(error),
-      }),
-      {
-        status: 500,
-        headers: corsHeaders,
-      }
+    console.error(
+      "repair_images_failed",
+      error instanceof Error ? error.message : String(error)
     );
+    return NextResponse.json(
+      { success: false, error: "Image repair failed" },
+      { status: 500 }
+    );
+  } finally {
+    repairInProgress = false;
   }
 }

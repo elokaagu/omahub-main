@@ -1,107 +1,130 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
-import { getProfile } from "@/lib/services/authService";
 import { createServerSupabaseClient } from "@/lib/supabase-unified";
+import { parsePlatformSettingsUpdate } from "@/lib/validation/platformSettingsBody";
 
-// GET: Fetch About Us and Our Story text
+const SETTING_KEYS = ["about_omahub", "our_story", "tailored_services"] as const;
+
+const MAP_DB_TO_API: Record<(typeof SETTING_KEYS)[number], "about" | "ourStory" | "tailoredServices"> = {
+  about_omahub: "about",
+  our_story: "ourStory",
+  tailored_services: "tailoredServices",
+};
+
 export async function GET() {
   try {
-    const { data: aboutData, error: aboutError } = await supabase
+    const supabase = await createServerSupabaseClient();
+    const { data, error } = await supabase
       .from("platform_settings")
-      .select("value")
-      .eq("key", "about_omahub")
-      .single();
-    const { data: storyData, error: storyError } = await supabase
-      .from("platform_settings")
-      .select("value")
-      .eq("key", "our_story")
-      .single();
-    const { data: tailoredServicesData, error: tailoredServicesError } =
-      await supabase
-        .from("platform_settings")
-        .select("value")
-        .eq("key", "tailored_services")
-        .single();
-    if (aboutError && aboutError.code !== "PGRST116") {
-      return NextResponse.json({ error: aboutError.message }, { status: 500 });
-    }
-    if (storyError && storyError.code !== "PGRST116") {
-      return NextResponse.json({ error: storyError.message }, { status: 500 });
-    }
-    if (tailoredServicesError && tailoredServicesError.code !== "PGRST116") {
+      .select("key, value")
+      .in("key", [...SETTING_KEYS]);
+
+    if (error) {
+      console.error("platform_settings_get_failed", error.message);
       return NextResponse.json(
-        { error: tailoredServicesError.message },
+        { error: "Failed to fetch platform settings" },
         { status: 500 }
       );
     }
-    return NextResponse.json({
-      about: aboutData?.value || "",
-      ourStory: storyData?.value || "",
-      tailoredServices: tailoredServicesData?.value || "",
-    });
+
+    const response = {
+      about: "",
+      ourStory: "",
+      tailoredServices: "",
+    };
+
+    for (const row of data ?? []) {
+      const key = row.key as (typeof SETTING_KEYS)[number];
+      const apiKey = MAP_DB_TO_API[key];
+      if (!apiKey) continue;
+      response[apiKey] = typeof row.value === "string" ? row.value : "";
+    }
+
+    return NextResponse.json(response);
   } catch (err) {
+    console.error(
+      "platform_settings_get_exception",
+      err instanceof Error ? err.message : String(err)
+    );
     return NextResponse.json(
-      { error: "Failed to fetch About Us and Our Story text" },
+      { error: "Failed to fetch platform settings" },
       { status: 500 }
     );
   }
 }
 
-// POST: Update About Us and/or Our Story text (super admin only)
 export async function POST(req: NextRequest) {
   try {
     const supabase = await createServerSupabaseClient();
-    // Get authenticated user from session
+
     const {
       data: { user },
       error: authError,
     } = await supabase.auth.getUser();
+
     if (authError || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    const profile = await getProfile(user.id);
-    if (!profile || profile.role !== "super_admin") {
+
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (profileError || profile?.role !== "super_admin") {
       return NextResponse.json({ error: "Permission denied" }, { status: 403 });
     }
-    const { about, ourStory, tailoredServices } = await req.json();
-    const updates = [];
-    if (about !== undefined) {
-      updates.push({
-        key: "about_omahub",
-        value: about,
-        updated_at: new Date().toISOString(),
-      });
+
+    let body: unknown;
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
     }
-    if (ourStory !== undefined) {
-      updates.push({
-        key: "our_story",
-        value: ourStory,
-        updated_at: new Date().toISOString(),
-      });
-    }
-    if (tailoredServices !== undefined) {
-      updates.push({
-        key: "tailored_services",
-        value: tailoredServices,
-        updated_at: new Date().toISOString(),
-      });
-    }
-    if (updates.length === 0) {
+
+    const parsed = parsePlatformSettingsUpdate(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: "No fields to update" },
+        { error: "Invalid settings payload" },
         { status: 400 }
       );
     }
-    const { error } = await supabase
+
+    const { about, ourStory, tailoredServices } = parsed.data;
+    const now = new Date().toISOString();
+
+    const updates = [] as Array<{ key: string; value: string; updated_at: string }>;
+
+    if (about !== undefined) {
+      updates.push({ key: "about_omahub", value: about, updated_at: now });
+    }
+    if (ourStory !== undefined) {
+      updates.push({ key: "our_story", value: ourStory, updated_at: now });
+    }
+    if (tailoredServices !== undefined) {
+      updates.push({ key: "tailored_services", value: tailoredServices, updated_at: now });
+    }
+
+    const { error: upsertError } = await supabase
       .from("platform_settings")
       .upsert(updates, { onConflict: "key" });
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+
+    if (upsertError) {
+      console.error("platform_settings_upsert_failed", upsertError.message);
+      return NextResponse.json(
+        { error: "Failed to update platform settings" },
+        { status: 500 }
+      );
     }
+
     return NextResponse.json({ success: true });
   } catch (err) {
+    console.error(
+      "platform_settings_post_exception",
+      err instanceof Error ? err.message : String(err)
+    );
     return NextResponse.json(
-      { error: "Failed to update About Us or Our Story text" },
+      { error: "Failed to update platform settings" },
       { status: 500 }
     );
   }

@@ -1,18 +1,31 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getBrandById } from "@/lib/services/brandService";
+import { getBrandCollections } from "@/lib/services/brandService";
 import { generateSEOMetadata } from "@/lib/seo";
 import ClientBrandProfile from "./ClientBrandProfile";
+import { getCachedBrandById } from "./cachedBrand";
+import { mapBrandToProfileData } from "./brandProfileMapper";
 
 interface BrandPageProps {
   params: { id: string };
+}
+
+const META_DESCRIPTION_MAX = 160;
+
+function trimMetaDescription(raw: string, maxLen = META_DESCRIPTION_MAX): string {
+  const single = raw.replace(/\s+/g, " ").trim();
+  if (single.length <= maxLen) return single;
+  const slice = single.slice(0, maxLen - 1);
+  const lastSpace = slice.lastIndexOf(" ");
+  const trimmed = lastSpace > 50 ? slice.slice(0, lastSpace) : slice;
+  return `${trimmed.trimEnd()}…`;
 }
 
 export async function generateMetadata({
   params,
 }: BrandPageProps): Promise<Metadata> {
   try {
-    const brand = await getBrandById(params.id);
+    const brand = await getCachedBrandById(params.id);
 
     if (!brand) {
       return {
@@ -21,10 +34,12 @@ export async function generateMetadata({
       };
     }
 
-    const description =
+    const rawDescription =
       brand.long_description ||
       brand.description ||
       `Discover ${brand.name}, a premium fashion brand${brand.location ? ` from ${brand.location}` : ""}. Explore their unique collections and connect with their expert team.`;
+
+    const description = trimMetaDescription(rawDescription);
 
     return generateSEOMetadata({
       title: `${brand.name} - Premium Fashion Brand`,
@@ -59,16 +74,20 @@ export async function generateMetadata({
 }
 
 export default async function BrandPage({ params }: BrandPageProps) {
-  try {
-    const brand = await getBrandById(params.id);
+  const brand = await getCachedBrandById(params.id);
 
-    if (!brand) {
-      notFound();
-    }
-
-    return <ClientBrandProfile brandId={params.id} />;
-  } catch (error) {
-    console.error("Error loading brand page:", error);
+  if (!brand) {
     notFound();
   }
+
+  const collections = await getBrandCollections(params.id);
+  const initialBrandData = mapBrandToProfileData(brand as any, collections as any);
+
+  return (
+    <ClientBrandProfile
+      key={params.id}
+      brandId={params.id}
+      initialBrandData={initialBrandData}
+    />
+  );
 }
