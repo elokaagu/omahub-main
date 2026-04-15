@@ -292,7 +292,11 @@ const nextConfig = {
   // Phase 2C: Experimental features for performance
   experimental: {
     optimizeCss: true,
-    optimizePackageImports: ["@radix-ui/react-icons", "lucide-react"],
+    optimizePackageImports: [
+      "@radix-ui/react-icons",
+      "lucide-react",
+      "framer-motion",
+    ],
     turbo: {
       rules: {
         "*.svg": {

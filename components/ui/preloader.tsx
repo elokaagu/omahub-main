@@ -13,7 +13,7 @@ export function Preloader({ children }: PreloaderProps) {
       try {
         // Warm server cache + run admin-only filtering on the server — never import
         // performanceService/getAdminClient in the browser bundle.
-        await fetch("/api/brands/optimized?limit=20", {
+        await fetch("/api/home/bootstrap", {
           credentials: "same-origin",
         }).catch(() => {});
 
@@ -32,23 +32,6 @@ export function Preloader({ children }: PreloaderProps) {
           document.head.appendChild(link);
         });
 
-        // Preload critical fonts
-        const criticalFonts = [
-          "/fonts/Canela-Regular-Trial.otf",
-          "/fonts/suisse-intl-regular.ttf",
-          "/fonts/SuisseIntl-SemiBold.ttf",
-        ];
-
-        criticalFonts.forEach((src) => {
-          const link = document.createElement("link");
-          link.rel = "preload";
-          link.as = "font";
-          link.type = "font/otf";
-          link.href = src;
-          link.crossOrigin = "anonymous";
-          document.head.appendChild(link);
-        });
-
         // Prefetch critical routes
         const criticalRoutes = ["/directory", "/collections", "/tailors"];
 
@@ -59,7 +42,9 @@ export function Preloader({ children }: PreloaderProps) {
           document.head.appendChild(link);
         });
 
-        console.log("✅ Critical resources preloaded");
+        if (process.env.NODE_ENV === "development") {
+          console.log("✅ Critical resources preloaded");
+        }
       } catch (error) {
         console.error("❌ Error preloading resources:", error);
       }

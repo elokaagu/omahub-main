@@ -1,8 +1,5 @@
-import { getCollectionsWithBrands } from "@/lib/services/collectionService";
-import { getTailorsWithBrands } from "@/lib/services/tailorService";
 import { getCategoriesForHomepage } from "@/lib/data/unified-categories";
 import type { CarouselItem, CategoryWithBrands } from "./homeTypes";
-import { devLog } from "./devLog";
 
 export { devLog } from "./devLog";
 
@@ -40,119 +37,53 @@ export function shuffleArray<T>(array: T[]): T[] {
   return arr;
 }
 
-export async function generateDynamicFallbackItems(): Promise<CarouselItem[]> {
-  try {
-    const [catalogues, tailors] = await Promise.all([
-      getCollectionsWithBrands(),
-      getTailorsWithBrands(),
-    ]);
+/** Server/client: build hero fallback carousel items from already-fetched sources. */
+export function buildCarouselFallbackFromCataloguesAndTailors(
+  catalogues: Array<{ image?: string | null }>,
+  tailors: Array<{ image?: string | null }>
+): CarouselItem[] {
+  const items: CarouselItem[] = [];
 
-    const items: CarouselItem[] = [];
-
-    if (catalogues.length > 0) {
-      const randomCatalogue =
-        catalogues[Math.floor(Math.random() * catalogues.length)];
-      items.push({
-        id: 1,
-        image: randomCatalogue.image,
-        title: "Collections",
-        subtitle: "Shop for an occasion, holiday, or ready to wear piece",
-        link: "/collections",
-        heroTitle: "New Season",
-        isEditorial: true,
-        width: 1920,
-        height: 1080,
-      });
+  if (catalogues.length > 0) {
+    const pick = catalogues[Math.floor(Math.random() * catalogues.length)];
+    if (pick.image) {
+      items.push({ ...fallbackCarouselItems[0], image: pick.image });
     } else {
       items.push(fallbackCarouselItems[0]);
     }
+  } else {
+    items.push(fallbackCarouselItems[0]);
+  }
 
-    if (tailors.length > 0) {
-      const randomTailor = tailors[Math.floor(Math.random() * tailors.length)];
-      items.push({
-        id: 2,
-        image: randomTailor.image,
-        title: "Tailored",
-        subtitle: "Masters of craft creating perfectly fitted garments",
-        link: "/tailors",
-        heroTitle: "Bespoke Craft",
-        isEditorial: true,
-        width: 1920,
-        height: 1080,
-      });
+  if (tailors.length > 0) {
+    const pick = tailors[Math.floor(Math.random() * tailors.length)];
+    if (pick.image) {
+      items.push({ ...fallbackCarouselItems[1], image: pick.image });
     } else {
       items.push(fallbackCarouselItems[1]);
     }
-
-    return items;
-  } catch (error) {
-    console.error("Error generating dynamic fallback items:", error);
-    return fallbackCarouselItems;
+  } else {
+    items.push(fallbackCarouselItems[1]);
   }
+
+  return items;
 }
 
-function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
-  return new Promise((resolve, reject) => {
-    const t = setTimeout(() => reject(new Error("Timeout")), ms);
-    promise.then(
-      (v) => {
-        clearTimeout(t);
-        resolve(v);
-      },
-      (e) => {
-        clearTimeout(t);
-        reject(e);
-      }
-    );
-  });
-}
-
-export async function generateDynamicCategoryImages(): Promise<{
-  collectionImage: string;
-  tailoredImage: string;
-}> {
-  try {
-    const [cataloguesResult, tailorsResult] = await withTimeout(
-      Promise.allSettled([getCollectionsWithBrands(), getTailorsWithBrands()]),
-      3000
-    );
-
-    let collectionImage = "";
-    let tailoredImage = "";
-
-    if (
-      cataloguesResult.status === "fulfilled" &&
-      cataloguesResult.value.length > 0
-    ) {
-      const randomCollection =
-        cataloguesResult.value[
-          Math.floor(Math.random() * cataloguesResult.value.length)
-        ];
-      if (randomCollection.image) {
-        collectionImage = randomCollection.image;
-        devLog("Dynamic collection image:", collectionImage);
-      }
-    }
-
-    if (
-      tailorsResult.status === "fulfilled" &&
-      tailorsResult.value.length > 0
-    ) {
-      const randomTailor =
-        tailorsResult.value[
-          Math.floor(Math.random() * tailorsResult.value.length)
-        ];
-      if (randomTailor.image) {
-        tailoredImage = randomTailor.image;
-        devLog("Dynamic tailor image:", tailoredImage);
-      }
-    }
-
-    return { collectionImage, tailoredImage };
-  } catch (error) {
-    console.error("Error generating dynamic category images:", error);
-    return { collectionImage: "", tailoredImage: "" };
+export function pickCategoryImagesFromSources(
+  catalogues: Array<{ image?: string | null }>,
+  tailors: Array<{ image?: string | null }>
+): { collectionImage: string; tailoredImage: string } {
+  let collectionImage = "";
+  let tailoredImage = "";
+  if (catalogues.length > 0) {
+    const pick = catalogues[Math.floor(Math.random() * catalogues.length)];
+    if (pick.image) collectionImage = pick.image;
   }
+  if (tailors.length > 0) {
+    const pick = tailors[Math.floor(Math.random() * tailors.length)];
+    if (pick.image) tailoredImage = pick.image;
+  }
+  return { collectionImage, tailoredImage };
 }
 
 export function buildInitialCategories(): CategoryWithBrands[] {

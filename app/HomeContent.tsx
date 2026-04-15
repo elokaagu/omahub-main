@@ -5,33 +5,36 @@ import { LazyImage } from "@/components/ui/lazy-image";
 import { VideoPlayer } from "@/components/ui/video-player";
 import React, { useState, useEffect } from "react";
 import { FadeIn, SlideUp } from "@/app/components/ui/animations";
-import { getBrandsByCategory, forceRefreshBrands } from "@/lib/services/brandService";
-import { getProductsByCategories } from "@/lib/services/productSearchService";
 import { SectionHeader } from "@/components/ui/section-header";
 import { Button } from "@/components/ui/button";
-import {
-  getActiveHeroSlides,
-  type HeroSlide,
-} from "@/lib/services/heroService";
-import {
-  getActiveSpotlightContent,
-  type SpotlightContent,
-} from "@/lib/services/spotlightService";
+import type { HeroSlide } from "@/lib/services/heroService";
+import type { SpotlightContent } from "@/lib/services/spotlightService";
 import { Carousel } from "@/components/ui/carousel-custom";
-import { occasionToCategoryMapping } from "@/lib/data/directory";
-import { UNIFIED_CATEGORIES } from "@/lib/data/unified-categories";
 import { FullWidthBrandRow } from "@/components/ui/full-width-brand-row";
 import {
   buildInitialCategories,
   fallbackCarouselItems,
-  generateDynamicCategoryImages,
-  generateDynamicFallbackItems,
 } from "@/app/home/homepageData";
-import { buildHomepageCategoriesFromBrands } from "@/app/home/buildHomepageCategories";
 import { devLog } from "@/app/home/devLog";
 import type { CarouselItem, CategoryWithBrands } from "@/app/home/homeTypes";
 
 const initialCategories: CategoryWithBrands[] = buildInitialCategories();
+
+const STATIC_CATEGORY_IMAGES = {
+  collectionImage:
+    "/lovable-uploads/827fb8c0-e5da-4520-a979-6fc054eefc6e.png",
+  tailoredImage:
+    "/lovable-uploads/bb152c0b-6378-419b-a0e6-eafce44631b2.png",
+} as const;
+
+type HomeBootstrapPayload = {
+  categories: CategoryWithBrands[];
+  heroSlides: HeroSlide[];
+  spotlightContent: SpotlightContent | null;
+  dynamicFallbackItems: CarouselItem[];
+  categoryImages: { collectionImage: string; tailoredImage: string };
+  occasionImages: Record<string, string>;
+};
 
 export default function HomeContent() {
   const [categories, setCategories] =
@@ -44,52 +47,16 @@ export default function HomeContent() {
   const [dynamicFallbackItems, setDynamicFallbackItems] = useState<
     CarouselItem[]
   >(fallbackCarouselItems);
-  const [categoryImages, setCategoryImages] = useState({
-    collectionImage: "",
-    tailoredImage: "",
+  const [categoryImages, setCategoryImages] = useState<{
+    collectionImage: string;
+    tailoredImage: string;
+  }>({
+    collectionImage: STATIC_CATEGORY_IMAGES.collectionImage,
+    tailoredImage: STATIC_CATEGORY_IMAGES.tailoredImage,
   });
   const [occasionImages, setOccasionImages] = useState<{
     [key: string]: string;
   }>({});
-
-  // Load dynamic category images - run only once
-  useEffect(() => {
-    let isMounted = true;
-
-    const loadCategoryImages = async () => {
-      try {
-        const fallbackImages = {
-          collectionImage:
-            "/lovable-uploads/827fb8c0-e5da-4520-a979-6fc054eefc6e.png",
-          tailoredImage:
-            "/lovable-uploads/bb152c0b-6378-419b-a0e6-eafce44631b2.png",
-        };
-
-        if (isMounted) {
-          setCategoryImages(fallbackImages);
-        }
-
-        const dynamicImages = await generateDynamicCategoryImages();
-
-        if (
-          isMounted &&
-          (dynamicImages.collectionImage !== fallbackImages.collectionImage ||
-            dynamicImages.tailoredImage !== fallbackImages.tailoredImage)
-        ) {
-          setCategoryImages(dynamicImages);
-          devLog("Updated category images:", dynamicImages);
-        }
-      } catch (error) {
-        console.error("Error loading category images:", error);
-      }
-    };
-
-    loadCategoryImages();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []); // Empty dependency array - run only once
 
   // Transform hero slides to carousel items
   const carouselItems: CarouselItem[] =
@@ -127,134 +94,71 @@ export default function HomeContent() {
       : dynamicFallbackItems;
 
   useEffect(() => {
-    const fetchData = async () => {
+    let cancelled = false;
+
+    const load = async () => {
       try {
         setIsLoading(true);
         setError(null);
 
-        // Use optimized API for better performance - FORCE FRESH DATA
-        const [brandsData, heroData, spotlightData, dynamicItems] =
-          await Promise.all([
-            // Force refresh brands data to get latest image URLs
-            forceRefreshBrands(),
-            getActiveHeroSlides(),
-            getActiveSpotlightContent(),
-            generateDynamicFallbackItems(),
-          ]);
+        const res = await fetch("/api/home/bootstrap", {
+          credentials: "same-origin",
+        });
 
-        const categoryProducts = await Promise.all(
-          UNIFIED_CATEGORIES.map(async (category) => {
-            try {
-              const products = await getProductsByCategories([category.name]);
-              return { categoryId: category.id, products };
-            } catch (error) {
-              console.error(
-                `Error fetching products for ${category.name}:`,
-                error
-              );
-              return { categoryId: category.id, products: [] };
-            }
-          })
-        );
+        if (!res.ok) {
+          throw new Error(`bootstrap ${res.status}`);
+        }
 
-        // Set dynamic fallback items
-        setDynamicFallbackItems(dynamicItems);
+        const data = (await res.json()) as HomeBootstrapPayload;
 
-        const updatedCategories = buildHomepageCategoriesFromBrands(
-          brandsData,
-          categoryProducts
-        );
+        if (cancelled) return;
 
-        setCategories(updatedCategories);
-        setHeroSlides(heroData);
-        setSpotlightContent(spotlightData);
+        setCategories(data.categories);
+        setHeroSlides(data.heroSlides);
+        setSpotlightContent(data.spotlightContent);
+        setDynamicFallbackItems(data.dynamicFallbackItems);
+
+        if (
+          data.categoryImages.collectionImage ||
+          data.categoryImages.tailoredImage
+        ) {
+          setCategoryImages({
+            collectionImage:
+              data.categoryImages.collectionImage ||
+              STATIC_CATEGORY_IMAGES.collectionImage,
+            tailoredImage:
+              data.categoryImages.tailoredImage ||
+              STATIC_CATEGORY_IMAGES.tailoredImage,
+          });
+        }
+
+        setOccasionImages(data.occasionImages ?? {});
+
         devLog(
-          "Homepage categories loaded:",
-          updatedCategories.map((c) => ({ title: c.title, brandCount: c.brands.length }))
+          "Homepage bootstrap:",
+          data.categories.map((c) => ({
+            title: c.title,
+            brandCount: c.brands.length,
+          }))
         );
       } catch (err) {
-        console.error("Error fetching data:", err);
-        setError("Failed to load content. Please try again.");
+        console.error("Error fetching homepage bootstrap:", err);
+        if (!cancelled) {
+          setError("Failed to load content. Please try again.");
+        }
       } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  // Load occasion images - run only once
-  useEffect(() => {
-    let isMounted = true;
-
-    async function fetchOccasionImages() {
-      if (!isMounted) return;
-
-      const mapping = occasionToCategoryMapping;
-      const usedBrandIds = new Set();
-      const newImages: Record<string, string> = {};
-
-      // Define better fallback images for each occasion
-      const occasionFallbacks = {
-        Wedding: "/lovable-uploads/57cc6a40-0f0d-4a7d-8786-41f15832ebfb.png",
-        Party: "/lovable-uploads/4a7c7e86-6cde-4d07-a246-a5aa4cb6fa51.png",
-        "Ready to Wear":
-          "/lovable-uploads/99ca757a-bed8-422e-b155-0b9d365b58e0.png",
-        Vacation: "/lovable-uploads/25c3fe26-3fc4-43ef-83ac-6931a74468c0.png",
-      };
-
-      for (const [occasion, category] of Object.entries(mapping)) {
-        if (!isMounted) return;
-
-        try {
-          const brands = await getBrandsByCategory(category);
-          // Filter out brands already used for other occasions and brands without images/videos
-          const availableBrands = brands.filter((b) => {
-            if (usedBrandIds.has(b.id)) return false;
-            
-            // Check if brand has image or video uploaded
-            const hasImage = b.brand_images && b.brand_images.length > 0;
-            const hasVideo = b.video_url && b.video_url.trim() !== '';
-            
-            return hasImage || hasVideo;
-          });
-
-          if (availableBrands.length > 0) {
-            // Select a random brand from available ones
-            const randomBrand =
-              availableBrands[
-                Math.floor(Math.random() * availableBrands.length)
-              ];
-            usedBrandIds.add(randomBrand.id);
-            newImages[occasion] =
-              (randomBrand.brand_images?.[0]?.storage_path
-                ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${randomBrand.brand_images[0].storage_path}`
-                : null) ||
-              occasionFallbacks[occasion as keyof typeof occasionFallbacks];
-          } else {
-            newImages[occasion] =
-              occasionFallbacks[occasion as keyof typeof occasionFallbacks];
-          }
-        } catch (error) {
-          console.error(`Error fetching brands for ${occasion}:`, error);
-          newImages[occasion] =
-            occasionFallbacks[occasion as keyof typeof occasionFallbacks];
+        if (!cancelled) {
+          setIsLoading(false);
         }
       }
+    };
 
-      if (isMounted) {
-        setOccasionImages(newImages);
-        devLog("Occasion images resolved:", newImages);
-      }
-    }
-
-    fetchOccasionImages();
+    load();
 
     return () => {
-      isMounted = false;
+      cancelled = true;
     };
-  }, []); // Empty dependency array - run only once
-
+  }, []);
 
   if (error) {
     return (
