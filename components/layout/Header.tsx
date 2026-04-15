@@ -376,7 +376,7 @@ export default function Header() {
             );
           })}
 
-          <div className="hidden lg:flex lg:flex-1 lg:justify-end lg:gap-x-6">
+          <div className="hidden lg:flex lg:flex-1 lg:items-center lg:justify-end lg:gap-x-6">
             <button
               onClick={triggerSearchModal}
               className={cn(

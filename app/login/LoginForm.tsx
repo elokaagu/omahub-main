@@ -82,36 +82,35 @@ function LoginFormInner() {
           debugJson={urlState.debugJson}
         />
 
-        <form className="space-y-6" onSubmit={handleSubmit}>
+        <form className="space-y-5" onSubmit={handleSubmit}>
         <div>
           <label
             htmlFor="email"
-            className="block text-sm font-medium text-oma-cocoa"
+            className="mb-2 block text-sm font-medium text-oma-black/80"
           >
             Email address
           </label>
-          <div className="mt-1">
-            <input
-              id="email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 shadow-sm placeholder:text-gray-400 focus:border-oma-plum focus:outline-none focus:ring-oma-plum"
-            />
-          </div>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            autoComplete="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@example.com"
+            className="block w-full rounded-xl border-0 bg-[#EBF2FA] px-4 py-3.5 text-oma-black shadow-inner ring-1 ring-inset ring-slate-200/70 transition-[box-shadow,background-color] placeholder:text-oma-cocoa/45 focus:bg-white focus:outline-none focus:ring-2 focus:ring-oma-plum/35"
+          />
         </div>
 
         <div>
           <label
             htmlFor="password"
-            className="block text-sm font-medium text-oma-cocoa"
+            className="mb-2 block text-sm font-medium text-oma-black/80"
           >
             Password
           </label>
-          <div className="relative mt-1">
+          <div className="relative">
             <input
               id="password"
               name="password"
@@ -120,95 +119,91 @@ function LoginFormInner() {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 pr-10 shadow-sm placeholder:text-gray-400 focus:border-oma-plum focus:outline-none focus:ring-oma-plum"
+              placeholder="••••••••"
+              className="block w-full rounded-xl border-0 bg-[#EBF2FA] px-4 py-3.5 pr-12 text-oma-black shadow-inner ring-1 ring-inset ring-slate-200/70 transition-[box-shadow,background-color] placeholder:text-oma-cocoa/35 focus:bg-white focus:outline-none focus:ring-2 focus:ring-oma-plum/35"
             />
             <button
               type="button"
-              className="absolute inset-y-0 right-0 flex items-center pr-3"
+              className="absolute inset-y-0 right-0 flex items-center pr-4 text-oma-cocoa/60 transition-colors hover:text-oma-plum"
               onClick={() => setShowPassword(!showPassword)}
               aria-label={showPassword ? "Hide password" : "Show password"}
             >
               {showPassword ? (
-                <EyeOff className="h-4 w-4 text-gray-400 hover:text-gray-600" />
+                <EyeOff className="h-[1.125rem] w-[1.125rem]" />
               ) : (
-                <Eye className="h-4 w-4 text-gray-400 hover:text-gray-600" />
+                <Eye className="h-[1.125rem] w-[1.125rem]" />
               )}
             </button>
           </div>
         </div>
 
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-2.5">
             <input
               id="remember-me"
               name="remember-me"
               type="checkbox"
               checked={rememberMe}
               onChange={(e) => handleRememberMeChange(e.target.checked)}
-              className="h-4 w-4 rounded border-gray-300 text-oma-plum focus:ring-oma-plum"
+              className="h-4 w-4 rounded border-slate-300 text-oma-plum focus:ring-oma-plum/40"
             />
             <label
               htmlFor="remember-me"
-              className="ml-2 block text-sm text-oma-cocoa"
+              className="text-sm text-oma-cocoa"
             >
               Remember me
             </label>
           </div>
 
-          <div className="text-sm">
-            <Link
-              href="/forgot-password"
-              className="font-medium text-oma-plum hover:text-oma-plum/80"
-            >
-              Forgot your password?
-            </Link>
-          </div>
+          <Link
+            href="/forgot-password"
+            className="text-sm font-medium text-oma-plum underline-offset-4 hover:underline sm:text-right"
+          >
+            Forgot your password?
+          </Link>
         </div>
 
-        <div>
+        <div className="pt-1">
           <Button
             type="submit"
-            className="w-full bg-oma-plum hover:bg-oma-plum/90"
+            className="h-12 w-full rounded-full bg-oma-plum text-[15px] font-semibold tracking-wide text-white shadow-sm transition-[transform,background-color] hover:bg-oma-plum/92 active:scale-[0.99] disabled:opacity-70"
             disabled={loading}
           >
-            {loading ? "Signing in..." : "Sign in"}
+            {loading ? "Signing in…" : "Sign in"}
           </Button>
         </div>
         </form>
       </div>
 
-      <div className="mt-6 text-center">
-        <p className="text-sm text-oma-cocoa">
-          Don&apos;t have an account?{" "}
-          <Link
-            href="/signup"
-            className="font-medium text-oma-plum hover:text-oma-plum/80"
-          >
-            Sign up
-          </Link>
-        </p>
-      </div>
+      <p className="mt-6 text-center text-xs text-oma-cocoa/80 sm:text-sm">
+        New to OmaHub?{" "}
+        <Link
+          href="/signup"
+          className="font-semibold text-oma-plum underline-offset-4 hover:underline"
+        >
+          Create an account
+        </Link>
+      </p>
     </>
   );
 }
 
 function LoginFormLoading() {
   return (
-    <div className="space-y-6">
-      <div className="h-10 animate-pulse rounded-md bg-gray-200" />
+    <div className="space-y-5">
       <div className="space-y-2">
-        <div className="h-5 w-1/4 animate-pulse rounded bg-gray-200" />
-        <div className="h-10 animate-pulse rounded-md bg-gray-200" />
+        <div className="h-4 w-24 animate-pulse rounded bg-slate-200/80" />
+        <div className="h-12 animate-pulse rounded-xl bg-[#EBF2FA]" />
       </div>
       <div className="space-y-2">
-        <div className="h-5 w-1/4 animate-pulse rounded bg-gray-200" />
-        <div className="h-10 animate-pulse rounded-md bg-gray-200" />
+        <div className="h-4 w-20 animate-pulse rounded bg-slate-200/80" />
+        <div className="h-12 animate-pulse rounded-xl bg-[#EBF2FA]" />
       </div>
-      <div className="flex justify-between">
-        <div className="h-5 w-1/4 animate-pulse rounded bg-gray-200" />
-        <div className="h-5 w-1/4 animate-pulse rounded bg-gray-200" />
+      <div className="flex justify-between pt-1">
+        <div className="h-4 w-28 animate-pulse rounded bg-slate-200/80" />
+        <div className="h-4 w-36 animate-pulse rounded bg-slate-200/80" />
       </div>
-      <div className="h-10 animate-pulse rounded-md bg-gray-200" />
+      <div className="h-12 animate-pulse rounded-full bg-oma-plum/25" />
     </div>
   );
 }

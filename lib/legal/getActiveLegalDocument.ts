@@ -31,7 +31,7 @@ function rowToRender(
     id: string;
     document_type: string;
     title: string;
-    content: string;
+    content: unknown;
     effective_date: string;
     version: number | string;
     is_active: boolean;
@@ -43,11 +43,15 @@ function rowToRender(
     typeof row.version === "number"
       ? row.version
       : parseInt(String(row.version), 10) || 1;
+  const effectiveDate =
+    row.effective_date != null && String(row.effective_date).trim() !== ""
+      ? String(row.effective_date)
+      : "2025-01-01";
   return {
     id: row.id,
     document_type: expectedType,
-    title: row.title,
-    effective_date: row.effective_date,
+    title: String(row.title ?? "Legal document"),
+    effective_date: effectiveDate,
     version,
     is_active: row.is_active,
     contentHtml: sanitizeLegalDocumentHtml(row.content),
@@ -60,7 +64,18 @@ function rowToRender(
 export async function getActiveLegalDocument(
   type: LegalDocumentType
 ): Promise<ActiveLegalDocumentResult> {
-  const fallback = defaultDocForType(type);
+  let fallback: LegalDocumentForRender | null;
+  try {
+    fallback = defaultDocForType(type);
+  } catch (e) {
+    console.error("getActiveLegalDocument default doc:", e);
+    return {
+      status: "error",
+      message:
+        "Something went wrong while preparing this page. Please refresh or contact support.",
+    };
+  }
+
   if (!fallback) {
     return {
       status: "error",
@@ -93,7 +108,9 @@ export async function getActiveLegalDocument(
       )
       .eq("document_type", type)
       .eq("is_active", true)
-      .order("created_at", { ascending: false })
+      // Prefer columns that exist on all schema versions (avoid `created_at` if missing).
+      .order("effective_date", { ascending: false })
+      .order("version", { ascending: false })
       .limit(1)
       .maybeSingle();
 
@@ -107,11 +124,16 @@ export async function getActiveLegalDocument(
     }
 
     if (error) {
-      console.error("getActiveLegalDocument:", error.message);
+      console.error(
+        "getActiveLegalDocument:",
+        error.message,
+        error.code ?? ""
+      );
       return {
-        status: "error",
-        message:
-          "We could not load this policy from our servers. Please try again later or request a copy by email.",
+        status: "fallback",
+        doc: fallback,
+        notice:
+          "Showing default policy text because the published document could not be loaded from our servers.",
       };
     }
 
@@ -133,9 +155,10 @@ export async function getActiveLegalDocument(
   } catch (e) {
     console.error("getActiveLegalDocument unexpected:", e);
     return {
-      status: "error",
-      message:
-        "Something went wrong while loading this page. Please refresh or contact support.",
+      status: "fallback",
+      doc: fallback,
+      notice:
+        "Showing default policy text after an unexpected error while loading the published document.",
     };
   }
 }

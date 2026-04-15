@@ -77,12 +77,12 @@ export function HeaderUserMenu({
     "cursor-pointer rounded-md px-3 py-2.5 text-sm font-medium text-gray-800 focus:bg-gray-100 focus:text-gray-900";
 
   return (
-    <DropdownMenu open={open} onOpenChange={setOpen}>
+    <DropdownMenu open={open} onOpenChange={setOpen} modal={false}>
       <DropdownMenuTrigger asChild>
         <button
           type="button"
           className={cn(
-            "inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-oma-plum/40 focus-visible:ring-offset-2",
+            "inline-flex h-10 shrink-0 select-none items-center gap-2 rounded-lg border px-3 text-sm font-medium outline-none transition-[color,background-color,border-color] duration-200 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-oma-plum/40",
             onHero
               ? "border-white/35 bg-white/12 text-white hover:bg-white/20 backdrop-blur-sm"
               : "border-gray-200 bg-gray-50 text-gray-900 shadow-sm hover:bg-gray-100"
@@ -115,13 +115,17 @@ export function HeaderUserMenu({
             </span>
           )}
           <span className="max-w-[120px] truncate">{label}</span>
-          <ChevronDown
-            className={cn(
-              "h-4 w-4 shrink-0 opacity-80 transition-transform duration-200",
-              open && "rotate-180"
-            )}
+          <span
+            className="inline-flex size-4 shrink-0 items-center justify-center"
             aria-hidden
-          />
+          >
+            <ChevronDown
+              className={cn(
+                "size-4 opacity-80 transition-transform duration-200 ease-out will-change-transform",
+                open && "rotate-180"
+              )}
+            />
+          </span>
         </button>
       </DropdownMenuTrigger>
 

@@ -77,7 +77,9 @@ export default async function PrivacyPolicyPage() {
                 )}
                 <div
                   className="markdown-content"
-                  dangerouslySetInnerHTML={{ __html: result.doc.contentHtml }}
+                  dangerouslySetInnerHTML={{
+                    __html: result.doc.contentHtml ?? "",
+                  }}
                 />
                 <p className="mt-10 border-t border-oma-gold/20 pt-6 text-center text-sm text-oma-cocoa/90">
                   Questions about this policy?{" "}
