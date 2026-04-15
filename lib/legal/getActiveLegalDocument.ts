@@ -1,4 +1,4 @@
-import { createServerSupabaseClient } from "@/lib/supabase-unified";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { defaultLegalDocuments } from "./defaultLegalDocuments";
 import type { LegalDocumentForRender, LegalDocumentType } from "./legalDocument";
 import { sanitizeLegalDocumentHtml } from "./sanitizeLegalDocumentHtml";
@@ -69,7 +69,23 @@ export async function getActiveLegalDocument(
   }
 
   try {
-    const supabase = await createServerSupabaseClient();
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    // Public legal pages should still render when preview env is incomplete.
+    if (!supabaseUrl || !supabaseAnonKey) {
+      return {
+        status: "fallback",
+        doc: fallback,
+        notice:
+          "Showing default policy text while document storage is temporarily unavailable.",
+      };
+    }
+
+    const supabase = createSupabaseClient(supabaseUrl, supabaseAnonKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+
     const { data, error } = await supabase
       .from("legal_documents")
       .select(
@@ -81,7 +97,7 @@ export async function getActiveLegalDocument(
       .limit(1)
       .maybeSingle();
 
-    if (error && error.code === "PGRST116") {
+    if (error && (error.code === "PGRST116" || error.code === "42P01")) {
       return {
         status: "fallback",
         doc: fallback,

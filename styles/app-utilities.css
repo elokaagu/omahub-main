@@ -1,27 +1,3 @@
-/* Thin scrollbars — avoid hiding all scrollbars globally */
-html {
-  scrollbar-width: thin;
-  scrollbar-color: #d4b285 #f6f0e8;
-}
-
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: #f6f0e8;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #d4b285;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #a07f68;
-}
-
 @layer utilities {
   .scrollbar-hide::-webkit-scrollbar {
     display: none;

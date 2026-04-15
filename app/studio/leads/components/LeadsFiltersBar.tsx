@@ -71,7 +71,7 @@ export function LeadsFiltersBar({
               Status
             </Label>
             <Select value={statusFilter} onValueChange={onStatusFilterChange}>
-              <SelectTrigger className="border-oma-cocoa/20 focus:border-oma-plum">
+              <SelectTrigger id="status" className="border-oma-cocoa/20 focus:border-oma-plum">
                 <SelectValue placeholder="All statuses" />
               </SelectTrigger>
               <SelectContent>
@@ -91,7 +91,7 @@ export function LeadsFiltersBar({
               Source
             </Label>
             <Select value={sourceFilter} onValueChange={onSourceFilterChange}>
-              <SelectTrigger className="border-oma-cocoa/20 focus:border-oma-plum">
+              <SelectTrigger id="source" className="border-oma-cocoa/20 focus:border-oma-plum">
                 <SelectValue placeholder="All sources" />
               </SelectTrigger>
               <SelectContent>
@@ -110,7 +110,7 @@ export function LeadsFiltersBar({
               Priority
             </Label>
             <Select value={priorityFilter} onValueChange={onPriorityFilterChange}>
-              <SelectTrigger className="border-oma-cocoa/20 focus:border-oma-plum">
+              <SelectTrigger id="priority" className="border-oma-cocoa/20 focus:border-oma-plum">
                 <SelectValue placeholder="All priorities" />
               </SelectTrigger>
               <SelectContent>
@@ -127,7 +127,7 @@ export function LeadsFiltersBar({
               Sort By
             </Label>
             <Select value={sortBy} onValueChange={onSortByChange}>
-              <SelectTrigger className="border-oma-cocoa/20 focus:border-oma-plum">
+              <SelectTrigger id="sort" className="border-oma-cocoa/20 focus:border-oma-plum">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

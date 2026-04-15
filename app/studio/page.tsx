@@ -80,10 +80,10 @@ export default function StudioPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8">
       {/* Welcome Header */}
       <div className="text-center">
-        <h1 className="text-4xl font-bold text-oma-plum mb-2">
+        <h1 className="text-4xl font-bold text-omahub-primary mb-2">
           Welcome to OmaHub Studio
         </h1>
-        <p className="text-lg text-oma-cocoa">
+        <p className="text-lg text-omahub-secondary">
           Manage your brands, products, and business operations
         </p>
       </div>

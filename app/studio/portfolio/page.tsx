@@ -43,6 +43,7 @@ interface PortfolioItem {
   created_at: string;
   updated_at: string;
 }
+const isDev = process.env.NODE_ENV === "development";
 
 export default function PortfolioPage() {
   const { user } = useAuth();
@@ -67,26 +68,23 @@ export default function PortfolioPage() {
           brand_name: item.brand?.name || "Unknown Brand",
         }));
 
-        console.log("📸 Portfolio items fetched:", enrichedPortfolio.length);
-        
-        // Debug: Log image information for each portfolio item
-        enrichedPortfolio.forEach((item: PortfolioItem, index: number) => {
-          console.log(`📸 Portfolio item ${index + 1}:`, {
-            title: item.title,
-            mainImage: item.image,
-            imagesArray: item.images,
-            imagesArrayLength: item.images?.length || 0,
-            firstImage: item.images?.[0] || "none"
-          });
-        });
-        
         setPortfolioItems(enrichedPortfolio);
       } else {
-        throw new Error("Failed to fetch portfolio items");
+        if (response.status === 401 || response.status === 403) {
+          setPortfolioItems([]);
+          return;
+        }
+        const payload = await response.json().catch(() => null);
+        const message =
+          (payload && typeof payload.error === "string" && payload.error) ||
+          "Failed to fetch portfolio items";
+        throw new Error(message);
       }
     } catch (error) {
-      console.error("Error fetching portfolio items:", error);
-      toast.error("Failed to fetch portfolio items");
+      if (isDev) {
+        console.error("Error fetching portfolio items:", error);
+      }
+      toast.error("Could not load portfolio items");
     } finally {
       setLoading(false);
     }

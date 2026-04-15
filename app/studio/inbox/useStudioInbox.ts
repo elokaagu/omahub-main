@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { StudioInquiry, StudioNotification } from "./types";
 
 const POLL_MS = 60_000;
+const isDev = process.env.NODE_ENV === "development";
 
 type LoadReason = "initial" | "manual" | "interval";
 
@@ -55,6 +56,12 @@ export function useStudioInbox(options: {
         if (isStale()) return;
 
         if (!response.ok) {
+          if (response.status === 401 || response.status === 403) {
+            setInquiries([]);
+            setNotifications([]);
+            setLoadError(null);
+            return;
+          }
           throw new Error("Failed to load inbox");
         }
 
@@ -66,7 +73,9 @@ export function useStudioInbox(options: {
         setLoadError(null);
       } catch (e) {
         if (isStale()) return;
-        console.error("Error loading inbox:", e);
+        if (isDev) {
+          console.error("Error loading inbox:", e);
+        }
         setLoadError("We couldn’t load your inbox. Check your connection and try again.");
       } finally {
         if (!isStale()) {

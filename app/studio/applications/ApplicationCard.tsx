@@ -32,6 +32,17 @@ export function ApplicationCard({
   deletingApplicationId,
 }: ApplicationCardProps) {
   const rowBusy = updatingApplicationId === application.id;
+  const email = application.email?.trim();
+  const location = application.location?.trim();
+  const phone = application.phone?.trim();
+  const website = application.website?.trim();
+  const instagram = application.instagram?.trim();
+  const yearFounded =
+    application.year_founded !== null &&
+    application.year_founded !== undefined &&
+    String(application.year_founded).trim() !== ""
+      ? String(application.year_founded).trim()
+      : "";
 
   return (
     <Card className="hover:shadow-md transition-shadow">
@@ -55,43 +66,47 @@ export function ApplicationCard({
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-          <div className="flex items-center gap-2 text-sm">
-            <Mail className="h-4 w-4 text-oma-gold shrink-0" />
-            <span className="truncate">{application.email}</span>
-          </div>
-          <div className="flex items-center gap-2 text-sm">
-            <MapPin className="h-4 w-4 text-oma-gold shrink-0" />
-            <span>{application.location}</span>
-          </div>
-          {application.phone && (
-            <div className="flex items-center gap-2 text-sm">
-              <Phone className="h-4 w-4 text-oma-gold shrink-0" />
-              <span>{application.phone}</span>
+          {email && (
+            <div className="flex items-center gap-2 text-sm text-oma-cocoa">
+              <Mail className="h-4 w-4 text-oma-gold shrink-0" />
+              <span className="truncate">{email}</span>
             </div>
           )}
-          {application.website && (
-            <div className="flex items-center gap-2 text-sm">
+          {location && (
+            <div className="flex items-center gap-2 text-sm text-oma-cocoa">
+              <MapPin className="h-4 w-4 text-oma-gold shrink-0" />
+              <span>{location}</span>
+            </div>
+          )}
+          {phone && (
+            <div className="flex items-center gap-2 text-sm text-oma-cocoa">
+              <Phone className="h-4 w-4 text-oma-gold shrink-0" />
+              <span>{phone}</span>
+            </div>
+          )}
+          {website && (
+            <div className="flex items-center gap-2 text-sm text-oma-cocoa">
               <Globe className="h-4 w-4 text-oma-gold shrink-0" />
               <a
-                href={application.website}
+                href={website}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-oma-plum hover:underline truncate"
               >
-                {application.website}
+                {website}
               </a>
             </div>
           )}
-          {application.instagram && (
-            <div className="flex items-center gap-2 text-sm">
+          {instagram && (
+            <div className="flex items-center gap-2 text-sm text-oma-cocoa">
               <Instagram className="h-4 w-4 text-oma-gold shrink-0" />
-              <span>@{application.instagram.replace(/^@/, "")}</span>
+              <span>@{instagram.replace(/^@/, "")}</span>
             </div>
           )}
-          {application.year_founded && (
-            <div className="flex items-center gap-2 text-sm">
+          {yearFounded && (
+            <div className="flex items-center gap-2 text-sm text-oma-cocoa">
               <Building className="h-4 w-4 text-oma-gold shrink-0" />
-              <span>Founded {application.year_founded}</span>
+              <span>Founded {yearFounded}</span>
             </div>
           )}
         </div>

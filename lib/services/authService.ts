@@ -13,6 +13,14 @@ export type User = {
   owned_brands?: string[]; // Array of brand IDs owned by this user
 };
 
+const isDev = process.env.NODE_ENV === "development";
+function devLog(...args: unknown[]) {
+  if (isDev) console.log(...args);
+}
+function devWarn(...args: unknown[]) {
+  if (isDev) console.warn(...args);
+}
+
 // Client-side auth functions
 export async function signUp(email: string, password: string) {
   if (!supabase) {
@@ -126,8 +134,6 @@ export async function getCurrentUser() {
 
 export async function getProfile(userId: string): Promise<User | null> {
   try {
-    console.log("🔍 Fetching profile for user:", userId);
-
     if (!supabase) {
       console.error("❌ Supabase client not available");
       return null;
@@ -150,8 +156,8 @@ export async function getProfile(userId: string): Promise<User | null> {
       return null;
     }
 
-    console.log("✅ Got auth user:", { id: user?.id, email: user?.email });
-    console.log("📊 Profile query result:", {
+    devLog("Got auth user:", { id: user?.id, email: user?.email });
+    devLog("Profile query result:", {
       data: profileData,
       error: profileError,
     });
@@ -162,7 +168,7 @@ export async function getProfile(userId: string): Promise<User | null> {
     }
 
     if (!profileData) {
-      console.log("⚠️ Profile not found, creating new profile");
+      devLog("Profile not found, creating new profile");
       const userEmail = user?.email || "";
       let role: string = "user";
 
@@ -175,10 +181,10 @@ export async function getProfile(userId: string): Promise<User | null> {
 
         if (!emailError && emailProfile) {
           role = emailProfile.role;
-          console.log("✅ Found existing profile by email, using role:", role);
+          devLog("Found existing profile by email, using role:", role);
         }
       } catch {
-        console.warn("⚠️ Error in role detection, using default 'user' role");
+        devWarn("Error in role detection, using default 'user' role");
       }
 
       const { data: newProfile, error: createError } = await supabase
@@ -199,7 +205,7 @@ export async function getProfile(userId: string): Promise<User | null> {
         return null;
       }
 
-      console.log("✅ New profile created:", newProfile);
+      devLog("New profile created:", newProfile);
       return {
         id: newProfile.id,
         email: newProfile.email || userEmail,
@@ -211,7 +217,7 @@ export async function getProfile(userId: string): Promise<User | null> {
       };
     }
 
-    console.log("✅ Profile fetched successfully:", {
+    devLog("Profile fetched successfully:", {
       id: profileData.id,
       role: profileData.role,
       email: profileData.email || user?.email,
@@ -229,7 +235,7 @@ export async function getProfile(userId: string): Promise<User | null> {
       owned_brands: profileData.owned_brands || [],
     };
 
-    console.log("🎯 Returning profile:", userProfile);
+    devLog("Returning profile:", userProfile);
     return userProfile;
   } catch (err) {
     console.error("❌ Error in getProfile:", err);
@@ -273,7 +279,7 @@ export async function resetPassword(email: string) {
   
   const redirectUrl = `${baseUrl}/reset-password`;
 
-  console.log("🔗 Sending password reset email with redirect URL:", redirectUrl);
+  devLog("Sending password reset email with redirect URL:", redirectUrl);
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: redirectUrl,

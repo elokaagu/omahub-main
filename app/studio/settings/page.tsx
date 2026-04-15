@@ -25,9 +25,13 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { useStudioPermissions } from "@/hooks/useStudioPermissions";
 
 export default function SettingsPage() {
   const { user, loading } = useAuth();
+  const { permissions, loading: permissionsLoading } = useStudioPermissions(
+    user?.id
+  );
   const [isChangingStatus, setIsChangingStatus] = useState(false);
   const [platformStatus, setPlatformStatus] = useState<{
     isPublic: boolean;
@@ -38,7 +42,9 @@ export default function SettingsPage() {
   const [statusError, setStatusError] = useState<string | null>(null);
 
   // Check if user has super admin permissions
-  const isSuperAdmin = user?.role === "super_admin";
+  const hasSettingsPermission = permissions.includes("studio.settings.manage");
+  const isSuperAdmin =
+    user?.role === "super_admin" || hasSettingsPermission;
 
   // Fetch platform status on component mount
   useEffect(() => {
@@ -47,7 +53,7 @@ export default function SettingsPage() {
     }
   }, [isSuperAdmin]);
 
-  if (loading || !user) {
+  if (loading || !user || permissionsLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         Loading...

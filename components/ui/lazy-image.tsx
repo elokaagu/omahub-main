@@ -76,21 +76,19 @@ export function LazyImage({
         setIsLoading(true);
         setHasError(false);
 
-        console.log("🔍 LazyImage processing URL:", src);
-
         // Handle object URLs (blob:) immediately without conversion
         if (src.startsWith("blob:")) {
-          console.log("📸 Using object URL directly (temporary preview):", src);
           setImageUrl(src);
           return;
         }
 
         // For all other URLs (including Supabase), use as-is
         // The Supabase URLs are already public and accessible
-        console.log("📸 Using URL directly:", src);
         setImageUrl(src);
       } catch (err) {
-        console.error("❌ Error processing image URL:", src, err);
+        if (process.env.NODE_ENV === "development") {
+          console.error("Error processing image URL:", src, err);
+        }
         // Don't set error state, just try to use the original URL
         setImageUrl(src);
       }
@@ -108,7 +106,9 @@ export function LazyImage({
   const handleImageError = () => {
     setIsLoading(false);
     setHasError(true);
-    console.warn("❌ Image failed to load:", src);
+    if (process.env.NODE_ENV === "development") {
+      console.warn("Image failed to load:", src);
+    }
     onError?.();
   };
 

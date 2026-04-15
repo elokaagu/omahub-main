@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import type { FavouriteItem } from "@/lib/types/favouriteItem";
 
 export type { FavouriteItem } from "@/lib/types/favouriteItem";
+const isDev = process.env.NODE_ENV === "development";
 
 interface FavouritesContextType {
   favourites: FavouriteItem[];
@@ -63,14 +64,15 @@ export function FavouritesProvider({
       }
 
       const data = await response.json();
-      console.log("📚 Fetched favourites:", data);
 
       // Handle the new API response structure
       const favouritesData = data.favourites?.items || data.favourites || [];
 
       // Ensure we always have an array
       if (!Array.isArray(favouritesData)) {
-        console.error("❌ Favourites data is not an array:", favouritesData);
+        if (isDev) {
+          console.error("Favourites data is not an array:", favouritesData);
+        }
         setFavourites([]);
         return;
       }
@@ -141,8 +143,7 @@ export function FavouritesProvider({
           throw new Error(errorData.error || "Failed to add to favourites");
         }
 
-        const data = await response.json();
-        console.log("✅ Added to favourites:", data);
+        await response.json();
 
         // Show success toast
         toast.success("Added to favourites", {
@@ -188,7 +189,6 @@ export function FavouritesProvider({
       );
 
       if (!itemToRemove) {
-        console.log("⚠️ Item not found in favourites:", itemId, itemType);
         return false;
       }
 
@@ -215,8 +215,7 @@ export function FavouritesProvider({
           );
         }
 
-        const data = await response.json();
-        console.log("✅ Removed from favourites:", data);
+        await response.json();
 
         // Show success toast
         toast.success("Removed from favourites", {
