@@ -15,15 +15,8 @@ import {
 } from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-} from "@/components/ui/navigation-menu";
 import { NavigationLink } from "@/components/ui/navigation-link";
+import { HeaderUserMenu } from "@/components/layout/HeaderUserMenu";
 import { collections } from "@/lib/data/directory";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigation } from "@/contexts/NavigationContext";
@@ -411,83 +404,13 @@ export default function Header() {
             </Button>
 
             {user ? (
-              <NavigationMenu>
-                <NavigationMenuList>
-                  <NavigationMenuItem>
-                    <NavigationMenuTrigger
-                      className={cn(
-                        scrolled || !isHomePage
-                          ? "bg-oma-plum text-white hover:bg-oma-plum/90"
-                          : "bg-white text-oma-plum hover:bg-white/90"
-                      )}
-                    >
-                      {user.avatar_url ? (
-                        <Avatar className="h-6 w-6 mr-2">
-                          <AvatarImage
-                            src={user.avatar_url}
-                            alt={`${user.first_name || ""} ${user.last_name || ""}`}
-                          />
-                          <AvatarFallback>
-                            <User className="h-4 w-4" />
-                          </AvatarFallback>
-                        </Avatar>
-                      ) : (
-                        <User className="h-4 w-4 mr-2" />
-                      )}
-                      {user.first_name ? `${user.first_name}` : "My Account"}
-                    </NavigationMenuTrigger>
-                    <NavigationMenuContent>
-                      <ul className="grid w-[220px] gap-1 p-3 bg-white shadow-lg rounded-lg border border-gray-100">
-                        <li>
-                          <NavigationMenuLink asChild>
-                            <NavigationLink
-                              href="/profile"
-                              className="flex items-center gap-3 w-full rounded-md px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-oma-plum transition-colors"
-                            >
-                              <span>Profile</span>
-                            </NavigationLink>
-                          </NavigationMenuLink>
-                        </li>
-                        <li>
-                          <NavigationMenuLink asChild>
-                            <NavigationLink
-                              href="/favourites"
-                              className="flex items-center gap-3 w-full rounded-md px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-oma-plum transition-colors"
-                            >
-                              <span>Favourites</span>
-                            </NavigationLink>
-                          </NavigationMenuLink>
-                        </li>
-                        {showStudioInNav && (
-                          <li>
-                            <NavigationMenuLink asChild>
-                              <button
-                                onClick={handleStudioNavigation}
-                                disabled={isNavigatingToStudio}
-                                className="flex items-center gap-3 w-full rounded-md px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-oma-plum transition-colors disabled:opacity-50"
-                              >
-                                <span>
-                                  Studio {isNavigatingToStudio && "..."}
-                                </span>
-                              </button>
-                            </NavigationMenuLink>
-                          </li>
-                        )}
-                        <li className="border-t border-gray-100 mt-2 pt-2">
-                          <NavigationMenuLink asChild>
-                            <button
-                              onClick={handleSignOut}
-                              className="flex items-center gap-3 w-full rounded-md px-3 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
-                            >
-                              <span>Sign Out</span>
-                            </button>
-                          </NavigationMenuLink>
-                        </li>
-                      </ul>
-                    </NavigationMenuContent>
-                  </NavigationMenuItem>
-                </NavigationMenuList>
-              </NavigationMenu>
+              <HeaderUserMenu
+                scrolled={scrolled}
+                isHomePage={isHomePage}
+                showStudio={showStudioInNav}
+                onStudioNavigate={handleStudioNavigation}
+                studioNavigating={isNavigatingToStudio}
+              />
             ) : (
               <Button
                 asChild
