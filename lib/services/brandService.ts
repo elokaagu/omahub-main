@@ -1,4 +1,11 @@
-import { supabase, Brand, Review, Catalogue, Product } from "../supabase";
+import {
+  supabase,
+  Brand,
+  BrandImage,
+  Review,
+  Catalogue,
+  Product,
+} from "../supabase";
 import { getProfile, isAdmin } from "./authService";
 import { getAdminClientLazy } from "@/lib/supabase/adminClientLazy";
 
@@ -269,6 +276,7 @@ export async function getAllBrandsWithProductCounts(): Promise<
         image: item.brand_images?.[0]?.storage_path
           ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${item.brand_images[0].storage_path}`
           : item.image || "/placeholder-image.jpg", // Fallback to old image field for backward compatibility
+        brand_images: (item.brand_images || []) as BrandImage[],
         product_count: item.products?.[0]?.count || 0,
         // Include video fields
         video_url: item.video_url || undefined,
@@ -346,6 +354,7 @@ export async function getAllBrands(
           image: item.brand_images?.[0]?.storage_path
             ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${item.brand_images[0].storage_path}`
             : item.image || "/placeholder-image.jpg", // Fallback to old image field for backward compatibility
+          brand_images: (item.brand_images || []) as BrandImage[],
           video_url: item.video_url || undefined,
           video_thumbnail: item.video_thumbnail || undefined,
           contact_email: item.contact_email || undefined,
@@ -441,7 +450,7 @@ export async function getAllBrands(
         video_url: item.video_url || undefined,
         video_thumbnail: item.video_thumbnail || undefined,
         // Include the new normalized images
-        brand_images: item.brand_images || [],
+        brand_images: (item.brand_images || []) as BrandImage[],
         contact_email: item.contact_email || undefined,
       };
     });

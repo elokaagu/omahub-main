@@ -68,7 +68,8 @@ export type Brand = {
   categories?: string[];
   rating: number;
   is_verified: boolean;
-  // image: string; // DEPRECATED: Use brand_images table instead
+  /** Resolved public URL from API / legacy column; optional when only `brand_images` is used. */
+  image?: string;
   website?: string;
   instagram?: string;
   whatsapp?: string;

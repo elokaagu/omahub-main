@@ -8,6 +8,7 @@ import Header from "./Header";
 import Footer from "./Footer";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import { SearchModal } from "@/components/ui/search-modal";
+import { PageTransition } from "@/components/ui/page-transition";
 
 export default function LayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -43,7 +44,13 @@ export default function LayoutContent({ children }: { children: React.ReactNode 
           isHomePage || isStudioPage ? "" : "pt-20"
         }
       >
-        {children}
+        {isStudioPage ? (
+          children
+        ) : (
+          <PageTransition routeKey={pathname ?? ""} variant="marketing">
+            {children}
+          </PageTransition>
+        )}
       </main>
       {!isStudioPage && <Footer />}
       <SearchModal />

@@ -9,6 +9,8 @@ function instantIfReduced(reduce: boolean | null, transition: Transition) {
   return reduce === true ? { duration: 0 } : transition;
 }
 
+const EASE_STANDARD: [number, number, number, number] = [0.4, 0, 0.2, 1];
+
 type MotionWrapperProps = {
   children: ReactNode;
   delay?: number;
@@ -21,10 +23,13 @@ export function PageFade({ children }: { children: ReactNode }) {
   const reduce = useReducedMotion();
   return (
     <motion.div
-      initial={reduce ? false : { opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={reduce ? undefined : { opacity: 0 }}
-      transition={instantIfReduced(reduce, { duration: 0.3 })}
+      initial={reduce ? false : { opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={reduce ? undefined : { opacity: 0, y: -4 }}
+      transition={instantIfReduced(reduce, {
+        duration: 0.34,
+        ease: EASE_STANDARD,
+      })}
     >
       {children}
     </motion.div>
@@ -43,7 +48,11 @@ export function FadeIn({
     <motion.div
       initial={reduce ? false : { opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={instantIfReduced(reduce, { duration, delay })}
+      transition={instantIfReduced(reduce, {
+        duration,
+        delay,
+        ease: EASE_STANDARD,
+      })}
       className={className}
     >
       {children}
@@ -61,9 +70,13 @@ export function SlideUp({
   const reduce = useReducedMotion();
   return (
     <motion.div
-      initial={reduce ? false : { opacity: 0, y: 20 }}
+      initial={reduce ? false : { opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={instantIfReduced(reduce, { duration, delay })}
+      transition={instantIfReduced(reduce, {
+        duration,
+        delay,
+        ease: EASE_STANDARD,
+      })}
       className={className}
     >
       {children}
@@ -81,9 +94,13 @@ export function ScaleIn({
   const reduce = useReducedMotion();
   return (
     <motion.div
-      initial={reduce ? false : { opacity: 0, scale: 0.95 }}
+      initial={reduce ? false : { opacity: 0, scale: 0.97 }}
       animate={{ opacity: 1, scale: 1 }}
-      transition={instantIfReduced(reduce, { duration, delay })}
+      transition={instantIfReduced(reduce, {
+        duration,
+        delay,
+        ease: EASE_STANDARD,
+      })}
       className={className}
     >
       {children}
@@ -115,6 +132,7 @@ export function StaggerContainer({
       transition: {
         staggerChildren: staggerDelay,
         delayChildren: delay,
+        ease: EASE_STANDARD,
       },
     },
   };
@@ -153,8 +171,8 @@ export function StaggerItem({
       opacity: 1,
       y: 0,
       transition: instantIfReduced(reduce, {
-        duration: 0.5,
-        ease: "easeOut",
+        duration: 0.42,
+        ease: EASE_STANDARD,
       }),
     },
   };

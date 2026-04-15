@@ -4,6 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { useNavigation } from "@/contexts/NavigationContext";
 import { useRouter, usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 interface NavigationLinkProps {
   href: string;
@@ -55,7 +56,10 @@ export function NavigationLink({
   return (
     <Link
       href={href}
-      className={className}
+      className={cn(
+        "transition-[color,opacity,transform] duration-200 ease-smooth",
+        className
+      )}
       onClick={handleClick}
       replace={replace}
       {...props}

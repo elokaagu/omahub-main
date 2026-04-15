@@ -10,11 +10,33 @@ export interface BrandDisplay {
   isVerified: boolean;
 }
 
+/** Paths that are not real assets in `public/` (LazyImage would 404 → "Image Coming Soon"). */
+const BROKEN_IMAGE_FALLBACKS = new Set([
+  "",
+  "/placeholder.jpg",
+  "/placeholder-image.jpg",
+  "/placeholder.png",
+  "/placeholder.svg",
+]);
+
+/**
+ * Prefer `brand.image` from the API (already a full Supabase URL on the server).
+ * `/api/brands/public?refresh=1` maps rows without embedding `brand_images` in JSON,
+ * so relying only on `brand_images` here broke the directory grid for every refresh.
+ */
 function brandImageUrl(brand: Brand): string {
+  const fromApi = brand.image?.trim() ?? "";
+  if (fromApi && !BROKEN_IMAGE_FALLBACKS.has(fromApi)) {
+    return fromApi;
+  }
+
   const path = brand.brand_images?.[0]?.storage_path;
   const base = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-  if (!path || !base) return "/placeholder.jpg";
-  return `${base}/storage/v1/object/public/brand-assets/${path}`;
+  if (path && base) {
+    return `${base}/storage/v1/object/public/brand-assets/${path}`;
+  }
+
+  return "/brand/omahub-logo.png";
 }
 
 /** Maps API brand → card model. Skips rows without a stable id. */

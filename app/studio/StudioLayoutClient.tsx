@@ -36,6 +36,7 @@ import { TailoringEventProvider } from "@/contexts/NavigationContext";
 import ErrorBoundary from "../components/ErrorBoundary";
 import type { Database } from "@/lib/types/supabase";
 import { StudioInitialDataProvider } from "@/contexts/StudioInitialDataContext";
+import { PageTransition } from "@/components/ui/page-transition";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
@@ -271,7 +272,7 @@ export default function StudioLayoutClient({
     ) {
       const timer = setTimeout(() => {
         setFadeIn(true);
-      }, 100);
+      }, 48);
       return () => clearTimeout(timer);
     }
   }, [loading, isCheckingAccess, permissions]);
@@ -446,14 +447,14 @@ export default function StudioLayoutClient({
         >
           {/* Studio Header */}
           <header
-            className={`w-full bg-white border-b border-gray-200 shadow-sm fixed top-0 left-0 right-0 z-50 h-16 flex items-center transition-all duration-700 ease-out ${
+            className={`w-full bg-white border-b border-gray-200 shadow-sm fixed top-0 left-0 right-0 z-50 h-16 flex items-center transition-all duration-500 ease-smooth ${
               fadeIn ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4"
             }`}
           >
             <div className="w-full px-8 flex justify-between items-center">
               {/* Mobile sidebar toggle */}
               <div
-                className={`lg:hidden flex items-center transition-all duration-700 ease-out ${
+                className={`lg:hidden flex items-center transition-all duration-500 ease-smooth ${
                   fadeIn
                     ? "opacity-100 translate-x-0"
                     : "opacity-0 translate-x-4"
@@ -475,7 +476,7 @@ export default function StudioLayoutClient({
 
               {/* Desktop: OmaHub logo */}
               <div
-                className={`hidden lg:flex items-center transition-all duration-700 ease-out ${
+                className={`hidden lg:flex items-center transition-all duration-500 ease-smooth ${
                   fadeIn ? "opacity-100 scale-100" : "opacity-0 scale-95"
                 }`}
               >
@@ -496,7 +497,7 @@ export default function StudioLayoutClient({
 
               {/* Mobile: OmaHub logo */}
               <div
-                className={`lg:hidden flex-1 flex justify-center transition-all duration-700 ease-out ${
+                className={`lg:hidden flex-1 flex justify-center transition-all duration-500 ease-smooth ${
                   fadeIn ? "opacity-100 scale-100" : "opacity-0 scale-95"
                 }`}
               >
@@ -516,7 +517,7 @@ export default function StudioLayoutClient({
               </div>
 
               <div
-                className={`hidden md:flex items-center space-x-4 transition-all duration-700 ease-out ${
+                className={`hidden md:flex items-center space-x-4 transition-all duration-500 ease-smooth ${
                   fadeIn
                     ? "opacity-100 translate-y-0"
                     : "opacity-0 translate-y-4"
@@ -533,7 +534,7 @@ export default function StudioLayoutClient({
 
               {/* Mobile user profile */}
               <div
-                className={`md:hidden transition-all duration-700 ease-out ${
+                className={`md:hidden transition-all duration-500 ease-smooth ${
                   fadeIn
                     ? "opacity-100 translate-y-0"
                     : "opacity-0 translate-y-4"
@@ -550,7 +551,7 @@ export default function StudioLayoutClient({
           {/* Sidebar */}
           {/* Mobile Sidebar: Slide-in with buttons for navigation */}
           <aside
-            className={`lg:hidden bg-white w-4/5 max-w-xs border-r border-gray-200 fixed inset-y-0 left-0 z-40 transition-transform duration-300 ease-in-out ${
+            className={`lg:hidden bg-white w-4/5 max-w-xs border-r border-gray-200 fixed inset-y-0 left-0 z-40 transition-transform duration-300 ease-smooth ${
               sidebarOpen ? "translate-x-0" : "-translate-x-full"
             } mt-16 shadow-xl`}
             aria-modal="true"
@@ -587,7 +588,7 @@ export default function StudioLayoutClient({
                       router.push(item.href);
                       setSidebarOpen(false);
                     }}
-                    className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100 w-full text-left transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-oma-plum focus:ring-offset-2"
+                    className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100 w-full text-left transition-[background-color,color,transform] duration-200 ease-smooth active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-oma-plum focus:ring-offset-2"
                     aria-label={`Navigate to ${item.customLabel || item.label}`}
                   >
                     <item.icon className="h-5 w-5" aria-hidden="true" />
@@ -612,7 +613,7 @@ export default function StudioLayoutClient({
 
           {/* Desktop Sidebar: Keep existing implementation */}
           <aside
-            className={`hidden lg:block bg-white w-64 border-r border-gray-200 fixed inset-y-0 left-0 z-40 transition-all duration-700 ease-in-out lg:translate-x-0 mt-16 shadow-xl ${
+            className={`hidden lg:block bg-white w-64 border-r border-gray-200 fixed inset-y-0 left-0 z-40 transition-all duration-500 ease-smooth lg:translate-x-0 mt-16 shadow-xl ${
               fadeIn ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4"
             }`}
             aria-modal="true"
@@ -628,7 +629,7 @@ export default function StudioLayoutClient({
                   <NavigationLink
                     key={item.href}
                     href={item.href}
-                    className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
+                    className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100 transition-[background-color,color,transform] duration-200 ease-smooth active:scale-[0.99]"
                   >
                     <item.icon className="h-5 w-5" />
                     <span>{item.customLabel || item.label}</span>
@@ -651,11 +652,15 @@ export default function StudioLayoutClient({
 
           {/* Main Content */}
           <main
-            className={`flex-1 lg:ml-64 mt-16 transition-all duration-700 ease-out ${
+            className={`flex-1 lg:ml-64 mt-16 transition-all duration-500 ease-smooth ${
               fadeIn ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
             }`}
           >
-            <div className="min-h-screen relative">{children}</div>
+            <div className="min-h-screen relative">
+              <PageTransition routeKey={pathname} variant="studio">
+                {children}
+              </PageTransition>
+            </div>
           </main>
         </div>
         </TailoringEventProvider>

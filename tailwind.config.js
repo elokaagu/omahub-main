@@ -98,6 +98,15 @@ export default {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      transitionTimingFunction: {
+        smooth: "cubic-bezier(0.4, 0, 0.2, 1)",
+        "smooth-in": "cubic-bezier(0.4, 0, 1, 1)",
+        "smooth-out": "cubic-bezier(0, 0, 0.2, 1)",
+      },
+      transitionDuration: {
+        DEFAULT: "200ms",
+        layout: "320ms",
+      },
       keyframes: {
         "accordion-down": {
           from: { height: "0" },

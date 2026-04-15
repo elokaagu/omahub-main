@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   Card,
@@ -46,22 +46,7 @@ export default function SettingsPage() {
   const isSuperAdmin =
     user?.role === "super_admin" || hasSettingsPermission;
 
-  // Fetch platform status on component mount
-  useEffect(() => {
-    if (isSuperAdmin) {
-      fetchPlatformStatus();
-    }
-  }, [isSuperAdmin]);
-
-  if (loading || !user || permissionsLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        Loading...
-      </div>
-    );
-  }
-
-  const fetchPlatformStatus = async () => {
+  const fetchPlatformStatus = useCallback(async () => {
     try {
       setIsLoadingStatus(true);
       const response = await fetch("/api/auth/platform-status");
@@ -85,7 +70,21 @@ export default function SettingsPage() {
     } finally {
       setIsLoadingStatus(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (isSuperAdmin) {
+      void fetchPlatformStatus();
+    }
+  }, [isSuperAdmin, fetchPlatformStatus]);
+
+  if (loading || !user || permissionsLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        Loading...
+      </div>
+    );
+  }
 
   const handleMakePublic = async () => {
     setIsChangingStatus(true);

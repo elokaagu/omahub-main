@@ -1,5 +1,15 @@
 /* Keyframes + motion helper classes (imported before Tailwind in app/globals.css) */
 
+/* Used by Tailwind arbitrary animations: animate-[fadeIn_500ms_ease-in-out_forwards] */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 @keyframes fadeInUp {
   from {
     opacity: 0;
