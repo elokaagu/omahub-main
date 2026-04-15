@@ -274,13 +274,6 @@ export function FavouritesProvider({
     }
   }, [user, initialized, fetchFavourites]);
 
-  // Refresh favourites when user changes
-  useEffect(() => {
-    if (user) {
-      fetchFavourites();
-    }
-  }, [user, fetchFavourites]);
-
   const value = {
     favourites,
     loading,

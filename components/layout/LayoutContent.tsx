@@ -32,8 +32,9 @@ export default function LayoutContent({ children }: { children: React.ReactNode 
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isNavigating, forceReset]);
 
-  // Initial session bootstrap only — keep full-screen spinner off during in-app navigations.
-  if (authLoading) {
+  // Initial session bootstrap: marketing waits for auth; /studio skips this gate so SSR shell +
+  // StudioLayoutClient can paint while client profile hydrates in the background.
+  if (authLoading && !isStudioPage) {
     return <LoadingSpinner />;
   }
 

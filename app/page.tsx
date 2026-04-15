@@ -1,8 +1,8 @@
 import dynamic from "next/dynamic";
 import { Loading } from "@/components/ui/loading";
 import { StructuredData } from "@/components/seo/StructuredData";
+import { getHomeBootstrapPayload } from "@/lib/home/getHomeBootstrapPayload";
 
-// Dynamic import for client component
 const HomeContent = dynamic(() => import("./HomeContent"), {
   loading: () => (
     <div className="flex justify-center items-center min-h-screen">
@@ -11,7 +11,16 @@ const HomeContent = dynamic(() => import("./HomeContent"), {
   ),
 });
 
-export default function Home() {
+export const revalidate = 120;
+
+export default async function Home() {
+  let initialBootstrap = null;
+  try {
+    initialBootstrap = await getHomeBootstrapPayload();
+  } catch (e) {
+    console.error("home_bootstrap_page_error", e);
+  }
+
   return (
     <>
       <StructuredData
@@ -33,7 +42,7 @@ export default function Home() {
         }}
       />
       <main className="min-h-screen bg-gradient-to-b from-oma-beige/50 to-white">
-        <HomeContent />
+        <HomeContent initialBootstrap={initialBootstrap} />
       </main>
     </>
   );

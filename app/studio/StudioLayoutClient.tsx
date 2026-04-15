@@ -302,11 +302,15 @@ export default function StudioLayoutClient({
 
       sessionRecoveryAttemptedRef.current = false;
 
-      const effectiveRole =
-        user.role ??
-        (user.id === initialUser?.id
+      // Prefer SSR role when client user is still the generic placeholder ("user") from fast auth hydrate.
+      const ssrRoleForSameUser =
+        user.id === initialUser?.id
           ? (initialProfile?.role ?? initialUser?.role ?? null)
-          : null);
+          : null;
+      const effectiveRole =
+        user.role && user.role !== "user"
+          ? user.role
+          : (ssrRoleForSameUser ?? user.role ?? null);
 
       let next = permissionsForProfileRole(effectiveRole);
       if (!next.includes("studio.access")) {

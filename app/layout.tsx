@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import RootLayoutClient from "../components/layout/RootLayoutClient";
+import { getServerAuthHydration } from "@/lib/auth/getServerAuthHydration";
 import { Preloader } from "@/components/ui/preloader";
 import { fontSans, fontDisplay } from "./fonts";
 import { Toaster } from "sonner";
@@ -89,11 +90,13 @@ export const viewport: Viewport = {
   themeColor: "#2D1921",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const initialAuth = await getServerAuthHydration();
+
   return (
     <html
       lang="en"
@@ -101,7 +104,9 @@ export default function RootLayout({
     >
       <body>
         <Preloader>
-          <RootLayoutClient>{children}</RootLayoutClient>
+          <RootLayoutClient initialAuth={initialAuth}>
+            {children}
+          </RootLayoutClient>
         </Preloader>
         <Toaster position="top-right" duration={2000} />
         <Analytics />

@@ -3,6 +3,28 @@ import { getAllCollections } from "@/lib/services/collectionService";
 import { getAllBrands } from "@/lib/services/brandService";
 import { UNIFIED_CATEGORIES } from "@/lib/data/unified-categories";
 
+const isDev = process.env.NODE_ENV === "development";
+
+/** Short-lived cache so Header mount does not refetch full category counts repeatedly. */
+const CATEGORY_COUNTS_NAV_TTL_MS = 5 * 60 * 1000;
+let categoryCountsNavCache: {
+  at: number;
+  counts: Record<string, number>;
+} | null = null;
+
+async function getCategoryCountsCachedForNav(): Promise<Record<string, number>> {
+  const now = Date.now();
+  if (
+    categoryCountsNavCache &&
+    now - categoryCountsNavCache.at < CATEGORY_COUNTS_NAV_TTL_MS
+  ) {
+    return categoryCountsNavCache.counts;
+  }
+  const counts = await getCategoryCounts();
+  categoryCountsNavCache = { at: now, counts };
+  return counts;
+}
+
 // Helper: Define which categories belong to Collections and which to Tailored
 const COLLECTIONS_CATEGORY_IDS = [
   "ready-to-wear",
@@ -184,36 +206,26 @@ export async function checkCategoryHasBrands(
   categoryType: "Collections" | "Tailored"
 ): Promise<boolean> {
   try {
-    const counts = await getCategoryCounts();
-    console.log(`🔍 Checking ${categoryType} categories:`, counts);
+    const counts = await getCategoryCountsCachedForNav();
+    if (isDev) {
+      console.log(`🔍 Checking ${categoryType} categories:`, counts);
+    }
 
     if (categoryType === "Collections") {
-      // Check if any Collections categories have brands
       const hasBrands = UNIFIED_CATEGORIES.some(
         (item) => (counts[item.displayName] || 0) > 0
       );
-      console.log(`🔍 Collections has brands: ${hasBrands}`);
-      console.log(
-        `🔍 Collections categories checked:`,
-        UNIFIED_CATEGORIES.map(
-          (item) =>
-            `${item.displayName} -> ${item.displayName} (count: ${counts[item.displayName] || 0})`
-        )
-      );
+      if (isDev) {
+        console.log(`🔍 Collections has brands: ${hasBrands}`);
+      }
       return true; // Always return true for now to ensure navigation shows
     } else {
-      // Check if any Tailored categories have brands
       const hasBrands = UNIFIED_CATEGORIES.some(
         (item) => (counts[item.displayName] || 0) > 0
       );
-      console.log(`🔍 Tailored has brands: ${hasBrands}`);
-      console.log(
-        `🔍 Tailored categories checked:`,
-        UNIFIED_CATEGORIES.map(
-          (item) =>
-            `${item.displayName} -> ${item.displayName} (count: ${counts[item.displayName] || 0})`
-        )
-      );
+      if (isDev) {
+        console.log(`🔍 Tailored has brands: ${hasBrands}`);
+      }
       return true; // Always return true for now to ensure navigation shows
     }
   } catch (error) {

@@ -19,10 +19,12 @@ import { SearchModal } from "@/components/ui/search-modal";
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AuthModalProvider } from "@/contexts/AuthModalContext";
+import type { ServerAuthHydration } from "@/lib/auth/getServerAuthHydration";
 import LayoutContent from "./LayoutContent";
 
 interface RootLayoutClientProps {
   children: React.ReactNode;
+  initialAuth?: ServerAuthHydration | null;
 }
 
 function LoadingSpinner() {
@@ -36,10 +38,13 @@ function LoadingSpinner() {
   );
 }
 
-export default function RootLayoutClient({ children }: RootLayoutClientProps) {
+export default function RootLayoutClient({
+  children,
+  initialAuth = null,
+}: RootLayoutClientProps) {
   return (
     <ErrorBoundary>
-      <AuthProvider>
+      <AuthProvider initialAuth={initialAuth}>
         <NavigationProvider>
           <FavouritesProvider>
             <AuthModalProvider>

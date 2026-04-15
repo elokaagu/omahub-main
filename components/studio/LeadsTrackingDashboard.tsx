@@ -385,29 +385,25 @@ export default function LeadsTrackingDashboard({
     }
   }, [user, currentPage, filters, effectiveOwnedBrands.length]); // Add effectiveOwnedBrands.length as dependency
 
-  // Additional effect to fetch analytics when ownedBrandIds become available
-  useEffect(() => {
-    if (user && isBrandAdmin && effectiveOwnedBrands.length > 0) {
-      console.log(
-        "🏷️ Brand owner analytics: Owned brands now available, fetching analytics:",
-        effectiveOwnedBrands
-      );
-      fetchPlatformAnalytics();
-    }
-  }, [user, isBrandAdmin, effectiveOwnedBrands.length]);
-
-  // Fallback: Periodic refresh to ensure data stays in sync
+  // Fallback: periodic refresh when tab is visible (avoids work in background tabs)
   useEffect(() => {
     if (!user) return;
 
-    const interval = setInterval(() => {
-      console.log("🔄 Periodic refresh: updating dashboard data");
+    const tick = () => {
+      if (typeof document !== "undefined" && document.visibilityState === "hidden") {
+        return;
+      }
+      if (process.env.NODE_ENV === "development") {
+        console.log("🔄 Periodic refresh: updating dashboard data");
+      }
       fetchLeads();
       fetchAnalytics();
       if (isSuperAdmin || (isBrandAdmin && effectiveOwnedBrands.length > 0)) {
         fetchPlatformAnalytics();
       }
-    }, 30000); // Refresh every 30 seconds as fallback
+    };
+
+    const interval = setInterval(tick, 30000);
 
     return () => clearInterval(interval);
   }, [user, isSuperAdmin, isBrandAdmin, effectiveOwnedBrands.length]);

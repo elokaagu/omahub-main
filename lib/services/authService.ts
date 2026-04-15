@@ -132,24 +132,56 @@ export async function getCurrentUser() {
   return user;
 }
 
-export async function getProfile(userId: string): Promise<User | null> {
+export type GetProfileOptions = {
+  /** Skip redundant `getUser()` when the caller already validated the session (e.g. AuthContext). */
+  skipAuthUser?: boolean;
+  /** Used for profile-create fallback when `skipAuthUser` and no profile row yet. */
+  sessionEmail?: string;
+};
+
+export async function getProfile(
+  userId: string,
+  options?: GetProfileOptions
+): Promise<User | null> {
   try {
     if (!supabase) {
       console.error("❌ Supabase client not available");
       return null;
     }
 
-    // Get user and profile data in parallel for better performance
-    const [userResult, profileResult] = await Promise.all([
-      supabase.auth.getUser(),
-      supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
-    ]);
+    const skipAuthUser = options?.skipAuthUser === true;
 
-    const {
-      data: { user },
-      error: userError,
-    } = userResult;
-    const { data: profileData, error: profileError } = profileResult;
+    let user: { id: string; email?: string | null } | null = null;
+    let userError: { message: string } | null = null;
+    let profileData: Awaited<
+      ReturnType<
+        ReturnType<typeof supabase.from>["select"]
+      >
+    >["data"];
+    let profileError: Awaited<
+      ReturnType<
+        ReturnType<typeof supabase.from>["select"]
+      >
+    >["error"];
+
+    if (skipAuthUser) {
+      const row = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", userId)
+        .maybeSingle();
+      profileData = row.data;
+      profileError = row.error;
+    } else {
+      const [userResult, row] = await Promise.all([
+        supabase.auth.getUser(),
+        supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
+      ]);
+      user = userResult.data.user;
+      userError = userResult.error;
+      profileData = row.data;
+      profileError = row.error;
+    }
 
     if (userError) {
       console.error("❌ Error getting user:", userError);
@@ -169,7 +201,8 @@ export async function getProfile(userId: string): Promise<User | null> {
 
     if (!profileData) {
       devLog("Profile not found, creating new profile");
-      const userEmail = user?.email || "";
+      const userEmail =
+        (user?.email || options?.sessionEmail || "").trim() || "";
       let role: string = "user";
 
       try {
@@ -227,7 +260,11 @@ export async function getProfile(userId: string): Promise<User | null> {
 
     const userProfile = {
       id: profileData.id,
-      email: profileData.email || user?.email || "",
+      email:
+        profileData.email ||
+        user?.email ||
+        (options?.sessionEmail ? options.sessionEmail.trim() : "") ||
+        "",
       first_name: profileData.first_name || "",
       last_name: profileData.last_name || "",
       avatar_url: profileData.avatar_url || "",

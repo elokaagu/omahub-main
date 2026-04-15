@@ -11,11 +11,8 @@ export function Preloader({ children }: PreloaderProps) {
     // Prefetch critical data on app load
     const prefetchData = async () => {
       try {
-        // Warm server cache + run admin-only filtering on the server — never import
-        // performanceService/getAdminClient in the browser bundle.
-        await fetch("/api/home/bootstrap", {
-          credentials: "same-origin",
-        }).catch(() => {});
+        // Homepage bootstrap is fetched once from HomeContent (with optional cache).
+        // Avoid duplicating /api/home/bootstrap here.
 
         // Preload critical images
         const criticalImages = [

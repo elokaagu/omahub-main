@@ -140,6 +140,7 @@ export function Carousel({
                 alt={item.title}
                 width={item.width}
                 height={item.height}
+                priority={index === 0}
                 className={cn(
                   "w-full h-full object-cover",
                   item.isEditorial ? "object-[50%_20%]" : "object-[50%_15%]",

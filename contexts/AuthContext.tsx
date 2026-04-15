@@ -11,6 +11,7 @@ import React, {
 import type { AuthChangeEvent, AuthError, Session } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase-unified";
 import { getProfile, User } from "@/lib/services/authService";
+import type { ServerAuthHydration } from "@/lib/auth/getServerAuthHydration";
 import { AuthDebug } from "@/lib/utils/debug";
 import { toast } from "sonner";
 
@@ -56,11 +57,19 @@ function upsertBasicUserPreserveIdentity(
   };
 }
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export function AuthProvider({
+  children,
+  initialAuth = null,
+}: {
+  children: React.ReactNode;
+  initialAuth?: ServerAuthHydration | null;
+}) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [isClient, setIsClient] = useState(false);
+  const initialAuthRef = useRef(initialAuth);
+  initialAuthRef.current = initialAuth;
 
   // Add refs to prevent excessive refreshes
   const isRefreshingRef = useRef(false);
@@ -130,7 +139,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       lastRefreshTimeRef.current = now;
 
       AuthDebug.log("🔄 Refreshing user profile for:", session.user.id);
-      const profile = await getProfile(session.user.id);
+      const profile = await getProfile(session.user.id, {
+        skipAuthUser: true,
+        sessionEmail: session.user.email ?? undefined,
+      });
       if (profile) {
         setUser(profile);
         AuthDebug.log("✅ User profile refreshed:", profile.email);
@@ -156,7 +168,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         );
       });
       return (await Promise.race([
-        getProfile(userId),
+        getProfile(userId, {
+          skipAuthUser: true,
+          sessionEmail: email,
+        }),
         timeoutPromise,
       ])) as User | null;
     };
@@ -244,7 +259,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(null);
         AuthDebug.log("👋 User signed out");
       } else if (newSession?.user) {
-        await loadUserProfile(newSession.user.id, newSession.user.email);
+        const u = newSession.user;
+        setUser((prev) =>
+          upsertBasicUserPreserveIdentity(prev, u.id, u.email || "")
+        );
+        void loadUserProfile(u.id, u.email ?? undefined);
       }
     },
     []
@@ -283,8 +302,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             return;
           }
           if (session) {
-            AuthDebug.log("✅ Initial session found:", session.user.email);
-            await handleAuthStateChange("INITIAL_SESSION", session);
+            const snap = initialAuthRef.current;
+            if (snap && snap.authUserId === user.id) {
+              AuthDebug.log(
+                "✅ Initial session (server-hydrated profile):",
+                session.user.email
+              );
+              setSession(session);
+              setUser(snap.user);
+              void loadUserProfile(
+                user.id,
+                session.user.email ?? undefined
+              );
+            } else {
+              AuthDebug.log("✅ Initial session found:", session.user.email);
+              await handleAuthStateChange("INITIAL_SESSION", session);
+            }
           } else {
             AuthDebug.log("ℹ️  getUser ok but no local session");
           }
