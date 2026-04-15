@@ -3,7 +3,6 @@
 import React from "react";
 import Link from "next/link";
 import { useNavigation } from "@/contexts/NavigationContext";
-import { useRouter, usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 interface NavigationLinkProps {
@@ -24,9 +23,7 @@ export function NavigationLink({
   replace = false,
   ...props
 }: NavigationLinkProps) {
-  const { setIsNavigating, isNavigating } = useNavigation();
-  const router = useRouter();
-  const currentPathname = usePathname();
+  const { setIsNavigating } = useNavigation();
 
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     try {
@@ -43,6 +40,20 @@ export function NavigationLink({
       ) {
         setIsNavigating(false);
         return;
+      }
+
+      if (!e.defaultPrevented && typeof window !== "undefined") {
+        try {
+          const next = new URL(href, window.location.href);
+          const cur = new URL(window.location.href);
+          const nextKey = `${next.pathname}${next.search}`;
+          const curKey = `${cur.pathname}${cur.search}`;
+          if (nextKey !== curKey) {
+            setIsNavigating(true);
+          }
+        } catch {
+          // ignore invalid href
+        }
       }
     } catch (error) {
       if (process.env.NODE_ENV === "development") {

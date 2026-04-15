@@ -8,7 +8,7 @@ import type { FavouriteItem } from "@/lib/types/favouriteItem";
 import { Loading } from "@/components/ui/loading";
 import { LazyImage } from "@/components/ui/lazy-image";
 import { Button } from "@/components/ui/button";
-import { Heart, Store, BookOpen, ShoppingBag, RefreshCw } from "lucide-react";
+import { Heart, Store, BookOpen, ShoppingBag } from "lucide-react";
 
 const PLACEHOLDER_IMAGE = "/placeholder.jpg";
 
@@ -125,7 +125,7 @@ function FavouriteSection({
 }
 
 export default function FavouritesPage() {
-  const { favourites, loading, refreshFavourites } = useFavourites();
+  const { favourites, loading } = useFavourites();
 
   const list = useMemo(
     () => normalizeFavouritesList(favourites),
@@ -155,16 +155,6 @@ export default function FavouritesPage() {
             {list.length}
           </span>
         ) : null}
-        <Button
-          type="button"
-          onClick={() => void refreshFavourites()}
-          variant="outline"
-          size="sm"
-          className="ml-auto border-oma-plum text-oma-plum hover:bg-oma-plum/10"
-        >
-          <RefreshCw className="mr-2 h-4 w-4" aria-hidden />
-          Refresh
-        </Button>
       </div>
 
       {loading ? (

@@ -5,9 +5,8 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Users, Clock, Mail, RefreshCw } from "lucide-react";
+import { Users, Clock, Mail } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { cn } from "@/lib/utils";
 
 interface RecentAccount {
   id: string;
@@ -158,9 +157,6 @@ export default function RecentAccountsWidget() {
               disabled={refreshing}
               className="text-xs"
             >
-              <RefreshCw
-                className={cn("h-3 w-3 mr-1", refreshing && "animate-spin")}
-              />
               Retry
             </Button>
           </div>
@@ -177,19 +173,6 @@ export default function RecentAccountsWidget() {
           <Badge variant="secondary" className="text-xs">
             {recentAccounts.length} new
           </Badge>
-          <Button
-            variant="ghost"
-            size="sm"
-            type="button"
-            onClick={() => void fetchRecentAccounts()}
-            disabled={refreshing}
-            className="h-6 w-6 p-0"
-            aria-label={refreshing ? "Refreshing" : "Refresh recent accounts"}
-          >
-            <RefreshCw
-              className={cn("h-3 w-3", refreshing && "animate-spin")}
-            />
-          </Button>
         </div>
       </CardHeader>
       <CardContent>

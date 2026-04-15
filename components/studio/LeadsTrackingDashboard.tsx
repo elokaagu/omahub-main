@@ -45,7 +45,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { createClient } from "@/lib/supabase-unified";
 import Link from "next/link";
-import { RefreshCw, Star, Edit2, Check, X } from "lucide-react";
+import { Star, Edit2, Check, X } from "lucide-react";
 import {
   getAnalyticsData,
   getBrandGrowthData,
@@ -624,15 +624,6 @@ export default function LeadsTrackingDashboard({
                 Key metrics across the entire OmaHub platform
               </p>
             </div>
-            <Button
-              onClick={refetchAnalytics}
-              variant="outline"
-              size="sm"
-              className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white"
-            >
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
-            </Button>
           </div>
 
           {platformLoading ? (
@@ -751,15 +742,6 @@ export default function LeadsTrackingDashboard({
                 {effectiveOwnedBrands.length > 1 ? "brands" : "brand"}
               </p>
             </div>
-            <Button
-              onClick={refetchAnalytics}
-              variant="outline"
-              size="sm"
-              className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white"
-            >
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
-            </Button>
           </div>
 
           {platformLoading ? (
@@ -966,16 +948,6 @@ export default function LeadsTrackingDashboard({
               <strong>API Status:</strong>{" "}
               {analytics ? "Data loaded" : "No data"}
             </p>
-          </div>
-          <div className="mt-4">
-            <Button
-              onClick={refetchAnalytics}
-              variant="outline"
-              size="sm"
-              disabled={analyticsLoading}
-            >
-              {analyticsLoading ? "Refreshing..." : "Refresh Analytics"}
-            </Button>
           </div>
         </Card>
       )}

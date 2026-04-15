@@ -5,12 +5,12 @@ import Link from "next/link";
 import {
   Wifi,
   WifiOff,
-  RefreshCw,
   Home,
   Package,
   Users,
   MessageSquare,
 } from "@/lib/utils/iconImports";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -74,10 +74,6 @@ export default function OfflinePage() {
     };
   }, [applyNavigatorStatus]);
 
-  const handleRefresh = () => {
-    window.location.reload();
-  };
-
   /**
    * Tell a *waiting* service worker to call skipWaiting() (see `public/sw-enhanced.js`).
    * This does not test the network—it only applies a queued worker update, if any.
@@ -105,15 +101,17 @@ export default function OfflinePage() {
       }
       if (reg.installing) {
         setSwAdvanceHint(
-          "An update is still installing. Wait a few seconds, then try again or refresh."
+          "An update is still installing. Wait a few seconds, then try again or reload this tab."
         );
         return;
       }
       setSwAdvanceHint(
-        "No queued worker update. If content looks old, use “Refresh page”."
+        "No queued worker update. If content looks old, reload this tab."
       );
     } catch {
-      setSwAdvanceHint("Could not reach the service worker. Try a normal refresh.");
+      setSwAdvanceHint(
+        "Could not reach the service worker. Try reloading this tab."
+      );
     }
   };
 
@@ -148,8 +146,8 @@ export default function OfflinePage() {
         setConnectivity("online");
         setConnectionHint(
           res.ok
-            ? "We can reach OmaHub. Refresh the page for the latest content."
-            : "You're online, but the app returned an error. Try refreshing or try again later."
+            ? "We can reach OmaHub. Reload this tab for the latest content."
+            : "You're online, but the app returned an error. Try reloading this tab or try again later."
         );
       } catch {
         setConnectivity("offline");
@@ -173,7 +171,7 @@ export default function OfflinePage() {
         <div className="mb-6">
           {isUnknown ? (
             <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-slate-100">
-              <RefreshCw
+              <Loader2
                 className="h-9 w-9 animate-spin text-slate-500"
                 aria-hidden
               />
@@ -201,7 +199,7 @@ export default function OfflinePage() {
           {isUnknown
             ? "Hang on while we detect your network status."
             : isOnline
-              ? "You're connected again. Refresh to load the latest content."
+              ? "You're connected again. Reload this tab to load the latest content."
               : "Some pages you opened before may still work from cache. Live data needs a connection."}
         </p>
 
@@ -239,14 +237,9 @@ export default function OfflinePage() {
 
         <div className="space-y-3">
           {isOnline ? (
-            <Button
-              type="button"
-              className="w-full gap-2 bg-blue-600 hover:bg-blue-700"
-              onClick={handleRefresh}
-            >
-              <RefreshCw className="h-5 w-5" />
-              Refresh page
-            </Button>
+            <p className="text-sm text-gray-600">
+              Reload this tab in your browser to load the latest content.
+            </p>
           ) : (
             <Button
               type="button"

@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { StudioNav } from "@/components/ui/studio-nav";
 import { TrashIcon } from "@heroicons/react/24/outline";
-import { RefreshCw, Mail, Bell, AlertCircle } from "lucide-react";
+import { Mail, Bell, AlertCircle } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import type { StudioInquiry, StudioNotification } from "./types";
@@ -257,33 +257,20 @@ export default function StudioInboxPage() {
         <StudioNav />
 
         <div className="mb-8">
-          <div className="flex justify-between items-start gap-4">
-            <div>
-              <h1 className="text-3xl font-canela text-oma-plum mb-2">Studio Inbox</h1>
-              <p className="text-oma-cocoa">
-                {isSuperAdmin
-                  ? "Manage all customer inquiries and platform notifications"
-                  : "Manage inquiries and messages from potential clients"}
-              </p>
-              {isSuperAdmin && (
-                <div className="mt-2">
-                  <Badge className="bg-oma-plum text-white">
-                    Super Admin View - All Inquiries
-                  </Badge>
-                </div>
-              )}
-            </div>
-            <Button
-              onClick={() => void loadInbox()}
-              disabled={loading || refreshing}
-              variant="outline"
-              className="border-oma-plum text-oma-plum hover:bg-oma-plum/10 shrink-0"
-            >
-              <RefreshCw
-                className={`h-4 w-4 mr-2 ${loading || refreshing ? "animate-spin" : ""}`}
-              />
-              Refresh
-            </Button>
+          <div>
+            <h1 className="text-3xl font-canela text-oma-plum mb-2">Studio Inbox</h1>
+            <p className="text-oma-cocoa">
+              {isSuperAdmin
+                ? "Manage all customer inquiries and platform notifications"
+                : "Manage inquiries and messages from potential clients"}
+            </p>
+            {isSuperAdmin && (
+              <div className="mt-2">
+                <Badge className="bg-oma-plum text-white">
+                  Super Admin View - All Inquiries
+                </Badge>
+              </div>
+            )}
           </div>
         </div>
 

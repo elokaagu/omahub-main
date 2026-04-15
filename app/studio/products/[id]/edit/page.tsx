@@ -314,13 +314,6 @@ export default function EditProductPage() {
             </p>
             <div className="space-y-2">
               <Button
-                onClick={() => router.refresh()}
-                className="bg-black hover:bg-gray-800 text-white"
-              >
-                Refresh
-              </Button>
-              <br />
-              <Button
                 variant="outline"
                 onClick={() => router.push("/studio/products")}
                 className="border-gray-300 text-black hover:bg-gray-100"

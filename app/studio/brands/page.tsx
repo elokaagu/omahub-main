@@ -36,7 +36,6 @@ import {
 import { useRouter } from "next/navigation";
 import { AuthImage } from "@/components/ui/auth-image";
 import { Loading } from "@/components/ui/loading";
-import { RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { useStudioOptimization } from "@/lib/hooks/useStudioOptimization";
 import { getPrimaryBrandImagePublicUrl } from "@/lib/brands/brandEditMedia";
@@ -215,7 +214,6 @@ export default function BrandsPage() {
             variant="outline"
             onClick={() => void forceRefresh(fetchData)}
           >
-            <RefreshCw className="h-4 w-4 mr-2" />
             Try again
           </Button>
         </div>
@@ -251,15 +249,6 @@ export default function BrandsPage() {
           )}
         </div>
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-          <Button
-            onClick={() => void forceRefresh(fetchData)}
-            variant="outline"
-            size="sm"
-            className="flex items-center gap-2 w-full sm:w-auto"
-          >
-            <RefreshCw className="h-4 w-4" />
-            Refresh
-          </Button>
           {isAdmin && (
             <Button
               asChild

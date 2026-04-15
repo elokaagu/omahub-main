@@ -118,18 +118,9 @@ export default function DirectoryClient() {
         >
           <p className="text-red-700 text-sm sm:text-base">{errorMessage}</p>
           <p className="mt-2 text-gray-600 text-xs sm:text-sm">
-            You can retry loading designers below.
+            Reload this tab in your browser to try again, or continue once the
+            connection is stable.
           </p>
-          <Button
-            type="button"
-            variant="outline"
-            className="mt-3 border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white"
-            onClick={() =>
-              typeof window !== "undefined" && window.location.reload()
-            }
-          >
-            Refresh page
-          </Button>
         </div>
       ) : null}
 

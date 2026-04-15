@@ -20,7 +20,6 @@ import {
   Download,
   Clock,
   TrendingUp,
-  RefreshCw,
   BarChart3,
   FileText,
   Download as DownloadIcon,
@@ -187,10 +186,6 @@ export default function PerformanceDashboard() {
           </p>
         </div>
         <div className="flex items-center space-x-2">
-          <Button onClick={handleRefresh} variant="outline" size="sm">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
-          </Button>
           <Button onClick={handleExportData} variant="outline" size="sm">
             <DownloadIcon className="h-4 w-4 mr-2" />
             Export

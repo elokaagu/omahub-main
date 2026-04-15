@@ -1,7 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { RefreshCw } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 function estimatePageViews({
   totalBrands = 0,
@@ -67,16 +65,6 @@ export default function PageViewsCard({
         <CardTitle className="text-sm font-medium text-oma-cocoa">
           Page Views
         </CardTitle>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-6 w-6 p-0"
-          onClick={fetchPageViews}
-          disabled={loading}
-          aria-label="Refresh Page Views"
-        >
-          <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-        </Button>
       </CardHeader>
       <CardContent>
         {loading ? (

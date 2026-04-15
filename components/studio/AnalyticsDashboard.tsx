@@ -22,7 +22,7 @@ import {
   Star,
   CheckCircle,
   ShoppingBag,
-  RefreshCw,
+  Loader2,
   AlertTriangle,
   LogIn,
   Heart,
@@ -398,7 +398,6 @@ export default function AnalyticsDashboard({
             variant="outline"
             className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white"
           >
-            <RefreshCw className="h-4 w-4 mr-2" />
             Retry
           </Button>
         </div>
@@ -486,21 +485,14 @@ export default function AnalyticsDashboard({
               disabled={syncing}
               className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white"
             >
-              <RefreshCw
-                className={`h-4 w-4 mr-2 ${syncing ? "animate-spin" : ""}`}
-              />
+              {syncing ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Star className="h-4 w-4 mr-2" />
+              )}
               {syncing ? "Syncing..." : "Sync Ratings"}
             </Button>
           )}
-          <Button
-            onClick={fetchData}
-            variant="outline"
-            size="sm"
-            className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white"
-          >
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
-          </Button>
         </div>
       </div>
 

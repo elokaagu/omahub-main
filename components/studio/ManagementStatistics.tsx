@@ -16,7 +16,7 @@ import {
   TrendingUp,
   MessageSquare,
   Package,
-  RefreshCw,
+  Loader2,
   AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -135,7 +135,6 @@ export default function ManagementStatistics({
             Platform Statistics
           </h2>
           <Button onClick={() => fetchStatistics(false)} variant="outline">
-            <RefreshCw className="h-4 w-4 mr-2" />
             Retry
           </Button>
         </div>
@@ -215,20 +214,12 @@ export default function ManagementStatistics({
         </div>
         <div className="flex gap-2">
           <Button
-            onClick={() => fetchStatistics(false)}
-            variant="outline"
-            size="sm"
-          >
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
-          </Button>
-          <Button
             onClick={handleUpdateStatistics}
             variant="outline"
             size="sm"
             disabled={updating}
           >
-            <RefreshCw
+            <Loader2
               className={`h-4 w-4 mr-2 ${updating ? "animate-spin" : ""}`}
             />
             {updating ? "Updating..." : "Force Update"}

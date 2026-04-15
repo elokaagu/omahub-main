@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { StudioNav } from "@/components/ui/studio-nav";
-import { RefreshCw, Filter, AlertCircle } from "lucide-react";
+import { Filter, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import type { Lead } from "./types";
 import { normalizeLead } from "./types";
@@ -273,19 +273,6 @@ export default function StudioLeadsPage() {
                   </Badge>
                 </div>
               )}
-            </div>
-            <div className="flex gap-3">
-              <Button
-                onClick={() => void loadAll()}
-                disabled={loading || refreshing}
-                variant="outline"
-                className="border-oma-plum text-oma-plum hover:bg-oma-plum/10"
-              >
-                <RefreshCw
-                  className={`h-4 w-4 mr-2 ${loading || refreshing ? "animate-spin" : ""}`}
-                />
-                Refresh
-              </Button>
             </div>
           </div>
         </div>

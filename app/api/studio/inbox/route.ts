@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
         message,
         type,
         is_read,
-        action_url,
+        data,
         created_at,
         brand:brands(name)
       `)

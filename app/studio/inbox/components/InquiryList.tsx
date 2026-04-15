@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
-import { InboxIcon, ArrowPathIcon, ChatBubbleLeftIcon } from "@heroicons/react/24/outline";
+import { InboxIcon, ChatBubbleLeftIcon } from "@heroicons/react/24/outline";
 import { Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -357,25 +357,10 @@ export default function InquiryList({
   if (totalCount === 0) {
     return (
       <div className="bg-white rounded-lg shadow-sm border border-oma-beige">
-        <div className="px-6 py-4 border-b border-oma-beige flex items-center justify-between">
+        <div className="px-6 py-4 border-b border-oma-beige">
           <h3 className="text-lg font-canela text-oma-plum">
             Customer inquiries
           </h3>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="text-oma-cocoa hover:text-oma-plum"
-            title="Refresh"
-            onClick={() => void fetchInquiries()}
-            disabled={refreshing}
-          >
-            {refreshing ? (
-              <Loader2 className="h-5 w-5 animate-spin" />
-            ) : (
-              <ArrowPathIcon className="h-5 w-5" />
-            )}
-          </Button>
         </div>
         <div className="text-center py-16 bg-oma-cream/30">
           <div className="mx-auto h-16 w-16 text-oma-cocoa mb-4">
@@ -407,21 +392,6 @@ export default function InquiryList({
                 : null}
             </p>
           </div>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="self-end sm:self-auto text-oma-cocoa hover:text-oma-plum shrink-0"
-            title="Refresh"
-            onClick={() => void fetchInquiries()}
-            disabled={refreshing}
-          >
-            {refreshing ? (
-              <Loader2 className="h-5 w-5 animate-spin" />
-            ) : (
-              <ArrowPathIcon className="h-5 w-5" />
-            )}
-          </Button>
         </div>
       </div>
 

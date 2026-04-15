@@ -29,7 +29,6 @@ import {
 } from "@/components/ui/select";
 import {
   PlusCircle,
-  RefreshCw,
   Search,
   Edit,
   Eye,
@@ -385,20 +384,6 @@ export default function ServicesPage() {
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-          <Button
-            variant="outline"
-            className="flex items-center gap-2 border-oma-plum text-oma-plum hover:bg-oma-plum/10 w-full sm:w-auto"
-            onClick={fetchData}
-            disabled={loading}
-            aria-label="Refresh services"
-          >
-            {loading ? (
-              <RefreshCw className="h-4 w-4 animate-spin" />
-            ) : (
-              <RefreshCw className="h-4 w-4" />
-            )}
-            Refresh
-          </Button>
           <Link href="/studio/services/create" className="w-full sm:w-auto">
             <Button className="bg-oma-plum hover:bg-oma-plum/90 flex items-center gap-2 w-full sm:w-auto">
               <PlusCircle className="h-4 w-4" />

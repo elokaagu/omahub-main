@@ -7,6 +7,7 @@ import { useNavigation } from "@/contexts/NavigationContext";
 import Header from "./Header";
 import Footer from "./Footer";
 import LoadingSpinner from "@/components/ui/loading-spinner";
+import { NavigationProgressBar } from "@/components/ui/navigation-progress-bar";
 import { SearchModal } from "@/components/ui/search-modal";
 import { PageTransition } from "@/components/ui/page-transition";
 
@@ -31,13 +32,14 @@ export default function LayoutContent({ children }: { children: React.ReactNode 
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isNavigating, forceReset]);
 
-  // Show loading spinner for auth loading or navigation loading
-  if (authLoading || isNavigating) {
+  // Initial session bootstrap only — keep full-screen spinner off during in-app navigations.
+  if (authLoading) {
     return <LoadingSpinner />;
   }
 
   return (
     <>
+      <NavigationProgressBar visible={isNavigating} />
       {!isStudioPage && <Header />}
       <main
         className={

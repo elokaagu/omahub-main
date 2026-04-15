@@ -35,12 +35,6 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, State> {
     this.setState({ hasError: false, error: null });
   };
 
-  handleRefresh = (): void => {
-    if (typeof window !== "undefined") {
-      window.location.reload();
-    }
-  };
-
   render(): ReactNode {
     if (this.state.hasError) {
       if (this.props.fallback) {
@@ -58,8 +52,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, State> {
             </h2>
             <p className="text-sm text-oma-cocoa/80 mb-4">
               {section
-                ? `We couldn’t load this part (${section}). You can try again or refresh the page.`
-                : "Something unexpected happened. You can try again or refresh the page."}
+                ? `We couldn’t load this part (${section}). You can try again below, or reload this tab in your browser.`
+                : "Something unexpected happened. You can try again below, or reload this tab in your browser."}
             </p>
             {isDev && this.state.error ? (
               <div className="bg-oma-beige/50 p-4 rounded-md overflow-auto mb-4 border border-oma-gold/20">
@@ -75,13 +69,6 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, State> {
                 className="px-4 py-2 border border-oma-cocoa/30 rounded-md text-oma-cocoa hover:bg-oma-beige/50 transition-colors"
               >
                 Try again
-              </button>
-              <button
-                type="button"
-                onClick={this.handleRefresh}
-                className="px-4 py-2 bg-oma-plum text-white rounded-md hover:bg-oma-plum/90 transition-colors"
-              >
-                Refresh page
               </button>
             </div>
           </div>

@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -7,7 +6,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { RefreshCw, Search, X } from "lucide-react";
+import { Search, X } from "lucide-react";
 import type { StatusFilter } from "./types";
 import { isStatusFilter } from "./types";
 
@@ -18,8 +17,6 @@ type ApplicationsToolbarProps = {
   onSearchTermChange: (value: string) => void;
   statusFilter: StatusFilter;
   onStatusFilterChange: (value: StatusFilter) => void;
-  onRefresh: () => void;
-  loading: boolean;
 };
 
 export function ApplicationsToolbar({
@@ -29,12 +26,10 @@ export function ApplicationsToolbar({
   onSearchTermChange,
   statusFilter,
   onStatusFilterChange,
-  onRefresh,
-  loading,
 }: ApplicationsToolbarProps) {
   return (
     <>
-      <div className="mb-8 flex justify-between items-start">
+      <div className="mb-8">
         <div>
           <h1 className="text-3xl font-canela text-oma-plum mb-2">
             Designer Applications
@@ -49,17 +44,6 @@ export function ApplicationsToolbar({
             )}
           </p>
         </div>
-        <Button
-          variant="outline"
-          onClick={onRefresh}
-          disabled={loading}
-          className="shrink-0"
-        >
-          <RefreshCw
-            className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`}
-          />
-          {loading ? "Refreshing…" : "Refresh"}
-        </Button>
       </div>
 
       <div className="mb-6 flex flex-col sm:flex-row gap-4">

@@ -15,7 +15,6 @@ import {
   Calendar,
   Download,
   Filter,
-  RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -364,18 +363,6 @@ export default function SubscriptionsPage() {
           >
             <Download className="h-4 w-4" />
             Export CSV
-          </Button>
-          <Button
-            onClick={() => {
-              console.log("🔄 Manual refresh triggered");
-              void fetchSubscribers(getCurrentQuery(currentPage));
-              fetchStats();
-            }}
-            className="flex items-center gap-2"
-            disabled={loading}
-          >
-            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-            {loading ? 'Refreshing...' : 'Refresh'}
           </Button>
         </div>
       </div>

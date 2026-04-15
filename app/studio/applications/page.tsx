@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
 import type { StatusFilter } from "./types";
 import { useStudioApplications } from "./useStudioApplications";
 import { ApplicationsToolbar } from "./ApplicationsToolbar";
@@ -93,10 +92,7 @@ export default function ApplicationsPage() {
       <div className="container mx-auto px-6 py-8">
         <div className="text-center">
           <p className="text-red-500 mb-4">{error}</p>
-          <Button onClick={() => void fetchApplications()}>
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Try Again
-          </Button>
+          <Button onClick={() => void fetchApplications()}>Try Again</Button>
         </div>
       </div>
     );
@@ -111,8 +107,6 @@ export default function ApplicationsPage() {
         onSearchTermChange={setSearchTerm}
         statusFilter={statusFilter}
         onStatusFilterChange={setStatusFilter}
-        onRefresh={() => void fetchApplications()}
-        loading={loading}
       />
 
       <ApplicationsList
