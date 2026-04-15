@@ -79,7 +79,8 @@ export async function GET(request: NextRequest) {
     // Build query for notifications
     let notificationsQuery = supabase
       .from("notifications")
-      .select(`
+      .select(
+        `
         id,
         user_id,
         brand_id,
@@ -88,9 +89,9 @@ export async function GET(request: NextRequest) {
         type,
         is_read,
         data,
-        created_at,
-        brand:brands(name)
-      `)
+        created_at
+      `
+      )
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
       .limit(notificationsLimit);
@@ -103,7 +104,12 @@ export async function GET(request: NextRequest) {
     const { data: notifications, error: notificationsError } = await notificationsQuery;
 
     if (notificationsError) {
-      console.warn("⚠️ Failed to fetch notifications:", notificationsError.code);
+      console.warn(
+        "⚠️ Failed to fetch notifications:",
+        notificationsError.code,
+        notificationsError.message,
+        notificationsError.details ?? ""
+      );
       // Continue without notifications
     }
 
