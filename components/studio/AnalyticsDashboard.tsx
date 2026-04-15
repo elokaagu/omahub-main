@@ -120,7 +120,9 @@ export default function AnalyticsDashboard({
 
       // Calculate product statistics
       const totalProducts = products?.length || 0;
-      const inStock = products?.filter((p) => p.in_stock).length || 0;
+      const inStock =
+        products?.filter((p: { in_stock: boolean | null }) => Boolean(p.in_stock))
+          .length || 0;
       const outOfStock = totalProducts - inStock;
 
       // Fetch favourites data
@@ -131,7 +133,8 @@ export default function AnalyticsDashboard({
 
       // If brand owner, only get favourites for their products
       if (isBrandOwner && ownedBrandIds.length > 0) {
-        const productIds = products?.map((p) => p.id) || [];
+        const productIds =
+          products?.map((p: { id: string }) => p.id) || [];
         console.log(
           `🔍 Filtering favourites for ${productIds.length} products`
         );
@@ -174,7 +177,7 @@ export default function AnalyticsDashboard({
       let mostPopularProduct = null;
       if (favourites && products && favourites.length > 0) {
         const productFavouritesCount = favourites.reduce(
-          (acc, fav) => {
+          (acc: Record<string, number>, fav: { item_id: string }) => {
             acc[fav.item_id] = (acc[fav.item_id] || 0) + 1;
             return acc;
           },
@@ -186,15 +189,18 @@ export default function AnalyticsDashboard({
         let maxCount = 0;
         let mostPopularId: string | null = null;
 
-        Object.entries(productFavouritesCount).forEach(([productId, count]) => {
+        for (const productId of Object.keys(productFavouritesCount)) {
+          const count = productFavouritesCount[productId];
           if (count > maxCount) {
             maxCount = count;
             mostPopularId = productId;
           }
-        });
+        }
 
         if (mostPopularId && maxCount > 0) {
-          const product = products.find((p) => p.id === mostPopularId);
+          const product = products.find(
+            (p: { id: string }) => p.id === mostPopularId
+          );
           if (product) {
             mostPopularProduct = {
               id: product.id,

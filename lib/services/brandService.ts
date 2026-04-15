@@ -21,6 +21,29 @@ const CACHE_EXPIRY = 30 * 1000; // 30 seconds for stable performance
 // Define essential fields to reduce payload size
 const ESSENTIAL_BRAND_FIELDS = "*";
 
+/** Row from `brands` queries with `products(count)` and `brand_images` embeds */
+type BrandsQueryRow = {
+  id?: string | null;
+  name?: string | null;
+  description?: string | null;
+  long_description?: string | null;
+  location?: string | null;
+  price_range?: string | null;
+  currency?: string;
+  category?: string | null;
+  categories?: string[] | null;
+  rating?: number | null;
+  is_verified?: boolean | null;
+  image?: string | null;
+  brand_images?: { storage_path: string }[] | null;
+  products?: { count: number }[] | null;
+  video_url?: string | null;
+  video_thumbnail?: string | null;
+  contact_email?: string | null;
+};
+
+type BrandIdNameRow = { id: string; name: string };
+
 /**
  * Get set of brand keys (name + email) that have unapproved applications
  * A brand is unapproved if it has an application with status != 'approved'
@@ -183,15 +206,16 @@ export async function getAllBrandsWithProductCounts(): Promise<
     }
 
     // Map the data to include product_count and video fields
-    const brandsWithCounts: (Brand & { product_count: number })[] = data.map(
-      (item) => ({
+    const brandsWithCounts: (Brand & { product_count: number })[] = (
+      data as BrandsQueryRow[]
+    ).map((item: BrandsQueryRow) => ({
         id: item.id || `temp-id-${Math.random().toString(36).substring(2, 9)}`,
         name: item.name || "Brand Name",
         description: item.description || "Brand description",
         long_description: item.long_description || "Long brand description",
         location: item.location || "Unknown location",
         price_range: item.price_range || "$",
-        currency: item.currency,
+        currency: item.currency ?? "USD",
         category: item.category || "Other",
         categories: item.categories || [],
         rating: item.rating || 4.5,
@@ -205,8 +229,7 @@ export async function getAllBrandsWithProductCounts(): Promise<
         video_url: item.video_url || undefined,
         video_thumbnail: item.video_thumbnail || undefined,
         contact_email: item.contact_email || undefined,
-      })
-    );
+      }));
 
     // Filter out brands with unapproved applications
     const filteredBrands = await filterUnapprovedBrands(brandsWithCounts);
@@ -244,7 +267,7 @@ export async function getAllBrands(
       if (error) throw new Error(`Failed to fetch brands: ${error.message}`);
       if (!data || data.length === 0)
         throw new Error("No brands found in the database");
-      const mappedBrands = data.map((item) => {
+      const mappedBrands = (data as BrandsQueryRow[]).map((item: BrandsQueryRow) => {
         // Clean location data - remove trailing 'O' and '0' characters that might be data entry errors
         const cleanLocation = item.location
           ? item.location.replace(/[O0]+$/, "")
@@ -263,7 +286,7 @@ export async function getAllBrands(
           long_description: item.long_description || "Long brand description",
           location: cleanLocation || "Unknown location",
           price_range: item.price_range || "$",
-          currency: item.currency,
+          currency: item.currency ?? "USD",
           category: item.category || "Other",
           categories: item.categories || [],
           rating: item.rating || 4.5,
@@ -355,7 +378,7 @@ export async function getAllBrands(
         long_description: item.long_description || "Long brand description",
         location: cleanLocation || "Unknown location",
         price_range: item.price_range || "$",
-        currency: item.currency,
+        currency: item.currency ?? "USD",
         category: item.category || "Other",
         categories: item.categories || [],
         rating: item.rating || 4.5,
@@ -901,7 +924,12 @@ export async function getBrandNamesMap(): Promise<Map<string, string>> {
     }
 
     // Create and return the Map directly
-    const brandMap = new Map(data.map((brand) => [brand.id, brand.name]));
+    const brandMap = new Map(
+      (data as BrandIdNameRow[]).map((brand: BrandIdNameRow) => [
+        brand.id,
+        brand.name,
+      ])
+    );
 
     return brandMap;
   } catch (err) {

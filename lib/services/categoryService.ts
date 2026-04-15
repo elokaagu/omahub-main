@@ -47,8 +47,13 @@ export async function getAllBrandCategories(): Promise<string[]> {
     throw error;
   }
 
+  if (!data?.length) {
+    return [];
+  }
+
+  const rows = data as { category: string }[];
   // Get unique categories and sort them
-  const categories = [...new Set(data.map((item) => item.category))].sort();
+  const categories = [...new Set(rows.map((item) => item.category))].sort();
   return categories;
 }
 
@@ -77,7 +82,12 @@ export async function getCategoryCounts(): Promise<Record<string, number>> {
     counts[cat.displayName] = 0;
   });
 
-  data.forEach((item) => {
+  if (!data?.length) {
+    return counts;
+  }
+
+  const brandRows = data as { categories: unknown }[];
+  brandRows.forEach((item) => {
     const brandCategories: string[] = Array.isArray(item.categories)
       ? item.categories
       : [];

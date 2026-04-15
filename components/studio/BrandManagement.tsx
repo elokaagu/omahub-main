@@ -82,7 +82,7 @@ export default function BrandManagement({ className }: BrandManagementProps) {
         setTailorLoading(true);
         try {
           const tailors = await getTailorsWithBrands();
-          const found = tailors.some((t) => t.brand.id === editingBrand.id);
+          const found = tailors.some((t) => t.brand?.id === editingBrand.id);
           setIsTailoringEnabled(found);
         } catch {
           setIsTailoringEnabled(false);

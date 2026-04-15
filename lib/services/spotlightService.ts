@@ -135,7 +135,13 @@ export async function getSpotlightVideoForBrandName(
     }
 
     const lower = trimmed.toLowerCase();
-    const row = (data ?? []).find(
+    type SpotlightVideoRow = {
+      video_url: string | null;
+      video_thumbnail: string | null;
+      brand_name: string | null;
+    };
+    const rows = (data ?? []) as SpotlightVideoRow[];
+    const row = rows.find(
       (s) => s.brand_name?.toLowerCase() === lower && s.video_url
     );
 

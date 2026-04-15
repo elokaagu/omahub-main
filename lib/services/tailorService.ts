@@ -1,6 +1,21 @@
 import { supabase, Tailor, Brand } from "../supabase";
 import { getAdminClientLazy } from "@/lib/supabase/adminClientLazy";
 
+/** Tailor row from tailors + nested brand + brand_images select */
+export type TailorRowWithBrand = Tailor & {
+  brand?: {
+    name: string;
+    id: string;
+    location: string;
+    is_verified: boolean;
+    category: string;
+    image: string;
+    video_url?: string;
+    video_thumbnail?: string;
+    brand_images?: Array<{ storage_path: string }>;
+  };
+};
+
 /**
  * Fetch all tailors from the database
  */
@@ -79,21 +94,7 @@ export async function getTailorWithBrand(id: string): Promise<
 /**
  * Fetch tailors with brand information
  */
-export async function getTailorsWithBrands(): Promise<
-  (Tailor & {
-    brand: {
-      name: string;
-      id: string;
-      location: string;
-      is_verified: boolean;
-      category: string;
-      image: string;
-      video_url?: string;
-      video_thumbnail?: string;
-      brand_images?: any[];
-    };
-  })[]
-> {
+export async function getTailorsWithBrands(): Promise<TailorRowWithBrand[]> {
   if (!supabase) {
     throw new Error("Supabase client not available");
   }
@@ -117,19 +118,20 @@ export async function getTailorsWithBrands(): Promise<
 
   // Process the data to construct proper image URLs from brand_images
   // Note: Unverified brands are allowed on frontend, only unapproved brands (with pending applications) are hidden
-  const processedData = (data || []).map((tailor) => {
-      if (
-        tailor.brand &&
-        tailor.brand.brand_images &&
-        tailor.brand.brand_images.length > 0
-      ) {
-        // Use the new brand_images relationship - this ensures we get the current studio images
-        const storagePath = tailor.brand.brand_images[0].storage_path;
-        tailor.brand.image = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${storagePath}`;
-      }
-      // If no brand_images, keep the existing brands.image field as fallback
-      return tailor;
-    });
+  const rows = (data || []) as TailorRowWithBrand[];
+  const processedData = rows.map((tailor) => {
+    if (
+      tailor.brand &&
+      tailor.brand.brand_images &&
+      tailor.brand.brand_images.length > 0
+    ) {
+      // Use the new brand_images relationship - this ensures we get the current studio images
+      const storagePath = tailor.brand.brand_images[0].storage_path;
+      tailor.brand.image = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${storagePath}`;
+    }
+    // If no brand_images, keep the existing brands.image field as fallback
+    return tailor;
+  });
 
   // Filter out tailors with unapproved brands
   // Need to fetch full brand data to check contact_email
@@ -142,7 +144,10 @@ export async function getTailorsWithBrands(): Promise<
 
     if (unapprovedApps && unapprovedApps.length > 0) {
       const unapprovedKeys = new Set(
-        unapprovedApps.map((app) => `${app.brand_name}::${app.email}`)
+        unapprovedApps.map(
+          (app: { brand_name: string; email: string }) =>
+            `${app.brand_name}::${app.email}`
+        )
       );
 
       // Fetch brands to get contact_email for matching
@@ -158,12 +163,12 @@ export async function getTailorsWithBrands(): Promise<
 
         const unapprovedBrandIds = new Set(
           (brands || [])
-            .filter((b) => {
+            .filter((b: { id: string; name: string; contact_email: string | null }) => {
               if (!b.contact_email) return false;
               const key = `${b.name}::${b.contact_email}`;
               return unapprovedKeys.has(key);
             })
-            .map((b) => b.id)
+            .map((b: { id: string }) => b.id)
         );
 
         return processedData.filter(

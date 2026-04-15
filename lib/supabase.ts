@@ -1,3 +1,4 @@
+import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
 import { createClient, supabase } from "./supabase-unified";
 
 export { createClient, supabase };
@@ -13,10 +14,16 @@ export const getSupabaseClient = () => supabase;
 
 export const isSupabaseAvailable = () => !!supabase;
 
-if (process.env.NODE_ENV === "development" && typeof window !== "undefined") {
-  supabase.auth.onAuthStateChange((event, session) => {
-    console.log("Auth state changed:", event, !!session);
-  });
+if (
+  process.env.NODE_ENV === "development" &&
+  typeof window !== "undefined" &&
+  supabase
+) {
+  supabase.auth.onAuthStateChange(
+    (event: AuthChangeEvent, session: Session | null) => {
+      console.log("Auth state changed:", event, !!session);
+    }
+  );
 }
 
 // Helper function to safely execute database operations

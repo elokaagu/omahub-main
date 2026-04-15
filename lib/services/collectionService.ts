@@ -1,5 +1,21 @@
 import { supabase, Catalogue, Brand } from "../supabase";
 
+/** Row shape from catalogues + nested brand + brand_images select */
+type CollectionRowWithBrand = Catalogue & {
+  brand?: {
+    name: string;
+    id: string;
+    location: string;
+    is_verified: boolean;
+    category: string;
+    rating: number;
+    long_description: string;
+    price_range?: string;
+    image?: string;
+    brand_images?: Array<{ storage_path: string }>;
+  };
+};
+
 // Cache for collections data
 let collectionsCache: {
   data: any[] | null;
@@ -107,7 +123,7 @@ export async function getCollectionsWithBrands(
   forceRefresh: boolean = false
 ): Promise<
   (Catalogue & {
-    brand: {
+    brand?: {
       name: string;
       id: string;
       location: string;
@@ -116,6 +132,7 @@ export async function getCollectionsWithBrands(
       rating: number;
       long_description: string;
       price_range?: string;
+      image?: string;
     };
   })[]
 > {
@@ -149,7 +166,8 @@ export async function getCollectionsWithBrands(
   }
 
   // Process the data to construct proper image URLs from brand_images
-  const processedData = (data || []).map((collection) => {
+  const rows = (data || []) as CollectionRowWithBrand[];
+  const processedData = rows.map((collection) => {
     if (
       collection.brand &&
       collection.brand.brand_images &&

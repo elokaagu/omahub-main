@@ -160,13 +160,14 @@ export function useBrandOwnerAccess(): BrandOwnerAccess {
 
     const subscription = supabase
       .channel(`brand_access_updates_${user.id}`)
-      .on("broadcast", { event: "profile_updated" }, async (payload) => {
+      .on("broadcast", { event: "profile_updated" }, async (payload: unknown) => {
         console.log(
           "📡 useBrandOwnerAccess: Received profile update:",
           payload
         );
 
-        if (payload.payload?.user_id === user.id) {
+        const p = payload as { payload?: { user_id?: string } };
+        if (p.payload?.user_id === user.id) {
           console.log(
             "🔄 useBrandOwnerAccess: Profile update for current user, refreshing access..."
           );
@@ -176,7 +177,7 @@ export function useBrandOwnerAccess(): BrandOwnerAccess {
           }, 200);
         }
       })
-      .subscribe((status) => {
+      .subscribe((status: string) => {
         console.log("📡 useBrandOwnerAccess: Subscription status:", status);
       });
 

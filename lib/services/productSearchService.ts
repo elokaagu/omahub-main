@@ -133,14 +133,14 @@ export async function getAllProductCategories(): Promise<string[]> {
     const allCategories = new Set<string>();
 
     // Add legacy categories
-    legacyCategories?.forEach((item) => {
+    legacyCategories?.forEach((item: { category: string | null }) => {
       if (item.category) allCategories.add(item.category);
     });
 
     // Add array categories
-    arrayCategories?.forEach((item) => {
+    arrayCategories?.forEach((item: { categories: unknown }) => {
       if (item.categories && Array.isArray(item.categories)) {
-        item.categories.forEach((cat) => {
+        (item.categories as string[]).forEach((cat: string) => {
           if (cat) allCategories.add(cat);
         });
       }

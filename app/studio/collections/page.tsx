@@ -53,7 +53,7 @@ import {
 import { collectionsPageDevLog } from "./collectionsPageDevLog";
 
 type CollectionWithBrand = Catalogue & {
-  brand: {
+  brand?: {
     name: string;
     id: string;
     location: string;
@@ -186,7 +186,7 @@ export default function CollectionsPage() {
       list = list.filter(
         (c) =>
           c.title.toLowerCase().includes(q) ||
-          c.brand.name.toLowerCase().includes(q)
+          (c.brand?.name ?? "").toLowerCase().includes(q)
       );
     }
     return list;
@@ -426,7 +426,7 @@ export default function CollectionsPage() {
                         {collection.title}
                       </CardTitle>
                       <CardDescription className="text-black/60">
-                        {collection.brand.name}
+                        {collection.brand?.name ?? "Unknown brand"}
                       </CardDescription>
                     </div>
                   </div>

@@ -1,6 +1,23 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase-unified";
 
+/** Row shape from `getAnalyticsData` / `getBrandOwnerAnalyticsData` brands query */
+type AnalyticsBrandQueryRow = {
+  id: string;
+  name: string;
+  rating: number | null;
+  is_verified: boolean;
+  created_at: string;
+  reviews: { rating: number; created_at: string }[] | null;
+};
+
+type AnalyticsReviewQueryRow = {
+  id: string;
+  rating: number;
+  created_at: string;
+  brand_id: string;
+};
+
 export interface AnalyticsData {
   totalBrands: number;
   totalReviews: number;
@@ -266,8 +283,8 @@ export async function getAnalyticsData(
       handleDatabaseError(recentReviewsResult.error, "fetch recent reviews");
     }
 
-    const brands = brandsResult.data || [];
-    const reviews = reviewsResult.data || [];
+    const brands = (brandsResult.data || []) as AnalyticsBrandQueryRow[];
+    const reviews = (reviewsResult.data || []) as AnalyticsReviewQueryRow[];
 
     // Process brands data
     const totalBrands = brands.length;
@@ -285,10 +302,10 @@ export async function getAnalyticsData(
     // Calculate average rating from brands
     const brandRatings = brands
       .map((brand) => brand.rating)
-      .filter((rating) => rating !== null && rating !== undefined);
+      .filter((rating): rating is number => rating !== null && rating !== undefined);
     const averageRating =
       brandRatings.length > 0
-        ? brandRatings.reduce((acc, rating) => acc + rating, 0) /
+        ? brandRatings.reduce((acc: number, rating: number) => acc + rating, 0) /
           brandRatings.length
         : 0;
 
@@ -298,7 +315,8 @@ export async function getAnalyticsData(
     // Calculate review distribution
     const reviewDistribution = [1, 2, 3, 4, 5].map((rating) => ({
       rating,
-      count: reviews.filter((review) => review.rating === rating).length,
+      count: reviews.filter((review: AnalyticsReviewQueryRow) => review.rating === rating)
+        .length,
     }));
 
     // Get product counts with stock information
@@ -318,16 +336,16 @@ export async function getAnalyticsData(
       .filter(
         (brand) => brand.rating && brand.reviews && brand.reviews.length > 0
       )
-      .sort((a, b) => {
-        const aScore = (a.rating || 0) * Math.log(a.reviews.length + 1);
-        const bScore = (b.rating || 0) * Math.log(b.reviews.length + 1);
+      .sort((a: AnalyticsBrandQueryRow, b: AnalyticsBrandQueryRow) => {
+        const aScore = (a.rating || 0) * Math.log((a.reviews?.length ?? 0) + 1);
+        const bScore = (b.rating || 0) * Math.log((b.reviews?.length ?? 0) + 1);
         return bScore - aScore;
       })
       .slice(0, 5)
-      .map((brand) => ({
+      .map((brand: AnalyticsBrandQueryRow) => ({
         name: brand.name,
         rating: brand.rating || 0,
-        reviewCount: brand.reviews.length,
+        reviewCount: brand.reviews!.length,
       }));
 
     const analyticsData: AnalyticsData = {
@@ -450,7 +468,7 @@ export async function getBrandGrowthData(): Promise<BrandGrowthData[]> {
     // Group by month
     const monthlyData: { [key: string]: number } = {};
 
-    (brands || []).forEach((brand) => {
+    (brands || []).forEach((brand: { created_at: string }) => {
       const month = new Date(brand.created_at).toLocaleDateString("en-GB", {
         year: "numeric",
         month: "short",
@@ -508,7 +526,7 @@ export async function getReviewTrendsData(): Promise<ReviewTrendsData[]> {
     const monthlyData: { [key: string]: { total: number; ratings: number[] } } =
       {};
 
-    (reviews || []).forEach((review) => {
+    (reviews || []).forEach((review: { created_at: string; rating: number }) => {
       const month = new Date(review.created_at).toLocaleDateString("en-GB", {
         year: "numeric",
         month: "short",
@@ -636,7 +654,7 @@ export async function getBrandOwnerAnalyticsData(
     if (recentReviewsResult.error) throw recentReviewsResult.error;
 
     // Process brands data
-    const brands = brandsResult.data || [];
+    const brands = (brandsResult.data || []) as AnalyticsBrandQueryRow[];
     const totalBrands = brands.length;
     const verifiedBrands = brands.filter((brand) => brand.is_verified).length;
 
@@ -644,14 +662,17 @@ export async function getBrandOwnerAnalyticsData(
     const activeBrands = totalBrands;
 
     // Process reviews data
-    const reviews = reviewsResult.data || [];
+    const reviews = (reviewsResult.data || []) as AnalyticsReviewQueryRow[];
     const totalReviews = reviews.length;
 
     // Calculate average rating from all reviews for owned brands
     const averageRating =
       reviews.length > 0
-        ? reviews.reduce((sum, review) => sum + (review.rating || 0), 0) /
-          reviews.length
+        ? reviews.reduce(
+            (sum: number, review: AnalyticsReviewQueryRow) =>
+              sum + (review.rating || 0),
+            0
+          ) / reviews.length
         : 0;
 
     // Get product counts with stock information
@@ -735,7 +756,7 @@ export async function getBrandOwnerGrowthData(
     }
 
     // Count products by month
-    (data || []).forEach((product) => {
+    (data || []).forEach((product: { created_at: string }) => {
       const createdDate = new Date(product.created_at);
       const monthIndex = months.findIndex(
         (m) =>
@@ -803,7 +824,7 @@ export async function getBrandOwnerReviewTrends(
     }
 
     // Group reviews by month
-    (data || []).forEach((review) => {
+    (data || []).forEach((review: { created_at: string; rating: number }) => {
       const createdDate = new Date(review.created_at);
       const monthIndex = months.findIndex(
         (m) =>

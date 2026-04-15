@@ -2,8 +2,10 @@
 
 import React, { useMemo, useState, useEffect } from "react";
 import { Search, Grid, List } from "lucide-react";
-import { getTailorsWithBrands } from "@/lib/services/tailorService";
-import { Tailor } from "@/lib/supabase";
+import {
+  getTailorsWithBrands,
+  type TailorRowWithBrand,
+} from "@/lib/services/tailorService";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -37,18 +39,6 @@ const tailoredCategories = getCategoriesForDirectory().filter((cat) =>
   CURATED_CATEGORY_IDS.includes(cat.id)
 );
 
-type TailorWithBrand = Tailor & {
-  brand: {
-    name: string;
-    id: string;
-    location: string;
-    is_verified: boolean;
-    category: string;
-    video_url?: string;
-    video_thumbnail?: string;
-  };
-};
-
 // Mapping from unified category names to actual specialties
 const categoryToSpecialtiesMap: Record<string, string[]> = {
   Bridal: ["Wedding Dresses", "Bridal Wear", "Evening Gowns", "Bridal"],
@@ -70,7 +60,7 @@ const categoryToSpecialtiesMap: Record<string, string[]> = {
 const ALL_CATEGORIES_VALUE = "__all";
 
 function normalizeSpecialties(
-  specialties: TailorWithBrand["specialties"] | string | null | undefined
+  specialties: TailorRowWithBrand["specialties"] | string | null | undefined
 ): string[] {
   if (specialties == null || specialties === "") return [];
   if (Array.isArray(specialties)) {
@@ -88,7 +78,7 @@ function normalizeSpecialties(
 }
 
 function matchesCategoryOrSpecialty(
-  tailor: TailorWithBrand,
+  tailor: TailorRowWithBrand,
   category: string
 ): boolean {
   if (tailor.brand?.category === category) return true;
@@ -103,14 +93,15 @@ function matchesCategoryOrSpecialty(
   );
 }
 
-function TailorDirectoryMeta({ tailor }: { tailor: TailorWithBrand }) {
+function TailorDirectoryMeta({ tailor }: { tailor: TailorRowWithBrand }) {
+  const brand = tailor.brand;
   return (
     <>
       <div className="font-canela text-xl text-black mb-1">
-        {tailor.brand.name || tailor.title}
+        {brand?.name || tailor.title}
       </div>
-      <div className="text-sm text-black mb-1">{tailor.brand.category}</div>
-      <div className="text-sm text-black">{tailor.brand.location}</div>
+      <div className="text-sm text-black mb-1">{brand?.category ?? "—"}</div>
+      <div className="text-sm text-black">{brand?.location ?? "—"}</div>
     </>
   );
 }
@@ -127,7 +118,7 @@ function TailorDirectoryAction({ tailorId }: { tailorId: string }) {
 
 export default function TailorsPage() {
   const searchParams = useSearchParams();
-  const [tailors, setTailors] = useState<TailorWithBrand[]>([]);
+  const [tailors, setTailors] = useState<TailorRowWithBrand[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -177,7 +168,9 @@ export default function TailorsPage() {
         if (!normalizedSearchTerm) return true;
         return (
           tailor.title.toLowerCase().includes(normalizedSearchTerm) ||
-          tailor.brand.name.toLowerCase().includes(normalizedSearchTerm) ||
+          (tailor.brand?.name ?? "")
+            .toLowerCase()
+            .includes(normalizedSearchTerm) ||
           tailor.description?.toLowerCase().includes(normalizedSearchTerm)
         );
       });

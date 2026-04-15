@@ -8,7 +8,7 @@ import React, {
   useCallback,
   useRef,
 } from "react";
-import { Session } from "@supabase/supabase-js";
+import type { AuthChangeEvent, AuthError, Session } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase-unified";
 import { getProfile, User } from "@/lib/services/authService";
 import { AuthDebug } from "@/lib/utils/debug";
@@ -62,7 +62,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Force refresh the session
       const supabase = createClient();
-      supabase.auth.refreshSession().then(({ data, error }) => {
+      supabase.auth
+        .refreshSession()
+        .then(({ data, error }: { data: { session: Session | null }; error: AuthError | null }) => {
         if (error) {
           AuthDebug.error("❌ Session refresh failed:", error);
         } else {
@@ -271,7 +273,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth changes with enhanced error handling
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    } = supabase.auth.onAuthStateChange(
+      async (event: AuthChangeEvent, session: Session | null) => {
       AuthDebug.log("🔄 Auth state change:", event, {
         hasSession: !!session,
         userId: session?.user?.id,
@@ -283,7 +286,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         AuthDebug.error("❌ Error handling auth state change:", error);
         // Don't let auth errors crash the app
       }
-    });
+    }
+    );
 
     return () => {
       subscription.unsubscribe();
@@ -331,7 +335,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           table: "profiles",
           filter: `id=eq.${user.id}`,
         },
-        async (payload) => {
+        async (_payload: unknown) => {
           // Re-fetch profile and update context
           await loadUserProfile(user.id, user.email);
         }

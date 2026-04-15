@@ -172,7 +172,7 @@ export default function ProductsPage() {
       // Count favourites per product
       const productFavouritesMap =
         favouritesCountData?.reduce(
-          (acc, fav) => {
+          (acc: Record<string, number>, fav: { item_id: string }) => {
             acc[fav.item_id] = (acc[fav.item_id] || 0) + 1;
             return acc;
           },
@@ -185,7 +185,8 @@ export default function ProductsPage() {
       let mostPopular: ProductFavourites | null = null;
       let maxCount = 0;
 
-      Object.entries(productFavouritesMap).forEach(([productId, count]) => {
+      for (const productId of Object.keys(productFavouritesMap)) {
+        const count = productFavouritesMap[productId];
         if (count > maxCount) {
           maxCount = count;
           mostPopular = {
@@ -194,7 +195,7 @@ export default function ProductsPage() {
             productTitle: undefined,
           } as ProductFavourites;
         }
-      });
+      }
 
       // Add product title to most popular
       if (mostPopular && products.length > 0) {
