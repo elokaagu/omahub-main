@@ -1,4 +1,8 @@
 import type { Brand } from "@/lib/supabase";
+import {
+  brandIsListedInPublicDirectory,
+  resolveBrandDirectoryCardImageUrl,
+} from "@/lib/brands/directoryListingImage";
 
 export interface BrandDisplay {
   id: string;
@@ -10,44 +14,16 @@ export interface BrandDisplay {
   isVerified: boolean;
 }
 
-/** Paths that are not real assets in `public/` (LazyImage would 404 → "Image Coming Soon"). */
-const BROKEN_IMAGE_FALLBACKS = new Set([
-  "",
-  "/placeholder.jpg",
-  "/placeholder-image.jpg",
-  "/placeholder.png",
-  "/placeholder.svg",
-]);
-
-/**
- * Prefer `brand.image` from the API (already a full Supabase URL on the server).
- * `/api/brands/public?refresh=1` maps rows without embedding `brand_images` in JSON,
- * so relying only on `brand_images` here broke the directory grid for every refresh.
- */
-function brandImageUrl(brand: Brand): string {
-  const fromApi = brand.image?.trim() ?? "";
-  if (fromApi && !BROKEN_IMAGE_FALLBACKS.has(fromApi)) {
-    return fromApi;
-  }
-
-  const path = brand.brand_images?.[0]?.storage_path;
-  const base = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-  if (path && base) {
-    return `${base}/storage/v1/object/public/brand-assets/${path}`;
-  }
-
-  return "/brand/omahub-logo.png";
-}
-
-/** Maps API brand → card model. Skips rows without a stable id. */
+/** Maps API brand → card model. Skips rows without a stable id or a published listing image. */
 export function mapBrandToDisplay(brand: Brand): BrandDisplay | null {
   const id = brand.id?.trim();
   if (!id) return null;
+  if (!brandIsListedInPublicDirectory(brand)) return null;
 
   return {
     id,
     name: brand.name?.trim() || "Unnamed Brand",
-    image: brandImageUrl(brand),
+    image: resolveBrandDirectoryCardImageUrl(brand),
     category: brand.category || "",
     categories: brand.categories || [],
     location: brand.location

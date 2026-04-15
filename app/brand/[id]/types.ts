@@ -22,6 +22,11 @@ export interface BrandProfileData {
   whatsapp?: string;
   contact_email?: string;
   currency?: string;
+  /**
+   * When true, the brand has no published cover image and is hidden from `/directory`.
+   * Used for an on-page notice to designers.
+   */
+  showDirectoryImageNotice?: boolean;
 }
 
 export interface BrandProduct {

@@ -16,6 +16,8 @@ import { BrandCollectionsSection } from "./BrandCollectionsSection";
 import { BrandInfoSection } from "./BrandInfoSection";
 import { BrandReviewsSection } from "./BrandReviewsSection";
 import type { BrandProduct, BrandProfileData } from "./types";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { ImageIcon } from "lucide-react";
 
 interface ClientBrandProfileProps {
   brandId: string;
@@ -228,6 +230,20 @@ export default function ClientBrandProfile({
   return (
     <section className="pt-20 sm:pt-24 pb-16 px-4 sm:px-6 fade-in">
       <div className="max-w-7xl mx-auto">
+        {brandData.showDirectoryImageNotice ? (
+          <Alert className="mb-6 sm:mb-8 border-oma-gold/35 bg-oma-beige/60 text-oma-cocoa shadow-sm">
+            <ImageIcon className="h-4 w-4 text-oma-plum" aria-hidden />
+            <AlertTitle className="text-oma-plum font-canela text-base">
+              Not listed in the Brand Directory yet
+            </AlertTitle>
+            <AlertDescription className="text-oma-cocoa/90 text-sm mt-1">
+              This profile is still visible at this link, but it will not appear
+              on the public directory until a cover image is published in Studio
+              (upload brand images for this brand). Add at least one image so
+              visitors see your work in the directory grid.
+            </AlertDescription>
+          </Alert>
+        ) : null}
         <BrandHeaderSection
           brandData={brandData}
           reviewsCount={reviews.length}

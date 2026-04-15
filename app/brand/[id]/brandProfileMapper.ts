@@ -1,4 +1,6 @@
 import type { BrandProfileData } from "./types";
+import type { Brand } from "@/lib/supabase";
+import { brandIsListedInPublicDirectory } from "@/lib/brands/directoryListingImage";
 
 type BrandRecord = {
   id: string;
@@ -15,6 +17,9 @@ type BrandRecord = {
   instagram?: string | null;
   whatsapp?: string | null;
   contact_email?: string | null;
+  /** Legacy / API-resolved column when present on `brands` row */
+  image?: string | null;
+  logo_url?: string | null;
   brand_images?: Array<{ storage_path?: string | null }>;
 };
 
@@ -29,6 +34,9 @@ export function mapBrandToProfileData(
   brand: BrandRecord,
   collections: CollectionRecord[]
 ): BrandProfileData {
+  const asBrand = brand as Brand;
+  const listed = brandIsListedInPublicDirectory(asBrand);
+
   return {
     id: brand.id,
     name: brand.name,
@@ -43,6 +51,7 @@ export function mapBrandToProfileData(
     image: brand.brand_images?.[0]?.storage_path
       ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${brand.brand_images[0].storage_path}`
       : undefined,
+    showDirectoryImageNotice: !listed,
     website: brand.website,
     instagram: brand.instagram || undefined,
     whatsapp: brand.whatsapp || undefined,
