@@ -37,14 +37,14 @@ export async function getProductById(id: string): Promise<Product | null> {
     .from("products")
     .select("*")
     .eq("id", id)
-    .single();
+    .maybeSingle();
 
   if (error) {
     console.error(`Error fetching product ${id}:`, error);
     return null;
   }
 
-  return data;
+  return data ?? null;
 }
 
 /**

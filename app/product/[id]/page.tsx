@@ -10,6 +10,15 @@ interface ProductPageProps {
   params: { id: string };
 }
 
+function isNextNotFoundError(e: unknown): boolean {
+  return (
+    typeof e === "object" &&
+    e !== null &&
+    "digest" in e &&
+    (e as { digest?: string }).digest === "NEXT_NOT_FOUND"
+  );
+}
+
 function metaKeywords(
   product: Product,
   brandName: string,
@@ -105,7 +114,10 @@ export default async function ProductPage({ params }: ProductPageProps) {
       />
     );
   } catch (error) {
-    console.error("Error loading product page (treating as not found):", error);
+    if (isNextNotFoundError(error)) {
+      throw error;
+    }
+    console.error("Error loading product page:", error);
     notFound();
   }
 }
