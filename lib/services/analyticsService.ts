@@ -171,19 +171,17 @@ function calculateEstimatedPageViews(
 // Helper function to check authentication
 async function checkAuth() {
   const {
-    data: { session },
+    data: { user },
     error,
-  } = await supabase.auth.getSession();
+  } = await supabase.auth.getUser();
 
   if (error) {
     throw new Error(`Authentication error: ${error.message}`);
   }
 
-  if (!session) {
+  if (!user) {
     throw new Error("Please log in to access analytics data");
   }
-
-  return session;
 }
 
 // Helper function to handle database errors

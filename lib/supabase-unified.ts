@@ -284,7 +284,19 @@ export async function checkAuthState() {
   const client = createClient();
 
   try {
-    // First, try to get the current session
+    const {
+      data: { user },
+      error: userError,
+    } = await client.auth.getUser();
+
+    if (userError || !user) {
+      if (userError) {
+        console.error("Auth state check failed:", userError);
+        clearAuthData();
+      }
+      return { session: null, error: userError ?? null };
+    }
+
     const {
       data: { session },
       error: sessionError,
@@ -296,7 +308,6 @@ export async function checkAuthState() {
       return { session: null, error: sessionError };
     }
 
-    // If no session, return early
     if (!session) {
       return { session: null, error: null };
     }

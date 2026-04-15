@@ -258,24 +258,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const supabase = createClient();
 
-    // Get initial session with retry logic
+    // Verify JWT with Auth server, then hydrate full session from storage (client-only).
     const getInitialSession = async () => {
       try {
         const {
-          data: { session },
-          error,
-        } = await supabase.auth.getSession();
+          data: { user },
+          error: userError,
+        } = await supabase.auth.getUser();
 
-        if (error) {
-          AuthDebug.error("❌ Initial session error:", error);
-          // Don't fail completely on session error, try to recover
+        if (userError) {
+          AuthDebug.error("❌ Initial getUser error:", userError);
           setLoading(false);
           return;
         }
 
-        if (session) {
-          AuthDebug.log("✅ Initial session found:", session.user.email);
-          await handleAuthStateChange("INITIAL_SESSION", session);
+        if (user) {
+          const {
+            data: { session },
+            error: sessionError,
+          } = await supabase.auth.getSession();
+          if (sessionError) {
+            AuthDebug.error("❌ Initial getSession error:", sessionError);
+            setLoading(false);
+            return;
+          }
+          if (session) {
+            AuthDebug.log("✅ Initial session found:", session.user.email);
+            await handleAuthStateChange("INITIAL_SESSION", session);
+          } else {
+            AuthDebug.log("ℹ️  getUser ok but no local session");
+          }
         } else {
           AuthDebug.log("ℹ️  No initial session found");
         }
@@ -374,22 +386,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       const supabase = createClient();
       const {
-        data: { session },
-        error,
-      } = await supabase.auth.getSession();
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
 
-      if (error) {
-        AuthDebug.error("❌ Session recovery failed:", error);
+      if (userError || !user) {
+        AuthDebug.error("❌ Session recovery getUser failed:", userError);
         return false;
       }
 
-      if (session) {
-        AuthDebug.log("✅ Session recovered successfully");
-        await handleAuthStateChange("SESSION_RECOVERED", session);
-        return true;
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
+      if (sessionError || !session) {
+        AuthDebug.error("❌ Session recovery getSession failed:", sessionError);
+        return false;
       }
 
-      return false;
+      AuthDebug.log("✅ Session recovered successfully");
+      await handleAuthStateChange("SESSION_RECOVERED", session);
+      return true;
     } catch (error) {
       AuthDebug.error("❌ Unexpected error during session recovery:", error);
       return false;

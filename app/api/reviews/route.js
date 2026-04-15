@@ -24,11 +24,11 @@ export async function POST(request) {
     const supabase = createApiRouteSupabaseClient(request);
 
     const {
-      data: { session },
-      error: sessionError,
-    } = await supabase.auth.getSession();
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
 
-    if (sessionError || !session?.user) {
+    if (userError || !user?.id) {
       return NextResponse.json(
         { error: "Authentication required to submit reviews" },
         { status: 401 }
@@ -47,7 +47,7 @@ export async function POST(request) {
       return NextResponse.json({ error: "Invalid review payload" }, { status: 400 });
     }
 
-    const userId = session.user.id;
+    const userId = user.id;
     const { brandId, comment, rating } = parsed.data;
     const date = parsed.data.date || new Date().toISOString().split("T")[0];
 
@@ -81,7 +81,7 @@ export async function POST(request) {
       .eq("id", userId)
       .maybeSingle();
 
-    const author = resolveAuthorDisplayName(profile, session.user.email || "");
+    const author = resolveAuthorDisplayName(profile, user.email || "");
 
     const reviewData = {
       brand_id: brandId,

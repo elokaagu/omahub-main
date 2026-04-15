@@ -13,15 +13,15 @@ export async function GET(request: NextRequest) {
     const supabase = await createServerSupabaseClient();
 
     const {
-      data: { session },
-      error: sessionError,
-    } = await supabase.auth.getSession();
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
-    if (sessionError || !session?.user) {
+    if (authError || !user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const userId = session.user.id;
+    const userId = user.id;
     const { searchParams } = new URL(request.url);
     const parsed = parseBrandIdsParam(searchParams.get("brand_ids"));
 

@@ -42,20 +42,19 @@ export async function middleware(request: NextRequest) {
     );
 
     const {
-      data: { session },
+      data: { user },
       error,
-    } = await supabase.auth.getSession();
+    } = await supabase.auth.getUser();
 
-    // Handle corrupted sessions
+    // Handle invalid / expired JWT (validates with Auth server, unlike getSession)
     if (error) {
-      console.log("🔧 Session error in middleware:", error.message);
+      console.log("🔧 Auth error in middleware:", error.message);
       const redirectUrl = new URL("/login", request.url);
       redirectUrl.searchParams.set("redirect_to", request.nextUrl.pathname);
       return NextResponse.redirect(redirectUrl);
     }
 
-    // If no session on protected route, redirect to login
-    if (!session) {
+    if (!user) {
       const redirectUrl = new URL("/login", request.url);
       redirectUrl.searchParams.set("redirect_to", request.nextUrl.pathname);
       return NextResponse.redirect(redirectUrl);

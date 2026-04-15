@@ -98,10 +98,10 @@ export async function POST(request: NextRequest) {
 
   const supabase = await createServerSupabaseClient();
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  if (session?.user) {
+  if (user) {
     const auth = await requireLeadsAdmin();
     if (auth.ok) {
       return handlePostLead(body, auth.ctx);

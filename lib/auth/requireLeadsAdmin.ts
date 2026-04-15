@@ -29,11 +29,11 @@ export type RequireLeadsAdminResult =
 export async function requireLeadsAdmin(): Promise<RequireLeadsAdminResult> {
   const supabase = await createServerSupabaseClient();
   const {
-    data: { session },
-    error: sessionError,
-  } = await supabase.auth.getSession();
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
 
-  if (sessionError) {
+  if (authError) {
     return {
       ok: false,
       response: NextResponse.json(
@@ -43,14 +43,14 @@ export async function requireLeadsAdmin(): Promise<RequireLeadsAdminResult> {
     };
   }
 
-  if (!session?.user) {
+  if (!user?.id) {
     return {
       ok: false,
       response: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
     };
   }
 
-  const userId = session.user.id;
+  const userId = user.id;
 
   const { data: profileData, error: profileError } = await supabase
     .from("profiles")

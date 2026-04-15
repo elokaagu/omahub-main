@@ -29,15 +29,15 @@ export async function GET() {
     const supabase = await createServerSupabaseClient();
 
     const {
-      data: { session },
-      error: sessionError,
-    } = await supabase.auth.getSession();
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
 
-    if (sessionError) {
+    if (userError) {
       console.error(
         JSON.stringify({
-          event: "validate_session_error",
-          message: sessionError.message,
+          event: "validate_user_error",
+          message: userError.message,
         })
       );
       return json(
@@ -46,14 +46,14 @@ export async function GET() {
       );
     }
 
-    if (!session?.user) {
+    if (!user?.id) {
       return json({ valid: false, error: "Not signed in." }, { status: 401 });
     }
 
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("id, email, role")
-      .eq("id", session.user.id)
+      .eq("id", user.id)
       .maybeSingle();
 
     if (profileError) {
@@ -70,15 +70,16 @@ export async function GET() {
       );
     }
 
-    const session_expires = session.expires_at ?? null;
+    // Expiry is not returned here to avoid getSession() on the server (see Supabase SSR guidance).
+    const session_expires = null;
 
     if (!profile) {
       return json(
         {
           valid: true,
           user: {
-            id: session.user.id,
-            email: session.user.email,
+            id: user.id,
+            email: user.email,
             role: "user",
           },
           session_expires,
