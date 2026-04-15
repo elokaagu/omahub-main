@@ -4,6 +4,12 @@ import StudioLayoutClient from "./StudioLayoutClient";
 import type { Database } from "@/lib/types/supabase";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
+type StudioInitialUser = {
+  id: string;
+  email: string | null;
+  role?: Profile["role"] | null;
+  owned_brands?: string[] | null;
+};
 
 export default async function StudioLayout({
   children,
@@ -13,26 +19,29 @@ export default async function StudioLayout({
   const supabase = await createServerSupabaseClient();
   const {
     data: { user },
+    error: authError,
   } = await supabase.auth.getUser();
+  if (authError) {
+    console.error("[studio/layout] auth.getUser failed:", authError.message);
+  }
 
   let initialProfile: Profile | null = null;
-  let initialUser:
-    | {
-        id: string;
-        email: string | null;
-        role?: Profile["role"] | null;
-        owned_brands?: string[] | null;
-      }
-    | null = null;
+  let initialUser: StudioInitialUser | null = null;
 
   if (user) {
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("id, email, role, owned_brands, first_name, last_name, avatar_url")
+      .select("*")
       .eq("id", user.id)
       .maybeSingle();
+    if (profileError) {
+      console.error(
+        "[studio/layout] profiles lookup failed:",
+        profileError.message
+      );
+    }
 
-    initialProfile = (profile as Profile) ?? null;
+    initialProfile = profile ?? null;
     initialUser = {
       id: user.id,
       email: user.email ?? null,

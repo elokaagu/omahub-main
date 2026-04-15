@@ -6,7 +6,6 @@ import { getTailorWithBrand } from "@/lib/services/tailorService";
 import { Tailor, Brand } from "@/lib/supabase";
 import Link from "next/link";
 import { LazyImage } from "@/components/ui/lazy-image";
-import { Button } from "@/components/ui/button";
 import ContactDesignerModal from "@/components/ContactDesignerModal";
 import {
   ArrowLeft,
@@ -15,10 +14,7 @@ import {
   MapPin,
   Star,
   CheckCircle,
-  Calendar,
-  ExternalLink,
 } from "lucide-react";
-import { Verified } from "lucide-react";
 
 type TailorWithBrand = Tailor & {
   brand: Brand;
@@ -40,6 +36,32 @@ const getImageFocalPoint = (imageUrl: string, title: string) => {
 
   // Default to top-center for most fashion photography to avoid cutting off faces
   return "object-top";
+};
+
+const FALLBACK_TAILOR_IMAGE = "/placeholder-service.jpg";
+
+const formatConsultationFee = (
+  consultationFee: number | null | undefined,
+  currencyCode: string | null | undefined
+) => {
+  if (consultationFee == null) return null;
+  const amount = Number(consultationFee);
+  if (!Number.isFinite(amount)) return String(consultationFee);
+
+  const normalizedCurrency =
+    typeof currencyCode === "string" && currencyCode.trim().length > 0
+      ? currencyCode.trim().toUpperCase()
+      : "USD";
+
+  try {
+    return new Intl.NumberFormat("en-GB", {
+      style: "currency",
+      currency: normalizedCurrency,
+      maximumFractionDigits: amount % 1 === 0 ? 0 : 2,
+    }).format(amount);
+  } catch {
+    return `${normalizedCurrency} ${amount.toFixed(amount % 1 === 0 ? 0 : 2)}`;
+  }
 };
 
 export default function TailorPage() {
@@ -117,6 +139,16 @@ export default function TailorPage() {
     );
   }
 
+  const displayName = tailor.brand.name || tailor.title || "Tailor";
+  const imageFocalClass = getImageFocalPoint(
+    tailor.image || FALLBACK_TAILOR_IMAGE,
+    displayName
+  );
+  const consultationFeeLabel = formatConsultationFee(
+    tailor.consultation_fee,
+    tailor.brand.currency
+  );
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-oma-beige/30 to-white">
       <div className="max-w-7xl mx-auto px-6 py-24">
@@ -133,10 +165,10 @@ export default function TailorPage() {
           {/* Tailor Image */}
           <div className="relative aspect-[4/3] rounded-xl overflow-hidden">
             <LazyImage
-              src={tailor.image}
-              alt={tailor.brand.name || tailor.title}
+              src={tailor.image || FALLBACK_TAILOR_IMAGE}
+              alt={displayName}
               fill
-              className="object-cover"
+              className={`object-cover ${imageFocalClass}`}
               sizes="(max-width: 1024px) 100vw, 50vw"
               priority={true}
               aspectRatio="4/3"
@@ -148,7 +180,7 @@ export default function TailorPage() {
           <div className="space-y-6">
             <div>
               <h1 className="text-4xl font-canela text-black mb-2">
-                {tailor.brand.name || tailor.title}
+                {displayName}
               </h1>
               <div className="flex items-center gap-2 text-oma-cocoa/70 mb-4">
                 <MapPin className="w-4 h-4" />
@@ -197,16 +229,14 @@ export default function TailorPage() {
                 </div>
               )}
 
-              {tailor.consultation_fee && (
+              {consultationFeeLabel && (
                 <div className="flex items-center gap-3">
                   <DollarSign className="w-5 h-5 text-oma-cocoa/60" />
                   <div>
                     <span className="text-sm text-oma-cocoa/60">
                       Consultation Fee
                     </span>
-                    <p className="text-black font-medium">
-                      ${tailor.consultation_fee}
-                    </p>
+                    <p className="text-black font-medium">{consultationFeeLabel}</p>
                   </div>
                 </div>
               )}

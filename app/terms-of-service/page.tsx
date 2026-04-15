@@ -2,43 +2,70 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import {
-  ArrowLeft,
-  FileText,
-  Scale,
-  Users,
-  Shield,
-  AlertTriangle,
-  Mail,
-} from "lucide-react";
+import { ArrowLeft, FileText, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+interface LegalDocument {
+  id: string;
+  version: string;
+  effective_date: string;
+  content: string;
+  is_active: boolean;
+}
+
+interface LegalDocumentsResponse {
+  documents?: LegalDocument[];
+  error?: string;
+}
+
 export default function TermsOfServicePage() {
-  const [doc, setDoc] = useState<any>(null);
+  const [doc, setDoc] = useState<LegalDocument | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    const controller = new AbortController();
+
     async function fetchDoc() {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch("/api/legal-documents?type=terms_of_service");
-        const data = await res.json();
+        const res = await fetch("/api/legal-documents?type=terms_of_service", {
+          signal: controller.signal,
+        });
+        const data = (await res.json()) as LegalDocumentsResponse;
         if (res.ok && data.documents) {
-          const active = data.documents.find((d: any) => d.is_active);
+          const active = data.documents.find((d) => d.is_active);
           setDoc(active || null);
         } else {
           setError(data.error || "Failed to load document");
         }
-      } catch (err: any) {
-        setError(err.message || "Failed to load document");
+      } catch (err) {
+        if (controller.signal.aborted) return;
+        const message =
+          err instanceof Error ? err.message : "Failed to load document";
+        setError(message);
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
       }
     }
-    fetchDoc();
+
+    void fetchDoc();
+
+    return () => {
+      controller.abort();
+    };
   }, []);
+
+  const effectiveDateText = doc
+    ? new Date(doc.effective_date).toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      })
+    : null;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-oma-cream via-white to-oma-beige">
@@ -65,9 +92,7 @@ export default function TermsOfServicePage() {
               <span className="bg-oma-beige px-3 py-1 rounded-full">
                 Version {doc.version}
               </span>
-              <span>
-                Effective {new Date(doc.effective_date).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
-              </span>
+              <span>Effective {effectiveDateText}</span>
             </div>
           )}
         </div>
@@ -86,6 +111,7 @@ export default function TermsOfServicePage() {
             ) : doc ? (
               <div
                 className="markdown-content"
+                // Content is expected to be sanitized by the legal-documents API.
                 dangerouslySetInnerHTML={{ __html: doc.content }}
               />
             ) : (
@@ -127,7 +153,9 @@ export default function TermsOfServicePage() {
 
         {/* Footer */}
         <div className="mt-8 text-center text-sm text-oma-cocoa">
-          <p className="mb-2">Last updated: 1 January 2026</p>
+          {effectiveDateText ? (
+            <p className="mb-2">Last updated: {effectiveDateText}</p>
+          ) : null}
           <p>
             These Terms work together with our{" "}
             <Link

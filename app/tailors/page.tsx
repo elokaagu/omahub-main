@@ -1,23 +1,12 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import {
-  Search,
-  Grid,
-  List,
-  Filter,
-  Scissors,
-  Clock,
-  DollarSign,
-} from "lucide-react";
+import React, { useMemo, useState, useEffect } from "react";
+import { Search, Grid, List } from "lucide-react";
 import { getTailorsWithBrands } from "@/lib/services/tailorService";
-import { Tailor, Brand } from "@/lib/supabase";
+import { Tailor } from "@/lib/supabase";
 import Link from "next/link";
-import { OptimizedImage } from "@/components/ui/optimized-image";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { BrandCard } from "@/components/ui/brand-card";
 import {
   Select,
@@ -26,7 +15,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loading } from "@/components/ui/loading";
 import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -35,7 +23,6 @@ import {
   FadeIn,
   SlideUp,
 } from "@/app/components/ui/animations";
-import { UNIFIED_CATEGORIES } from "@/lib/data/unified-categories";
 import { getCategoriesForDirectory } from "@/lib/data/unified-categories";
 
 // Curated subset of category IDs for tailors
@@ -62,24 +49,6 @@ type TailorWithBrand = Tailor & {
   };
 };
 
-// Smart focal point detection for fashion/tailor images
-const getImageFocalPoint = (imageUrl: string, title: string) => {
-  // For fashion and tailor images, we typically want to focus on the upper portion
-  // where faces, necklines, and key design elements are usually located
-  const lowerTitle = title.toLowerCase();
-
-  if (lowerTitle.includes("bridal") || lowerTitle.includes("wedding")) {
-    return "object-top"; // Focus on top for bridal shots to capture face/neckline
-  }
-
-  if (lowerTitle.includes("evening") || lowerTitle.includes("gown")) {
-    return "object-center"; // Center for full gown shots
-  }
-
-  // Default to top-center for most fashion photography to avoid cutting off faces
-  return "object-top";
-};
-
 // Mapping from unified category names to actual specialties
 const categoryToSpecialtiesMap: Record<string, string[]> = {
   Bridal: ["Wedding Dresses", "Bridal Wear", "Evening Gowns", "Bridal"],
@@ -98,25 +67,85 @@ const categoryToSpecialtiesMap: Record<string, string[]> = {
   Alterations: ["Alterations", "Hemming", "Resizing", "Repairs"],
 };
 
+const ALL_CATEGORIES_VALUE = "__all";
+
+function normalizeSpecialties(
+  specialties: TailorWithBrand["specialties"] | string | null | undefined
+): string[] {
+  if (specialties == null || specialties === "") return [];
+  if (Array.isArray(specialties)) {
+    return specialties
+      .map((specialty) => String(specialty).trim())
+      .filter(Boolean);
+  }
+  if (typeof specialties === "string") {
+    return specialties
+      .split(",")
+      .map((s: string) => s.trim())
+      .filter(Boolean);
+  }
+  return [];
+}
+
+function matchesCategoryOrSpecialty(
+  tailor: TailorWithBrand,
+  category: string
+): boolean {
+  if (tailor.brand?.category === category) return true;
+  const mappedSpecialties = categoryToSpecialtiesMap[category] ?? [category];
+  const specialties = normalizeSpecialties(tailor.specialties);
+  return specialties.some((tailorSpecialty) =>
+    mappedSpecialties.some((mappedSpecialty) => {
+      const tailorValue = tailorSpecialty.toLowerCase();
+      const mappedValue = mappedSpecialty.toLowerCase();
+      return tailorValue.includes(mappedValue) || mappedValue.includes(tailorValue);
+    })
+  );
+}
+
+function TailorDirectoryMeta({ tailor }: { tailor: TailorWithBrand }) {
+  return (
+    <>
+      <div className="font-canela text-xl text-black mb-1">
+        {tailor.brand.name || tailor.title}
+      </div>
+      <div className="text-sm text-black mb-1">{tailor.brand.category}</div>
+      <div className="text-sm text-black">{tailor.brand.location}</div>
+    </>
+  );
+}
+
+function TailorDirectoryAction({ tailorId }: { tailorId: string }) {
+  return (
+    <Link href={`/tailor/${tailorId}`}>
+      <Button className="bg-oma-plum text-white hover:bg-oma-plum/90 transition-colors">
+        View Details
+      </Button>
+    </Link>
+  );
+}
+
 export default function TailorsPage() {
   const searchParams = useSearchParams();
   const [tailors, setTailors] = useState<TailorWithBrand[]>([]);
-  const [filteredTailors, setFilteredTailors] = useState<TailorWithBrand[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const specialtyFromQuery = (searchParams.get("specialty") || "").trim();
 
   // Sync selectedCategory with specialty query param
   useEffect(() => {
-    const specialty = searchParams.get("specialty");
-    if (specialty && tailoredCategories.some((cat) => cat.name === specialty)) {
-      setSelectedCategory(specialty);
-    } else if (!specialty) {
+    if (
+      specialtyFromQuery &&
+      tailoredCategories.some((cat) => cat.name === specialtyFromQuery)
+    ) {
+      setSelectedCategory(specialtyFromQuery);
+    } else if (!specialtyFromQuery) {
       setSelectedCategory("");
     }
-  }, [searchParams, tailoredCategories]);
+  }, [specialtyFromQuery]);
 
   useEffect(() => {
     async function fetchTailors() {
@@ -124,7 +153,6 @@ export default function TailorsPage() {
         setLoading(true);
         const data = await getTailorsWithBrands();
         setTailors(data);
-        setFilteredTailors(data);
       } catch (err) {
         console.error("Error fetching tailors:", err);
         setError("Failed to load tailor information");
@@ -136,62 +164,24 @@ export default function TailorsPage() {
     fetchTailors();
   }, []);
 
-  useEffect(() => {
-    let filtered = tailors;
+  const filteredTailors = useMemo(() => {
+    const normalizedSearchTerm = searchTerm.trim().toLowerCase();
+    const activeCategory = selectedCategory || specialtyFromQuery;
 
-    // Filter by category
-    if (selectedCategory) {
-      filtered = filtered.filter(
-        (tailor) => tailor.brand.category === selectedCategory
-      );
-    }
-
-    // Filter by specialty query param
-    const specialty = searchParams.get("specialty");
-    if (specialty) {
-      // Get the mapped specialties for this category
-      const mappedSpecialties = categoryToSpecialtiesMap[specialty] || [
-        specialty,
-      ];
-
-      filtered = filtered.filter((tailor) => {
-        if (!tailor.specialties) return false;
-        let specialtiesArr: string[] = [];
-        if (Array.isArray(tailor.specialties)) {
-          specialtiesArr = tailor.specialties as string[];
-        } else if (typeof tailor.specialties === "string") {
-          specialtiesArr = (tailor.specialties as string)
-            .split(",")
-            .map((s: string) => s.trim());
-        }
-
-        // Check if any of the mapped specialties match the tailor's specialties
-        return specialtiesArr.some((tailorSpecialty) =>
-          mappedSpecialties.some(
-            (mappedSpecialty) =>
-              tailorSpecialty
-                .toLowerCase()
-                .includes(mappedSpecialty.toLowerCase()) ||
-              mappedSpecialty
-                .toLowerCase()
-                .includes(tailorSpecialty.toLowerCase())
-          )
+    return tailors
+      .filter((tailor) => Boolean(tailor.brand))
+      .filter((tailor) =>
+        activeCategory ? matchesCategoryOrSpecialty(tailor, activeCategory) : true
+      )
+      .filter((tailor) => {
+        if (!normalizedSearchTerm) return true;
+        return (
+          tailor.title.toLowerCase().includes(normalizedSearchTerm) ||
+          tailor.brand.name.toLowerCase().includes(normalizedSearchTerm) ||
+          tailor.description?.toLowerCase().includes(normalizedSearchTerm)
         );
       });
-    }
-
-    // Filter by search term
-    if (searchTerm) {
-      filtered = filtered.filter(
-        (tailor) =>
-          tailor.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          tailor.brand.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          tailor.description?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    setFilteredTailors(filtered);
-  }, [tailors, searchTerm, searchParams, selectedCategory]);
+  }, [tailors, selectedCategory, specialtyFromQuery, searchTerm]);
 
   if (loading) {
     return (
@@ -269,14 +259,20 @@ export default function TailorsPage() {
               {/* Category Filter */}
               <div className="w-full max-w-xs">
                 <Select
-                  value={selectedCategory}
-                  onValueChange={setSelectedCategory}
+                  value={selectedCategory || ALL_CATEGORIES_VALUE}
+                  onValueChange={(value) =>
+                    setSelectedCategory(
+                      value === ALL_CATEGORIES_VALUE ? "" : value
+                    )
+                  }
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Filter by Category" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Categories</SelectItem>
+                    <SelectItem value={ALL_CATEGORIES_VALUE}>
+                      All Categories
+                    </SelectItem>
                     {tailoredCategories.map((cat) => (
                       <SelectItem key={cat.id} value={cat.name}>
                         {cat.name}
@@ -348,21 +344,9 @@ export default function TailorsPage() {
                             />
                           </div>
                           <div className="flex-1 flex flex-col p-4">
-                            <div className="font-canela text-xl text-black mb-1">
-                              {tailor.brand.name || tailor.title}
-                            </div>
-                            <div className="text-sm text-black mb-1">
-                              {tailor.brand.category}
-                            </div>
-                            <div className="text-sm text-black mb-4">
-                              {tailor.brand.location}
-                            </div>
+                            <TailorDirectoryMeta tailor={tailor} />
                             <div className="flex justify-end mt-auto">
-                              <Link href={`/tailor/${tailor.id}`}>
-                                <Button className="bg-oma-plum text-white hover:bg-oma-plum/90 transition-colors">
-                                  View Details
-                                </Button>
-                              </Link>
+                              <TailorDirectoryAction tailorId={tailor.id} />
                             </div>
                           </div>
                         </Card>
@@ -406,22 +390,10 @@ export default function TailorsPage() {
                             </div>
                             <div className="flex-1 flex flex-col justify-between p-4">
                               <div>
-                                <div className="font-canela text-xl text-black mb-1">
-                                  {tailor.brand.name || tailor.title}
-                                </div>
-                                <div className="text-sm text-black mb-1">
-                                  {tailor.brand.category}
-                                </div>
-                                <div className="text-sm text-black">
-                                  {tailor.brand.location}
-                                </div>
+                                <TailorDirectoryMeta tailor={tailor} />
                               </div>
                               <div className="flex justify-end mt-4">
-                                <Link href={`/tailor/${tailor.id}`}>
-                                  <Button className="bg-oma-plum text-white hover:bg-oma-plum/90 transition-colors">
-                                    View Details
-                                  </Button>
-                                </Link>
+                                <TailorDirectoryAction tailorId={tailor.id} />
                               </div>
                             </div>
                           </div>

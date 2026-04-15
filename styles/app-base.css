@@ -1,0 +1,64 @@
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+  }
+
+  .font-sans {
+    font-family:
+      var(--font-suisse),
+      -apple-system,
+      BlinkMacSystemFont,
+      sans-serif;
+  }
+
+  /* Radix dialog: single positioning block (parent transform / Chrome quirks) */
+  [data-radix-dialog-overlay] {
+    z-index: 9999 !important;
+  }
+
+  [data-radix-dialog-content] {
+    transform: translate(-50%, -50%) !important;
+    -webkit-transform: translate(-50%, -50%) !important;
+    -ms-transform: translate(-50%, -50%) !important;
+    left: 50vw !important;
+    top: 50vh !important;
+    position: fixed !important;
+    z-index: 10000 !important;
+    will-change: transform;
+    max-height: 90vh !important;
+    overflow-y: auto !important;
+  }
+
+  a,
+  button {
+    @apply transition-colors duration-200;
+  }
+
+  @media (max-width: 640px) {
+    button,
+    .btn,
+    [role="button"] {
+      min-height: 44px;
+      min-width: 44px;
+    }
+
+    input,
+    select,
+    textarea {
+      min-height: 44px;
+      font-size: 16px;
+    }
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+html:has([data-studio-page]) {
+  scroll-behavior: auto;
+}

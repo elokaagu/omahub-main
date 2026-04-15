@@ -4,24 +4,11 @@ import Link from "next/link";
 import { LazyImage } from "@/components/ui/lazy-image";
 import { VideoPlayer } from "@/components/ui/video-player";
 import React, { useState, useEffect } from "react";
-import {
-  FadeIn,
-  SlideUp,
-  StaggerContainer,
-  StaggerItem,
-} from "@/app/components/ui/animations";
-import {
-  getAllBrands,
-  getBrandsByCategory,
-  forceRefreshBrands,
-} from "@/lib/services/brandService";
-import { getCollectionsWithBrands } from "@/lib/services/collectionService";
-import { getTailorsWithBrands } from "@/lib/services/tailorService";
+import { FadeIn, SlideUp } from "@/app/components/ui/animations";
+import { getBrandsByCategory, forceRefreshBrands } from "@/lib/services/brandService";
 import { getProductsByCategories } from "@/lib/services/productSearchService";
 import { SectionHeader } from "@/components/ui/section-header";
-import { CategoryCard } from "@/components/ui/category-card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle } from "@/components/ui/icons";
 import {
   getActiveHeroSlides,
   type HeroSlide,
@@ -31,277 +18,22 @@ import {
   type SpotlightContent,
 } from "@/lib/services/spotlightService";
 import { Carousel } from "@/components/ui/carousel-custom";
-import { Loading } from "@/components/ui/loading";
-import { InstantImage } from "@/components/ui/instant-image";
-import { occasions, occasionToCategoryMapping } from "@/lib/data/directory";
-import {
-  getCategoriesForHomepage,
-  mapLegacyToUnified,
-  getCategoryById,
-  UNIFIED_CATEGORIES,
-} from "@/lib/data/unified-categories";
+import { occasionToCategoryMapping } from "@/lib/data/directory";
+import { UNIFIED_CATEGORIES } from "@/lib/data/unified-categories";
 import { FullWidthBrandRow } from "@/components/ui/full-width-brand-row";
-import { useAuth } from "@/contexts/AuthContext";
+import {
+  buildInitialCategories,
+  fallbackCarouselItems,
+  generateDynamicCategoryImages,
+  generateDynamicFallbackItems,
+} from "@/app/home/homepageData";
+import { buildHomepageCategoriesFromBrands } from "@/app/home/buildHomepageCategories";
+import { devLog } from "@/app/home/devLog";
+import type { CarouselItem, CategoryWithBrands } from "@/app/home/homeTypes";
 
-interface Brand {
-  id: string;
-  name: string;
-  image: string;
-  location: string;
-  rating: number;
-  is_verified: boolean;
-  category: string;
-}
-
-interface BrandDisplay {
-  id: string;
-  name: string;
-  image: string;
-  location: string;
-  rating: number;
-  isVerified: boolean;
-  category: string;
-  video_url?: string;
-  video_thumbnail?: string;
-}
-
-interface CategoryWithBrands {
-  title: string;
-  image: string;
-  href: string;
-  customCta: string;
-  brands: BrandDisplay[];
-}
-
-interface CarouselItem {
-  id: string | number;
-  image: string;
-  title: string;
-  subtitle: string;
-  link: string;
-  heroTitle: string;
-  isEditorial?: boolean;
-  width: number;
-  height: number;
-}
-
-// Dynamic fallback carousel items (will be populated with real data)
-let fallbackCarouselItems: CarouselItem[] = [
-  {
-    id: 1,
-    image: "/lovable-uploads/827fb8c0-e5da-4520-a979-6fc054eefc6e.png",
-    title: "Collections",
-    subtitle: "Shop for an occasion, holiday, or ready to wear piece",
-    link: "/collections",
-    heroTitle: "New Season",
-    isEditorial: true,
-    width: 1920,
-    height: 1080,
-  },
-  {
-    id: 2,
-    image: "/lovable-uploads/bb152c0b-6378-419b-a0e6-eafce44631b2.png",
-    title: "Tailored",
-    subtitle: "Masters of craft creating perfectly fitted garments",
-    link: "/tailors",
-    heroTitle: "Bespoke Craft",
-    isEditorial: true,
-    width: 1920,
-    height: 1080,
-  },
-];
-
-// Function to generate dynamic fallback items
-const generateDynamicFallbackItems = async (): Promise<CarouselItem[]> => {
-  try {
-    const [catalogues, tailors] = await Promise.all([
-      getCollectionsWithBrands(),
-      getTailorsWithBrands(),
-    ]);
-
-    const items: CarouselItem[] = [];
-
-    // Get a random catalogue image
-    if (catalogues.length > 0) {
-      const randomCatalogue =
-        catalogues[Math.floor(Math.random() * catalogues.length)];
-      items.push({
-        id: 1,
-        image: randomCatalogue.image,
-        title: "Collections",
-        subtitle: "Shop for an occasion, holiday, or ready to wear piece",
-        link: "/collections",
-        heroTitle: "New Season",
-        isEditorial: true,
-        width: 1920,
-        height: 1080,
-      });
-    } else {
-      // Fallback to original image if no catalogues
-      items.push(fallbackCarouselItems[0]);
-    }
-
-    // Get a random tailor image
-    if (tailors.length > 0) {
-      const randomTailor = tailors[Math.floor(Math.random() * tailors.length)];
-      items.push({
-        id: 2,
-        image: randomTailor.image,
-        title: "Tailored",
-        subtitle: "Masters of craft creating perfectly fitted garments",
-        link: "/tailors",
-        heroTitle: "Bespoke Craft",
-        isEditorial: true,
-        width: 1920,
-        height: 1080,
-      });
-    } else {
-      // Fallback to original image if no tailors
-      items.push(fallbackCarouselItems[1]);
-    }
-
-    return items;
-  } catch (error) {
-    console.error("Error generating dynamic fallback items:", error);
-    return fallbackCarouselItems; // Return original fallback items on error
-  }
-};
-
-// Smart focal point detection for category images
-const getCategoryImageFocalPoint = (category: string): string => {
-  switch (category.toLowerCase()) {
-    case "collections":
-      // For collection images with people, use center-top positioning to show faces/upper body centered
-      return "object-center object-top";
-    case "tailored":
-      // Tailored images often show full garments, center positioning works well
-      return "object-center";
-    default:
-      return "object-center";
-  }
-};
-
-// Map database categories to homepage categories
-const mapDatabaseCategoryToHomepage = (dbCategory: string): string => {
-  const categoryMap: { [key: string]: string } = {
-    Bridal: "Bridal",
-    "Ready to Wear": "Ready to Wear",
-    "Made to Measure": "Made to Measure",
-    "Streetwear & Urban": "Streetwear & Urban",
-    Accessories: "Accessories",
-    "Custom Design": "Custom Design",
-    "Evening Gowns": "Evening Gowns",
-    Alterations: "Alterations",
-    "High End Fashion Brands": "High End Fashion Brands",
-    "High End Fashion Brand": "High End Fashion Brands",
-    Luxury: "High End Fashion Brands",
-    // Aliases/legacy
-    "Casual Wear": "Ready to Wear",
-    "Formal Wear": "Ready to Wear",
-    Jewelry: "Accessories",
-    Couture: "Bridal",
-    Streetwear: "Streetwear & Urban",
-  };
-  return categoryMap[dbCategory] || "";
-};
-
-// Use unified categories for homepage
-const getHomepageCategories = (): CategoryWithBrands[] => {
-  const unifiedCategories = getCategoriesForHomepage();
-
-  // Debug: Log the categories being returned
-  console.log(
-    "🔍 Unified categories for homepage:",
-    unifiedCategories.map((c) => c.displayName)
-  );
-
-  return unifiedCategories.map((category) => ({
-    title: category.displayName,
-    image: category.homepageImage!,
-    href: `/directory?category=${encodeURIComponent(category.displayName)}`,
-    customCta: category.homepageCta!,
-    brands: [],
-  }));
-};
-
-// Initial categories
-const initialCategories: CategoryWithBrands[] = getHomepageCategories();
-
-// Simple in-memory cache for dynamic images (session-based) - REMOVED
-// Caching removed for simplicity and reliability
-
-// Generate dynamic category images for Browse by Category section - SIMPLIFIED
-const generateDynamicCategoryImages = async (): Promise<{
-  collectionImage: string;
-  tailoredImage: string;
-}> => {
-  try {
-    console.log("🔍 Fetching catalogues and tailors for dynamic images...");
-
-    // Fetch data with timeout
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error("Timeout")), 3000);
-    });
-
-    const results = (await Promise.race([
-      Promise.allSettled([getCollectionsWithBrands(), getTailorsWithBrands()]),
-      timeoutPromise,
-    ])) as PromiseSettledResult<any>[];
-
-    const [cataloguesResult, tailorsResult] = results;
-
-    let collectionImage = "";
-    let tailoredImage = "";
-
-    // Handle collections
-    if (
-      cataloguesResult.status === "fulfilled" &&
-      cataloguesResult.value.length > 0
-    ) {
-      const randomCollection =
-        cataloguesResult.value[
-          Math.floor(Math.random() * cataloguesResult.value.length)
-        ];
-      if (randomCollection.image) {
-        collectionImage = randomCollection.image;
-        console.log("✅ Using dynamic collection image:", collectionImage);
-      }
-    }
-
-    // Handle tailors
-    if (
-      tailorsResult.status === "fulfilled" &&
-      tailorsResult.value.length > 0
-    ) {
-      const randomTailor =
-        tailorsResult.value[
-          Math.floor(Math.random() * tailorsResult.value.length)
-        ];
-      if (randomTailor.image) {
-        tailoredImage = randomTailor.image;
-        console.log("✅ Using dynamic tailor image:", tailoredImage);
-      }
-    }
-
-    return { collectionImage, tailoredImage };
-  } catch (error) {
-    console.error("❌ Error generating dynamic images:", error);
-    return { collectionImage: "", tailoredImage: "" };
-  }
-};
-
-// Utility to shuffle an array
-function shuffleArray<T>(array: T[]): T[] {
-  const arr = [...array];
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
-}
+const initialCategories: CategoryWithBrands[] = buildInitialCategories();
 
 export default function HomeContent() {
-  const { user } = useAuth();
   const [categories, setCategories] =
     useState<CategoryWithBrands[]>(initialCategories);
   const [isLoading, setIsLoading] = useState(true);
@@ -316,88 +48,9 @@ export default function HomeContent() {
     collectionImage: "",
     tailoredImage: "",
   });
-  const [categoryImagesLoaded, setCategoryImagesLoaded] = useState(false);
   const [occasionImages, setOccasionImages] = useState<{
     [key: string]: string;
   }>({});
-  const [occasionLoading, setOccasionLoading] = useState(true);
-
-  // Function to refresh all data and clear caches
-  const refreshAllData = async () => {
-    try {
-      console.log("🔄 Refreshing all homepage data...");
-      setIsLoading(true);
-
-      // Clear all caches that depend on brand data
-      const { clearAllBrandDependentCaches } = await import(
-        "@/lib/services/brandService"
-      );
-      clearAllBrandDependentCaches();
-
-      // Refetch all data
-      const [brandsData, heroData, spotlightData, dynamicItems] =
-        await Promise.all([
-          getAllBrands(false, true),
-          getActiveHeroSlides(),
-          getActiveSpotlightContent(),
-          generateDynamicFallbackItems(),
-        ]);
-
-      // Process brands data and update state
-      const updatedCategories = UNIFIED_CATEGORIES.map((category) => {
-        const categoryBrands = shuffleArray(
-          brandsData.filter((brand: any) => {
-            const allCategories = [
-              brand.category,
-              ...(brand.categories || []),
-            ].filter(Boolean);
-
-            const brandMatchesCategory = allCategories.some(
-              (cat) => mapLegacyToUnified(cat) === category.id
-            );
-
-            return brandMatchesCategory;
-          })
-        )
-          .slice(0, 8)
-          .map((brand: any) => {
-            return {
-              id: brand.id,
-              name: brand.name,
-              image: brand.brand_images?.[0]?.storage_path
-                ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${brand.brand_images[0].storage_path}`
-                : "/placeholder-image.jpg",
-              location: brand.location?.split(",")[0] || "Unknown",
-              rating: brand.rating,
-              isVerified: brand.is_verified || false,
-              category: brand.category,
-              video_url: brand.video_url || undefined,
-              video_thumbnail: brand.video_thumbnail || undefined,
-            };
-          });
-
-        return {
-          title: category.displayName,
-          image: category.homepageImage!,
-          href: `/directory?category=${encodeURIComponent(category.displayName)}`,
-          customCta: category.homepageCta,
-          brands: categoryBrands,
-        };
-      });
-
-      setCategories(updatedCategories);
-      setHeroSlides(heroData);
-      setSpotlightContent(spotlightData);
-      setDynamicFallbackItems(dynamicItems);
-
-      console.log("✅ Homepage data refreshed successfully");
-    } catch (error) {
-      console.error("❌ Error refreshing homepage data:", error);
-      setError("Failed to refresh data");
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   // Load dynamic category images - run only once
   useEffect(() => {
@@ -405,9 +58,6 @@ export default function HomeContent() {
 
     const loadCategoryImages = async () => {
       try {
-        console.log("🖼️ Loading category images...");
-
-        // Set fallback images immediately
         const fallbackImages = {
           collectionImage:
             "/lovable-uploads/827fb8c0-e5da-4520-a979-6fc054eefc6e.png",
@@ -416,32 +66,21 @@ export default function HomeContent() {
         };
 
         if (isMounted) {
-          console.log("🔧 Setting fallback images:", fallbackImages);
           setCategoryImages(fallbackImages);
-          setCategoryImagesLoaded(true);
-          console.log("✅ Fallback images set");
         }
 
-        // Try to get dynamic images
-        console.log("🔍 Attempting to load dynamic images...");
         const dynamicImages = await generateDynamicCategoryImages();
-        console.log("🎯 Dynamic images loaded:", dynamicImages);
 
-        // Update with dynamic images if they're different and component is still mounted
         if (
           isMounted &&
           (dynamicImages.collectionImage !== fallbackImages.collectionImage ||
             dynamicImages.tailoredImage !== fallbackImages.tailoredImage)
         ) {
-          console.log("🔄 Updating to dynamic images:", dynamicImages);
           setCategoryImages(dynamicImages);
-          console.log("🔄 Updated to dynamic images");
-        } else if (isMounted) {
-          console.log("📌 Using fallback images (no dynamic images available)");
+          devLog("Updated category images:", dynamicImages);
         }
       } catch (error) {
-        console.error("❌ Error loading category images:", error);
-        // Fallback images are already set, so we're good
+        console.error("Error loading category images:", error);
       }
     };
 
@@ -503,7 +142,6 @@ export default function HomeContent() {
             generateDynamicFallbackItems(),
           ]);
 
-        // Fetch products for each category to enhance filtering
         const categoryProducts = await Promise.all(
           UNIFIED_CATEGORIES.map(async (category) => {
             try {
@@ -522,142 +160,18 @@ export default function HomeContent() {
         // Set dynamic fallback items
         setDynamicFallbackItems(dynamicItems);
 
-        // Process brands data with performance optimization
-        const updatedCategories = UNIFIED_CATEGORIES.map((category, index) => {
-          // Get products for this category
-          const categoryProductData = categoryProducts[index];
-          const categoryProductIds = new Set(
-            categoryProductData?.products?.map((p: any) => p.brand_id) || []
-          );
-
-          const categoryBrands = shuffleArray(
-            brandsData.filter((brand: any) => {
-              const allCategories = [
-                brand.category,
-                ...(brand.categories || []),
-              ].filter(Boolean);
-
-              // Check if brand matches category directly
-              const brandMatchesCategory = allCategories.some(
-                (cat) => mapLegacyToUnified(cat) === category.id
-              );
-
-              // Check if brand has products that match this category
-              const brandHasMatchingProducts = categoryProductIds.has(brand.id);
-
-              // Check if brand has image or video uploaded
-              const hasImage = brand.brand_images && brand.brand_images.length > 0;
-              const hasVideo = brand.video_url && brand.video_url.trim() !== '';
-              
-              const hasMedia = hasImage || hasVideo;
-
-              return (brandMatchesCategory || brandHasMatchingProducts) && hasMedia;
-            })
-          )
-            .slice(0, 8) // Limit all categories to 8 brands for consistent display
-            .map((brand: any) => {
-              // Debug: Log raw brand data for brands with videos
-              if (brand.video_url && process.env.NODE_ENV === "development") {
-                console.log("🎬 Raw brand data with video:", {
-                  name: brand.name,
-                  video_url: brand.video_url,
-                  video_thumbnail: brand.video_thumbnail,
-                  category: brand.category,
-                });
-              }
-
-              return {
-                id: brand.id,
-                name: brand.name,
-                image: brand.brand_images?.[0]?.storage_path
-                  ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${brand.brand_images[0].storage_path}`
-                  : "/placeholder-image.jpg",
-                location: brand.location?.split(",")[0] || "Unknown", // Take just the city name
-                rating: brand.rating,
-                isVerified: brand.is_verified || false,
-                category: brand.category,
-                // Always pass video fields if present, so BrandCard can prefer video over image
-                video_url:
-                  brand.video_url && brand.video_url.trim() !== ""
-                    ? brand.video_url
-                    : undefined,
-                video_thumbnail:
-                  brand.video_thumbnail && brand.video_thumbnail.trim() !== ""
-                    ? brand.video_thumbnail
-                    : undefined,
-              };
-            });
-
-          // Debug: Log brands with videos for this category
-          const brandsWithVideos = categoryBrands.filter(
-            (brand) => brand.video_url
-          );
-          if (brandsWithVideos.length > 0) {
-            console.log(
-              `🎬 Category "${category.displayName}" has ${brandsWithVideos.length} brands with videos:`,
-              brandsWithVideos.map((b) => ({
-                name: b.name,
-                video_url: b.video_url,
-                video_thumbnail: b.video_thumbnail,
-              }))
-            );
-          }
-
-          // Fix debug logging for Streetwear
-          if (category.id === "streetwear-urban") {
-            console.log("🔍 Streetwear category brands:", categoryBrands);
-            console.log(
-              "🔍 All brands data:",
-              brandsData.map((b: any) => ({
-                name: b.name,
-                category: b.category,
-                mapped: mapLegacyToUnified(b.category),
-              }))
-            );
-          }
-
-          return {
-            title: category.displayName,
-            image: category.homepageImage!,
-            href: `/directory?category=${encodeURIComponent(category.displayName)}`,
-            customCta: category.homepageCta!,
-            brands: categoryBrands,
-          };
-        });
+        const updatedCategories = buildHomepageCategoriesFromBrands(
+          brandsData,
+          categoryProducts
+        );
 
         setCategories(updatedCategories);
         setHeroSlides(heroData);
         setSpotlightContent(spotlightData);
-
-        // Debug spotlight content
-        console.log("🎯 Spotlight data fetched:", spotlightData);
-        console.log("🎯 Spotlight content set:", !!spotlightData);
-
-        // Debug categories
-        console.log(
-          "🔍 Initial categories:",
-          initialCategories.map((c) => c.title)
+        devLog(
+          "Homepage categories loaded:",
+          updatedCategories.map((c) => ({ title: c.title, brandCount: c.brands.length }))
         );
-        console.log(
-          "🔍 Updated categories with brands:",
-          updatedCategories.map((c) => ({
-            title: c.title,
-            brandCount: c.brands.length,
-          }))
-        );
-
-        // Debug Streetwear specifically
-        const streetwearCategory = updatedCategories.find(
-          (c) => c.title === "Streetwear & Urban"
-        );
-        if (streetwearCategory) {
-          console.log(
-            "✅ Streetwear category found with brands:",
-            streetwearCategory.brands.map((b) => b.name)
-          );
-        } else {
-          console.log("❌ Streetwear category NOT found in updated categories");
-        }
       } catch (err) {
         console.error("Error fetching data:", err);
         setError("Failed to load content. Please try again.");
@@ -676,10 +190,9 @@ export default function HomeContent() {
     async function fetchOccasionImages() {
       if (!isMounted) return;
 
-      setOccasionLoading(true);
       const mapping = occasionToCategoryMapping;
       const usedBrandIds = new Set();
-      const newImages: any = {};
+      const newImages: Record<string, string> = {};
 
       // Define better fallback images for each occasion
       const occasionFallbacks = {
@@ -718,35 +231,20 @@ export default function HomeContent() {
                 ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${randomBrand.brand_images[0].storage_path}`
                 : null) ||
               occasionFallbacks[occasion as keyof typeof occasionFallbacks];
-            console.log(
-              `✅ Using brand image for ${occasion}:`,
-              randomBrand.name,
-              newImages[occasion]
-            );
           } else {
-            // Use fallback if no brands available
             newImages[occasion] =
               occasionFallbacks[occasion as keyof typeof occasionFallbacks];
-            console.log(
-              `📌 Using fallback for ${occasion} (no brands):`,
-              newImages[occasion]
-            );
           }
         } catch (error) {
-          console.error(`❌ Error fetching brands for ${occasion}:`, error);
+          console.error(`Error fetching brands for ${occasion}:`, error);
           newImages[occasion] =
             occasionFallbacks[occasion as keyof typeof occasionFallbacks];
-          console.log(
-            `📌 Using fallback for ${occasion} (error):`,
-            newImages[occasion]
-          );
         }
       }
 
       if (isMounted) {
         setOccasionImages(newImages);
-        setOccasionLoading(false);
-        console.log("🎯 Final occasion images:", newImages);
+        devLog("Occasion images resolved:", newImages);
       }
     }
 
@@ -757,57 +255,6 @@ export default function HomeContent() {
     };
   }, []); // Empty dependency array - run only once
 
-  // Add a function to force refresh brands
-  const handleRefreshBrands = async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      // Force refresh brands from backend
-      const brandsData = await getAllBrands(false, true);
-      // Re-run the category mapping logic
-      const updatedCategories = UNIFIED_CATEGORIES.map((category) => {
-        const categoryBrands = shuffleArray(
-          brandsData.filter((brand: any) => {
-            const allCategories = [
-              brand.category,
-              ...(brand.categories || []),
-            ].filter(Boolean);
-            return allCategories.some(
-              (cat) => mapLegacyToUnified(cat) === category.id
-            );
-          })
-        )
-          .slice(0, 8)
-          .map((brand: any) => {
-            return {
-              id: brand.id,
-              name: brand.name,
-              image: brand.brand_images?.[0]?.storage_path
-                ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${brand.brand_images[0].storage_path}`
-                : "/placeholder-image.jpg",
-              location: brand.location?.split(",")[0] || "Unknown",
-              rating: brand.rating,
-              isVerified: brand.is_verified || false,
-              category: brand.category,
-              video_url: brand.video_url || undefined,
-              video_thumbnail: brand.video_thumbnail || undefined,
-            };
-          });
-        return {
-          title: category.displayName,
-          image: category.homepageImage!,
-          href: `/directory?category=${encodeURIComponent(category.displayName)}`,
-          customCta: category.homepageCta!,
-          brands: categoryBrands,
-        };
-      });
-      setCategories(updatedCategories);
-    } catch (err) {
-      setError("Failed to refresh brands. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   if (error) {
     return (
@@ -849,13 +296,6 @@ export default function HomeContent() {
               Browse by Category
             </h2>
           </div>
-          {/* Debug info */}
-          {process.env.NODE_ENV === "development" && (
-            <div className="text-xs text-gray-500 text-center mb-4">
-              Debug: Collection Image: {categoryImages.collectionImage} |
-              Tailored Image: {categoryImages.tailoredImage}
-            </div>
-          )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Collections Card */}
             <FadeIn delay={0.1}>
@@ -867,19 +307,6 @@ export default function HomeContent() {
                         src={categoryImages.collectionImage}
                         alt="Collections"
                         className="w-full h-full object-cover object-center object-top transition-transform duration-300 group-hover:scale-105"
-                        onLoad={() =>
-                          console.log(
-                            "✅ Collection image loaded:",
-                            categoryImages.collectionImage
-                          )
-                        }
-                        onError={(e) =>
-                          console.error(
-                            "❌ Collection image failed:",
-                            categoryImages.collectionImage,
-                            e
-                          )
-                        }
                       />
                     ) : (
                       <div className="w-full h-full bg-gray-300 flex items-center justify-center text-gray-500">
@@ -908,19 +335,6 @@ export default function HomeContent() {
                         src={categoryImages.tailoredImage}
                         alt="Tailored"
                         className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105"
-                        onLoad={() =>
-                          console.log(
-                            "✅ Tailored image loaded:",
-                            categoryImages.tailoredImage
-                          )
-                        }
-                        onError={(e) =>
-                          console.error(
-                            "❌ Tailored image failed:",
-                            categoryImages.tailoredImage,
-                            e
-                          )
-                        }
                       />
                     ) : (
                       <div className="w-full h-full bg-gray-300 flex items-center justify-center text-gray-500">

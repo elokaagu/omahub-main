@@ -7,6 +7,27 @@ import { getTailorsWithBrands } from "@/lib/services/tailorService";
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import { BrandCard } from "@/components/ui/brand-card";
 
+type TailorGalleryItem = {
+  id: string;
+  title?: string;
+  image?: string;
+  description?: string;
+  price_range?: string;
+  lead_time?: string;
+  consultation_fee?: number;
+  brand?: {
+    id: string;
+    name: string;
+    image?: string;
+    category?: string;
+    location?: string;
+    is_verified?: boolean;
+    video_url?: string;
+    video_thumbnail?: string;
+    brand_images?: unknown[];
+  };
+};
+
 // Animation helpers inspired by HowItWorksClient
 const getSectionTransform = (isVisible: boolean) => ({
   transform: `translateY(${isVisible ? 0 : 50}px)`,
@@ -31,13 +52,11 @@ export default function TailoredClient() {
   const [visibleSections, setVisibleSections] = useState<Set<string>>(
     new Set()
   );
-  const [tailors, setTailors] = useState<any[]>([]);
+  const [tailors, setTailors] = useState<TailorGalleryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [heroImage, setHeroImage] = useState<string>(
-    "/lovable-uploads/tailored-image.jpg"
-  ); // Tailored hero image
   const [isHovered, setIsHovered] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
 
   const heroRef = useRef<HTMLDivElement>(null);
   const questionsRef = useRef<HTMLDivElement>(null);
@@ -48,9 +67,18 @@ export default function TailoredClient() {
   const tailorsScrollRef = useRef<HTMLDivElement>(null);
   const [heroVisible, setHeroVisible] = useState(false);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const updateReducedMotion = () => setReducedMotion(mediaQuery.matches);
+    updateReducedMotion();
+    mediaQuery.addEventListener("change", updateReducedMotion);
+    return () => mediaQuery.removeEventListener("change", updateReducedMotion);
+  }, []);
+
   // Autoscroll functionality for tailors carousel
   useEffect(() => {
-    if (!tailorsScrollRef.current || isHovered) return;
+    if (!tailorsScrollRef.current || isHovered || reducedMotion) return;
 
     const scrollContainer = tailorsScrollRef.current;
     const scrollWidth = scrollContainer.scrollWidth;
@@ -70,7 +98,7 @@ export default function TailoredClient() {
     }, 3000);
 
     return () => clearInterval(autoScroll);
-  }, [isHovered]);
+  }, [isHovered, reducedMotion]);
 
   useEffect(() => {
     const observerOptions = {
@@ -110,22 +138,17 @@ export default function TailoredClient() {
       { threshold: 0.1 }
     );
     if (heroRef.current) heroObserver.observe(heroRef.current);
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      heroObserver.disconnect();
+    };
   }, []);
 
   const fetchTailors = async () => {
     try {
       setLoading(true);
       const data = await getTailorsWithBrands();
-              console.log("🔍 Tailors data fetched:", data.map(t => ({
-          id: t.id,
-          title: t.title,
-          brandName: t.brand?.name,
-          brandImage: t.brand?.image,
-          hasBrandImages: (t.brand?.brand_images?.length || 0) > 0,
-          brandImageCount: t.brand?.brand_images?.length || 0
-        })));
-      setTailors(data);
+      setTailors((data ?? []) as TailorGalleryItem[]);
 
       // Always use the static tailored hero image
     } catch (err) {
@@ -154,7 +177,7 @@ export default function TailoredClient() {
         {/* Background Image */}
         <div className="absolute inset-0 w-full h-full">
           <img
-            src={heroImage}
+            src="/lovable-uploads/tailored-image.jpg"
             alt="Featured Tailor"
             className="w-full h-full object-cover object-center"
             style={{ maxHeight: "100vh" }}
@@ -274,9 +297,9 @@ export default function TailoredClient() {
                           id={tailor.brand.id}
                           name={tailor.brand.name}
                           image={tailor.brand.image || "/placeholder-image.jpg"}
-                          category={tailor.brand.category}
-                          location={tailor.brand.location}
-                          isVerified={tailor.brand.is_verified}
+                          category={tailor.brand.category || ""}
+                          location={tailor.brand.location || ""}
+                          isVerified={Boolean(tailor.brand.is_verified)}
                           video_url={tailor.brand.video_url}
                           video_thumbnail={tailor.brand.video_thumbnail}
                           className="h-full"
@@ -287,16 +310,11 @@ export default function TailoredClient() {
                             tailor.image ||
                             "/placeholder-image.jpg"
                           }
-                          alt={tailor.brand?.name || tailor.title || "Tailor"}
+                          alt={tailor.title || "Tailor"}
                           aspectRatio="3/4"
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                           quality={90}
                           fill
-                          onError={() => {
-                            console.log(
-                              `Image failed to load for tailor: ${tailor.brand?.name || tailor.title}`
-                            );
-                          }}
                         />
                       )}
                     </div>
@@ -618,11 +636,9 @@ export default function TailoredClient() {
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div
             className="absolute top-10 left-10 w-40 h-40 bg-gradient-to-br from-oma-plum/10 to-oma-gold/10 rounded-full blur-2xl"
-            style={{ transform: `translateY(${window.scrollY * 0.1}px)` }}
           />
           <div
             className="absolute bottom-10 right-10 w-32 h-32 bg-gradient-to-br from-oma-gold/10 to-oma-plum/10 rounded-full blur-xl"
-            style={{ transform: `translateY(${window.scrollY * -0.1}px)` }}
           />
         </div>
         <div

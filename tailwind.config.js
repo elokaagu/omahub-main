@@ -80,7 +80,14 @@ export default {
           "Roboto",
           "sans-serif",
         ],
-        canela: ["var(--font-canela)", "serif"],
+        canela: [
+          "var(--font-canela)",
+          "Georgia",
+          "Cambria",
+          "Times New Roman",
+          "Times",
+          "serif",
+        ],
         suisse: ["var(--font-suisse)", "system-ui", "sans-serif"],
         gotham: ["Gotham Book", "sans-serif"],
         script: ["Brush Script MT", "Satisfy", "cursive"],
@@ -130,16 +137,6 @@ export default {
             opacity: "1",
           },
         },
-        fadeInUp: {
-          "0%": {
-            opacity: "0",
-            transform: "translateY(20px)",
-          },
-          "100%": {
-            opacity: "1",
-            transform: "translateY(0)",
-          },
-        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -147,7 +144,6 @@ export default {
         "fade-in": "fade-in 0.5s ease-out",
         "fade-out": "fade-out 0.3s ease-out",
         "scale-in": "scale-in 0.4s ease-out",
-        fadeInUp: "fadeInUp 0.5s ease-out forwards",
       },
     },
   },

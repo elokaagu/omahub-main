@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -105,11 +105,80 @@ function triggerCsvDownload(filename: string, csvContent: string) {
   URL.revokeObjectURL(url);
 }
 
+function AssignedBrandsList({
+  user,
+  onToggleExpanded,
+}: {
+  user: UserWithBrands;
+  onToggleExpanded: (userId: string) => void;
+}) {
+  if (user.role === "super_admin") {
+    return (
+      <Badge variant="secondary" className="text-xs bg-oma-plum text-white">
+        <Building className="h-3 w-3 mr-1" />
+        All brands
+      </Badge>
+    );
+  }
+
+  if (user.brand_names.length === 0) {
+    return <span className="text-oma-cocoa/60 text-sm">No brands assigned</span>;
+  }
+
+  return (
+    <div className="space-y-1">
+      <div className="flex flex-wrap gap-1">
+        {user.brand_names.slice(0, 2).map((brandName, index) => (
+          <Badge
+            key={index}
+            variant="secondary"
+            className="text-xs bg-oma-beige text-oma-plum max-w-[120px] truncate"
+          >
+            <Building className="h-3 w-3 mr-1 flex-shrink-0" />
+            <span className="truncate">{brandName}</span>
+          </Badge>
+        ))}
+      </div>
+
+      {user.brand_names.length > 2 && (
+        <div className="flex items-center gap-2">
+          <Badge
+            variant="outline"
+            className="text-xs text-oma-cocoa/60 border-oma-cocoa/20"
+          >
+            +{user.brand_names.length - 2} more
+          </Badge>
+          <button
+            onClick={() => onToggleExpanded(user.id)}
+            className="text-xs text-oma-plum hover:text-oma-plum/80 underline cursor-pointer"
+          >
+            {user.expanded ? "Show less" : "Show all"}
+          </button>
+        </div>
+      )}
+
+      {user.expanded && user.brand_names.length > 2 && (
+        <div className="flex flex-wrap gap-1 pt-1 border-t border-oma-cocoa/10">
+          {user.brand_names.slice(2).map((brandName, index) => (
+            <Badge
+              key={index + 2}
+              variant="secondary"
+              className="text-xs bg-oma-beige/50 text-oma-plum max-w-[120px] truncate"
+            >
+              <Building className="h-3 w-3 mr-1 flex-shrink-0" />
+              <span className="truncate">{brandName}</span>
+            </Badge>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function UsersPage() {
   const { user } = useAuth();
   const router = useRouter();
   const [users, setUsers] = useState<UserWithBrands[]>([]);
-  const [filteredUsers, setFilteredUsers] = useState<UserWithBrands[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -132,9 +201,7 @@ export default function UsersPage() {
     }
   }, [user, router]);
 
-  // Fetch users and brands
-  useEffect(() => {
-    const fetchData = async () => {
+  const fetchUsersAndBrands = useCallback(async () => {
       try {
         setLoading(true);
 
@@ -172,22 +239,22 @@ export default function UsersPage() {
         );
 
         setUsers(usersWithBrands);
-        setFilteredUsers(usersWithBrands);
       } catch (error) {
         console.error("Error fetching users:", error);
         toast.error("Failed to load users");
       } finally {
         setLoading(false);
       }
-    };
+    }, []);
 
-    if (user?.role === "super_admin") {
-      fetchData();
-    }
-  }, [user]);
-
-  // Filter users based on search term and role filter
+  // Fetch users and brands
   useEffect(() => {
+    if (user?.role === "super_admin") {
+      void fetchUsersAndBrands();
+    }
+  }, [user, fetchUsersAndBrands]);
+
+  const filteredUsers = useMemo(() => {
     let filtered = users;
 
     // Apply search filter
@@ -206,7 +273,7 @@ export default function UsersPage() {
       filtered = filtered.filter((user) => user.role === roleFilter);
     }
 
-    setFilteredUsers(filtered);
+    return filtered;
   }, [users, searchTerm, roleFilter]);
 
   const handleEditUser = (userToEdit: UserWithBrands) => {
@@ -301,46 +368,7 @@ export default function UsersPage() {
         });
       }
 
-      // Update the local state immediately instead of reloading
-      if (editingUser && result.action === "updated") {
-        // Update the user in the local state
-        setUsers((prevUsers) =>
-          prevUsers.map((user) =>
-            user.id === editingUser.id
-              ? {
-                  ...user,
-                  role: formData.role,
-                  owned_brands: formData.selectedBrands,
-                  brand_names: formData.selectedBrands
-                    .map((brandId) => {
-                      const brand = brands.find((b) => b.id === brandId);
-                      return brand?.name;
-                    })
-                    .filter(Boolean) as string[],
-                }
-              : user
-          )
-        );
-
-        // Update filtered users as well
-        setFilteredUsers((prevFiltered) =>
-          prevFiltered.map((user) =>
-            user.id === editingUser.id
-              ? {
-                  ...user,
-                  role: formData.role,
-                  owned_brands: formData.selectedBrands,
-                  brand_names: formData.selectedBrands
-                    .map((brandId) => {
-                      const brand = brands.find((b) => b.id === brandId);
-                      return brand?.name;
-                    })
-                    .filter(Boolean) as string[],
-                }
-              : user
-          )
-        );
-      }
+      await fetchUsersAndBrands();
 
       // Reset form and close dialog
       setFormData({
@@ -379,7 +407,6 @@ export default function UsersPage() {
 
       toast.success("User deleted successfully");
       setUsers((prev) => prev.filter((user) => user.id !== userId));
-      setFilteredUsers((prev) => prev.filter((user) => user.id !== userId));
     } catch (error) {
       console.error("Error deleting user:", error);
       toast.error("Failed to delete user");
@@ -447,8 +474,7 @@ export default function UsersPage() {
         `Sync completed! Updated ${result.summary.successful}/${result.summary.totalSuperAdmins} super admins with ${result.summary.totalBrandsAdded} brand assignments.`
       );
 
-      // Refresh users list
-      window.location.reload();
+      await fetchUsersAndBrands();
     } catch (error) {
       console.error("Error syncing super admin brands:", error);
       toast.error("Failed to sync super admin brands");
@@ -457,43 +483,10 @@ export default function UsersPage() {
     }
   };
 
-  // Test real-time profile updates
-  const testRealTimeUpdate = async (userId: string, email: string) => {
-    try {
-      console.log("🧪 Testing real-time profile update for:", email);
-
-      const response = await fetch("/api/admin/users", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({
-          email: email,
-          role: "brand_admin",
-          owned_brands: ["ehbs-couture"], // Test with a known brand
-        }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        console.error("❌ Test failed:", result);
-        toast.error("Real-time update test failed");
-        return;
-      }
-
-      console.log("✅ Test successful:", result);
-      toast.success("Real-time update test completed!", {
-        description: result.profileRefreshTriggered
-          ? "Profile refresh notification was sent successfully."
-          : "Update completed but no real-time notification was sent.",
-        duration: 5000,
-      });
-    } catch (error) {
-      console.error("❌ Test error:", error);
-      toast.error("Real-time update test encountered an error");
-    }
+  const toggleUserExpanded = (userId: string) => {
+    setUsers((prev) =>
+      prev.map((u) => (u.id === userId ? { ...u, expanded: !u.expanded } : u))
+    );
   };
 
   if (user?.role !== "super_admin") {
@@ -627,14 +620,10 @@ export default function UsersPage() {
                   <Select
                     value={formData.role}
                     onValueChange={(value) => {
-                      console.log("Role changed to:", value);
                       handleInputChange("role", value);
                     }}
                   >
-                    <SelectTrigger
-                      className="w-full"
-                      onClick={() => console.log("SelectTrigger clicked")}
-                    >
+                    <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select a role" />
                     </SelectTrigger>
                     <SelectContent side="bottom" sideOffset={4}>
@@ -644,67 +633,6 @@ export default function UsersPage() {
                       <SelectItem value="super_admin">Super Admin</SelectItem>
                     </SelectContent>
                   </Select>
-
-                  {/* Fallback radio buttons if Select fails */}
-                  <div className="mt-2 space-y-2">
-                    <p className="text-sm text-muted-foreground">
-                      Alternative selection:
-                    </p>
-                    <div className="grid grid-cols-2 gap-2">
-                      <label className="flex items-center space-x-2">
-                        <input
-                          type="radio"
-                          name="role-fallback"
-                          value="user"
-                          checked={formData.role === "user"}
-                          onChange={(e) =>
-                            handleInputChange("role", e.target.value)
-                          }
-                          className="rounded border-gray-300"
-                        />
-                        <span className="text-sm">User</span>
-                      </label>
-                      <label className="flex items-center space-x-2">
-                        <input
-                          type="radio"
-                          name="role-fallback"
-                          value="brand_admin"
-                          checked={formData.role === "brand_admin"}
-                          onChange={(e) =>
-                            handleInputChange("role", e.target.value)
-                          }
-                          className="rounded border-gray-300"
-                        />
-                        <span className="text-sm">Brand Admin</span>
-                      </label>
-                      <label className="flex items-center space-x-2">
-                        <input
-                          type="radio"
-                          name="role-fallback"
-                          value="admin"
-                          checked={formData.role === "admin"}
-                          onChange={(e) =>
-                            handleInputChange("role", e.target.value)
-                          }
-                          className="rounded border-gray-300"
-                        />
-                        <span className="text-sm">Admin</span>
-                      </label>
-                      <label className="flex items-center space-x-2">
-                        <input
-                          type="radio"
-                          name="role-fallback"
-                          value="super_admin"
-                          checked={formData.role === "super_admin"}
-                          onChange={(e) =>
-                            handleInputChange("role", e.target.value)
-                          }
-                          className="rounded border-gray-300"
-                        />
-                        <span className="text-sm">Super Admin</span>
-                      </label>
-                    </div>
-                  </div>
                 </div>
 
                 <div className="space-y-2">
@@ -928,78 +856,10 @@ export default function UsersPage() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <div className="space-y-1">
-                          {user.role === "super_admin" ? (
-                            <Badge
-                              variant="secondary"
-                              className="text-xs bg-oma-plum text-white"
-                            >
-                              <Building className="h-3 w-3 mr-1" />
-                              All brands
-                            </Badge>
-                          ) : user.brand_names.length > 0 ? (
-                            <div className="space-y-1">
-                              {/* Show first 2 brands always */}
-                              <div className="flex flex-wrap gap-1">
-                                {user.brand_names.slice(0, 2).map((brandName, index) => (
-                                  <Badge
-                                    key={index}
-                                    variant="secondary"
-                                    className="text-xs bg-oma-beige text-oma-plum max-w-[120px] truncate"
-                                  >
-                                    <Building className="h-3 w-3 mr-1 flex-shrink-0" />
-                                    <span className="truncate">{brandName}</span>
-                                  </Badge>
-                                ))}
-                              </div>
-                              
-                              {/* Show count and expand option if more than 2 brands */}
-                              {user.brand_names.length > 2 && (
-                                <div className="flex items-center gap-2">
-                                  <Badge
-                                    variant="outline"
-                                    className="text-xs text-oma-cocoa/60 border-oma-cocoa/20"
-                                  >
-                                    +{user.brand_names.length - 2} more
-                                  </Badge>
-                                  <button
-                                    onClick={() => {
-                                      // Toggle expanded state for this user
-                                      setUsers(prev => prev.map(u => 
-                                        u.id === user.id 
-                                          ? { ...u, expanded: !u.expanded }
-                                          : u
-                                      ));
-                                    }}
-                                    className="text-xs text-oma-plum hover:text-oma-plum/80 underline cursor-pointer"
-                                  >
-                                    {user.expanded ? 'Show less' : 'Show all'}
-                                  </button>
-                                </div>
-                              )}
-                              
-                              {/* Show remaining brands when expanded */}
-                              {user.expanded && user.brand_names.length > 2 && (
-                                <div className="flex flex-wrap gap-1 pt-1 border-t border-oma-cocoa/10">
-                                  {user.brand_names.slice(2).map((brandName, index) => (
-                                    <Badge
-                                      key={index + 2}
-                                      variant="secondary"
-                                      className="text-xs bg-oma-beige/50 text-oma-plum max-w-[120px] truncate"
-                                    >
-                                      <Building className="h-3 w-3 mr-1 flex-shrink-0" />
-                                      <span className="truncate">{brandName}</span>
-                                    </Badge>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          ) : (
-                            <span className="text-oma-cocoa/60 text-sm">
-                              No brands assigned
-                            </span>
-                          )}
-                        </div>
+                        <AssignedBrandsList
+                          user={user}
+                          onToggleExpanded={toggleUserExpanded}
+                        />
                       </TableCell>
                       <TableCell className="text-oma-cocoa/70">
                         {new Date(user.created_at).toLocaleDateString("en-GB")}
@@ -1048,76 +908,10 @@ export default function UsersPage() {
                       </span>
                     </div>
                     <div className="space-y-2">
-                      {user.role === "super_admin" ? (
-                        <Badge
-                          variant="secondary"
-                          className="text-xs bg-oma-plum text-white"
-                        >
-                          <Building className="h-3 w-3 mr-1" />
-                          All brands
-                        </Badge>
-                      ) : user.brand_names.length > 0 ? (
-                        <div className="space-y-2">
-                          {/* Show first 2 brands always */}
-                          <div className="flex flex-wrap gap-1">
-                            {user.brand_names.slice(0, 2).map((brandName, index) => (
-                              <Badge
-                                key={index}
-                                variant="secondary"
-                                className="text-xs bg-oma-beige text-oma-plum max-w-[120px] truncate"
-                              >
-                                <Building className="h-3 w-3 mr-1 flex-shrink-0" />
-                                <span className="truncate">{brandName}</span>
-                              </Badge>
-                            ))}
-                          </div>
-                          
-                          {/* Show count and expand option if more than 2 brands */}
-                          {user.brand_names.length > 2 && (
-                            <div className="flex items-center gap-2">
-                              <Badge
-                                variant="outline"
-                                className="text-xs text-oma-cocoa/60 border-oma-cocoa/20"
-                              >
-                                +{user.brand_names.length - 2} more
-                              </Badge>
-                              <button
-                                onClick={() => {
-                                  // Toggle expanded state for this user
-                                  setUsers(prev => prev.map(u => 
-                                    u.id === user.id 
-                                      ? { ...u, expanded: !u.expanded }
-                                      : u
-                                  ));
-                                }}
-                                className="text-xs text-oma-plum hover:text-oma-plum/80 underline cursor-pointer"
-                              >
-                                {user.expanded ? 'Show less' : 'Show all'}
-                              </button>
-                            </div>
-                          )}
-                          
-                          {/* Show remaining brands when expanded */}
-                          {user.expanded && user.brand_names.length > 2 && (
-                            <div className="flex flex-wrap gap-1 pt-1 border-t border-oma-cocoa/10">
-                              {user.brand_names.slice(2).map((brandName, index) => (
-                                <Badge
-                                  key={index + 2}
-                                  variant="secondary"
-                                  className="text-xs bg-oma-beige/50 text-oma-plum max-w-[120px] truncate"
-                                >
-                                  <Building className="h-3 w-3 mr-1 flex-shrink-0" />
-                                  <span className="truncate">{brandName}</span>
-                                </Badge>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <span className="text-oma-cocoa/60 text-sm">
-                          No brands assigned
-                        </span>
-                      )}
+                      <AssignedBrandsList
+                        user={user}
+                        onToggleExpanded={toggleUserExpanded}
+                      />
                     </div>
                     <div className="flex gap-2 mt-2">
                       <Button

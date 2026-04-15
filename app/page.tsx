@@ -3,8 +3,7 @@ import { Loading } from "@/components/ui/loading";
 import { StructuredData } from "@/components/seo/StructuredData";
 
 // Dynamic import for client component
-const HomeContent = dynamic(() => import("./HomeContent.tsx"), {
-  ssr: false,
+const HomeContent = dynamic(() => import("./HomeContent"), {
   loading: () => (
     <div className="flex justify-center items-center min-h-screen">
       <Loading size="lg" />
@@ -12,7 +11,6 @@ const HomeContent = dynamic(() => import("./HomeContent.tsx"), {
   ),
 });
 
-// This is a Server Component
 export default function Home() {
   return (
     <>

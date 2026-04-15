@@ -1,0 +1,105 @@
+@layer components {
+  .hover-lift {
+    @apply transition-transform duration-300 hover:-translate-y-1;
+  }
+
+  .hover-scale {
+    @apply transition-transform duration-300 hover:scale-105;
+  }
+
+  .expand-underline {
+    @apply relative after:absolute after:bottom-0 after:left-0 after:h-[1px] after:w-0 after:bg-current after:transition-all after:duration-300 hover:after:w-full;
+  }
+
+  .brand-row-scroll {
+    scroll-behavior: smooth;
+    transition: scroll-left 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  .brand-row-scroll * {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .fade-in {
+    animation: fadeInUp 0.5s ease-out forwards;
+  }
+
+  .slide-up {
+    animation: slideUp 500ms ease-out forwards;
+  }
+
+  .slide-in-right {
+    animation: slideInRight 500ms ease-out forwards;
+  }
+
+  .animate-fade-in {
+    animation: fadeInUp 0.6s ease-out forwards;
+  }
+
+  .animate-typewriter {
+    animation: typewriter 1.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  }
+
+  .animate-text-slide-up {
+    animation: textSlideUp 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  }
+
+  .animate-text-fade-in {
+    animation: textFadeIn 1.2s ease-in-out forwards;
+  }
+
+  .animate-shimmer {
+    animation: shimmer 1.5s infinite;
+  }
+
+  .animate-float-slow {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .hero-section {
+    @apply relative w-full min-h-screen overflow-hidden;
+  }
+
+  .hero-image {
+    @apply absolute inset-0 w-full h-full object-cover;
+    transform: scale(1.1);
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .hero-image.active {
+    transform: scale(1);
+  }
+
+  .hero-content {
+    @apply absolute inset-0 flex flex-col items-center justify-center text-white z-10;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .hero-content.active {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .image-fade-in {
+    opacity: 0;
+    transition: opacity 0.15s ease-in-out;
+  }
+
+  .image-fade-in.loaded {
+    opacity: 1;
+  }
+
+  .aspect-square,
+  .aspect-video,
+  .aspect-\[3\/4\],
+  .aspect-\[4\/3\] {
+    contain: layout style;
+  }
+
+  [data-nextjs-image-container] {
+    will-change: transform;
+    contain: layout;
+  }
+}

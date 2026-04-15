@@ -1,0 +1,55 @@
+@layer components {
+  .heading-xl {
+    @apply font-canela text-5xl md:text-7xl font-normal tracking-tight;
+  }
+
+  .heading-lg {
+    @apply font-canela text-4xl md:text-6xl font-normal tracking-tight;
+  }
+
+  .heading-md {
+    @apply font-canela text-3xl md:text-5xl font-normal;
+  }
+
+  .heading-sm {
+    @apply font-canela text-2xl md:text-3xl font-normal;
+  }
+
+  .body-lg {
+    @apply font-sans text-lg leading-relaxed;
+  }
+
+  .body-md {
+    @apply font-sans text-base leading-relaxed;
+  }
+
+  .body-sm {
+    @apply font-sans text-sm leading-relaxed;
+  }
+
+  .caption {
+    @apply font-sans text-xs uppercase tracking-wide;
+  }
+
+  .italic-serif {
+    @apply font-sans italic;
+  }
+
+  @media (max-width: 640px) {
+    .heading-xl {
+      @apply text-4xl leading-tight;
+    }
+
+    .heading-lg {
+      @apply text-3xl leading-tight;
+    }
+
+    .heading-md {
+      @apply text-2xl leading-tight;
+    }
+
+    .heading-sm {
+      @apply text-xl leading-tight;
+    }
+  }
+}

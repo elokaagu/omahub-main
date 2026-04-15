@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -42,13 +42,195 @@ type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 type StudioLayoutClientProps = {
   children: React.ReactNode;
   initialProfile: Profile | null;
-  initialUser: {
-    id: string;
-    email: string | null;
-    role?: Profile["role"] | null;
-    owned_brands?: string[] | null;
-  } | null;
+  initialUser: StudioInitialUser | null;
 };
+
+type StudioInitialUser = {
+  id: string;
+  email: string | null;
+  role?: Profile["role"] | null;
+  owned_brands?: string[] | null;
+};
+
+type NavigationItem = {
+  href: string;
+  label: string;
+  icon: any;
+  permission: string;
+  customLabel?: string;
+  showForRoles?: string[];
+};
+
+function useStudioDiagnostics() {
+  useEffect(() => {
+    const handleError = (event: ErrorEvent) => {
+      console.error("Studio Layout Error:", event.error);
+      if (typeof window !== "undefined" && (window as any).gtag) {
+        (window as any).gtag("event", "exception", {
+          description: event.error?.message || "Unknown error",
+          fatal: false,
+        });
+      }
+    };
+
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      console.error("Studio Layout Unhandled Promise Rejection:", event.reason);
+      event.preventDefault();
+      if (typeof window !== "undefined" && (window as any).gtag) {
+        (window as any).gtag("event", "exception", {
+          description: event.reason?.message || "Unhandled promise rejection",
+          fatal: false,
+        });
+      }
+    };
+
+    const handleLoad = () => {
+      if (typeof window !== "undefined" && window.performance) {
+        const navigation = performance.getEntriesByType("navigation")[0] as any;
+        if (navigation) {
+          console.log("📊 Studio Load Performance:", {
+            domContentLoaded:
+              navigation.domContentLoadedEventEnd -
+              navigation.domContentLoadedEventStart,
+            loadComplete: navigation.loadEventEnd - navigation.loadEventStart,
+            total: navigation.loadEventEnd - navigation.navigationStart,
+          });
+        }
+      }
+    };
+
+    window.addEventListener("error", handleError);
+    window.addEventListener("unhandledrejection", handleUnhandledRejection);
+    window.addEventListener("load", handleLoad);
+    return () => {
+      window.removeEventListener("error", handleError);
+      window.removeEventListener("unhandledrejection", handleUnhandledRejection);
+      window.removeEventListener("load", handleLoad);
+    };
+  }, []);
+}
+
+function buildNavigationItems(
+  permissions: Permission[],
+  role: string | null | undefined
+): NavigationItem[] {
+  const baseItems: NavigationItem[] = [
+    {
+      href: "/studio",
+      label: "Dashboard",
+      icon: Home,
+      permission: "studio.access",
+    },
+  ];
+
+  const permissionItems: NavigationItem[] = [
+    {
+      href: "/studio/brands",
+      label: "Brands",
+      icon: Package,
+      permission: "studio.brands.manage",
+      customLabel: role === "brand_admin" ? "Your Brands" : "Brands",
+    },
+    {
+      href: "/studio/collections",
+      label: "Collections",
+      icon: ImageIcon,
+      permission: "studio.catalogues.manage",
+      customLabel: role === "brand_admin" ? "Your Collections" : "Collections",
+    },
+    {
+      href: "/studio/products",
+      label: "Products",
+      icon: ShoppingBag,
+      permission: "studio.products.manage",
+      customLabel: role === "brand_admin" ? "Your Products" : "Products",
+    },
+    {
+      href: "/studio/services",
+      label: "Services",
+      icon: Scissors,
+      permission: "studio.products.manage",
+      customLabel: role === "brand_admin" ? "Your Services" : "Services",
+    },
+    {
+      href: "/studio/portfolio",
+      label: "Portfolio",
+      icon: ImageIcon,
+      permission: "studio.hero.manage",
+    },
+    {
+      href: "/studio/hero",
+      label: "Hero Carousel",
+      icon: Monitor,
+      permission: "studio.hero.manage",
+    },
+    {
+      href: "/studio/spotlight",
+      label: "Spotlight",
+      icon: ImageIcon,
+      permission: "studio.hero.manage",
+    },
+    {
+      href: "/studio/users",
+      label: "Users",
+      icon: Users,
+      permission: "studio.users.manage",
+    },
+    {
+      href: "/studio/reviews",
+      label: "Reviews",
+      icon: MessageSquare,
+      permission: "studio.products.manage",
+      customLabel: role === "brand_admin" ? "Your Reviews" : "Reviews",
+    },
+    {
+      href: "/studio/inbox",
+      label: "Inbox",
+      icon: Inbox,
+      permission: "studio.products.manage",
+      customLabel: role === "brand_admin" ? "Your Inbox" : "Inbox",
+    },
+    {
+      href: "/studio/applications",
+      label: "Applications",
+      icon: FileText,
+      permission: "studio.users.manage",
+      customLabel: "Applications",
+      showForRoles: ["super_admin"],
+    },
+    {
+      href: "/studio/subscriptions",
+      label: "Subscriptions",
+      icon: Mail,
+      permission: "studio.users.manage",
+      customLabel: "Subscriptions",
+      showForRoles: ["super_admin"],
+    },
+    {
+      href: "/studio/profile",
+      label: "Profile",
+      icon: User,
+      permission: "studio.access",
+    },
+    {
+      href: "/studio/settings",
+      label: "Settings",
+      icon: Settings,
+      permission: "studio.settings.manage",
+    },
+  ];
+
+  const filteredItems = permissionItems.filter((item) => {
+    if (item.permission === "studio.access") return true;
+    const hasPermission = permissions.includes(item.permission as any);
+    if (item.showForRoles && role) {
+      return hasPermission && item.showForRoles.includes(role);
+    }
+    return hasPermission;
+  });
+
+  return [...baseItems, ...filteredItems];
+}
 
 export default function StudioLayoutClient({
   children,
@@ -58,12 +240,8 @@ export default function StudioLayoutClient({
   const { user, loading, signOut } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
-  const pendingSidebarClose = useRef(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [fadeIn, setFadeIn] = useState(false);
-
-  const handleSidebarNav = () => {
-    // No-op, just for compatibility
-  };
 
   useEffect(() => {
     if (sidebarOpen) {
@@ -76,7 +254,6 @@ export default function StudioLayoutClient({
   const bootstrapPerms = permissionsForProfileRole(serverRole);
 
   const [permissions, setPermissions] = useState<Permission[]>(bootstrapPerms);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   /** When SSR already authenticated with studio access, do not block the shell on client auth hydration. */
   const [isCheckingAccess, setIsCheckingAccess] = useState(() => {
     const hasAccess = bootstrapPerms.includes("studio.access");
@@ -132,60 +309,7 @@ export default function StudioLayoutClient({
     void run();
   }, [loading, user?.id, user?.role, router, initialUser?.id, initialProfile?.role, initialUser?.role]);
 
-  // Enhanced error handling and performance monitoring
-  useEffect(() => {
-    const handleError = (event: ErrorEvent) => {
-      console.error("Studio Layout Error:", event.error);
-      // Log to analytics service if available
-      if (typeof window !== "undefined" && (window as any).gtag) {
-        (window as any).gtag("event", "exception", {
-          description: event.error?.message || "Unknown error",
-          fatal: false,
-        });
-      }
-    };
-
-    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
-      console.error("Studio Layout Unhandled Promise Rejection:", event.reason);
-      event.preventDefault();
-      // Log to analytics service if available
-      if (typeof window !== "undefined" && (window as any).gtag) {
-        (window as any).gtag("event", "exception", {
-          description: event.reason?.message || "Unhandled promise rejection",
-          fatal: false,
-        });
-      }
-    };
-
-    // Performance monitoring
-    const handleLoad = () => {
-      if (typeof window !== "undefined" && window.performance) {
-        const navigation = performance.getEntriesByType("navigation")[0] as any;
-        if (navigation) {
-          console.log("📊 Studio Load Performance:", {
-            domContentLoaded:
-              navigation.domContentLoadedEventEnd -
-              navigation.domContentLoadedEventStart,
-            loadComplete: navigation.loadEventEnd - navigation.loadEventStart,
-            total: navigation.loadEventEnd - navigation.navigationStart,
-          });
-        }
-      }
-    };
-
-    window.addEventListener("error", handleError);
-    window.addEventListener("unhandledrejection", handleUnhandledRejection);
-    window.addEventListener("load", handleLoad);
-
-    return () => {
-      window.removeEventListener("error", handleError);
-      window.removeEventListener(
-        "unhandledrejection",
-        handleUnhandledRejection
-      );
-      window.removeEventListener("load", handleLoad);
-    };
-  }, []);
+  useStudioDiagnostics();
 
   const handleBackToSite = () => {
     // Use window.location.href for more reliable navigation
@@ -256,149 +380,7 @@ export default function StudioLayoutClient({
     );
   }
 
-  // Create permission-based navigation items
-  const getNavigationItems = () => {
-    type NavigationItem = {
-      href: string;
-      label: string;
-      icon: any;
-      permission: string;
-      customLabel?: string;
-      showForRoles?: string[]; // New property for conditional visibility
-    };
-
-    const baseItems: NavigationItem[] = [
-      {
-        href: "/studio",
-        label: "Dashboard",
-        icon: Home,
-        permission: "studio.access",
-      },
-    ];
-
-    const permissionItems: NavigationItem[] = [
-      {
-        href: "/studio/brands",
-        label: "Brands",
-        icon: Package,
-        permission: "studio.brands.manage",
-        customLabel: user?.role === "brand_admin" ? "Your Brands" : "Brands",
-      },
-      {
-        href: "/studio/collections",
-        label: "Collections",
-        icon: ImageIcon,
-        permission: "studio.catalogues.manage",
-        customLabel:
-          user?.role === "brand_admin" ? "Your Collections" : "Collections",
-      },
-      {
-        href: "/studio/products",
-        label: "Products",
-        icon: ShoppingBag,
-        permission: "studio.products.manage",
-        customLabel:
-          user?.role === "brand_admin" ? "Your Products" : "Products",
-      },
-      {
-        href: "/studio/services",
-        label: "Services",
-        icon: Scissors,
-        permission: "studio.products.manage",
-        customLabel:
-          user?.role === "brand_admin" ? "Your Services" : "Services",
-      },
-      {
-        href: "/studio/portfolio",
-        label: "Portfolio",
-        icon: ImageIcon,
-        permission: "studio.hero.manage",
-      },
-      {
-        href: "/studio/hero",
-        label: "Hero Carousel",
-        icon: Monitor,
-        permission: "studio.hero.manage",
-      },
-      {
-        href: "/studio/spotlight",
-        label: "Spotlight",
-        icon: ImageIcon,
-        permission: "studio.hero.manage",
-      },
-      {
-        href: "/studio/users",
-        label: "Users",
-        icon: Users,
-        permission: "studio.users.manage",
-      },
-      {
-        href: "/studio/reviews",
-        label: "Reviews",
-        icon: MessageSquare,
-        permission: "studio.products.manage",
-        customLabel: user?.role === "brand_admin" ? "Your Reviews" : "Reviews",
-      },
-      {
-        href: "/studio/inbox",
-        label: "Inbox",
-        icon: Inbox,
-        permission: "studio.products.manage",
-        customLabel: user?.role === "brand_admin" ? "Your Inbox" : "Inbox",
-      },
-      {
-        href: "/studio/applications",
-        label: "Applications",
-        icon: FileText,
-        permission: "studio.users.manage",
-        customLabel: "Applications",
-        // Only show for super admins
-        showForRoles: ["super_admin"]
-      },
-      {
-        href: "/studio/subscriptions",
-        label: "Subscriptions",
-        icon: Mail,
-        permission: "studio.users.manage",
-        customLabel: "Subscriptions",
-        showForRoles: ["super_admin"]
-      },
-      {
-        href: "/studio/profile",
-        label: "Profile",
-        icon: User,
-        permission: "studio.access",
-      },
-      {
-        href: "/studio/settings",
-        label: "Settings",
-        icon: Settings,
-        permission: "studio.settings.manage",
-      },
-    ];
-
-    // Filter items based on permissions
-    const filteredItems = permissionItems.filter((item) => {
-      if (item.permission === "studio.access") return true;
-      
-      // Check if user has the required permission
-      const hasPermission = permissions.includes(item.permission as any);
-      
-      // Check if item has role restrictions
-      if (item.showForRoles && user?.role) {
-        return hasPermission && item.showForRoles.includes(user.role);
-      }
-      
-      return hasPermission;
-    });
-
-    return [...baseItems, ...filteredItems];
-  };
-
-  const navigationItems = getNavigationItems();
-
-  // Add this helper for mobile nav items - now uses the same permission system
-  const mobileNavItems = navigationItems;
+  const navigationItems = buildNavigationItems(permissions, user?.role ?? null);
 
   return (
     <StudioInitialDataProvider
@@ -553,7 +535,7 @@ export default function StudioLayoutClient({
                 role="navigation"
                 aria-label="Studio navigation"
               >
-                {mobileNavItems.map((item) => (
+                {navigationItems.map((item) => (
                   <button
                     key={item.href}
                     onClick={() => {
@@ -602,24 +584,12 @@ export default function StudioLayoutClient({
                     key={item.href}
                     href={item.href}
                     className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100"
-                    onClick={handleSidebarNav}
                   >
                     <item.icon className="h-5 w-5" />
                     <span>{item.customLabel || item.label}</span>
                   </NavigationLink>
                 ))}
 
-                {/* Mobile Back to Site in sidebar */}
-                <button
-                  onClick={() => {
-                    setSidebarOpen(false);
-                    handleBackToSite();
-                  }}
-                  className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100 w-full lg:hidden border-t border-gray-200 mt-4 pt-4"
-                >
-                  <Home className="h-5 w-5" />
-                  <span>Back to Site</span>
-                </button>
               </nav>
 
               <div className="pt-6 border-t border-gray-200 mt-auto">

@@ -2,20 +2,21 @@ import { Metadata } from "next";
 import { generateSEOMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = generateSEOMetadata({
-  title: "Expert Tailors - Premium Tailoring Services",
+  title: "Verified Tailors for Custom Fashion | OmaHub",
   description:
-    "Connect with expert tailors and seamstresses for bespoke clothing, alterations, and custom fashion pieces. Find verified tailoring professionals for all your fashion needs.",
+    "Discover verified African tailors on OmaHub for bespoke clothing, bridal and occasion wear, alterations, and made-to-measure pieces tailored to your style and fit.",
   keywords: [
-    "expert tailors",
-    "tailoring services",
+    "verified tailors",
+    "african tailors",
     "bespoke clothing",
-    "custom tailoring",
+    "custom fashion",
+    "made to measure clothing",
+    "bridal tailoring",
+    "occasion wear tailoring",
     "alterations",
-    "seamstresses",
-    "fashion tailoring",
+    "seamstress near me",
+    "omahub tailors",
     "custom clothing",
-    "professional tailors",
-    "tailoring experts",
   ],
   url: "/tailors",
   type: "website",

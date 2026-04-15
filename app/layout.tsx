@@ -1,30 +1,34 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import RootLayoutClient from "../components/layout/RootLayoutClient";
 import { Preloader } from "@/components/ui/preloader";
-import { suisseIntl, canela } from "./fonts";
+import { fontSans, fontDisplay } from "./fonts";
 import { Toaster } from "sonner";
 import { Analytics } from "@vercel/analytics/react";
 import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.oma-hub.com";
+const SITE_DESCRIPTION =
+  "Discover curated African fashion brands, bespoke tailors, and occasion-ready collections on OmaHub.";
 
 export const metadata: Metadata = {
   title: {
     default: "OmaHub",
     template: "%s | OmaHub",
   },
-  description:
-    "Discover premium fashion brands, connect with expert tailors, and explore curated collections. Your gateway to luxury fashion and bespoke tailoring from Africa's finest designers.",
+  description: SITE_DESCRIPTION,
   keywords: [
-    "fashion",
-    "tailoring",
-    "bespoke",
+    "African fashion platform",
+    "curated fashion brands",
+    "bespoke tailors",
+    "custom tailoring",
+    "occasion wear",
+    "bridal fashion",
+    "ready to wear",
+    "luxury African designers",
+    "made to measure",
+    "OmaHub",
     "African fashion",
-    "luxury fashion",
-    "designer brands",
-    "custom clothing",
-    "fashion platform",
-    "tailor services",
-    "fashion collections",
   ],
   authors: [{ name: "OmaHub Team" }],
   creator: "OmaHub",
@@ -34,17 +38,16 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL("https://www.oma-hub.com"),
+  metadataBase: new URL(SITE_URL),
   alternates: {
-    canonical: "https://www.oma-hub.com",
+    canonical: SITE_URL,
   },
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://www.oma-hub.com",
-    title: "OmaHub",
-    description:
-      "Discover premium fashion brands, connect with expert tailors, and explore curated collections. Your gateway to luxury fashion and bespoke tailoring from Africa's finest designers.",
+    url: SITE_URL,
+    title: "OmaHub | Curated African Fashion & Bespoke Tailoring",
+    description: SITE_DESCRIPTION,
     siteName: "OmaHub",
     images: [
       {
@@ -57,9 +60,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "OmaHub",
-    description:
-      "Discover premium fashion brands, connect with expert tailors, and explore curated collections.",
+    title: "OmaHub | Curated African Fashion & Bespoke Tailoring",
+    description: SITE_DESCRIPTION,
     images: ["/OmaHubBanner.png"],
     creator: "@omahub",
     site: "@omahub",
@@ -75,18 +77,16 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
-  verification: {
-    google: "your-google-verification-code",
-    yandex: "your-yandex-verification-code",
-    yahoo: "your-yahoo-verification-code",
-  },
   manifest: "/manifest.json",
-  themeColor: "#2D1921",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
     title: "OmaHub",
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#2D1921",
 };
 
 export default function RootLayout({
@@ -95,7 +95,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${suisseIntl.variable} ${canela.variable}`}>
+    <html
+      lang="en"
+      className={`${fontSans.variable} ${fontDisplay.variable}`}
+    >
       <body>
         <Preloader>
           <RootLayoutClient>{children}</RootLayoutClient>
