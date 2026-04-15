@@ -112,6 +112,26 @@ const withPWA = require("next-pwa")({
   },
 });
 
+function supabaseStorageRemotePatterns() {
+  const patterns = [];
+  const raw = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (raw) {
+    try {
+      const host = new URL(raw).hostname;
+      if (host) {
+        patterns.push({
+          protocol: "https",
+          hostname: host,
+          pathname: "/storage/v1/object/**",
+        });
+      }
+    } catch {
+      /* ignore invalid env */
+    }
+  }
+  return patterns;
+}
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Ensure consistent trailing slash handling to prevent duplicate content
@@ -190,11 +210,12 @@ const nextConfig = {
     // Remove the overly restrictive CSP that was blocking images
     // contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     remotePatterns: [
+      ...supabaseStorageRemotePatterns(),
       {
         protocol: "https",
         hostname: "gswduyodzdgucjscjtvz.supabase.co",
         port: "",
-        pathname: "/storage/v1/object/public/**",
+        pathname: "/storage/v1/object/**",
       },
       {
         protocol: "https",

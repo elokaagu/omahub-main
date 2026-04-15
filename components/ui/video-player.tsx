@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
-import { AlertCircle } from "lucide-react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 
 import { LazyImage } from "./lazy-image";
 import { cn } from "@/lib/utils";
@@ -22,7 +21,15 @@ interface VideoPlayerProps {
   priority?: boolean;
   onVideoLoad?: () => void;
   onVideoError?: () => void;
+  /** Reserved for future UI; playback is still driven by `controls`. */
   showPlayButton?: boolean;
+}
+
+/** Only treat URLs as video when they look like real media files (avoids image URLs mis-stored in `video_url`). */
+export function isLikelyVideoUrl(url: string): boolean {
+  const path = url.split("?")[0].toLowerCase();
+  return /\.(mp4|webm|mov|m4v|ogv|avi|mkv|wmv|flv|3gp)(\b|$)/.test(path) ||
+    /\.m3u8(\b|$)/.test(path);
 }
 
 export function VideoPlayer({
@@ -41,52 +48,22 @@ export function VideoPlayer({
   priority = false,
   onVideoLoad,
   onVideoError,
-  showPlayButton = false,
+  showPlayButton: _showPlayButton = false,
 }: VideoPlayerProps) {
   const [isLoading, setIsLoading] = useState(true);
-  const [hasError, setHasError] = useState(false);
+  const [videoDecodeFailed, setVideoDecodeFailed] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  // Check if the image URL is actually a video file
-  const isVideoFile = (url: string) => {
-    if (!url) return false;
-    const videoExtensions = [
-      ".mp4",
-      ".mov",
-      ".avi",
-      ".webm",
-      ".mkv",
-      ".flv",
-      ".wmv",
-      ".m4v",
-      ".3gp",
-    ];
-    const lowerUrl = url.toLowerCase();
-    return (
-      videoExtensions.some((ext) => lowerUrl.includes(ext)) ||
-      lowerUrl.includes("/video/") ||
-      lowerUrl.includes("video") ||
-      lowerUrl.includes("blob:")
-    );
-  };
+  const isPlayableVideo = useMemo(
+    () => !!videoUrl?.trim() && isLikelyVideoUrl(videoUrl.trim()),
+    [videoUrl]
+  );
 
-  // Debug logging
   useEffect(() => {
-    if (process.env.NODE_ENV === "development") {
-      console.log("🎬 VideoPlayer Debug:", {
-        videoUrl,
-        thumbnailUrl,
-        fallbackImageUrl,
-        alt,
-        hasVideo: !!videoUrl,
-        videoUrlType: typeof videoUrl,
-        videoUrlLength: videoUrl?.length,
-        willShowVideo: !!videoUrl && videoUrl.trim() !== "",
-      });
-    }
-  }, [videoUrl, thumbnailUrl, fallbackImageUrl, alt]);
+    setVideoDecodeFailed(false);
+    setIsLoading(true);
+  }, [videoUrl]);
 
-  // Aspect ratio classes
   const aspectRatioClasses = {
     "16/9": "aspect-video",
     "4/3": "aspect-[4/3]",
@@ -95,48 +72,90 @@ export function VideoPlayer({
   };
 
   useEffect(() => {
-    if (videoRef.current) {
-      const video = videoRef.current;
+    if (!isPlayableVideo || !videoRef.current) return;
 
-      const handleLoadStart = () => {
-        console.log("🎬 Video load started for:", videoUrl);
-        setIsLoading(true);
-        setHasError(false);
-      };
+    const video = videoRef.current;
 
-      const handleCanPlay = () => {
-        console.log("🎬 Video can play for:", videoUrl);
-        setIsLoading(false);
-        onVideoLoad?.();
-      };
+    const handleLoadStart = () => {
+      setIsLoading(true);
+      setVideoDecodeFailed(false);
+    };
 
-      const handleError = (e: Event) => {
-        console.error("🎬 Video error for:", videoUrl, e);
-        setIsLoading(false);
-        setHasError(true);
-        onVideoError?.();
-      };
+    const handleCanPlay = () => {
+      setIsLoading(false);
+      onVideoLoad?.();
+    };
 
-      const handleLoadedData = () => {
-        console.log("🎬 Video data loaded for:", videoUrl);
-      };
+    const handleError = (e: Event) => {
+      console.error("VideoPlayer: decode/load error:", videoUrl, e);
+      setIsLoading(false);
+      setVideoDecodeFailed(true);
+      onVideoError?.();
+    };
 
-      video.addEventListener("loadstart", handleLoadStart);
-      video.addEventListener("canplay", handleCanPlay);
-      video.addEventListener("error", handleError);
-      video.addEventListener("loadeddata", handleLoadedData);
+    const handleLoadedData = () => {
+      setIsLoading(false);
+    };
 
-      return () => {
-        video.removeEventListener("loadstart", handleLoadStart);
-        video.removeEventListener("canplay", handleCanPlay);
-        video.removeEventListener("error", handleError);
-        video.removeEventListener("loadeddata", handleLoadedData);
-      };
+    video.addEventListener("loadstart", handleLoadStart);
+    video.addEventListener("canplay", handleCanPlay);
+    video.addEventListener("error", handleError);
+    video.addEventListener("loadeddata", handleLoadedData);
+
+    return () => {
+      video.removeEventListener("loadstart", handleLoadStart);
+      video.removeEventListener("canplay", handleCanPlay);
+      video.removeEventListener("error", handleError);
+      video.removeEventListener("loadeddata", handleLoadedData);
+    };
+  }, [isPlayableVideo, onVideoLoad, onVideoError, videoUrl]);
+
+  const imageFallbackSrc =
+    thumbnailUrl?.trim() ||
+    fallbackImageUrl?.trim() ||
+    (!isPlayableVideo && videoUrl?.trim()) ||
+    "";
+
+  // Mis-tagged row: `video_url` is actually an image — render as image.
+  if (videoUrl?.trim() && !isPlayableVideo) {
+    if (!imageFallbackSrc) {
+      return (
+        <div
+          className={cn(
+            "relative group overflow-hidden bg-gray-200 flex items-center justify-center",
+            aspectRatioClasses[aspectRatio],
+            className
+          )}
+        >
+          <div className="text-gray-500 text-center">
+            <div className="text-2xl mb-2">📷</div>
+            <div className="text-sm">No Image</div>
+          </div>
+        </div>
+      );
     }
-  }, [onVideoLoad, onVideoError, videoUrl]);
+    return (
+      <div
+        className={cn(
+          "relative group overflow-hidden",
+          aspectRatioClasses[aspectRatio],
+          className
+        )}
+      >
+        <LazyImage
+          src={imageFallbackSrc}
+          alt={alt}
+          fill
+          className="object-cover"
+          sizes={sizes}
+          quality={quality}
+          priority={priority}
+        />
+      </div>
+    );
+  }
 
-  // If we have a video URL, show the video player
-  if (videoUrl) {
+  if (videoUrl?.trim() && isPlayableVideo && !videoDecodeFailed) {
     return (
       <div
         className={cn(
@@ -154,7 +173,7 @@ export function VideoPlayer({
           controls={controls}
           playsInline
           preload="metadata"
-          style={{ display: 'block' }} // Ensure video is visible
+          style={{ display: "block" }}
         >
           <source src={videoUrl} type="video/mp4" />
           <source src={videoUrl} type="video/webm" />
@@ -162,33 +181,21 @@ export function VideoPlayer({
           Your browser does not support the video tag.
         </video>
 
-        {/* Loading indicator */}
         {isLoading && (
-          <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
-          </div>
-        )}
-
-        {/* Error indicator */}
-        {hasError && (
-          <div className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full">
-            <AlertCircle className="h-4 w-4" />
-          </div>
-        )}
-
-        {/* Debug info in development */}
-        {process.env.NODE_ENV === "development" && (
-          <div className="absolute top-2 left-2 bg-black/80 text-white text-xs p-2 rounded">
-            Video: {videoUrl ? "Loading..." : "No URL"}
+          <div className="absolute inset-0 bg-black/20 flex items-center justify-center pointer-events-none">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white" />
           </div>
         )}
       </div>
     );
   }
 
-  // If no video, show image fallback
-  const imageToShow = thumbnailUrl || fallbackImageUrl;
-  
+  // No video, or video failed — show still image
+  const imageToShow =
+    thumbnailUrl?.trim() ||
+    fallbackImageUrl?.trim() ||
+    "";
+
   if (!imageToShow) {
     return (
       <div
