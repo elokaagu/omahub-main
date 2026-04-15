@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -115,13 +115,7 @@ export default function FAQManagementPage() {
     }
   }, [user, router]);
 
-  useEffect(() => {
-    if (user?.role === "super_admin") {
-      fetchFAQs();
-    }
-  }, [user, showInactive]);
-
-  const fetchFAQs = async () => {
+  const fetchFAQs = useCallback(async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams();
@@ -143,7 +137,13 @@ export default function FAQManagementPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showInactive]);
+
+  useEffect(() => {
+    if (user?.role === "super_admin") {
+      void fetchFAQs();
+    }
+  }, [user, showInactive, fetchFAQs]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useStudioInitialData } from "@/contexts/StudioInitialDataContext";
 import { useStudioPermissions } from "@/hooks/useStudioPermissions";
@@ -124,7 +124,7 @@ export default function ProductsPage() {
   // }, [user, router]);
 
   // Fetch favourites data
-  const fetchFavouritesData = async () => {
+  const fetchFavouritesData = useCallback(async () => {
     try {
       if (!supabase) return;
 
@@ -212,7 +212,7 @@ export default function ProductsPage() {
     } catch (error) {
       console.error("Error fetching favourites data:", error);
     }
-  };
+  }, [effectiveUser?.role, products]);
 
   // Fetch products
   useEffect(() => {
@@ -289,7 +289,7 @@ export default function ProductsPage() {
     if (products.length > 0) {
       fetchFavouritesData();
     }
-  }, [products]);
+  }, [products, fetchFavouritesData]);
 
   // Filter products based on search and filters
   useEffect(() => {

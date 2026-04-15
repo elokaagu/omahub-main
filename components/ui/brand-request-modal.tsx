@@ -111,7 +111,7 @@ export function BrandRequestModal({
     console.log("📝 Initial form data:", initialFormData);
     console.log("🔍 Modal props:", { isOpen, sizes, colors, productName, brandName });
     console.log("🎯 FormData preferred_size after setState:", initialFormData.preferred_size);
-  }, [isOpen, sizes, colors]);
+  }, [isOpen, sizes, colors, productName, brandName]);
 
   // Additional effect to handle size/color prop changes specifically
   useEffect(() => {

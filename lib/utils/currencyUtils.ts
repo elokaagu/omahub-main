@@ -524,7 +524,7 @@ export function validateProductsCurrency(
   return { valid, invalid };
 }
 
-export default {
+const currencyUtils = {
   CURRENCIES,
   getCurrencyByCode,
   getCurrencyBySymbol,
@@ -538,3 +538,5 @@ export default {
   validateProductCurrency,
   validateProductsCurrency,
 };
+
+export default currencyUtils;

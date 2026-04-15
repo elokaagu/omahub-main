@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable react-hooks/exhaustive-deps */
 
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";

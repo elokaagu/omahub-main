@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/supabase-admin";
 import { requireSuperAdmin } from "@/lib/auth/requireSuperAdmin";
 
+export const dynamic = "force-dynamic";
+
 function countQuery(
   supabase: NonNullable<Awaited<ReturnType<typeof getAdminClient>>>
 ) {

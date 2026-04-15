@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -110,7 +110,7 @@ export default function ReviewManagementPage() {
   }, [user, router]);
 
   // Fetch reviews
-  const fetchReviews = async (page = 1, search = "", brand = "") => {
+  const fetchReviews = useCallback(async (page = 1, search = "", brand = "") => {
     if (!session) return;
 
     try {
@@ -154,14 +154,14 @@ export default function ReviewManagementPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [session]);
 
   // Initial load
   useEffect(() => {
     if (user && session) {
       fetchReviews(1, searchTerm, selectedBrand);
     }
-  }, [user, session]);
+  }, [user, session, fetchReviews, searchTerm, selectedBrand]);
 
   // Handle search and filter changes
   useEffect(() => {
@@ -172,7 +172,7 @@ export default function ReviewManagementPage() {
     }, 500);
 
     return () => clearTimeout(delayedSearch);
-  }, [searchTerm, selectedBrand]);
+  }, [searchTerm, selectedBrand, user, session, fetchReviews]);
 
   // Handle page changes
   const handlePageChange = (page: number) => {

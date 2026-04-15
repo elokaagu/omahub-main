@@ -353,7 +353,7 @@ export function convertPrice(
   return usdPrice * toRate;
 }
 
-export default {
+const priceFormatter = {
   formatNumberWithCommas,
   formatPriceRange,
   formatPriceRangeWithCommas,
@@ -368,3 +368,5 @@ export default {
   isValidPrice,
   convertPrice,
 };
+
+export default priceFormatter;

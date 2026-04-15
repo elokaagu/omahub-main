@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useStudioPermissions } from "@/hooks/useStudioPermissions";
@@ -58,20 +58,7 @@ export default function PortfolioPage() {
 
   const canManagePortfolio = permissions.includes("studio.hero.manage");
 
-  useEffect(() => {
-    if (authLoading || permissionsLoading) {
-      return;
-    }
-    if (!user || !canManagePortfolio) {
-      setAccessDenied(true);
-      setPortfolioItems([]);
-      setLoading(false);
-      return;
-    }
-    void fetchPortfolioItems();
-  }, [authLoading, permissionsLoading, user?.id, canManagePortfolio]);
-
-  const fetchPortfolioItems = async () => {
+  const fetchPortfolioItems = useCallback(async () => {
     try {
       if (!user || !canManagePortfolio) return;
       // Fetch portfolio items from dedicated portfolio API
@@ -106,7 +93,20 @@ export default function PortfolioPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, canManagePortfolio]);
+
+  useEffect(() => {
+    if (authLoading || permissionsLoading) {
+      return;
+    }
+    if (!user || !canManagePortfolio) {
+      setAccessDenied(true);
+      setPortfolioItems([]);
+      setLoading(false);
+      return;
+    }
+    void fetchPortfolioItems();
+  }, [authLoading, permissionsLoading, user, canManagePortfolio, fetchPortfolioItems]);
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this portfolio item?")) {

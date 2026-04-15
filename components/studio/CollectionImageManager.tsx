@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,12 +30,7 @@ export function CollectionImageManager({
   const [newImageUrl, setNewImageUrl] = useState("");
   const [newImageAlt, setNewImageAlt] = useState("");
 
-  // Load images
-  useEffect(() => {
-    loadImages();
-  }, [collectionId]);
-
-  const loadImages = async () => {
+  const loadImages = useCallback(async () => {
     try {
       setLoading(true);
       const collectionImages = await getCollectionImages(collectionId);
@@ -46,7 +41,12 @@ export function CollectionImageManager({
     } finally {
       setLoading(false);
     }
-  };
+  }, [collectionId]);
+
+  // Load images
+  useEffect(() => {
+    void loadImages();
+  }, [collectionId, loadImages]);
 
   const handleAddImage = async () => {
     if (!newImageUrl.trim()) {

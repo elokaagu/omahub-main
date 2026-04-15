@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -87,7 +87,7 @@ export default function AnalyticsDashboard({
   const [vercelError, setVercelError] = useState<string | null>(null);
 
   // Fetch product-specific analytics
-  const fetchProductAnalytics = async () => {
+  const fetchProductAnalytics = useCallback(async () => {
     try {
       if (!supabase || !user) return;
 
@@ -218,9 +218,9 @@ export default function AnalyticsDashboard({
     } catch (error) {
       console.error("Error fetching product analytics:", error);
     }
-  };
+  }, [isBrandOwner, ownedBrandIds, user]);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -267,7 +267,7 @@ export default function AnalyticsDashboard({
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, fetchProductAnalytics, isBrandOwner, ownedBrandIds]);
 
   const handleSyncRatings = async () => {
     try {
@@ -298,7 +298,7 @@ export default function AnalyticsDashboard({
     if (!authLoading) {
       fetchData();
     }
-  }, [isBrandOwner, ownedBrandIds, user, authLoading]);
+  }, [isBrandOwner, ownedBrandIds, user, authLoading, fetchData]);
 
   // Calculate estimated monthly page views
   // Show loading state while auth is loading

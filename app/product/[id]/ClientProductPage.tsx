@@ -56,7 +56,7 @@ export default function ClientProductPage({
     return () => {
       cancelled = true;
     };
-  }, [product?.id, product?.video_url, brand?.id, brand?.name]);
+  }, [product, brand, product?.id, product?.video_url, brand?.id, brand?.name]);
 
   useEffect(() => {
     setMediaSelection(

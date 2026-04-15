@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/supabase-admin";
 import { requireSuperAdmin } from "@/lib/auth/requireSuperAdmin";
 
+export const dynamic = "force-dynamic";
+
 type NewsletterExportRow = {
   email: string | null;
   first_name: string | null;

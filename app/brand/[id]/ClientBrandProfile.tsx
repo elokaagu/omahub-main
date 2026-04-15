@@ -103,7 +103,7 @@ export default function ClientBrandProfile({
     if (brandData && brandData.collections.length === 0) {
       setShowAllProducts(true);
     }
-  }, [brandData?.collections]);
+  }, [brandData]);
 
   // Fetch products when showAllProducts is toggled
   useEffect(() => {

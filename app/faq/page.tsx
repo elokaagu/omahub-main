@@ -7,6 +7,7 @@ import { faqAnswerPlainText } from "@/lib/faqAnswerRendering";
 import { FaqList } from "./FaqList";
 
 export { metadata } from "./metadata";
+export const dynamic = "force-dynamic";
 
 export default async function FAQPage() {
   const { faqs, error } = await getPublicFaqs();

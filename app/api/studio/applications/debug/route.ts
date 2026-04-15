@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/supabase-admin";
 import { requireSuperAdmin } from "@/lib/auth/requireSuperAdmin";
 
+export const dynamic = "force-dynamic";
+
 /**
  * Debug endpoint to check applications and verify setup
  * This helps diagnose why applications might not be visible

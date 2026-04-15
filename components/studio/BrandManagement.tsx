@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import {
   getAllBrands,
@@ -93,13 +93,7 @@ export default function BrandManagement({ className }: BrandManagementProps) {
     }
   }, [editingBrand]);
 
-  useEffect(() => {
-    if (!accessLoading && user && canManageBrands) {
-      fetchBrands();
-    }
-  }, [accessLoading, user, canManageBrands]);
-
-  const fetchBrands = async () => {
+  const fetchBrands = useCallback(async () => {
     try {
       setIsLoading(true);
       setAuthError(null); // Clear any previous auth errors
@@ -123,7 +117,13 @@ export default function BrandManagement({ className }: BrandManagementProps) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [filterBrandsByOwnership]);
+
+  useEffect(() => {
+    if (!accessLoading && user && canManageBrands) {
+      void fetchBrands();
+    }
+  }, [accessLoading, user, canManageBrands, fetchBrands]);
 
   const handleRefreshSession = async () => {
     try {

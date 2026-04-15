@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
@@ -90,6 +90,17 @@ const serviceTypeLabels = {
   service: "Service",
 };
 
+const TAILORED_CATEGORIES = [
+  "Bridal",
+  "Custom Design",
+  "Evening Gowns",
+  "Alterations",
+  "Tailored",
+  "Event Wear",
+  "Wedding Guest",
+  "Birthday",
+];
+
 // Get appropriate icon for service
 const getServiceIcon = (service: ServiceWithBrand) => {
   // For portfolio items, show Sparkles icon
@@ -157,45 +168,14 @@ export default function ServicesPage() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const tailoringEvent = useTailoringEvent();
 
-  // Tailor-specific categories
-  const tailoredCategories = [
-    "Bridal",
-    "Custom Design",
-    "Evening Gowns",
-    "Alterations",
-    "Tailored",
-    "Event Wear",
-    "Wedding Guest",
-    "Birthday",
-  ];
-
-  useEffect(() => {
-    // Only fetch data on mount or when user/pathname changes
-    if (searchParams.get("refresh") === "1") {
-      fetchData();
-      nextRouter.replace(pathname);
-    } else {
-      fetchData();
-    }
-    // Subscribe to tailoring events to refetch brands/services
-    const unsubscribe = tailoringEvent.subscribe(() => {
-      fetchData();
-    });
-    return () => unsubscribe();
-  }, [user, pathname]);
-
-  useEffect(() => {
-    filterServices();
-  }, [services, searchQuery, selectedBrand, selectedServiceType]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const brandsData = await getAllBrands();
 
       // Filter to only tailor brands
       const tailorBrands = brandsData.filter((brand) =>
-        tailoredCategories.includes(brand.category)
+        TAILORED_CATEGORIES.includes(brand.category)
       );
 
       // Filter brands based on user role
@@ -257,9 +237,9 @@ export default function ServicesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
-  const filterServices = () => {
+  const filterServices = useCallback(() => {
     let filtered = [...services];
 
     // Filter by brand
@@ -305,7 +285,24 @@ export default function ServicesPage() {
     }
 
     setFilteredServices(filtered);
-  };
+  }, [services, selectedBrand, selectedServiceType, searchQuery]);
+
+  useEffect(() => {
+    if (searchParams.get("refresh") === "1") {
+      void fetchData();
+      nextRouter.replace(pathname);
+    } else {
+      void fetchData();
+    }
+    const unsubscribe = tailoringEvent.subscribe(() => {
+      void fetchData();
+    });
+    return () => unsubscribe();
+  }, [fetchData, nextRouter, pathname, searchParams, tailoringEvent]);
+
+  useEffect(() => {
+    filterServices();
+  }, [filterServices]);
 
   const handleEditService = (serviceId: string) => {
     // Stay on the Services page after editing
