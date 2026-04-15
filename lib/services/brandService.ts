@@ -10,6 +10,7 @@ import { getProfile, isAdmin } from "./authService";
 import { getAdminClientLazy } from "@/lib/supabase/adminClientLazy";
 
 import { clearCollectionsCache } from "./collectionService";
+import { isUsableBrandCardImageUrl } from "@/lib/brands/directoryListingImage";
 
 // Cache configuration
 let brandsCache: {
@@ -765,12 +766,13 @@ export async function getBrandsByCategory(category: string): Promise<Brand[]> {
     return [];
   }
 
-  // Filter out brands without images or videos
+  // Keep brands with gallery assets, legacy image column, or video
   const brandsWithMedia = data.filter((brand: any) => {
-    const hasImage = brand.brand_images && brand.brand_images.length > 0;
-    const hasVideo = brand.video_url && brand.video_url.trim() !== '';
-    
-    return hasImage || hasVideo;
+    const hasGallery = brand.brand_images && brand.brand_images.length > 0;
+    const hasLegacy = isUsableBrandCardImageUrl(brand.image);
+    const hasVideo = brand.video_url && brand.video_url.trim() !== "";
+
+    return hasGallery || hasLegacy || hasVideo;
   });
 
   // Filter out brands with unapproved applications

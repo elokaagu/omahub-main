@@ -85,6 +85,6 @@ async function buildHomeBootstrapPayload(): Promise<HomeBootstrapPayload> {
  */
 export const getHomeBootstrapPayload = unstable_cache(
   buildHomeBootstrapPayload,
-  ["home-bootstrap-v1"],
+  ["home-bootstrap-v2"],
   { revalidate: 120, tags: ["home-bootstrap"] }
 );

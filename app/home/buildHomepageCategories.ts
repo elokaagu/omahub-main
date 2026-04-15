@@ -2,6 +2,7 @@ import {
   UNIFIED_CATEGORIES,
   mapLegacyToUnified,
 } from "@/lib/data/unified-categories";
+import { isUsableBrandCardImageUrl } from "@/lib/brands/directoryListingImage";
 import type { BrandDisplay, CategoryWithBrands } from "./homeTypes";
 import { shuffleArray } from "./homepageData";
 import { devLog } from "./devLog";
@@ -14,6 +15,7 @@ type CategoryProductBundle = {
 function mapBrandToDisplay(brand: {
   id: string;
   name: string;
+  image?: string | null;
   brand_images?: { storage_path: string }[];
   location?: string;
   rating: number;
@@ -22,12 +24,19 @@ function mapBrandToDisplay(brand: {
   video_url?: string | null;
   video_thumbnail?: string | null;
 }): BrandDisplay {
+  const base = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+  const fromStorage = brand.brand_images?.[0]?.storage_path
+    ? `${base}/storage/v1/object/public/brand-assets/${brand.brand_images[0].storage_path}`
+    : null;
+  const fromLegacy = isUsableBrandCardImageUrl(brand.image)
+    ? brand.image!.trim()
+    : null;
+  const resolvedImage = fromStorage || fromLegacy || "/placeholder-image.jpg";
+
   return {
     id: brand.id,
     name: brand.name,
-    image: brand.brand_images?.[0]?.storage_path
-      ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${brand.brand_images[0].storage_path}`
-      : "/placeholder-image.jpg",
+    image: resolvedImage,
     location: brand.location?.split(",")[0] || "Unknown",
     rating: brand.rating,
     isVerified: brand.is_verified || false,
@@ -47,6 +56,7 @@ export function buildHomepageCategoriesFromBrands(
   brandsData: Array<{
     id: string;
     name: string;
+    image?: string | null;
     category: string;
     categories?: string[];
     brand_images?: { storage_path: string }[];
@@ -77,9 +87,12 @@ export function buildHomepageCategoriesFromBrands(
 
         const brandHasMatchingProducts = categoryProductIds.has(brand.id);
 
-        const hasImage = brand.brand_images && brand.brand_images.length > 0;
-        const hasVideo = brand.video_url && brand.video_url.trim() !== "";
-        const hasMedia = Boolean(hasImage || hasVideo);
+        const hasGallery =
+          brand.brand_images && brand.brand_images.length > 0;
+        const hasLegacyImage = isUsableBrandCardImageUrl(brand.image);
+        const hasVideo =
+          Boolean(brand.video_url && brand.video_url.trim() !== "");
+        const hasMedia = Boolean(hasGallery || hasLegacyImage || hasVideo);
 
         return (
           (brandMatchesCategory || brandHasMatchingProducts) && hasMedia

@@ -11,6 +11,12 @@ const BROKEN_IMAGE_FALLBACKS = new Set([
   "/placeholder.svg",
 ]);
 
+/** True when `url` is non-empty and not a known placeholder (legacy `brands.image`, logos, etc.). */
+export function isUsableBrandCardImageUrl(url: string | null | undefined): boolean {
+  const t = url?.trim() ?? "";
+  return t.length > 0 && !BROKEN_IMAGE_FALLBACKS.has(t);
+}
+
 /**
  * Same resolution rules as the directory / BrandCard image (API `image`, then `brand_images[0]`).
  */

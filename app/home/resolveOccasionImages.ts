@@ -1,4 +1,5 @@
 import { occasionToCategoryMapping } from "@/lib/data/directory";
+import { isUsableBrandCardImageUrl } from "@/lib/brands/directoryListingImage";
 
 export const OCCASION_FALLBACKS = {
   Wedding: "/lovable-uploads/57cc6a40-0f0d-4a7d-8786-41f15832ebfb.png",
@@ -10,6 +11,7 @@ export const OCCASION_FALLBACKS = {
 
 type BrandRow = {
   id: string;
+  image?: string | null;
   brand_images?: { storage_path: string }[] | null;
   video_url?: string | null;
 };
@@ -32,9 +34,10 @@ export function resolveOccasionImages(
     const brands = byOccasion.get(occasion) ?? [];
     const availableBrands = brands.filter((b) => {
       if (usedBrandIds.has(b.id)) return false;
-      const hasImage = b.brand_images && b.brand_images.length > 0;
+      const hasGallery = b.brand_images && b.brand_images.length > 0;
+      const hasLegacy = isUsableBrandCardImageUrl(b.image);
       const hasVideo = b.video_url && b.video_url.trim() !== "";
-      return hasImage || hasVideo;
+      return hasGallery || hasLegacy || hasVideo;
     });
 
     const fallback =
@@ -45,9 +48,13 @@ export function resolveOccasionImages(
         availableBrands[Math.floor(Math.random() * availableBrands.length)];
       usedBrandIds.add(pick.id);
       const path = pick.brand_images?.[0]?.storage_path;
-      out[occasion] = path
-        ? `${supabasePublicUrl}/storage/v1/object/public/brand-assets/${path}`
-        : fallback;
+      if (path) {
+        out[occasion] = `${supabasePublicUrl}/storage/v1/object/public/brand-assets/${path}`;
+      } else if (isUsableBrandCardImageUrl(pick.image)) {
+        out[occasion] = pick.image!.trim();
+      } else {
+        out[occasion] = fallback;
+      }
     } else {
       out[occasion] = fallback;
     }
