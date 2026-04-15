@@ -300,7 +300,7 @@ export default function SpotlightManagementPage() {
                         className="flex-1"
                       >
                         {isActivating === item.id ? (
-                          <div className="h-3 w-3 mr-1 animate-spin rounded-full border border-current border-t-transparent" />
+                          <div className="h-3 w-3 mr-1 rounded-full border border-current border-t-transparent" />
                         ) : (
                           <Eye className="h-3 w-3 mr-1" />
                         )}
@@ -330,7 +330,7 @@ export default function SpotlightManagementPage() {
                         disabled={isDeleting === item.id}
                       >
                         {isDeleting === item.id ? (
-                          <div className="h-3 w-3 mr-1 animate-spin rounded-full border border-current border-t-transparent" />
+                          <div className="h-3 w-3 mr-1 rounded-full border border-current border-t-transparent" />
                         ) : (
                           <Trash2 className="h-3 w-3 mr-1" />
                         )}

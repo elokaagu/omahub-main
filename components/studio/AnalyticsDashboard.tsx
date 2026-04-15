@@ -486,7 +486,7 @@ export default function AnalyticsDashboard({
               className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white"
             >
               {syncing ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                <Loader2 className="h-4 w-4 mr-2" />
               ) : (
                 <Star className="h-4 w-4 mr-2" />
               )}

@@ -2,7 +2,11 @@ import Image from "next/image";
 import Link from "next/link";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { LoginForm } from "./LoginForm";
-import { LoginHeroGallery } from "./LoginHeroGallery";
+import { LoginHeroGalleryClient } from "./LoginHeroGalleryClient";
+import { getLoginHeroBrandSlides } from "@/lib/brands/getLoginHeroBrandSlides";
+
+const MOBILE_FALLBACK_IMAGE =
+  "/lovable-uploads/bb152c0b-6378-419b-a0e6-eafce44631b2.png";
 
 function LoginWordmark() {
   return (
@@ -22,7 +26,10 @@ function LoginWordmark() {
   );
 }
 
-export default function LoginPage() {
+export default async function LoginPage() {
+  const heroSlides = await getLoginHeroBrandSlides();
+  const mobileCover = heroSlides[0]?.imageUrl ?? MOBILE_FALLBACK_IMAGE;
+
   return (
     <div className="flex min-h-[calc(100vh-5rem)] w-full flex-col bg-[#FAF9F6] lg:flex-row lg:min-h-[calc(100dvh-5rem)]">
       {/* Form column */}
@@ -54,13 +61,17 @@ export default function LoginPage() {
         </div>
       </section>
 
-      <LoginHeroGallery />
+      <LoginHeroGalleryClient slides={heroSlides} />
 
-      {/* Mobile gallery strip */}
+      {/* Mobile hero strip — first live brand cover when available */}
       <div className="relative mt-2 h-44 w-full shrink-0 overflow-hidden rounded-t-3xl lg:hidden">
         <Image
-          src="/lovable-uploads/bb152c0b-6378-419b-a0e6-eafce44631b2.png"
-          alt="OmaHub curated fashion"
+          src={mobileCover}
+          alt={
+            heroSlides[0]
+              ? `${heroSlides[0].brandName} on OmaHub`
+              : "OmaHub curated fashion"
+          }
           fill
           className="object-cover"
           sizes="100vw"

@@ -2,18 +2,15 @@
 
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
 import { useNavigation } from "@/contexts/NavigationContext";
 import Header from "./Header";
 import Footer from "./Footer";
-import LoadingSpinner from "@/components/ui/loading-spinner";
 import { NavigationProgressBar } from "@/components/ui/navigation-progress-bar";
 import { SearchModal } from "@/components/ui/search-modal";
 import { PageTransition } from "@/components/ui/page-transition";
 
 export default function LayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { loading: authLoading } = useAuth();
   const { isNavigating, forceReset } = useNavigation();
   const isHomePage = pathname === "/";
   const isStudioPage = pathname?.startsWith("/studio") || false;
@@ -31,12 +28,6 @@ export default function LayoutContent({ children }: { children: React.ReactNode 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isNavigating, forceReset]);
-
-  // Initial session bootstrap: marketing waits for auth; /studio skips this gate so SSR shell +
-  // StudioLayoutClient can paint while client profile hydrates in the background.
-  if (authLoading && !isStudioPage) {
-    return <LoadingSpinner />;
-  }
 
   return (
     <>

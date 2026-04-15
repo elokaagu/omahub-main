@@ -1,5 +1,4 @@
 import { useEffect, useState, useCallback } from "react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
 function estimatePageViews({
   totalBrands = 0,
@@ -60,23 +59,22 @@ export default function PageViewsCard({
   }, [fetchPageViews]);
 
   return (
-    <Card className="border border-oma-gold/10 bg-white">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium text-oma-cocoa">
-          Page Views
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        {loading ? (
-          <div className="h-8 bg-oma-beige rounded w-1/2 animate-pulse mb-2" />
-        ) : (
-          <div className="text-2xl font-canela text-oma-plum">
-            {isReal && pageViews !== null
-              ? pageViews.toLocaleString()
-              : estimated.toLocaleString() + "*"}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+    <div className="flex min-h-[7.25rem] flex-col justify-center text-left">
+      <h3 className="text-sm font-medium text-oma-cocoa">Page Views</h3>
+      {loading ? (
+        <div className="mt-2 h-8 w-1/2 min-w-[5rem] animate-pulse rounded bg-oma-beige/80" />
+      ) : (
+        <p className="mt-1 text-2xl font-canela tabular-nums text-oma-plum">
+          {isReal && pageViews !== null
+            ? pageViews.toLocaleString()
+            : `${estimated.toLocaleString()}*`}
+        </p>
+      )}
+      <p className="mt-1 text-sm leading-snug text-oma-cocoa">
+        {isReal && pageViews !== null
+          ? "Last 30 days (Vercel)"
+          : "Estimated from catalogue size"}
+      </p>
+    </div>
   );
 }

@@ -26,10 +26,11 @@ const LoadingSpinner = ({
 }) => (
   <div
     className={cn(
-      "animate-spin rounded-full border-2 border-gray-300 border-t-oma-plum",
+      "rounded-full border-2 border-oma-plum/35 bg-oma-plum/10 animate-pulse",
       sizeClasses[size!],
       className
     )}
+    aria-hidden
   />
 );
 

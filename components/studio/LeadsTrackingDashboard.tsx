@@ -29,7 +29,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { cn, formatCurrency, formatDate } from "@/lib/utils";
 import {
   BarChart,
   Bar,
@@ -60,6 +60,14 @@ import {
 import PageViewsCard from "./PageViewsCard";
 
 const COLORS = ["#6B46C1", "#F59E0B", "#10B981", "#EF4444", "#8B5CF6"]; // OmaHub color palette: plum, amber, emerald, red, violet
+
+/** Outer shell for overview / analytics blocks — consistent padding and rhythm */
+const DASHBOARD_SECTION =
+  "rounded-2xl border border-oma-beige/70 bg-gradient-to-br from-white via-oma-cream/30 to-oma-beige/15 p-6 shadow-sm sm:p-8";
+
+/** Inner stat tiles — same height band and alignment as siblings */
+const METRIC_CARD =
+  "flex min-h-[7.5rem] flex-col justify-center rounded-xl border border-black/[0.06] bg-white p-5 text-left shadow-sm";
 
 const statusColors = {
   new: "bg-blue-100 text-blue-800",
@@ -512,13 +520,9 @@ export default function LeadsTrackingDashboard({
     await handleFieldUpdate(leadId, "status", newStatus);
   };
 
-  // Show loading state while auth is loading
   if (authLoading) {
     return (
-      <div className="text-center py-8">
-        <div className="animate-spin h-8 w-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-        <p className="text-gray-600">Loading authentication...</p>
-      </div>
+      <p className="py-8 text-center text-sm text-gray-600">Loading…</p>
     );
   }
 
@@ -595,35 +599,32 @@ export default function LeadsTrackingDashboard({
             </Card>
           ))}
         </div>
-        <div className="text-center py-8">
-          <div className="animate-spin h-8 w-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading leads dashboard...</p>
-        </div>
+        <p className="py-8 text-center text-sm text-gray-600">
+          Loading leads dashboard…
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       {/* Debug info in development */}
       {process.env.NODE_ENV === "development" && <SessionDebugInfo />}
 
       {/* Platform Overview Section - Super Admin Only */}
       {isSuperAdmin && (
-        <div className="bg-gradient-to-r from-oma-plum/5 to-oma-beige/10 rounded-lg p-6 border border-oma-beige">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-2xl font-canela text-oma-plum">
-                Platform Overview
-              </h2>
-              <p className="text-oma-cocoa">
-                Key metrics across the entire OmaHub platform
-              </p>
-            </div>
-          </div>
+        <div className={DASHBOARD_SECTION}>
+          <header className="mb-6 max-w-3xl space-y-1.5 sm:mb-8">
+            <h2 className="font-canela text-2xl tracking-tight text-oma-plum sm:text-[1.65rem]">
+              Platform Overview
+            </h2>
+            <p className="text-sm leading-relaxed text-oma-cocoa sm:text-[0.95rem]">
+              Key metrics across the entire OmaHub platform
+            </p>
+          </header>
 
           {platformLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-4 lg:grid-cols-5">
               {[...Array(5)].map((_, i) => (
                 <Card key={i} className="p-4">
                   <div className="animate-pulse">
@@ -649,54 +650,64 @@ export default function LeadsTrackingDashboard({
               </Button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-              <Card className="p-4 border-l-4 border-l-oma-plum">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-4 lg:grid-cols-5">
+              <Card
+                className={cn(METRIC_CARD, "border-l-4 border-l-oma-plum")}
+              >
                 <h3 className="text-sm font-medium text-oma-cocoa">
                   Total Brands
                 </h3>
-                <p className="text-2xl font-canela text-oma-plum">
+                <p className="mt-1 text-2xl font-canela tabular-nums text-oma-plum">
                   {platformAnalytics?.totalBrands || 0}
                 </p>
-                <p className="text-sm text-oma-cocoa">
+                <p className="mt-1 text-sm text-oma-cocoa">
                   {platformAnalytics?.verifiedBrands || 0} verified
                 </p>
               </Card>
-              <Card className="p-4 border-l-4 border-l-oma-beige">
+              <Card
+                className={cn(METRIC_CARD, "border-l-4 border-l-oma-beige")}
+              >
                 <h3 className="text-sm font-medium text-oma-cocoa">
                   Total Products
                 </h3>
-                <p className="text-2xl font-canela text-oma-plum">
+                <p className="mt-1 text-2xl font-canela tabular-nums text-oma-plum">
                   {platformAnalytics?.totalProducts || 0}
                 </p>
-                <p className="text-sm text-oma-cocoa">Across all brands</p>
+                <p className="mt-1 text-sm text-oma-cocoa">Across all brands</p>
               </Card>
-              <Card className="p-4 border-l-4 border-l-green-500">
+              <Card
+                className={cn(METRIC_CARD, "border-l-4 border-l-green-500")}
+              >
                 <h3 className="text-sm font-medium text-oma-cocoa">
                   Total Reviews
                 </h3>
-                <p className="text-2xl font-canela text-oma-plum">
+                <p className="mt-1 text-2xl font-canela tabular-nums text-oma-plum">
                   {platformAnalytics?.totalReviews || 0}
                 </p>
-                <p className="text-sm text-oma-cocoa">
+                <p className="mt-1 text-sm text-oma-cocoa">
                   {platformAnalytics?.recentReviews || 0} this month
                 </p>
               </Card>
-              <Card className="p-4 border-l-4 border-l-blue-500">
+              <Card
+                className={cn(METRIC_CARD, "border-l-4 border-l-blue-500")}
+              >
                 <PageViewsCard
                   totalBrands={platformAnalytics?.totalBrands || 0}
                   totalReviews={platformAnalytics?.totalReviews || 0}
                   totalProducts={platformAnalytics?.totalProducts || 0}
                 />
               </Card>
-              <Card className="p-4 border-l-4 border-l-purple-500">
+              <Card
+                className={cn(METRIC_CARD, "border-l-4 border-l-purple-500")}
+              >
                 <h3 className="text-sm font-medium text-oma-cocoa">
                   Avg Rating
                 </h3>
-                <p className="text-2xl font-canela text-oma-plum flex items-center">
+                <p className="mt-1 flex items-center text-2xl font-canela tabular-nums text-oma-plum">
                   {platformAnalytics?.averageRating?.toFixed(1) || "0.0"}
-                  <Star className="h-5 w-5 text-yellow-400 ml-1 fill-current" />
+                  <Star className="ml-1 h-5 w-5 fill-current text-yellow-400" />
                 </p>
-                <p className="text-sm text-oma-cocoa">Platform average</p>
+                <p className="mt-1 text-sm text-oma-cocoa">Platform average</p>
               </Card>
             </div>
           )}
@@ -705,16 +716,14 @@ export default function LeadsTrackingDashboard({
 
       {/* Brand Overview Section - Brand Admin Only */}
       {authLoading ? (
-        <div className="bg-gradient-to-r from-oma-plum/5 to-oma-beige/10 rounded-lg p-6 border border-oma-beige">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-2xl font-canela text-oma-plum">
-                Your Brand Overview
-              </h2>
-              <p className="text-oma-cocoa">Loading brand information...</p>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className={DASHBOARD_SECTION}>
+          <header className="mb-6 max-w-3xl space-y-1.5 sm:mb-8">
+            <h2 className="font-canela text-2xl tracking-tight text-oma-plum sm:text-[1.65rem]">
+              Your Brand Overview
+            </h2>
+            <p className="text-sm text-oma-cocoa">Loading brand information…</p>
+          </header>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
             {[...Array(4)].map((_, i) => (
               <Card key={i} className="p-4">
                 <div className="animate-pulse">
@@ -727,21 +736,19 @@ export default function LeadsTrackingDashboard({
           </div>
         </div>
       ) : isBrandAdmin ? (
-        <div className="bg-gradient-to-r from-oma-plum/5 to-oma-beige/10 rounded-lg p-6 border border-oma-beige">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-2xl font-canela text-oma-plum">
-                Your Brand Overview
-              </h2>
-              <p className="text-oma-cocoa">
-                Key metrics for your{" "}
-                {effectiveOwnedBrands.length > 1 ? "brands" : "brand"}
-              </p>
-            </div>
-          </div>
+        <div className={DASHBOARD_SECTION}>
+          <header className="mb-6 max-w-3xl space-y-1.5 sm:mb-8">
+            <h2 className="font-canela text-2xl tracking-tight text-oma-plum sm:text-[1.65rem]">
+              Your Brand Overview
+            </h2>
+            <p className="text-sm leading-relaxed text-oma-cocoa sm:text-[0.95rem]">
+              Key metrics for your{" "}
+              {effectiveOwnedBrands.length > 1 ? "brands" : "brand"}
+            </p>
+          </header>
 
           {platformLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
               {[...Array(4)].map((_, i) => (
                 <Card key={i} className="p-4">
                   <div className="animate-pulse">
@@ -767,53 +774,61 @@ export default function LeadsTrackingDashboard({
               </Button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Card className="p-4 border-l-4 border-l-oma-plum">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <Card
+                className={cn(METRIC_CARD, "border-l-4 border-l-oma-plum")}
+              >
                 <h3 className="text-sm font-medium text-oma-cocoa">
                   Your Brands
                 </h3>
-                <p className="text-2xl font-canela text-oma-plum">
+                <p className="mt-1 text-2xl font-canela tabular-nums text-oma-plum">
                   {brandOwnerAnalytics?.totalBrands ||
                     effectiveOwnedBrands.length}
                 </p>
-                <p className="text-sm text-oma-cocoa">
+                <p className="mt-1 text-sm text-oma-cocoa">
                   {effectiveOwnedBrands.length > 1
                     ? "Brands owned"
                     : "Brand owned"}
                 </p>
               </Card>
-              <Card className="p-4 border-l-4 border-l-oma-beige">
+              <Card
+                className={cn(METRIC_CARD, "border-l-4 border-l-oma-beige")}
+              >
                 <h3 className="text-sm font-medium text-oma-cocoa">
                   Total Products
                 </h3>
-                <p className="text-2xl font-canela text-oma-plum">
+                <p className="mt-1 text-2xl font-canela tabular-nums text-oma-plum">
                   {brandOwnerAnalytics?.totalProducts || 0}
                 </p>
-                <p className="text-sm text-oma-cocoa">
+                <p className="mt-1 text-sm text-oma-cocoa">
                   Across your{" "}
                   {effectiveOwnedBrands.length > 1 ? "brands" : "brand"}
                 </p>
               </Card>
-              <Card className="p-4 border-l-4 border-l-green-500">
+              <Card
+                className={cn(METRIC_CARD, "border-l-4 border-l-green-500")}
+              >
                 <h3 className="text-sm font-medium text-oma-cocoa">
                   Total Reviews
                 </h3>
-                <p className="text-2xl font-canela text-oma-plum">
+                <p className="mt-1 text-2xl font-canela tabular-nums text-oma-plum">
                   {brandOwnerAnalytics?.totalReviews || 0}
                 </p>
-                <p className="text-sm text-oma-cocoa">
+                <p className="mt-1 text-sm text-oma-cocoa">
                   {brandOwnerAnalytics?.recentReviews || 0} this month
                 </p>
               </Card>
-              <Card className="p-4 border-l-4 border-l-purple-500">
+              <Card
+                className={cn(METRIC_CARD, "border-l-4 border-l-purple-500")}
+              >
                 <h3 className="text-sm font-medium text-oma-cocoa">
                   Avg Rating
                 </h3>
-                <p className="text-2xl font-canela text-oma-plum flex items-center">
+                <p className="mt-1 flex items-center text-2xl font-canela tabular-nums text-oma-plum">
                   {brandOwnerAnalytics?.averageRating?.toFixed(1) || "0.0"}
-                  <Star className="h-5 w-5 text-yellow-400 ml-1 fill-current" />
+                  <Star className="ml-1 h-5 w-5 fill-current text-yellow-400" />
                 </p>
-                <p className="text-sm text-oma-cocoa">
+                <p className="mt-1 text-sm text-oma-cocoa">
                   Your {effectiveOwnedBrands.length > 1 ? "brands" : "brand"}{" "}
                   average
                 </p>
@@ -824,71 +839,77 @@ export default function LeadsTrackingDashboard({
       ) : null}
 
       {/* Leads Analytics Section */}
-      <div>
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-canela text-oma-plum">
-            Leads & Bookings Analytics
-          </h2>
-          <div className="flex items-center gap-2">
-            {analyticsLoading && (
-              <div className="flex items-center gap-2 text-sm text-oma-cocoa">
-                <div className="animate-spin h-4 w-4 border-2 border-oma-plum border-t-transparent rounded-full"></div>
-                Loading analytics...
-              </div>
-            )}
-
-
+      <div className={DASHBOARD_SECTION}>
+        <header className="mb-6 flex flex-col gap-3 sm:mb-8 sm:flex-row sm:items-end sm:justify-between">
+          <div className="max-w-2xl space-y-1.5">
+            <h2 className="font-canela text-2xl tracking-tight text-oma-plum sm:text-[1.65rem]">
+              Leads &amp; Bookings Analytics
+            </h2>
+            <p className="text-sm leading-relaxed text-oma-cocoa sm:text-[0.95rem]">
+              Pipeline health and appointments at a glance
+            </p>
           </div>
-        </div>
+          {analyticsLoading && (
+            <span className="shrink-0 text-sm text-oma-cocoa">
+              Loading analytics…
+            </span>
+          )}
+        </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="p-4 border-l-4 border-l-oma-plum border-oma-beige">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <Card
+            className={cn(METRIC_CARD, "border-l-4 border-l-oma-plum")}
+          >
             <h3 className="text-sm font-medium text-oma-cocoa">Total Leads</h3>
-            <p className="text-2xl font-canela text-oma-plum">
+            <p className="mt-1 text-2xl font-canela tabular-nums text-oma-plum">
               {analytics?.total_leads || 0}
             </p>
-            <p className="text-sm text-oma-cocoa">
+            <p className="mt-1 text-sm text-oma-cocoa">
               This month: {analytics?.this_month_leads || 0}
             </p>
           </Card>
-          <Card className="p-4 border-l-4 border-l-oma-beige border-oma-beige">
+          <Card
+            className={cn(METRIC_CARD, "border-l-4 border-l-oma-beige")}
+          >
             <h3 className="text-sm font-medium text-oma-cocoa">
               Qualified Leads
             </h3>
-            <p className="text-2xl font-canela text-oma-plum">
+            <p className="mt-1 text-2xl font-canela tabular-nums text-oma-plum">
               {analytics?.qualified_leads || 0}
             </p>
-            <p className="text-sm text-oma-cocoa">Ready for follow-up</p>
+            <p className="mt-1 text-sm text-oma-cocoa">Ready for follow-up</p>
           </Card>
-          <Card className="p-4 border-l-4 border-l-emerald-500 border-oma-beige">
+          <Card
+            className={cn(METRIC_CARD, "border-l-4 border-l-emerald-500")}
+          >
             <h3 className="text-sm font-medium text-oma-cocoa">
               Conversion Rate
             </h3>
-            <p className="text-2xl font-canela text-oma-plum">
+            <p className="mt-1 text-2xl font-canela tabular-nums text-oma-plum">
               {analytics?.conversion_rate || 0}%
             </p>
-            <p className="text-sm text-oma-cocoa">
+            <p className="mt-1 text-sm text-oma-cocoa">
               Converted: {analytics?.converted_leads || 0}
             </p>
           </Card>
-          <Card className="p-4 border-l-4 border-l-amber-500 border-oma-beige">
+          <Card
+            className={cn(METRIC_CARD, "border-l-4 border-l-amber-500")}
+          >
             <h3 className="text-sm font-medium text-oma-cocoa">
               Total Bookings
             </h3>
-            <p className="text-2xl font-canela text-oma-plum">
+            <p className="mt-1 text-2xl font-canela tabular-nums text-oma-plum">
               {analytics?.total_bookings || 0}
             </p>
-            <p className="text-sm text-oma-cocoa">
+            <p className="mt-1 text-sm text-oma-cocoa">
               This month: {analytics?.this_month_bookings || 0}
             </p>
           </Card>
         </div>
 
-
-
         {/* Analytics Error Display */}
         {analyticsError && (
-          <Card className="p-4 border-l-4 border-l-red-500 border-red-200 bg-red-50 mt-4">
+          <Card className="mt-5 border border-red-200 bg-red-50 p-4 sm:mt-6">
             <h3 className="text-sm font-medium text-red-800 mb-2">
               Analytics Error
             </h3>
@@ -1005,10 +1026,10 @@ export default function LeadsTrackingDashboard({
         )}
 
       {/* Leads Table */}
-      <Card className="border-oma-beige">
-        <CardHeader className="bg-oma-cream/30">
-          <div className="flex justify-between items-center">
-            <CardTitle className="font-canela text-oma-plum">
+      <Card className="overflow-hidden rounded-2xl border border-oma-beige/80 shadow-sm">
+        <CardHeader className="space-y-0 border-b border-oma-beige/60 bg-oma-cream/25 px-5 py-4 sm:px-6">
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+            <CardTitle className="font-canela text-lg text-oma-plum sm:text-xl">
               Recent Leads
             </CardTitle>
             <div className="text-sm text-oma-cocoa">
@@ -1019,24 +1040,24 @@ export default function LeadsTrackingDashboard({
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-oma-cream/20 border-b border-oma-beige">
+              <thead className="border-b border-oma-beige/60 bg-oma-cream/15">
                 <tr>
-                  <th className="text-left p-4 font-medium text-oma-cocoa">
+                  <th className="p-3 px-4 text-left text-xs font-semibold uppercase tracking-wide text-oma-cocoa sm:p-3.5 sm:px-5">
                     Customer
                   </th>
-                  <th className="text-left p-4 font-medium text-oma-cocoa">
+                  <th className="p-3 px-4 text-left text-xs font-semibold uppercase tracking-wide text-oma-cocoa sm:p-3.5 sm:px-5">
                     Brand
                   </th>
-                  <th className="text-left p-4 font-medium text-oma-cocoa">
+                  <th className="p-3 px-4 text-left text-xs font-semibold uppercase tracking-wide text-oma-cocoa sm:p-3.5 sm:px-5">
                     Source
                   </th>
-                  <th className="text-left p-4 font-medium text-oma-cocoa">
+                  <th className="p-3 px-4 text-left text-xs font-semibold uppercase tracking-wide text-oma-cocoa sm:p-3.5 sm:px-5">
                     Type
                   </th>
-                  <th className="text-left p-4 font-medium text-oma-cocoa">
+                  <th className="p-3 px-4 text-left text-xs font-semibold uppercase tracking-wide text-oma-cocoa sm:p-3.5 sm:px-5">
                     Status
                   </th>
-                  <th className="text-left p-4 font-medium text-oma-cocoa">
+                  <th className="p-3 px-4 text-left text-xs font-semibold uppercase tracking-wide text-oma-cocoa sm:p-3.5 sm:px-5">
                     Date
                   </th>
                 </tr>
@@ -1045,9 +1066,9 @@ export default function LeadsTrackingDashboard({
                 {leads.map((lead) => (
                   <tr
                     key={lead.id}
-                    className="border-b border-oma-beige hover:bg-oma-cream/10 group"
+                    className="group border-b border-oma-beige/70 hover:bg-oma-cream/15"
                   >
-                    <td className="p-4">
+                    <td className="px-4 py-3 sm:px-5">
                       <div>
                         <div className="font-medium text-oma-plum">
                           {lead.customer_name}
@@ -1057,12 +1078,12 @@ export default function LeadsTrackingDashboard({
                         </div>
                       </div>
                     </td>
-                    <td className="p-4">
+                    <td className="px-4 py-3 sm:px-5">
                       <div className="text-sm text-oma-cocoa">
                         {lead.brands?.name || "Unknown Brand"}
                       </div>
                     </td>
-                    <td className="p-4">
+                    <td className="px-4 py-3 sm:px-5">
                       <Badge
                         variant="outline"
                         className="capitalize border-oma-beige text-oma-cocoa"
@@ -1070,7 +1091,7 @@ export default function LeadsTrackingDashboard({
                         {lead.source}
                       </Badge>
                     </td>
-                    <td className="p-4">
+                    <td className="px-4 py-3 sm:px-5">
                       <Badge
                         variant="outline"
                         className="capitalize border-oma-beige text-oma-cocoa"
@@ -1078,7 +1099,7 @@ export default function LeadsTrackingDashboard({
                         {lead.lead_type?.replace("_", " ")}
                       </Badge>
                     </td>
-                    <td className="p-4">
+                    <td className="px-4 py-3 sm:px-5">
                       <Select
                         value={lead.status}
                         onValueChange={(value) =>
@@ -1099,7 +1120,7 @@ export default function LeadsTrackingDashboard({
                         </SelectContent>
                       </Select>
                     </td>
-                    <td className="p-4">
+                    <td className="px-4 py-3 sm:px-5">
                       <div className="text-sm text-oma-cocoa">
                         {new Date(lead.created_at!).toLocaleDateString("en-GB")}
                       </div>

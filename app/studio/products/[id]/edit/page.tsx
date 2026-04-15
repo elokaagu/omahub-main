@@ -231,7 +231,7 @@ export default function EditProductPage() {
         <div className="max-w-4xl mx-auto px-6 py-24">
           <div className="flex items-center justify-center min-h-[400px]">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-oma-plum mx-auto mb-4"></div>
+              <div className="rounded-full h-12 w-12 border-b-2 border-oma-plum mx-auto mb-4"></div>
               <p className="text-gray-600">Loading product edit form...</p>
             </div>
           </div>
@@ -290,7 +290,7 @@ export default function EditProductPage() {
         <div className="max-w-4xl mx-auto px-6 py-24">
           <div className="flex items-center justify-center min-h-[400px]">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-oma-plum mx-auto mb-4"></div>
+              <div className="rounded-full h-12 w-12 border-b-2 border-oma-plum mx-auto mb-4"></div>
               <p className="text-gray-600">Loading product data...</p>
               <p className="text-sm text-gray-500 mt-2">If this takes too long, please refresh the page</p>
             </div>
@@ -1152,7 +1152,7 @@ export default function EditProductPage() {
             >
               {isSubmitting ? (
                 <>
-                  <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2" />
+                  <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2" />
                   Updating Product...
                 </>
               ) : (

@@ -3,7 +3,7 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useStudioPermissions } from "@/hooks/useStudioPermissions";
 import { Button } from "@/components/ui/button";
-import { Loading } from "@/components/ui/loading";
+import { StudioAuthPlaceholder } from "@/components/studio/StudioAuthPlaceholder";
 import { NavigationLink } from "@/components/ui/navigation-link";
 
 type SuperAdminHeroGateProps = {
@@ -14,7 +14,7 @@ type SuperAdminHeroGateProps = {
 
 /**
  * Resolves auth before rendering hero studio surfaces.
- * Avoids masking unauthorized users behind a generic loading spinner.
+ * Avoids masking unauthorized users behind a long-lived loading state.
  */
 export function SuperAdminHeroGate({
   children,
@@ -26,11 +26,7 @@ export function SuperAdminHeroGate({
   );
 
   if (authLoading || permissionsLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <Loading />
-      </div>
-    );
+    return <StudioAuthPlaceholder />;
   }
 
   if (!user) {

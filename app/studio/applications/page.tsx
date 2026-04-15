@@ -56,7 +56,7 @@ export default function ApplicationsPage() {
     return (
       <div className="container mx-auto px-6 py-8">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-oma-plum mx-auto" />
+          <div className="rounded-full h-12 w-12 border-b-2 border-oma-plum mx-auto" />
           <p className="mt-4 text-oma-cocoa">Loading…</p>
         </div>
       </div>
@@ -80,7 +80,7 @@ export default function ApplicationsPage() {
     return (
       <div className="container mx-auto px-6 py-8">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-oma-plum mx-auto" />
+          <div className="rounded-full h-12 w-12 border-b-2 border-oma-plum mx-auto" />
           <p className="mt-4 text-oma-cocoa">Loading applications…</p>
         </div>
       </div>

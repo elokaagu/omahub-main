@@ -56,7 +56,6 @@ export default function HomeContent({
   const [categories, setCategories] = useState<CategoryWithBrands[]>(() =>
     seeded ? initialBootstrap!.categories : initialCategories
   );
-  const [isLoading, setIsLoading] = useState(() => !seeded);
   const [error, setError] = useState<string | null>(null);
   const [heroSlides, setHeroSlides] = useState<HeroSlide[]>(() =>
     seeded ? initialBootstrap!.heroSlides : []
@@ -141,7 +140,6 @@ export default function HomeContent({
 
     const load = async () => {
       try {
-        setIsLoading(true);
         setError(null);
 
         const now = Date.now();
@@ -169,7 +167,6 @@ export default function HomeContent({
             });
           }
           setOccasionImages(data.occasionImages ?? {});
-          setIsLoading(false);
           return;
         }
 
@@ -220,10 +217,6 @@ export default function HomeContent({
         if (!cancelled) {
           setError("Failed to load content. Please try again.");
         }
-      } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
       }
     };
 
@@ -238,14 +231,6 @@ export default function HomeContent({
     return (
       <div className="flex flex-col items-center justify-center min-h-screen px-4">
         <div className="text-red-500 mb-4">{error}</div>
-      </div>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full"></div>
       </div>
     );
   }

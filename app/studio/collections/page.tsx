@@ -314,7 +314,7 @@ export default function CollectionsPage() {
           )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2">
           <Card className="border-oma-gold/20 bg-white/80">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-black/70">
@@ -337,20 +337,6 @@ export default function CollectionsPage() {
               <div className="text-2xl font-bold text-black">
                 {brands.length}
               </div>
-            </CardContent>
-          </Card>
-          <Card className="border-oma-gold/20 bg-white/80">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-black/70">
-                New this month
-              </CardTitle>
-              <CardDescription className="text-xs text-black/50">
-                Not tracked yet — needs reliable{" "}
-                <code className="text-xs">created_at</code> on collections.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-black/40">—</div>
             </CardContent>
           </Card>
         </div>

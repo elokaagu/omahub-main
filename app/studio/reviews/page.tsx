@@ -393,7 +393,7 @@ export default function ReviewManagementPage() {
         {/* Reviews List */}
         {loading ? (
           <div className="text-center py-8">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-oma-plum"></div>
+            <div className="inline-block rounded-full h-8 w-8 border-b-2 border-oma-plum"></div>
             <p className="mt-2 text-oma-cocoa">Loading reviews...</p>
           </div>
         ) : reviews.length === 0 ? (
@@ -448,7 +448,7 @@ export default function ReviewManagementPage() {
                             disabled={isDeleting === review.id}
                           >
                             {isDeleting === review.id ? (
-                              <div className="h-4 w-4 animate-spin rounded-full border border-current border-t-transparent" />
+                              <div className="h-4 w-4 rounded-full border border-current border-t-transparent" />
                             ) : (
                               <Trash2 className="h-4 w-4" />
                             )}
@@ -655,7 +655,7 @@ export default function ReviewManagementPage() {
                 className="bg-oma-plum hover:bg-oma-plum/90"
               >
                 {isSubmittingReply ? (
-                  <div className="h-4 w-4 animate-spin rounded-full border border-current border-t-transparent mr-2" />
+                  <div className="h-4 w-4 rounded-full border border-current border-t-transparent mr-2" />
                 ) : (
                   <Send className="h-4 w-4 mr-2" />
                 )}

@@ -149,7 +149,7 @@ export default function EditCataloguePage({
   if (authLoading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full" />
+        <div className="h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full" />
       </div>
     );
   }
@@ -175,7 +175,7 @@ export default function EditCataloguePage({
   if (loadStatus === "loading") {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full" />
+        <div className="h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full" />
       </div>
     );
   }

@@ -77,22 +77,22 @@ export default function StudioPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8">
+    <div className="mx-auto max-w-7xl space-y-10 px-4 py-8 sm:px-6 sm:py-10">
       {/* Welcome Header */}
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-omahub-primary mb-2">
+      <header className="mx-auto max-w-2xl text-center">
+        <h1 className="mb-3 font-canela text-3xl tracking-tight text-omahub-primary sm:text-4xl">
           Welcome to OmaHub Studio
         </h1>
-        <p className="text-lg text-omahub-secondary">
+        <p className="text-base leading-relaxed text-omahub-secondary sm:text-lg">
           Manage your brands, products, and business operations
         </p>
-      </div>
+      </header>
 
       {/* Main Dashboard Components */}
       <div className="grid grid-cols-1 gap-8">
         {/* Leads Dashboard */}
-        <Card className="border-oma-gold/30 shadow-sm">
-          <CardContent className="bg-white">
+        <Card className="overflow-hidden rounded-2xl border border-oma-beige/60 shadow-sm">
+          <CardContent className="bg-white px-5 py-6 sm:px-8 sm:py-8">
             <Suspense
               fallback={
                 <div className="h-64 bg-gray-100 rounded-lg animate-pulse" />

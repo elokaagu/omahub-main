@@ -26,6 +26,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { StudioNav } from "@/components/ui/studio-nav";
+import { StudioAuthPlaceholder } from "@/components/studio/StudioAuthPlaceholder";
 import { TrashIcon } from "@heroicons/react/24/outline";
 import { Mail, Bell, AlertCircle } from "lucide-react";
 import { Label } from "@/components/ui/label";
@@ -215,14 +216,7 @@ export default function StudioInboxPage() {
   };
 
   if (authLoading) {
-    return (
-      <div className="min-h-screen bg-oma-cream flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-oma-plum mx-auto mb-4"></div>
-          <p className="text-oma-cocoa">Loading authentication...</p>
-        </div>
-      </div>
-    );
+    return <StudioAuthPlaceholder />;
   }
 
   if (!user) {
@@ -295,10 +289,7 @@ export default function StudioInboxPage() {
         )}
 
         {loading && (
-          <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-oma-plum mx-auto mb-4"></div>
-            <p className="text-oma-cocoa">Loading inbox...</p>
-          </div>
+          <p className="py-8 text-center text-sm text-oma-cocoa">Loading inbox…</p>
         )}
 
         {isEmpty && (

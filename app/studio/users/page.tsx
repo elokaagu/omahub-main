@@ -47,7 +47,6 @@ import {
   Building,
   Search,
   Filter,
-  RefreshCw,
   Download,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -185,7 +184,6 @@ export default function UsersPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
-  const [isSyncing, setIsSyncing] = useState(false);
   const [editingUser, setEditingUser] = useState<UserWithBrands | null>(null);
   const [formData, setFormData] = useState({
     email: "",
@@ -447,42 +445,6 @@ export default function UsersPage() {
     toast.success(`Exported ${filteredUsers.length} row(s)`);
   };
 
-  const handleSyncSuperAdminBrands = async () => {
-    if (
-      !confirm("This will assign all brands to all super admins. Continue?")
-    ) {
-      return;
-    }
-
-    try {
-      setIsSyncing(true);
-
-      const response = await fetch("/api/admin/sync-super-admin-brands", {
-        method: "POST",
-        credentials: "include",
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        console.error("Error syncing super admin brands:", result);
-        toast.error(result.error || "Failed to sync super admin brands");
-        return;
-      }
-
-      toast.success(
-        `Sync completed! Updated ${result.summary.successful}/${result.summary.totalSuperAdmins} super admins with ${result.summary.totalBrandsAdded} brand assignments.`
-      );
-
-      await fetchUsersAndBrands();
-    } catch (error) {
-      console.error("Error syncing super admin brands:", error);
-      toast.error("Failed to sync super admin brands");
-    } finally {
-      setIsSyncing(false);
-    }
-  };
-
   const toggleUserExpanded = (userId: string) => {
     setUsers((prev) =>
       prev.map((u) => (u.id === userId ? { ...u, expanded: !u.expanded } : u))
@@ -503,8 +465,7 @@ export default function UsersPage() {
             <div className="h-4 w-96 bg-gray-200 rounded animate-pulse"></div>
           </div>
           <div className="flex space-x-3">
-            <div className="h-10 w-32 bg-gray-200 rounded animate-pulse"></div>
-            <div className="h-10 w-24 bg-gray-200 rounded animate-pulse"></div>
+            <div className="h-10 w-28 bg-gray-200 rounded animate-pulse"></div>
           </div>
         </div>
 
@@ -562,18 +523,7 @@ export default function UsersPage() {
             Manage user accounts and assign brands to users
           </p>
         </div>
-        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-          <Button
-            variant="outline"
-            onClick={handleSyncSuperAdminBrands}
-            disabled={isSyncing}
-            className="text-oma-plum border-oma-plum hover:bg-oma-plum hover:text-white w-full sm:w-auto"
-          >
-            <RefreshCw
-              className={`h-4 w-4 mr-2 ${isSyncing ? "animate-spin" : ""}`}
-            />
-            {isSyncing ? "Syncing..." : "Sync Super Admins"}
-          </Button>
+        <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button

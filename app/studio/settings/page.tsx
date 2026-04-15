@@ -180,7 +180,7 @@ export default function SettingsPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-oma-plum font-canela">
                 {isLoadingStatus ? (
-                  <div className="animate-spin h-5 w-5 border-2 border-oma-plum border-t-transparent rounded-full" />
+                  <div className="h-5 w-5 border-2 border-oma-plum border-t-transparent rounded-full" />
                 ) : platformStatus?.isPublic ? (
                   <Globe className="h-5 w-5" />
                 ) : (
@@ -195,7 +195,7 @@ export default function SettingsPage() {
             <CardContent>
               {isLoadingStatus ? (
                 <div className="text-center py-4">
-                  <div className="animate-spin h-6 w-6 border-2 border-oma-plum border-t-transparent rounded-full mx-auto mb-2" />
+                  <div className="h-6 w-6 border-2 border-oma-plum border-t-transparent rounded-full mx-auto mb-2" />
                   <p className="text-sm text-oma-cocoa/70">Loading status...</p>
                 </div>
               ) : (
@@ -289,7 +289,7 @@ export default function SettingsPage() {
                   >
                     {isChangingStatus ? (
                       <>
-                        <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                        <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
                         <span>Updating...</span>
                       </>
                     ) : (
@@ -312,7 +312,7 @@ export default function SettingsPage() {
                   >
                     {isChangingStatus ? (
                       <>
-                        <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full"></div>
+                        <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full"></div>
                         <span>Updating...</span>
                       </>
                     ) : (

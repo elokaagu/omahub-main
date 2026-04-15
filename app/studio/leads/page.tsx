@@ -17,6 +17,7 @@ import { LeadsStatsCards } from "./components/LeadsStatsCards";
 import { LeadsFiltersBar } from "./components/LeadsFiltersBar";
 import { LeadsList } from "./components/LeadsList";
 import { DeleteLeadDialog } from "./components/DeleteLeadDialog";
+import { StudioAuthPlaceholder } from "@/components/studio/StudioAuthPlaceholder";
 
 export default function StudioLeadsPage() {
   const { user, loading: authLoading } = useAuth();
@@ -220,14 +221,7 @@ export default function StudioLeadsPage() {
   };
 
   if (authLoading) {
-    return (
-      <div className="min-h-screen bg-oma-cream flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-oma-plum mx-auto mb-4"></div>
-          <p className="text-oma-cocoa">Loading authentication...</p>
-        </div>
-      </div>
-    );
+    return <StudioAuthPlaceholder />;
   }
 
   if (!user) {
@@ -322,10 +316,7 @@ export default function StudioLeadsPage() {
         />
 
         {loading && (
-          <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-oma-plum mx-auto mb-4"></div>
-            <p className="text-oma-cocoa">Loading leads...</p>
-          </div>
+          <p className="py-8 text-center text-sm text-oma-cocoa">Loading leads…</p>
         )}
 
         {!loading && filteredLeads.length === 0 && (

@@ -172,7 +172,7 @@ function CreateHeroSlideInner() {
           >
             {isSubmitting ? (
               <>
-                <div className="h-4 w-4 mr-2 animate-spin rounded-full border border-current border-t-transparent" />
+                <div className="h-4 w-4 mr-2 rounded-full border border-current border-t-transparent" />
                 Creating...
               </>
             ) : (

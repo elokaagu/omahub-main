@@ -378,16 +378,18 @@ export default function Header() {
 
           <div className="hidden lg:flex lg:flex-1 lg:items-center lg:justify-end lg:gap-x-6">
             <button
+              type="button"
               onClick={triggerSearchModal}
               className={cn(
-                "p-2 rounded-full transition-all duration-200 hover:scale-105",
+                "inline-flex size-10 shrink-0 items-center justify-center rounded-full transition-colors duration-200",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset",
                 scrolled || !isHomePage
-                  ? "text-oma-black hover:text-oma-plum hover:bg-oma-beige/20"
-                  : "text-white hover:text-white/90 bg-white/10 hover:bg-white/20 backdrop-blur-sm"
+                  ? "text-oma-black hover:text-oma-plum hover:bg-oma-beige/20 focus-visible:ring-oma-plum/35"
+                  : "bg-white/10 text-white backdrop-blur-sm hover:bg-white/20 hover:text-white/90 focus-visible:ring-white/40"
               )}
               aria-label="Search"
             >
-              <Search className="h-5 w-5" />
+              <Search className="h-5 w-5 shrink-0" aria-hidden />
             </button>
 
             <Button

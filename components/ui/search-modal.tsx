@@ -214,9 +214,7 @@ export function SearchModal() {
           )}
 
           {isLoading && (
-            <div className="flex items-center justify-center py-8">
-              <div className="animate-spin h-6 w-6 border-2 border-oma-plum border-t-transparent rounded-full"></div>
-            </div>
+            <p className="py-8 text-center text-sm text-oma-cocoa">Searching…</p>
           )}
 
           {!isLoading && results.length > 0 && (

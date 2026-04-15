@@ -725,7 +725,7 @@ export default function InquiryDetail({ inquiryId, onBack }: InquiryDetailProps)
             className="bg-oma-plum hover:bg-oma-plum/90 gap-2"
           >
             {sendingReply ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <Loader2 className="h-4 w-4" />
             ) : (
               <PaperAirplaneIcon className="h-4 w-4" />
             )}

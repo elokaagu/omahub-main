@@ -98,7 +98,7 @@ export default function CreateBrandPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-oma-plum mx-auto mb-4" />
+            <div className="rounded-full h-12 w-12 border-b-2 border-oma-plum mx-auto mb-4" />
             <p className="text-gray-600">Loading brand creation form...</p>
           </div>
         </div>
@@ -627,7 +627,7 @@ export default function CreateBrandPage() {
                 >
                   {submitting ? (
                     <span className="flex items-center gap-2">
-                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-r-transparent" />
+                      <span className="h-4 w-4 rounded-full border-2 border-r-transparent" />
                       Creating...
                     </span>
                   ) : (

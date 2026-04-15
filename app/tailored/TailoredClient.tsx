@@ -259,7 +259,7 @@ export default function TailoredClient() {
           </div>
           {loading ? (
             <div className="flex justify-center items-center min-h-[200px]">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-oma-plum" />
+              <div className="rounded-full h-12 w-12 border-t-2 border-b-2 border-oma-plum" />
             </div>
           ) : error ? (
             <div className="text-center text-oma-plum py-8">{error}</div>

@@ -201,7 +201,7 @@ function HeroManagementContent() {
                           aria-label="Move slide up"
                         >
                           {reorderUpLoading(index) ? (
-                            <div className="h-4 w-4 animate-spin rounded-full border border-current border-t-transparent" />
+                            <div className="h-4 w-4 rounded-full border border-current border-t-transparent" />
                           ) : (
                             <ArrowUp className="h-4 w-4" />
                           )}
@@ -217,7 +217,7 @@ function HeroManagementContent() {
                           aria-label="Move slide down"
                         >
                           {reorderDownLoading(index) ? (
-                            <div className="h-4 w-4 animate-spin rounded-full border border-current border-t-transparent" />
+                            <div className="h-4 w-4 rounded-full border border-current border-t-transparent" />
                           ) : (
                             <ArrowDown className="h-4 w-4" />
                           )}
@@ -247,7 +247,7 @@ function HeroManagementContent() {
                           className="flex-1 sm:flex-none"
                         >
                           {isToggling === slide.id ? (
-                            <div className="h-4 w-4 animate-spin rounded-full border border-current border-t-transparent" />
+                            <div className="h-4 w-4 rounded-full border border-current border-t-transparent" />
                           ) : slide.is_active ? (
                             <EyeOff className="h-4 w-4" />
                           ) : (
@@ -267,7 +267,7 @@ function HeroManagementContent() {
                               className="flex-1 sm:flex-none"
                             >
                               {isDeleting === slide.id ? (
-                                <div className="h-4 w-4 animate-spin rounded-full border border-current border-t-transparent" />
+                                <div className="h-4 w-4 rounded-full border border-current border-t-transparent" />
                               ) : (
                                 <Trash2 className="h-4 w-4" />
                               )}

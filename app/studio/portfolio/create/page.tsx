@@ -270,7 +270,7 @@ export default function CreatePortfolioPage() {
   if (authLoading) {
     return (
       <div className="flex justify-center items-center min-h-[40vh]">
-        <div className="animate-spin h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full" />
+        <div className="h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full" />
       </div>
     );
   }
@@ -296,7 +296,7 @@ export default function CreatePortfolioPage() {
   if (accessLoading) {
     return (
       <div className="flex justify-center items-center min-h-[40vh]">
-        <div className="animate-spin h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full" />
+        <div className="h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full" />
       </div>
     );
   }
@@ -322,7 +322,7 @@ export default function CreatePortfolioPage() {
   if (isBrandsLoading) {
     return (
       <div className="flex justify-center items-center min-h-[40vh]">
-        <div className="animate-spin h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full" />
+        <div className="h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full" />
       </div>
     );
   }

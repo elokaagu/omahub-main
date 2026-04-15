@@ -99,7 +99,7 @@ export default function AuthSuccessPage() {
           <div className="text-center">
             {status === "loading" && (
               <>
-                <div className="animate-spin h-8 w-8 border-2 border-oma-plum border-t-transparent rounded-full mx-auto mb-4"></div>
+                <div className="h-8 w-8 border-2 border-oma-plum border-t-transparent rounded-full mx-auto mb-4"></div>
                 <h2 className="text-xl font-semibold text-oma-cocoa mb-2">
                   Completing Authentication...
                 </h2>

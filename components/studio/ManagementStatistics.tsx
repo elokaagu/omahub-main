@@ -220,7 +220,7 @@ export default function ManagementStatistics({
             disabled={updating}
           >
             <Loader2
-              className={`h-4 w-4 mr-2 ${updating ? "animate-spin" : ""}`}
+              className={`h-4 w-4 mr-2 ${updating ? "opacity-50" : ""}`}
             />
             {updating ? "Updating..." : "Force Update"}
           </Button>
