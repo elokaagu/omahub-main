@@ -49,6 +49,7 @@ const navigation = [
   { name: "How It Works", href: "/how-it-works" },
   { name: "About", href: "/about" },
 ];
+const isDev = process.env.NODE_ENV === "development";
 
 // Fallback navigation items
 const fallbackNavigationItems: NavigationItem[] = [
@@ -159,12 +160,14 @@ export default function Header() {
       user?.role === "super_admin" ||
       user?.role === "brand_admin" ||
       hasStudioAccess;
-    console.log("Header user state:", {
-      userId: user?.id,
-      userRole: user?.role,
-      hasAdminAccess,
-      isSuperAdmin: user?.role === "super_admin",
-    });
+    if (isDev) {
+      console.log("Header user state:", {
+        userId: user?.id,
+        userRole: user?.role,
+        hasAdminAccess,
+        isSuperAdmin: user?.role === "super_admin",
+      });
+    }
 
     if (typeof window === "undefined") return;
 
@@ -180,11 +183,15 @@ export default function Header() {
   useEffect(() => {
     async function loadDynamicNavigation() {
       try {
-        console.log("🔄 Header: Starting to load dynamic navigation...");
+        if (isDev) {
+          console.log("Header: Starting to load dynamic navigation...");
+        }
 
         // Load dynamic navigation items
         const dynamicItems = await getNavigationItems();
-        console.log("📋 Header: Dynamic items loaded:", dynamicItems);
+        if (isDev) {
+          console.log("Header: Dynamic items loaded:", dynamicItems);
+        }
 
         setDynamicNavigationItems(dynamicItems);
 
@@ -197,18 +204,17 @@ export default function Header() {
         setCollectionsHasBrands(collectionsHasBrands);
         setTailoredHasBrands(tailoredHasBrands);
 
-        console.log("✅ Header: Dynamic navigation loaded successfully", {
-          itemsCount: dynamicItems.length,
-          collectionsHasBrands,
-          tailoredHasBrands,
-          items: dynamicItems.map((item) => ({
-            title: item.title,
-            itemCount: item.items.length,
-            items: item.items.map((subItem) => subItem.title),
-          })),
-        });
+        if (isDev) {
+          console.log("Header: Dynamic navigation loaded successfully", {
+            itemsCount: dynamicItems.length,
+            collectionsHasBrands,
+            tailoredHasBrands,
+          });
+        }
       } catch (error) {
-        console.error("❌ Header: Error loading dynamic navigation:", error);
+        if (isDev) {
+          console.error("Header: Error loading dynamic navigation:", error);
+        }
         // Fallback to static navigation on error
         setDynamicNavigationItems(fallbackNavigationItems);
       }
@@ -240,7 +246,9 @@ export default function Header() {
   };
 
   const handleStudioNavigation = async () => {
-    console.log("Header: Studio navigation initiated");
+    if (isDev) {
+      console.log("Header: Studio navigation initiated");
+    }
 
     setIsNavigatingToStudio(true);
     setIsNavigating(true);
@@ -248,7 +256,9 @@ export default function Header() {
     try {
       // Add a timeout to prevent indefinite loading
       const navigationTimeout = setTimeout(() => {
-        console.warn("Header: Studio navigation timeout, resetting state");
+        if (isDev) {
+          console.warn("Header: Studio navigation timeout, resetting state");
+        }
         setIsNavigatingToStudio(false);
         setIsNavigating(false);
       }, 5000);
@@ -259,9 +269,13 @@ export default function Header() {
       // Clear timeout if navigation succeeds
       clearTimeout(navigationTimeout);
 
-      console.log("Header: Studio navigation completed");
+      if (isDev) {
+        console.log("Header: Studio navigation completed");
+      }
     } catch (error) {
-      console.error("Header: Error navigating to studio:", error);
+      if (isDev) {
+        console.error("Header: Error navigating to studio:", error);
+      }
       setIsNavigatingToStudio(false);
       setIsNavigating(false);
     }
@@ -325,10 +339,6 @@ export default function Header() {
         <div className="hidden lg:flex lg:items-center lg:gap-x-8">
           {/* Direct category rendering like mobile */}
           {dynamicNavigationItems.map((category) => {
-            console.log(
-              `🔍 Header: Rendering desktop dropdown for ${category.title}:`,
-              category.items.map((item) => `${item.title} (${item.count})`)
-            );
             return (
               <div key={category.title} className="relative group">
                 <button

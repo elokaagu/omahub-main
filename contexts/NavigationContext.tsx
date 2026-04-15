@@ -9,6 +9,7 @@ import React, {
   useCallback,
 } from "react";
 import { usePathname } from "next/navigation";
+const isDev = process.env.NODE_ENV === "development";
 
 interface NavigationContextType {
   isNavigating: boolean;
@@ -73,7 +74,9 @@ export function NavigationProvider({
     // Prevent rapid state changes
     if (isResettingRef.current) return;
 
-    console.log(`🔄 Navigation: Setting isNavigating to ${loading}`);
+    if (isDev) {
+      console.log(`Navigation: Setting isNavigating to ${loading}`);
+    }
     setIsNavigatingState(loading);
 
     if (loading) {
@@ -81,7 +84,9 @@ export function NavigationProvider({
     } else {
       if (navigationStartRef.current) {
         const duration = Date.now() - navigationStartRef.current;
-        console.log(`✅ Navigation: Completed in ${duration}ms`);
+        if (isDev) {
+          console.log(`Navigation: Completed in ${duration}ms`);
+        }
       }
       navigationStartRef.current = null;
     }
@@ -89,7 +94,9 @@ export function NavigationProvider({
 
   // Improved force reset function
   const forceReset = useCallback(() => {
-    console.log("🔄 Navigation: Force reset triggered");
+    if (isDev) {
+      console.log("Navigation: Force reset triggered");
+    }
     isResettingRef.current = true;
 
     // Clear any existing timeout
@@ -110,9 +117,9 @@ export function NavigationProvider({
   // Reset navigation loading when pathname changes
   useEffect(() => {
     if (isNavigating) {
-      console.log(
-        "✅ Navigation: Pathname changed, resetting navigation state"
-      );
+      if (isDev) {
+        console.log("Navigation: Pathname changed, resetting navigation state");
+      }
       forceReset();
     }
   }, [pathname, isNavigating, forceReset]);
@@ -131,9 +138,11 @@ export function NavigationProvider({
           ? Date.now() - navigationStartRef.current
           : 0;
 
-        console.warn(`⚠️ Navigation: Timeout reached after ${duration}ms`);
-        console.warn(`⚠️ Navigation: Current pathname: ${pathname}`);
-        console.warn("⚠️ Navigation: Auto-resetting stuck navigation state");
+        if (isDev) {
+          console.warn(`Navigation: Timeout reached after ${duration}ms`);
+          console.warn(`Navigation: Current pathname: ${pathname}`);
+          console.warn("Navigation: Auto-resetting stuck navigation state");
+        }
 
         forceReset();
       }, 2500); // Reduced timeout for better UX

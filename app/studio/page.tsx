@@ -92,9 +92,6 @@ export default function StudioPage() {
       <div className="grid grid-cols-1 gap-8">
         {/* Leads Dashboard */}
         <Card className="border-oma-gold/30 shadow-sm">
-          <CardHeader className="bg-gradient-to-r from-oma-plum to-oma-cocoa text-white rounded-t-lg">
-            <CardTitle className="text-white">Leads & Conversions</CardTitle>
-          </CardHeader>
           <CardContent className="bg-white">
             <Suspense
               fallback={

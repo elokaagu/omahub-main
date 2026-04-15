@@ -7,7 +7,6 @@ import { useNavigation } from "@/contexts/NavigationContext";
 import Header from "./Header";
 import Footer from "./Footer";
 import LoadingSpinner from "@/components/ui/loading-spinner";
-import { Toaster } from "sonner";
 import { SearchModal } from "@/components/ui/search-modal";
 
 export default function LayoutContent({ children }: { children: React.ReactNode }) {
@@ -47,7 +46,6 @@ export default function LayoutContent({ children }: { children: React.ReactNode 
         {children}
       </main>
       {!isStudioPage && <Footer />}
-      <Toaster position="top-right" />
       <SearchModal />
     </>
   );

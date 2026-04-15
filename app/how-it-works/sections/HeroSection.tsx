@@ -56,15 +56,6 @@ export function HeroSection() {
         </p>
 
         <div
-          className="mb-2 flex flex-col justify-center gap-2 text-xs font-semibold text-oma-gold sm:mb-0 sm:flex-row sm:gap-8 sm:text-sm"
-          style={textStaggerStyle(isVisible, 0.35)}
-        >
-          <div>500+ Designers</div>
-          <div>10k+ Happy Clients</div>
-          <div>50+ Countries</div>
-        </div>
-
-        <div
           className="mx-auto mb-8 flex w-full max-w-xs flex-col justify-center gap-4 sm:mb-12 sm:max-w-none sm:flex-row"
           style={textStaggerStyle(isVisible, 0.28)}
         >

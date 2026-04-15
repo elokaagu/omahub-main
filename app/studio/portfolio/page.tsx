@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { useStudioPermissions } from "@/hooks/useStudioPermissions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Edit, Trash2, Eye, Image as ImageIcon } from "lucide-react";
@@ -46,17 +47,33 @@ interface PortfolioItem {
 const isDev = process.env.NODE_ENV === "development";
 
 export default function PortfolioPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const { permissions, loading: permissionsLoading } = useStudioPermissions(
+    user?.id
+  );
   const router = useRouter();
   const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [accessDenied, setAccessDenied] = useState(false);
+
+  const canManagePortfolio = permissions.includes("studio.hero.manage");
 
   useEffect(() => {
-    fetchPortfolioItems();
-  }, []);
+    if (authLoading || permissionsLoading) {
+      return;
+    }
+    if (!user || !canManagePortfolio) {
+      setAccessDenied(true);
+      setPortfolioItems([]);
+      setLoading(false);
+      return;
+    }
+    void fetchPortfolioItems();
+  }, [authLoading, permissionsLoading, user?.id, canManagePortfolio]);
 
   const fetchPortfolioItems = async () => {
     try {
+      if (!user || !canManagePortfolio) return;
       // Fetch portfolio items from dedicated portfolio API
       const response = await fetch("/api/studio/portfolio");
       if (response.ok) {
@@ -71,6 +88,7 @@ export default function PortfolioPage() {
         setPortfolioItems(enrichedPortfolio);
       } else {
         if (response.status === 401 || response.status === 403) {
+          setAccessDenied(true);
           setPortfolioItems([]);
           return;
         }
@@ -112,10 +130,27 @@ export default function PortfolioPage() {
     }
   };
 
-  if (loading) {
+  if (loading || authLoading || permissionsLoading) {
     return (
       <div className="flex justify-center items-center h-64">
         <div className="animate-spin h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
+
+  if (accessDenied) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
+        <Card>
+          <CardContent className="text-center py-12">
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              Access denied
+            </h3>
+            <p className="text-gray-600">
+              You need portfolio management access to view this page.
+            </p>
+          </CardContent>
+        </Card>
       </div>
     );
   }

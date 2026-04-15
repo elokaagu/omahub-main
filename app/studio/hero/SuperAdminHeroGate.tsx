@@ -1,6 +1,7 @@
 "use client";
 
 import { useAuth } from "@/contexts/AuthContext";
+import { useStudioPermissions } from "@/hooks/useStudioPermissions";
 import { Button } from "@/components/ui/button";
 import { Loading } from "@/components/ui/loading";
 import { NavigationLink } from "@/components/ui/navigation-link";
@@ -20,8 +21,11 @@ export function SuperAdminHeroGate({
   capabilityPhrase = "manage hero slides",
 }: SuperAdminHeroGateProps) {
   const { user, loading: authLoading } = useAuth();
+  const { permissions, loading: permissionsLoading } = useStudioPermissions(
+    user?.id
+  );
 
-  if (authLoading) {
+  if (authLoading || permissionsLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <Loading />
@@ -45,7 +49,10 @@ export function SuperAdminHeroGate({
     );
   }
 
-  if (user.role !== "super_admin") {
+  const canManageHero =
+    user.role === "super_admin" || permissions.includes("studio.hero.manage");
+
+  if (!canManageHero) {
     return (
       <div className="max-w-lg mx-auto px-6 py-24 text-center">
         <h1 className="text-2xl font-canela text-oma-black mb-2">

@@ -47,6 +47,18 @@ type ResolvedStudioAccess = {
   owned_brands: string[];
 };
 
+function inferRoleFromPermissions(
+  permissions: Permission[],
+  fallbackRole?: string | null
+): string {
+  if (fallbackRole) return fallbackRole;
+  if (permissions.includes("studio.settings.manage")) return "super_admin";
+  // Brand admins can manage products; plain admins cannot.
+  if (permissions.includes("studio.products.manage")) return "brand_admin";
+  if (permissions.includes("studio.brands.manage")) return "admin";
+  return "user";
+}
+
 export default function BrandsPage() {
   const { user } = useAuth();
   const supabase = createClientComponentClient<Database>();
@@ -86,7 +98,10 @@ export default function BrandsPage() {
       }
 
       const profile = profileResult.error ? null : profileResult.data;
-      const effectiveRole = profile?.role ?? user.role ?? "user";
+      const effectiveRole = inferRoleFromPermissions(
+        permissions,
+        profile?.role ?? user.role ?? null
+      );
       const effectiveOwned = profile?.owned_brands ?? user.owned_brands ?? [];
 
       setResolvedAccess({
@@ -99,8 +114,7 @@ export default function BrandsPage() {
         return;
       }
 
-      const isAdmin =
-        effectiveRole === "admin" || effectiveRole === "super_admin";
+      const isAdmin = effectiveRole === "admin" || effectiveRole === "super_admin";
       const isBrandOwner = effectiveRole === "brand_admin";
       const ownedBrandIds = effectiveOwned || [];
 

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useStudioInitialData } from "@/contexts/StudioInitialDataContext";
+import { useStudioPermissions } from "@/hooks/useStudioPermissions";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -83,6 +84,9 @@ export default function ProductsPage() {
   const { user, loading: authLoading } = useAuth();
   const initialData = useStudioInitialData();
   const effectiveUser = user ?? initialData?.user ?? null;
+  const { permissions, loading: permissionsLoading } = useStudioPermissions(
+    effectiveUser?.id
+  );
   const router = useRouter();
   const [products, setProducts] = useState<ProductWithDetails[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<
@@ -105,6 +109,11 @@ export default function ProductsPage() {
   });
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<string | null>(null);
+  const hasProductPermission =
+    permissions.includes("studio.products.manage") ||
+    effectiveUser?.role === "super_admin" ||
+    effectiveUser?.role === "brand_admin" ||
+    effectiveUser?.role === "admin";
 
   // Check if user is super admin or brand owner
   // useEffect(() => {
@@ -213,7 +222,10 @@ export default function ProductsPage() {
         const productsData = await getAllProductsWithBrandCurrency(); // Use getAllProductsWithBrandCurrency to include portfolio items for admin
 
         // Filter products based on user role
-        if (effectiveUser?.role === "super_admin") {
+        if (
+          effectiveUser?.role === "super_admin" ||
+          permissions.includes("studio.settings.manage")
+        ) {
           // Super admins see all products
           setProducts(productsData);
           setFilteredProducts(productsData);
@@ -264,16 +276,13 @@ export default function ProductsPage() {
       }
     };
 
-    if (
-      effectiveUser?.role === "super_admin" ||
-      effectiveUser?.role === "brand_admin"
-    ) {
+    if (hasProductPermission) {
       fetchProducts();
-    } else if (!authLoading) {
+    } else if (!authLoading && !permissionsLoading) {
       // User is not authorized or session failed to load
       setLoading(false);
     }
-  }, [effectiveUser, authLoading]);
+  }, [effectiveUser, authLoading, hasProductPermission, permissionsLoading, permissions]);
 
   // Fetch favourites data when products are loaded
   useEffect(() => {
@@ -368,7 +377,7 @@ export default function ProductsPage() {
     new Set(products.map((p) => ({ id: p.brand_id, name: p.brand.name })))
   ).sort((a, b) => a.name.localeCompare(b.name));
 
-  if (loading || authLoading) {
+  if (loading || authLoading || permissionsLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-oma-beige/30 to-white">
         <div className="max-w-7xl mx-auto px-6 py-24">
@@ -380,10 +389,7 @@ export default function ProductsPage() {
     );
   }
 
-  if (
-    !effectiveUser ||
-    (effectiveUser.role !== "super_admin" && effectiveUser.role !== "brand_admin")
-  ) {
+  if (!effectiveUser || !hasProductPermission) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-oma-beige/30 to-white">
         <div className="max-w-7xl mx-auto px-6 py-24 text-center space-y-4">
@@ -391,7 +397,7 @@ export default function ProductsPage() {
             Studio Access Required
           </h1>
           <p className="text-oma-cocoa/80">
-            You need a brand admin or super admin account to view products.
+            You need products management access to view products.
           </p>
         </div>
       </div>

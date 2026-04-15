@@ -40,9 +40,36 @@ const clientConfig = {
   },
 };
 
+function sanitizeCorruptedAuthStorage() {
+  if (typeof window === "undefined") return;
+  try {
+    const keys = Object.keys(localStorage).filter(
+      (k) => k.startsWith("sb-") && k.includes("auth-token")
+    );
+    for (const key of keys) {
+      const raw = localStorage.getItem(key);
+      if (!raw) continue;
+      // Supabase expects JSON token payload in storage; stale prefixed strings can crash parse paths.
+      const looksCorrupt = raw.startsWith("base64-");
+      if (looksCorrupt) {
+        localStorage.removeItem(key);
+        continue;
+      }
+      try {
+        JSON.parse(raw);
+      } catch {
+        localStorage.removeItem(key);
+      }
+    }
+  } catch {
+    // no-op: avoid blocking client bootstrap
+  }
+}
+
 // Browser client for client-side operations
 export function createClient() {
   validateEnvVars();
+  sanitizeCorruptedAuthStorage();
   return createBrowserClient(supabaseUrl!, supabaseAnonKey!, clientConfig);
 }
 

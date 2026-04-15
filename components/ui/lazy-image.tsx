@@ -2,6 +2,9 @@ import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 
+const BLUR_DATA_URL =
+  "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0nMTYnIGhlaWdodD0nMTYnIHhtbG5zPSdodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2Zyc+PHJlY3Qgd2lkdGg9JzE2JyBoZWlnaHQ9JzE2JyBmaWxsPScjZTdlNWUyJy8+PC9zdmc+";
+
 interface LazyImageProps {
   src: string;
   alt: string;
@@ -192,12 +195,13 @@ export function LazyImage({
 
   return (
     <div ref={imgRef} className={containerClasses}>
-      {/* Loading overlay */}
-      {isLoading && (
-        <div className="absolute inset-0 bg-gray-100 animate-pulse z-10">
-          <div className="absolute inset-0 bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100" />
-        </div>
-      )}
+      {/* Fade the loading veil out as the image resolves */}
+      <div
+        className={cn(
+          "pointer-events-none absolute inset-0 z-10 bg-gray-100 transition-opacity duration-500",
+          isLoading ? "opacity-100" : "opacity-0"
+        )}
+      />
 
       {/* Actual image */}
       <Image
@@ -207,10 +211,14 @@ export function LazyImage({
         height={fill ? undefined : height}
         fill={fill}
         className={cn(
-          "transition-opacity duration-300",
-          isLoading ? "opacity-0" : "opacity-100",
+          "transition-[opacity,filter,transform] duration-500 ease-out",
+          isLoading
+            ? "opacity-70 blur-xl scale-[1.03]"
+            : "opacity-100 blur-0 scale-100",
           fill ? "object-cover" : "w-full h-full object-cover"
         )}
+        placeholder="blur"
+        blurDataURL={BLUR_DATA_URL}
         priority={priority}
         quality={quality}
         sizes={sizes}
