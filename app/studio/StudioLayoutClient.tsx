@@ -230,7 +230,10 @@ function buildNavigationItems(
     return hasPermission;
   });
 
-  return [...baseItems, ...filteredItems];
+  // Brand admins land on /studio/brands (see app/studio/page.tsx); they don't need a platform-wide dashboard link.
+  const dashboardItems = role === "brand_admin" ? [] : baseItems;
+
+  return [...dashboardItems, ...filteredItems];
 }
 
 export default function StudioLayoutClient({
@@ -430,7 +433,16 @@ export default function StudioLayoutClient({
     );
   }
 
-  const navigationItems = buildNavigationItems(permissions, user?.role ?? null);
+  const ssrRoleForNav =
+    user?.id === initialUser?.id
+      ? (initialProfile?.role ?? initialUser?.role ?? null)
+      : null;
+  const roleForNav =
+    user?.role && user.role !== "user"
+      ? user.role
+      : (ssrRoleForNav ?? user?.role ?? null);
+
+  const navigationItems = buildNavigationItems(permissions, roleForNav);
 
   return (
     <StudioInitialDataProvider
