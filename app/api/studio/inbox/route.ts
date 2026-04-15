@@ -64,7 +64,12 @@ export async function GET(request: NextRequest) {
     const { data: inquiries, error: inquiriesError } = await inquiriesQuery;
 
     if (inquiriesError) {
-      console.error("❌ Error fetching inquiries:", inquiriesError.code);
+      console.error(
+        "❌ Error fetching inquiries:",
+        inquiriesError.code,
+        inquiriesError.message,
+        inquiriesError.details ?? ""
+      );
       return NextResponse.json(
         { error: "Failed to fetch inquiries" },
         { status: 500 }

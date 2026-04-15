@@ -144,7 +144,14 @@ export async function PUT(
     // Update the inquiry
     const updateData: Record<string, unknown> = {};
     if (status !== undefined) updateData.status = status;
-    if (is_read !== undefined) updateData.is_read = is_read;
+    if (is_read !== undefined) {
+      updateData.is_read = is_read;
+      if (is_read) {
+        updateData.read_at = new Date().toISOString();
+      } else {
+        updateData.read_at = null;
+      }
+    }
     updateData.updated_at = new Date().toISOString();
 
     const { data: updatedInquiry, error: updateError } = await supabase
