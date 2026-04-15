@@ -34,7 +34,6 @@ import {
   type NavigationItem,
 } from "@/components/ui/navigation";
 import { supabase } from "@/lib/supabase";
-import { getBrandsByCategory } from "@/lib/services/brandService";
 import { checkCategoryHasBrands } from "@/lib/services/categoryService";
 import { triggerSearchModal } from "@/components/ui/search-modal";
 import { useStudioPermissions } from "@/hooks/useStudioPermissions";

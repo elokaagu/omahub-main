@@ -44,11 +44,56 @@ type BrandsQueryRow = {
 
 type BrandIdNameRow = { id: string; name: string };
 
+/** Browser-only: load brands via `/api/brands/*` so admin filtering runs on the server. */
+async function fetchBrandsFromPublicApi(
+  params: Record<string, string | undefined>
+): Promise<Brand[]> {
+  const sp = new URLSearchParams();
+  for (const [k, v] of Object.entries(params)) {
+    if (v) sp.set(k, v);
+  }
+  const qs = sp.toString();
+  const res = await fetch(`/api/brands/public${qs ? `?${qs}` : ""}`, {
+    credentials: "same-origin",
+  });
+  if (!res.ok) {
+    const err = (await res.json().catch(() => ({}))) as { error?: string };
+    throw new Error(
+      typeof err.error === "string"
+        ? err.error
+        : `Failed to load brands (${res.status})`
+    );
+  }
+  const json = (await res.json()) as { brands?: Brand[] };
+  return json.brands ?? [];
+}
+
+async function fetchSearchBrandsFromApi(query: string): Promise<Brand[]> {
+  const q = query.trim();
+  if (!q) return [];
+  const res = await fetch(`/api/brands/search?${new URLSearchParams({ q })}`, {
+    credentials: "same-origin",
+  });
+  if (!res.ok) {
+    const err = (await res.json().catch(() => ({}))) as { error?: string };
+    throw new Error(
+      typeof err.error === "string"
+        ? err.error
+        : `Brand search failed (${res.status})`
+    );
+  }
+  const json = (await res.json()) as { brands?: Brand[] };
+  return json.brands ?? [];
+}
+
 /**
  * Get set of brand keys (name + email) that have unapproved applications
  * A brand is unapproved if it has an application with status != 'approved'
  */
 async function getUnapprovedBrandKeys(): Promise<Set<string>> {
+  if (typeof window !== "undefined") {
+    return new Set();
+  }
   try {
     const supabaseAdmin = await getAdminClientLazy();
     if (!supabaseAdmin) {
@@ -248,6 +293,12 @@ export async function getAllBrands(
   filterEmptyBrands: boolean = false,
   noCache: boolean = false
 ): Promise<Brand[]> {
+  if (typeof window !== "undefined") {
+    return fetchBrandsFromPublicApi({
+      ...(filterEmptyBrands ? { filterEmpty: "1" } : {}),
+      ...(noCache ? { refresh: "1" } : {}),
+    });
+  }
   try {
     if (filterEmptyBrands) {
       // Get brands with product counts and filter out empty ones
@@ -514,8 +565,12 @@ export async function forceRefreshBrands(
   filterEmptyBrands: boolean = false
 ): Promise<Brand[]> {
   console.log("Force refreshing brands data");
-  clearBrandsCache();
-  return getAllBrands(filterEmptyBrands);
+  if (typeof window === "undefined") {
+    clearBrandsCache();
+    return getAllBrands(filterEmptyBrands);
+  }
+  // Browser: bypass in-memory server cache via API refresh flag
+  return getAllBrands(filterEmptyBrands, true);
 }
 
 /**
@@ -680,6 +735,9 @@ export async function deleteBrand(
  * Fetch brands by category
  */
 export async function getBrandsByCategory(category: string): Promise<Brand[]> {
+  if (typeof window !== "undefined") {
+    return fetchBrandsFromPublicApi({ category });
+  }
   if (!supabase) {
     throw new Error("Supabase client not available");
   }
@@ -840,6 +898,9 @@ export async function addReview(
  * Search brands by name or description
  */
 export async function searchBrands(query: string): Promise<Brand[]> {
+  if (typeof window !== "undefined") {
+    return fetchSearchBrandsFromApi(query);
+  }
   if (!supabase) {
     throw new Error("Supabase client not available");
   }
