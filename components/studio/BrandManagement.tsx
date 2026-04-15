@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createClient } from "@/lib/supabase-unified";
 import {
   getAllBrands,
   invalidateBrandsCache,
@@ -57,7 +57,7 @@ export default function BrandManagement({ className }: BrandManagementProps) {
     refresh,
   } = useBrandOwnerAccess();
 
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
   const [brands, setBrands] = useState<Brand[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);

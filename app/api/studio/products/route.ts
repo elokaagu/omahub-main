@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase-unified";
+import {
+  allocateUniqueProductSlug,
+  slugifyProductTitle,
+} from "@/lib/products/productSlug";
 
 const PRODUCT_SELECT_FIELDS = `
   id,
@@ -212,9 +216,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Add created_by and timestamps
+    const titleTrimmed = (productData.title as string).trim();
+    const slugSource =
+      typeof productData.slug === "string" && productData.slug.trim()
+        ? productData.slug.trim()
+        : titleTrimmed;
+    const slug = await allocateUniqueProductSlug(
+      supabase,
+      slugifyProductTitle(slugSource)
+    );
+
+    // Add created_by, unique slug, and timestamps
     const newProduct = {
       ...productData,
+      slug,
       created_by: userId,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),

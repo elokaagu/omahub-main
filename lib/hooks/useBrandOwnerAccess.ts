@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createClient } from "@/lib/supabase-unified";
 import type { Database } from "@/lib/types/supabase";
 import {
   getUserPermissions,
@@ -60,7 +60,7 @@ export function useBrandOwnerAccess(): BrandOwnerAccess {
     : null;
   const displayUser = (user as AuthUser | null) ?? fallbackUser;
 
-  const supabase = createClientComponentClient<Database>();
+  const supabase = createClient();
   const [userProfile, setUserProfile] = useState<Profile | null>(
     initialData?.profile ?? null
   );

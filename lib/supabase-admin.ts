@@ -1,15 +1,24 @@
+/**
+ * Service-role Supabase client. Do not import this file from client components —
+ * use `getAdminClientLazy` from `@/lib/supabase/adminClientLazy` instead so the
+ * bundle does not pull service-role code into the browser.
+ */
 import { createClient } from "@supabase/supabase-js";
 
-// Create a Supabase client with admin privileges
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+// Create a Supabase client with admin privileges (server / API routes only)
+const supabaseUrl =
+  process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 // Helper function to validate environment variables
 function validateAdminEnvVars() {
   if (!supabaseUrl || !supabaseServiceKey) {
-    const error = new Error("Missing required Supabase admin environment variables");
+    const error = new Error(
+      "Missing required Supabase admin environment variables: set SUPABASE_SERVICE_ROLE_KEY and " +
+        "SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL (server-side only; never expose the service role key to the browser)."
+    );
     console.error("❌ Supabase admin configuration error:", {
-      hasUrl: !!supabaseUrl,
+      hasUrl: !!(process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL),
       hasServiceKey: !!supabaseServiceKey,
       env: process.env.NODE_ENV,
     });
@@ -270,6 +279,9 @@ export async function createProductsTable() {
 
 // Get a client with admin privileges (reusable function)
 export async function getAdminClient() {
+  if (typeof window !== "undefined") {
+    return null;
+  }
   try {
     validateAdminEnvVars();
     return createClient(supabaseUrl!, supabaseServiceKey!, {

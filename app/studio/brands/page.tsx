@@ -6,8 +6,7 @@ import {
   Permission,
 } from "@/lib/services/permissionsService";
 import { useAuth } from "@/contexts/AuthContext";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import type { Database } from "@/lib/types/supabase";
+import { createClient } from "@/lib/supabase-unified";
 import Link from "next/link";
 import {
   Card,
@@ -61,7 +60,7 @@ function inferRoleFromPermissions(
 
 export default function BrandsPage() {
   const { user } = useAuth();
-  const supabase = createClientComponentClient<Database>();
+  const supabase = createClient();
   const [brands, setBrands] = useState<Brand[]>([]);
   const [userPermissions, setUserPermissions] = useState<Permission[]>([]);
   const [resolvedAccess, setResolvedAccess] =

@@ -13,7 +13,6 @@ import { createClient } from "@/lib/supabase-unified";
 import { getProfile, User } from "@/lib/services/authService";
 import { AuthDebug } from "@/lib/utils/debug";
 import { toast } from "sonner";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 interface AuthContextType {
   user: User | null;
@@ -321,7 +320,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!user?.id) return;
-    const supabase = createClientComponentClient();
+    const supabase = createClient();
     const channel = supabase
       .channel("profile-updates")
       .on(

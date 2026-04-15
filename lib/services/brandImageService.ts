@@ -1,4 +1,4 @@
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createClient } from "@/lib/supabase-unified";
 import { Brand, BrandImage } from "@/lib/supabase";
 
 export interface BrandWithImages extends Omit<Brand, 'image'> {
@@ -12,7 +12,7 @@ export interface ImageUrlData {
 }
 
 export class BrandImageService {
-  private supabase = createClientComponentClient();
+  private supabase = createClient();
 
   /**
    * Get a brand with all its associated images

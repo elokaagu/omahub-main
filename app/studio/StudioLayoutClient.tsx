@@ -405,7 +405,7 @@ export default function StudioLayoutClient({
               fadeIn ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4"
             }`}
           >
-            <div className="container mx-auto px-8 flex justify-between items-center">
+            <div className="w-full px-8 flex justify-between items-center">
               {/* Mobile sidebar toggle */}
               <div
                 className={`lg:hidden flex items-center transition-all duration-700 ease-out ${

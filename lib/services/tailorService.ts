@@ -1,5 +1,5 @@
 import { supabase, Tailor, Brand } from "../supabase";
-import { getAdminClient } from "../supabase-admin";
+import { getAdminClientLazy } from "@/lib/supabase/adminClientLazy";
 
 /**
  * Fetch all tailors from the database
@@ -133,7 +133,7 @@ export async function getTailorsWithBrands(): Promise<
 
   // Filter out tailors with unapproved brands
   // Need to fetch full brand data to check contact_email
-  const supabaseAdmin = await getAdminClient();
+  const supabaseAdmin = await getAdminClientLazy();
   if (supabaseAdmin) {
     const { data: unapprovedApps } = await supabaseAdmin
       .from("designer_applications")

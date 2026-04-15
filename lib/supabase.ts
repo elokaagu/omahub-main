@@ -114,6 +114,8 @@ export type Tailor = {
 export type Product = {
   id: string;
   title: string;
+  /** URL-safe unique slug (requires DB migration `add_products_slug`). */
+  slug?: string;
   description: string;
   price: number;
   sale_price?: number;

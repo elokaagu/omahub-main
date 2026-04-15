@@ -1,5 +1,4 @@
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import type { Database } from "@/lib/types/supabase";
+import { createClient } from "@/lib/supabase-unified";
 
 /**
  * Helper functions for safer Supabase queries that avoid 406 Not Acceptable errors
@@ -10,7 +9,7 @@ export const supabaseHelpers = {
    * Safely get a single profile by ID, avoiding 406 errors
    */
   async getProfileById(userId: string) {
-    const supabase = createClientComponentClient<Database>();
+    const supabase = createClient();
 
     try {
       // Use maybeSingle() instead of single() to avoid 406 errors
@@ -36,7 +35,7 @@ export const supabaseHelpers = {
    * Safely get profiles with array response, then extract single if needed
    */
   async getProfileByIdSafe(userId: string) {
-    const supabase = createClientComponentClient<Database>();
+    const supabase = createClient();
 
     try {
       // Use array query first, then extract single result
@@ -72,7 +71,7 @@ export const supabaseHelpers = {
       limit?: number;
     } = {}
   ): Promise<{ data: T | T[] | null; error: any | null }> {
-    const supabase = createClientComponentClient<Database>();
+    const supabase = createClient();
 
     try {
       let query = supabase.from(tableName).select(options.select || "*");
@@ -114,7 +113,7 @@ export const supabaseHelpers = {
    * Create or update profile with proper error handling
    */
   async upsertProfile(profileData: any) {
-    const supabase = createClientComponentClient<Database>();
+    const supabase = createClient();
 
     try {
       const { data, error } = await supabase

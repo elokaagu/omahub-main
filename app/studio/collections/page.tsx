@@ -3,8 +3,7 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import type { Database } from "@/lib/types/supabase";
+import { createClient } from "@/lib/supabase-unified";
 import { getAllBrands } from "@/lib/services/brandService";
 import {
   getCollectionsWithBrands,
@@ -68,7 +67,7 @@ type CollectionWithBrand = Catalogue & {
 export default function CollectionsPage() {
   const router = useRouter();
   const { user } = useAuth();
-  const supabase = createClientComponentClient<Database>();
+  const supabase = createClient();
 
   const [brands, setBrands] = useState<Brand[]>([]);
   const [collections, setCollections] = useState<CollectionWithBrand[]>([]);

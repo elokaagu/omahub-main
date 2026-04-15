@@ -1,6 +1,6 @@
 import { supabase, Brand, Review, Catalogue, Product } from "../supabase";
 import { getProfile, isAdmin } from "./authService";
-import { getAdminClient } from "../supabase-admin";
+import { getAdminClientLazy } from "@/lib/supabase/adminClientLazy";
 
 import { clearCollectionsCache } from "./collectionService";
 
@@ -27,7 +27,7 @@ const ESSENTIAL_BRAND_FIELDS = "*";
  */
 async function getUnapprovedBrandKeys(): Promise<Set<string>> {
   try {
-    const supabaseAdmin = await getAdminClient();
+    const supabaseAdmin = await getAdminClientLazy();
     if (!supabaseAdmin) {
       console.warn("⚠️ Cannot get admin client, skipping unapproved brand filter");
       return new Set();

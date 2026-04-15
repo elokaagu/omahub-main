@@ -2,7 +2,7 @@
 import { ALLOWED_BRAND_PUBLIC_FIELDS } from "@/lib/validation/brandsOptimizedQuery";
 import { supabase } from "../supabase";
 import { normalizeProductImages } from "../utils/productImageUtils";
-import { getAdminClient } from "../supabase-admin";
+import { getAdminClientLazy } from "@/lib/supabase/adminClientLazy";
 
 // Cache configuration
 const CACHE_DURATION = {
@@ -113,7 +113,7 @@ export const performanceService = {
       }
 
       // Filter out brands with unapproved applications
-      const supabaseAdmin = await getAdminClient();
+      const supabaseAdmin = await getAdminClientLazy();
       if (supabaseAdmin) {
         const { data: unapprovedApps } = await supabaseAdmin
           .from("designer_applications")
