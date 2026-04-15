@@ -6,7 +6,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -22,6 +21,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Card,
   CardContent,
@@ -40,10 +49,10 @@ import {
   HelpCircle,
   Save,
   X,
-  GripVertical,
 } from "lucide-react";
 import { toast } from "sonner";
 import OmaHubEditor from "@/app/components/OmaHubEditor";
+import { faqAnswerLooksLikeHtml } from "@/lib/faqAnswerRendering";
 
 interface FAQ {
   id: string;
@@ -86,6 +95,7 @@ export default function FAQManagementPage() {
   const [filterCategory, setFilterCategory] = useState<string>("all");
   const [filterLocation, setFilterLocation] = useState<string>("all");
   const [showInactive, setShowInactive] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -163,7 +173,25 @@ export default function FAQManagementPage() {
         toast.success(result.message);
         setIsDialogOpen(false);
         resetForm();
-        fetchFAQs();
+        if (result.faq) {
+          setFaqs((prev) => {
+            if (isEditing) {
+              return prev.map((f) =>
+                f.id === result.faq.id ? (result.faq as FAQ) : f
+              );
+            }
+            return [result.faq as FAQ, ...prev].sort((a, b) => {
+              if (a.display_order !== b.display_order) {
+                return a.display_order - b.display_order;
+              }
+              return (
+                new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+              );
+            });
+          });
+        } else {
+          fetchFAQs();
+        }
       } else {
         toast.error(result.error || "Failed to save FAQ");
       }
@@ -190,11 +218,9 @@ export default function FAQManagementPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this FAQ?")) {
-      return;
-    }
-
     try {
+      const previousFaqs = faqs;
+      setFaqs((prev) => prev.filter((faq) => faq.id !== id));
       const response = await fetch(`/api/admin/faqs?id=${id}`, {
         method: "DELETE",
       });
@@ -203,18 +229,28 @@ export default function FAQManagementPage() {
 
       if (response.ok) {
         toast.success(result.message);
-        fetchFAQs();
       } else {
+        setFaqs(previousFaqs);
         toast.error(result.error || "Failed to delete FAQ");
       }
     } catch (error) {
       console.error("Error deleting FAQ:", error);
+      fetchFAQs();
       toast.error("Failed to delete FAQ");
+    } finally {
+      setDeleteTargetId(null);
     }
   };
 
   const toggleActive = async (faq: FAQ) => {
     try {
+      const nextActive = !faq.is_active;
+      setFaqs((prev) =>
+        prev.map((item) =>
+          item.id === faq.id ? { ...item, is_active: nextActive } : item
+        )
+      );
+
       const response = await fetch("/api/admin/faqs", {
         method: "PUT",
         headers: {
@@ -222,12 +258,7 @@ export default function FAQManagementPage() {
         },
         body: JSON.stringify({
           id: faq.id,
-          question: faq.question,
-          answer: faq.answer,
-          category: faq.category,
-          display_order: faq.display_order,
-          page_location: faq.page_location,
-          is_active: !faq.is_active,
+          is_active: nextActive,
         }),
       });
 
@@ -237,12 +268,21 @@ export default function FAQManagementPage() {
         toast.success(
           `FAQ ${!faq.is_active ? "activated" : "deactivated"} successfully`
         );
-        fetchFAQs();
       } else {
+        setFaqs((prev) =>
+          prev.map((item) =>
+            item.id === faq.id ? { ...item, is_active: faq.is_active } : item
+          )
+        );
         toast.error(result.error || "Failed to update FAQ");
       }
     } catch (error) {
       console.error("Error updating FAQ:", error);
+      setFaqs((prev) =>
+        prev.map((item) =>
+          item.id === faq.id ? { ...item, is_active: faq.is_active } : item
+        )
+      );
       toast.error("Failed to update FAQ");
     }
   };
@@ -298,7 +338,13 @@ export default function FAQManagementPage() {
             Manage frequently asked questions across the platform
           </p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <Dialog
+          open={isDialogOpen}
+          onOpenChange={(open) => {
+            setIsDialogOpen(open);
+            if (!open) resetForm();
+          }}
+        >
           <DialogTrigger asChild>
             <Button
               onClick={() => {
@@ -417,7 +463,10 @@ export default function FAQManagementPage() {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => setIsDialogOpen(false)}
+                  onClick={() => {
+                    setIsDialogOpen(false);
+                    resetForm();
+                  }}
                 >
                   <X className="h-4 w-4 mr-2" />
                   Cancel
@@ -563,7 +612,7 @@ export default function FAQManagementPage() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleDelete(faq.id)}
+                      onClick={() => setDeleteTargetId(faq.id)}
                       className="text-red-600 hover:text-red-700"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -572,9 +621,14 @@ export default function FAQManagementPage() {
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-700 whitespace-pre-wrap">
-                  {faq.answer}
-                </p>
+                {faqAnswerLooksLikeHtml(faq.answer) ? (
+                  <div
+                    className="text-gray-700 markdown-content max-w-none [&_a]:text-oma-plum [&_a]:underline [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:mb-3 [&_p:last-child]:mb-0 [&_ul]:list-disc [&_ul]:pl-5"
+                    dangerouslySetInnerHTML={{ __html: faq.answer }}
+                  />
+                ) : (
+                  <p className="text-gray-700 whitespace-pre-wrap">{faq.answer}</p>
+                )}
                 <div className="mt-4 text-xs text-gray-500">
                   Created: {new Date(faq.created_at).toLocaleDateString("en-GB")} •
                   Updated: {new Date(faq.updated_at).toLocaleDateString("en-GB")}
@@ -584,6 +638,35 @@ export default function FAQManagementPage() {
           ))
         )}
       </div>
+      <AlertDialog
+        open={Boolean(deleteTargetId)}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTargetId(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete FAQ</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this FAQ? This action cannot be
+              undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700"
+              onClick={() => {
+                if (deleteTargetId) {
+                  void handleDelete(deleteTargetId);
+                }
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

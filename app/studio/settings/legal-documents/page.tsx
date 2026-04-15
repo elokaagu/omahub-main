@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,6 +33,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import Link from "next/link";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface LegalDocument {
   id: string;
@@ -46,6 +48,8 @@ interface LegalDocument {
 }
 
 export default function LegalDocumentsPage() {
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
   const [documents, setDocuments] = useState<LegalDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -64,8 +68,14 @@ export default function LegalDocumentsPage() {
   });
 
   useEffect(() => {
-    fetchDocuments();
-  }, []);
+    if (!authLoading && user && user.role !== "super_admin") {
+      router.push("/studio");
+      return;
+    }
+    if (!authLoading && user?.role === "super_admin") {
+      fetchDocuments();
+    }
+  }, [authLoading, user, router]);
 
   const fetchDocuments = async () => {
     try {
@@ -118,6 +128,32 @@ export default function LegalDocumentsPage() {
     setIsEditing(false);
   };
 
+  const handleCreateForType = (
+    type: "terms_of_service" | "privacy_policy"
+  ) => {
+    setSelectedDocument(null);
+    setFormData({
+      document_type: type,
+      title: "",
+      content: "",
+      effective_date: new Date().toISOString().split("T")[0],
+    });
+    setIsCreating(true);
+    setIsEditing(false);
+  };
+
+  const handleCreateFromVersion = (document: LegalDocument) => {
+    setSelectedDocument(null);
+    setFormData({
+      document_type: document.document_type,
+      title: document.title,
+      content: document.content,
+      effective_date: new Date().toISOString().split("T")[0],
+    });
+    setIsCreating(true);
+    setIsEditing(false);
+  };
+
   const handleSave = async () => {
     if (!formData.title.trim() || !formData.content.trim()) {
       toast.error("Please fill in all required fields");
@@ -126,14 +162,12 @@ export default function LegalDocumentsPage() {
 
     try {
       setSaving(true);
-      const url = isCreating ? "/api/legal-documents" : "/api/legal-documents";
-
       const method = isCreating ? "POST" : "PUT";
       const body = isCreating
         ? formData
         : { ...formData, id: selectedDocument?.id };
 
-      const response = await fetch(url, {
+      const response = await fetch("/api/legal-documents", {
         method,
         headers: {
           "Content-Type": "application/json",
@@ -155,6 +189,52 @@ export default function LegalDocumentsPage() {
     } catch (error) {
       console.error("Error saving document:", error);
       toast.error("Failed to save document");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleActivateVersion = async (document: LegalDocument) => {
+    if (document.is_active) return;
+
+    try {
+      setSaving(true);
+
+      // Best effort: deactivate currently active version for same type first.
+      const currentActive = documents.find(
+        (d) => d.document_type === document.document_type && d.is_active
+      );
+      if (currentActive) {
+        await fetch("/api/legal-documents", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: currentActive.id, is_active: false }),
+        });
+      }
+
+      const response = await fetch("/api/legal-documents", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: document.id, is_active: true }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        toast.error(data.error || "Failed to activate version");
+        return;
+      }
+
+      setDocuments((prev) =>
+        prev.map((doc) => {
+          if (doc.document_type !== document.document_type) return doc;
+          if (doc.id === document.id) return { ...doc, is_active: true };
+          return { ...doc, is_active: false };
+        })
+      );
+      toast.success("Version activated");
+    } catch (error) {
+      console.error("Error activating version:", error);
+      toast.error("Failed to activate version");
     } finally {
       setSaving(false);
     }
@@ -182,7 +262,7 @@ export default function LegalDocumentsPage() {
       : "/privacy-policy";
   };
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="animate-pulse">
@@ -193,6 +273,22 @@ export default function LegalDocumentsPage() {
             ))}
           </div>
         </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="max-w-7xl mx-auto px-6 py-8 text-gray-600">
+        Sign in to manage legal documents.
+      </div>
+    );
+  }
+
+  if (user.role !== "super_admin") {
+    return (
+      <div className="max-w-7xl mx-auto px-6 py-8 text-gray-600">
+        You do not have permission to manage legal documents.
       </div>
     );
   }
@@ -314,6 +410,10 @@ export default function LegalDocumentsPage() {
             Manage your Terms of Service and Privacy Policy
           </p>
         </div>
+        <Button onClick={handleCreate}>
+          <Plus className="h-4 w-4 mr-2" />
+          Create Document
+        </Button>
       </div>
 
       {setupRequired && (
@@ -356,7 +456,7 @@ export default function LegalDocumentsPage() {
             (doc) => doc.document_type === type
           );
           const activeDocument = typeDocuments.find((doc) => doc.is_active);
-          const allVersions = typeDocuments.sort(
+          const allVersions = [...typeDocuments].sort(
             (a, b) => b.version - a.version
           );
 
@@ -369,6 +469,18 @@ export default function LegalDocumentsPage() {
                     {getDocumentTypeLabel(type)}
                   </div>
                   <div className="flex items-center gap-2">
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={() =>
+                        handleCreateForType(
+                          type as "terms_of_service" | "privacy_policy"
+                        )
+                      }
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      New Version
+                    </Button>
                     <Link href={getPublicUrl(type)} target="_blank">
                       <Button variant="outline" size="sm">
                         <Eye className="h-4 w-4 mr-2" />
@@ -417,13 +529,32 @@ export default function LegalDocumentsPage() {
                             </div>
                           </div>
                         </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEdit(doc)}
-                        >
-                          Edit
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          {!doc.is_active && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={saving}
+                              onClick={() => handleActivateVersion(doc)}
+                            >
+                              Activate
+                            </Button>
+                          )}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleCreateFromVersion(doc)}
+                          >
+                            Duplicate
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEdit(doc)}
+                          >
+                            Edit
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>

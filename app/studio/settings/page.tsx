@@ -22,17 +22,12 @@ import {
   Globe,
   Eye,
   EyeOff,
-  Clipboard,
-  Edit3,
-  Save,
-  X,
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { Textarea } from "@/components/ui/textarea";
 
 export default function SettingsPage() {
-  const { user, refreshUserProfile, loading } = useAuth();
+  const { user, loading } = useAuth();
   const [isChangingStatus, setIsChangingStatus] = useState(false);
   const [platformStatus, setPlatformStatus] = useState<{
     isPublic: boolean;
@@ -40,18 +35,7 @@ export default function SettingsPage() {
     fallback?: string;
   } | null>(null);
   const [isLoadingStatus, setIsLoadingStatus] = useState(true);
-  const [aboutText, setAboutText] = useState("");
-  const [aboutLoading, setAboutLoading] = useState(false);
-  const [aboutSaving, setAboutSaving] = useState(false);
-  const [ourStoryText, setOurStoryText] = useState("");
-  const [ourStoryLoading, setOurStoryLoading] = useState(false);
-  const [ourStorySaving, setOurStorySaving] = useState(false);
-
-  // Inline editing states
-  const [isEditingAbout, setIsEditingAbout] = useState(false);
-  const [isEditingOurStory, setIsEditingOurStory] = useState(false);
-  const [tempAboutText, setTempAboutText] = useState("");
-  const [tempOurStoryText, setTempOurStoryText] = useState("");
+  const [statusError, setStatusError] = useState<string | null>(null);
 
   // Check if user has super admin permissions
   const isSuperAdmin = user?.role === "super_admin";
@@ -62,36 +46,6 @@ export default function SettingsPage() {
       fetchPlatformStatus();
     }
   }, [isSuperAdmin]);
-
-  // Fetch About Us and Our Story text on mount (super admin only)
-  useEffect(() => {
-    if (isSuperAdmin) {
-      setAboutLoading(true);
-      setOurStoryLoading(true);
-      fetch("/api/platform-settings")
-        .then((res) => res.json())
-        .then((data) => {
-          setAboutText(data.about || "");
-          setOurStoryText(data.ourStory || "");
-        })
-        .catch(() => toast.error("Failed to load About Us/Our Story text"))
-        .finally(() => {
-          setAboutLoading(false);
-          setOurStoryLoading(false);
-        });
-    }
-  }, [isSuperAdmin]);
-
-  // Ensure user is always up to date
-  useEffect(() => {
-    if (!user && !loading) {
-      refreshUserProfile();
-    }
-  }, [user, loading, refreshUserProfile]);
-
-  useEffect(() => {
-    console.log("Current user in settings page:", user);
-  }, [user]);
 
   if (loading || !user) {
     return (
@@ -114,11 +68,14 @@ export default function SettingsPage() {
           fallback:
             typeof data.fallback === "string" ? data.fallback : undefined,
         });
+        setStatusError(null);
       } else {
         console.error("Failed to fetch platform status:", data.error);
+        setStatusError(data?.error || "Failed to load platform visibility.");
       }
     } catch (error) {
       console.error("Error fetching platform status:", error);
+      setStatusError("Could not load platform visibility. Please retry.");
     } finally {
       setIsLoadingStatus(false);
     }
@@ -180,86 +137,23 @@ export default function SettingsPage() {
     }
   };
 
-  // Inline editing handlers for About Us
-  const handleEditAbout = () => {
-    setTempAboutText(aboutText);
-    setIsEditingAbout(true);
-  };
-
-  const handleSaveAbout = async () => {
-    setAboutSaving(true);
-    try {
-      const res = await fetch("/api/platform-settings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ about: tempAboutText, user }),
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setAboutText(tempAboutText);
-        setIsEditingAbout(false);
-        toast.success("About Us updated successfully");
-      } else {
-        toast.error(data.error || "Failed to update About Us");
-      }
-    } catch {
-      toast.error("Failed to update About Us");
-    } finally {
-      setAboutSaving(false);
-    }
-  };
-
-  const handleCancelAbout = () => {
-    setIsEditingAbout(false);
-    setTempAboutText("");
-  };
-
-  // Inline editing handlers for Our Story
-  const handleEditOurStory = () => {
-    setTempOurStoryText(ourStoryText);
-    setIsEditingOurStory(true);
-  };
-
-  const handleSaveOurStory = async () => {
-    setOurStorySaving(true);
-    try {
-      const res = await fetch("/api/platform-settings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ourStory: tempOurStoryText, user }),
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setOurStoryText(tempOurStoryText);
-        setIsEditingOurStory(false);
-        toast.success("Our Story updated successfully");
-      } else {
-        toast.error(data.error || "Failed to update Our Story");
-      }
-    } catch {
-      toast.error("Failed to update Our Story");
-    } finally {
-      setOurStorySaving(false);
-    }
-  };
-
-  const handleCancelOurStory = () => {
-    setIsEditingOurStory(false);
-    setTempOurStoryText("");
-  };
-
-  if (!user) {
+  if (!isSuperAdmin) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center">
-          <Settings className="mx-auto h-12 w-12 text-oma-plum/50" />
-          <h3 className="mt-4 text-lg font-canela text-oma-plum">
-            Authentication Required
-          </h3>
-          <p className="mt-2 text-oma-cocoa">
-            Please sign in to access studio settings.
-          </p>
-        </div>
+      <div className="max-w-4xl mx-auto px-6 py-12">
+        <Card className="border-oma-beige">
+          <CardHeader>
+            <CardTitle className="text-oma-plum font-canela">
+              Super Admin Access Required
+            </CardTitle>
+            <CardDescription className="text-oma-cocoa">
+              Studio settings tools are limited to super admin accounts.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-sm text-oma-cocoa/80">
+            Contact a super admin if you need updates to legal documents, FAQs,
+            or platform visibility.
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -277,153 +171,156 @@ export default function SettingsPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Removed About Us and Our Story cards */}
-          {/* Platform Access Control - Only for Super Admins */}
-          {isSuperAdmin && (
-            <Card className="border-oma-beige">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-oma-plum font-canela">
-                  {isLoadingStatus ? (
-                    <div className="animate-spin h-5 w-5 border-2 border-oma-plum border-t-transparent rounded-full" />
-                  ) : platformStatus?.isPublic ? (
-                    <Globe className="h-5 w-5" />
-                  ) : (
-                    <Lock className="h-5 w-5" />
-                  )}
-                  Platform Visibility
-                </CardTitle>
-                <CardDescription className="text-oma-cocoa">
-                  Control public access to the platform
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
+          <Card className="border-oma-beige">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-oma-plum font-canela">
                 {isLoadingStatus ? (
-                  <div className="text-center py-4">
-                    <div className="animate-spin h-6 w-6 border-2 border-oma-plum border-t-transparent rounded-full mx-auto mb-2" />
-                    <p className="text-sm text-oma-cocoa/70">
-                      Loading status...
-                    </p>
-                  </div>
+                  <div className="animate-spin h-5 w-5 border-2 border-oma-plum border-t-transparent rounded-full" />
+                ) : platformStatus?.isPublic ? (
+                  <Globe className="h-5 w-5" />
                 ) : (
-                  <>
-                    <div className="mb-4">
-                      <div
-                        className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium ${
-                          platformStatus?.isPublic
-                            ? "bg-green-100 text-green-800 border border-green-200"
-                            : "bg-amber-100 text-amber-800 border border-amber-200"
-                        }`}
-                      >
-                        {platformStatus?.isPublic ? (
-                          <>
-                            <Eye className="h-3 w-3" />
-                            <span>Platform is Public</span>
-                          </>
-                        ) : (
-                          <>
-                            <EyeOff className="h-3 w-3" />
-                            <span>Platform is Private</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-
-                    <p className="text-sm text-oma-cocoa/80 mb-4">
-                      {platformStatus?.isPublic
-                        ? "The platform is currently accessible to all visitors without a password. Anyone can browse and explore your content."
-                        : "The platform is currently password-protected for internal testing. Visitors need the access password to view content."}
-                    </p>
-
-                    {platformStatus?.fallback ===
-                      "missing_row_defaults_to_private" && (
-                      <p className="text-xs text-oma-cocoa/75 mb-3 rounded-md bg-oma-beige/50 px-2.5 py-2">
-                        No database row for platform visibility yet — effective
-                        status is private until you use Make Public or Make
-                        Private.
-                      </p>
-                    )}
-                    {platformStatus?.fallback ===
-                      "unrecognised_stored_value_treated_as_private" && (
-                      <p className="text-xs text-amber-900/90 mb-3 rounded-md border border-amber-200 bg-amber-50 px-2.5 py-2">
-                        Stored value is not recognised; treated as private. Use
-                        the buttons below to set public or private explicitly.
-                      </p>
-                    )}
-
-                    <div className="space-y-2 text-xs text-oma-cocoa/70">
-                      <div className="flex items-center gap-2">
-                        <Shield className="h-3 w-3 text-oma-plum" />
-                        <span>
-                          {platformStatus?.isPublic
-                            ? "Open access for all visitors"
-                            : "Password-protected access"}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Globe className="h-3 w-3 text-oma-plum" />
-                        <span>
-                          {platformStatus?.isPublic
-                            ? "SEO friendly and discoverable"
-                            : "Hidden from search engines"}
-                        </span>
-                      </div>
-                    </div>
-                  </>
+                  <Lock className="h-5 w-5" />
                 )}
-              </CardContent>
-              <CardFooter className="flex gap-2">
-                {!isLoadingStatus && (
-                  <>
-                    <Button
-                      onClick={handleMakePublic}
-                      disabled={isChangingStatus || platformStatus?.isPublic}
-                      variant={
-                        platformStatus?.isPublic ? "secondary" : "default"
-                      }
-                      className={`flex items-center gap-2 flex-1 ${
-                        !platformStatus?.isPublic
-                          ? "bg-oma-plum hover:bg-oma-plum/90 text-white"
-                          : ""
+                Platform Visibility
+              </CardTitle>
+              <CardDescription className="text-oma-cocoa">
+                Control public access to the platform
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {isLoadingStatus ? (
+                <div className="text-center py-4">
+                  <div className="animate-spin h-6 w-6 border-2 border-oma-plum border-t-transparent rounded-full mx-auto mb-2" />
+                  <p className="text-sm text-oma-cocoa/70">Loading status...</p>
+                </div>
+              ) : (
+                <>
+                  {statusError && (
+                    <p className="text-xs text-red-800 mb-3 rounded-md border border-red-200 bg-red-50 px-2.5 py-2">
+                      {statusError}
+                    </p>
+                  )}
+                  <div className="mb-4">
+                    <div
+                      className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium ${
+                        platformStatus?.isPublic
+                          ? "bg-green-100 text-green-800 border border-green-200"
+                          : "bg-amber-100 text-amber-800 border border-amber-200"
                       }`}
                     >
-                      {isChangingStatus ? (
+                      {platformStatus?.isPublic ? (
                         <>
-                          <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
-                          <span>Updating...</span>
+                          <Eye className="h-3 w-3" />
+                          <span>Platform is Public</span>
                         </>
                       ) : (
                         <>
-                          <Globe className="h-4 w-4" />
-                          <span>Make Public</span>
+                          <EyeOff className="h-3 w-3" />
+                          <span>Platform is Private</span>
                         </>
                       )}
-                    </Button>
+                    </div>
+                  </div>
 
-                    <Button
-                      onClick={handleMakePrivate}
-                      disabled={isChangingStatus || !platformStatus?.isPublic}
-                      variant={
-                        !platformStatus?.isPublic ? "secondary" : "outline"
-                      }
-                      className="flex items-center gap-2 flex-1"
-                    >
-                      {isChangingStatus ? (
-                        <>
-                          <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full"></div>
-                          <span>Updating...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Lock className="h-4 w-4" />
-                          <span>Make Private</span>
-                        </>
-                      )}
-                    </Button>
-                  </>
-                )}
-              </CardFooter>
-            </Card>
-          )}
+                  <p className="text-sm text-oma-cocoa/80 mb-4">
+                    {platformStatus?.isPublic
+                      ? "The platform is currently accessible to all visitors without a password. Anyone can browse and explore your content."
+                      : "The platform is currently password-protected for internal testing. Visitors need the access password to view content."}
+                  </p>
+
+                  {platformStatus?.fallback ===
+                    "missing_row_defaults_to_private" && (
+                    <p className="text-xs text-oma-cocoa/75 mb-3 rounded-md bg-oma-beige/50 px-2.5 py-2">
+                      No database row for platform visibility yet — effective
+                      status is private until you use Make Public or Make
+                      Private.
+                    </p>
+                  )}
+                  {platformStatus?.fallback ===
+                    "unrecognised_stored_value_treated_as_private" && (
+                    <p className="text-xs text-amber-900/90 mb-3 rounded-md border border-amber-200 bg-amber-50 px-2.5 py-2">
+                      Stored value is not recognised; treated as private. Use
+                      the buttons below to set public or private explicitly.
+                    </p>
+                  )}
+
+                  <div className="space-y-2 text-xs text-oma-cocoa/70">
+                    <div className="flex items-center gap-2">
+                      <Shield className="h-3 w-3 text-oma-plum" />
+                      <span>
+                        {platformStatus?.isPublic
+                          ? "Open access for all visitors"
+                          : "Password-protected access"}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Globe className="h-3 w-3 text-oma-plum" />
+                      <span>
+                        {platformStatus?.isPublic
+                          ? "SEO friendly and discoverable"
+                          : "Hidden from search engines"}
+                      </span>
+                    </div>
+                  </div>
+                </>
+              )}
+            </CardContent>
+            <CardFooter className="flex gap-2">
+              {!isLoadingStatus && (
+                <>
+                  <Button
+                    onClick={handleMakePublic}
+                    disabled={
+                      isChangingStatus ||
+                      platformStatus?.isPublic ||
+                      Boolean(statusError)
+                    }
+                    variant={platformStatus?.isPublic ? "secondary" : "default"}
+                    className={`flex items-center gap-2 flex-1 ${
+                      !platformStatus?.isPublic
+                        ? "bg-oma-plum hover:bg-oma-plum/90 text-white"
+                        : ""
+                    }`}
+                  >
+                    {isChangingStatus ? (
+                      <>
+                        <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                        <span>Updating...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Globe className="h-4 w-4" />
+                        <span>Make Public</span>
+                      </>
+                    )}
+                  </Button>
+
+                  <Button
+                    onClick={handleMakePrivate}
+                    disabled={
+                      isChangingStatus ||
+                      !platformStatus?.isPublic ||
+                      Boolean(statusError)
+                    }
+                    variant={!platformStatus?.isPublic ? "secondary" : "outline"}
+                    className="flex items-center gap-2 flex-1"
+                  >
+                    {isChangingStatus ? (
+                      <>
+                        <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full"></div>
+                        <span>Updating...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Lock className="h-4 w-4" />
+                        <span>Make Private</span>
+                      </>
+                    )}
+                  </Button>
+                </>
+              )}
+            </CardFooter>
+          </Card>
 
           {/* Legal Documents Management */}
           <Card className="border-oma-beige">
@@ -525,7 +422,6 @@ export default function SettingsPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3 text-sm text-oma-cocoa">
-              {isSuperAdmin && (
                 <div className="flex items-start gap-2">
                   <Lock className="h-4 w-4 text-oma-plum mt-0.5 flex-shrink-0" />
                   <p>
@@ -534,18 +430,14 @@ export default function SettingsPage() {
                     gate when you're ready to launch publicly.
                   </p>
                 </div>
-              )}
-              {isSuperAdmin && (
                 <div className="flex items-start gap-2">
-                  <Edit3 className="h-4 w-4 text-oma-plum mt-0.5 flex-shrink-0" />
+                  <Shield className="h-4 w-4 text-oma-plum mt-0.5 flex-shrink-0" />
                   <p>
-                    <strong>Content Editing:</strong> Edit About Us and Our
-                    Story content directly in the studio without needing to
-                    navigate to separate pages. Changes are saved immediately
-                    and reflected on the public About page.
+                    <strong>Legal + FAQ Controls:</strong> Use dedicated tools
+                    for legal documents and FAQs to manage versions, page
+                    visibility, and published content quality.
                   </p>
                 </div>
-              )}
               <div className="flex items-start gap-2">
                 <Shield className="h-4 w-4 text-oma-plum mt-0.5 flex-shrink-0" />
                 <p>

@@ -15,8 +15,14 @@ import { UNIFIED_CATEGORIES } from "@/lib/data/unified-categories";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
+type DemoFilter = {
+  type: "category" | "search" | "brand" | "location" | "stock";
+  value: string;
+  label: string;
+};
+
 export default function TagsDemoPage() {
-  const [activeFilters, setActiveFilters] = React.useState([
+  const [activeFilters, setActiveFilters] = React.useState<DemoFilter[]>([
     { type: "category" as const, value: "bridal", label: "Category: Bridal" },
     {
       type: "search" as const,
@@ -25,6 +31,12 @@ export default function TagsDemoPage() {
     },
     { type: "location" as const, value: "Lagos", label: "Location: Lagos" },
   ]);
+  const [removableProductCategories, setRemovableProductCategories] =
+    React.useState<string[]>(["Bridal", "Evening Gowns", "Custom Design"]);
+  const [removableFilterCategories, setRemovableFilterCategories] =
+    React.useState<string[]>(["Ready to Wear", "Accessories", "Vacation"]);
+  const [removableStudioCategories, setRemovableStudioCategories] =
+    React.useState<string[]>(["Evening Gowns", "Custom Design"]);
 
   const handleRemoveFilter = (type: string, value: string) => {
     setActiveFilters((prev) =>
@@ -32,8 +44,19 @@ export default function TagsDemoPage() {
     );
   };
 
-  const handleRemoveCategory = (category: string) => {
-    console.log("Removing category:", category);
+  const handleRemoveCategoryFrom = (
+    category: string,
+    section: "product" | "filter" | "studio"
+  ) => {
+    if (section === "product") {
+      setRemovableProductCategories((prev) => prev.filter((c) => c !== category));
+      return;
+    }
+    if (section === "filter") {
+      setRemovableFilterCategories((prev) => prev.filter((c) => c !== category));
+      return;
+    }
+    setRemovableStudioCategories((prev) => prev.filter((c) => c !== category));
   };
 
   return (
@@ -153,11 +176,18 @@ export default function TagsDemoPage() {
                 Product Upload Form Style
               </h4>
               <TagGroup
-                categories={["Bridal", "Evening Gowns", "Custom Design"]}
+                categories={removableProductCategories}
                 variant="default"
                 removable
-                onRemove={handleRemoveCategory}
+                onRemove={(category) =>
+                  handleRemoveCategoryFrom(category, "product")
+                }
               />
+              {removableProductCategories.length === 0 && (
+                <p className="text-xs text-oma-cocoa/60 italic mt-2">
+                  No categories left in this demo group.
+                </p>
+              )}
             </div>
 
             <div>
@@ -165,11 +195,16 @@ export default function TagsDemoPage() {
                 Filter Tags with Remove
               </h4>
               <TagGroup
-                categories={["Ready to Wear", "Accessories", "Vacation"]}
+                categories={removableFilterCategories}
                 variant="outline"
                 removable
-                onRemove={handleRemoveCategory}
+                onRemove={(category) => handleRemoveCategoryFrom(category, "filter")}
               />
+              {removableFilterCategories.length === 0 && (
+                <p className="text-xs text-oma-cocoa/60 italic mt-2">
+                  No filter tags left in this demo group.
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -220,9 +255,11 @@ export default function TagsDemoPage() {
                 </h4>
                 <div className="space-y-2">
                   <TagGroup
-                    categories={["Evening Gowns", "Custom Design"]}
+                    categories={removableStudioCategories}
                     removable
-                    onRemove={handleRemoveCategory}
+                    onRemove={(category) =>
+                      handleRemoveCategoryFrom(category, "studio")
+                    }
                   />
                 </div>
                 <p className="text-xs text-oma-cocoa/70">
@@ -240,6 +277,41 @@ export default function TagsDemoPage() {
                   Outline style for filter selections
                 </p>
               </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Edge Cases */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle>Edge Cases</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div>
+              <h4 className="text-sm font-medium mb-3 text-oma-cocoa">
+                Long Labels and Overflow
+              </h4>
+              <div className="flex flex-wrap gap-2">
+                <UnifiedTag category="Limited Edition Wedding Guest Occasion Collection" />
+                <FilterTag category="Ultra Lightweight Destination Evening Wear Capsule" />
+              </div>
+            </div>
+            <div>
+              <h4 className="text-sm font-medium mb-3 text-oma-cocoa">
+                Unknown / Fallback Category
+              </h4>
+              <div className="flex flex-wrap gap-2">
+                <UnifiedTag category="Unmapped Experimental Category" />
+              </div>
+            </div>
+            <div>
+              <h4 className="text-sm font-medium mb-3 text-oma-cocoa">
+                Empty Active Filters State
+              </h4>
+              <ActiveFilters filters={[]} onRemove={handleRemoveFilter} />
+              <p className="text-xs text-oma-cocoa/60 italic">
+                Component collapses gracefully when there are no active filters.
+              </p>
             </div>
           </CardContent>
         </Card>

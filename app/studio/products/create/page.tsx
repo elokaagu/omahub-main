@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,6 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Loading } from "@/components/ui/loading";
 import { NavigationLink } from "@/components/ui/navigation-link";
 import { FileUpload } from "@/components/ui/file-upload";
 import { VideoUpload } from "@/components/ui/video-upload";
@@ -18,17 +17,8 @@ import { SimpleFileUpload } from "@/components/ui/simple-file-upload";
 import { createProduct } from "@/lib/services/productService";
 import { getAllCollections } from "@/lib/services/collectionService";
 import { getAllBrands } from "@/lib/services/brandService";
-import { Product, Brand, Catalogue } from "@/lib/supabase";
-import {
-  ArrowLeft,
-  Plus,
-  Trash2,
-  Upload,
-  Coins,
-  Package,
-  Image as ImageIcon,
-  MessageCircle,
-} from "lucide-react";
+import { Brand, Catalogue } from "@/lib/supabase";
+import { ArrowLeft, Trash2, Coins, Package, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import {
   Select,
@@ -37,19 +27,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { supabase } from "@/lib/supabase";
-import {
-  formatNumberWithCommas,
-  parseFormattedNumber,
-} from "@/lib/utils/priceFormatter";
 import { Checkbox } from "@/components/ui/checkbox";
 import { getBrandCurrency } from "@/lib/utils/currencyUtils";
-import {
-  getCategoriesForStudio,
-  getAllCategoryNames,
-} from "@/lib/data/unified-categories";
+import { getAllCategoryNames } from "@/lib/data/unified-categories";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { useBrandOwnerAccess } from "@/lib/hooks/useBrandOwnerAccess";
+import { StringTagListField } from "@/app/studio/products/components/StringTagListField";
 
 // Common currencies used across Africa
 const CURRENCIES = [
@@ -77,18 +60,14 @@ export default function CreateProductPage() {
     userPermissions,
     ownedBrandIds,
     isBrandOwner,
+    filterBrandsByOwnership,
   } = useBrandOwnerAccess();
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [catalogues, setCatalogues] = useState<Catalogue[]>([]);
-  const [filteredCatalogues, setFilteredCatalogues] = useState<Catalogue[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [selectedBrandCurrency, setSelectedBrandCurrency] = useState("USD");
-  const [dataFetched, setDataFetched] = useState(false);
-  const [permissionGranted, setPermissionGranted] = useState(false);
-  const [brandAssignmentLatched, setBrandAssignmentLatched] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -126,102 +105,55 @@ export default function CreateProductPage() {
     service_type: "" as "product" | "service" | "consultation",
   });
 
-  // Fetch brands and catalogues
-  useEffect(() => {
-    const fetchData = async () => {
-      if (dataFetched) return;
-      
-      setLoading(true);
+  const filteredCatalogues = useMemo(() => {
+    if (!formData.brand_id) return [];
+    return catalogues.filter((c) => c.brand_id === formData.brand_id);
+  }, [formData.brand_id, catalogues]);
 
+  // Fetch brands and catalogues (brand list uses shared ownership rules from profile)
+  useEffect(() => {
+    if (!user?.id) return;
+
+    let cancelled = false;
+
+    const run = async () => {
+      setLoading(true);
       try {
         const [brandsData, cataloguesData] = await Promise.all([
-          getAllBrands().catch(() => []),
-          getAllCollections().catch(() => []),
+          getAllBrands().catch(() => [] as Brand[]),
+          getAllCollections().catch(() => [] as Catalogue[]),
         ]);
-
-        // Filter brands based on user role
-        if (user?.role === "super_admin") {
-          setBrands(brandsData);
-        } else if (user?.role === "brand_admin") {
-          if (!supabase) {
-            setBrands([]);
-            return;
-          }
-
-          const userProfile = await supabase
-            .from("profiles")
-            .select("owned_brands")
-            .eq("id", user.id)
-            .maybeSingle();
-
-          if (userProfile.error) {
-            setBrands([]);
-            toast.error("Failed to load user profile. Please refresh the page.");
-            return;
-          }
-
-          if (userProfile.data?.owned_brands) {
-            const ownedBrandIds = userProfile.data.owned_brands;
-            const ownedBrands = brandsData.filter((brand) =>
-              ownedBrandIds.includes(brand.id)
-            );
-            setBrands(ownedBrands);
-          } else {
-            setBrands([]);
-          }
-        }
-
+        if (cancelled) return;
+        setBrands(filterBrandsByOwnership(brandsData));
         setCatalogues(cataloguesData);
-      } catch (error) {
-        setBrands([]);
-        setCatalogues([]);
-        toast.error("Failed to load data. Please refresh the page.");
+      } catch {
+        if (!cancelled) {
+          setBrands([]);
+          setCatalogues([]);
+          toast.error("Failed to load data. Please refresh the page.");
+        }
       } finally {
-        setLoading(false);
-        setDataFetched(true);
+        if (!cancelled) setLoading(false);
       }
     };
 
-    if (user) {
-      fetchData();
-    }
-  }, [user]);
+    void run();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id, filterBrandsByOwnership]);
 
-  // Filter catalogues based on selected brand
+  // Keep helper text in sync when brand list loads or selection changes
   useEffect(() => {
-    if (formData.brand_id) {
-      const brandCatalogues = catalogues.filter(
-        (catalogue) => catalogue.brand_id === formData.brand_id
-      );
-      setFilteredCatalogues(brandCatalogues);
-    } else {
-      setFilteredCatalogues([]);
+    if (!formData.brand_id) {
+      setSelectedBrandCurrency("");
+      return;
     }
-  }, [formData.brand_id, catalogues]);
-
-  // Set selected brand currency for display purposes only (no auto-sync)
-  useEffect(() => {
-    if (formData.brand_id) {
-      const selectedBrand = brands.find(b => b.id === formData.brand_id);
-      if (selectedBrand) {
-        const brandCurrency = getBrandCurrency(selectedBrand);
-        if (brandCurrency) {
-          setSelectedBrandCurrency(brandCurrency.code);
-        } else {
-          setSelectedBrandCurrency("");
-        }
-      }
-    }
+    const selectedBrand = brands.find((b) => b.id === formData.brand_id);
+    if (!selectedBrand) return;
+    const brandCurrency = getBrandCurrency(selectedBrand);
+    setSelectedBrandCurrency(brandCurrency?.code ?? "");
   }, [formData.brand_id, brands]);
-
-  // Force refresh user profile if role is incorrect
-  useEffect(() => {
-    if (user && !authLoading && user.role === "user" && user.email === "team@houseofagu.com") {
-      console.log("🔄 Forcing profile refresh for team@houseofagu.com");
-      // Force a profile refresh by clearing and reloading
-      window.location.reload();
-    }
-  }, [user, authLoading]);
 
   const hasProductPermission =
     userPermissions.includes("studio.products.manage") ||
@@ -229,20 +161,10 @@ export default function CreateProductPage() {
     user?.role === "brand_admin" ||
     user?.role === "admin";
 
-  useEffect(() => {
-    if (!authLoading && !accessLoading && user && hasProductPermission) {
-      setPermissionGranted(true);
-    }
-  }, [authLoading, accessLoading, user, hasProductPermission]);
+  const isAuthOrAccessResolving = authLoading || accessLoading;
 
-  useEffect(() => {
-    if (ownedBrandIds && ownedBrandIds.length > 0) {
-      setBrandAssignmentLatched(true);
-    }
-  }, [ownedBrandIds?.join(",")]);
-
-  // Show loading state while auth/permissions are initializing
-  if (authLoading || accessLoading || (!permissionGranted && !user)) {
+  // Auth + studio access profile (useBrandOwnerAccess) — do not conflate with !user
+  if (isAuthOrAccessResolving) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-oma-beige/30 to-white">
         <div className="max-w-4xl mx-auto px-6 py-24">
@@ -278,15 +200,7 @@ export default function CreateProductPage() {
     );
   }
 
-  // Debug user role
-  console.log("🔍 Product Create: User role check:", {
-    user: user ? { id: user.id, email: user.email, role: user.role } : null,
-    authLoading,
-    hasPermission: user && (user.role === "super_admin" || user.role === "brand_admin" || user.role === "admin")
-  });
-
-  // Check permissions after user is loaded and not in loading state
-  if (user && !permissionGranted && !hasProductPermission) {
+  if (user && !hasProductPermission) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-oma-beige/30 to-white">
         <div className="max-w-4xl mx-auto px-6 py-24">
@@ -306,13 +220,11 @@ export default function CreateProductPage() {
     );
   }
 
-  // Brand owners need to have at least one assigned brand before they can create products
+  // Brand admins need at least one assigned brand (after access hook has finished)
   if (
-    permissionGranted &&
     user &&
+    hasProductPermission &&
     isBrandOwner &&
-    !accessLoading &&
-    !brandAssignmentLatched &&
     (!ownedBrandIds || ownedBrandIds.length === 0)
   ) {
     return (
@@ -384,21 +296,28 @@ export default function CreateProductPage() {
   ];
 
   const handleInputChange = (name: string, value: string | boolean) => {
-    // Handle price formatting for price and sale_price fields
     if (
       (name === "price" || name === "sale_price") &&
       typeof value === "string"
     ) {
-      // Remove any non-numeric characters except decimal point
       const numericValue = value.replace(/[^\d.]/g, "");
-
-      // Validate that it's a valid number
       if (numericValue === "" || !isNaN(parseFloat(numericValue))) {
-        setFormData({
-          ...formData,
-          [name]: numericValue,
-        });
+        setFormData((prev) => ({ ...prev, [name]: numericValue }));
       }
+      return;
+    }
+
+    if (name === "brand_id" && typeof value === "string") {
+      const selectedBrand = brands.find((brand) => brand.id === value);
+      const brandCur = selectedBrand ? getBrandCurrency(selectedBrand) : null;
+      const nextCurrency = brandCur?.code ?? "USD";
+      setSelectedBrandCurrency(brandCur?.code ?? "");
+      setFormData((prev) => ({
+        ...prev,
+        brand_id: value,
+        catalogue_id: "",
+        currency: nextCurrency,
+      }));
       return;
     }
 
@@ -406,23 +325,6 @@ export default function CreateProductPage() {
       ...prev,
       [name]: value,
     }));
-
-    // Reset catalogue when brand changes
-    if (name === "brand_id") {
-      setFormData((prev) => ({
-        ...prev,
-        catalogue_id: "",
-      }));
-
-      // Update selected brand currency for display purposes only
-      const selectedBrand = brands.find(brand => brand.id === value);
-      if (selectedBrand) {
-        const brandCurrency = getBrandCurrency(selectedBrand);
-        if (brandCurrency) {
-          setSelectedBrandCurrency(brandCurrency.code);
-        }
-      }
-    }
   };
 
   const handleImageUpload = (url: string, index?: number) => {
@@ -513,13 +415,6 @@ export default function CreateProductPage() {
     }));
   };
 
-  const removeSpecialty = (index: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      specialties: prev.specialties.filter((_, i) => i !== index),
-    }));
-  };
-
   // Handle service type change
   const handleServiceTypeChange = (
     serviceType: "product" | "service" | "consultation"
@@ -536,11 +431,7 @@ export default function CreateProductPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Prevent double submission
-    if (isLoading || submitting) {
-      console.log("🔄 Form submission already in progress, ignoring...");
-      return;
-    }
+    if (submitting) return;
 
     // Validate session before proceeding
     try {
@@ -550,8 +441,8 @@ export default function CreateProductPage() {
           "Your session has expired. Please refresh the page and sign in again."
         );
         setTimeout(() => {
-          window.location.reload();
-        }, 2000);
+          router.refresh();
+        }, 1500);
         return;
       }
     } catch (sessionError) {
@@ -578,6 +469,18 @@ export default function CreateProductPage() {
       return;
     }
 
+    const selectedBrand = brands.find((b) => b.id === formData.brand_id);
+    if (selectedBrand) {
+      const brandCurrency = getBrandCurrency(selectedBrand);
+      if (brandCurrency && formData.currency !== brandCurrency.code) {
+        toast.error(
+          `Currency must match this brand (${brandCurrency.symbol}${brandCurrency.code}). ` +
+            "Change the currency selector or pick a different brand."
+        );
+        return;
+      }
+    }
+
     // Validate pricing based on service type
     if (!formData.contact_for_pricing && !formData.price?.trim()) {
       toast.error("Please enter a price or enable 'Contact for Pricing'");
@@ -597,9 +500,7 @@ export default function CreateProductPage() {
     }
 
     try {
-      setIsLoading(true);
       setSubmitting(true);
-      console.log("🔄 Starting product creation...");
 
       // Prepare product data with only the fields that exist in the database
       const productData = {
@@ -661,12 +562,9 @@ export default function CreateProductPage() {
         }),
       };
 
-      console.log("📦 Creating product with data:", productData);
-
       const newProduct = await createProduct(productData);
 
       if (newProduct) {
-        console.log("✅ Product created successfully:", newProduct.id);
         toast.success("Product created successfully!");
         router.push("/studio/products");
       } else {
@@ -695,8 +593,8 @@ export default function CreateProductPage() {
           "Your session has expired. Please refresh the page and sign in again."
         );
         setTimeout(() => {
-          window.location.reload();
-        }, 2000);
+          router.refresh();
+        }, 1500);
       } else if (error instanceof Error && error.message?.includes("currency")) {
         toast.error(`Currency error: ${error.message}`);
       } else if (error instanceof Error) {
@@ -705,16 +603,8 @@ export default function CreateProductPage() {
         toast.error("Failed to create product. Please try again.");
       }
     } finally {
-      setIsLoading(false);
       setSubmitting(false);
     }
-  };
-
-  // Format price for display - use centralized utility
-  const formatPriceForDisplay = (price: string): string => {
-    const numericPrice = parseFloat(price.replace(/,/g, ""));
-    if (isNaN(numericPrice)) return price;
-    return formatNumberWithCommas(numericPrice);
   };
 
   // Show loading state while data is being fetched
@@ -1033,7 +923,8 @@ export default function CreateProductPage() {
                     <div className="space-y-1">
                       {selectedBrandCurrency ? (
                         <p className="text-xs text-muted-foreground">
-                          Brand currency: {selectedBrandCurrency}
+                          Brand default is {selectedBrandCurrency}. The product currency must match
+                          the brand when you save (same rule as on the edit screen).
                         </p>
                       ) : (
                         <p className="text-xs text-muted-foreground">
@@ -1249,152 +1140,29 @@ export default function CreateProductPage() {
               <CardTitle className="text-black">Product Details</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Sizes */}
-              <div className="space-y-2">
-                <Label className="text-black">Available Sizes</Label>
-                <div className="flex gap-2 mb-2">
-                  <Input
-                    placeholder="Add size (e.g., S, M, L, XL)"
-                    className="border-oma-cocoa/20 focus:border-oma-plum"
-                    onKeyPress={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        handleArrayChange("sizes", e.currentTarget.value);
-                        e.currentTarget.value = "";
-                      }
-                    }}
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white"
-                    onClick={(e) => {
-                      const input = e.currentTarget
-                        .previousElementSibling as HTMLInputElement;
-                      handleArrayChange("sizes", input.value);
-                      input.value = "";
-                    }}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {formData.sizes.map((size, index) => (
-                    <Badge
-                      key={index}
-                      variant="secondary"
-                      className="flex items-center gap-1 bg-oma-beige text-oma-plum"
-                    >
-                      {size}
-                      <button
-                        type="button"
-                        onClick={() => removeArrayItem("sizes", index)}
-                        className="ml-1 hover:text-red-600"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-              </div>
+              <StringTagListField
+                label="Available Sizes"
+                placeholder="Add size (e.g., S, M, L, XL)"
+                items={formData.sizes}
+                onAdd={(v) => handleArrayChange("sizes", v)}
+                onRemove={(index) => removeArrayItem("sizes", index)}
+              />
 
-              {/* Colours */}
-              <div className="space-y-2">
-                <Label className="text-black">Available Colours</Label>
-                <div className="flex gap-2 mb-2">
-                  <Input
-                    placeholder="Add colour (e.g., Red, Blue, Black)"
-                    className="border-oma-cocoa/20 focus:border-oma-plum"
-                    onKeyPress={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        handleArrayChange("colors", e.currentTarget.value);
-                        e.currentTarget.value = "";
-                      }
-                    }}
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white"
-                    onClick={(e) => {
-                      const input = e.currentTarget
-                        .previousElementSibling as HTMLInputElement;
-                      handleArrayChange("colors", input.value);
-                      input.value = "";
-                    }}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {formData.colors.map((color, index) => (
-                    <Badge
-                      key={index}
-                      variant="secondary"
-                      className="flex items-center gap-1 bg-oma-beige text-oma-plum"
-                    >
-                      {color}
-                      <button
-                        type="button"
-                        onClick={() => removeArrayItem("colors", index)}
-                        className="ml-1 hover:text-red-600"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-              </div>
+              <StringTagListField
+                label="Available Colours"
+                placeholder="Add colour (e.g., Red, Blue, Black)"
+                items={formData.colors}
+                onAdd={(v) => handleArrayChange("colors", v)}
+                onRemove={(index) => removeArrayItem("colors", index)}
+              />
 
-              {/* Materials */}
-              <div className="space-y-2">
-                <Label className="text-black">Materials</Label>
-                <div className="flex gap-2 mb-2">
-                  <Input
-                    placeholder="Add material (e.g., Cotton, Silk, Polyester)"
-                    className="border-oma-cocoa/20 focus:border-oma-plum"
-                    onKeyPress={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        handleArrayChange("materials", e.currentTarget.value);
-                        e.currentTarget.value = "";
-                      }
-                    }}
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white"
-                    onClick={(e) => {
-                      const input = e.currentTarget
-                        .previousElementSibling as HTMLInputElement;
-                      handleArrayChange("materials", input.value);
-                      input.value = "";
-                    }}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {formData.materials.map((material, index) => (
-                    <Badge
-                      key={index}
-                      variant="secondary"
-                      className="flex items-center gap-1 bg-oma-beige text-oma-plum"
-                    >
-                      {material}
-                      <button
-                        type="button"
-                        onClick={() => removeArrayItem("materials", index)}
-                        className="ml-1 hover:text-red-600"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-              </div>
+              <StringTagListField
+                label="Materials"
+                placeholder="Add material (e.g., Cotton, Silk, Polyester)"
+                items={formData.materials}
+                onAdd={(v) => handleArrayChange("materials", v)}
+                onRemove={(index) => removeArrayItem("materials", index)}
+              />
 
               <div className="space-y-2">
                 <Label htmlFor="care_instructions" className="text-black">
@@ -1474,33 +1242,25 @@ export default function CreateProductPage() {
                     ))}
                   </div>
 
-                  {/* Custom Specialty Input */}
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Add custom specialty"
-                      className="border-oma-cocoa/20 focus:border-oma-plum"
-                      onKeyPress={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          handleSpecialtyChange(e.currentTarget.value);
-                          e.currentTarget.value = "";
-                        }
-                      }}
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white"
-                      onClick={(e) => {
-                        const input = e.currentTarget
-                          .previousElementSibling as HTMLInputElement;
-                        handleSpecialtyChange(input.value);
-                        input.value = "";
-                      }}
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  <StringTagListField
+                    label="Custom specialties"
+                    placeholder="Add custom specialty"
+                    items={formData.specialties.filter(
+                      (s) => !tailorSpecialties.includes(s)
+                    )}
+                    onAdd={(v) => handleSpecialtyChange(v)}
+                    onRemove={(index) => {
+                      const customOnly = formData.specialties.filter(
+                        (s) => !tailorSpecialties.includes(s)
+                      );
+                      const toRemove = customOnly[index];
+                      if (toRemove === undefined) return;
+                      setFormData((prev) => ({
+                        ...prev,
+                        specialties: prev.specialties.filter((s) => s !== toRemove),
+                      }));
+                    }}
+                  />
                 </div>
 
                 {/* Fitting Sessions */}
@@ -1595,7 +1355,7 @@ export default function CreateProductPage() {
               type="button"
               variant="outline"
               onClick={() => router.push("/studio/products")}
-              disabled={isLoading || submitting}
+              disabled={submitting}
               className="border-oma-cocoa text-black hover:bg-oma-cocoa hover:text-white"
             >
               Cancel
@@ -1603,9 +1363,9 @@ export default function CreateProductPage() {
             <Button
               type="submit"
               className="bg-oma-plum hover:bg-oma-plum/90"
-              disabled={isLoading || submitting}
+              disabled={submitting}
             >
-              {isLoading || submitting ? (
+              {submitting ? (
                 <div className="flex items-center gap-2">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                   Creating Product...

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Card,
   CardContent,
@@ -28,76 +29,76 @@ import Link from "next/link";
 import { SimpleFileUpload } from "@/components/ui/simple-file-upload";
 import { VideoUpload } from "@/components/ui/video-upload";
 import { MultiSelect } from "@/components/ui/multi-select";
-import {
-  formatPriceRange,
-  formatNumberWithCommas,
-} from "@/lib/utils/priceFormatter";
-import { getCurrencyByCode } from "@/lib/utils/currencyUtils";
-import { getAllCategoryNames } from "@/lib/data/unified-categories";
+import { formatPriceRange } from "@/lib/utils/priceFormatter";
 import { formatBrandDescription } from "@/lib/utils/textFormatter";
+import {
+  STUDIO_CURRENCIES_FOR_PRICE_SELECT,
+  SHORT_DESCRIPTION_LIMIT,
+  BRAND_NAME_LIMIT,
+  getStudioBrandCategoryNames,
+  getFoundingYearOptions,
+} from "@/lib/brands/studioBrandFormConstants";
+import {
+  createBrandFormSchema,
+  firstCreateBrandValidationMessage,
+} from "@/lib/validation/createBrandFormSchema";
+import { brandFormDevLog } from "../brandFormDevLog";
 
-// Brand categories - now using unified categories (same as product)
-const CATEGORIES = getAllCategoryNames();
+const CATEGORIES = getStudioBrandCategoryNames();
+const FOUNDING_YEARS = getFoundingYearOptions();
 
-// Common currencies used across Africa
-const CURRENCIES = [
-  { code: "NGN", symbol: "₦", name: "Nigerian Naira" },
-  { code: "KES", symbol: "KSh", name: "Kenyan Shilling" },
-  { code: "GHS", symbol: "GHS", name: "Ghanaian Cedi" },
-  { code: "ZAR", symbol: "R", name: "South African Rand" },
-  { code: "EGP", symbol: "EGP", name: "Egyptian Pound" },
-  { code: "MAD", symbol: "MAD", name: "Moroccan Dirham" },
-  { code: "TND", symbol: "TND", name: "Tunisian Dinar" },
-  { code: "XOF", symbol: "XOF", name: "West African CFA Franc" },
-  { code: "DZD", symbol: "DA", name: "Algerian Dinar" },
-  { code: "USD", symbol: "$", name: "US Dollar" },
-  { code: "EUR", symbol: "€", name: "Euro" },
-  { code: "GBP", symbol: "£", name: "British Pound" },
-];
+type CreateBrandFormState = {
+  name: string;
+  description: string;
+  long_description: string;
+  location: string;
+  price_min: string;
+  price_max: string;
+  contact_for_pricing: boolean;
+  currency: string;
+  categories: string[];
+  image: string;
+  website: string;
+  instagram: string;
+  whatsapp: string;
+  contact_email: string;
+  founded_year: string;
+  video_url: string;
+  video_thumbnail: string;
+};
 
-// Generate founding year options from current year backwards to 1950
-const FOUNDING_YEARS = Array.from(
-  { length: new Date().getFullYear() - 1950 + 1 },
-  (_, i) => (new Date().getFullYear() - i).toString()
-);
-
-// Character limits
-const SHORT_DESCRIPTION_LIMIT = 150;
-const BRAND_NAME_LIMIT = 50; // Add brand name character limit
+const initialFormState = (): CreateBrandFormState => ({
+  name: "",
+  description: "",
+  long_description: "",
+  location: "",
+  price_min: "",
+  price_max: "",
+  contact_for_pricing: false,
+  currency: "USD",
+  categories: [],
+  image: "",
+  website: "",
+  instagram: "",
+  whatsapp: "",
+  contact_email: "",
+  founded_year: "",
+  video_url: "",
+  video_thumbnail: "",
+});
 
 export default function CreateBrandPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const [submitting, setSubmitting] = useState(false);
-  const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-    long_description: "",
-    location: "",
-    price_range: "",
-    price_min: "",
-    price_max: "",
-    contact_for_pricing: false,
-    currency: "USD", // Default to USD instead of NGN
-    categories: [] as string[],
-    image: "",
-    is_verified: false,
-    website: "",
-    instagram: "",
-    whatsapp: "",
-    contact_email: "",
-    founded_year: "",
-    video_url: "",
-    video_thumbnail: "",
-  });
+  const [formData, setFormData] = useState<CreateBrandFormState>(initialFormState);
 
-  // Add loading state while auth is initializing
   if (authLoading) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-oma-plum mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-oma-plum mx-auto mb-4" />
             <p className="text-gray-600">Loading brand creation form...</p>
           </div>
         </div>
@@ -105,7 +106,6 @@ export default function CreateBrandPage() {
     );
   }
 
-  // Add error handling for missing user
   if (!user) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
@@ -129,86 +129,33 @@ export default function CreateBrandPage() {
   ) => {
     const { name, value } = e.target;
 
-    // Handle character limit for brand name
     if (name === "name" && value.length > BRAND_NAME_LIMIT) {
-      return; // Don't update if exceeding limit
+      return;
     }
-
-    // Handle character limit for short description
     if (name === "description" && value.length > SHORT_DESCRIPTION_LIMIT) {
-      return; // Don't update if exceeding limit
+      return;
     }
 
-    // Auto-detect currency from price range ONLY if no currency is explicitly selected
-    if (name === "price_range" && value && !formData.currency) {
-      // Extract currency symbol from price range and convert to currency code
-      const currencySymbol = value.match(/^([^\d,]+)/)?.[1]?.trim();
-      if (currencySymbol) {
-        const detectedCurrency = (() => {
-          const currencyObj = getCurrencyByCode(currencySymbol);
-          if (currencyObj) return currencyObj.code;
-
-          // Fallback mapping for common symbols
-          if (currencySymbol === "₦") return "NGN";
-          if (currencySymbol === "KSh") return "KES";
-          if (currencySymbol === "GHS") return "GHS";
-          if (currencySymbol === "R") return "ZAR";
-          if (currencySymbol === "EGP") return "EGP";
-          if (currencySymbol === "MAD") return "MAD";
-          if (currencySymbol === "TND") return "TND";
-          if (currencySymbol === "XOF") return "XOF";
-          if (currencySymbol === "DA") return "DZD";
-          if (currencySymbol === "$") return "USD";
-          if (currencySymbol === "£") return "GBP";
-          if (currencySymbol === "€") return "EUR";
-          return null;
-        })();
-
-        if (detectedCurrency) {
-          console.log(
-            `🔄 Auto-detected currency: ${detectedCurrency} from price range (no explicit currency set)`
-          );
-          setFormData((prev) => ({
-            ...prev,
-            [name]: value,
-            currency: detectedCurrency,
-          }));
-          return;
-        }
-      }
-    }
-
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSelectChange = (name: string, value: string) => {
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleCategoriesChange = (categories: string[]) => {
-    setFormData({
-      ...formData,
-      categories,
-    });
+    setFormData((prev) => ({ ...prev, categories }));
   };
 
   const handleImageUpload = (url: string) => {
-    console.log("🖼️ Image upload completed, updating form state:", url);
-    setFormData((prev) => ({
-      ...prev,
-      image: url,
-    }));
+    brandFormDevLog("Image upload completed:", url);
+    setFormData((prev) => ({ ...prev, image: url }));
   };
 
   const handleVideoUpload = (url: string) => {
     setFormData((prev) => ({ ...prev, video_url: url }));
   };
+
   const handleVideoThumbnailUpload = (url: string) => {
     setFormData((prev) => ({ ...prev, video_thumbnail: url }));
   };
@@ -216,162 +163,71 @@ export default function CreateBrandPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Debug logging
-    console.log("🔍 Brand Creation Debug:", {
-      hasUser: !!user,
-      userRole: user?.role,
-      userEmail: user?.email,
-      formData: {
-        name: formData.name,
-        description: formData.description,
-        categories: formData.categories,
-        location: formData.location,
-        image: formData.image, // This will be updated to use brand_images after creation
-      },
-    });
-
-    // Check if user is authenticated
     if (!user) {
       toast.error("You must be logged in to create a brand");
       return;
     }
 
-    // Validate session before proceeding
-    try {
-      const sessionCheck = await fetch("/api/auth/validate");
-      if (!sessionCheck.ok) {
-        toast.error(
-          "Your session has expired. Please refresh the page and sign in again."
-        );
-        setTimeout(() => {
-          window.location.reload();
-        }, 2000);
-        return;
-      }
-    } catch (sessionError) {
-      console.error("Session validation failed:", sessionError);
-      toast.error(
-        "Unable to verify your session. Please refresh the page and try again."
-      );
+    const parsed = createBrandFormSchema.safeParse(formData);
+    if (!parsed.success) {
+      toast.error(firstCreateBrandValidationMessage(parsed));
       return;
     }
 
-    // Validation
-    if (!formData.name) {
-      toast.error("Brand name is required");
-      return;
-    }
+    const d = parsed.data;
 
-    if (!formData.description) {
-      toast.error("Brand description is required");
-      return;
-    }
-
-    if (!formData.categories.length) {
-      toast.error("At least one category is required");
-      return;
-    }
-
-    if (!formData.location) {
-      toast.error("Location is required");
-      return;
-    }
-
-    if (!formData.image) {
-      toast.error("Brand image is required");
-      return;
-    }
-
-    // Validate price range - either set a range or explicitly mark as contact for pricing
-    if (
-      !formData.price_min &&
-      !formData.price_max &&
-      !formData.contact_for_pricing
-    ) {
-      toast.error(
-        "Please set a price range or mark as 'explore brand for prices'"
-      );
-      return;
-    }
-
-    // Email is optional - only validate format if provided
-    if (formData.contact_email) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(formData.contact_email)) {
-        toast.error("Please enter a valid email address");
-        return;
-      }
-    }
-
-    // Format price range if both min and max are provided
     let priceRange = "";
-    if (
-      formData.price_min &&
-      formData.price_max &&
-      !formData.contact_for_pricing
-    ) {
-      const currency = CURRENCIES.find((c) => c.code === formData.currency);
-      const symbol = currency?.symbol || "$";
-      priceRange = formatPriceRange(
-        formData.price_min,
-        formData.price_max,
-        symbol
-      );
-    }
-
-    // If contact for pricing is checked, override any price range
-    if (formData.contact_for_pricing) {
+    if (d.contact_for_pricing) {
       priceRange = "explore brand for prices";
+    } else {
+      const currencyRow = STUDIO_CURRENCIES_FOR_PRICE_SELECT.find(
+        (c) => c.code === d.currency
+      );
+      const symbol = currencyRow?.symbol || "$";
+      priceRange = formatPriceRange(d.price_min, d.price_max, symbol);
     }
 
-    // Format descriptions to remove contractions and make them more professional
     const payload = {
-      name: formData.name,
-      description: formatBrandDescription(formData.description || ""),
+      name: d.name,
+      description: formatBrandDescription(d.description),
       long_description: formatBrandDescription(
-        formData.long_description || formData.description || ""
+        d.long_description.trim() || d.description
       ),
-      location: formData.location,
+      location: d.location,
       price_range: priceRange || "explore brand for prices",
-      currency: formData.currency,
-      category: formData.categories[0],
-      categories: formData.categories,
-      image: formData.image,
+      currency: d.currency,
+      category: d.categories[0],
+      categories: d.categories,
+      image: d.image,
       is_verified: false,
-      website: formData.website || undefined,
-      instagram: formData.instagram || undefined,
-      whatsapp: formData.whatsapp || undefined,
-      contact_email: formData.contact_email || undefined,
-      founded_year: formData.founded_year || undefined,
-      video_url: formData.video_url || undefined,
-      video_thumbnail: formData.video_thumbnail || undefined,
+      website: d.website.trim() || undefined,
+      instagram: d.instagram.trim() || undefined,
+      whatsapp: d.whatsapp.trim() || undefined,
+      contact_email: d.contact_email.trim() || undefined,
+      founded_year: d.founded_year.trim() || undefined,
+      video_url: d.video_url.trim() || undefined,
+      video_thumbnail: d.video_thumbnail.trim() || undefined,
     };
 
-    console.log("📤 Sending brand creation payload:", payload);
+    brandFormDevLog("Brand creation payload:", payload);
 
     setSubmitting(true);
     try {
       const response = await fetch("/api/studio/brands", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
       const data = await response.json();
-      console.log("📥 API Response:", { status: response.status, data });
+      brandFormDevLog("Create brand API response:", response.status, data);
 
       if (!response.ok) {
-        // Handle specific error cases
         if (response.status === 401) {
           toast.error(
             "Your session has expired. Please refresh the page and sign in again."
           );
-          // Optionally redirect to login or refresh page
-          setTimeout(() => {
-            window.location.reload();
-          }, 2000);
+          setTimeout(() => window.location.reload(), 2000);
           return;
         }
         if (response.status === 403) {
@@ -386,9 +242,7 @@ export default function CreateBrandPage() {
       toast.success("Brand created successfully!");
       router.push(`/studio/brands/${data.brand.id}`);
     } catch (error) {
-      console.error("❌ Error creating brand:", error);
-
-      // Show more specific error messages
+      console.error("Error creating brand:", error);
       if (error instanceof Error) {
         if (error.message.includes("fetch")) {
           toast.error(
@@ -405,19 +259,8 @@ export default function CreateBrandPage() {
     }
   };
 
-  // Calculate remaining characters for short description
   const remainingChars = SHORT_DESCRIPTION_LIMIT - formData.description.length;
-
-  // Calculate remaining characters for brand name
   const remainingNameChars = BRAND_NAME_LIMIT - formData.name.length;
-
-  // Add debugging to see what's happening
-  console.log("🔍 CreateBrandPage render:", {
-    hasUser: !!user,
-    userRole: user?.role,
-    authLoading,
-    categoriesCount: CATEGORIES.length,
-  });
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
@@ -429,49 +272,6 @@ export default function CreateBrandPage() {
         </Button>
         <h1 className="text-3xl font-canela text-gray-900">Create New Brand</h1>
       </div>
-
-      {/* Debug Info in Development */}
-      {process.env.NODE_ENV === "development" && (
-        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm">
-          <p className="font-semibold text-blue-800 mb-2">
-            🔍 Debug Information:
-          </p>
-          <div className="space-y-1 text-blue-700">
-            <p>• User Authenticated: {user ? "✅ Yes" : "❌ No"}</p>
-            {user && (
-              <>
-                <p>• User Email: {user.email}</p>
-                <p>• User Role: {user.role}</p>
-                <p>• User ID: {user.id}</p>
-              </>
-            )}
-            <p>
-              • Form Valid:{" "}
-              {formData.name &&
-              formData.description &&
-              formData.categories.length > 0 &&
-              formData.location &&
-              formData.image &&
-              formData.contact_email
-                ? "✅ Yes"
-                : "❌ No"}
-            </p>
-            <p>
-              • Missing Fields:{" "}
-              {[
-                !formData.name && "Name",
-                !formData.description && "Description",
-                !formData.categories.length && "Categories",
-                !formData.location && "Location",
-                !formData.image && "Image",
-                !formData.contact_email && "Contact Email",
-              ]
-                .filter(Boolean)
-                .join(", ") || "None"}
-            </p>
-          </div>
-        </div>
-      )}
 
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -544,12 +344,10 @@ export default function CreateBrandPage() {
                         className="min-h-[200px]"
                       />
                       <div className="text-xs text-muted-foreground mt-1">
-                        💡 Tip: Contractions (isn't, it's, don't) will be
-                        automatically converted to formal language.
+                        💡 Tip: Contractions (isn&apos;t, it&apos;s, don&apos;t)
+                        will be automatically converted to formal language.
                       </div>
                     </div>
-
-                    {/* Live Preview */}
                     <div className="space-y-2">
                       <Label className="text-sm font-medium text-gray-700">
                         Live Preview
@@ -599,7 +397,7 @@ export default function CreateBrandPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="price_range">Price Range</Label>
+                    <Label>Pricing</Label>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                       <Select
                         value={formData.currency}
@@ -611,7 +409,7 @@ export default function CreateBrandPage() {
                           <SelectValue placeholder="Currency" />
                         </SelectTrigger>
                         <SelectContent>
-                          {CURRENCIES.map((currency) => (
+                          {STUDIO_CURRENCIES_FOR_PRICE_SELECT.map((currency) => (
                             <SelectItem
                               key={currency.code}
                               value={currency.code}
@@ -647,8 +445,9 @@ export default function CreateBrandPage() {
                           {formatPriceRange(
                             formData.price_min,
                             formData.price_max,
-                            CURRENCIES.find((c) => c.code === formData.currency)
-                              ?.symbol || "$"
+                            STUDIO_CURRENCIES_FOR_PRICE_SELECT.find(
+                              (c) => c.code === formData.currency
+                            )?.symbol || "$"
                           )}
                         </>
                       ) : (
@@ -656,22 +455,21 @@ export default function CreateBrandPage() {
                       )}
                     </p>
 
-                    {/* Contact for Pricing Option */}
                     <div className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
+                      <Checkbox
                         id="contact_for_pricing"
-                        name="contact_for_pricing"
                         checked={formData.contact_for_pricing}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            contact_for_pricing: e.target.checked,
-                          })
+                        onCheckedChange={(checked) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            contact_for_pricing: checked === true,
+                          }))
                         }
-                        className="rounded border-gray-300 text-oma-plum focus:ring-oma-plum"
                       />
-                      <Label htmlFor="contact_for_pricing" className="text-sm">
+                      <Label
+                        htmlFor="contact_for_pricing"
+                        className="text-sm font-normal cursor-pointer"
+                      >
                         explore brand for prices (if you prefer not to show
                         specific prices)
                       </Label>
@@ -799,10 +597,7 @@ export default function CreateBrandPage() {
                   maxSize={5}
                   imageType="brand"
                   imageRole="cover"
-                  // Note: brandId and brandName will be set after brand creation
-                  // For now, this will use legacy naming, but can be updated later
                 />
-                {/* Always show brand video and thumbnail upload fields */}
                 <div className="mt-6 space-y-4">
                   <Label>Brand Video (optional)</Label>
                   <VideoUpload
@@ -829,7 +624,6 @@ export default function CreateBrandPage() {
                   type="submit"
                   className="w-full"
                   disabled={submitting}
-                  onClick={handleSubmit}
                 >
                   {submitting ? (
                     <span className="flex items-center gap-2">

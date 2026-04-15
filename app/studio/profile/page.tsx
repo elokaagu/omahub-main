@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { getProfile, updateProfile, User } from "@/lib/services/authService";
 import { toast } from "sonner";
@@ -17,29 +17,27 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { User as UserIcon, Save } from "lucide-react";
 import { FileUpload } from "@/components/ui/file-upload";
-import { useRouter } from "next/navigation";
 import { AuthImage } from "@/components/ui/auth-image";
 
 interface ProfileData extends User {
   // Extends the User type from authService
 }
 
+type FormBaseline = {
+  first_name: string;
+  last_name: string;
+  avatar_url: string;
+};
+
 export default function ProfilePage() {
   const { user, refreshUserProfile } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
-  const router = useRouter();
+  const [baseline, setBaseline] = useState<FormBaseline | null>(null);
 
   useEffect(() => {
-    const initialize = async () => {
-      // Setup storage buckets to ensure they exist
-      try {
-        console.log("Storage initialized successfully");
-      } catch (error) {
-        console.error("Error initializing storage:", error);
-      }
-
+    const load = async () => {
       if (!user) return;
 
       setLoading(true);
@@ -47,23 +45,35 @@ export default function ProfilePage() {
         const profile = await getProfile(user.id);
 
         if (profile) {
-          setProfileData({
+          const data: ProfileData = {
             id: user.id,
             email: user.email,
             first_name: profile.first_name || "",
             last_name: profile.last_name || "",
             avatar_url: profile.avatar_url || "",
-            role: profile.role || "admin",
+            role: profile.role ?? user.role ?? "user",
+          };
+          setProfileData(data);
+          setBaseline({
+            first_name: data.first_name ?? "",
+            last_name: data.last_name ?? "",
+            avatar_url: data.avatar_url ?? "",
           });
         } else {
-          // Create a default profile if none exists
-          setProfileData({
+          // No profile row in DB yet — local form only; role shown from session (not elevated in UI)
+          const data: ProfileData = {
             id: user.id,
             email: user.email,
             first_name: "",
             last_name: "",
             avatar_url: "",
-            role: "admin",
+            role: user.role ?? "user",
+          };
+          setProfileData(data);
+          setBaseline({
+            first_name: "",
+            last_name: "",
+            avatar_url: "",
           });
         }
       } catch (error) {
@@ -74,8 +84,17 @@ export default function ProfilePage() {
       }
     };
 
-    initialize();
+    void load();
   }, [user]);
+
+  const isDirty = useMemo(() => {
+    if (!profileData || !baseline) return false;
+    return (
+      (profileData.first_name ?? "") !== baseline.first_name ||
+      (profileData.last_name ?? "") !== baseline.last_name ||
+      (profileData.avatar_url ?? "") !== baseline.avatar_url
+    );
+  }, [profileData, baseline]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -100,21 +119,36 @@ export default function ProfilePage() {
     e.preventDefault();
     if (!profileData || !user) return;
 
+    const first_name = (profileData.first_name ?? "").trim();
+    const last_name = (profileData.last_name ?? "").trim();
+    const avatar_url = (profileData.avatar_url ?? "").trim();
+
     setSaving(true);
     try {
       await updateProfile(user.id, {
-        first_name: profileData.first_name,
-        last_name: profileData.last_name,
-        avatar_url: profileData.avatar_url,
+        first_name,
+        last_name,
+        avatar_url,
       });
 
-      // Refresh the user data in AuthContext to update the header
-      await refreshUserProfile();
+      setProfileData((prev) =>
+        prev
+          ? { ...prev, first_name, last_name, avatar_url }
+          : prev
+      );
+      setBaseline({ first_name, last_name, avatar_url });
 
       toast.success("Profile updated successfully");
 
-      // No need to force a page reload which can cause the "saving forever" issue
-      // Just let the component state update naturally
+      try {
+        await refreshUserProfile();
+      } catch (refreshErr) {
+        console.error("Auth context refresh failed after save:", refreshErr);
+        toast.message(
+          "Saved your profile, but the header may not update until you refresh.",
+          { duration: 6000 }
+        );
+      }
     } catch (error) {
       console.error("Error updating profile:", error);
       toast.error("Failed to update profile");
@@ -209,11 +243,15 @@ export default function ProfilePage() {
                 </div>
               </CardContent>
 
-              <CardFooter>
+              <CardFooter className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-xs text-muted-foreground order-2 sm:order-1">
+                  Avatar and name changes apply when you click Save — uploading a
+                  photo updates the preview only until then.
+                </p>
                 <Button
                   type="submit"
-                  className="bg-oma-plum hover:bg-oma-plum/90 flex items-center gap-2"
-                  disabled={saving}
+                  className="bg-oma-plum hover:bg-oma-plum/90 flex items-center gap-2 order-1 sm:order-2 shrink-0"
+                  disabled={saving || !isDirty}
                 >
                   <Save className="h-4 w-4" />
                   {saving ? "Saving..." : "Save Changes"}

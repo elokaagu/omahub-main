@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { getAllBrands } from "@/lib/services/brandService";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import {
   getUserPermissions,
   Permission,
@@ -14,7 +13,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -37,30 +35,33 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { AuthImage } from "@/components/ui/auth-image";
 import { Loading } from "@/components/ui/loading";
 import { RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { useStudioOptimization } from "@/lib/hooks/useStudioOptimization";
+import { getPrimaryBrandImagePublicUrl } from "@/lib/brands/brandEditMedia";
 
-type Profile = Database["public"]["Tables"]["profiles"]["Row"];
+type ResolvedStudioAccess = {
+  role: string;
+  owned_brands: string[];
+};
 
 export default function BrandsPage() {
-  const { user, refreshUserProfile } = useAuth();
+  const { user } = useAuth();
   const supabase = createClientComponentClient<Database>();
   const [brands, setBrands] = useState<Brand[]>([]);
-  const [filteredBrands, setFilteredBrands] = useState<Brand[]>([]);
   const [userPermissions, setUserPermissions] = useState<Permission[]>([]);
-  const [userProfile, setUserProfile] = useState<Profile | null>(null);
+  const [resolvedAccess, setResolvedAccess] =
+    useState<ResolvedStudioAccess | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
 
-  // Use optimization hook to prevent constant reloading
-  const { debouncedFetch, controlledRefresh, forceRefresh } = useStudioOptimization({
-    debounceMs: 1000, // 1 second debounce
-    maxRefreshIntervalMs: 30000, // 30 seconds max between checks
+  const { controlledRefresh, forceRefresh } = useStudioOptimization({
+    debounceMs: 1000,
+    maxRefreshIntervalMs: 30000,
     enableRealTimeUpdates: true,
   });
 
@@ -71,8 +72,8 @@ export default function BrandsPage() {
     }
 
     setLoading(true);
+    setLoadError(null);
     try {
-      // Get user permissions and profile directly without refreshing
       const [permissions, profileResult] = await Promise.all([
         getUserPermissions(user.id),
         supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
@@ -82,92 +83,88 @@ export default function BrandsPage() {
 
       if (profileResult.error) {
         console.error("Error fetching profile:", profileResult.error);
-        // Use user context as fallback
-        setUserProfile({
-          id: user.id,
-          email: user.email,
-          role: user.role || "user",
-          owned_brands: user.owned_brands || [],
-          first_name: user.first_name || null,
-          last_name: user.last_name || null,
-          avatar_url: user.avatar_url || null,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        } as Profile);
-      } else {
-        setUserProfile(profileResult.data);
       }
 
-      // Get brands based on user role
-      if (permissions.includes("studio.brands.manage")) {
-        const effectiveProfile = profileResult.data || {
-          role: user.role,
-          owned_brands: user.owned_brands || [],
-        };
+      const profile = profileResult.error ? null : profileResult.data;
+      const effectiveRole = profile?.role ?? user.role ?? "user";
+      const effectiveOwned = profile?.owned_brands ?? user.owned_brands ?? [];
 
-        const isAdmin =
-          effectiveProfile.role === "admin" ||
-          effectiveProfile.role === "super_admin";
-        const isBrandOwner = effectiveProfile.role === "brand_admin";
-        const ownedBrandIds = effectiveProfile.owned_brands || [];
+      setResolvedAccess({
+        role: String(effectiveRole),
+        owned_brands: Array.isArray(effectiveOwned) ? [...effectiveOwned] : [],
+      });
 
-        if (isAdmin) {
-          // Admins see all brands with brand_images relationship
-          const { data: fetchedBrands, error } = await supabase
-            .from("brands")
-            .select("*, brand_images(*)")
-            .order("name");
+      if (!permissions.includes("studio.brands.manage")) {
+        setBrands([]);
+        return;
+      }
 
-          if (error) throw error;
-          setBrands(fetchedBrands || []);
-        } else if (isBrandOwner && ownedBrandIds.length > 0) {
-          // Brand owners see only their brands with brand_images relationship
-          const { data: fetchedBrands, error } = await supabase
-            .from("brands")
-            .select("*, brand_images(*)")
-            .in("id", ownedBrandIds)
-            .order("name");
+      const isAdmin =
+        effectiveRole === "admin" || effectiveRole === "super_admin";
+      const isBrandOwner = effectiveRole === "brand_admin";
+      const ownedBrandIds = effectiveOwned || [];
 
-          if (error) throw error;
-          setBrands(fetchedBrands || []);
-        } else {
-          setBrands([]);
-        }
+      if (isAdmin) {
+        const { data: fetchedBrands, error } = await supabase
+          .from("brands")
+          .select("*, brand_images(*)")
+          .order("name");
+
+        if (error) throw error;
+        setBrands(fetchedBrands || []);
+      } else if (isBrandOwner && ownedBrandIds.length > 0) {
+        const { data: fetchedBrands, error } = await supabase
+          .from("brands")
+          .select("*, brand_images(*)")
+          .in("id", ownedBrandIds)
+          .order("name");
+
+        if (error) throw error;
+        setBrands(fetchedBrands || []);
+      } else {
+        setBrands([]);
       }
     } catch (error) {
       console.error("Error fetching data:", error);
+      const message =
+        "We couldn’t load brands. Check your connection and try again.";
+      setLoadError(message);
       toast.error("Failed to load data");
     } finally {
       setLoading(false);
     }
-  }, [user, supabase]); // Only depend on user and supabase
+  }, [user, supabase]);
 
   useEffect(() => {
-    // Use controlled refresh to prevent excessive calls
     controlledRefresh(fetchData);
-  }, [fetchData, controlledRefresh]); // Now safe to depend on fetchData since it's memoized
+  }, [fetchData, controlledRefresh]);
 
   useEffect(() => {
-    if (searchQuery.trim() === "") {
-      setFilteredBrands(brands);
-    } else {
-      const query = searchQuery.toLowerCase();
-      const filtered = brands.filter(
-        (brand) =>
-          brand.name.toLowerCase().includes(query) ||
-          (brand.description?.toLowerCase() || "").includes(query) ||
-          brand.category.toLowerCase().includes(query) ||
-          brand.location.toLowerCase().includes(query)
-      );
-      setFilteredBrands(filtered);
+    if (!user) {
+      setLoadError(null);
+      setResolvedAccess(null);
     }
-  }, [searchQuery, brands]);
+  }, [user]);
+
+  const filteredBrands = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return brands;
+    return brands.filter(
+      (brand) =>
+        brand.name.toLowerCase().includes(query) ||
+        (brand.description?.toLowerCase() || "").includes(query) ||
+        brand.category.toLowerCase().includes(query) ||
+        brand.location.toLowerCase().includes(query)
+    );
+  }, [brands, searchQuery]);
 
   const handleBrandClick = (brandId: string) => {
-    router.push(
-      `/studio/brands/${encodeURIComponent(brandId.trim().toLowerCase())}`
-    );
+    router.push(`/studio/brands/${encodeURIComponent(brandId.trim())}`);
   };
+
+  const roleForUi = resolvedAccess?.role ?? user?.role ?? "user";
+  const isBrandOwner = roleForUi === "brand_admin";
+  const isAdmin = roleForUi === "admin" || roleForUi === "super_admin";
 
   if (loading) {
     return (
@@ -191,6 +188,28 @@ export default function BrandsPage() {
     );
   }
 
+  if (loadError) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh] px-4">
+        <div className="text-center max-w-md">
+          <Package className="mx-auto h-12 w-12 text-gray-400" />
+          <h3 className="mt-4 text-lg font-semibold text-gray-900">
+            Something went wrong
+          </h3>
+          <p className="mt-2 text-gray-600">{loadError}</p>
+          <Button
+            className="mt-6"
+            variant="outline"
+            onClick={() => void forceRefresh(fetchData)}
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Try again
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   if (!userPermissions.includes("studio.brands.manage")) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -198,15 +217,12 @@ export default function BrandsPage() {
           <Package className="mx-auto h-12 w-12 text-gray-400" />
           <h3 className="mt-4 text-lg font-semibold">Access Denied</h3>
           <p className="mt-2 text-gray-500">
-            You don't have permission to manage brands.
+            You don&apos;t have permission to manage brands.
           </p>
         </div>
       </div>
     );
   }
-
-  const isBrandOwner = user.role === "brand_admin";
-  const isAdmin = user.role === "admin" || user.role === "super_admin";
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
@@ -223,7 +239,7 @@ export default function BrandsPage() {
         </div>
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <Button
-            onClick={() => forceRefresh(fetchData)}
+            onClick={() => void forceRefresh(fetchData)}
             variant="outline"
             size="sm"
             className="flex items-center gap-2 w-full sm:w-auto"
@@ -309,67 +325,70 @@ export default function BrandsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredBrands.map((brand) => (
-                <TableRow
-                  key={brand.id}
-                  className="cursor-pointer hover:bg-gray-50"
-                  onClick={() => handleBrandClick(brand.id)}
-                >
-                  <TableCell className="font-medium">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-md overflow-hidden bg-gray-100 flex-shrink-0">
-                        {brand.brand_images?.[0]?.storage_path && (
-                          <AuthImage
-                            src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${brand.brand_images[0].storage_path}`}
-                            alt={brand.name}
-                            aspectRatio="square"
-                            className="w-full h-full"
-                            sizes="40px"
-                            quality={60}
-                          />
+              {filteredBrands.map((brand) => {
+                const imageUrl = getPrimaryBrandImagePublicUrl(brand);
+                return (
+                  <TableRow
+                    key={brand.id}
+                    className="cursor-pointer hover:bg-gray-50"
+                    onClick={() => handleBrandClick(brand.id)}
+                  >
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-md overflow-hidden bg-gray-100 flex-shrink-0">
+                          {imageUrl ? (
+                            <AuthImage
+                              src={imageUrl}
+                              alt={brand.name}
+                              aspectRatio="square"
+                              className="w-full h-full"
+                              sizes="40px"
+                              quality={60}
+                            />
+                          ) : null}
+                        </div>
+                        <span>{brand.name}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>{brand.category}</TableCell>
+                    <TableCell>{brand.location}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center">
+                        <Star className="h-4 w-4 text-yellow-400 mr-1" />
+                        {brand.rating && brand.rating > 0 ? (
+                          brand.rating.toFixed(1)
+                        ) : (
+                          <span className="text-gray-400">No ratings yet</span>
                         )}
                       </div>
-                      <span>{brand.name}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>{brand.category}</TableCell>
-                  <TableCell>{brand.location}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center">
-                      <Star className="h-4 w-4 text-yellow-400 mr-1" />
-                      {brand.rating && brand.rating > 0 ? (
-                        brand.rating.toFixed(1)
+                    </TableCell>
+                    <TableCell>
+                      {brand.is_verified ? (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          Verified
+                        </span>
                       ) : (
-                        <span className="text-gray-400">No ratings yet</span>
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                          Unverified
+                        </span>
                       )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {brand.is_verified ? (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        <CheckCircle className="h-3 w-3 mr-1" />
-                        Verified
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                        Unverified
-                      </span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleBrandClick(brand.id);
-                      }}
-                    >
-                      View
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleBrandClick(brand.id);
+                        }}
+                      >
+                        View
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </div>

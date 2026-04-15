@@ -1,12 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { AuthImage } from "@/components/ui/auth-image";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
@@ -20,161 +17,72 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
-  getAllHeroSlides,
-  deleteHeroSlide,
-  toggleHeroSlideStatus,
-  reorderHeroSlides,
-  type HeroSlide,
-} from "@/lib/services/heroService";
-import {
   Plus,
   Edit,
   Trash2,
   Eye,
   EyeOff,
-  GripVertical,
   Monitor,
   ArrowUp,
   ArrowDown,
 } from "lucide-react";
-import { toast } from "sonner";
 import { Loading } from "@/components/ui/loading";
 import { NavigationLink } from "@/components/ui/navigation-link";
+import { SuperAdminHeroGate } from "./SuperAdminHeroGate";
+import { useHeroSlidesAdmin } from "./useHeroSlidesAdmin";
 
 export default function HeroManagementPage() {
-  const { user, session } = useAuth();
-  const router = useRouter();
-  const [heroSlides, setHeroSlides] = useState<HeroSlide[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isDeleting, setIsDeleting] = useState<string | null>(null);
-  const [isToggling, setIsToggling] = useState<string | null>(null);
-  const [isReordering, setIsReordering] = useState(false);
+  return (
+    <SuperAdminHeroGate capabilityPhrase="manage the homepage hero carousel">
+      <HeroManagementContent />
+    </SuperAdminHeroGate>
+  );
+}
 
-  // Check if user is super admin
-  useEffect(() => {
-    if (user && user.role !== "super_admin") {
-      router.push("/studio");
-      return;
-    }
-  }, [user, router]);
+function HeroManagementContent() {
+  const { user } = useAuth();
+  const {
+    heroSlides,
+    listLoad,
+    fetchSlides,
+    isDeleting,
+    isToggling,
+    reorderInFlight,
+    reorderUpLoading,
+    reorderDownLoading,
+    handleDelete,
+    handleToggleStatus,
+    handleMoveUp,
+    handleMoveDown,
+  } = useHeroSlidesAdmin(user);
 
-  // Fetch hero slides
-  useEffect(() => {
-    const fetchHeroSlides = async () => {
-      try {
-        setIsLoading(true);
-        const slides = await getAllHeroSlides();
-        setHeroSlides(slides);
-      } catch (error) {
-        console.error("Error fetching hero slides:", error);
-        toast.error("Failed to load hero slides");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (user?.role === "super_admin") {
-      fetchHeroSlides();
-    }
-  }, [user]);
-
-  const handleDelete = async (id: string) => {
-    if (!user) return;
-
-    try {
-      setIsDeleting(id);
-      await deleteHeroSlide(user.id, id);
-      setHeroSlides((prev) => prev.filter((slide) => slide.id !== id));
-      toast.success("Hero slide deleted successfully");
-    } catch (error) {
-      console.error("Error deleting hero slide:", error);
-      toast.error("Failed to delete hero slide");
-    } finally {
-      setIsDeleting(null);
-    }
-  };
-
-  const handleToggleStatus = async (id: string, currentStatus: boolean) => {
-    if (!user) return;
-
-    try {
-      setIsToggling(id);
-      await toggleHeroSlideStatus(user.id, id, !currentStatus);
-
-      // Update local state
-      setHeroSlides((prev) =>
-        prev.map((slide) =>
-          slide.id === id ? { ...slide, is_active: !currentStatus } : slide
-        )
-      );
-
-      toast.success(
-        `Hero slide ${!currentStatus ? "activated" : "deactivated"} successfully`
-      );
-    } catch (error) {
-      console.error("Error toggling hero slide status:", error);
-      toast.error("Failed to update hero slide status");
-    } finally {
-      setIsToggling(null);
-    }
-  };
-
-  const handleMoveUp = async (index: number) => {
-    if (index === 0 || !user) return;
-
-    try {
-      setIsReordering(true);
-      const newSlides = [...heroSlides];
-      [newSlides[index - 1], newSlides[index]] = [
-        newSlides[index],
-        newSlides[index - 1],
-      ];
-
-      const slideIds = newSlides.map((slide) => slide.id);
-      await reorderHeroSlides(user.id, slideIds);
-
-      setHeroSlides(newSlides);
-      toast.success("Hero slides reordered successfully");
-    } catch (error) {
-      console.error("Error reordering hero slides:", error);
-      toast.error("Failed to reorder hero slides");
-    } finally {
-      setIsReordering(false);
-    }
-  };
-
-  const handleMoveDown = async (index: number) => {
-    if (index === heroSlides.length - 1 || !user) return;
-
-    try {
-      setIsReordering(true);
-      const newSlides = [...heroSlides];
-      [newSlides[index], newSlides[index + 1]] = [
-        newSlides[index + 1],
-        newSlides[index],
-      ];
-
-      const slideIds = newSlides.map((slide) => slide.id);
-      await reorderHeroSlides(user.id, slideIds);
-
-      setHeroSlides(newSlides);
-      toast.success("Hero slides reordered successfully");
-    } catch (error) {
-      console.error("Error reordering hero slides:", error);
-      toast.error("Failed to reorder hero slides");
-    } finally {
-      setIsReordering(false);
-    }
-  };
-
-  if (user?.role !== "super_admin") {
-    return <Loading />;
-  }
-
-  if (isLoading) {
+  if (listLoad.status === "loading") {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <Loading />
+      </div>
+    );
+  }
+
+  if (listLoad.status === "error") {
+    return (
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-24 text-center">
+        <h1 className="text-2xl font-canela text-oma-black mb-2">
+          Couldn&apos;t load hero slides
+        </h1>
+        <p className="text-oma-cocoa mb-6">{listLoad.message}</p>
+        <div className="flex flex-wrap justify-center gap-3">
+          <Button
+            type="button"
+            className="bg-oma-plum hover:bg-oma-plum/90"
+            onClick={() => void fetchSlides()}
+          >
+            Try again
+          </Button>
+          <Button asChild variant="outline">
+            <NavigationLink href="/studio">Back to Studio</NavigationLink>
+          </Button>
+        </div>
       </div>
     );
   }
@@ -287,22 +195,32 @@ export default function HeroManagementPage() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleMoveUp(index)}
-                          disabled={index === 0 || isReordering}
+                          onClick={() => void handleMoveUp(index)}
+                          disabled={index === 0 || reorderInFlight}
                           className="flex-1 sm:flex-none"
+                          aria-label="Move slide up"
                         >
-                          <ArrowUp className="h-4 w-4" />
+                          {reorderUpLoading(index) ? (
+                            <div className="h-4 w-4 animate-spin rounded-full border border-current border-t-transparent" />
+                          ) : (
+                            <ArrowUp className="h-4 w-4" />
+                          )}
                         </Button>
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleMoveDown(index)}
+                          onClick={() => void handleMoveDown(index)}
                           disabled={
-                            index === heroSlides.length - 1 || isReordering
+                            index === heroSlides.length - 1 || reorderInFlight
                           }
                           className="flex-1 sm:flex-none"
+                          aria-label="Move slide down"
                         >
-                          <ArrowDown className="h-4 w-4" />
+                          {reorderDownLoading(index) ? (
+                            <div className="h-4 w-4 animate-spin rounded-full border border-current border-t-transparent" />
+                          ) : (
+                            <ArrowDown className="h-4 w-4" />
+                          )}
                         </Button>
                       </div>
 
@@ -369,7 +287,7 @@ export default function HeroManagementPage() {
                             <AlertDialogFooter>
                               <AlertDialogCancel>Cancel</AlertDialogCancel>
                               <AlertDialogAction
-                                onClick={() => handleDelete(slide.id)}
+                                onClick={() => void handleDelete(slide.id)}
                                 className="bg-red-600 hover:bg-red-700"
                               >
                                 Delete

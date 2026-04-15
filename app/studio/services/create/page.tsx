@@ -11,15 +11,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { FileUpload } from "@/components/ui/file-upload";
 import { getTailorBrands } from "@/lib/services/brandService";
-import { createProduct } from "@/lib/services/productService";
+import { createService, StudioServiceType } from "@/lib/services/serviceService";
 import { Brand } from "@/lib/supabase";
 import {
   ArrowLeft,
   Plus,
   Trash2,
   Scissors,
-  Clock,
-  DollarSign,
   Users,
   Sparkles,
   MessageCircle,
@@ -87,6 +85,29 @@ const tailorSpecialties = [
   "Beadwork",
 ];
 
+interface CreateServiceFormData {
+  title: string;
+  description: string;
+  service_type: StudioServiceType | "";
+  brand_id: string;
+  image: string;
+  images: string[];
+  consultation_fee: string;
+  hourly_rate: string;
+  fixed_price: string;
+  price_range: string;
+  contact_for_pricing: boolean;
+  duration: string;
+  sessions_included: string;
+  specialties: string[];
+  requirements: string;
+  lead_time: string;
+  measurement_guide: string;
+  fitting_sessions: string;
+  delivery_method: string;
+  includes: string[];
+}
+
 export default function CreateServicePage() {
   const { user } = useAuth();
   const router = useRouter();
@@ -95,7 +116,7 @@ export default function CreateServicePage() {
   const [loading, setLoading] = useState(true);
   const tailoringEvent = useTailoringEvent();
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<CreateServiceFormData>({
     title: "",
     description: "",
     service_type: "",
@@ -121,20 +142,7 @@ export default function CreateServicePage() {
     includes: [] as string[],
   });
 
-  // Tailor-specific categories
-  const tailoredCategories = [
-    "Bridal",
-    "Custom Design",
-    "Evening Gowns",
-    "Alterations",
-    "Tailored",
-    "Event Wear",
-    "Wedding Guest",
-    "Birthday",
-  ];
-
-  // Check if selected brand is a tailor brand
-  const isTailorBrand = (): boolean => {
+  const isSelectedAllowedBrand = (): boolean => {
     return brands.some((brand) => brand.id === formData.brand_id);
   };
 
@@ -188,7 +196,7 @@ export default function CreateServicePage() {
       fetchData();
     });
     return () => unsubscribe();
-  }, [user]);
+  }, [user, tailoringEvent]);
 
   const handleInputChange = (name: string, value: string | boolean) => {
     setFormData((prev) => ({
@@ -197,10 +205,10 @@ export default function CreateServicePage() {
     }));
   };
 
-  const handleServiceTypeSelect = (serviceType: any) => {
+  const handleServiceTypeSelect = (serviceType: (typeof serviceTypes)[number]) => {
     setFormData((prev) => ({
       ...prev,
-      service_type: serviceType.id,
+      service_type: serviceType.id as StudioServiceType,
       title: serviceType.title,
       description: serviceType.description,
       // Set defaults based on service type
@@ -277,7 +285,7 @@ export default function CreateServicePage() {
       return;
     }
 
-    if (!isTailorBrand()) {
+    if (!isSelectedAllowedBrand()) {
       toast.error("Services can only be created for tailor brands");
       return;
     }
@@ -296,7 +304,14 @@ export default function CreateServicePage() {
     try {
       setIsLoading(true);
 
-      // Create as a special product with service metadata
+      const serviceTypeMeta = serviceTypes.find(
+        (s) => s.id === formData.service_type
+      );
+      if (!serviceTypeMeta) {
+        toast.error("Please select a valid service type");
+        return;
+      }
+
       const serviceData = {
         title: formData.title,
         description: formData.description,
@@ -315,21 +330,11 @@ export default function CreateServicePage() {
             ? formData.images
             : [formData.image || "/placeholder-service.jpg"],
         brand_id: formData.brand_id,
-        category:
-          serviceTypes.find((s) => s.id === formData.service_type)?.category ||
-          "Custom Design",
-        categories: [
-          serviceTypes.find((s) => s.id === formData.service_type)?.category ||
-          "Custom Design"
-        ],
+        category: serviceTypeMeta.category,
+        categories: [serviceTypeMeta.category],
         in_stock: true,
         is_custom: true,
-        // Service-specific metadata
-        service_type: ["consultation", "product", "service"].includes(
-          formData.service_type
-        )
-          ? (formData.service_type as "consultation" | "product" | "service")
-          : undefined,
+        service_type: formData.service_type,
         consultation_fee: formData.consultation_fee
           ? parseFloat(formData.consultation_fee)
           : undefined,
@@ -352,9 +357,9 @@ export default function CreateServicePage() {
         includes: formData.includes || [],
       };
 
-      await createProduct(serviceData);
+      await createService(serviceData);
       toast.success("Service created successfully");
-      router.push("/studio/products");
+      router.push("/studio/services");
     } catch (error) {
       console.error("Error creating service:", error);
       toast.error("Failed to create service");
@@ -371,6 +376,50 @@ export default function CreateServicePage() {
     );
   }
 
+  if (!user) {
+    return (
+      <div className="text-center py-12 text-gray-600">
+        Sign in to create tailoring services.
+      </div>
+    );
+  }
+
+  if (!["super_admin", "brand_admin"].includes(user.role ?? "")) {
+    return (
+      <div className="text-center py-12 text-gray-600">
+        You do not have permission to create services.
+      </div>
+    );
+  }
+
+  if (brands.length === 0) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+        <div className="flex items-center mb-8">
+          <Button
+            variant="outline"
+            size="icon"
+            className="mr-4"
+            onClick={() => router.push("/studio/services")}
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div>
+            <h1 className="text-3xl font-canela text-gray-900">Create Service</h1>
+            <p className="text-gray-600 mt-1">No eligible tailor brands found.</p>
+          </div>
+        </div>
+        <Card className="border border-oma-gold/10 bg-white">
+          <CardContent className="py-8 text-center text-gray-600">
+            {user.role === "brand_admin"
+              ? "No owned tailoring brands are available for your account yet."
+              : "Create or configure a tailoring brand first, then add services."}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
       <div className="flex items-center mb-8">
@@ -378,7 +427,7 @@ export default function CreateServicePage() {
           variant="outline"
           size="icon"
           className="mr-4"
-          onClick={() => router.push("/studio/products")}
+          onClick={() => router.push("/studio/services")}
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
@@ -422,19 +471,12 @@ export default function CreateServicePage() {
                   ))}
                 </SelectContent>
               </Select>
-              {brands.filter((brand) =>
-                tailoredCategories.includes(brand.category)
-              ).length === 0 && (
-                <p className="text-sm text-amber-600">
-                  No tailor brands found. Please create a tailor brand first.
-                </p>
-              )}
             </div>
           </CardContent>
         </Card>
 
         {/* Service Type Selection */}
-        {formData.brand_id && isTailorBrand() && (
+        {formData.brand_id && isSelectedAllowedBrand() && (
           <Card className="border border-oma-gold/10 bg-white">
             <CardHeader>
               <CardTitle className="text-black">Service Type</CardTitle>
@@ -860,7 +902,7 @@ export default function CreateServicePage() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => router.push("/studio/products")}
+                onClick={() => router.push("/studio/services")}
                 disabled={isLoading}
                 className="border-oma-cocoa text-black hover:bg-oma-cocoa hover:text-white"
               >

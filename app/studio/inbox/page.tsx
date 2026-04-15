@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
-import { createClient } from "@/lib/supabase-unified";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -27,208 +27,123 @@ import {
 } from "@/components/ui/alert-dialog";
 import { StudioNav } from "@/components/ui/studio-nav";
 import { TrashIcon } from "@heroicons/react/24/outline";
-import { RefreshCw, Mail, Bell, MessageSquare, Reply } from "lucide-react";
+import { RefreshCw, Mail, Bell, AlertCircle } from "lucide-react";
 import { Label } from "@/components/ui/label";
-
-interface Inquiry {
-  id: string;
-  brand_id: string;
-  customer_name: string;
-  customer_email: string;
-  subject: string;
-  message: string;
-  inquiry_type: string;
-  priority: "low" | "normal" | "high";
-  status: "new" | "read" | "replied" | "closed";
-  source: string;
-  created_at: string;
-  brand?: {
-    name: string;
-    category?: string;
-  };
-}
-
-interface Notification {
-  id: string;
-  user_id: string;
-  brand_id: string;
-  type: string;
-  title: string;
-  message: string;
-  data: any;
-  is_read: boolean;
-  created_at: string;
-  brand?: {
-    name: string;
-  };
-}
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import type { StudioInquiry, StudioNotification } from "./types";
+import { useStudioInbox } from "./useStudioInbox";
 
 export default function StudioInboxPage() {
   const { user, loading: authLoading } = useAuth();
-  const [inquiries, setInquiries] = useState<Inquiry[]>([]);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedInquiry, setSelectedInquiry] = useState<Inquiry | null>(null);
-  const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
+  const [selectedInquiry, setSelectedInquiry] = useState<StudioInquiry | null>(null);
+  const [selectedNotification, setSelectedNotification] =
+    useState<StudioNotification | null>(null);
   const [replyMessage, setReplyMessage] = useState("");
   const [isReplying, setIsReplying] = useState(false);
-  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [inquiryToDelete, setInquiryToDelete] = useState<Inquiry | null>(null);
+  const [inquiryToDelete, setInquiryToDelete] = useState<StudioInquiry | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Check user role on mount
-  useEffect(() => {
-    const checkUserRole = async () => {
-      if (!user?.id) return;
-      
-      try {
-        // Get user profile to determine actual role
-        const supabase = createClient();
-        const { data: profile, error } = await supabase
-          .from("profiles")
-          .select("role, owned_brands")
-          .eq("id", user.id)
-          .single();
+  const pausePolling = !!(selectedInquiry || selectedNotification);
 
-        if (error) {
-          console.error("Error fetching user profile:", error);
-          return;
-        }
+  const {
+    inquiries,
+    setInquiries,
+    notifications,
+    setNotifications,
+    loading,
+    refreshing,
+    loadError,
+    loadInbox,
+  } = useStudioInbox({
+    userId: user?.id,
+    authLoading,
+    pausePolling,
+  });
 
-        const isSuperAdmin = profile.role === "super_admin";
-        setIsSuperAdmin(isSuperAdmin);
-        
-        console.log("🔍 User role determined:", {
-          role: profile.role,
-          isSuperAdmin,
-          ownedBrands: profile.owned_brands?.length || 0
-        });
-      } catch (error) {
-        console.error("Error checking user role:", error);
-      }
-    };
+  const isSuperAdmin = user?.role === "super_admin";
 
-    checkUserRole();
-  }, [user?.id]);
-
-  // Load inquiries and notifications
-  const loadInbox = async () => {
-    if (!user?.id) return;
-
-    try {
-      setLoading(true);
-      console.log("📧 Loading inbox for user:", user.email);
-
-      const response = await fetch(`/api/studio/inbox?_t=${Date.now()}`, {
-        credentials: "include",
-        headers: {
-          "Cache-Control": "no-cache, no-store, must-revalidate",
-          Pragma: "no-cache",
-          Expires: "0",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to load inbox");
-      }
-
-      const data = await response.json();
-      setInquiries(data.inquiries || []);
-      setNotifications(data.notifications || []);
-
-      console.log(`✅ Loaded ${data.inquiries?.length || 0} inquiries and ${data.notifications?.length || 0} notifications`);
-    } catch (error) {
-      console.error("❌ Error loading inbox:", error);
-      toast.error("Failed to load inbox");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Load data on mount
-  useEffect(() => {
-    if (user && !authLoading) {
-      loadInbox();
-    }
-  }, [user, authLoading]);
-
-  // Auto-refresh inbox every 30 seconds to keep it fresh
-  useEffect(() => {
-    if (!user || authLoading) return;
-
-    const interval = setInterval(() => {
-      console.log("🔄 Auto-refreshing inbox data...");
-      loadInbox();
-    }, 30000); // Refresh every 30 seconds
-
-    return () => clearInterval(interval);
-  }, [user, authLoading]);
-
-  // Mark inquiry as read
   const markAsRead = async (inquiryId: string) => {
     try {
       const response = await fetch(`/api/studio/inbox/${inquiryId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ status: "read" }),
+        body: JSON.stringify({ is_read: true }),
       });
 
       if (!response.ok) {
         throw new Error("Failed to mark as read");
       }
 
-      // Update local state
-      setInquiries(prev => 
-        prev.map(inq => 
+      setInquiries((prev) =>
+        prev.map((inq) =>
           inq.id === inquiryId ? { ...inq, status: "read" } : inq
         )
       );
-
-      toast.success("Marked as read");
     } catch (error) {
-      console.error("❌ Error marking as read:", error);
+      console.error("Error marking as read:", error);
       toast.error("Failed to mark as read");
     }
   };
 
-  // Open inquiry details
-  const openInquiry = (inquiry: Inquiry) => {
+  const openInquiry = (inquiry: StudioInquiry) => {
     setSelectedInquiry(inquiry);
     if (inquiry.status === "new") {
-      markAsRead(inquiry.id);
+      void markAsRead(inquiry.id);
     }
   };
 
-  // Open notification details
-  const openNotification = (notification: Notification) => {
-    setSelectedNotification(notification);
+  const markNotificationRead = async (notification: StudioNotification) => {
+    if (notification.is_read) return;
+    try {
+      const response = await fetch(`/api/studio/notifications/${notification.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ is_read: true }),
+      });
+      if (!response.ok) {
+        throw new Error("Failed to mark notification read");
+      }
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === notification.id ? { ...n, is_read: true } : n))
+      );
+    } catch (e) {
+      console.error("Error marking notification read:", e);
+      toast.error("Could not mark notification as read");
+    }
   };
 
-  // Send reply
+  const openNotification = (notification: StudioNotification) => {
+    setSelectedNotification(notification);
+    void markNotificationRead(notification);
+  };
+
   const sendReply = async () => {
     if (!selectedInquiry || !replyMessage.trim()) return;
 
     setIsReplying(true);
     try {
-      const response = await fetch(`/api/studio/inbox/${selectedInquiry.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ 
-          status: "replied",
-          reply: replyMessage.trim()
-        }),
-      });
+      const response = await fetch(
+        `/api/studio/inbox/${selectedInquiry.id}/replies`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            message: replyMessage.trim(),
+            isInternalNote: false,
+          }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Failed to send reply");
       }
 
-      // Update local state
-      setInquiries(prev => 
-        prev.map(inq => 
+      setInquiries((prev) =>
+        prev.map((inq) =>
           inq.id === selectedInquiry.id ? { ...inq, status: "replied" } : inq
         )
       );
@@ -237,14 +152,13 @@ export default function StudioInboxPage() {
       setSelectedInquiry(null);
       setReplyMessage("");
     } catch (error) {
-      console.error("❌ Error sending reply:", error);
+      console.error("Error sending reply:", error);
       toast.error("Failed to send reply");
     } finally {
       setIsReplying(false);
     }
   };
 
-  // Delete inquiry
   const deleteInquiry = async () => {
     if (!inquiryToDelete || isDeleting) return;
 
@@ -259,21 +173,19 @@ export default function StudioInboxPage() {
         throw new Error("Failed to delete inquiry");
       }
 
-      // Remove from local state
-      setInquiries(prev => prev.filter(inq => inq.id !== inquiryToDelete.id));
+      setInquiries((prev) => prev.filter((inq) => inq.id !== inquiryToDelete.id));
       setDeleteDialogOpen(false);
       setInquiryToDelete(null);
 
       toast.success("Inquiry deleted successfully");
     } catch (error) {
-      console.error("❌ Error deleting inquiry:", error);
+      console.error("Error deleting inquiry:", error);
       toast.error("Failed to delete inquiry");
     } finally {
       setIsDeleting(false);
     }
   };
 
-  // Get status color
   const getStatusColor = (status: string) => {
     switch (status) {
       case "new":
@@ -289,7 +201,6 @@ export default function StudioInboxPage() {
     }
   };
 
-  // Get priority color
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case "high":
@@ -303,7 +214,6 @@ export default function StudioInboxPage() {
     }
   };
 
-  // Show loading state
   if (authLoading) {
     return (
       <div className="min-h-screen bg-oma-cream flex items-center justify-center">
@@ -315,7 +225,6 @@ export default function StudioInboxPage() {
     );
   }
 
-  // Show authentication required state
   if (!user) {
     return (
       <div className="min-h-screen bg-oma-cream flex items-center justify-center">
@@ -329,7 +238,7 @@ export default function StudioInboxPage() {
                 Please log in to access the Studio Inbox.
               </p>
               <Button asChild className="bg-oma-plum hover:bg-oma-plum/90">
-                <a href="/login">Log In</a>
+                <Link href="/login">Log In</Link>
               </Button>
             </div>
           </CardContent>
@@ -338,17 +247,19 @@ export default function StudioInboxPage() {
     );
   }
 
+  const showMainContent = !loading;
+  const isEmpty =
+    inquiries.length === 0 && notifications.length === 0 && showMainContent && !loadError;
+
   return (
     <div className="min-h-screen bg-oma-cream">
       <div className="max-w-7xl mx-auto px-6 py-8">
         <StudioNav />
-        
+
         <div className="mb-8">
-          <div className="flex justify-between items-start">
+          <div className="flex justify-between items-start gap-4">
             <div>
-              <h1 className="text-3xl font-canela text-oma-plum mb-2">
-                Studio Inbox
-              </h1>
+              <h1 className="text-3xl font-canela text-oma-plum mb-2">Studio Inbox</h1>
               <p className="text-oma-cocoa">
                 {isSuperAdmin
                   ? "Manage all customer inquiries and platform notifications"
@@ -362,19 +273,40 @@ export default function StudioInboxPage() {
                 </div>
               )}
             </div>
-            <Button 
-              onClick={loadInbox} 
-              disabled={loading}
+            <Button
+              onClick={() => void loadInbox()}
+              disabled={loading || refreshing}
               variant="outline"
-              className="border-oma-plum text-oma-plum hover:bg-oma-plum/10"
+              className="border-oma-plum text-oma-plum hover:bg-oma-plum/10 shrink-0"
             >
-              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+              <RefreshCw
+                className={`h-4 w-4 mr-2 ${loading || refreshing ? "animate-spin" : ""}`}
+              />
               Refresh
             </Button>
           </div>
         </div>
 
-        {/* Loading State */}
+        {loadError && (
+          <Alert variant="destructive" className="mb-6">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Inbox couldn’t load</AlertTitle>
+            <AlertDescription className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <span>{loadError}</span>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="border-current shrink-0"
+                onClick={() => void loadInbox()}
+                disabled={loading || refreshing}
+              >
+                Try again
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
+
         {loading && (
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-oma-plum mx-auto mb-4"></div>
@@ -382,8 +314,7 @@ export default function StudioInboxPage() {
           </div>
         )}
 
-        {/* Empty State */}
-        {!loading && inquiries.length === 0 && notifications.length === 0 && (
+        {isEmpty && (
           <Card>
             <CardContent className="pt-6">
               <div className="text-center py-8">
@@ -403,8 +334,7 @@ export default function StudioInboxPage() {
           </Card>
         )}
 
-        {/* Inquiries Section */}
-        {!loading && inquiries.length > 0 && (
+        {showMainContent && inquiries.length > 0 && (
           <div className="mb-8">
             <div className="flex items-center gap-2 mb-4">
               <Mail className="h-5 w-5 text-oma-plum" />
@@ -427,7 +357,7 @@ export default function StudioInboxPage() {
                         <CardTitle className="text-lg font-canela text-oma-plum">
                           {inquiry.subject}
                         </CardTitle>
-                        <div className="flex items-center gap-2 mt-1">
+                        <div className="flex items-center gap-2 mt-1 flex-wrap">
                           <span className="text-sm text-oma-cocoa">
                             From: {inquiry.customer_name} ({inquiry.customer_email})
                           </span>
@@ -438,7 +368,7 @@ export default function StudioInboxPage() {
                           )}
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 shrink-0">
                         <Badge className={getStatusColor(inquiry.status)}>
                           {inquiry.status}
                         </Badge>
@@ -461,9 +391,7 @@ export default function StudioInboxPage() {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-oma-cocoa text-sm line-clamp-2">
-                      {inquiry.message}
-                    </p>
+                    <p className="text-oma-cocoa text-sm line-clamp-2">{inquiry.message}</p>
                     <div className="flex items-center justify-between mt-3 text-xs text-oma-cocoa/70">
                       <span>Source: {inquiry.source}</span>
                       <span>{new Date(inquiry.created_at).toLocaleDateString("en-GB")}</span>
@@ -475,8 +403,7 @@ export default function StudioInboxPage() {
           </div>
         )}
 
-        {/* Notifications Section */}
-        {!loading && notifications.length > 0 && (
+        {showMainContent && notifications.length > 0 && (
           <div className="mb-8">
             <div className="flex items-center gap-2 mb-4">
               <Bell className="h-5 w-5 text-oma-plum" />
@@ -488,7 +415,9 @@ export default function StudioInboxPage() {
               {notifications.map((notification) => (
                 <Card
                   key={notification.id}
-                  className="cursor-pointer transition-colors hover:bg-oma-beige/20"
+                  className={`cursor-pointer transition-colors hover:bg-oma-beige/20 ${
+                    !notification.is_read ? "border-oma-plum/40" : ""
+                  }`}
                   onClick={() => openNotification(notification)}
                 >
                   <CardHeader>
@@ -497,12 +426,16 @@ export default function StudioInboxPage() {
                         <CardTitle className="text-lg font-canela text-oma-plum">
                           {notification.title}
                         </CardTitle>
-                        <p className="text-sm text-oma-cocoa mt-1">
-                          {notification.message}
-                        </p>
+                        <p className="text-sm text-oma-cocoa mt-1">{notification.message}</p>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Badge className={notification.is_read ? "bg-gray-100 text-gray-800" : "bg-blue-100 text-blue-800"}>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Badge
+                          className={
+                            notification.is_read
+                              ? "bg-gray-100 text-gray-800"
+                              : "bg-blue-100 text-blue-800"
+                          }
+                        >
                           {notification.is_read ? "Read" : "New"}
                         </Badge>
                       </div>
@@ -511,7 +444,9 @@ export default function StudioInboxPage() {
                   <CardContent>
                     <div className="flex items-center justify-between text-xs text-oma-cocoa/70">
                       <span>Type: {notification.type}</span>
-                      <span>{new Date(notification.created_at).toLocaleDateString("en-GB")}</span>
+                      <span>
+                        {new Date(notification.created_at).toLocaleDateString("en-GB")}
+                      </span>
                     </div>
                   </CardContent>
                 </Card>
@@ -520,8 +455,12 @@ export default function StudioInboxPage() {
           </div>
         )}
 
-        {/* Inquiry Detail Dialog */}
-        <Dialog open={!!selectedInquiry} onOpenChange={() => setSelectedInquiry(null)}>
+        <Dialog
+          open={!!selectedInquiry}
+          onOpenChange={(open) => {
+            if (!open) setSelectedInquiry(null);
+          }}
+        >
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>{selectedInquiry?.subject}</DialogTitle>
@@ -533,7 +472,7 @@ export default function StudioInboxPage() {
               <div className="bg-gray-50 p-4 rounded-lg">
                 <p className="text-oma-cocoa">{selectedInquiry?.message}</p>
               </div>
-              
+
               <div>
                 <Label htmlFor="reply" className="text-sm font-medium text-oma-cocoa">
                   Reply
@@ -549,14 +488,11 @@ export default function StudioInboxPage() {
               </div>
 
               <div className="flex justify-end gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setSelectedInquiry(null)}
-                >
+                <Button variant="outline" onClick={() => setSelectedInquiry(null)}>
                   Cancel
                 </Button>
                 <Button
-                  onClick={sendReply}
+                  onClick={() => void sendReply()}
                   disabled={!replyMessage.trim() || isReplying}
                   className="bg-oma-plum hover:bg-oma-plum/90"
                 >
@@ -567,8 +503,12 @@ export default function StudioInboxPage() {
           </DialogContent>
         </Dialog>
 
-        {/* Notification Detail Dialog */}
-        <Dialog open={!!selectedNotification} onOpenChange={() => setSelectedNotification(null)}>
+        <Dialog
+          open={!!selectedNotification}
+          onOpenChange={(open) => {
+            if (!open) setSelectedNotification(null);
+          }}
+        >
           <DialogContent>
             <DialogHeader>
               <DialogTitle>{selectedNotification?.title}</DialogTitle>
@@ -577,13 +517,17 @@ export default function StudioInboxPage() {
               <p className="text-oma-cocoa">{selectedNotification?.message}</p>
               <div className="text-sm text-oma-cocoa/70">
                 <p>Type: {selectedNotification?.type}</p>
-                <p>Date: {selectedNotification ? new Date(selectedNotification.created_at).toLocaleDateString("en-GB") : ""}</p>
+                <p>
+                  Date:{" "}
+                  {selectedNotification
+                    ? new Date(selectedNotification.created_at).toLocaleDateString("en-GB")
+                    : ""}
+                </p>
               </div>
             </div>
           </DialogContent>
         </Dialog>
 
-        {/* Delete Confirmation Dialog */}
         <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
@@ -595,7 +539,7 @@ export default function StudioInboxPage() {
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
               <AlertDialogAction
-                onClick={deleteInquiry}
+                onClick={() => void deleteInquiry()}
                 disabled={isDeleting}
                 className="bg-red-600 hover:bg-red-700"
               >

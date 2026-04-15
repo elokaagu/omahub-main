@@ -6,22 +6,18 @@ const INQUIRY_SELECT_FIELDS = `
   brand_id,
   customer_name,
   customer_email,
+  customer_phone,
   subject,
   message,
+  inquiry_type,
   status,
+  priority,
+  source,
   is_read,
   created_at,
   updated_at,
   replied_at,
-  brand:brands(name, category),
-  replies:inquiry_replies(
-    id,
-    inquiry_id,
-    admin_id,
-    message,
-    is_internal_note,
-    created_at
-  )
+  brand:brands(name, category)
 `;
 
 const VALID_INQUIRY_STATUSES = ["new", "pending", "replied", "closed"] as const;
@@ -176,6 +172,14 @@ export async function PUT(
       { status: 500 }
     );
   }
+}
+
+/** Alias for clients that still send PATCH (same body rules as PUT). */
+export async function PATCH(
+  request: NextRequest,
+  context: { params: { id: string } }
+) {
+  return PUT(request, context);
 }
 
 export async function DELETE(

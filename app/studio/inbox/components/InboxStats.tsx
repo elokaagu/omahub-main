@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   InboxIcon,
   ExclamationTriangleIcon,
@@ -8,7 +8,8 @@ import {
   ClockIcon,
   CalendarDaysIcon,
 } from "@heroicons/react/24/outline";
-import { TrendingUp } from "lucide-react";
+import { TrendingUp, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface InboxStatsData {
   totalInquiries: number;
@@ -22,18 +23,48 @@ interface InboxStatsData {
   inquiriesByStatus: Record<string, number>;
 }
 
+function messageForStatsHttpStatus(status: number): string {
+  if (status === 401) {
+    return "Please sign in to view inbox statistics.";
+  }
+  if (status === 403) {
+    return "You don't have permission to view these statistics.";
+  }
+  if (status >= 500) {
+    return "Server error while loading statistics. Try again later.";
+  }
+  return `Unable to load statistics (${status}).`;
+}
+
+function formatStatLabel(key: string): string {
+  return key.replace(/_/g, " ");
+}
+
+function entriesForDisplay(record: Record<string, number>) {
+  return Object.entries(record).filter(([, count]) => count > 0);
+}
+
 export default function InboxStats() {
   const [stats, setStats] = useState<InboxStatsData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchStats();
-  }, []);
+  const isFetchingRef = useRef(false);
+  const isInitialFetchRef = useRef(true);
 
-  const fetchStats = async () => {
-    try {
+  const fetchStats = useCallback(async () => {
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
+
+    const isInitial = isInitialFetchRef.current;
+    if (isInitial) {
       setLoading(true);
+    } else {
+      setRefreshing(true);
+    }
+
+    try {
       const response = await fetch("/api/studio/inbox/stats", {
         method: "GET",
         credentials: "include",
@@ -43,11 +74,12 @@ export default function InboxStats() {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to fetch statistics");
+        throw new Error(messageForStatsHttpStatus(response.status));
       }
 
-      const data = await response.json();
+      const data = (await response.json()) as InboxStatsData;
       setStats(data);
+      setError(null);
     } catch (err) {
       console.error("Error fetching inbox stats:", err);
       setError(
@@ -55,8 +87,15 @@ export default function InboxStats() {
       );
     } finally {
       setLoading(false);
+      setRefreshing(false);
+      isFetchingRef.current = false;
+      isInitialFetchRef.current = false;
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    void fetchStats();
+  }, [fetchStats]);
 
   if (loading) {
     return (
@@ -83,12 +122,23 @@ export default function InboxStats() {
           Error Loading Statistics
         </h3>
         <p className="text-red-600 text-sm mt-2">{error}</p>
-        <button
-          onClick={fetchStats}
-          className="mt-4 text-sm text-oma-plum hover:text-oma-plum/80 underline"
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="mt-4 border-oma-plum/30 text-oma-plum hover:bg-oma-plum/5"
+          onClick={() => void fetchStats()}
+          disabled={refreshing}
         >
-          Try again
-        </button>
+          {refreshing ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Retrying…
+            </>
+          ) : (
+            "Try again"
+          )}
+        </Button>
       </div>
     );
   }
@@ -131,6 +181,10 @@ export default function InboxStats() {
       borderColor: "border-red-200",
     },
   ];
+
+  const typeEntries = entriesForDisplay(stats.inquiriesByType);
+  const priorityEntries = entriesForDisplay(stats.inquiriesByPriority);
+  const statusEntries = entriesForDisplay(stats.inquiriesByStatus);
 
   return (
     <div className="space-y-8">
@@ -194,17 +248,68 @@ export default function InboxStats() {
             <h3 className="text-lg font-canela text-oma-plum">Inquiry Types</h3>
           </div>
           <div className="space-y-3">
-            {Object.entries(stats.inquiriesByType).map(([type, count]) => (
-              <div key={type} className="flex justify-between items-center">
-                <span className="text-sm text-oma-cocoa capitalize">
-                  {type.replace("_", " ")}
-                </span>
-                <span className="text-sm font-medium text-oma-plum">
-                  {count}
-                </span>
-              </div>
-            ))}
+            {typeEntries.length === 0 ? (
+              <p className="text-sm text-oma-cocoa/70">
+                No inquiry type data yet.
+              </p>
+            ) : (
+              typeEntries.map(([type, count]) => (
+                <div key={type} className="flex justify-between items-center">
+                  <span className="text-sm text-oma-cocoa capitalize">
+                    {formatStatLabel(type)}
+                  </span>
+                  <span className="text-sm font-medium text-oma-plum">
+                    {count}
+                  </span>
+                </div>
+              ))
+            )}
           </div>
+
+          {(priorityEntries.length > 0 || statusEntries.length > 0) && (
+            <div className="mt-6 pt-4 border-t border-oma-beige/80 space-y-4">
+              {priorityEntries.length > 0 && (
+                <div>
+                  <h4 className="text-xs font-semibold uppercase tracking-wide text-oma-cocoa/80 mb-2">
+                    By priority
+                  </h4>
+                  <div className="space-y-2">
+                    {priorityEntries.map(([key, count]) => (
+                      <div
+                        key={key}
+                        className="flex justify-between items-center text-sm"
+                      >
+                        <span className="text-oma-cocoa capitalize">
+                          {formatStatLabel(key)}
+                        </span>
+                        <span className="font-medium text-oma-plum">{count}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {statusEntries.length > 0 && (
+                <div>
+                  <h4 className="text-xs font-semibold uppercase tracking-wide text-oma-cocoa/80 mb-2">
+                    By status
+                  </h4>
+                  <div className="space-y-2">
+                    {statusEntries.map(([key, count]) => (
+                      <div
+                        key={key}
+                        className="flex justify-between items-center text-sm"
+                      >
+                        <span className="text-oma-cocoa capitalize">
+                          {formatStatLabel(key)}
+                        </span>
+                        <span className="font-medium text-oma-plum">{count}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

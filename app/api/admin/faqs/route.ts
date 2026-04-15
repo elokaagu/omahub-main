@@ -4,6 +4,7 @@ import { createServerSupabaseClient } from "@/lib/supabase-unified";
 import {
   faqCreateSchema,
   faqUpdateSchema,
+  faqPatchSchema,
   faqIdSchema,
   faqCategorySchema,
   faqPageLocationSchema,
@@ -160,17 +161,20 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
     }
 
-    const parsed = faqUpdateSchema.safeParse(body);
+    const parsed =
+      faqPatchSchema.safeParse(body).success
+        ? faqPatchSchema.safeParse(body)
+        : faqUpdateSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json({ error: "Invalid request" }, { status: 400 });
     }
 
     const { id, question, answer, ...optional } = parsed.data;
     const patch: Record<string, unknown> = {
-      question,
-      answer,
       updated_by: auth.userId,
     };
+    if (question !== undefined) patch.question = question;
+    if (answer !== undefined) patch.answer = answer;
     if (optional.category !== undefined) patch.category = optional.category;
     if (optional.display_order !== undefined) {
       patch.display_order = optional.display_order;

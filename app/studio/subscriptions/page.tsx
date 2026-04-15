@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -44,6 +44,16 @@ interface SubscriptionStats {
   growth: number;
 }
 
+type SubscriberQuery = {
+  page: number;
+  limit: number;
+  search: string;
+  status: string;
+  source: string;
+};
+
+const ITEMS_PER_PAGE = 20;
+
 export default function SubscriptionsPage() {
   const { user } = useAuth();
   const [subscribers, setSubscribers] = useState<NewsletterSubscriber[]>([]);
@@ -54,8 +64,31 @@ export default function SubscriptionsPage() {
   const [sourceFilter, setSourceFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [itemsPerPage] = useState(20);
-  const [loadingTimeout, setLoadingTimeout] = useState<NodeJS.Timeout | null>(null);
+  const loadingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearLoadingTimeout = () => {
+    if (loadingTimeoutRef.current) {
+      clearTimeout(loadingTimeoutRef.current);
+      loadingTimeoutRef.current = null;
+    }
+  };
+
+  const startLoadingTimeout = () => {
+    clearLoadingTimeout();
+    loadingTimeoutRef.current = setTimeout(() => {
+      console.warn("⚠️ Loading timeout reached, stopping loading state");
+      setLoading(false);
+      toast.error("Loading timeout - please try refreshing the page");
+    }, 30000);
+  };
+
+  const getCurrentQuery = (page: number): SubscriberQuery => ({
+    page,
+    limit: ITEMS_PER_PAGE,
+    search: searchTerm,
+    status: statusFilter !== "all" ? statusFilter : "",
+    source: sourceFilter !== "all" ? sourceFilter : "",
+  });
 
   // Check if user has access and fetch data
   useEffect(() => {
@@ -72,44 +105,41 @@ export default function SubscriptionsPage() {
       return;
     }
 
-    // User is super admin, fetch data
-    console.log("🔄 Fetching subscribers for super admin:", user.email);
-    fetchSubscribers();
+    // User is super admin, fetch top-level stats once on auth-ready.
+    console.log("🔄 Fetching subscriber stats for super admin:", user.email);
     fetchStats();
-
-    // Set a timeout to prevent infinite loading
-    const timeout = setTimeout(() => {
-      if (loading) {
-        console.warn("⚠️ Loading timeout reached, stopping loading state");
-        setLoading(false);
-        toast.error("Loading timeout - please try refreshing the page");
-      }
-    }, 30000); // 30 second timeout
-
-    setLoadingTimeout(timeout);
-
-    // Cleanup timeout on unmount
-    return () => {
-      if (timeout) {
-        clearTimeout(timeout);
-      }
-    };
   }, [user]);
 
-  const fetchSubscribers = async (retryCount = 0): Promise<void> => {
+  // Fetch subscribers whenever current page changes (with applied filters).
+  useEffect(() => {
+    if (!user || user.role !== "super_admin") return;
+    void fetchSubscribers(getCurrentQuery(currentPage));
+  }, [currentPage, user]);
+
+  useEffect(() => {
+    return () => {
+      clearLoadingTimeout();
+    };
+  }, []);
+
+  const fetchSubscribers = async (
+    query: SubscriberQuery,
+    retryCount = 0
+  ): Promise<void> => {
     const maxRetries = 3;
     const retryDelay = Math.pow(2, retryCount) * 1000; // Exponential backoff
 
     try {
       console.log(`🔄 Fetching subscribers (attempt ${retryCount + 1}/${maxRetries + 1})`);
       setLoading(true);
+      startLoadingTimeout();
 
       const params = new URLSearchParams({
-        page: currentPage.toString(),
-        limit: itemsPerPage.toString(),
-        search: searchTerm,
-        status: statusFilter !== "all" ? statusFilter : "",
-        source: sourceFilter !== "all" ? sourceFilter : "",
+        page: query.page.toString(),
+        limit: query.limit.toString(),
+        search: query.search,
+        status: query.status,
+        source: query.source,
       });
 
       const response = await fetch(
@@ -144,13 +174,7 @@ export default function SubscriptionsPage() {
       console.log(`✅ Subscribers fetched successfully:`, data);
       
       setSubscribers(data.subscribers || []);
-      setTotalPages(Math.ceil((data.total || 0) / itemsPerPage));
-      
-      // Clear timeout on successful load
-      if (loadingTimeout) {
-        clearTimeout(loadingTimeout);
-        setLoadingTimeout(null);
-      }
+      setTotalPages(Math.ceil((data.total || 0) / query.limit));
       
     } catch (error) {
       console.error(`❌ Error fetching subscribers (attempt ${retryCount + 1}):`, error);
@@ -158,7 +182,7 @@ export default function SubscriptionsPage() {
       if (retryCount < maxRetries) {
         console.log(`🔄 Retrying in ${retryDelay}ms...`);
         setTimeout(() => {
-          fetchSubscribers(retryCount + 1);
+          void fetchSubscribers(query, retryCount + 1);
         }, retryDelay);
         return;
       }
@@ -167,11 +191,7 @@ export default function SubscriptionsPage() {
       toast.error(`Failed to fetch subscribers: ${errorMessage}`);
     } finally {
       setLoading(false);
-      // Clear timeout when loading completes (success or failure)
-      if (loadingTimeout) {
-        clearTimeout(loadingTimeout);
-        setLoadingTimeout(null);
-      }
+      clearLoadingTimeout();
     }
   };
 
@@ -239,7 +259,7 @@ export default function SubscriptionsPage() {
       }
 
       toast.success("Subscription status updated successfully");
-      fetchSubscribers(); // Refresh the list
+      await fetchSubscribers(getCurrentQuery(currentPage)); // Refresh the list
       fetchStats(); // Refresh stats
     } catch (error) {
       console.error("Error updating status:", error);
@@ -347,7 +367,7 @@ export default function SubscriptionsPage() {
           <Button
             onClick={() => {
               console.log("🔄 Manual refresh triggered");
-              fetchSubscribers();
+              void fetchSubscribers(getCurrentQuery(currentPage));
               fetchStats();
             }}
             className="flex items-center gap-2"
@@ -390,7 +410,10 @@ export default function SubscriptionsPage() {
                 {stats.active}
               </div>
               <p className="text-xs text-black">
-                {((stats.active / stats.total) * 100).toFixed(1)}% of total
+                {stats.total > 0
+                  ? ((stats.active / stats.total) * 100).toFixed(1)
+                  : "0.0"}
+                % of total
               </p>
             </CardContent>
           </Card>
@@ -422,8 +445,10 @@ export default function SubscriptionsPage() {
                 {stats.unsubscribed}
               </div>
               <p className="text-xs text-black">
-                {((stats.unsubscribed / stats.total) * 100).toFixed(1)}% of
-                total
+                {stats.total > 0
+                  ? ((stats.unsubscribed / stats.total) * 100).toFixed(1)
+                  : "0.0"}
+                % of total
               </p>
             </CardContent>
           </Card>
@@ -473,8 +498,11 @@ export default function SubscriptionsPage() {
 
               <Button
                 onClick={() => {
-                  setCurrentPage(1);
-                  fetchSubscribers();
+                  const nextPage = 1;
+                  setCurrentPage(nextPage);
+                  if (currentPage === nextPage) {
+                    void fetchSubscribers(getCurrentQuery(nextPage));
+                  }
                 }}
                 className="flex items-center gap-2"
               >

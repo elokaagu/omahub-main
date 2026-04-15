@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   ArrowLeftIcon,
   PaperAirplaneIcon,
@@ -8,21 +8,29 @@ import {
   CalendarIcon,
   PhoneIcon,
   EnvelopeIcon,
-  ExclamationTriangleIcon,
-  CheckCircleIcon,
-  ClockIcon,
   EyeIcon,
   ChatBubbleLeftRightIcon,
-  DocumentTextIcon,
   PrinterIcon,
   ShareIcon,
+  ClipboardDocumentIcon,
 } from "@heroicons/react/24/outline";
-import { formatDistanceToNow, format } from "date-fns";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 
-interface UserProfile {
-  role: string;
-  owned_brands: string[];
-}
+const WORKFLOW_STATUSES = ["new", "pending", "replied", "closed"] as const;
+type WorkflowStatus = (typeof WORKFLOW_STATUSES)[number];
 
 interface Inquiry {
   id: string;
@@ -53,59 +61,163 @@ interface Reply {
   message: string;
   is_internal_note: boolean;
   created_at: string;
-  updated_at: string;
-  admin: {
-    first_name?: string;
-    last_name?: string;
+  updated_at?: string;
+  admin?: {
+    first_name?: string | null;
+    last_name?: string | null;
     email: string;
-  };
+  } | null;
 }
 
 interface InquiryDetailProps {
   inquiryId: string;
   onBack: () => void;
-  userProfile: UserProfile;
 }
 
-export default function InquiryDetail({
-  inquiryId,
-  onBack,
-  userProfile,
-}: InquiryDetailProps) {
+function messageForHttpStatus(status: number): string {
+  if (status === 401) return "Please sign in to view this inquiry.";
+  if (status === 403) return "You don't have permission to view this inquiry.";
+  if (status === 404) return "This inquiry could not be found.";
+  if (status >= 500) return "Server error while loading the inquiry.";
+  return `Unable to load inquiry (${status}).`;
+}
+
+function mapInquiryFromApi(raw: Record<string, unknown>, replyCount: number): Inquiry {
+  const brand = raw.brand as { name?: string; category?: string } | null | undefined;
+  return {
+    id: String(raw.id ?? ""),
+    brand_id: String(raw.brand_id ?? ""),
+    name: String(raw.customer_name ?? ""),
+    email: String(raw.customer_email ?? ""),
+    phone: raw.customer_phone ? String(raw.customer_phone) : undefined,
+    subject: String(raw.subject ?? ""),
+    message: String(raw.message ?? ""),
+    type: String(raw.inquiry_type ?? raw.type ?? ""),
+    status: String(raw.status ?? ""),
+    priority: String(raw.priority ?? "normal"),
+    source: String(raw.source ?? ""),
+    created_at: String(raw.created_at ?? ""),
+    updated_at: String(raw.updated_at ?? ""),
+    read: Boolean(raw.is_read),
+    replied_at: raw.replied_at ? String(raw.replied_at) : undefined,
+    brand_name: brand?.name ? String(brand.name) : "",
+    brand_category: brand?.category ? String(brand.category) : undefined,
+    replies_count: replyCount,
+  };
+}
+
+function normalizeAdmin(raw: unknown): Reply["admin"] {
+  if (!raw || typeof raw !== "object") return null;
+  if (Array.isArray(raw)) {
+    return raw[0] && typeof raw[0] === "object"
+      ? (raw[0] as Reply["admin"])
+      : null;
+  }
+  return raw as Reply["admin"];
+}
+
+function mapReplyFromApi(raw: Record<string, unknown>): Reply {
+  return {
+    id: String(raw.id ?? ""),
+    inquiry_id: String(raw.inquiry_id ?? ""),
+    admin_id: String(raw.admin_id ?? ""),
+    message: String(raw.message ?? ""),
+    is_internal_note: Boolean(raw.is_internal_note),
+    created_at: String(raw.created_at ?? ""),
+    updated_at: raw.updated_at ? String(raw.updated_at) : undefined,
+    admin: normalizeAdmin(raw.admin),
+  };
+}
+
+function formatTypeLabel(type: string): string {
+  return type.replace(/_/g, " ").toUpperCase();
+}
+
+function replyAuthorName(reply: Reply): string {
+  const a = reply.admin;
+  if (!a) return "Team member";
+  const parts = [a.first_name, a.last_name].filter(Boolean);
+  if (parts.length) return parts.join(" ");
+  return a.email || "Team member";
+}
+
+function workflowSelectValue(status: string): WorkflowStatus {
+  return WORKFLOW_STATUSES.includes(status as WorkflowStatus)
+    ? (status as WorkflowStatus)
+    : "new";
+}
+
+export default function InquiryDetail({ inquiryId, onBack }: InquiryDetailProps) {
   const [inquiry, setInquiry] = useState<Inquiry | null>(null);
   const [replies, setReplies] = useState<Reply[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [replyMessage, setReplyMessage] = useState("");
   const [isInternalNote, setIsInternalNote] = useState(false);
   const [sendingReply, setSendingReply] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);
-  const [updating, setUpdating] = useState(false);
+  const [markingRead, setMarkingRead] = useState(false);
 
-  useEffect(() => {
-    fetchInquiryDetails();
-  }, [inquiryId]);
+  const fetchInFlightRef = useRef(false);
+  const isInitialLoadRef = useRef(true);
+  const replyFormRef = useRef<HTMLDivElement>(null);
 
-  const fetchInquiryDetails = async () => {
-    try {
+  const canNativeShare =
+    typeof navigator !== "undefined" &&
+    typeof navigator.share === "function";
+
+  const fetchInquiryDetails = useCallback(async () => {
+    if (fetchInFlightRef.current) return;
+    fetchInFlightRef.current = true;
+
+    const isInitial = isInitialLoadRef.current;
+    if (isInitial) {
       setLoading(true);
-      setError(null);
+    } else {
+      setRefreshing(true);
+    }
+    setError(null);
 
-      const response = await fetch(`/api/studio/inbox/${inquiryId}`, {
-        method: "GET",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+    try {
+      const [detailRes, repliesRes] = await Promise.all([
+        fetch(`/api/studio/inbox/${inquiryId}`, {
+          method: "GET",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+        }),
+        fetch(`/api/studio/inbox/${inquiryId}/replies`, {
+          method: "GET",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+        }),
+      ]);
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch inquiry details");
+      if (!detailRes.ok) {
+        throw new Error(messageForHttpStatus(detailRes.status));
       }
 
-      const data = await response.json();
-      setInquiry(data.inquiry);
-      setReplies(data.replies || []);
+      const detailJson = (await detailRes.json()) as {
+        success?: boolean;
+        inquiry?: Record<string, unknown>;
+      };
+      const raw = detailJson.inquiry;
+      if (!raw || typeof raw !== "object") {
+        throw new Error("Invalid response from server.");
+      }
+
+      let replyList: Reply[] = [];
+      if (repliesRes.ok) {
+        const repliesJson = (await repliesRes.json()) as { replies?: unknown[] };
+        replyList = (repliesJson.replies || []).map((r) =>
+          mapReplyFromApi(r as Record<string, unknown>)
+        );
+      } else if (repliesRes.status !== 404) {
+        console.warn("InquiryDetail: replies fetch failed", repliesRes.status);
+      }
+
+      setInquiry(mapInquiryFromApi(raw, replyList.length));
+      setReplies(replyList);
     } catch (err) {
       console.error("Error fetching inquiry details:", err);
       setError(
@@ -113,41 +225,51 @@ export default function InquiryDetail({
       );
     } finally {
       setLoading(false);
+      setRefreshing(false);
+      fetchInFlightRef.current = false;
+      isInitialLoadRef.current = false;
     }
-  };
+  }, [inquiryId]);
+
+  useEffect(() => {
+    void fetchInquiryDetails();
+  }, [fetchInquiryDetails]);
 
   const handleSendReply = async (e: React.FormEvent) => {
     e.preventDefault();
+    const trimmed = replyMessage.trim();
+    if (!trimmed) {
+      toast.error("Write a message before sending.");
+      return;
+    }
 
-    if (!replyMessage.trim()) return;
+    const wasInternal = isInternalNote;
 
     try {
       setSendingReply(true);
-
       const response = await fetch(`/api/studio/inbox/${inquiryId}/replies`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
-          message: replyMessage.trim(),
-          isInternalNote,
+          message: trimmed,
+          isInternalNote: wasInternal,
         }),
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = (await response.json().catch(() => ({}))) as {
+          error?: string;
+        };
         throw new Error(errorData.error || "Failed to send reply");
       }
 
-      const data = await response.json();
+      const data = (await response.json()) as { reply?: Record<string, unknown> };
+      if (data.reply) {
+        setReplies((prev) => [...prev, mapReplyFromApi(data.reply!)]);
+      }
 
-      // Add new reply to the list
-      setReplies((prev) => [...prev, data.reply]);
-
-      // Update inquiry status if not internal note
-      if (!isInternalNote) {
+      if (!wasInternal) {
         setInquiry((prev) =>
           prev
             ? {
@@ -157,66 +279,66 @@ export default function InquiryDetail({
               }
             : null
         );
+        toast.success("Reply sent. The customer has been notified by email.");
+      } else {
+        toast.success("Internal note added.");
       }
 
-      // Clear form
       setReplyMessage("");
       setIsInternalNote(false);
-
-      // Show success message
-      if (!isInternalNote) {
-        alert(
-          `Reply sent successfully! The customer has been notified via email.`
-        );
-      } else {
-        alert(`Internal note added successfully.`);
-      }
     } catch (err) {
       console.error("Error sending reply:", err);
-
-      // Show more specific error messages
       const errorMessage =
         err instanceof Error ? err.message : "Failed to send reply";
 
-      if (errorMessage.includes("Email service not configured")) {
-        alert(
-          "Reply saved successfully, but the customer was not notified via email because the email service is not configured. Please contact the administrator to set up the email service."
-        );
-      } else if (errorMessage.includes("RESEND_API_KEY")) {
-        alert(
-          "Reply saved successfully, but email notification failed due to missing email service configuration. The customer was not notified."
+      if (
+        errorMessage.includes("Email service not configured") ||
+        errorMessage.includes("RESEND_API_KEY")
+      ) {
+        toast.warning(
+          "Reply was saved, but email could not be sent. Check email configuration."
         );
       } else {
-        alert(`Failed to send reply: ${errorMessage}. Please try again.`);
+        toast.error(errorMessage);
       }
     } finally {
       setSendingReply(false);
     }
   };
 
-  const handleStatusUpdate = async (newStatus: string) => {
-    if (!inquiry) return;
+  const handleStatusUpdate = async (newStatus: WorkflowStatus) => {
+    if (!inquiry || inquiry.status === newStatus) return;
 
     try {
       setUpdatingStatus(true);
-
       const response = await fetch(`/api/studio/inbox/${inquiryId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({ status: newStatus }),
       });
 
       if (!response.ok) {
-        throw new Error("Failed to update status");
+        const errBody = (await response.json().catch(() => ({}))) as {
+          error?: string;
+        };
+        throw new Error(errBody.error || "Failed to update status");
       }
 
-      setInquiry((prev) => (prev ? { ...prev, status: newStatus } : null));
+      const data = (await response.json()) as {
+        inquiry?: Record<string, unknown>;
+      };
+      if (data.inquiry && typeof data.inquiry === "object") {
+        setInquiry(mapInquiryFromApi(data.inquiry, replies.length));
+      } else {
+        setInquiry((prev) => (prev ? { ...prev, status: newStatus } : null));
+      }
+      toast.success("Status updated.");
     } catch (err) {
       console.error("Error updating status:", err);
-      alert("Failed to update status. Please try again.");
+      toast.error(
+        err instanceof Error ? err.message : "Failed to update status."
+      );
     } finally {
       setUpdatingStatus(false);
     }
@@ -226,48 +348,70 @@ export default function InquiryDetail({
     if (!inquiry) return;
 
     try {
-      setUpdating(true);
-
+      setMarkingRead(true);
       const response = await fetch(`/api/studio/inbox/${inquiryId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ status: "read" }),
+        body: JSON.stringify({ is_read: true }),
       });
 
       if (!response.ok) {
         throw new Error("Failed to mark as read");
       }
 
-      setInquiry((prev) => (prev ? { ...prev, status: "read" } : null));
+      const data = (await response.json()) as {
+        inquiry?: Record<string, unknown>;
+      };
+      if (data.inquiry && typeof data.inquiry === "object") {
+        setInquiry(mapInquiryFromApi(data.inquiry, replies.length));
+      } else {
+        setInquiry((prev) => (prev ? { ...prev, read: true } : null));
+      }
+      toast.success("Marked as read.");
     } catch (err) {
       console.error("Error marking as read:", err);
-      alert("Failed to mark as read. Please try again.");
+      toast.error("Could not mark as read. Try again.");
     } finally {
-      setUpdating(false);
+      setMarkingRead(false);
     }
   };
 
-  const handleReply = () => {
-    // This function is called by the new JSX, but the original file had a reply form.
-    // The new JSX implies a different reply flow.
-    // For now, we'll just log it or show a message.
-    console.log("Reply button clicked");
-    // The original file had a reply form here, which is now removed.
-    // The new JSX implies a different reply flow.
-    // For now, we'll just log it or show a message.
-    console.log("Reply button clicked");
+  const scrollToReplyForm = () => {
+    replyFormRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  // Helper functions for status and priority colors
+  const handleShareOrCopy = async () => {
+    if (!inquiry) return;
+    const title = inquiry.subject || "Inquiry";
+    const text = `${title}\n\n${inquiry.message}`;
+
+    if (canNativeShare) {
+      try {
+        await navigator.share({ title, text });
+      } catch (e) {
+        if ((e as Error).name !== "AbortError") {
+          toast.error("Share was cancelled or failed.");
+        }
+      }
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success("Inquiry copied to clipboard.");
+    } catch {
+      toast.error("Could not copy to clipboard.");
+    }
+  };
+
   function getStatusColor(status: string): string {
     switch (status) {
       case "unread":
       case "new":
         return "bg-blue-100 text-blue-800 border border-blue-200";
       case "read":
+      case "pending":
       case "in_progress":
         return "bg-yellow-100 text-yellow-800 border border-yellow-200";
       case "replied":
@@ -321,12 +465,16 @@ export default function InquiryDetail({
           Error Loading Inquiry
         </h3>
         <p className="text-red-600 text-sm mt-2">{error}</p>
-        <button
-          onClick={() => window.location.reload()}
-          className="mt-4 px-4 py-2 bg-oma-plum text-white rounded-lg hover:bg-oma-plum/90 transition-colors"
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="mt-4 border-oma-plum/30 text-oma-plum"
+          onClick={() => void fetchInquiryDetails()}
+          disabled={refreshing}
         >
-          Retry
-        </button>
+          {refreshing ? "Retrying…" : "Try again"}
+        </Button>
       </div>
     );
   }
@@ -346,37 +494,55 @@ export default function InquiryDetail({
     );
   }
 
+  const statusSelectValue = workflowSelectValue(inquiry.status);
+
   return (
     <div className="bg-white rounded-lg shadow-sm border border-oma-beige overflow-hidden">
+      <div className="px-6 py-3 border-b border-oma-beige bg-oma-cream/20 flex items-center gap-3">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="gap-2 border-oma-beige"
+          onClick={onBack}
+        >
+          <ArrowLeftIcon className="h-4 w-4" />
+          Back to list
+        </Button>
+      </div>
+
       {/* Header */}
       <div className="px-6 py-4 border-b border-oma-beige bg-oma-cream/30">
-        <div className="flex items-start justify-between">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
               <h1 className="text-2xl font-canela text-oma-plum">
                 {inquiry.subject || "General Inquiry"}
               </h1>
               {!inquiry.read && (
-                <span className="inline-block w-3 h-3 bg-blue-500 rounded-full"></span>
+                <span
+                  className="inline-block w-3 h-3 bg-blue-500 rounded-full shrink-0"
+                  title="Unread"
+                />
               )}
             </div>
-            <div className="flex items-center gap-4 text-sm text-oma-cocoa">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-oma-cocoa">
               <span className="flex items-center gap-1">
-                <UserIcon className="h-4 w-4" />
+                <UserIcon className="h-4 w-4 shrink-0" />
                 {inquiry.name}
               </span>
               <span className="flex items-center gap-1">
-                <EnvelopeIcon className="h-4 w-4" />
+                <EnvelopeIcon className="h-4 w-4 shrink-0" />
                 {inquiry.email}
               </span>
               {inquiry.phone && (
                 <span className="flex items-center gap-1">
-                  <PhoneIcon className="h-4 w-4" />
+                  <PhoneIcon className="h-4 w-4 shrink-0" />
                   {inquiry.phone}
                 </span>
               )}
               <span className="flex items-center gap-1">
-                <CalendarIcon className="h-4 w-4" />
+                <CalendarIcon className="h-4 w-4 shrink-0" />
                 {new Date(inquiry.created_at).toLocaleDateString("en-GB", {
                   year: "numeric",
                   month: "long",
@@ -387,17 +553,17 @@ export default function InquiryDetail({
               </span>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
             <span
-              className={`px-3 py-1 text-sm font-medium rounded-full ${getStatusColor(
+              className={`px-3 py-1 text-sm font-medium rounded-full w-fit ${getStatusColor(
                 inquiry.status
               )}`}
             >
-              {inquiry.status}
+              {inquiry.status.replace(/_/g, " ")}
             </span>
             {inquiry.priority && inquiry.priority !== "normal" && (
               <span
-                className={`px-3 py-1 text-sm font-medium rounded-full ${getPriorityColor(
+                className={`px-3 py-1 text-sm font-medium rounded-full w-fit ${getPriorityColor(
                   inquiry.priority
                 )}`}
               >
@@ -406,12 +572,34 @@ export default function InquiryDetail({
             )}
           </div>
         </div>
+
+        <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+          <Label className="text-oma-cocoa shrink-0">Workflow status</Label>
+          <Select
+            value={statusSelectValue}
+            onValueChange={(v) => void handleStatusUpdate(v as WorkflowStatus)}
+            disabled={updatingStatus}
+          >
+            <SelectTrigger className="w-full sm:w-56 border-oma-beige">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              {WORKFLOW_STATUSES.map((s) => (
+                <SelectItem key={s} value={s}>
+                  {s.replace(/_/g, " ")}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {updatingStatus && (
+            <span className="text-xs text-oma-cocoa">Updating…</span>
+          )}
+        </div>
       </div>
 
-      {/* Brand and Type Info */}
-      {(inquiry.brand_name || inquiry.type) && (
+      {(inquiry.brand_name || inquiry.type || inquiry.source) && (
         <div className="px-6 py-4 border-b border-oma-beige bg-white">
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-4">
             {inquiry.brand_name && (
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium text-oma-cocoa">
@@ -428,7 +616,7 @@ export default function InquiryDetail({
                   Type:
                 </span>
                 <span className="text-sm text-oma-cocoa bg-gray-100 px-3 py-1 rounded-full">
-                  {inquiry.type.replace("_", " ").toUpperCase()}
+                  {formatTypeLabel(inquiry.type)}
                 </span>
               </div>
             )}
@@ -446,7 +634,6 @@ export default function InquiryDetail({
         </div>
       )}
 
-      {/* Message Content */}
       <div className="px-6 py-6">
         <h3 className="text-lg font-canela text-oma-plum mb-4">Message</h3>
         <div className="bg-oma-cream/50 rounded-lg p-6 border border-oma-beige">
@@ -456,64 +643,146 @@ export default function InquiryDetail({
         </div>
       </div>
 
-      {/* Replies Section */}
-      {inquiry.replies_count > 0 && (
+      {(replies.length > 0 || inquiry.replies_count > 0) && (
         <div className="px-6 py-6 border-t border-oma-beige">
           <h3 className="text-lg font-canela text-oma-plum mb-4">
-            Replies ({inquiry.replies_count})
+            Replies ({Math.max(replies.length, inquiry.replies_count)})
           </h3>
-          {/* Replies would be loaded and displayed here */}
-          <div className="space-y-4">
-            {/* Placeholder for reply system */}
-            <div className="text-center py-8 text-oma-cocoa">
-              <p>Reply system coming soon...</p>
-            </div>
-          </div>
+          {replies.length === 0 ? (
+            <p className="text-sm text-oma-cocoa/80">
+              Replies exist but could not be loaded. Use Try again above or
+              refresh the page.
+            </p>
+          ) : (
+            <ul className="space-y-4">
+              {replies.map((reply) => (
+                <li
+                  key={reply.id}
+                  className={cn(
+                    "rounded-lg border p-4",
+                    reply.is_internal_note
+                      ? "border-amber-200 bg-amber-50/60"
+                      : "border-oma-beige bg-white"
+                  )}
+                >
+                  <div className="flex flex-wrap justify-between gap-2 text-xs text-oma-cocoa mb-2">
+                    <span className="font-medium text-oma-plum">
+                      {replyAuthorName(reply)}
+                      {reply.is_internal_note && (
+                        <span className="ml-2 text-amber-800">(internal)</span>
+                      )}
+                    </span>
+                    <time dateTime={reply.created_at}>
+                      {new Date(reply.created_at).toLocaleString("en-GB")}
+                    </time>
+                  </div>
+                  <p className="text-sm text-oma-cocoa whitespace-pre-wrap">
+                    {reply.message}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       )}
 
-      {/* Action Buttons */}
-      <div className="px-6 py-4 border-t border-oma-beige bg-oma-cream/30">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            {!inquiry.read && (
-              <button
-                onClick={handleMarkAsRead}
-                disabled={updating}
-                className="flex items-center gap-2 px-4 py-2 bg-oma-plum text-white rounded-lg hover:bg-oma-plum/90 disabled:opacity-50 transition-colors"
-              >
-                <EyeIcon className="h-4 w-4" />
-                {updating ? "Marking..." : "Mark as Read"}
-              </button>
-            )}
-            <button
-              onClick={handleReply}
-              className="flex items-center gap-2 px-4 py-2 border border-oma-beige text-oma-plum rounded-lg hover:bg-oma-cream transition-colors"
-            >
-              <ChatBubbleLeftRightIcon className="h-4 w-4" />
-              Reply
-            </button>
+      <div ref={replyFormRef} className="px-6 py-6 border-t border-oma-beige">
+        <h3 className="text-lg font-canela text-oma-plum mb-4">
+          Reply or internal note
+        </h3>
+        <form onSubmit={handleSendReply} className="space-y-4">
+          <div>
+            <Label htmlFor="inquiry-reply-body" className="text-oma-cocoa">
+              Message
+            </Label>
+            <Textarea
+              id="inquiry-reply-body"
+              value={replyMessage}
+              onChange={(e) => setReplyMessage(e.target.value)}
+              placeholder="Type your reply to the customer or an internal note…"
+              rows={5}
+              className="mt-1 border-oma-beige"
+              maxLength={5000}
+            />
+            <p className="text-xs text-oma-cocoa/70 mt-1">
+              Customer replies trigger an email when email is configured. Internal
+              notes stay in the studio only.
+            </p>
           </div>
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => window.print()}
-              className="p-2 text-oma-cocoa hover:text-oma-plum hover:bg-oma-cream rounded-lg transition-colors"
+            <Checkbox
+              id="internal-note"
+              checked={isInternalNote}
+              onCheckedChange={(c) => setIsInternalNote(c === true)}
+            />
+            <Label htmlFor="internal-note" className="text-sm font-normal cursor-pointer">
+              Internal note only (do not email the customer)
+            </Label>
+          </div>
+          <Button
+            type="submit"
+            disabled={sendingReply}
+            className="bg-oma-plum hover:bg-oma-plum/90 gap-2"
+          >
+            {sendingReply ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <PaperAirplaneIcon className="h-4 w-4" />
+            )}
+            {sendingReply ? "Sending…" : "Send"}
+          </Button>
+        </form>
+      </div>
+
+      <div className="px-6 py-4 border-t border-oma-beige bg-oma-cream/30">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap items-center gap-2">
+            {!inquiry.read && (
+              <Button
+                type="button"
+                onClick={() => void handleMarkAsRead()}
+                disabled={markingRead}
+                className="bg-oma-plum hover:bg-oma-plum/90 gap-2"
+              >
+                <EyeIcon className="h-4 w-4" />
+                {markingRead ? "Marking…" : "Mark as read"}
+              </Button>
+            )}
+            <Button
+              type="button"
+              variant="outline"
+              className="border-oma-beige gap-2"
+              onClick={scrollToReplyForm}
+            >
+              <ChatBubbleLeftRightIcon className="h-4 w-4" />
+              Jump to reply
+            </Button>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="text-oma-cocoa hover:text-oma-plum"
               title="Print"
+              onClick={() => window.print()}
             >
               <PrinterIcon className="h-5 w-5" />
-            </button>
-            <button
-              onClick={() =>
-                navigator.share?.({
-                  title: inquiry.subject || "Inquiry",
-                  text: inquiry.message,
-                })
-              }
-              className="p-2 text-oma-cocoa hover:text-oma-plum hover:bg-oma-cream rounded-lg transition-colors"
-              title="Share"
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="text-oma-cocoa hover:text-oma-plum"
+              title={canNativeShare ? "Share" : "Copy to clipboard"}
+              onClick={() => void handleShareOrCopy()}
             >
-              <ShareIcon className="h-5 w-5" />
-            </button>
+              {canNativeShare ? (
+                <ShareIcon className="h-5 w-5" />
+              ) : (
+                <ClipboardDocumentIcon className="h-5 w-5" />
+              )}
+            </Button>
           </div>
         </div>
       </div>

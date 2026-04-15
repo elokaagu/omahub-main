@@ -39,5 +39,30 @@ export const faqUpdateSchema = z.object({
   is_active: z.boolean().optional(),
 });
 
+/** Partial FAQ patch (e.g., active toggle) */
+export const faqPatchSchema = z
+  .object({
+    id: faqIdSchema,
+    question: z.string().trim().min(1).max(2000).optional(),
+    answer: z.string().trim().min(1).max(100_000).optional(),
+    category: faqCategorySchema.optional(),
+    display_order: z.coerce.number().int().min(0).max(99_999).optional(),
+    page_location: faqPageLocationSchema.optional(),
+    is_active: z.boolean().optional(),
+  })
+  .refine(
+    (data) =>
+      data.question !== undefined ||
+      data.answer !== undefined ||
+      data.category !== undefined ||
+      data.display_order !== undefined ||
+      data.page_location !== undefined ||
+      data.is_active !== undefined,
+    {
+      message: "At least one field must be provided",
+    }
+  );
+
 export type FaqCreateInput = z.infer<typeof faqCreateSchema>;
 export type FaqUpdateInput = z.infer<typeof faqUpdateSchema>;
+export type FaqPatchInput = z.infer<typeof faqPatchSchema>;

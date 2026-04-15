@@ -1,13 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useAuth } from "@/contexts/AuthContext";
 import { getAllBrands } from "@/lib/services/brandService";
 import {
   getCollectionById,
   updateCollection,
 } from "@/lib/services/collectionService";
-import { Brand, Catalogue } from "@/lib/supabase";
+import { Brand } from "@/lib/supabase";
 import {
   Card,
   CardContent,
@@ -30,6 +32,23 @@ import { FileUpload } from "@/components/ui/file-upload";
 import { CollectionImageManager } from "@/components/studio/CollectionImageManager";
 import { ArrowLeft, Save } from "lucide-react";
 import { toast } from "sonner";
+import { CollectionEditUnavailable } from "./CollectionEditUnavailable";
+
+type LoadStatus = "loading" | "ready" | "missing" | "error";
+
+type CollectionFormFields = {
+  title: string;
+  description: string;
+  brandId: string;
+  image: string;
+};
+
+const emptyForm = (): CollectionFormFields => ({
+  title: "",
+  description: "",
+  brandId: "",
+  image: "",
+});
 
 export default function EditCataloguePage({
   params,
@@ -38,66 +57,68 @@ export default function EditCataloguePage({
 }) {
   const router = useRouter();
   const { id } = params;
+  const { user, loading: authLoading } = useAuth();
 
   const [brands, setBrands] = useState<Brand[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loadStatus, setLoadStatus] = useState<LoadStatus>("loading");
+  const [loadErrorDetail, setLoadErrorDetail] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [catalogue, setCatalogue] = useState<Catalogue | null>(null);
+  const [form, setForm] = useState<CollectionFormFields>(emptyForm);
 
-  // Form state
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [brandId, setBrandId] = useState("");
-  const [image, setImage] = useState("");
+  const loadCollection = useCallback(async () => {
+    setLoadStatus("loading");
+    setLoadErrorDetail(null);
+    try {
+      const [catalogueData, brandsData] = await Promise.all([
+        getCollectionById(id),
+        getAllBrands(),
+      ]);
+
+      if (!catalogueData) {
+        setBrands([]);
+        setForm(emptyForm());
+        setLoadStatus("missing");
+        return;
+      }
+
+      setBrands(brandsData);
+      setForm({
+        title: catalogueData.title,
+        description: catalogueData.description || "",
+        brandId: catalogueData.brand_id,
+        image: catalogueData.image,
+      });
+      setLoadStatus("ready");
+    } catch (error) {
+      console.error("Error fetching collection edit data:", error);
+      setLoadErrorDetail(
+        error instanceof Error ? error.message : "Unknown error"
+      );
+      setBrands([]);
+      setForm(emptyForm());
+      setLoadStatus("error");
+    }
+  }, [id]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        // Fetch the catalogue
-        const catalogueData = await getCollectionById(id);
-        if (!catalogueData) {
-          toast.error("Collection not found");
-          router.push("/studio/collections");
-          return;
-        }
-        setCatalogue(catalogueData);
-
-        // Initialize form data
-        setTitle(catalogueData.title);
-        setDescription(catalogueData.description || "");
-        setBrandId(catalogueData.brand_id);
-        setImage(catalogueData.image);
-
-        // Fetch brands for dropdown
-        const brandsData = await getAllBrands();
-        setBrands(brandsData);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        toast.error("Failed to load collection data");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [id, router]);
+    if (authLoading || !user) return;
+    void loadCollection();
+  }, [authLoading, user, loadCollection]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate form
-    if (!title.trim()) {
+    if (!form.title.trim()) {
       toast.error("Please enter a collection title");
       return;
     }
 
-    if (!brandId) {
+    if (!form.brandId) {
       toast.error("Please select a brand");
       return;
     }
 
-    if (!image) {
+    if (!form.image) {
       toast.error("Please upload an image");
       return;
     }
@@ -105,10 +126,10 @@ export default function EditCataloguePage({
     setSaving(true);
     try {
       await updateCollection(id, {
-        title,
-        description: description.trim() || undefined,
-        brand_id: brandId,
-        image,
+        title: form.title,
+        description: form.description.trim() || undefined,
+        brand_id: form.brandId,
+        image: form.image,
       });
 
       toast.success("Collection updated successfully");
@@ -122,33 +143,69 @@ export default function EditCataloguePage({
   };
 
   const handleImageUpload = (url: string) => {
-    setImage(url);
+    setForm((prev) => ({ ...prev, image: url }));
   };
 
-  if (loading) {
+  if (authLoading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full"></div>
+        <div className="animate-spin h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full" />
       </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center px-6 py-20">
+        <h1 className="text-2xl font-canela text-gray-900 mb-2">
+          Sign in required
+        </h1>
+        <p className="text-gray-600 mb-8 text-center max-w-md">
+          You need to be signed in to edit a collection.
+        </p>
+        <Button asChild className="bg-oma-plum hover:bg-oma-plum/90">
+          <Link href="/login" className="inline-flex items-center gap-2">
+            Go to login
+          </Link>
+        </Button>
+      </div>
+    );
+  }
+
+  if (loadStatus === "loading") {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  if (loadStatus === "missing") {
+    return <CollectionEditUnavailable variant="missing" />;
+  }
+
+  if (loadStatus === "error") {
+    return (
+      <CollectionEditUnavailable
+        variant="error"
+        detail={loadErrorDetail}
+        onRetry={() => void loadCollection()}
+      />
     );
   }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
       <div className="flex items-center mb-8">
-        <Button
-          variant="outline"
-          size="icon"
-          className="mr-4"
-          onClick={() => router.push("/studio/collections")}
-        >
-          <ArrowLeft className="h-4 w-4" />
+        <Button variant="outline" size="icon" className="mr-4" asChild>
+          <Link href="/studio/collections" aria-label="Back to collections">
+            <ArrowLeft className="h-4 w-4" />
+          </Link>
         </Button>
         <h1 className="text-3xl font-canela text-gray-900">Edit Collection</h1>
       </div>
 
       <div className="space-y-8">
-        {/* Collection Details Card */}
         <Card>
           <CardHeader>
             <CardTitle>Collection Details</CardTitle>
@@ -163,15 +220,22 @@ export default function EditCataloguePage({
                   <Label htmlFor="title">Collection Title</Label>
                   <Input
                     id="title"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
+                    value={form.title}
+                    onChange={(e) =>
+                      setForm((prev) => ({ ...prev, title: e.target.value }))
+                    }
                     placeholder="Enter collection title"
                   />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="brand">Brand</Label>
-                  <Select value={brandId} onValueChange={setBrandId}>
+                  <Select
+                    value={form.brandId}
+                    onValueChange={(value) =>
+                      setForm((prev) => ({ ...prev, brandId: value }))
+                    }
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select a brand" />
                     </SelectTrigger>
@@ -190,8 +254,13 @@ export default function EditCataloguePage({
                 <Label htmlFor="description">Description (Optional)</Label>
                 <Textarea
                   id="description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
+                  value={form.description}
+                  onChange={(e) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      description: e.target.value,
+                    }))
+                  }
                   placeholder="Enter a brief description of this collection..."
                   rows={3}
                 />
@@ -204,7 +273,7 @@ export default function EditCataloguePage({
                 </p>
                 <FileUpload
                   onUploadComplete={handleImageUpload}
-                  defaultValue={image}
+                  defaultValue={form.image}
                   bucket="brand-assets"
                   path="collections"
                 />
@@ -224,7 +293,6 @@ export default function EditCataloguePage({
           </CardContent>
         </Card>
 
-        {/* Collection Images Manager */}
         <Card>
           <CardHeader>
             <CardTitle>Collection Gallery</CardTitle>
@@ -236,7 +304,7 @@ export default function EditCataloguePage({
           <CardContent className="p-6">
             <CollectionImageManager
               collectionId={id}
-              collectionTitle={title || "Collection"}
+              collectionTitle={form.title.trim() || "Collection"}
             />
           </CardContent>
         </Card>

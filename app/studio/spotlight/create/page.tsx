@@ -8,6 +8,13 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Card,
   CardContent,
   CardHeader,
@@ -24,15 +31,20 @@ import {
 } from "@/lib/services/spotlightService";
 import { getAllBrands } from "@/lib/services/brandService";
 import { getProductsByBrand } from "@/lib/services/productService";
+import type { Brand, Product } from "@/lib/supabase";
 import { ArrowLeft, Plus, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Loading } from "@/components/ui/loading";
 import Link from "next/link";
 
+type VideoType = NonNullable<CreateSpotlightData["video_type"]>;
+
 export default function CreateSpotlightPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingBrands, setIsLoadingBrands] = useState(false);
+  const [isLoadingBrandProducts, setIsLoadingBrandProducts] = useState(false);
   const [formData, setFormData] = useState<CreateSpotlightData>({
     title: "",
     subtitle: "",
@@ -49,32 +61,63 @@ export default function CreateSpotlightPage() {
     brand_link: "",
     is_active: true,
   });
-  const [brands, setBrands] = useState<any[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
   const [selectedBrandId, setSelectedBrandId] = useState<string>("");
-  const [brandProducts, setBrandProducts] = useState<any[]>([]);
+  const [brandProducts, setBrandProducts] = useState<Product[]>([]);
+  const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
+  const [brandLoadError, setBrandLoadError] = useState<string | null>(null);
+  const [productsLoadError, setProductsLoadError] = useState<string | null>(
+    null
+  );
 
   useEffect(() => {
-    // Fetch all brands for dropdown
-    getAllBrands().then(setBrands);
+    const fetchBrands = async () => {
+      try {
+        setIsLoadingBrands(true);
+        setBrandLoadError(null);
+        const allBrands = await getAllBrands();
+        setBrands(allBrands);
+      } catch (error) {
+        console.error("Error loading brands:", error);
+        setBrandLoadError("Could not load brands. Please refresh and try again.");
+      } finally {
+        setIsLoadingBrands(false);
+      }
+    };
+    void fetchBrands();
   }, []);
 
   useEffect(() => {
-    if (selectedBrandId) {
-      getProductsByBrand(selectedBrandId).then(setBrandProducts);
-    } else {
-      setBrandProducts([]);
-    }
-    // Reset featured products if brand changes
-    setFormData((prev) => ({ ...prev, featured_products: [] }));
+    const fetchProducts = async () => {
+      if (!selectedBrandId) {
+        setBrandProducts([]);
+        setProductsLoadError(null);
+        return;
+      }
+
+      try {
+        setIsLoadingBrandProducts(true);
+        setProductsLoadError(null);
+        const products = await getProductsByBrand(selectedBrandId);
+        setBrandProducts(products);
+      } catch (error) {
+        console.error("Error loading products by brand:", error);
+        setProductsLoadError(
+          "Could not load products for this brand. Try selecting the brand again."
+        );
+      } finally {
+        setIsLoadingBrandProducts(false);
+      }
+    };
+    void fetchProducts();
   }, [selectedBrandId]);
 
   // Check if user is super admin
-  // useEffect(() => {
-  //   if (user && user.role !== "super_admin") {
-  //     router.push("/studio");
-  //     return;
-  //   }
-  // }, [user, router]);
+  useEffect(() => {
+    if (!authLoading && user && user.role !== "super_admin") {
+      router.push("/studio");
+    }
+  }, [authLoading, user, router]);
 
   const handleInputChange = (
     field: keyof CreateSpotlightData,
@@ -124,6 +167,32 @@ export default function CreateSpotlightPage() {
     handleProductChange(index, "image", url);
   };
 
+  const handleVideoTypeChange = (value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      video_type: value === "__none" ? undefined : (value as VideoType),
+    }));
+  };
+
+  const handleBrandSelection = (brandId: string) => {
+    const selectedBrand = brands.find((brand) => brand.id === brandId);
+    setSelectedBrandId(brandId);
+    if (!selectedBrand) return;
+
+    setFormData((prev) => ({
+      ...prev,
+      brand_name: selectedBrand.name || prev.brand_name,
+      brand_description: selectedBrand.description || prev.brand_description,
+      brand_link: selectedBrand.website || prev.brand_link,
+    }));
+
+    if (formData.featured_products.length > 0) {
+      setFormData((prev) => ({ ...prev, featured_products: [] }));
+      setSelectedProductIds([]);
+      toast.message("Featured products were reset after changing brand.");
+    }
+  };
+
   const addProduct = () => {
     setFormData((prev) => ({
       ...prev,
@@ -132,6 +201,7 @@ export default function CreateSpotlightPage() {
         { name: "", collection: "", image: "" },
       ],
     }));
+    setSelectedProductIds((prev) => [...prev, "__none"]);
   };
 
   const removeProduct = (index: number) => {
@@ -139,6 +209,26 @@ export default function CreateSpotlightPage() {
       ...prev,
       featured_products: prev.featured_products.filter((_, i) => i !== index),
     }));
+    setSelectedProductIds((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleProductSelectById = (index: number, productId: string) => {
+    const selected = brandProducts.find((p) => p.id === productId);
+    if (!selected) {
+      handleProductChange(index, "name", "");
+      handleProductChange(index, "collection", "");
+      handleProductChange(index, "image", "");
+      return;
+    }
+
+    handleProductChange(index, "name", selected.title || "");
+    handleProductChange(index, "collection", selected.category || "");
+    handleProductChange(index, "image", selected.image || "");
+    setSelectedProductIds((prev) => {
+      const next = [...prev];
+      next[index] = productId;
+      return next;
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -188,15 +278,55 @@ export default function CreateSpotlightPage() {
       await createSpotlightContent(user.id, formData);
       toast.success("Spotlight content created successfully");
       router.push("/studio/spotlight");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating spotlight content:", error);
-      toast.error("Failed to create spotlight content");
+
+      let errorMessage = "Failed to create spotlight content";
+      if (error?.message) {
+        if (
+          error.message.includes("permission") ||
+          error.message.includes("unauthorized")
+        ) {
+          errorMessage =
+            "Permission denied. Please ensure you have super admin access.";
+        } else if (
+          error.message.includes("network") ||
+          error.message.includes("fetch")
+        ) {
+          errorMessage =
+            "Network error. Please check your connection and try again.";
+        } else if (
+          error.message.includes("validation") ||
+          error.message.includes("required")
+        ) {
+          errorMessage = "Validation error. Please check all required fields.";
+        } else if (
+          error.message.includes("storage") ||
+          error.message.includes("bucket")
+        ) {
+          errorMessage =
+            "File upload error. Please ensure your images and videos are uploaded properly.";
+        } else if (
+          error.message.includes("database") ||
+          error.message.includes("postgres")
+        ) {
+          errorMessage = "Database error. Please try again or contact support.";
+        } else {
+          errorMessage = `Error: ${error.message}`;
+        }
+      }
+
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
-  if (user?.role !== "super_admin") {
+  if (authLoading || !user) {
+    return <Loading />;
+  }
+
+  if (user.role !== "super_admin") {
     return <Loading />;
   }
 
@@ -249,6 +379,39 @@ export default function CreateSpotlightPage() {
                   required
                 />
               </div>
+            </div>
+
+            <div>
+              <Label htmlFor="selected_brand">Link to Existing Brand</Label>
+              <Select
+                value={selectedBrandId || "__none"}
+                onValueChange={(value) =>
+                  handleBrandSelection(value === "__none" ? "" : value)
+                }
+              >
+                <SelectTrigger id="selected_brand">
+                  <SelectValue
+                    placeholder={
+                      isLoadingBrands ? "Loading brands..." : "Select a brand"
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none">No linked brand</SelectItem>
+                  {brands.map((brand) => (
+                    <SelectItem key={brand.id} value={brand.id}>
+                      {brand.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {brandLoadError && (
+                <p className="text-xs text-red-600 mt-1">{brandLoadError}</p>
+              )}
+              <p className="text-xs text-oma-cocoa/70 mt-1">
+                Optional: selecting a brand pre-fills brand fields and enables
+                product pickers.
+              </p>
             </div>
 
             <div>
@@ -396,20 +559,23 @@ export default function CreateSpotlightPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="video_type">Video Type</Label>
-                <select
-                  id="video_type"
-                  value={formData.video_type || ""}
-                  onChange={(e) =>
-                    handleInputChange("video_type", e.target.value as any)
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-oma-plum"
+                <Select
+                  value={formData.video_type ?? "__none"}
+                  onValueChange={handleVideoTypeChange}
                 >
-                  <option value="">Select video type</option>
-                  <option value="brand_campaign">Brand Campaign</option>
-                  <option value="behind_scenes">Behind the Scenes</option>
-                  <option value="interview">Interview</option>
-                  <option value="product_demo">Product Demo</option>
-                </select>
+                  <SelectTrigger id="video_type">
+                    <SelectValue placeholder="Select video type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none">No video type</SelectItem>
+                    <SelectItem value="brand_campaign">Brand Campaign</SelectItem>
+                    <SelectItem value="behind_scenes">
+                      Behind the Scenes
+                    </SelectItem>
+                    <SelectItem value="interview">Interview</SelectItem>
+                    <SelectItem value="product_demo">Product Demo</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="video_description">Video Description</Label>
@@ -449,8 +615,16 @@ export default function CreateSpotlightPage() {
                 <Upload className="h-12 w-12 mx-auto mb-4 opacity-40" />
                 <p>No featured products added yet</p>
                 <p className="text-sm">
-                  Add products to showcase in the spotlight section
+                  {selectedBrandId
+                    ? "Add products to showcase in the spotlight section"
+                    : "Select a linked brand first to add products"}
                 </p>
+                {isLoadingBrandProducts && (
+                  <p className="text-xs mt-2">Loading brand products...</p>
+                )}
+                {productsLoadError && (
+                  <p className="text-xs text-red-600 mt-2">{productsLoadError}</p>
+                )}
               </div>
             ) : (
               <div className="space-y-4">
@@ -473,40 +647,28 @@ export default function CreateSpotlightPage() {
                         <Label htmlFor={`product_name_${index}`}>
                           Product Name
                         </Label>
-                        <select
-                          id={`product_name_${index}`}
-                          value={product.name}
-                          onChange={(e) => {
-                            const selected = brandProducts.find(
-                              (p) => p.title === e.target.value
-                            );
-                            handleProductChange(
+                        <Select
+                          value={selectedProductIds[index] || "__none"}
+                          onValueChange={(value) =>
+                            handleProductSelectById(
                               index,
-                              "name",
-                              selected?.title || ""
-                            );
-                            handleProductChange(
-                              index,
-                              "collection",
-                              selected?.category || ""
-                            );
-                            handleProductChange(
-                              index,
-                              "image",
-                              selected?.image || ""
-                            );
-                          }}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-oma-plum"
-                          required
+                              value === "__none" ? "" : value
+                            )
+                          }
                           disabled={!selectedBrandId}
                         >
-                          <option value="">Select a product</option>
-                          {brandProducts.map((p) => (
-                            <option key={p.id} value={p.title}>
-                              {p.title}
-                            </option>
-                          ))}
-                        </select>
+                          <SelectTrigger id={`product_name_${index}`}>
+                            <SelectValue placeholder="Select a product" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="__none">Select a product</SelectItem>
+                            {brandProducts.map((p) => (
+                              <SelectItem key={p.id} value={p.id}>
+                                {p.title}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div>
                         <Label htmlFor={`product_collection_${index}`}>

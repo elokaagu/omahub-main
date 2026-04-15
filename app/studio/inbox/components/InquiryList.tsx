@@ -1,24 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import {
-  UserIcon,
-  CalendarIcon,
-  ExclamationTriangleIcon,
-  CheckCircleIcon,
-  ClockIcon,
-  EyeIcon,
-  ChatBubbleLeftRightIcon,
-  InboxIcon,
-  ArrowPathIcon,
-  ChatBubbleLeftIcon,
-} from "@heroicons/react/24/outline";
-import { formatDistanceToNow } from "date-fns";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { InboxIcon, ArrowPathIcon, ChatBubbleLeftIcon } from "@heroicons/react/24/outline";
+import { Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
-interface UserProfile {
-  role: string;
-  owned_brands: string[];
-}
+const PAGE_SIZE = 20;
+const FETCH_LIMIT = 200;
 
 interface InboxFilters {
   status?: string;
@@ -56,147 +46,267 @@ interface Inquiry {
 interface InquiryListProps {
   filters: InboxFilters;
   onInquirySelect: (inquiryId: string) => void;
-  userProfile: UserProfile;
+}
+
+function messageForHttpStatus(status: number): string {
+  if (status === 401) return "Please sign in to view inquiries.";
+  if (status === 403) return "You don't have permission to view these inquiries.";
+  if (status >= 500) return "Server error while loading inquiries.";
+  return `Unable to load inquiries (${status}).`;
+}
+
+function mapListInquiry(raw: Record<string, unknown>): Inquiry {
+  const brand = raw.brand as { name?: string; category?: string } | null | undefined;
+  return {
+    id: String(raw.id ?? ""),
+    brand_id: String(raw.brand_id ?? ""),
+    name: String(raw.customer_name ?? ""),
+    email: String(raw.customer_email ?? ""),
+    phone: raw.customer_phone ? String(raw.customer_phone) : undefined,
+    subject: String(raw.subject ?? ""),
+    message: String(raw.message ?? ""),
+    type: String(raw.inquiry_type ?? ""),
+    status: String(raw.status ?? ""),
+    priority: String(raw.priority ?? "normal"),
+    source: String(raw.source ?? ""),
+    created_at: String(raw.created_at ?? ""),
+    updated_at: String(raw.updated_at ?? ""),
+    read: Boolean(raw.is_read),
+    replied_at: raw.replied_at ? String(raw.replied_at) : undefined,
+    brand_name: brand?.name ? String(brand.name) : "",
+    brand_category: brand?.category ? String(brand.category) : undefined,
+    brand_image: undefined,
+    replies_count: 0,
+    latest_reply_message: undefined,
+    latest_reply_at: undefined,
+    latest_reply_admin: undefined,
+  };
+}
+
+function formatTypeLabel(type: string): string {
+  return type.replace(/_/g, " ").toUpperCase();
+}
+
+function inquiryMatchesFilters(inquiry: Inquiry, filters: InboxFilters): boolean {
+  if (filters.status) {
+    if (filters.status === "unread") {
+      const unreadLike =
+        !inquiry.read ||
+        inquiry.status === "unread" ||
+        inquiry.status === "new";
+      if (!unreadLike) return false;
+    } else if (inquiry.status !== filters.status) {
+      return false;
+    }
+  }
+  if (filters.priority && inquiry.priority !== filters.priority) return false;
+  if (filters.type && inquiry.type !== filters.type) return false;
+  if (filters.brandId && inquiry.brand_id !== filters.brandId) return false;
+  if (filters.search) {
+    const q = filters.search.trim().toLowerCase();
+    if (!q) return true;
+    const hay = [
+      inquiry.name,
+      inquiry.email,
+      inquiry.subject,
+      inquiry.message,
+      inquiry.brand_name,
+    ]
+      .join(" ")
+      .toLowerCase();
+    if (!hay.includes(q)) return false;
+  }
+  return true;
+}
+
+function getPriorityColor(priority: string) {
+  switch (priority) {
+    case "urgent":
+      return "text-red-600 bg-red-50 border-red-200";
+    case "high":
+      return "text-orange-600 bg-orange-50 border-orange-200";
+    case "normal":
+      return "text-blue-600 bg-blue-50 border-blue-200";
+    case "low":
+      return "text-gray-600 bg-gray-50 border-gray-200";
+    default:
+      return "text-gray-600 bg-gray-50 border-gray-200";
+  }
+}
+
+function getStatusColor(status: string) {
+  switch (status) {
+    case "unread":
+    case "new":
+      return "text-orange-600 bg-orange-50 border-orange-200";
+    case "read":
+    case "pending":
+    case "in_progress":
+      return "text-blue-600 bg-blue-50 border-blue-200";
+    case "replied":
+      return "text-green-600 bg-green-50 border-green-200";
+    case "closed":
+      return "text-gray-600 bg-gray-50 border-gray-200";
+    default:
+      return "text-gray-600 bg-gray-50 border-gray-200";
+  }
 }
 
 export default function InquiryList({
   filters,
   onInquirySelect,
-  userProfile,
 }: InquiryListProps) {
-  const [inquiries, setInquiries] = useState<Inquiry[]>([]);
+  const [allInquiries, setAllInquiries] = useState<Inquiry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(0);
-  const [totalCount, setTotalCount] = useState(0);
+  const [markingReadId, setMarkingReadId] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchInquiries();
-  }, [filters, currentPage]);
+  const isFirstFetch = useRef(true);
+  const fetchInFlight = useRef(false);
 
-  const fetchInquiries = async () => {
-    try {
+  const fetchInquiries = useCallback(async () => {
+    if (fetchInFlight.current) return;
+    fetchInFlight.current = true;
+
+    if (isFirstFetch.current) {
       setLoading(true);
-      setError(null);
+    } else {
+      setRefreshing(true);
+    }
+    setError(null);
 
-      const params = new URLSearchParams({
-        page: currentPage.toString(),
-        limit: "20",
-      });
-
-      // Add filters to params
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value) {
-          params.append(key, value);
+    try {
+      const response = await fetch(
+        `/api/studio/inbox?inquiriesLimit=${FETCH_LIMIT}`,
+        {
+          method: "GET",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
         }
-      });
-
-      const response = await fetch(`/api/studio/inbox?${params}`, {
-        method: "GET",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      );
 
       if (!response.ok) {
-        throw new Error("Failed to fetch inquiries");
+        const errJson = (await response.json().catch(() => ({}))) as {
+          error?: string;
+        };
+        throw new Error(
+          errJson.error || messageForHttpStatus(response.status)
+        );
       }
 
-      const data = await response.json();
-      setInquiries(data.inquiries);
-      setTotalPages(data.totalPages);
-      setTotalCount(data.totalCount);
+      const data = (await response.json()) as {
+        success?: boolean;
+        inquiries?: Record<string, unknown>[];
+        error?: string;
+      };
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      const rows = data.inquiries ?? [];
+      setAllInquiries(rows.map((r) => mapListInquiry(r)));
     } catch (err) {
       console.error("Error fetching inquiries:", err);
-      setError(err instanceof Error ? err.message : "Failed to load inquiries");
+      setError(
+        err instanceof Error ? err.message : "Failed to load inquiries"
+      );
     } finally {
       setLoading(false);
+      setRefreshing(false);
+      fetchInFlight.current = false;
+      isFirstFetch.current = false;
     }
-  };
+  }, []);
 
-  const handleInquiryClick = async (inquiry: Inquiry) => {
-    // Mark as read if unread
-    if (!inquiry.read) {
+  useEffect(() => {
+    void fetchInquiries();
+  }, [fetchInquiries]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters]);
+
+  const filteredInquiries = useMemo(
+    () => allInquiries.filter((i) => inquiryMatchesFilters(i, filters)),
+    [allInquiries, filters]
+  );
+
+  const totalCount = filteredInquiries.length;
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+
+  useEffect(() => {
+    setCurrentPage((p) => Math.min(p, totalPages));
+  }, [totalPages]);
+
+  const pageInquiries = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    return filteredInquiries.slice(start, start + PAGE_SIZE);
+  }, [filteredInquiries, currentPage]);
+
+  const rangeStart = totalCount === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
+  const rangeEnd = Math.min(currentPage * PAGE_SIZE, totalCount);
+
+  const markInquiryReadOnServer = useCallback(
+    async (inquiryId: string): Promise<boolean> => {
       try {
-        await fetch(`/api/studio/inbox/${inquiry.id}`, {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
+        const response = await fetch(`/api/studio/inbox/${inquiryId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
           credentials: "include",
-          body: JSON.stringify({
-            status: "read",
-            readAt: true,
-          }),
+          body: JSON.stringify({ is_read: true }),
         });
-
-        // Update local state
-        setInquiries((prev) =>
+        if (!response.ok) return false;
+        setAllInquiries((prev) =>
           prev.map((inq) =>
-            inq.id === inquiry.id ? { ...inq, status: "read", read: true } : inq
+            inq.id === inquiryId ? { ...inq, read: true } : inq
           )
         );
-      } catch (error) {
-        console.error("Error marking inquiry as read:", error);
+        return true;
+      } catch (e) {
+        console.error("Error marking inquiry as read:", e);
+        return false;
       }
-    }
+    },
+    []
+  );
 
-    onInquirySelect(inquiry.id);
-  };
+  const handleInquiryOpen = useCallback(
+    async (inquiry: Inquiry) => {
+      if (!inquiry.read) {
+        setMarkingReadId(inquiry.id);
+        const ok = await markInquiryReadOnServer(inquiry.id);
+        setMarkingReadId(null);
+        if (!ok) {
+          toast.error("Could not mark as read. You can still open the inquiry.");
+        }
+      }
+      onInquirySelect(inquiry.id);
+    },
+    [markInquiryReadOnServer, onInquirySelect]
+  );
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "urgent":
-        return "text-red-600 bg-red-50 border-red-200";
-      case "high":
-        return "text-orange-600 bg-orange-50 border-orange-200";
-      case "normal":
-        return "text-blue-600 bg-blue-50 border-blue-200";
-      case "low":
-        return "text-gray-600 bg-gray-50 border-gray-200";
-      default:
-        return "text-gray-600 bg-gray-50 border-gray-200";
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "unread":
-        return "text-orange-600 bg-orange-50 border-orange-200";
-      case "read":
-        return "text-blue-600 bg-blue-50 border-blue-200";
-      case "replied":
-        return "text-green-600 bg-green-50 border-green-200";
-      case "closed":
-        return "text-gray-600 bg-gray-50 border-gray-200";
-      default:
-        return "text-gray-600 bg-gray-50 border-gray-200";
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "unread":
-        return ExclamationTriangleIcon;
-      case "read":
-        return EyeIcon;
-      case "replied":
-        return CheckCircleIcon;
-      case "closed":
-        return ClockIcon;
-      default:
-        return ClockIcon;
-    }
-  };
+  const handleMarkAsReadOnly = useCallback(
+    async (e: React.MouseEvent, inquiry: Inquiry) => {
+      e.stopPropagation();
+      if (inquiry.read) return;
+      setMarkingReadId(inquiry.id);
+      const ok = await markInquiryReadOnServer(inquiry.id);
+      setMarkingReadId(null);
+      if (ok) toast.success("Marked as read");
+      else toast.error("Could not mark as read");
+    },
+    [markInquiryReadOnServer]
+  );
 
   if (loading) {
     return (
       <div className="bg-white rounded-lg shadow-sm border border-oma-beige">
         <div className="px-6 py-4 border-b border-oma-beige">
           <h3 className="text-lg font-canela text-oma-plum">
-            Loading Inquiries...
+            Loading inquiries…
           </h3>
         </div>
         <div className="p-6">
@@ -227,33 +337,52 @@ export default function InquiryList({
     return (
       <div className="bg-red-50 border border-red-200 rounded-lg p-6">
         <h3 className="text-red-800 font-semibold font-canela">
-          Error Loading Inquiries
+          Error loading inquiries
         </h3>
         <p className="text-red-600 text-sm mt-2">{error}</p>
-        <button
-          onClick={() => window.location.reload()}
-          className="mt-4 px-4 py-2 bg-oma-plum text-white rounded-lg hover:bg-oma-plum/90 transition-colors"
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="mt-4 border-oma-plum/30 text-oma-plum"
+          onClick={() => void fetchInquiries()}
+          disabled={refreshing}
         >
-          Retry
-        </button>
+          {refreshing ? "Retrying…" : "Try again"}
+        </Button>
       </div>
     );
   }
 
-  if (inquiries.length === 0) {
+  if (totalCount === 0) {
     return (
       <div className="bg-white rounded-lg shadow-sm border border-oma-beige">
-        <div className="px-6 py-4 border-b border-oma-beige">
+        <div className="px-6 py-4 border-b border-oma-beige flex items-center justify-between">
           <h3 className="text-lg font-canela text-oma-plum">
-            Customer Inquiries
+            Customer inquiries
           </h3>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="text-oma-cocoa hover:text-oma-plum"
+            title="Refresh"
+            onClick={() => void fetchInquiries()}
+            disabled={refreshing}
+          >
+            {refreshing ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : (
+              <ArrowPathIcon className="h-5 w-5" />
+            )}
+          </Button>
         </div>
         <div className="text-center py-16 bg-oma-cream/30">
           <div className="mx-auto h-16 w-16 text-oma-cocoa mb-4">
             <InboxIcon className="h-full w-full" />
           </div>
           <h3 className="text-xl font-canela text-oma-plum mb-2">
-            No Inquiries Found
+            No inquiries found
           </h3>
           <p className="text-oma-cocoa">
             No inquiries match your current filters.
@@ -266,37 +395,60 @@ export default function InquiryList({
   return (
     <div className="bg-white rounded-lg shadow-sm border border-oma-beige overflow-hidden">
       <div className="px-6 py-4 border-b border-oma-beige">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-canela text-oma-plum">
-            Customer Inquiries ({inquiries.length})
-          </h3>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => window.location.reload()}
-              className="p-2 text-oma-cocoa hover:text-oma-plum hover:bg-oma-cream rounded-lg transition-colors"
-              title="Refresh"
-            >
-              <ArrowPathIcon className="h-5 w-5" />
-            </button>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h3 className="text-lg font-canela text-oma-plum">
+              Customer inquiries
+            </h3>
+            <p className="text-sm text-oma-cocoa mt-0.5">
+              Showing {rangeStart}–{rangeEnd} of {totalCount}
+              {allInquiries.length >= FETCH_LIMIT && totalCount >= FETCH_LIMIT
+                ? ` (loaded up to ${FETCH_LIMIT} most recent)`
+                : null}
+            </p>
           </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="self-end sm:self-auto text-oma-cocoa hover:text-oma-plum shrink-0"
+            title="Refresh"
+            onClick={() => void fetchInquiries()}
+            disabled={refreshing}
+          >
+            {refreshing ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : (
+              <ArrowPathIcon className="h-5 w-5" />
+            )}
+          </Button>
         </div>
       </div>
 
       <div className="divide-y divide-oma-beige">
-        {inquiries.map((inquiry) => (
+        {pageInquiries.map((inquiry) => (
           <div
             key={inquiry.id}
-            onClick={() => onInquirySelect(inquiry.id)}
-            className="p-6 hover:bg-oma-cream/50 cursor-pointer transition-colors"
+            role="button"
+            tabIndex={0}
+            onClick={() => void handleInquiryOpen(inquiry)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                void handleInquiryOpen(inquiry);
+              }
+            }}
+            className="p-6 hover:bg-oma-cream/50 cursor-pointer transition-colors text-left w-full"
           >
             <div className="flex items-start justify-between mb-3">
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
-                  <h4 className="font-semibold text-oma-plum">
-                    {inquiry.name}
-                  </h4>
+                  <h4 className="font-semibold text-oma-plum">{inquiry.name}</h4>
                   {!inquiry.read && (
-                    <span className="inline-block w-2 h-2 bg-blue-500 rounded-full"></span>
+                    <span
+                      className="inline-block w-2 h-2 bg-blue-500 rounded-full shrink-0"
+                      title="Unread"
+                    />
                   )}
                 </div>
                 <p className="text-sm text-oma-cocoa">{inquiry.email}</p>
@@ -310,19 +462,21 @@ export default function InquiryList({
                 )}
               </div>
               <div className="text-right flex-shrink-0">
-                <div className="flex items-center gap-2 mb-2">
+                <div className="flex items-center gap-2 mb-2 justify-end">
                   <span
-                    className={`inline-block px-3 py-1 text-xs font-medium rounded-full ${getStatusColor(
-                      inquiry.status
-                    )}`}
+                    className={cn(
+                      "inline-block px-3 py-1 text-xs font-medium rounded-full border",
+                      getStatusColor(inquiry.status)
+                    )}
                   >
-                    {inquiry.status}
+                    {inquiry.status.replace(/_/g, " ")}
                   </span>
                   {inquiry.priority && inquiry.priority !== "normal" && (
                     <span
-                      className={`inline-block px-2 py-1 text-xs font-medium rounded-full ${getPriorityColor(
-                        inquiry.priority
-                      )}`}
+                      className={cn(
+                        "inline-block px-2 py-1 text-xs font-medium rounded-full border",
+                        getPriorityColor(inquiry.priority)
+                      )}
                     >
                       {inquiry.priority}
                     </span>
@@ -339,47 +493,48 @@ export default function InquiryList({
               </div>
             </div>
 
-            {/* Inquiry Type */}
             {inquiry.type && (
               <div className="mb-3">
                 <span className="text-xs text-oma-cocoa bg-oma-beige px-2 py-1 rounded-full">
-                  {inquiry.type.replace("_", " ").toUpperCase()}
+                  {formatTypeLabel(inquiry.type)}
                 </span>
               </div>
             )}
 
-            {/* Message Preview */}
             <p className="text-oma-cocoa text-sm leading-relaxed line-clamp-2">
               {inquiry.message}
             </p>
 
-            {/* Action Buttons */}
-            <div className="flex items-center justify-between mt-4">
+            <div className="flex items-center justify-between mt-4 gap-2 flex-wrap">
               <div className="flex items-center gap-2">
                 {!inquiry.read && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      // markAsRead function would need to be implemented
-                    }}
-                    className="text-xs text-oma-plum hover:text-oma-plum/80 underline"
+                  <Button
+                    type="button"
+                    variant="link"
+                    size="sm"
+                    className="h-auto p-0 text-xs text-oma-plum"
+                    disabled={markingReadId === inquiry.id}
+                    onClick={(e) => void handleMarkAsReadOnly(e, inquiry)}
                   >
-                    Mark as read
-                  </button>
+                    {markingReadId === inquiry.id ? "Marking…" : "Mark as read"}
+                  </Button>
                 )}
-                <button
+                <Button
+                  type="button"
+                  variant="link"
+                  size="sm"
+                  className="h-auto p-0 text-xs text-oma-plum"
                   onClick={(e) => {
                     e.stopPropagation();
-                    onInquirySelect(inquiry.id);
+                    void handleInquiryOpen(inquiry);
                   }}
-                  className="text-xs text-oma-plum hover:text-oma-plum/80 underline"
                 >
                   View details
-                </button>
+                </Button>
               </div>
-              <div className="flex items-center gap-1">
-                <ChatBubbleLeftIcon className="h-4 w-4 text-oma-cocoa" />
-                <span className="text-xs text-oma-cocoa">
+              <div className="flex items-center gap-1 text-oma-cocoa">
+                <ChatBubbleLeftIcon className="h-4 w-4 shrink-0" />
+                <span className="text-xs">
                   {inquiry.replies_count || 0} replies
                 </span>
               </div>
@@ -387,37 +542,40 @@ export default function InquiryList({
           </div>
         ))}
       </div>
+
+      {totalPages > 1 && (
+        <div className="px-6 py-4 border-t border-oma-beige flex flex-wrap items-center justify-between gap-3 bg-oma-cream/20">
+          <p className="text-sm text-oma-cocoa">
+            Page {currentPage} of {totalPages}
+          </p>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="border-oma-beige"
+              disabled={currentPage <= 1}
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            >
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              Previous
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="border-oma-beige"
+              disabled={currentPage >= totalPages}
+              onClick={() =>
+                setCurrentPage((p) => Math.min(totalPages, p + 1))
+              }
+            >
+              Next
+              <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
-}
-
-// Helper functions for status and priority colors
-function getStatusColor(status: string): string {
-  switch (status) {
-    case "unread":
-    case "new":
-      return "bg-blue-100 text-blue-800 border border-blue-200";
-    case "read":
-    case "in_progress":
-      return "bg-yellow-100 text-yellow-800 border border-yellow-200";
-    case "replied":
-      return "bg-green-100 text-green-800 border border-green-200";
-    case "closed":
-      return "bg-gray-100 text-gray-800 border border-gray-200";
-    default:
-      return "bg-gray-100 text-gray-800 border border-gray-200";
-  }
-}
-
-function getPriorityColor(priority: string): string {
-  switch (priority) {
-    case "urgent":
-      return "bg-red-100 text-red-800 border border-red-200";
-    case "high":
-      return "bg-orange-100 text-orange-800 border border-orange-200";
-    case "low":
-      return "bg-gray-100 text-gray-800 border border-gray-200";
-    default:
-      return "bg-gray-100 text-gray-800 border border-gray-200";
-  }
 }

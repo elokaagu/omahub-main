@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,6 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Loading } from "@/components/ui/loading";
 import { NavigationLink } from "@/components/ui/navigation-link";
 import { FileUpload } from "@/components/ui/file-upload";
 import { VideoUpload } from "@/components/ui/video-upload";
@@ -18,16 +17,7 @@ import { getProductById, updateProduct } from "@/lib/services/productService";
 import { getAllCollections } from "@/lib/services/collectionService";
 import { getAllBrands } from "@/lib/services/brandService";
 import { Product, Brand, Catalogue } from "@/lib/supabase";
-import {
-  ArrowLeft,
-  Plus,
-  Trash2,
-  Upload,
-  DollarSign,
-  Package,
-  Image as ImageIcon,
-  Save,
-} from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   Select,
@@ -36,29 +26,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { supabase } from "@/lib/supabase";
-import {
-  formatNumberWithCommas,
-  parseFormattedNumber,
-} from "@/lib/utils/priceFormatter";
 import { getBrandCurrency } from "@/lib/utils/currencyUtils";
-import { Checkbox } from "@/components/ui/checkbox";
-
-// Brand categories - now using standardized categories
-const CATEGORIES = [
-  "Bridal",
-  "Custom Design",
-  "Evening Gowns",
-  "Alterations",
-  "Ready to Wear",
-  "Casual Wear",
-  "Accessories",
-  "Jewelry",
-  "Vacation",
-  "Couture",
-  "Luxury",
-  "Streetwear & Urban",
-];
+import { useBrandOwnerAccess } from "@/lib/hooks/useBrandOwnerAccess";
 
 // Curated product categories for dropdown
 const PRODUCT_CATEGORIES: string[] = [
@@ -75,17 +44,24 @@ const PRODUCT_CATEGORIES: string[] = [
 
 export default function EditProductPage() {
   const { user, loading: authLoading } = useAuth();
+  const {
+    loading: accessLoading,
+    userPermissions,
+    ownedBrandIds,
+    isBrandOwner,
+    isAdmin,
+    filterBrandsByOwnership,
+  } = useBrandOwnerAccess();
   const router = useRouter();
   const params = useParams();
   const productId = params.id as string;
 
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingProduct, setIsLoadingProduct] = useState(true);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [catalogues, setCatalogues] = useState<Catalogue[]>([]);
-  const [filteredCatalogues, setFilteredCatalogues] = useState<Catalogue[]>([]);
   const [product, setProduct] = useState<Product | null>(null);
-  const [selectedBrandCurrency, setSelectedBrandCurrency] = useState("USD"); // Default to USD instead of Naira
+  const [selectedBrandCurrency, setSelectedBrandCurrency] = useState("USD");
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -111,78 +87,36 @@ export default function EditProductPage() {
     is_active: true,
   });
 
-  // Check user permissions by fetching profile directly
-  const [userProfile, setUserProfile] = useState<any>(null);
-  const [profileLoading, setProfileLoading] = useState(true);
-  
-  // Add timeout states to prevent infinite loading
-  const [authTimeout, setAuthTimeout] = useState(false);
+  const filteredCatalogues = useMemo(() => {
+    if (!formData.brand_id) return [];
+    return catalogues.filter((c) => c.brand_id === formData.brand_id);
+  }, [formData.brand_id, catalogues]);
+
   const [productTimeout, setProductTimeout] = useState(false);
 
-  useEffect(() => {
-    const fetchUserProfile = async () => {
-      if (!user?.id) return;
-      
-      try {
-        setProfileLoading(true);
-        const { data: profile, error } = await supabase
-          .from("profiles")
-          .select("role, owned_brands")
-          .eq("id", user.id)
-          .single();
-
-        if (error) {
-          console.error("Error fetching profile:", error);
-          return;
-        }
-
-        console.log("🔍 Product Edit - Actual Profile:", profile);
-        setUserProfile(profile);
-      } catch (error) {
-        console.error("Error fetching user profile:", error);
-      } finally {
-        setProfileLoading(false);
-      }
-    };
-
-    fetchUserProfile();
-  }, [user?.id]);
-
-  // Set selected brand currency for display purposes only (no auto-sync)
   useEffect(() => {
     if (formData.brand_id) {
       const selectedBrand = brands.find((b) => b.id === formData.brand_id);
       if (selectedBrand) {
-        if (selectedBrand.currency) {
-          setSelectedBrandCurrency(selectedBrand.currency);
-        } else {
-          setSelectedBrandCurrency("");
-        }
+        const cur = getBrandCurrency(selectedBrand);
+        setSelectedBrandCurrency(cur?.code ?? "");
       }
+    } else {
+      setSelectedBrandCurrency("");
     }
   }, [formData.brand_id, brands]);
 
-  // Filter catalogues based on selected brand
   useEffect(() => {
-    if (formData.brand_id) {
-      const brandCatalogues = catalogues.filter(
-        (catalogue) => catalogue.brand_id === formData.brand_id
-      );
-      setFilteredCatalogues(brandCatalogues);
-    } else {
-      setFilteredCatalogues([]);
-    }
-  }, [formData.brand_id, catalogues]);
+    if (!user?.id || !productId || accessLoading) return;
 
-  // Fetch product data and populate form
-  useEffect(() => {
+    let cancelled = false;
+
     const fetchProductData = async () => {
+      setIsLoadingProduct(true);
+      setProductTimeout(false);
       try {
-        setIsLoadingProduct(true);
-
-        // Add timeout to prevent infinite loading
-        const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error("Request timeout")), 10000); // 10 second timeout
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          setTimeout(() => reject(new Error("Request timeout")), 12000);
         });
 
         const dataPromise = Promise.all([
@@ -191,36 +125,24 @@ export default function EditProductPage() {
           getAllCollections(),
         ]);
 
-        const result = await Promise.race([
+        const result = (await Promise.race([
           dataPromise,
-          timeoutPromise
-        ]) as [Product | null, Brand[], Catalogue[]];
-        
+          timeoutPromise,
+        ])) as [Product | null, Brand[], Catalogue[]];
+
+        if (cancelled) return;
+
         const [productData, brandsData, cataloguesData] = result;
 
         if (!productData) {
           toast.error("Product not found");
-          window.location.href = "/studio/products";
+          router.push("/studio/products");
           return;
         }
 
-        // Check if brand owner has access to this product
-        if (user?.role === "brand_admin") {
-          if (!supabase) {
-            console.error("Supabase client not available");
-            router.push("/studio/products");
-            return;
-          }
-
-          const userProfile = await supabase
-            .from("profiles")
-            .select("owned_brands")
-            .eq("id", user.id)
-            .single();
-
-          const ownedBrandIds = userProfile.data?.owned_brands || [];
-
-          if (!ownedBrandIds.includes(productData.brand_id)) {
+        if (!isAdmin && isBrandOwner) {
+          const allowed = ownedBrandIds ?? [];
+          if (!allowed.includes(productData.brand_id)) {
             toast.error("You don't have permission to edit this product");
             router.push("/studio/products");
             return;
@@ -228,44 +150,16 @@ export default function EditProductPage() {
         }
 
         setProduct(productData);
-
-        // Filter brands based on user role
-        if (user?.role === "super_admin") {
-          setBrands(brandsData);
-        } else if (user?.role === "brand_admin") {
-          if (!supabase) {
-            console.error("Supabase client not available");
-            setBrands([]);
-            return;
-          }
-
-          const userProfile = await supabase
-            .from("profiles")
-            .select("owned_brands")
-            .eq("id", user.id)
-            .single();
-
-          if (userProfile.data?.owned_brands) {
-            const ownedBrandIds = userProfile.data.owned_brands;
-            const ownedBrands = brandsData.filter((brand) =>
-              ownedBrandIds.includes(brand.id)
-            );
-            setBrands(ownedBrands);
-          } else {
-            setBrands([]);
-          }
-        }
-
+        setBrands(filterBrandsByOwnership(brandsData));
         setCatalogues(cataloguesData);
 
-        // Populate form with existing product data
         setFormData({
           title: productData.title || "",
           description: productData.description || "",
           price: productData.price?.toString() || "",
           sale_price: productData.sale_price?.toString() || "",
           image: productData.image || "",
-          images: productData.images || [], // Load existing images array
+          images: productData.images || [],
           brand_id: productData.brand_id || "",
           catalogue_id: productData.catalogue_id || "",
           category: productData.category || "",
@@ -279,65 +173,59 @@ export default function EditProductPage() {
           lead_time: productData.lead_time || "",
           video_url: productData.video_url || "",
           video_thumbnail: productData.video_thumbnail || "",
-          currency: productData.currency || "USD", // Set currency from product
+          currency: productData.currency || "USD",
           is_featured: false,
           is_active: true,
         });
 
-        // Set initial currency based on product's brand
         if (productData.brand_id) {
           const brand = brandsData.find((b) => b.id === productData.brand_id);
-          if (brand && brand.currency) {
-            setSelectedBrandCurrency(brand.currency);
-          }
+          const cur = brand ? getBrandCurrency(brand) : null;
+          if (cur?.code) setSelectedBrandCurrency(cur.code);
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error("Error fetching product data:", error);
-        
-        if (error.message === "Request timeout") {
-          toast.error("Request timed out. Please try again or refresh the page.");
+        const msg = error instanceof Error ? error.message : "";
+        if (msg === "Request timeout") {
+          toast.error("Request timed out. Please try again or go back to products.");
+          setProductTimeout(true);
         } else {
-          toast.error("Failed to load product data. Please refresh the page.");
+          toast.error("Failed to load product data.");
+          router.push("/studio/products");
         }
-        
-        // Use window.location.href to ensure clean navigation
-        setTimeout(() => {
-          window.location.href = "/studio/products";
-        }, 2000);
       } finally {
-        setIsLoadingProduct(false);
+        if (!cancelled) setIsLoadingProduct(false);
       }
     };
 
-    if (user && productId) {
-      fetchProductData();
-    }
-  }, [user, productId, router]);
+    void fetchProductData();
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    user?.id,
+    productId,
+    accessLoading,
+    router,
+    filterBrandsByOwnership,
+    isAdmin,
+    isBrandOwner,
+    ownedBrandIds,
+  ]);
 
-  // Add timeout for auth loading to prevent infinite loading
   useEffect(() => {
-    if (authLoading) {
-      const timer = setTimeout(() => {
-        setAuthTimeout(true);
-      }, 8000); // 8 second timeout for auth loading
-      
-      return () => clearTimeout(timer);
-    }
-  }, [authLoading]);
-
-  // Add timeout for product loading to prevent infinite loading
-  useEffect(() => {
-    if (isLoadingProduct) {
-      const timer = setTimeout(() => {
-        setProductTimeout(true);
-      }, 12000); // 12 second timeout for product loading
-      
-      return () => clearTimeout(timer);
-    }
+    if (!isLoadingProduct) return;
+    const timer = setTimeout(() => setProductTimeout(true), 14000);
+    return () => clearTimeout(timer);
   }, [isLoadingProduct]);
 
-  // Show loading state while auth is initializing
-  if (authLoading && !authTimeout) {
+  const hasProductPermission =
+    userPermissions.includes("studio.products.manage") ||
+    user?.role === "super_admin" ||
+    user?.role === "brand_admin" ||
+    user?.role === "admin";
+
+  if (authLoading || accessLoading) {
     return (
       <div className="min-h-screen bg-white">
         <div className="max-w-4xl mx-auto px-6 py-24">
@@ -345,41 +233,6 @@ export default function EditProductPage() {
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-oma-plum mx-auto mb-4"></div>
               <p className="text-gray-600">Loading product edit form...</p>
-              <p className="text-sm text-gray-500 mt-2">If this takes too long, please refresh the page</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Show timeout message if auth takes too long
-  if (authTimeout) {
-    return (
-      <div className="min-h-screen bg-white">
-        <div className="max-w-4xl mx-auto px-6 py-24">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-red-600 mb-4">
-              Loading Timeout
-            </h1>
-            <p className="text-gray-600 mb-4">
-              The page is taking too long to load. This might be due to network issues.
-            </p>
-            <div className="space-y-2">
-              <Button 
-                onClick={() => window.location.reload()} 
-                className="bg-black hover:bg-gray-800 text-white"
-              >
-                Refresh Page
-              </Button>
-              <br />
-              <Button 
-                variant="outline"
-                onClick={() => window.location.href = "/studio/products"}
-                className="border-gray-300 text-black hover:bg-gray-100"
-              >
-                Go Back to Products
-              </Button>
             </div>
           </div>
         </div>
@@ -407,26 +260,7 @@ export default function EditProductPage() {
     );
   }
 
-  // Show loading while fetching profile
-  if (profileLoading) {
-    return (
-      <div className="min-h-screen bg-white">
-        <div className="max-w-4xl mx-auto px-6 py-24">
-          <div className="flex items-center justify-center min-h-[400px]">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-oma-plum mx-auto mb-4"></div>
-              <p className="text-gray-600">Loading permissions...</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Check permissions based on actual profile
-  const hasPermission = userProfile?.role === "super_admin" || userProfile?.role === "brand_admin";
-
-  if (!hasPermission) {
+  if (!hasProductPermission) {
     return (
       <div className="min-h-screen bg-white">
         <div className="max-w-4xl mx-auto px-6 py-24">
@@ -438,7 +272,7 @@ export default function EditProductPage() {
               You don't have permission to edit products.
             </p>
             <p className="text-sm text-gray-500 mb-4">
-              Your role: {userProfile?.role || 'unknown'}
+              Your role: {user?.role ?? "unknown"}
             </p>
             <Button asChild>
               <NavigationLink href="/studio">Go to Studio</NavigationLink>
@@ -479,16 +313,16 @@ export default function EditProductPage() {
               The product data is taking too long to load. This might be due to network issues.
             </p>
             <div className="space-y-2">
-              <Button 
-                onClick={() => window.location.reload()} 
+              <Button
+                onClick={() => router.refresh()}
                 className="bg-black hover:bg-gray-800 text-white"
               >
-                Refresh Page
+                Refresh
               </Button>
               <br />
-              <Button 
+              <Button
                 variant="outline"
-                onClick={() => window.location.href = "/studio/products"}
+                onClick={() => router.push("/studio/products")}
                 className="border-gray-300 text-black hover:bg-gray-100"
               >
                 Go Back to Products
@@ -521,52 +355,35 @@ export default function EditProductPage() {
   }
 
   const handleInputChange = (name: string, value: string | boolean) => {
-    // Handle price formatting for price and sale_price fields
     if (
       (name === "price" || name === "sale_price") &&
       typeof value === "string"
     ) {
-      // Remove any non-numeric characters except decimal point
       const numericValue = value.replace(/[^\d.]/g, "");
-
-      // Validate that it's a valid number
       if (numericValue === "" || !isNaN(parseFloat(numericValue))) {
-        setFormData({
-          ...formData,
-          [name]: numericValue,
-        });
+        setFormData((prev) => ({ ...prev, [name]: numericValue }));
       }
       return;
     }
 
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
-
-    // Update currency when brand changes
     if (name === "brand_id" && typeof value === "string") {
       const selectedBrand = brands.find((brand) => brand.id === value);
-      if (selectedBrand) {
-        const brandCurrency = getBrandCurrency(selectedBrand);
-        if (brandCurrency) {
-          setSelectedBrandCurrency(brandCurrency.code);
-
-          // Automatically set the product currency to match the brand
-          setFormData((prev) => ({
-            ...prev,
-            currency: brandCurrency.code,
-          }));
-        }
-      }
+      const brandCur = selectedBrand ? getBrandCurrency(selectedBrand) : null;
+      const nextCurrency = brandCur?.code ?? "USD";
+      setSelectedBrandCurrency(brandCur?.code ?? "");
+      setFormData((prev) => ({
+        ...prev,
+        brand_id: value,
+        catalogue_id: "",
+        currency: nextCurrency,
+      }));
+      return;
     }
-  };
 
-  // Format price for display - use centralized utility
-  const formatPriceForDisplay = (price: string): string => {
-    const numericPrice = parseFloat(price.replace(/,/g, ""));
-    if (isNaN(numericPrice)) return price;
-    return formatNumberWithCommas(numericPrice);
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const handleImageUpload = (url: string, index?: number) => {
@@ -660,7 +477,7 @@ export default function EditProductPage() {
     }
 
     try {
-      setIsLoading(true);
+      setIsSubmitting(true);
 
       const updateData: Partial<Product> = {
         title: formData.title,
@@ -702,14 +519,11 @@ export default function EditProductPage() {
         currency: formData.currency, // Add currency to update data
       };
 
-      console.log("Updating product with data:", updateData);
-
       const updatedProduct = await updateProduct(productId, updateData);
 
       if (updatedProduct) {
         toast.success("Product updated successfully!");
-        // Immediate redirect to prevent any chance of getting stuck
-        window.location.href = "/studio/products";
+        router.push("/studio/products");
       } else {
         throw new Error("Product update returned null");
       }
@@ -731,7 +545,7 @@ export default function EditProductPage() {
         toast.error("Failed to update product. Please try again.");
       }
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -743,10 +557,10 @@ export default function EditProductPage() {
           <Button
             variant="outline"
             size="icon"
-            onClick={() => window.location.href = "/studio/products"}
+            asChild
             className="border-gray-300 hover:bg-gray-100"
           >
-            ←
+            <NavigationLink href="/studio/products">←</NavigationLink>
           </Button>
           <div>
             <h1 className="text-4xl font-canela text-black mb-2">
@@ -1008,11 +822,10 @@ export default function EditProductPage() {
                   </Select>
                   {formData.brand_id && (
                     <p className="text-xs text-muted-foreground">
-                      Auto-synced with{" "}
-                      {brands.find((b) => b.id === formData.brand_id)?.name}{" "}
-                      {selectedBrandCurrency
-                        ? `(${selectedBrandCurrency})`
-                        : "(Contact designer for pricing)"}
+                      Changing brand sets currency to{" "}
+                      {brands.find((b) => b.id === formData.brand_id)?.name}
+                      &apos;s default ({selectedBrandCurrency || "—"}); you can
+                      change it here, but it must match the brand when you save.
                     </p>
                   )}
                 </div>
@@ -1336,20 +1149,15 @@ export default function EditProductPage() {
 
           {/* Submit Button */}
           <div className="flex gap-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => window.location.href = "/studio/products"}
-              className="border-gray-300 text-black hover:bg-gray-100"
-            >
-              Cancel
+            <Button type="button" variant="outline" asChild className="border-gray-300 text-black hover:bg-gray-100">
+              <NavigationLink href="/studio/products">Cancel</NavigationLink>
             </Button>
             <Button
               type="submit"
-              disabled={isLoading}
+              disabled={isSubmitting}
               className="bg-black hover:bg-gray-800 text-white"
             >
-              {isLoading ? (
+              {isSubmitting ? (
                 <>
                   <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2" />
                   Updating Product...

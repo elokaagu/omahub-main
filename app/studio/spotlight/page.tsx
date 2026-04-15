@@ -30,32 +30,35 @@ import { toast } from "sonner";
 import { Loading } from "@/components/ui/loading";
 
 export default function SpotlightManagementPage() {
-  const { user, session } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [spotlightContent, setSpotlightContent] = useState<SpotlightContent[]>(
     []
   );
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [isActivating, setIsActivating] = useState<string | null>(null);
 
   // Check if user is super admin
   useEffect(() => {
-    if (user && user.role !== "super_admin") {
+    if (!authLoading && user && user.role !== "super_admin") {
       router.push("/studio");
       return;
     }
-  }, [user, router]);
+  }, [authLoading, user, router]);
 
   // Fetch spotlight content
   useEffect(() => {
     const fetchSpotlightContent = async () => {
       try {
         setIsLoading(true);
+        setLoadError(null);
         const content = await getAllSpotlightContent();
         setSpotlightContent(content);
       } catch (error) {
         console.error("Error fetching spotlight content:", error);
+        setLoadError("Could not load spotlight content.");
         toast.error("Failed to load spotlight content");
       } finally {
         setIsLoading(false);
@@ -66,6 +69,21 @@ export default function SpotlightManagementPage() {
       fetchSpotlightContent();
     }
   }, [user]);
+
+  const retryFetch = async () => {
+    try {
+      setIsLoading(true);
+      setLoadError(null);
+      const content = await getAllSpotlightContent();
+      setSpotlightContent(content);
+    } catch (error) {
+      console.error("Error retrying spotlight content fetch:", error);
+      setLoadError("Could not load spotlight content.");
+      toast.error("Failed to load spotlight content");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleDelete = async (id: string) => {
     if (!user) return;
@@ -107,14 +125,52 @@ export default function SpotlightManagementPage() {
     }
   };
 
-  if (user?.role !== "super_admin") {
+  if (authLoading || !user) {
     return <Loading />;
+  }
+
+  if (user.role !== "super_admin") {
+    return (
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+        <Card>
+          <CardHeader>
+            <CardTitle>Access Denied</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-sm text-oma-cocoa">
+              Spotlight management is restricted to super admin users.
+            </p>
+            <Button asChild variant="outline">
+              <Link href="/studio">Back to Studio</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <Loading />
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+        <Card>
+          <CardHeader>
+            <CardTitle>Unable to load spotlight content</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-sm text-oma-cocoa">{loadError}</p>
+            <Button onClick={retryFetch} variant="outline">
+              Retry
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -175,7 +231,7 @@ export default function SpotlightManagementPage() {
             <Card key={item.id} className="overflow-hidden">
               <div className="relative">
                 <Image
-                  src={item.main_image}
+                  src={item.main_image || "/placeholder-service.jpg"}
                   alt={item.brand_name}
                   width={400}
                   height={200}
@@ -208,6 +264,18 @@ export default function SpotlightManagementPage() {
                     <p className="text-xs text-oma-cocoa line-clamp-2">
                       {item.brand_description}
                     </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Badge variant="outline">
+                      {item.video_url ? "Video attached" : "No video"}
+                    </Badge>
+                    <Badge variant="outline">
+                      Products: {item.featured_products?.length ?? 0}
+                    </Badge>
+                    <Badge variant="outline">
+                      Updated:{" "}
+                      {new Date(item.updated_at).toLocaleDateString("en-GB")}
+                    </Badge>
                   </div>
 
                   <div className="flex flex-col sm:flex-row gap-2">
@@ -277,6 +345,9 @@ export default function SpotlightManagementPage() {
                         <AlertDialogDescription>
                           Are you sure you want to delete "{item.title}"? This
                           action cannot be undone.
+                          {item.is_active
+                            ? " This spotlight is currently active and deleting it will remove the active homepage spotlight until another entry is activated."
+                            : ""}
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>

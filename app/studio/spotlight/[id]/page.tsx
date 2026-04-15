@@ -8,6 +8,13 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Card,
   CardContent,
   CardHeader,
@@ -28,6 +35,8 @@ import { ArrowLeft, Plus, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Loading } from "@/components/ui/loading";
 import Link from "next/link";
+
+type VideoType = NonNullable<SpotlightContent["video_type"]>;
 
 export default function EditSpotlightPage() {
   const { user } = useAuth();
@@ -159,6 +168,13 @@ export default function EditSpotlightPage() {
     handleProductChange(index, "image", url);
   };
 
+  const handleVideoTypeChange = (value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      video_type: value === "__none" ? undefined : (value as VideoType),
+    }));
+  };
+
   const addProduct = () => {
     setFormData((prev) => ({
       ...prev,
@@ -216,6 +232,25 @@ export default function EditSpotlightPage() {
     }
     if (!formData.brand_link?.trim()) {
       toast.error("Brand link is required");
+      return;
+    }
+    const featuredProducts = formData.featured_products ?? [];
+    const invalidProductIndex = featuredProducts.findIndex((product) => {
+      const hasAnyField =
+        product.name.trim() ||
+        product.collection.trim() ||
+        product.image.trim();
+      if (!hasAnyField) return false;
+      return (
+        !product.name.trim() ||
+        !product.collection.trim() ||
+        !product.image.trim()
+      );
+    });
+    if (invalidProductIndex !== -1) {
+      toast.error(
+        `Featured product ${invalidProductIndex + 1} must include name, collection, and image`
+      );
       return;
     }
 
@@ -280,8 +315,30 @@ export default function EditSpotlightPage() {
     }
   };
 
-  if (user?.role !== "super_admin") {
-    return <Loading />;
+  if (!user) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <Loading />
+      </div>
+    );
+  }
+
+  if (user.role !== "super_admin") {
+    return (
+      <div className="max-w-4xl mx-auto px-6 py-8">
+        <div className="text-center">
+          <h1 className="text-2xl font-canela text-oma-black mb-2">
+            Access Denied
+          </h1>
+          <p className="text-oma-cocoa mb-4">
+            You need super admin access to edit spotlight content.
+          </p>
+          <Button asChild variant="outline">
+            <Link href="/studio">Back to Studio</Link>
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   if (isLoading) {
@@ -503,20 +560,23 @@ export default function EditSpotlightPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="video_type">Video Type</Label>
-                <select
-                  id="video_type"
-                  value={formData.video_type || ""}
-                  onChange={(e) =>
-                    handleInputChange("video_type", e.target.value as any)
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-oma-plum"
+                <Select
+                  value={formData.video_type ?? "__none"}
+                  onValueChange={handleVideoTypeChange}
                 >
-                  <option value="">Select video type</option>
-                  <option value="brand_campaign">Brand Campaign</option>
-                  <option value="behind_scenes">Behind the Scenes</option>
-                  <option value="interview">Interview</option>
-                  <option value="product_demo">Product Demo</option>
-                </select>
+                  <SelectTrigger id="video_type">
+                    <SelectValue placeholder="Select video type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none">No video type</SelectItem>
+                    <SelectItem value="brand_campaign">Brand Campaign</SelectItem>
+                    <SelectItem value="behind_scenes">
+                      Behind the Scenes
+                    </SelectItem>
+                    <SelectItem value="interview">Interview</SelectItem>
+                    <SelectItem value="product_demo">Product Demo</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="video_description">Video Description</Label>

@@ -2,38 +2,102 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
+import { useBrandOwnerAccess } from "@/lib/hooks/useBrandOwnerAccess";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Plus, X, Upload } from "lucide-react";
-import Link from "next/link";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ArrowLeft, X } from "lucide-react";
 import { toast } from "sonner";
 import { SimpleFileUpload } from "@/components/ui/simple-file-upload";
 import { MultiSelect } from "@/components/ui/multi-select";
-import { getAllBrands } from "@/lib/services/brandService";
+import { getBrandsEligibleForPortfolio } from "@/lib/studio/tailorPortfolioBrands";
+import type { Brand } from "@/lib/supabase";
+import { AuthImage } from "@/components/ui/auth-image";
 
-interface Brand {
-  id: string;
-  name: string;
-  category: string;
-  brand_images?: Array<{
-    id: string;
-    role: string;
-    storage_path: string;
-    created_at: string;
-    updated_at: string;
-  }>;
-}
+const MAX_PORTFOLIO_IMAGES = 15;
+const LEAD_TIME_MAX_LEN = 200;
+
+const tailorSpecialties = [
+  "Bridal Wear",
+  "Wedding Dresses",
+  "Evening Gowns",
+  "Cocktail Dresses",
+  "Formal Wear",
+  "Business Attire",
+  "Casual Wear",
+  "Alterations",
+  "Custom Design",
+  "Bespoke Tailoring",
+  "Made-to-Measure",
+  "Fitting Services",
+  "Pattern Making",
+  "Embroidery",
+  "Beadwork",
+  "Lace Work",
+  "Sequins & Rhinestones",
+  "Hand Stitching",
+  "Custom Fitting",
+];
+
+const commonMaterials = [
+  "Silk",
+  "Satin",
+  "Chiffon",
+  "Lace",
+  "Tulle",
+  "Velvet",
+  "Crepe",
+  "Jersey",
+  "Denim",
+  "Cotton",
+  "Wool",
+  "Linen",
+  "Polyester",
+  "Viscose",
+  "Rayon",
+];
+
+const commonTechniques = [
+  "Hand Stitching",
+  "Machine Stitching",
+  "Embroidery",
+  "Beading",
+  "Appliqué",
+  "Pleating",
+  "Gathering",
+  "Draping",
+  "Pattern Making",
+  "Fitting",
+  "Alterations",
+  "Custom Design",
+  "Bespoke Tailoring",
+  "Made-to-Measure",
+];
 
 export default function CreatePortfolioPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
+  const {
+    loading: accessLoading,
+    filterBrandsByOwnership,
+    isAdmin,
+    isBrandOwner,
+  } = useBrandOwnerAccess();
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isBrandsLoading, setIsBrandsLoading] = useState(true);
   const [brands, setBrands] = useState<Brand[]>([]);
-  const [loading, setLoading] = useState(true);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -44,105 +108,47 @@ export default function CreatePortfolioPage() {
     specialties: [] as string[],
     lead_time: "",
     consultation_fee: "",
-    // Portfolio images (no individual pricing)
     images: [] as string[],
-    // Optional fields
     materials: [] as string[],
     techniques: [] as string[],
     inspiration: "",
   });
 
-  // Tailor categories that can have portfolios
-  const tailorCategories = [
-    "Bridal",
-    "Custom Design",
-    "Evening Gowns",
-    "Alterations",
-    "Tailored",
-    "Event Wear",
-    "Wedding Guest",
-    "Birthday",
-  ];
+  useEffect(() => {
+    if (authLoading || !user?.id || accessLoading) return;
 
-  // Common tailor specialties
-  const tailorSpecialties = [
-    "Bridal Wear",
-    "Wedding Dresses",
-    "Evening Gowns",
-    "Cocktail Dresses",
-    "Formal Wear",
-    "Business Attire",
-    "Casual Wear",
-    "Alterations",
-    "Custom Design",
-    "Bespoke Tailoring",
-    "Made-to-Measure",
-    "Fitting Services",
-    "Pattern Making",
-    "Embroidery",
-    "Beadwork",
-    "Lace Work",
-    "Sequins & Rhinestones",
-    "Hand Stitching",
-    "Custom Fitting",
-  ];
+    let cancelled = false;
 
-  // Common materials
-  const commonMaterials = [
-    "Silk",
-    "Satin",
-    "Chiffon",
-    "Lace",
-    "Tulle",
-    "Velvet",
-    "Crepe",
-    "Jersey",
-    "Denim",
-    "Cotton",
-    "Wool",
-    "Linen",
-    "Polyester",
-    "Viscose",
-    "Rayon",
-  ];
+    const run = async () => {
+      setIsBrandsLoading(true);
+      try {
+        const eligible = await getBrandsEligibleForPortfolio();
+        if (cancelled) return;
+        setBrands(filterBrandsByOwnership(eligible));
+      } catch (error) {
+        console.error("Error fetching brands:", error);
+        if (!cancelled) toast.error("Failed to load brands");
+      } finally {
+        if (!cancelled) setIsBrandsLoading(false);
+      }
+    };
 
-  // Common techniques
-  const commonTechniques = [
-    "Hand Stitching",
-    "Machine Stitching",
-    "Embroidery",
-    "Beading",
-    "Appliqué",
-    "Pleating",
-    "Gathering",
-    "Draping",
-    "Pattern Making",
-    "Fitting",
-    "Alterations",
-    "Custom Design",
-    "Bespoke Tailoring",
-    "Made-to-Measure",
-  ];
+    void run();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id, authLoading, accessLoading, filterBrandsByOwnership]);
 
   useEffect(() => {
-    fetchBrands();
-  }, []);
-
-  const fetchBrands = async () => {
-    try {
-      const brandsData = await getAllBrands();
-      // Only show brands that are tailors
-      const tailorBrands = brandsData.filter((brand: Brand) =>
-        tailorCategories.includes(brand.category)
-      );
-      setBrands(tailorBrands);
-    } catch (error) {
-      console.error("Error fetching brands:", error);
-      toast.error("Failed to load brands");
-    } finally {
-      setLoading(false);
-    }
-  };
+    setFormData((prev) => {
+      if (!prev.brand_id) {
+        return prev.category === "" ? prev : { ...prev, category: "" };
+      }
+      const brand = brands.find((b) => b.id === prev.brand_id);
+      if (!brand) return prev;
+      return prev.category === brand.category ? prev : { ...prev, category: brand.category };
+    });
+  }, [formData.brand_id, brands]);
 
   const handleInputChange = (
     name: string,
@@ -152,10 +158,13 @@ export default function CreatePortfolioPage() {
   };
 
   const handleImageUpload = (url: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      images: [...prev.images, url],
-    }));
+    setFormData((prev) => {
+      if (prev.images.length >= MAX_PORTFOLIO_IMAGES) {
+        toast.error(`You can upload at most ${MAX_PORTFOLIO_IMAGES} images`);
+        return prev;
+      }
+      return { ...prev, images: [...prev.images, url] };
+    });
   };
 
   const handleRemoveImage = (index: number) => {
@@ -165,59 +174,85 @@ export default function CreatePortfolioPage() {
     }));
   };
 
+  const validate = (): string | null => {
+    const title = formData.title.trim();
+    const description = formData.description.trim();
+    if (!title) return "Please enter a portfolio title";
+    if (title.length > 200) return "Title must be 200 characters or fewer";
+    if (!description) return "Please enter a description";
+    if (description.length < 10) return "Description should be at least 10 characters";
+    if (!formData.brand_id) return "Please select a brand";
+    if (!formData.category) return "Brand category is missing; pick a valid brand";
+    if (formData.images.length === 0) return "Please upload at least one portfolio image";
+    if (formData.images.length > MAX_PORTFOLIO_IMAGES) {
+      return `Please use at most ${MAX_PORTFOLIO_IMAGES} images`;
+    }
+
+    if (formData.consultation_fee.trim() !== "") {
+      const fee = Number(formData.consultation_fee);
+      if (Number.isNaN(fee) || fee < 0) {
+        return "Consultation fee must be a non-negative number";
+      }
+    }
+
+    const lt = formData.lead_time.trim();
+    if (lt.length > LEAD_TIME_MAX_LEN) {
+      return `Lead time must be ${LEAD_TIME_MAX_LEN} characters or fewer`;
+    }
+
+    return null;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.title || !formData.description || !formData.brand_id) {
-      toast.error("Please fill in all required fields");
-      return;
-    }
-
-    if (formData.images.length === 0) {
-      toast.error("Please upload at least one portfolio image");
+    const err = validate();
+    if (err) {
+      toast.error(err);
       return;
     }
 
     try {
-      setIsLoading(true);
+      setIsSubmitting(true);
 
-      // Create portfolio as a special product type
+      const consultationFeeParsed =
+        formData.consultation_fee.trim() === ""
+          ? undefined
+          : Number(formData.consultation_fee);
+
       const portfolioData = {
-        title: formData.title,
-        description: formData.description,
-        price: 0, // No individual pricing for portfolio items
+        title: formData.title.trim(),
+        description: formData.description.trim(),
+        price: 0,
         image: formData.images[0],
         images: formData.images,
         brand_id: formData.brand_id,
-        category: formData.category || "Custom Design",
+        category: formData.category,
         in_stock: true,
         is_custom: true,
-        // Portfolio-specific metadata
         service_type: "portfolio" as const,
-        contact_for_pricing: true, // Always true for portfolios
-        price_range: formData.price_range,
+        contact_for_pricing: true,
+        price_range: formData.price_range.trim() || undefined,
         specialties: formData.specialties,
-        lead_time: formData.lead_time,
-        consultation_fee: formData.consultation_fee
-          ? parseFloat(formData.consultation_fee)
-          : undefined,
-        // Portfolio fields
+        lead_time: formData.lead_time.trim() || undefined,
+        consultation_fee: consultationFeeParsed,
         materials: formData.materials,
         techniques: formData.techniques,
-        inspiration: formData.inspiration,
+        inspiration: formData.inspiration.trim() || undefined,
       };
 
       const response = await fetch("/api/studio/products", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(portfolioData),
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to create portfolio");
+        const error = await response.json().catch(() => ({}));
+        throw new Error(
+          typeof error.error === "string" ? error.error : "Failed to create portfolio"
+        );
       }
 
       toast.success("Portfolio created successfully!");
@@ -228,17 +263,71 @@ export default function CreatePortfolioPage() {
         error instanceof Error ? error.message : "Failed to create portfolio"
       );
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
-  if (loading) {
+  if (authLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full"></div>
+      <div className="flex justify-center items-center min-h-[40vh]">
+        <div className="animate-spin h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full" />
       </div>
     );
   }
+
+  if (!user) {
+    return (
+      <div className="max-w-md mx-auto px-4 py-16">
+        <Card>
+          <CardContent className="pt-6 text-center space-y-4">
+            <h2 className="text-xl font-canela text-oma-plum">Sign in required</h2>
+            <p className="text-muted-foreground">
+              Log in to create portfolio entries for your brands.
+            </p>
+            <Button asChild className="bg-oma-plum hover:bg-oma-plum/90">
+              <Link href="/login">Log in</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (accessLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-[40vh]">
+        <div className="animate-spin h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  if (!isAdmin && !isBrandOwner) {
+    return (
+      <div className="max-w-lg mx-auto px-4 py-16">
+        <Card>
+          <CardContent className="pt-6 text-center space-y-4">
+            <h2 className="text-xl font-canela text-oma-plum">Access restricted</h2>
+            <p className="text-muted-foreground">
+              Only brand owners and administrators can create portfolio entries.
+            </p>
+            <Button variant="outline" asChild>
+              <Link href="/studio/portfolio">Back to portfolio</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (isBrandsLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-[40vh]">
+        <div className="animate-spin h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  const showForm = brands.length > 0;
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
@@ -251,252 +340,261 @@ export default function CreatePortfolioPage() {
         <h1 className="text-3xl font-canela text-gray-900">Create Portfolio</h1>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Basic Information */}
+      {!showForm ? (
         <Card>
           <CardHeader>
-            <CardTitle>Portfolio Information</CardTitle>
+            <CardTitle>No tailoring brands available</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="title">Portfolio Title *</Label>
-              <Input
-                id="title"
-                value={formData.title}
-                onChange={(e) => handleInputChange("title", e.target.value)}
-                placeholder="e.g., Bridal Collection 2024, Custom Evening Wear"
-                className="border-oma-cocoa/20 focus:border-oma-plum"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="description">Description *</Label>
-              <Textarea
-                id="description"
-                value={formData.description}
-                onChange={(e) =>
-                  handleInputChange("description", e.target.value)
-                }
-                placeholder="Describe your portfolio, your style, and what makes your work unique..."
-                rows={4}
-                className="border-oma-cocoa/20 focus:border-oma-plum"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="brand_id">Brand *</Label>
-                <select
-                  id="brand_id"
-                  value={formData.brand_id}
-                  onChange={(e) =>
-                    handleInputChange("brand_id", e.target.value)
-                  }
-                  className="w-full p-2 border border-oma-cocoa/20 rounded-md focus:border-oma-plum"
-                >
-                  <option value="">Select a brand</option>
-                  {brands.map((brand) => (
-                    <option key={brand.id} value={brand.id}>
-                      {brand.name} ({brand.category})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <Label htmlFor="category">Category</Label>
-                <select
-                  id="category"
-                  value={formData.category}
-                  onChange={(e) =>
-                    handleInputChange("category", e.target.value)
-                  }
-                  className="w-full p-2 border border-oma-cocoa/20 rounded-md focus:border-oma-plum"
-                >
-                  <option value="">Select category</option>
-                  {tailorCategories.map((category) => (
-                    <option key={category} value={category}>
-                      {category}
-                    </option>
-                  ))}
-                </select>
-              </div>
+          <CardContent className="space-y-4 text-muted-foreground">
+            <p>
+              Portfolio entries are tied to brands in tailoring-related categories (e.g. bridal,
+              custom design). None of your brands match yet, or you have not been assigned a brand.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Button asChild className="bg-oma-plum hover:bg-oma-plum/90">
+                <Link href="/studio/brands">Manage brands</Link>
+              </Button>
+              <Button variant="outline" asChild>
+                <Link href="/studio/brands/create">Create a brand</Link>
+              </Button>
             </div>
           </CardContent>
         </Card>
-
-        {/* Portfolio Images */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Portfolio Images *</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label>Upload Portfolio Images</Label>
-              <SimpleFileUpload
-                onUploadComplete={handleImageUpload}
-                bucket="brand-assets"
-                path="portfolio"
-                accept="image/png,image/jpeg,image/jpg,image/webp"
-                maxSize={10}
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                Upload high-quality images of your work. No individual pricing
-                needed.
-              </p>
-            </div>
-
-            {/* Display uploaded images */}
-            {formData.images.length > 0 && (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {formData.images.map((image, index) => (
-                  <div key={index} className="relative group">
-                    <img
-                      src={image}
-                      alt={`Portfolio image ${index + 1}`}
-                      className="w-full h-32 object-cover rounded-lg"
-                    />
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="sm"
-                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={() => handleRemoveImage(index)}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Pricing & Business Info */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Business Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      ) : (
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Portfolio Information</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="price_range">General Price Range</Label>
+                <Label htmlFor="title">Portfolio Title *</Label>
                 <Input
-                  id="price_range"
-                  value={formData.price_range}
-                  onChange={(e) =>
-                    handleInputChange("price_range", e.target.value)
-                  }
-                  placeholder="e.g., $500 - $5,000"
+                  id="title"
+                  value={formData.title}
+                  onChange={(e) => handleInputChange("title", e.target.value)}
+                  placeholder="e.g., Bridal Collection 2024, Custom Evening Wear"
+                  className="border-oma-cocoa/20 focus:border-oma-plum"
+                  maxLength={200}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="description">Description *</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => handleInputChange("description", e.target.value)}
+                  placeholder="Describe your portfolio, your style, and what makes your work unique..."
+                  rows={4}
                   className="border-oma-cocoa/20 focus:border-oma-plum"
                 />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label>Brand *</Label>
+                  <Select
+                    value={formData.brand_id || undefined}
+                    onValueChange={(v) => handleInputChange("brand_id", v)}
+                  >
+                    <SelectTrigger className="border-oma-cocoa/20 focus:border-oma-plum">
+                      <SelectValue placeholder="Select a brand" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {brands.map((brand) => (
+                        <SelectItem key={brand.id} value={brand.id}>
+                          {brand.name} ({brand.category})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label>Category</Label>
+                  <p className="text-sm text-muted-foreground mt-2 min-h-[40px] rounded-md border border-oma-cocoa/20 px-3 py-2 bg-muted/30">
+                    {formData.brand_id && formData.category ? (
+                      <>
+                        Taken from your brand:{" "}
+                        <span className="font-medium text-foreground">{formData.category}</span>
+                      </>
+                    ) : (
+                      "Select a brand to use its category for this portfolio."
+                    )}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Portfolio Images *</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label>Upload Portfolio Images</Label>
+                <SimpleFileUpload
+                  onUploadComplete={handleImageUpload}
+                  bucket="brand-assets"
+                  path="portfolio"
+                  accept="image/png,image/jpeg,image/jpg,image/webp"
+                  maxSize={10}
+                />
                 <p className="text-xs text-muted-foreground mt-1">
-                  General range for your work (not individual items)
+                  First image is the cover. Up to {MAX_PORTFOLIO_IMAGES} images (
+                  {formData.images.length}/{MAX_PORTFOLIO_IMAGES}).
                 </p>
               </div>
 
+              {formData.images.length > 0 && (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {formData.images.map((image, index) => (
+                    <div key={`${image}-${index}`} className="relative group">
+                      <div className="relative w-full h-32 rounded-lg overflow-hidden bg-muted">
+                        <AuthImage
+                          src={image}
+                          alt={`Portfolio image ${index + 1}`}
+                          width={400}
+                          height={256}
+                          className="w-full h-32 object-cover"
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => handleRemoveImage(index)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Business Information</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="price_range">General Price Range</Label>
+                  <Input
+                    id="price_range"
+                    value={formData.price_range}
+                    onChange={(e) => handleInputChange("price_range", e.target.value)}
+                    placeholder="e.g., £500 - £5,000"
+                    className="border-oma-cocoa/20 focus:border-oma-plum"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    General range for your work (not individual items)
+                  </p>
+                </div>
+
+                <div>
+                  <Label htmlFor="consultation_fee">Consultation Fee (Optional)</Label>
+                  <Input
+                    id="consultation_fee"
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    value={formData.consultation_fee}
+                    onChange={(e) => handleInputChange("consultation_fee", e.target.value)}
+                    placeholder="e.g., 100"
+                    className="border-oma-cocoa/20 focus:border-oma-plum"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Non-negative amount for initial consultations
+                  </p>
+                </div>
+              </div>
+
               <div>
-                <Label htmlFor="consultation_fee">
-                  Consultation Fee (Optional)
-                </Label>
+                <Label htmlFor="lead_time">Lead Time</Label>
                 <Input
-                  id="consultation_fee"
-                  type="number"
-                  value={formData.consultation_fee}
-                  onChange={(e) =>
-                    handleInputChange("consultation_fee", e.target.value)
-                  }
-                  placeholder="e.g., 100"
+                  id="lead_time"
+                  value={formData.lead_time}
+                  onChange={(e) => handleInputChange("lead_time", e.target.value)}
+                  placeholder="e.g., 4-6 weeks, 2-3 months"
+                  maxLength={LEAD_TIME_MAX_LEN}
                   className="border-oma-cocoa/20 focus:border-oma-plum"
                 />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Fee for initial design consultations
-                </p>
               </div>
-            </div>
 
-            <div>
-              <Label htmlFor="lead_time">Lead Time</Label>
-              <Input
-                id="lead_time"
-                value={formData.lead_time}
-                onChange={(e) => handleInputChange("lead_time", e.target.value)}
-                placeholder="e.g., 4-6 weeks, 2-3 months"
-                className="border-oma-cocoa/20 focus:border-oma-plum"
-              />
-            </div>
+              <div>
+                <Label>Specialties</Label>
+                <MultiSelect
+                  options={tailorSpecialties}
+                  value={formData.specialties}
+                  onValueChange={(selected: string[]) =>
+                    handleInputChange("specialties", selected)
+                  }
+                  placeholder="Select your specialties"
+                />
+              </div>
+            </CardContent>
+          </Card>
 
-            <div>
-              <Label>Specialties</Label>
-              <MultiSelect
-                options={tailorSpecialties}
-                value={formData.specialties}
-                onValueChange={(selected: string[]) =>
-                  handleInputChange("specialties", selected)
-                }
-                placeholder="Select your specialties"
-              />
-            </div>
-          </CardContent>
-        </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Additional Details (Optional)</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label>Materials You Work With</Label>
+                <MultiSelect
+                  options={commonMaterials}
+                  value={formData.materials}
+                  onValueChange={(selected: string[]) =>
+                    handleInputChange("materials", selected)
+                  }
+                  placeholder="Select materials you commonly use"
+                />
+              </div>
 
-        {/* Additional Details */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Additional Details (Optional)</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label>Materials You Work With</Label>
-              <MultiSelect
-                options={commonMaterials}
-                value={formData.materials}
-                onValueChange={(selected: string[]) =>
-                  handleInputChange("materials", selected)
-                }
-                placeholder="Select materials you commonly use"
-              />
-            </div>
+              <div>
+                <Label>Techniques You Use</Label>
+                <MultiSelect
+                  options={commonTechniques}
+                  value={formData.techniques}
+                  onValueChange={(selected: string[]) =>
+                    handleInputChange("techniques", selected)
+                  }
+                  placeholder="Select techniques you specialize in"
+                />
+              </div>
 
-            <div>
-              <Label>Techniques You Use</Label>
-              <MultiSelect
-                options={commonTechniques}
-                value={formData.techniques}
-                onValueChange={(selected: string[]) =>
-                  handleInputChange("techniques", selected)
-                }
-                placeholder="Select techniques you specialize in"
-              />
-            </div>
+              <div>
+                <Label htmlFor="inspiration">Design Inspiration</Label>
+                <Textarea
+                  id="inspiration"
+                  value={formData.inspiration}
+                  onChange={(e) => handleInputChange("inspiration", e.target.value)}
+                  placeholder="What inspires your designs? (optional)"
+                  rows={3}
+                  className="border-oma-cocoa/20 focus:border-oma-plum"
+                />
+              </div>
+            </CardContent>
+          </Card>
 
-            <div>
-              <Label htmlFor="inspiration">Design Inspiration</Label>
-              <Textarea
-                id="inspiration"
-                value={formData.inspiration}
-                onChange={(e) =>
-                  handleInputChange("inspiration", e.target.value)
-                }
-                placeholder="What inspires your designs? (optional)"
-                rows={3}
-                className="border-oma-cocoa/20 focus:border-oma-plum"
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Submit Button */}
-        <div className="flex justify-end">
-          <Button
-            type="submit"
-            disabled={isLoading}
-            className="bg-oma-plum hover:bg-oma-plum/90 text-white"
-          >
-            {isLoading ? "Creating..." : "Create Portfolio"}
-          </Button>
-        </div>
-      </form>
+          <div className="flex justify-end">
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="bg-oma-plum hover:bg-oma-plum/90 text-white"
+            >
+              {isSubmitting ? "Creating..." : "Create Portfolio"}
+            </Button>
+          </div>
+        </form>
+      )}
     </div>
   );
 }

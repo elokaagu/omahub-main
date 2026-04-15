@@ -1,7 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useAuth } from "@/contexts/AuthContext";
 import { getAllBrands } from "@/lib/services/brandService";
 import { createCollection } from "@/lib/services/collectionService";
 import { Brand } from "@/lib/supabase";
@@ -27,56 +29,75 @@ import { FileUpload } from "@/components/ui/file-upload";
 import { ArrowLeft, Save } from "lucide-react";
 import { toast } from "sonner";
 
+type BrandsLoadStatus = "loading" | "ready" | "error";
+
+type CreateCollectionForm = {
+  title: string;
+  description: string;
+  brandId: string;
+  image: string;
+};
+
+const emptyForm = (): CreateCollectionForm => ({
+  title: "",
+  description: "",
+  brandId: "",
+  image: "",
+});
+
 export default function CreateCataloguePage() {
   const router = useRouter();
-  const [brands, setBrands] = useState<Brand[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const { user, loading: authLoading } = useAuth();
 
-  // Form state
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [brandId, setBrandId] = useState("");
-  const [image, setImage] = useState("");
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [brandsLoadStatus, setBrandsLoadStatus] =
+    useState<BrandsLoadStatus>("loading");
+  const [brandsErrorDetail, setBrandsErrorDetail] = useState<string | null>(
+    null
+  );
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState<CreateCollectionForm>(emptyForm());
+
+  const loadBrands = useCallback(async () => {
+    setBrandsLoadStatus("loading");
+    setBrandsErrorDetail(null);
+    try {
+      const brandsData = await getAllBrands();
+      setBrands(brandsData);
+      setForm((prev) => ({
+        ...prev,
+        brandId: brandsData[0]?.id ?? prev.brandId,
+      }));
+      setBrandsLoadStatus("ready");
+    } catch (error) {
+      console.error("Error fetching brands:", error);
+      setBrands([]);
+      setBrandsErrorDetail(
+        error instanceof Error ? error.message : "Failed to load brands"
+      );
+      setBrandsLoadStatus("error");
+    }
+  }, []);
 
   useEffect(() => {
-    const fetchBrands = async () => {
-      setLoading(true);
-      try {
-        // Fetch brands for dropdown
-        const brandsData = await getAllBrands();
-        setBrands(brandsData);
-
-        // If there are brands, select the first one by default
-        if (brandsData.length > 0) {
-          setBrandId(brandsData[0].id);
-        }
-      } catch (error) {
-        console.error("Error fetching brands:", error);
-        toast.error("Failed to load brands");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchBrands();
-  }, []);
+    if (authLoading || !user) return;
+    void loadBrands();
+  }, [authLoading, user, loadBrands]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate form
-    if (!title.trim()) {
+    if (!form.title.trim()) {
       toast.error("Please enter a collection title");
       return;
     }
 
-    if (!brandId) {
+    if (!form.brandId) {
       toast.error("Please select a brand");
       return;
     }
 
-    if (!image) {
+    if (!form.image) {
       toast.error("Please upload an image");
       return;
     }
@@ -84,10 +105,10 @@ export default function CreateCataloguePage() {
     setSaving(true);
     try {
       await createCollection({
-        title,
-        description: description.trim() || undefined,
-        brand_id: brandId,
-        image,
+        title: form.title,
+        description: form.description.trim() || undefined,
+        brand_id: form.brandId,
+        image: form.image,
       });
 
       toast.success("Collection created successfully");
@@ -101,13 +122,64 @@ export default function CreateCataloguePage() {
   };
 
   const handleImageUpload = (url: string) => {
-    setImage(url);
+    setForm((prev) => ({ ...prev, image: url }));
   };
 
-  if (loading) {
+  if (authLoading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full"></div>
+        <div className="animate-spin h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center px-6 py-20">
+        <h1 className="text-2xl font-canela text-gray-900 mb-2">
+          Sign in required
+        </h1>
+        <p className="text-gray-600 mb-8 text-center max-w-md">
+          You need to be signed in to create a collection.
+        </p>
+        <Button asChild className="bg-oma-plum hover:bg-oma-plum/90">
+          <Link href="/login" className="inline-flex items-center gap-2">
+            Go to login
+          </Link>
+        </Button>
+      </div>
+    );
+  }
+
+  if (brandsLoadStatus === "loading") {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  if (brandsLoadStatus === "error") {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center px-6 py-20">
+        <h1 className="text-2xl font-canela text-gray-900 mb-2">
+          Couldn&apos;t load brands
+        </h1>
+        <p className="text-gray-600 mb-8 text-center max-w-md">
+          {brandsErrorDetail ??
+            "Something went wrong while loading brands. Try again or go back to the list."}
+        </p>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Button type="button" variant="outline" onClick={() => void loadBrands()}>
+            Try again
+          </Button>
+          <Button asChild variant="outline">
+            <Link href="/studio/collections" className="inline-flex items-center gap-2">
+              <ArrowLeft className="h-4 w-4" />
+              Back to collections
+            </Link>
+          </Button>
+        </div>
       </div>
     );
   }
@@ -115,13 +187,10 @@ export default function CreateCataloguePage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
       <div className="flex items-center mb-8">
-        <Button
-          variant="outline"
-          size="icon"
-          className="mr-4"
-          onClick={() => router.push("/studio/collections")}
-        >
-          <ArrowLeft className="h-4 w-4" />
+        <Button variant="outline" size="icon" className="mr-4" asChild>
+          <Link href="/studio/collections" aria-label="Back to collections">
+            <ArrowLeft className="h-4 w-4" />
+          </Link>
         </Button>
         <h1 className="text-3xl font-canela text-gray-900">
           Create Collection
@@ -139,8 +208,10 @@ export default function CreateCataloguePage() {
               <Label htmlFor="title">Collection Title</Label>
               <Input
                 id="title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
+                value={form.title}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, title: e.target.value }))
+                }
                 placeholder="Enter collection title"
               />
             </div>
@@ -149,8 +220,13 @@ export default function CreateCataloguePage() {
               <Label htmlFor="description">Description (Optional)</Label>
               <Textarea
                 id="description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                value={form.description}
+                onChange={(e) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    description: e.target.value,
+                  }))
+                }
                 placeholder="Enter a brief description of this collection..."
                 rows={3}
               />
@@ -158,7 +234,12 @@ export default function CreateCataloguePage() {
 
             <div className="space-y-2">
               <Label htmlFor="brand">Brand</Label>
-              <Select value={brandId} onValueChange={setBrandId}>
+              <Select
+                value={form.brandId}
+                onValueChange={(value) =>
+                  setForm((prev) => ({ ...prev, brandId: value }))
+                }
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select a brand" />
                 </SelectTrigger>
@@ -176,6 +257,7 @@ export default function CreateCataloguePage() {
               <Label>Collection Image</Label>
               <FileUpload
                 onUploadComplete={handleImageUpload}
+                defaultValue={form.image}
                 bucket="brand-assets"
                 path="collections"
               />

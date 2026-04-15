@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Users, Clock, Mail, RefreshCw } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface RecentAccount {
   id: string;
@@ -15,17 +17,40 @@ interface RecentAccount {
   hours_since_creation?: number;
 }
 
+function recentAccountsDevLog(...args: unknown[]) {
+  if (process.env.NODE_ENV === "development") {
+    console.log("[RecentAccounts]", ...args);
+  }
+}
+
+function hoursSinceCreated(createdAt: string): number {
+  const t = new Date(createdAt).getTime();
+  if (Number.isNaN(t)) return 0;
+  return (Date.now() - t) / (1000 * 60 * 60);
+}
+
 export default function RecentAccountsWidget() {
   const [recentAccounts, setRecentAccounts] = useState<RecentAccount[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchRecentAccounts = async () => {
-    try {
-      setLoading(true);
-      setError(null);
+  const hasCompletedFetchRef = useRef(false);
+  const isFetchingRef = useRef(false);
 
-      console.log("🔍 Fetching recent accounts via API...");
+  const fetchRecentAccounts = useCallback(async () => {
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
+
+    const isInitial = !hasCompletedFetchRef.current;
+    if (isInitial) {
+      setLoading(true);
+    } else {
+      setRefreshing(true);
+    }
+
+    try {
+      recentAccountsDevLog("fetching recent accounts");
 
       const response = await fetch("/api/admin/recent-accounts");
 
@@ -47,26 +72,31 @@ export default function RecentAccountsWidget() {
         return;
       }
 
+      setError(null);
       setRecentAccounts(result.data || []);
-      console.log(
-        `✅ Successfully loaded ${result.data?.length || 0} recent accounts`
-      );
+      recentAccountsDevLog("loaded", result.data?.length ?? 0, "accounts");
     } catch (err) {
-      console.error("❌ Unexpected error:", err);
+      console.error("RecentAccountsWidget: unexpected error", err);
       setError("An unexpected error occurred");
     } finally {
       setLoading(false);
+      setRefreshing(false);
+      isFetchingRef.current = false;
+      hasCompletedFetchRef.current = true;
     }
-  };
+  }, []);
 
   useEffect(() => {
-    fetchRecentAccounts();
+    void fetchRecentAccounts();
 
-    // Refresh every 30 seconds
-    const interval = setInterval(fetchRecentAccounts, 30000);
+    const POLL_MS = 60_000;
+    const interval = setInterval(() => {
+      if (document.visibilityState !== "visible") return;
+      void fetchRecentAccounts();
+    }, POLL_MS);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [fetchRecentAccounts]);
 
   const getRoleColor = (role: string) => {
     switch (role) {
@@ -82,11 +112,13 @@ export default function RecentAccountsWidget() {
   };
 
   const getTimeColor = (hours: number) => {
-    if (hours < 1) return "text-green-600"; // Less than 1 hour
-    if (hours < 24) return "text-blue-600"; // Less than 1 day
-    if (hours < 168) return "text-orange-600"; // Less than 1 week
+    if (hours < 1) return "text-green-600";
+    if (hours < 24) return "text-blue-600";
+    if (hours < 168) return "text-orange-600";
     return "text-gray-600";
   };
+
+  const formatRoleLabel = (role: string) => role.replace(/_/g, " ");
 
   if (loading) {
     return (
@@ -122,10 +154,13 @@ export default function RecentAccountsWidget() {
             <Button
               variant="outline"
               size="sm"
-              onClick={fetchRecentAccounts}
+              onClick={() => void fetchRecentAccounts()}
+              disabled={refreshing}
               className="text-xs"
             >
-              <RefreshCw className="h-3 w-3 mr-1" />
+              <RefreshCw
+                className={cn("h-3 w-3 mr-1", refreshing && "animate-spin")}
+              />
               Retry
             </Button>
           </div>
@@ -145,10 +180,15 @@ export default function RecentAccountsWidget() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={fetchRecentAccounts}
+            type="button"
+            onClick={() => void fetchRecentAccounts()}
+            disabled={refreshing}
             className="h-6 w-6 p-0"
+            aria-label={refreshing ? "Refreshing" : "Refresh recent accounts"}
           >
-            <RefreshCw className="h-3 w-3" />
+            <RefreshCw
+              className={cn("h-3 w-3", refreshing && "animate-spin")}
+            />
           </Button>
         </div>
       </CardHeader>
@@ -160,51 +200,50 @@ export default function RecentAccountsWidget() {
           </div>
         ) : (
           <div className="space-y-3">
-            {recentAccounts.map((account) => (
-              <div
-                key={account.id}
-                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-              >
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Mail className="h-3 w-3 text-gray-400" />
-                    <p className="text-sm font-medium text-gray-900 truncate">
-                      {account.email}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge
-                      variant="secondary"
-                      className={`text-xs ${getRoleColor(account.role)}`}
-                    >
-                      {account.role.replace("_", " ")}
-                    </Badge>
-                    <div className="flex items-center gap-1">
-                      <Clock className="h-3 w-3 text-gray-400" />
-                      <span
-                        className={`text-xs ${getTimeColor(account.hours_since_creation || 0)}`}
+            {recentAccounts.map((account) => {
+              const hours =
+                account.hours_since_creation ?? hoursSinceCreated(account.created_at);
+              return (
+                <div
+                  key={account.id}
+                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Mail className="h-3 w-3 text-gray-400" />
+                      <p className="text-sm font-medium text-gray-900 truncate">
+                        {account.email}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge
+                        variant="secondary"
+                        className={`text-xs ${getRoleColor(account.role)}`}
                       >
-                        {formatDistanceToNow(new Date(account.created_at), {
-                          addSuffix: true,
-                        })}
-                      </span>
+                        {formatRoleLabel(account.role)}
+                      </Badge>
+                      <div className="flex items-center gap-1">
+                        <Clock className="h-3 w-3 text-gray-400" />
+                        <span
+                          className={`text-xs ${getTimeColor(hours)}`}
+                        >
+                          {formatDistanceToNow(new Date(account.created_at), {
+                            addSuffix: true,
+                          })}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
         {recentAccounts.length > 0 && (
           <div className="mt-4 pt-3 border-t">
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full text-xs"
-              onClick={() => window.open("/studio/users", "_blank")}
-            >
-              View All Users
+            <Button variant="outline" size="sm" className="w-full text-xs" asChild>
+              <Link href="/studio/users">View All Users</Link>
             </Button>
           </div>
         )}

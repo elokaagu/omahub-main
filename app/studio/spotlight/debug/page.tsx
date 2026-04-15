@@ -1,31 +1,93 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { toast } from "sonner";
+
+type DiagnosticsInfo = {
+  timestamp: string;
+  contextUser: {
+    id?: string;
+    email?: string;
+    role?: string;
+  } | null;
+  session: {
+    hasSession: boolean;
+    userId?: string;
+    email?: string;
+    error?: string;
+  } | null;
+  directUser: {
+    hasUser: boolean;
+    userId?: string;
+    email?: string;
+    error?: string;
+  } | null;
+  profile: {
+    role?: string;
+    email?: string;
+    error?: string;
+  } | null;
+  uploadTest: {
+    attempted: boolean;
+    success: boolean;
+    path?: string;
+    error?: string;
+  } | null;
+  error?: string;
+};
 
 export default function SpotlightDebugPage() {
-  const { user } = useAuth();
-  const [debugInfo, setDebugInfo] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
+  const [debugInfo, setDebugInfo] = useState<DiagnosticsInfo | null>(null);
+  const [isRunningDiagnostics, setIsRunningDiagnostics] = useState(false);
+  const [isRefreshingSession, setIsRefreshingSession] = useState(false);
+
+  useEffect(() => {
+    if (!authLoading && user && user.role !== "super_admin") {
+      router.push("/studio");
+    }
+  }, [authLoading, user, router]);
+
+  const summary = useMemo(() => {
+    if (!debugInfo) return null;
+    const authPass = Boolean(
+      debugInfo.contextUser &&
+        debugInfo.directUser?.hasUser &&
+        debugInfo.session?.hasSession
+    );
+    const profilePass = Boolean(
+      debugInfo.profile && !debugInfo.profile.error && debugInfo.profile.role
+    );
+    const uploadPass = Boolean(
+      debugInfo.uploadTest &&
+        debugInfo.uploadTest.attempted &&
+        debugInfo.uploadTest.success
+    );
+    return { authPass, profilePass, uploadPass };
+  }, [debugInfo]);
 
   const runDiagnostics = async () => {
-    setLoading(true);
-    const info: any = {
+    setIsRunningDiagnostics(true);
+    const info: DiagnosticsInfo = {
       timestamp: new Date().toISOString(),
-      user: null,
+      contextUser: null,
       session: null,
+      directUser: null,
       profile: null,
       uploadTest: null,
     };
 
     try {
       // Check user from context
-      info.user = user
+      info.contextUser = user
         ? {
             id: user.id,
             email: user.email,
@@ -66,7 +128,8 @@ export default function SpotlightDebugPage() {
           .single();
 
         info.profile = {
-          data: profile,
+          role: profile?.role,
+          email: profile?.email,
           error: profileError?.message,
         };
       }
@@ -78,8 +141,9 @@ export default function SpotlightDebugPage() {
         .upload(`debug-test-${Date.now()}.jpg`, testFile);
 
       info.uploadTest = {
-        success: !!uploadData,
-        data: uploadData,
+        attempted: true,
+        success: Boolean(uploadData),
+        path: uploadData?.path,
         error: uploadError?.message,
       };
 
@@ -94,27 +158,48 @@ export default function SpotlightDebugPage() {
     }
 
     setDebugInfo(info);
-    setLoading(false);
+    setIsRunningDiagnostics(false);
   };
 
   const refreshSession = async () => {
-    setLoading(true);
+    setIsRefreshingSession(true);
     try {
-      const { data, error } = await supabase.auth.refreshSession();
+      const { error } = await supabase.auth.refreshSession();
       if (error) {
-        alert(`Session refresh failed: ${error.message}`);
+        toast.error(`Session refresh failed: ${error.message}`);
       } else {
-        alert("Session refreshed successfully!");
+        toast.success("Session refreshed successfully");
         // Trigger a re-run of diagnostics
         await runDiagnostics();
       }
     } catch (error) {
-      alert(
+      toast.error(
         `Error: ${error instanceof Error ? error.message : "Unknown error"}`
       );
     }
-    setLoading(false);
+    setIsRefreshingSession(false);
   };
+
+  if (authLoading || !user) {
+    return (
+      <div className="max-w-4xl mx-auto px-6 py-8 text-oma-cocoa">Loading...</div>
+    );
+  }
+
+  if (user.role !== "super_admin") {
+    return (
+      <div className="max-w-4xl mx-auto px-6 py-8">
+        <Card>
+          <CardHeader>
+            <CardTitle>Access Denied</CardTitle>
+          </CardHeader>
+          <CardContent className="text-sm text-oma-cocoa">
+            This diagnostics page is restricted to super admin users.
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-8">
@@ -141,18 +226,49 @@ export default function SpotlightDebugPage() {
             <CardTitle>Actions</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Button onClick={runDiagnostics} disabled={loading}>
-              {loading ? "Running..." : "Run Diagnostics"}
+            <Button onClick={runDiagnostics} disabled={isRunningDiagnostics || isRefreshingSession}>
+              {isRunningDiagnostics ? "Running..." : "Run Diagnostics"}
             </Button>
             <Button
               onClick={refreshSession}
-              disabled={loading}
+              disabled={isRunningDiagnostics || isRefreshingSession}
               variant="outline"
             >
-              {loading ? "Refreshing..." : "Refresh Session"}
+              {isRefreshingSession ? "Refreshing..." : "Refresh Session"}
             </Button>
+            <p className="text-xs text-oma-cocoa/70">
+              The upload check performs a temporary write to `spotlight-images` and deletes it immediately.
+            </p>
           </CardContent>
         </Card>
+
+        {summary && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Health Summary</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm">
+              <p>
+                Auth:{" "}
+                <span className={summary.authPass ? "text-green-700" : "text-red-700"}>
+                  {summary.authPass ? "PASS" : "FAIL"}
+                </span>
+              </p>
+              <p>
+                Profile:{" "}
+                <span className={summary.profilePass ? "text-green-700" : "text-red-700"}>
+                  {summary.profilePass ? "PASS" : "FAIL"}
+                </span>
+              </p>
+              <p>
+                Storage Upload:{" "}
+                <span className={summary.uploadPass ? "text-green-700" : "text-red-700"}>
+                  {summary.uploadPass ? "PASS" : "FAIL"}
+                </span>
+              </p>
+            </CardContent>
+          </Card>
+        )}
 
         {debugInfo && (
           <Card>
@@ -177,8 +293,7 @@ export default function SpotlightDebugPage() {
                 <strong>Expected Results:</strong>
               </p>
               <ul className="list-disc pl-6 space-y-1">
-                <li>User should have email: eloka.agu@icloud.com</li>
-                <li>User role should be: super_admin</li>
+                <li>User role should be `super_admin`</li>
                 <li>Session should exist and be valid</li>
                 <li>Upload test should succeed</li>
               </ul>
