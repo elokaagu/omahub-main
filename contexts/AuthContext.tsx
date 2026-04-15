@@ -25,6 +25,37 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+/** Avoid wiping avatar/role when a later profile fetch times out or returns null transiently. */
+function upsertBasicUserPreserveIdentity(
+  prev: User | null,
+  userId: string,
+  email: string
+): User {
+  const basic: User = {
+    id: userId,
+    email: email || "",
+    first_name: "",
+    last_name: "",
+    avatar_url: "",
+    role: "user",
+    owned_brands: [],
+  };
+  if (!prev || prev.id !== userId) {
+    return basic;
+  }
+  return {
+    ...basic,
+    role: prev.role && prev.role !== "user" ? prev.role : basic.role,
+    owned_brands:
+      prev.owned_brands && prev.owned_brands.length > 0
+        ? prev.owned_brands
+        : basic.owned_brands,
+    first_name: prev.first_name || basic.first_name,
+    last_name: prev.last_name || basic.last_name,
+    avatar_url: prev.avatar_url || basic.avatar_url,
+  };
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -151,18 +182,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         const userEmail = email || "";
-        const basicUser: User = {
-          id: userId,
-          email: userEmail,
-          first_name: "",
-          last_name: "",
-          avatar_url: "",
-          role: "user",
-          owned_brands: [],
-        };
-        setUser(basicUser);
+        setUser((prev) =>
+          upsertBasicUserPreserveIdentity(prev, userId, userEmail)
+        );
         AuthDebug.log(
-          "⚠️ No profile found after retries; using basic user (role user) until profile exists:",
+          "⚠️ No profile row after retries; preserving prior role/avatar if same user:",
           userEmail
         );
         return;
@@ -186,20 +210,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         AuthDebug.error("❌ Error loading user profile:", error);
         if (retryable) {
           const userEmail = email || "";
-          const basicUser: User = {
-            id: userId,
-            email: userEmail,
-            first_name: "",
-            last_name: "",
-            avatar_url: "",
-            role: "user",
-            owned_brands: [],
-          };
-          setUser(basicUser);
-          AuthDebug.log(
-            "⚠️ Profile loading failed after retries; using basic user (role user):",
-            userEmail
-          );
+          setUser((prev) => {
+            if (prev?.id === userId) {
+              AuthDebug.log(
+                "⚠️ Profile load timeout/network after retries; keeping existing user state"
+              );
+              return prev;
+            }
+            return upsertBasicUserPreserveIdentity(prev, userId, userEmail);
+          });
           return;
         }
 

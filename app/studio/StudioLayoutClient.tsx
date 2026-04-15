@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -237,11 +237,12 @@ export default function StudioLayoutClient({
   initialProfile,
   initialUser,
 }: StudioLayoutClientProps) {
-  const { user, loading, signOut } = useAuth();
+  const { user, loading, signOut, attemptSessionRecovery } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [fadeIn, setFadeIn] = useState(false);
+  const sessionRecoveryAttemptedRef = useRef(false);
 
   useEffect(() => {
     if (sidebarOpen) {
@@ -282,10 +283,23 @@ export default function StudioLayoutClient({
 
     const run = async () => {
       if (!user?.id) {
+        if (
+          initialUser?.id &&
+          !sessionRecoveryAttemptedRef.current
+        ) {
+          sessionRecoveryAttemptedRef.current = true;
+          const recovered = await attemptSessionRecovery();
+          if (recovered) {
+            return;
+          }
+        }
+        sessionRecoveryAttemptedRef.current = false;
         setIsCheckingAccess(false);
         router.push("/login?redirect=/studio");
         return;
       }
+
+      sessionRecoveryAttemptedRef.current = false;
 
       const effectiveRole =
         user.role ??
@@ -298,6 +312,22 @@ export default function StudioLayoutClient({
         next = await getUserPermissions(user.id);
       }
 
+      if (
+        !next.includes("studio.access") &&
+        next.length === 0 &&
+        user.id === initialUser?.id
+      ) {
+        const ssrBootstrap = permissionsForProfileRole(
+          initialProfile?.role ?? initialUser?.role ?? null
+        );
+        if (ssrBootstrap.includes("studio.access")) {
+          console.warn(
+            "[studio] Permissions empty after DB check; using SSR role for this navigation (transient or RLS)."
+          );
+          next = ssrBootstrap;
+        }
+      }
+
       setPermissions(next);
       setIsCheckingAccess(false);
 
@@ -307,7 +337,16 @@ export default function StudioLayoutClient({
     };
 
     void run();
-  }, [loading, user?.id, user?.role, router, initialUser?.id, initialProfile?.role, initialUser?.role]);
+  }, [
+    loading,
+    user?.id,
+    user?.role,
+    router,
+    initialUser?.id,
+    initialProfile?.role,
+    initialUser?.role,
+    attemptSessionRecovery,
+  ]);
 
   useStudioDiagnostics();
 
@@ -326,8 +365,14 @@ export default function StudioLayoutClient({
     setSidebarOpen(!sidebarOpen);
   };
 
+  /** SSR user but client auth not hydrated yet → avoid flashing shell or false "access denied". */
+  const awaitingClientIdentity =
+    initialUser?.id != null && user?.id == null;
+
   const showGlobalLoader =
-    isCheckingAccess || (loading && initialUser == null);
+    isCheckingAccess ||
+    (loading && initialUser == null) ||
+    awaitingClientIdentity;
 
   // Show loading state while checking authentication and access
   if (showGlobalLoader) {
