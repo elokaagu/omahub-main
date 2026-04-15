@@ -5,7 +5,7 @@ import { Preloader } from "@/components/ui/preloader";
 import { fontSans, fontDisplay } from "./fonts";
 import { Toaster } from "sonner";
 import { Analytics } from "@vercel/analytics/react";
-import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
+import GoogleTagManager from "@/components/analytics/GoogleTagManager";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.oma-hub.com";
 const SITE_DESCRIPTION =
@@ -105,7 +105,7 @@ export default function RootLayout({
         </Preloader>
         <Toaster position="top-right" duration={2000} />
         <Analytics />
-        <GoogleAnalytics />
+        <GoogleTagManager />
       </body>
     </html>
   );

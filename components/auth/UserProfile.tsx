@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { AuthImage } from "@/components/ui/auth-image";
 import { LogOut, User, Settings, LayoutDashboard } from "lucide-react";
 import { toast } from "sonner";
@@ -25,7 +25,7 @@ export default function UserProfile() {
   const [isSigningOut, setIsSigningOut] = useState(false);
   const { hasStudioAccess } = useStudioPermissions(user?.id);
 
-  const showStudioInMenu =
+  const canAccessStudio =
     hasStudioAccess ||
     user?.role === "admin" ||
     user?.role === "super_admin" ||
@@ -63,11 +63,7 @@ export default function UserProfile() {
       router.push("/studio/settings");
     } else {
       // For main site, redirect to studio settings if user has access
-      if (
-        user?.role === "admin" ||
-        user?.role === "super_admin" ||
-        user?.role === "brand_admin"
-      ) {
+      if (canAccessStudio) {
         router.push("/studio/settings");
       } else {
         toast.info("Settings are available in the studio for administrators");
@@ -95,7 +91,11 @@ export default function UserProfile() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+        <Button
+          variant="ghost"
+          className="relative h-8 w-8 rounded-full"
+          aria-label="Open user menu"
+        >
           <Avatar className="h-8 w-8">
             {avatarUrl ? (
               <AuthImage
@@ -125,11 +125,12 @@ export default function UserProfile() {
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={handleProfileClick}
-          className="cursor-pointer"
+          className="cursor-pointer flex items-center gap-0"
         >
+          <User className="mr-2 h-4 w-4 shrink-0" />
           <span>Profile</span>
         </DropdownMenuItem>
-        {showStudioInMenu && (
+        {canAccessStudio && (
           <DropdownMenuItem
             onClick={handleStudioClick}
             className="cursor-pointer flex items-center gap-0"
@@ -140,16 +141,18 @@ export default function UserProfile() {
         )}
         <DropdownMenuItem
           onClick={handleSettingsClick}
-          className="cursor-pointer"
+          className="cursor-pointer flex items-center gap-0"
         >
+          <Settings className="mr-2 h-4 w-4 shrink-0" />
           <span>Settings</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={handleSignOut}
           disabled={isSigningOut}
-          className="cursor-pointer"
+          className="cursor-pointer flex items-center gap-0"
         >
+          <LogOut className="mr-2 h-4 w-4 shrink-0" />
           <span>{isSigningOut ? "Signing out..." : "Sign out"}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
