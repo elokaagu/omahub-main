@@ -10,6 +10,7 @@ interface AuthModalContextType {
     message?: string;
     showSignUp?: boolean;
     redirectTo?: string;
+    onSuccess?: () => void;
   }) => void;
   closeAuthModal: () => void;
 }
@@ -29,6 +30,7 @@ export function AuthModalProvider({ children }: { children: React.ReactNode }) {
         message={config.message}
         showSignUp={config.showSignUp}
         redirectTo={config.redirectTo}
+        onSuccess={config.onSuccess}
       />
     </AuthModalContext.Provider>
   );

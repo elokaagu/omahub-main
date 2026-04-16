@@ -55,6 +55,9 @@ export default function AddToBasketButton({
             title: "Sign In to Request from Brand",
             message: `Please sign in to submit your request for ${productName} to ${brandName}.`,
             showSignUp: true,
+            onSuccess: () => {
+              setIsModalOpen(true);
+            },
           })
         }
         className={`bg-oma-plum hover:bg-oma-plum/90 text-white ${className}`}

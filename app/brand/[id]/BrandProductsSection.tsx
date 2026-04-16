@@ -54,9 +54,13 @@ export function BrandProductsSection({
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
           {products.map((product, index) => (
-            <NavigationLink key={product.id} href={`/product/${product.id}`} className="block group">
+            <NavigationLink
+              key={product.id}
+              href={`/product/${product.id}`}
+              className="group block"
+            >
               <div
-                className="bg-white rounded-lg sm:rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 animate-[fadeIn_500ms_ease-in-out_forwards] opacity-0"
+                className="overflow-hidden rounded-xl border border-black/[0.06] bg-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg animate-[fadeIn_500ms_ease-in-out_forwards] opacity-0"
                 style={{ animationDelay: `${index * 100}ms` }}
               >
                 <div className="aspect-square relative overflow-hidden">
@@ -73,19 +77,39 @@ export function BrandProductsSection({
                     aspectRatio="square"
                     quality={85}
                   />
+                  <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/55 via-black/15 to-transparent" />
+                  <div className="absolute left-2.5 top-2.5">
+                    <Badge
+                      variant="secondary"
+                      className="border border-white/25 bg-black/35 text-[11px] text-white backdrop-blur-sm"
+                    >
+                      {(product.category as string) || "Product"}
+                    </Badge>
+                  </div>
+                  {product.service_type !== "portfolio" && (
+                    <div className="absolute right-2.5 top-2.5">
+                      <Badge
+                        variant="secondary"
+                        className={`text-[11px] ${
+                          product.in_stock
+                            ? "bg-emerald-100 text-emerald-800"
+                            : "bg-oma-cocoa/70 text-white"
+                        }`}
+                      >
+                        {product.in_stock ? "In Stock" : "Out of Stock"}
+                      </Badge>
+                    </div>
+                  )}
                 </div>
-                <div className="p-3 sm:p-4">
-                  <h3 className="font-medium text-sm sm:text-lg mb-1 group-hover:text-oma-plum transition-colors line-clamp-2">
+                <div className="space-y-2 p-3.5 sm:p-4">
+                  <h3 className="line-clamp-1 text-base font-semibold sm:text-lg group-hover:text-oma-plum transition-colors">
                     {product.title as string}
                   </h3>
-                  <p className="text-oma-cocoa/70 text-xs sm:text-sm mb-2 line-clamp-1">
-                    {(product.category as string) || ""}
-                  </p>
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-2">
                     {product.service_type === "portfolio" ? (
-                      <div />
+                      <p className="text-sm text-oma-cocoa/70">Portfolio item</p>
                     ) : (
-                      <p className="text-oma-plum font-medium text-sm sm:text-base">
+                      <p className="text-xl font-canela text-oma-plum tabular-nums sm:text-[1.7rem] leading-none">
                         {
                           formatProductPrice(product as any, {
                             price_range: brandData.priceRange,
@@ -95,18 +119,7 @@ export function BrandProductsSection({
                         }
                       </p>
                     )}
-                    {product.service_type !== "portfolio" && (
-                      <Badge
-                        variant="secondary"
-                        className={`text-xs ${
-                          product.in_stock
-                            ? "bg-oma-gold text-oma-cocoa"
-                            : "bg-oma-cocoa/40 text-white"
-                        }`}
-                      >
-                        {product.in_stock ? "In Stock" : "Out of Stock"}
-                      </Badge>
-                    )}
+                    <span className="text-xs text-oma-cocoa/70">View details</span>
                   </div>
                 </div>
               </div>

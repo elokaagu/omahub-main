@@ -20,6 +20,7 @@ export default function PageViewsCard({
   const [pageViews, setPageViews] = useState<number | null>(null);
   const [isReal, setIsReal] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [fallbackReason, setFallbackReason] = useState<string | null>(null);
 
   const estimated = estimatePageViews({
     totalBrands,
@@ -41,13 +42,18 @@ export default function PageViewsCard({
       ) {
         setPageViews(data.pageViews);
         setIsReal(true);
+        setFallbackReason(null);
       } else {
         setPageViews(null);
         setIsReal(false);
+        setFallbackReason(
+          typeof data?.message === "string" ? data.message : null
+        );
       }
     } catch {
       setPageViews(null);
       setIsReal(false);
+      setFallbackReason("Unable to reach analytics endpoint.");
     } finally {
       setLoading(false);
     }
@@ -75,6 +81,11 @@ export default function PageViewsCard({
           ? "Last 30 days (Vercel)"
           : "Estimated from catalogue size"}
       </p>
+      {!loading && !isReal && fallbackReason ? (
+        <p className="mt-1 text-xs leading-snug text-oma-cocoa/80">
+          {fallbackReason}
+        </p>
+      ) : null}
     </div>
   );
 }

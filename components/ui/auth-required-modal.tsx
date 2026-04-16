@@ -25,6 +25,7 @@ interface AuthRequiredModalProps {
   message?: string;
   showSignUp?: boolean;
   redirectTo?: string;
+  onSuccess?: () => void;
 }
 
 export function AuthRequiredModal({
@@ -34,6 +35,7 @@ export function AuthRequiredModal({
   message = "Please sign in to continue with this action.",
   showSignUp = true,
   redirectTo,
+  onSuccess,
 }: AuthRequiredModalProps) {
   const [isSignIn, setIsSignIn] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
@@ -61,6 +63,7 @@ export function AuthRequiredModal({
       await signIn(email, password);
       toast.success("Sign in successful!");
       await refreshUserProfile();
+      onSuccess?.();
       handleClose();
     } catch (error: any) {
       setError(error.message || "Sign in failed. Please try again.");

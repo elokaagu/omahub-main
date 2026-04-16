@@ -53,6 +53,10 @@ type SubscriberQuery = {
 };
 
 const ITEMS_PER_PAGE = 20;
+const DASHBOARD_SECTION =
+  "rounded-2xl border border-oma-beige/70 bg-gradient-to-br from-white via-oma-cream/30 to-oma-beige/15 p-5 shadow-sm sm:p-6";
+const METRIC_CARD =
+  "flex min-h-[7.5rem] flex-col justify-center rounded-xl border border-black/[0.06] bg-white p-5 text-left shadow-sm";
 
 export default function SubscriptionsPage() {
   const { user } = useAuth();
@@ -344,60 +348,60 @@ export default function SubscriptionsPage() {
   }
 
   return (
-    <div className="container mx-auto px-6 py-8">
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-oma-plum mb-2">
+    <div className="mx-auto max-w-7xl space-y-8 px-4 py-8 sm:px-6 sm:py-10">
+      <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div className="max-w-2xl space-y-1.5">
+          <h1 className="font-canela text-3xl tracking-tight text-oma-plum sm:text-4xl">
             Newsletter Subscriptions
           </h1>
-          <p className="text-oma-cocoa">
-            Manage and monitor newsletter subscribers
+          <p className="text-sm leading-relaxed text-oma-cocoa sm:text-base">
+            Manage and monitor newsletter subscribers across OmaHub.
           </p>
         </div>
 
-        <div className="flex gap-3 mt-4 lg:mt-0">
-          <Button
-            onClick={exportSubscribers}
-            variant="outline"
-            className="flex items-center gap-2"
-          >
-            <Download className="h-4 w-4" />
-            Export CSV
-          </Button>
-        </div>
-      </div>
+        <Button
+          onClick={exportSubscribers}
+          variant="outline"
+          className="w-full gap-2 border-oma-beige text-oma-cocoa hover:bg-oma-beige/40 sm:w-auto"
+        >
+          <Download className="h-4 w-4" />
+          Export CSV
+        </Button>
+      </header>
 
       {/* Stats Cards */}
       {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-black">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <Card className={METRIC_CARD}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0">
+              <CardTitle className="text-sm font-medium text-oma-cocoa">
                 Total Subscribers
               </CardTitle>
-              <Users className="h-4 w-4 text-black" />
+              <Users className="h-4 w-4 text-oma-cocoa" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-black">{stats.total}</div>
-              <p className="text-xs text-black">
+            <CardContent className="p-0 pt-2">
+              <div className="text-2xl font-canela tabular-nums text-oma-plum">
+                {stats.total}
+              </div>
+              <p className="text-xs text-oma-cocoa">
                 {stats.growth > 0 ? "+" : ""}
                 {stats.growth}% from last month
               </p>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-black">
+          <Card className={METRIC_CARD}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0">
+              <CardTitle className="text-sm font-medium text-oma-cocoa">
                 Active Subscribers
               </CardTitle>
-              <Mail className="h-4 w-4 text-black" />
+              <Mail className="h-4 w-4 text-oma-cocoa" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-black">
+            <CardContent className="p-0 pt-2">
+              <div className="text-2xl font-canela tabular-nums text-oma-plum">
                 {stats.active}
               </div>
-              <p className="text-xs text-black">
+              <p className="text-xs text-oma-cocoa">
                 {stats.total > 0
                   ? ((stats.active / stats.total) * 100).toFixed(1)
                   : "0.0"}
@@ -406,33 +410,33 @@ export default function SubscriptionsPage() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-black">
+          <Card className={METRIC_CARD}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0">
+              <CardTitle className="text-sm font-medium text-oma-cocoa">
                 This Month
               </CardTitle>
-              <Calendar className="h-4 w-4 text-black" />
+              <Calendar className="h-4 w-4 text-oma-cocoa" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-black">
+            <CardContent className="p-0 pt-2">
+              <div className="text-2xl font-canela tabular-nums text-oma-plum">
                 {stats.thisMonth}
               </div>
-              <p className="text-xs text-black">New subscriptions this month</p>
+              <p className="text-xs text-oma-cocoa">New subscriptions this month</p>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-black">
+          <Card className={METRIC_CARD}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0">
+              <CardTitle className="text-sm font-medium text-oma-cocoa">
                 Unsubscribed
               </CardTitle>
-              <TrendingUp className="h-4 w-4 text-black" />
+              <TrendingUp className="h-4 w-4 text-oma-cocoa" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-black">
+            <CardContent className="p-0 pt-2">
+              <div className="text-2xl font-canela tabular-nums text-oma-plum">
                 {stats.unsubscribed}
               </div>
-              <p className="text-xs text-black">
+              <p className="text-xs text-oma-cocoa">
                 {stats.total > 0
                   ? ((stats.unsubscribed / stats.total) * 100).toFixed(1)
                   : "0.0"}
@@ -444,26 +448,26 @@ export default function SubscriptionsPage() {
       )}
 
       {/* Filters and Search */}
-      <Card className="mb-6">
-        <CardContent className="pt-6">
-          <div className="flex flex-col lg:flex-row gap-4">
+      <Card className={DASHBOARD_SECTION}>
+        <CardContent className="p-0">
+          <div className="flex flex-col gap-4 lg:flex-row">
             <div className="flex-1">
               <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-black" />
+                <Search className="absolute left-3 top-3 h-4 w-4 text-oma-cocoa" />
                 <Input
                   placeholder="Search by email, name..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 text-black placeholder:text-black/60"
+                  className="border-oma-beige bg-white pl-10 text-oma-black placeholder:text-oma-cocoa/70"
                 />
               </div>
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex flex-col gap-2 sm:flex-row">
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-3 py-2 border border-input rounded-md text-sm text-black bg-white"
+                className="rounded-md border border-oma-beige bg-white px-3 py-2 text-sm text-oma-black"
               >
                 <option value="all">All Statuses</option>
                 <option value="active">Active</option>
@@ -475,7 +479,7 @@ export default function SubscriptionsPage() {
               <select
                 value={sourceFilter}
                 onChange={(e) => setSourceFilter(e.target.value)}
-                className="px-3 py-2 border border-input rounded-md text-sm text-black bg-white"
+                className="rounded-md border border-oma-beige bg-white px-3 py-2 text-sm text-oma-black"
               >
                 <option value="all">All Sources</option>
                 <option value="website">Website</option>
@@ -492,7 +496,7 @@ export default function SubscriptionsPage() {
                     void fetchSubscribers(getCurrentQuery(nextPage));
                   }
                 }}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 bg-oma-plum hover:bg-oma-plum/90"
               >
                 <Filter className="h-4 w-4" />
                 Apply
@@ -503,46 +507,48 @@ export default function SubscriptionsPage() {
       </Card>
 
       {/* Subscribers Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-black">Subscribers</CardTitle>
+      <Card className="overflow-hidden rounded-2xl border border-oma-beige/80 shadow-sm">
+        <CardHeader className="border-b border-oma-beige/60 bg-oma-cream/20">
+          <CardTitle className="font-canela text-2xl text-oma-plum">
+            Subscribers
+          </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           {loading ? (
             <div className="text-center py-8">
-              <div className="rounded-full h-8 w-8 border-b-2 border-oma-plum mx-auto"></div>
-              <p className="mt-2 text-black">Loading subscribers...</p>
+              <div className="mx-auto h-8 w-8 rounded-full border-b-2 border-oma-plum"></div>
+              <p className="mt-2 text-oma-cocoa">Loading subscribers...</p>
             </div>
           ) : subscribers.length === 0 ? (
             <div className="text-center py-8">
-              <Mail className="h-12 w-12 text-black mx-auto mb-4" />
-              <p className="text-black">No subscribers found</p>
+              <Mail className="mx-auto mb-4 h-12 w-12 text-oma-cocoa" />
+              <p className="text-oma-cocoa">No subscribers found</p>
             </div>
           ) : (
             <>
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b">
-                      <th className="text-left py-3 px-4 font-medium text-black">
+                    <tr className="border-b border-oma-beige/60 bg-oma-cream/15">
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-oma-cocoa">
                         Email
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-black">
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-oma-cocoa">
                         Name
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-black">
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-oma-cocoa">
                         Status
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-black">
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-oma-cocoa">
                         Source
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-black">
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-oma-cocoa">
                         Subscribed
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-black">
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-oma-cocoa">
                         Emails Sent
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-black">
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-oma-cocoa">
                         Actions
                       </th>
                     </tr>
@@ -551,41 +557,41 @@ export default function SubscriptionsPage() {
                     {subscribers.map((subscriber) => (
                       <tr
                         key={subscriber.id}
-                        className="border-b hover:bg-gray-50"
+                        className="border-b border-oma-beige/60 hover:bg-oma-cream/10"
                       >
-                        <td className="py-3 px-4">
-                          <div className="font-medium text-black">
+                        <td className="px-4 py-3">
+                          <div className="font-medium text-oma-black">
                             {subscriber.email}
                           </div>
                         </td>
-                        <td className="py-3 px-4">
+                        <td className="px-4 py-3">
                           {subscriber.first_name || subscriber.last_name ? (
-                            <div className="text-black">
+                            <div className="text-oma-black">
                               {subscriber.first_name} {subscriber.last_name}
                             </div>
                           ) : (
-                            <span className="text-black">-</span>
+                            <span className="text-oma-cocoa">-</span>
                           )}
                         </td>
-                        <td className="py-3 px-4">
+                        <td className="px-4 py-3">
                           {getStatusBadge(subscriber.subscription_status)}
                         </td>
-                        <td className="py-3 px-4">
+                        <td className="px-4 py-3">
                           {getSourceBadge(subscriber.source)}
                         </td>
-                        <td className="py-3 px-4">
-                          <div className="text-sm text-black">
+                        <td className="px-4 py-3">
+                          <div className="text-sm text-oma-cocoa">
                             {new Date(
                               subscriber.subscribed_at
                             ).toLocaleDateString("en-GB")}
                           </div>
                         </td>
-                        <td className="py-3 px-4">
-                          <div className="text-sm text-black">
+                        <td className="px-4 py-3">
+                          <div className="text-sm text-oma-cocoa">
                             {subscriber.email_count}
                           </div>
                         </td>
-                        <td className="py-3 px-4">
+                        <td className="px-4 py-3">
                           <div className="flex gap-2">
                             {subscriber.subscription_status === "active" ? (
                               <Button
@@ -597,7 +603,7 @@ export default function SubscriptionsPage() {
                                     "unsubscribed"
                                   )
                                 }
-                                className="text-red-600 border-red-200 hover:bg-red-50"
+                                className="border-red-200 text-red-600 hover:bg-red-50"
                               >
                                 Unsubscribe
                               </Button>
@@ -608,7 +614,7 @@ export default function SubscriptionsPage() {
                                 onClick={() =>
                                   handleStatusChange(subscriber.id, "active")
                                 }
-                                className="text-green-600 border-green-200 hover:bg-green-50"
+                                className="border-green-200 text-green-600 hover:bg-green-50"
                               >
                                 Reactivate
                               </Button>
@@ -623,8 +629,8 @@ export default function SubscriptionsPage() {
 
               {/* Pagination */}
               {totalPages > 1 && (
-                <div className="flex items-center justify-between mt-6">
-                  <div className="text-sm text-black">
+                <div className="mt-6 flex items-center justify-between border-t border-oma-beige/60 px-6 py-4">
+                  <div className="text-sm text-oma-cocoa">
                     Page {currentPage} of {totalPages}
                   </div>
                   <div className="flex gap-2">

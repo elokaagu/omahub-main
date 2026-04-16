@@ -2,7 +2,6 @@ import Link from "next/link";
 import { ArrowLeft, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getActiveLegalDocument } from "@/lib/legal/getActiveLegalDocument";
-import { formatLegalEffectiveDate } from "@/lib/legal/formatLegalEffectiveDate";
 
 export { metadata } from "./metadata";
 
@@ -32,17 +31,6 @@ export default async function PrivacyPolicyPage() {
             </div>
             <h1 className="heading-lg text-oma-plum">Privacy Policy</h1>
           </div>
-          {result.status !== "error" && (
-            <div className="flex flex-wrap items-center gap-4 text-sm text-oma-cocoa">
-              <span className="rounded-full bg-oma-beige px-3 py-1">
-                Version {result.doc.version}
-              </span>
-              <span>
-                Effective{" "}
-                {formatLegalEffectiveDate(result.doc.effective_date)}
-              </span>
-            </div>
-          )}
         </div>
       </header>
 

@@ -50,7 +50,8 @@ function sumPageviewsFromPayload(data: unknown): { total: number; entryCount: nu
 }
 
 export async function fetchVercelPageviewsLast30Days(): Promise<VercelPageviewsSummaryResult> {
-  const accessToken = process.env.VERCEL_ACCESS_TOKEN;
+  const accessToken =
+    process.env.VERCEL_ACCESS_TOKEN ?? process.env.VERCEL_TOKEN;
   const teamId = process.env.VERCEL_TEAM_ID;
   const projectId = process.env.VERCEL_PROJECT_ID;
 
@@ -58,7 +59,8 @@ export async function fetchVercelPageviewsLast30Days(): Promise<VercelPageviewsS
     return {
       ok: false,
       pageViews: null,
-      message: "Vercel Analytics not configured. Using estimated page views.",
+      message:
+        "Vercel Analytics not configured. Set VERCEL_ACCESS_TOKEN (or VERCEL_TOKEN) to load real page views.",
       source: "estimated",
     };
   }
@@ -104,7 +106,7 @@ export async function fetchVercelPageviewsLast30Days(): Promise<VercelPageviewsS
     return {
       ok: false,
       pageViews: null,
-      message: "Vercel Analytics API request failed.",
+      message: `Vercel Analytics API request failed (${response.status}).`,
       source: "estimated",
     };
   }

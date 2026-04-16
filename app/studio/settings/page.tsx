@@ -416,23 +416,25 @@ export default function SettingsPage() {
               </Button>
             </CardFooter>
           </Card>
-        </div>
 
-        {/* Information Section */}
-        <Card className="border-oma-beige bg-oma-cream/30">
-          <CardHeader>
-            <CardTitle className="text-oma-plum font-canela">
-              Content Management
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3 text-sm text-oma-cocoa">
+          {/* Content Management */}
+          <Card className="border-oma-beige bg-oma-cream/30">
+            <CardHeader>
+              <CardTitle className="text-oma-plum font-canela">
+                Content Management
+              </CardTitle>
+              <CardDescription className="text-oma-cocoa">
+                Overview of access and publishing controls
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3 text-sm text-oma-cocoa">
                 <div className="flex items-start gap-2">
                   <Lock className="h-4 w-4 text-oma-plum mt-0.5 flex-shrink-0" />
                   <p>
                     <strong>Platform Access:</strong> Control whether the
                     platform requires a password for access. Remove the password
-                    gate when you're ready to launch publicly.
+                    gate when you&apos;re ready to launch publicly.
                   </p>
                 </div>
                 <div className="flex items-start gap-2">
@@ -443,33 +445,34 @@ export default function SettingsPage() {
                     visibility, and published content quality.
                   </p>
                 </div>
-              <div className="flex items-start gap-2">
-                <Shield className="h-4 w-4 text-oma-plum mt-0.5 flex-shrink-0" />
-                <p>
-                  <strong>Legal Documents:</strong> Keep your Terms of Service
-                  and Privacy Policy up to date with version control and
-                  effective date tracking.
-                </p>
+                <div className="flex items-start gap-2">
+                  <Shield className="h-4 w-4 text-oma-plum mt-0.5 flex-shrink-0" />
+                  <p>
+                    <strong>Legal Documents:</strong> Keep your Terms of Service
+                    and Privacy Policy up to date with version control and
+                    effective date tracking.
+                  </p>
+                </div>
+                <div className="flex items-start gap-2">
+                  <MessageSquare className="h-4 w-4 text-oma-plum mt-0.5 flex-shrink-0" />
+                  <p>
+                    <strong>FAQ Management:</strong> Organise helpful information
+                    for your users with categorised questions and rich text
+                    answers.
+                  </p>
+                </div>
+                <div className="flex items-start gap-2">
+                  <Settings className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                  <p>
+                    <strong>Access Control:</strong> These management tools
+                    require super admin privileges to ensure content security and
+                    compliance.
+                  </p>
+                </div>
               </div>
-              <div className="flex items-start gap-2">
-                <MessageSquare className="h-4 w-4 text-oma-plum mt-0.5 flex-shrink-0" />
-                <p>
-                  <strong>FAQ Management:</strong> Organise helpful information
-                  for your users with categorised questions and rich text
-                  answers.
-                </p>
-              </div>
-              <div className="flex items-start gap-2">
-                <Settings className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
-                <p>
-                  <strong>Access Control:</strong> These management tools
-                  require super admin privileges to ensure content security and
-                  compliance.
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

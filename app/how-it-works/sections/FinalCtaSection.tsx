@@ -17,7 +17,7 @@ export function FinalCtaSection() {
     <section
       ref={ref}
       id="cta"
-      className="relative flex min-h-screen snap-end flex-col items-center justify-center bg-gradient-to-t from-oma-plum/10 to-white px-4 py-24"
+      className="relative flex min-h-screen snap-start flex-col items-center justify-center bg-gradient-to-t from-oma-plum/10 to-white px-4 py-24"
       style={sectionEnterStyle(isVisible)}
     >
       <SectionCorners variant="cta" />

@@ -43,84 +43,102 @@ export function ApplicationCard({
     String(application.year_founded).trim() !== ""
       ? String(application.year_founded).trim()
       : "";
+  const createdOn = application.created_at
+    ? new Date(application.created_at).toLocaleDateString("en-GB")
+    : "N/A";
+  const hasContactMeta =
+    Boolean(email) ||
+    Boolean(location) ||
+    Boolean(phone) ||
+    Boolean(website) ||
+    Boolean(instagram) ||
+    Boolean(yearFounded);
+  const description = application.description?.trim();
+  const category = application.category?.trim();
 
   return (
-    <Card className="hover:shadow-md transition-shadow">
-      <CardHeader>
-        <div className="flex justify-between items-start">
-          <div className="flex-1">
-            <CardTitle className="text-xl text-oma-plum">
+    <Card className="rounded-2xl border border-black/[0.08] bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
+      <CardHeader className="space-y-3 pb-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <CardTitle className="truncate text-xl font-canela text-oma-plum">
               {application.brand_name}
             </CardTitle>
-            <p className="text-oma-cocoa mt-1">by {application.designer_name}</p>
+            <p className="mt-1 text-sm text-oma-cocoa">by {application.designer_name}</p>
           </div>
-          <div className="flex items-center gap-2 ml-4">
+          <div className="ml-2 flex flex-wrap items-center justify-end gap-2">
             <ApplicationStatusBadge status={application.status} />
-            <span className="text-sm text-oma-cocoa whitespace-nowrap">
-              {application.created_at
-                ? new Date(application.created_at).toLocaleDateString("en-GB")
-                : "N/A"}
+            <span className="whitespace-nowrap text-sm text-oma-cocoa">
+              {createdOn}
             </span>
           </div>
         </div>
       </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-          {email && (
-            <div className="flex items-center gap-2 text-sm text-oma-cocoa">
-              <Mail className="h-4 w-4 text-oma-gold shrink-0" />
-              <span className="truncate">{email}</span>
-            </div>
-          )}
-          {location && (
-            <div className="flex items-center gap-2 text-sm text-oma-cocoa">
-              <MapPin className="h-4 w-4 text-oma-gold shrink-0" />
-              <span>{location}</span>
-            </div>
-          )}
-          {phone && (
-            <div className="flex items-center gap-2 text-sm text-oma-cocoa">
-              <Phone className="h-4 w-4 text-oma-gold shrink-0" />
-              <span>{phone}</span>
-            </div>
-          )}
-          {website && (
-            <div className="flex items-center gap-2 text-sm text-oma-cocoa">
-              <Globe className="h-4 w-4 text-oma-gold shrink-0" />
-              <a
-                href={website}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-oma-plum hover:underline truncate"
-              >
-                {website}
-              </a>
-            </div>
-          )}
-          {instagram && (
-            <div className="flex items-center gap-2 text-sm text-oma-cocoa">
-              <Instagram className="h-4 w-4 text-oma-gold shrink-0" />
-              <span>@{instagram.replace(/^@/, "")}</span>
-            </div>
-          )}
-          {yearFounded && (
-            <div className="flex items-center gap-2 text-sm text-oma-cocoa">
-              <Building className="h-4 w-4 text-oma-gold shrink-0" />
-              <span>Founded {yearFounded}</span>
-            </div>
-          )}
-        </div>
+      <CardContent className="space-y-4">
+        {hasContactMeta && (
+          <div className="grid grid-cols-1 gap-2 rounded-xl border border-oma-beige/70 bg-oma-cream/20 p-3 sm:grid-cols-2">
+            {email && (
+              <div className="flex items-center gap-2 text-sm text-oma-cocoa">
+                <Mail className="h-4 w-4 shrink-0 text-oma-gold" />
+                <span className="truncate">{email}</span>
+              </div>
+            )}
+            {location && (
+              <div className="flex items-center gap-2 text-sm text-oma-cocoa">
+                <MapPin className="h-4 w-4 shrink-0 text-oma-gold" />
+                <span className="truncate">{location}</span>
+              </div>
+            )}
+            {phone && (
+              <div className="flex items-center gap-2 text-sm text-oma-cocoa">
+                <Phone className="h-4 w-4 shrink-0 text-oma-gold" />
+                <span className="truncate">{phone}</span>
+              </div>
+            )}
+            {website && (
+              <div className="flex items-center gap-2 text-sm text-oma-cocoa">
+                <Globe className="h-4 w-4 shrink-0 text-oma-gold" />
+                <a
+                  href={website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="truncate text-oma-plum hover:underline"
+                >
+                  {website}
+                </a>
+              </div>
+            )}
+            {instagram && (
+              <div className="flex items-center gap-2 text-sm text-oma-cocoa">
+                <Instagram className="h-4 w-4 shrink-0 text-oma-gold" />
+                <span>@{instagram.replace(/^@/, "")}</span>
+              </div>
+            )}
+            {yearFounded && (
+              <div className="flex items-center gap-2 text-sm text-oma-cocoa">
+                <Building className="h-4 w-4 shrink-0 text-oma-gold" />
+                <span>Founded {yearFounded}</span>
+              </div>
+            )}
+          </div>
+        )}
 
-        <div className="mb-4">
-          <Badge variant="outline" className="mb-2">
-            {application.category}
-          </Badge>
-          <p className="text-sm text-oma-cocoa line-clamp-3">
-            {application.description}
-          </p>
-        </div>
+        {(category || description) && (
+          <div className="space-y-2">
+            {category && (
+              <Badge variant="outline" className="bg-white">
+                {category}
+              </Badge>
+            )}
+            {description && (
+              <p className="line-clamp-3 text-sm leading-relaxed text-oma-cocoa">
+                {description}
+              </p>
+            )}
+          </div>
+        )}
 
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex flex-wrap gap-2 border-t border-oma-beige/60 pt-3">
           <Button
             variant="outline"
             size="sm"

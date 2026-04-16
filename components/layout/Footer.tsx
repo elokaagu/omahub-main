@@ -28,7 +28,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/"
-                  className="text-sm text-oma-cocoa hover:text-oma-plum expand-underline"
+                  className="text-sm text-oma-cocoa hover:text-oma-plum expand-underline focus-visible:outline-none focus-visible:ring-0"
                 >
                   Home
                 </Link>
@@ -36,7 +36,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/about"
-                  className="text-sm text-oma-cocoa hover:text-oma-plum expand-underline"
+                  className="text-sm text-oma-cocoa hover:text-oma-plum expand-underline focus-visible:outline-none focus-visible:ring-0"
                 >
                   Our Story
                 </Link>
@@ -44,7 +44,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/directory"
-                  className="text-sm text-oma-cocoa hover:text-oma-plum expand-underline"
+                  className="text-sm text-oma-cocoa hover:text-oma-plum expand-underline focus-visible:outline-none focus-visible:ring-0"
                 >
                   Explore Designers
                 </Link>
@@ -52,7 +52,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/how-it-works"
-                  className="text-sm text-oma-cocoa hover:text-oma-plum expand-underline"
+                  className="text-sm text-oma-cocoa hover:text-oma-plum expand-underline focus-visible:outline-none focus-visible:ring-0"
                 >
                   How It Works
                 </Link>
@@ -60,7 +60,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/contact"
-                  className="text-sm text-oma-cocoa hover:text-oma-plum expand-underline"
+                  className="text-sm text-oma-cocoa hover:text-oma-plum expand-underline focus-visible:outline-none focus-visible:ring-0"
                 >
                   Contact Us
                 </Link>
@@ -77,7 +77,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/join"
-                  className="text-sm text-oma-cocoa hover:text-oma-plum expand-underline"
+                  className="text-sm text-oma-cocoa hover:text-oma-plum expand-underline focus-visible:outline-none focus-visible:ring-0"
                 >
                   Join the Hub
                 </Link>
@@ -85,7 +85,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/terms-of-service"
-                  className="text-sm text-oma-cocoa hover:text-oma-plum expand-underline"
+                  className="text-sm text-oma-cocoa hover:text-oma-plum expand-underline focus-visible:outline-none focus-visible:ring-0"
                 >
                   Terms & Conditions
                 </Link>
@@ -93,7 +93,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/privacy-policy"
-                  className="text-sm text-oma-cocoa hover:text-oma-plum expand-underline"
+                  className="text-sm text-oma-cocoa hover:text-oma-plum expand-underline focus-visible:outline-none focus-visible:ring-0"
                 >
                   Privacy Policy
                 </Link>
@@ -101,7 +101,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/faq"
-                  className="text-sm text-oma-cocoa hover:text-oma-plum expand-underline"
+                  className="text-sm text-oma-cocoa hover:text-oma-plum expand-underline focus-visible:outline-none focus-visible:ring-0"
                 >
                   FAQs
                 </Link>
@@ -120,7 +120,7 @@ export default function Footer() {
                   href="https://www.instagram.com/_omahub/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm text-oma-cocoa hover:text-oma-plum flex items-center gap-2 group"
+                  className="text-sm text-oma-cocoa hover:text-oma-plum flex items-center gap-2 group focus-visible:outline-none focus-visible:ring-0"
                 >
                   <Instagram className="h-4 w-4 transition group-hover:text-oma-plum" />
                   <span className="expand-underline">@omahub</span>
@@ -131,7 +131,7 @@ export default function Footer() {
                   href="https://www.tiktok.com/@_omahub"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm text-oma-cocoa hover:text-oma-plum flex items-center gap-2 group"
+                  className="text-sm text-oma-cocoa hover:text-oma-plum flex items-center gap-2 group focus-visible:outline-none focus-visible:ring-0"
                 >
                   <svg
                     className="h-4 w-4 transition group-hover:text-oma-plum"

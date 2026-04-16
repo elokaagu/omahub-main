@@ -7,6 +7,7 @@ interface AuthModalConfig {
   message?: string;
   showSignUp?: boolean;
   redirectTo?: string;
+  onSuccess?: () => void;
 }
 
 export function useAuthModal() {

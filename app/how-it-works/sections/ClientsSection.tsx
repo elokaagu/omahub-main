@@ -18,7 +18,7 @@ export function ClientsSection() {
     <section
       ref={ref}
       id="clients"
-      className="relative flex min-h-screen snap-center flex-col items-center justify-center bg-white px-4 py-16"
+      className="relative flex min-h-screen snap-start flex-col items-center justify-center bg-white px-4 py-16"
       style={sectionEnterStyle(isVisible)}
     >
       <SectionCorners variant="clients" />

@@ -181,17 +181,17 @@ export default function ProfilePage() {
         Profile Settings
       </h1>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 items-stretch gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <Card>
+          <Card className="h-full">
             <CardHeader>
               <CardTitle>Personal Information</CardTitle>
               <CardDescription>
                 Update your personal details and profile
               </CardDescription>
             </CardHeader>
-            <form onSubmit={handleSubmit}>
-              <CardContent className="space-y-4">
+            <form onSubmit={handleSubmit} className="flex h-full flex-col">
+              <CardContent className="flex-1 space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <Input
@@ -262,14 +262,14 @@ export default function ProfilePage() {
         </div>
 
         <div>
-          <Card>
+          <Card className="h-full">
             <CardHeader>
               <CardTitle>Profile Picture</CardTitle>
               <CardDescription>
                 Upload a profile picture to personalize your account
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex h-full flex-col">
               <div className="flex flex-col items-center justify-center mb-6">
                 {profileData.avatar_url ? (
                   <AuthImage
@@ -292,12 +292,14 @@ export default function ProfilePage() {
                 <p className="text-xs text-gray-500">{profileData.email}</p>
               </div>
 
-              <FileUpload
-                onUploadComplete={handleAvatarUpload}
-                defaultValue={profileData.avatar_url}
-                bucket="profiles"
-                path="avatars"
-              />
+              <div className="mt-auto">
+                <FileUpload
+                  onUploadComplete={handleAvatarUpload}
+                  defaultValue={profileData.avatar_url}
+                  bucket="profiles"
+                  path="avatars"
+                />
+              </div>
             </CardContent>
           </Card>
         </div>

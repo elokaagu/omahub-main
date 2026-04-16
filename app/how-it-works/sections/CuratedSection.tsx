@@ -18,7 +18,7 @@ export function CuratedSection() {
     <section
       ref={ref}
       id="curated"
-      className="relative flex min-h-screen snap-center flex-col items-center justify-center bg-oma-beige/20 px-4 py-24"
+      className="relative flex min-h-screen snap-start flex-col items-center justify-center bg-oma-beige/20 px-4 py-24"
       style={sectionEnterStyle(isVisible)}
     >
       <SectionCorners variant="standard" />

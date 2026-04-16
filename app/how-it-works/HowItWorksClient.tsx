@@ -11,7 +11,7 @@ import { FinalCtaSection } from "./sections/FinalCtaSection";
 export default function HowItWorksClient() {
   return (
     <div
-      className="relative h-screen w-full overflow-y-auto md:snap-y md:snap-mandatory"
+      className="relative h-screen w-full overflow-x-hidden overflow-y-auto scroll-pt-16 snap-y snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       style={{ scrollBehavior: "smooth" }}
     >
       <HeroSection />

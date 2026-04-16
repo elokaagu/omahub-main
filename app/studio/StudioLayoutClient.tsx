@@ -247,12 +247,21 @@ export default function StudioLayoutClient({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [fadeIn, setFadeIn] = useState(false);
   const sessionRecoveryAttemptedRef = useRef(false);
+  const mainContentRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     if (sidebarOpen) {
       setSidebarOpen(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
+
+  useEffect(() => {
+    // Always reset scroll position when changing Studio routes.
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    }
+    mainContentRef.current?.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, [pathname]);
 
   const serverRole = initialProfile?.role ?? initialUser?.role ?? null;
@@ -562,12 +571,12 @@ export default function StudioLayoutClient({
                 <X className="h-5 w-5" />
               </Button>
             </div>
-            <div className="px-8 pt-4 pb-6 h-[calc(100vh-4rem)] overflow-y-auto flex flex-col">
+            <div className="px-8 pt-4 pb-6 h-[calc(100vh-4rem)] overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden flex flex-col">
               <div className="mb-8">
                 <h1 className="text-2xl font-canela text-oma-plum">Studio</h1>
               </div>
               <nav
-                className="space-y-1 flex-1 overflow-y-auto"
+                className="space-y-1 flex-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                 role="navigation"
                 aria-label="Studio navigation"
               >
@@ -578,7 +587,7 @@ export default function StudioLayoutClient({
                       router.push(item.href);
                       setSidebarOpen(false);
                     }}
-                    className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100 w-full text-left transition-[background-color,color,transform] duration-200 ease-smooth active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-oma-plum focus:ring-offset-2"
+                    className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100 w-full text-left transition-[background-color,color,transform] duration-200 ease-smooth active:scale-[0.99] focus:outline-none focus-visible:outline-none focus-visible:ring-0"
                     aria-label={`Navigate to ${item.customLabel || item.label}`}
                   >
                     <item.icon className="h-5 w-5" aria-hidden="true" />
@@ -609,17 +618,17 @@ export default function StudioLayoutClient({
             aria-modal="true"
             role="dialog"
           >
-            <div className="px-8 pt-8 pb-6 h-full flex flex-col overflow-y-auto">
+            <div className="px-8 pt-8 pb-6 h-full flex flex-col overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {/* Studio title only */}
               <div className="mb-8">
                 <h1 className="text-2xl font-canela text-oma-plum">Studio</h1>
               </div>
-              <nav className="space-y-1 flex-1 overflow-y-auto">
+              <nav className="space-y-1 flex-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {navigationItems.map((item) => (
                   <NavigationLink
                     key={item.href}
                     href={item.href}
-                    className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100 transition-[background-color,color,transform] duration-200 ease-smooth active:scale-[0.99]"
+                    className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100 transition-[background-color,color,transform] duration-200 ease-smooth active:scale-[0.99] focus:outline-none focus-visible:outline-none focus-visible:ring-0"
                   >
                     <item.icon className="h-5 w-5" />
                     <span>{item.customLabel || item.label}</span>
@@ -642,6 +651,7 @@ export default function StudioLayoutClient({
 
           {/* Main Content */}
           <main
+            ref={mainContentRef}
             className={`flex-1 lg:ml-64 mt-16 transition-all duration-500 ease-smooth ${
               fadeIn ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
             }`}

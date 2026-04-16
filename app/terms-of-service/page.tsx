@@ -59,14 +59,6 @@ export default function TermsOfServicePage() {
     };
   }, []);
 
-  const effectiveDateText = doc
-    ? new Date(doc.effective_date).toLocaleDateString("en-GB", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      })
-    : null;
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-oma-cream via-white to-oma-beige">
       {/* Header */}
@@ -87,14 +79,6 @@ export default function TermsOfServicePage() {
             </div>
             <h1 className="heading-lg text-oma-plum">Terms of Service</h1>
           </div>
-          {doc && (
-            <div className="flex items-center gap-4 text-sm text-oma-cocoa">
-              <span className="bg-oma-beige px-3 py-1 rounded-full">
-                Version {doc.version}
-              </span>
-              <span>Effective {effectiveDateText}</span>
-            </div>
-          )}
         </div>
       </div>
 
@@ -153,9 +137,6 @@ export default function TermsOfServicePage() {
 
         {/* Footer */}
         <div className="mt-8 text-center text-sm text-oma-cocoa">
-          {effectiveDateText ? (
-            <p className="mb-2">Last updated: {effectiveDateText}</p>
-          ) : null}
           <p>
             These Terms work together with our{" "}
             <Link
