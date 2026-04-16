@@ -45,6 +45,99 @@ interface BrandRequestModalProps {
   colors?: string[];
 }
 
+const FALLBACK_SIZE_OPTIONS = [
+  "XXS",
+  "XS",
+  "S",
+  "M",
+  "L",
+  "XL",
+  "XXL",
+  "XXXL",
+  "4XL",
+  "5XL",
+  "32",
+  "34",
+  "36",
+  "38",
+  "40",
+  "42",
+  "44",
+  "46",
+  "48",
+  "50",
+  "52",
+  "54",
+  "Custom Measurements",
+  "Petite",
+  "Tall",
+  "Plus Size",
+  "Maternity",
+  "Other",
+];
+
+const FALLBACK_COLOR_OPTIONS = [
+  "Black",
+  "White",
+  "Navy",
+  "Red",
+  "Blue",
+  "Green",
+  "Yellow",
+  "Pink",
+  "Purple",
+  "Orange",
+  "Brown",
+  "Gray",
+  "Beige",
+  "Cream",
+  "Other",
+];
+
+const COUNTRY_OPTIONS = [
+  "Nigeria",
+  "United Kingdom",
+  "United States",
+  "Canada",
+  "Australia",
+  "Germany",
+  "France",
+  "Italy",
+  "Spain",
+  "Netherlands",
+  "Belgium",
+  "Switzerland",
+  "Austria",
+  "Sweden",
+  "Norway",
+  "Denmark",
+  "Finland",
+  "Ireland",
+  "Portugal",
+  "Greece",
+  "Poland",
+  "Czech Republic",
+  "Hungary",
+  "Romania",
+  "Bulgaria",
+  "Croatia",
+  "Slovenia",
+  "Slovakia",
+  "Estonia",
+  "Latvia",
+  "Lithuania",
+  "Luxembourg",
+  "Malta",
+  "Cyprus",
+  "Iceland",
+  "Liechtenstein",
+  "Monaco",
+  "San Marino",
+  "Vatican City",
+  "Andorra",
+  "Other",
+];
+
 export function BrandRequestModal({
   isOpen,
   onClose,
@@ -58,16 +151,6 @@ export function BrandRequestModal({
   sizes,
   colors,
 }: BrandRequestModalProps) {
-  console.log("🎭 BrandRequestModal rendered with props:", { 
-    sizes, 
-    colors, 
-    productName, 
-    brandName, 
-    isOpen,
-    productId,
-    price 
-  });
-  
   const [isLoading, setIsLoading] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
@@ -102,31 +185,21 @@ export function BrandRequestModal({
       preferred_size: "",
       preferred_color: "",
     };
-    
     setFormData(initialFormData);
     setValidationErrors([]);
-    
-    console.log("🔄 Form reset - Sizes prop:", sizes, "Colors prop:", colors);
-    console.log("📝 Initial form data:", initialFormData);
-    console.log("🔍 Modal props:", { isOpen, sizes, colors, productName, brandName });
-    console.log("🎯 FormData preferred_size after setState:", initialFormData.preferred_size);
   }, [isOpen, sizes, colors, productName, brandName]);
 
   // Additional effect to handle size/color prop changes specifically
   useEffect(() => {
     if (sizes && sizes.length > 0 && !formData.preferred_size) {
-      console.log("🔄 Sizes prop available, setting default size:", { sizes, current: formData.preferred_size });
       setFormData(prev => ({ ...prev, preferred_size: sizes[0] }));
     }
     if (colors && colors.length > 0 && !formData.preferred_color) {
-      console.log("🔄 Colors prop available, setting default color:", { colors, current: formData.preferred_color });
       setFormData(prev => ({ ...prev, preferred_color: colors[0] }));
     }
   }, [sizes, colors, formData.preferred_size, formData.preferred_color]);
 
   const handleInputChange = (field: string, value: string | number) => {
-    console.log(`📝 Field change: ${field} = ${value}`);
-    console.log(`📊 Previous form data:`, formData);
     setFormData((prev) => ({ ...prev, [field]: value }));
     // Clear validation errors when user starts typing
     if (validationErrors.length > 0) {
@@ -185,8 +258,6 @@ export function BrandRequestModal({
       quantity: formData.quantity,
     };
 
-    console.log("Submitting brand request:", requestData);
-
     try {
       const response = await fetch("/api/orders/custom", {
         method: "POST",
@@ -196,17 +267,11 @@ export function BrandRequestModal({
         body: JSON.stringify(requestData),
       });
 
-      console.log("API response status:", response.status);
-      console.log("API response headers:", response.headers);
-
       if (!response.ok) {
         const errorData = await response.json();
-        console.error("API error response:", errorData);
         throw new Error(errorData.error || "Failed to submit request");
       }
-
-      const successData = await response.json();
-      console.log("API success response:", successData);
+      await response.json();
 
       toast.success(
         "Request submitted successfully! The brand will contact you soon."
@@ -241,38 +306,20 @@ export function BrandRequestModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-5xl max-h-[90vh] overflow-y-auto rounded-2xl border border-oma-gold/20 p-0">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold text-oma-cocoa">
-            Request from {brandName}
-          </DialogTitle>
-          <DialogDescription className="text-gray-600">
-            Submit your request for {productName} and we'll connect you with the brand.
-          </DialogDescription>
-          
-          {/* Debug display - remove in production */}
-          {process.env.NODE_ENV === 'development' && (
-            <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded text-xs">
-              <p className="font-medium text-yellow-800 mb-2">🔍 Debug Info (Development):</p>
-              <div className="grid grid-cols-2 gap-2 text-yellow-700">
-                <div>
-                  <p><strong>Sizes prop:</strong> "{sizes ? JSON.stringify(sizes) : 'undefined'}"</p>
-                  <p><strong>Colors prop:</strong> "{colors ? JSON.stringify(colors) : 'undefined'}"</p>
-                  <p><strong>Product:</strong> {productName}</p>
-                  <p><strong>Brand:</strong> {brandName}</p>
-                </div>
-                <div>
-                  <p><strong>Form size:</strong> "{formData.preferred_size || 'empty'}"</p>
-                  <p><strong>Form color:</strong> "{formData.preferred_color || 'empty'}"</p>
-                  <p><strong>Modal open:</strong> {isOpen ? 'Yes' : 'No'}</p>
-                  <p><strong>Product ID:</strong> {productId}</p>
-                </div>
-              </div>
-            </div>
-          )}
+          <div className="border-b border-oma-gold/20 bg-gradient-to-r from-oma-cream/80 via-white to-oma-beige/80 px-6 py-5">
+            <DialogTitle className="text-2xl font-canela text-oma-plum">
+              Request from {brandName}
+            </DialogTitle>
+            <DialogDescription className="mt-1 text-oma-cocoa/80">
+              Submit your request for {productName} and we&apos;ll connect you with
+              the brand.
+            </DialogDescription>
+          </div>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 gap-6 p-6 md:grid-cols-[0.9fr_1.1fr]">
           {/* Product Information */}
           <div className="space-y-4">
             {/* Validation Errors Display */}
@@ -293,12 +340,12 @@ export function BrandRequestModal({
               </div>
             )}
             
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h3 className="font-semibold text-oma-plum mb-3">
+            <div className="rounded-xl border border-oma-gold/15 bg-oma-cream/40 p-4 shadow-sm">
+              <h3 className="mb-3 font-semibold text-oma-plum">
                 Product Details
               </h3>
               <div className="flex items-center space-x-3">
-                <div className="w-16 h-16 bg-gray-200 rounded-lg overflow-hidden">
+                <div className="h-16 w-16 overflow-hidden rounded-lg bg-gray-200 ring-1 ring-oma-gold/20">
                   <img
                     src={productImage}
                     alt={productName}
@@ -307,22 +354,29 @@ export function BrandRequestModal({
                 </div>
                 <div>
                   <p className="font-medium text-gray-900">{productName}</p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm font-medium text-oma-plum">
                     {price > 0
                       ? formatPrice(price, brandCurrency || "£")
                       : "Contact for pricing"}
                   </p>
                   {sizes && sizes.length > 0 && (
-                    <p className="text-sm text-gray-600">Available Sizes: {sizes.join(", ")}</p>
+                    <p className="text-sm text-gray-600">
+                      Available Sizes: {sizes.join(", ")}
+                    </p>
                   )}
                   {colors && colors.length > 0 && (
-                    <p className="text-sm text-gray-600">Available Colors: {colors.join(", ")}</p>
+                    <p className="text-sm text-gray-600">
+                      Available Colors: {colors.join(", ")}
+                    </p>
                   )}
                 </div>
               </div>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-3 rounded-xl border border-oma-gold/15 bg-white p-4 shadow-sm">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-oma-cocoa/60">
+                Preferences
+              </p>
               <div>
                 <Label
                   htmlFor="quantity"
@@ -357,57 +411,25 @@ export function BrandRequestModal({
                   Preferred Size
                 </Label>
                 <Select
-                  key={`size-${formData.preferred_size}`}
                   value={formData.preferred_size}
                   onValueChange={(value) => handleInputChange("preferred_size", value)}
                 >
                   <SelectTrigger className="border-oma-beige focus:border-oma-plum focus:ring-oma-plum">
-                    <SelectValue placeholder="Select your preferred size">
-                      {formData.preferred_size || "Select your preferred size"}
-                    </SelectValue>
+                    <SelectValue placeholder="Select your preferred size" />
                   </SelectTrigger>
                   <SelectContent>
-                    {/* Show all available sizes for this product */}
                     {sizes && sizes.length > 0 ? (
                       sizes.map((sizeOption) => (
-                        <SelectItem key={sizeOption} value={sizeOption}>{sizeOption}</SelectItem>
+                        <SelectItem key={sizeOption} value={sizeOption}>
+                          {sizeOption}
+                        </SelectItem>
                       ))
                     ) : (
-                      <>
-                        {/* Fallback to standard sizes if no specific size was set */}
-                        <SelectItem value="XXS">XXS (Extra Extra Small)</SelectItem>
-                        <SelectItem value="XS">XS (Extra Small)</SelectItem>
-                        <SelectItem value="S">S (Small)</SelectItem>
-                        <SelectItem value="M">M (Medium)</SelectItem>
-                        <SelectItem value="L">L (Large)</SelectItem>
-                        <SelectItem value="XL">XL (Extra Large)</SelectItem>
-                        <SelectItem value="XXL">XXL (2XL)</SelectItem>
-                        <SelectItem value="XXXL">XXXL (3XL)</SelectItem>
-                        <SelectItem value="4XL">4XL</SelectItem>
-                        <SelectItem value="5XL">5XL</SelectItem>
-                        
-                        {/* Numeric Sizes */}
-                        <SelectItem value="32">32</SelectItem>
-                        <SelectItem value="34">34</SelectItem>
-                        <SelectItem value="36">36</SelectItem>
-                        <SelectItem value="38">38</SelectItem>
-                        <SelectItem value="40">40</SelectItem>
-                        <SelectItem value="42">42</SelectItem>
-                        <SelectItem value="44">44</SelectItem>
-                        <SelectItem value="46">46</SelectItem>
-                        <SelectItem value="48">48</SelectItem>
-                        <SelectItem value="50">50</SelectItem>
-                        <SelectItem value="52">52</SelectItem>
-                        <SelectItem value="54">54</SelectItem>
-                        
-                        {/* Custom Options */}
-                        <SelectItem value="custom">Custom Measurements</SelectItem>
-                        <SelectItem value="petite">Petite</SelectItem>
-                        <SelectItem value="tall">Tall</SelectItem>
-                        <SelectItem value="plus-size">Plus Size</SelectItem>
-                        <SelectItem value="maternity">Maternity</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
-                      </>
+                      FALLBACK_SIZE_OPTIONS.map((sizeOption) => (
+                        <SelectItem key={sizeOption} value={sizeOption}>
+                          {sizeOption}
+                        </SelectItem>
+                      ))
                     )}
                   </SelectContent>
                 </Select>
@@ -422,40 +444,25 @@ export function BrandRequestModal({
                   Preferred Color
                 </Label>
                 <Select
-                  key={`color-${formData.preferred_color}`}
                   value={formData.preferred_color}
                   onValueChange={(value) => handleInputChange("preferred_color", value)}
                 >
                   <SelectTrigger className="border-oma-beige focus:border-oma-plum focus:ring-oma-plum">
-                    <SelectValue placeholder="Select your preferred color">
-                      {formData.preferred_color || "Select your preferred color"}
-                    </SelectValue>
+                    <SelectValue placeholder="Select your preferred color" />
                   </SelectTrigger>
                   <SelectContent>
-                    {/* Show all available colors for this product */}
                     {colors && colors.length > 0 ? (
                       colors.map((colorOption) => (
-                        <SelectItem key={colorOption} value={colorOption}>{colorOption}</SelectItem>
+                        <SelectItem key={colorOption} value={colorOption}>
+                          {colorOption}
+                        </SelectItem>
                       ))
                     ) : (
-                      <>
-                        {/* Fallback to common colors if no specific color was set */}
-                        <SelectItem value="black">Black</SelectItem>
-                        <SelectItem value="white">White</SelectItem>
-                        <SelectItem value="navy">Navy</SelectItem>
-                        <SelectItem value="red">Red</SelectItem>
-                        <SelectItem value="blue">Blue</SelectItem>
-                        <SelectItem value="green">Green</SelectItem>
-                        <SelectItem value="yellow">Yellow</SelectItem>
-                        <SelectItem value="pink">Pink</SelectItem>
-                        <SelectItem value="purple">Purple</SelectItem>
-                        <SelectItem value="orange">Orange</SelectItem>
-                        <SelectItem value="brown">Brown</SelectItem>
-                        <SelectItem value="gray">Gray</SelectItem>
-                        <SelectItem value="beige">Beige</SelectItem>
-                        <SelectItem value="cream">Cream</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
-                      </>
+                      FALLBACK_COLOR_OPTIONS.map((colorOption) => (
+                        <SelectItem key={colorOption} value={colorOption}>
+                          {colorOption}
+                        </SelectItem>
+                      ))
                     )}
                   </SelectContent>
                 </Select>
@@ -464,7 +471,10 @@ export function BrandRequestModal({
           </div>
 
           {/* Customer Information Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border border-oma-gold/15 bg-white p-4 shadow-sm md:p-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-oma-cocoa/60">
+              Contact Details
+            </p>
             <div>
               <Label
                 htmlFor="full_name"
@@ -608,95 +618,20 @@ export function BrandRequestModal({
                   Country
                 </Label>
                 <Select
-                  key={`country-${formData.country}`}
                   value={formData.country}
                   onValueChange={(value) => handleInputChange("country", value)}
                 >
                   <SelectTrigger className="border-oma-beige focus:border-oma-plum focus:ring-oma-plum">
-                    <SelectValue placeholder="Select your country">
-                      {formData.country || "Select your country"}
-                    </SelectValue>
+                    <SelectValue placeholder="Select your country" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Nigeria">Nigeria</SelectItem>
-                    <SelectItem value="United Kingdom">United Kingdom</SelectItem>
-                    <SelectItem value="United States">United States</SelectItem>
-                    <SelectItem value="Canada">Canada</SelectItem>
-                    <SelectItem value="Australia">Australia</SelectItem>
-                    <SelectItem value="Germany">Germany</SelectItem>
-                    <SelectItem value="France">France</SelectItem>
-                    <SelectItem value="Italy">Italy</SelectItem>
-                    <SelectItem value="Spain">Spain</SelectItem>
-                    <SelectItem value="Netherlands">Netherlands</SelectItem>
-                    <SelectItem value="Belgium">Belgium</SelectItem>
-                    <SelectItem value="Switzerland">Switzerland</SelectItem>
-                    <SelectItem value="Austria">Austria</SelectItem>
-                    <SelectItem value="Sweden">Sweden</SelectItem>
-                    <SelectItem value="Norway">Norway</SelectItem>
-                    <SelectItem value="Denmark">Denmark</SelectItem>
-                    <SelectItem value="Finland">Finland</SelectItem>
-                    <SelectItem value="Ireland">Ireland</SelectItem>
-                    <SelectItem value="Portugal">Portugal</SelectItem>
-                    <SelectItem value="Greece">Greece</SelectItem>
-                    <SelectItem value="Poland">Poland</SelectItem>
-                    <SelectItem value="Czech Republic">Czech Republic</SelectItem>
-                    <SelectItem value="Hungary">Hungary</SelectItem>
-                    <SelectItem value="Romania">Romania</SelectItem>
-                    <SelectItem value="Bulgaria">Bulgaria</SelectItem>
-                    <SelectItem value="Croatia">Croatia</SelectItem>
-                    <SelectItem value="Slovenia">Slovenia</SelectItem>
-                    <SelectItem value="Slovakia">Slovakia</SelectItem>
-                    <SelectItem value="Estonia">Estonia</SelectItem>
-                    <SelectItem value="Latvia">Latvia</SelectItem>
-                    <SelectItem value="Lithuania">Lithuania</SelectItem>
-                    <SelectItem value="Luxembourg">Luxembourg</SelectItem>
-                    <SelectItem value="Malta">Malta</SelectItem>
-                    <SelectItem value="Cyprus">Cyprus</SelectItem>
-                    <SelectItem value="Iceland">Iceland</SelectItem>
-                    <SelectItem value="Liechtenstein">Liechtenstein</SelectItem>
-                    <SelectItem value="Monaco">Monaco</SelectItem>
-                    <SelectItem value="San Marino">San Marino</SelectItem>
-                    <SelectItem value="Vatican City">Vatican City</SelectItem>
-                    <SelectItem value="Andorra">Andorra</SelectItem>
-                    <SelectItem value="Other">Other</SelectItem>
+                    {COUNTRY_OPTIONS.map((countryOption) => (
+                      <SelectItem key={countryOption} value={countryOption}>
+                        {countryOption}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
-                
-                {/* Test buttons for country - remove in production */}
-                {process.env.NODE_ENV === 'development' && (
-                  <div className="mt-2 p-2 bg-yellow-100 rounded border">
-                    <p className="text-xs font-medium mb-2">Test Country (Development):</p>
-                    <div className="flex flex-wrap gap-1">
-                      <button
-                        type="button"
-                        onClick={() => handleInputChange("country", "United Kingdom")}
-                        className="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
-                      >
-                        Set UK
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleInputChange("country", "Nigeria")}
-                        className="px-2 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600"
-                      >
-                        Set Nigeria
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleInputChange("country", "")}
-                        className="px-2 py-1 text-xs bg-gray-500 text-white rounded hover:bg-gray-600"
-                      >
-                        Clear Country
-                      </button>
-                    </div>
-                  </div>
-                )}
-                {/* Debug info - remove in production */}
-                {process.env.NODE_ENV === 'development' && (
-                  <p className="text-xs text-blue-600 mt-1">
-                    Current value: "{formData.country}"
-                  </p>
-                )}
               </div>
             </div>
 
@@ -724,7 +659,7 @@ export function BrandRequestModal({
             <Button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-oma-plum hover:bg-oma-plum/90 text-white py-3"
+              className="mt-2 w-full bg-oma-plum py-3 text-white hover:bg-oma-plum/90"
             >
               {isLoading ? (
                 "Submitting Request..."
@@ -735,73 +670,6 @@ export function BrandRequestModal({
                 </div>
               )}
             </Button>
-            
-            {/* Debug Display (Development Only) */}
-            {process.env.NODE_ENV === "development" && (
-              <div className="mt-4 p-3 bg-gray-100 rounded-lg text-xs">
-                <h4 className="font-medium mb-2">Debug Info:</h4>
-                <div className="space-y-1">
-                  <p><strong>Quantity:</strong> {formData.quantity}</p>
-                  <p><strong>Preferred Size:</strong> {formData.preferred_size || 'Not selected'}</p>
-                  <p><strong>Preferred Color:</strong> {formData.preferred_color || 'Not entered'}</p>
-                  <p><strong>Full Name:</strong> {formData.full_name || 'Not entered'}</p>
-                  <p><strong>Email:</strong> {formData.email || 'Not entered'}</p>
-                  <p className="text-blue-600"><strong>Note:</strong> Address fields are now optional</p>
-                </div>
-                
-                {/* Test Buttons */}
-                <div className="mt-3 space-y-2">
-                  <h5 className="font-medium">Test Dropdowns:</h5>
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleInputChange("preferred_size", "M")}
-                      className="text-xs"
-                    >
-                      Set Size: M
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleInputChange("preferred_size", "XL")}
-                      className="text-xs"
-                    >
-                      Set Size: XL
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleInputChange("preferred_size", "custom")}
-                      className="text-xs"
-                    >
-                      Set Size: Custom
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleInputChange("country", "United Kingdom")}
-                      className="text-xs"
-                    >
-                      Set Country: UK
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleInputChange("country", "Nigeria")}
-                      className="text-xs"
-                    >
-                      Set Country: Nigeria
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            )}
           </form>
         </div>
       </DialogContent>

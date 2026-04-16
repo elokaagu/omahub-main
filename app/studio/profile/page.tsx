@@ -298,6 +298,7 @@ export default function ProfilePage() {
                   defaultValue={profileData.avatar_url}
                   bucket="profiles"
                   path="avatars"
+                  hidePreview
                 />
               </div>
             </CardContent>

@@ -17,6 +17,7 @@ interface FileUploadProps {
   accept?: string | Record<string, string[]>;
   maxSize?: number;
   className?: string;
+  hidePreview?: boolean;
 }
 
 export function FileUpload({
@@ -29,6 +30,7 @@ export function FileUpload({
   accept = "image/jpeg, image/png, image/webp",
   maxSize = 5,
   className = "",
+  hidePreview = false,
 }: FileUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState<string | null>(defaultValue || null);
@@ -445,7 +447,7 @@ export function FileUpload({
         disabled={uploading}
       />
 
-      {preview && !imageError ? (
+      {preview && !imageError && !hidePreview ? (
         <div className="relative">
           <AuthImage
             src={preview}
