@@ -183,7 +183,9 @@ export function VideoPlayer({
 
         {isLoading && (
           <div className="absolute inset-0 bg-black/20 flex items-center justify-center pointer-events-none">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white" />
+            <p className="rounded-md bg-black/45 px-3 py-1 text-xs font-medium text-white">
+              Loading video...
+            </p>
           </div>
         )}
       </div>

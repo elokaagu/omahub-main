@@ -15,7 +15,6 @@ import {
   ClipboardDocumentIcon,
 } from "@heroicons/react/24/outline";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -725,7 +724,7 @@ export default function InquiryDetail({ inquiryId, onBack }: InquiryDetailProps)
             className="bg-oma-plum hover:bg-oma-plum/90 gap-2"
           >
             {sendingReply ? (
-              <Loader2 className="h-4 w-4" />
+              <span className="h-2 w-2 rounded-full bg-current opacity-70" />
             ) : (
               <PaperAirplaneIcon className="h-4 w-4" />
             )}

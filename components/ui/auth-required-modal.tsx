@@ -162,10 +162,7 @@ export function AuthRequiredModal({
                 className="w-full bg-oma-plum hover:bg-oma-plum/90 text-white py-2"
               >
                 {isLoading ? (
-                  <div className="flex items-center gap-2">
-                    <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
-                    Signing In...
-                  </div>
+                  "Signing In..."
                 ) : (
                   <div className="flex items-center gap-2">
                     Sign In
@@ -244,10 +241,7 @@ export function AuthRequiredModal({
                 className="w-full bg-oma-plum hover:bg-oma-plum/90 text-white py-2"
               >
                 {isLoading ? (
-                  <div className="flex items-center gap-2">
-                    <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
-                    Creating Account...
-                  </div>
+                  "Creating Account..."
                 ) : (
                   <div className="flex items-center gap-2">
                     Create Account

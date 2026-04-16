@@ -11,7 +11,9 @@ function DirectoryInteractiveFallback() {
         <p className="text-oma-cocoa text-lg">
           Please wait while we load designer data...
         </p>
-        <div className="mx-auto mt-4 h-8 w-8 animate-spin rounded-full border-4 border-oma-plum border-t-transparent" />
+        <div className="mx-auto mt-4 h-2 w-36 overflow-hidden rounded-full bg-oma-plum/20">
+          <div className="h-full w-1/2 animate-pulse rounded-full bg-oma-plum/60" />
+        </div>
       </div>
     </div>
   );

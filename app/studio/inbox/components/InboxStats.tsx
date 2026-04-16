@@ -8,7 +8,7 @@ import {
   ClockIcon,
   CalendarDaysIcon,
 } from "@heroicons/react/24/outline";
-import { TrendingUp, Loader2 } from "lucide-react";
+import { TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface InboxStatsData {
@@ -131,10 +131,7 @@ export default function InboxStats() {
           disabled={refreshing}
         >
           {refreshing ? (
-            <>
-              <Loader2 className="h-4 w-4 mr-2" />
-              Retrying…
-            </>
+            "Retrying…"
           ) : (
             "Try again"
           )}

@@ -17,7 +17,9 @@ export function AuthSuccessLoading() {
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white px-4 py-8 shadow sm:rounded-lg sm:px-10">
           <div className="text-center">
-            <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-2 border-oma-plum border-t-transparent" />
+            <div className="mx-auto mb-4 h-2 w-28 overflow-hidden rounded-full bg-oma-plum/20">
+              <div className="h-full w-1/2 animate-pulse rounded-full bg-oma-plum/60" />
+            </div>
             <h2 className="mb-2 text-xl font-semibold text-oma-cocoa">
               Completing Authentication...
             </h2>

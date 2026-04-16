@@ -172,10 +172,7 @@ export function NewsletterForm({ location, className }: NewsletterFormProps) {
                   className="w-full bg-[#391c25] hover:bg-[#391c25]/90 text-white"
                 >
                   {loading ? (
-                    <span className="flex items-center gap-2">
-                      <span className="h-4 w-4 border-2 border-t-transparent border-white/80 animate-spin rounded-full"></span>
-                      <span>Subscribing...</span>
-                    </span>
+                    "Subscribing..."
                   ) : (
                     "Subscribe"
                   )}

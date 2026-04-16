@@ -10,7 +10,6 @@ import {
   Users,
   MessageSquare,
 } from "@/lib/utils/iconImports";
-import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -171,10 +170,9 @@ export default function OfflinePage() {
         <div className="mb-6">
           {isUnknown ? (
             <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-slate-100">
-              <Loader2
-                className="h-9 w-9 animate-spin text-slate-500"
-                aria-hidden
-              />
+              <span className="text-sm font-medium text-slate-500" aria-hidden>
+                ...
+              </span>
             </div>
           ) : isOnline ? (
             <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-green-100">

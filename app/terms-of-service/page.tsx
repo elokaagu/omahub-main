@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, FileText, Mail } from "lucide-react";
+import { ArrowLeft, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface LegalDocument {
@@ -73,10 +73,7 @@ export default function TermsOfServicePage() {
               Back to Home
             </Button>
           </Link>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-oma-plum/10 rounded-lg">
-              <FileText className="h-6 w-6 text-oma-plum" />
-            </div>
+          <div className="mb-2">
             <h1 className="heading-lg text-oma-plum">Terms of Service</h1>
           </div>
         </div>

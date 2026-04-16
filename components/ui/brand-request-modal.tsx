@@ -20,7 +20,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Loader2,
   ShoppingBag,
   User,
   Mail,
@@ -728,10 +727,7 @@ export function BrandRequestModal({
               className="w-full bg-oma-plum hover:bg-oma-plum/90 text-white py-3"
             >
               {isLoading ? (
-                <div className="flex items-center gap-2">
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                  Submitting Request...
-                </div>
+                "Submitting Request..."
               ) : (
                 <div className="flex items-center gap-2">
                   <ShoppingBag className="h-5 w-5" />

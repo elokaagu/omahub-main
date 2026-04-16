@@ -331,10 +331,7 @@ export function SimpleFileUpload({
             className="mb-2"
           >
             {uploading ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2" />
-                Uploading...
-              </>
+              "Uploading..."
             ) : (
               <>
                 <Upload className="h-4 w-4 mr-2" />
@@ -358,7 +355,6 @@ export function SimpleFileUpload({
       {uploading && (
         <div className="space-y-2">
           <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600" />
             <p className="text-sm text-blue-700">Uploading image...</p>
           </div>
           {uploadProgress > 0 && (

@@ -22,7 +22,6 @@ import {
   Star,
   CheckCircle,
   ShoppingBag,
-  Loader2,
   AlertTriangle,
   LogIn,
   Heart,
@@ -486,7 +485,7 @@ export default function AnalyticsDashboard({
               className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white"
             >
               {syncing ? (
-                <Loader2 className="h-4 w-4 mr-2" />
+                <span className="mr-2 h-2 w-2 rounded-full bg-current opacity-70" />
               ) : (
                 <Star className="h-4 w-4 mr-2" />
               )}

@@ -16,7 +16,6 @@ import {
   TrendingUp,
   MessageSquare,
   Package,
-  Loader2,
   AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -219,9 +218,7 @@ export default function ManagementStatistics({
             size="sm"
             disabled={updating}
           >
-            <Loader2
-              className={`h-4 w-4 mr-2 ${updating ? "opacity-50" : ""}`}
-            />
+            <span className="mr-2 h-2 w-2 rounded-full bg-current opacity-70" />
             {updating ? "Updating..." : "Force Update"}
           </Button>
         </div>

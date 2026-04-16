@@ -812,10 +812,7 @@ export function TailoredOrderModal({
                 className="bg-oma-plum hover:bg-oma-plum/90"
               >
                 {loading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-                    Submitting...
-                  </>
+                  "Submitting..."
                 ) : (
                   "Submit Custom Order"
                 )}
