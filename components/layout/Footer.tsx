@@ -106,6 +106,16 @@ export default function Footer() {
                   FAQs
                 </Link>
               </li>
+              <li>
+                <a
+                  href="https://luma.com/user/usr-10IvrGBF3vxclvm"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-oma-cocoa hover:text-oma-plum expand-underline focus-visible:outline-none focus-visible:ring-0"
+                >
+                  Events
+                </a>
+              </li>
             </ul>
           </div>
 
