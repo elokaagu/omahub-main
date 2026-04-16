@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, Shield } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getActiveLegalDocument } from "@/lib/legal/getActiveLegalDocument";
 
@@ -25,10 +25,7 @@ export default async function PrivacyPolicyPage() {
               Back to Home
             </Link>
           </Button>
-          <div className="mb-2 flex items-center gap-3">
-            <div className="rounded-lg bg-oma-plum/10 p-2">
-              <Shield className="h-6 w-6 text-oma-plum" aria-hidden />
-            </div>
+          <div className="mb-2">
             <h1 className="heading-lg text-oma-plum">Privacy Policy</h1>
           </div>
         </div>
