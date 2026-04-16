@@ -10,6 +10,7 @@ import {
   isCustomOrderHoneypotTriggered,
   parseCustomOrderBody,
 } from "@/lib/validation/customOrderBody";
+import { buildOmaHubEmailHtml } from "@/lib/services/omahubEmailTemplate";
 
 function normalizeAmount(v: number | null | undefined, fallback: number): number {
   return typeof v === "number" && Number.isFinite(v) && v > 0 ? v : fallback;
@@ -222,6 +223,22 @@ export async function POST(request: NextRequest) {
         from: "OmaHub <info@oma-hub.com>",
         to: ["info@oma-hub.com"],
         subject: `New Custom Order Request - ${product.title}`,
+        html: buildOmaHubEmailHtml({
+          title: "New Custom Order",
+          subtitle: orderNumber,
+          intro: "A new custom order was submitted on OmaHub.",
+          sections: [
+            {
+              title: "Order Summary",
+              details: [
+                { label: "Order", value: orderNumber },
+                { label: "Product", value: product.title },
+                { label: "Brand", value: brand.name },
+                { label: "Amount", value: amountLabel },
+              ],
+            },
+          ],
+        }),
         text: `Order ${orderNumber} for ${product.title} (${brand.name}) - ${amountLabel}`,
       });
 
@@ -230,6 +247,23 @@ export async function POST(request: NextRequest) {
           from: "OmaHub <info@oma-hub.com>",
           to: [brand.contact_email],
           subject: `New Custom Order Request - ${product.title}`,
+          html: buildOmaHubEmailHtml({
+            title: "New Custom Order",
+            subtitle: brand.name,
+            intro: `A customer submitted a request for ${product.title}.`,
+            sections: [
+              {
+                title: "Order Summary",
+                details: [
+                  { label: "Order", value: orderNumber },
+                  { label: "Product", value: product.title },
+                  { label: "Amount", value: amountLabel },
+                ],
+              },
+            ],
+            ctaLabel: "Review in Studio",
+            ctaUrl: `${process.env.NEXT_PUBLIC_SITE_URL || "https://oma-hub.com"}/studio/orders`,
+          }),
           text: `Order ${orderNumber} submitted. Please review in Studio.`,
         });
       }
@@ -238,6 +272,24 @@ export async function POST(request: NextRequest) {
         from: "OmaHub <info@oma-hub.com>",
         to: [delivery_address.email],
         subject: `Order Confirmation - ${product.title} from ${brand.name}`,
+        html: buildOmaHubEmailHtml({
+          title: "Order Confirmation",
+          subtitle: orderNumber,
+          intro: `Your request for ${product.title} from ${brand.name} was submitted successfully.`,
+          sections: [
+            {
+              title: "Order Summary",
+              details: [
+                { label: "Order", value: orderNumber },
+                { label: "Product", value: product.title },
+                { label: "Brand", value: brand.name },
+                { label: "Amount", value: amountLabel },
+              ],
+            },
+          ],
+          ctaLabel: "Continue Browsing",
+          ctaUrl: `${process.env.NEXT_PUBLIC_SITE_URL || "https://oma-hub.com"}/directory`,
+        }),
         text: `Your request ${orderNumber} was submitted successfully.`,
       });
     } catch (emailError) {

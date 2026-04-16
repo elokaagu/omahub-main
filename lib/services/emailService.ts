@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import { buildOmaHubEmailHtml } from "@/lib/services/omahubEmailTemplate";
 
 // Lazy initialization helper - get Resend instance when needed
 function getResendInstance(): Resend | null {
@@ -48,12 +49,35 @@ export async function sendContactEmail(formData: {
 
     // Determine recipient - use provided 'to' email or fallback to admin
     const recipientEmail = formData.to || "info@oma-hub.com";
+    const studioInboxUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "https://oma-hub.com"}/studio/inbox`;
     
     console.log("📧 Sending contact email via Resend to:", recipientEmail);
     const { data, error } = await resend.emails.send({
       from: "OmaHub <info@oma-hub.com>",
       to: [recipientEmail],
       subject: `New Contact Form Submission: ${formData.subject}`,
+      html: buildOmaHubEmailHtml({
+        preheader: `New contact submission from ${formData.name}`,
+        title: "New Contact Submission",
+        subtitle: formData.subject,
+        intro: "A new contact form entry has been submitted on OmaHub.",
+        sections: [
+          {
+            title: "Submission Details",
+            details: [
+              { label: "Name", value: formData.name },
+              { label: "Email", value: formData.email },
+              { label: "Subject", value: formData.subject },
+            ],
+          },
+          {
+            title: "Message",
+            content: formData.message,
+          },
+        ],
+        ctaLabel: "Open Studio Inbox",
+        ctaUrl: studioInboxUrl,
+      }),
       text: `
 Name: ${formData.name}
 Email: ${formData.email}
@@ -97,12 +121,36 @@ export async function sendNewLeadNotificationToBrand(params: {
     const notesBlock = params.notes?.trim()
       ? `\nNotes:\n${params.notes.trim()}\n`
       : "";
+    const inboxUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "https://oma-hub.com"}/studio/inbox`;
 
     const { error } = await resend.emails.send({
       from: "OmaHub <info@oma-hub.com>",
       to: [params.to],
       subject: `New lead — ${params.brandName}`,
       replyTo: params.customerEmail,
+      html: buildOmaHubEmailHtml({
+        preheader: `New lead for ${params.brandName}`,
+        title: "New Lead",
+        subtitle: params.brandName,
+        intro: "A new lead has been captured on OmaHub.",
+        sections: [
+          {
+            title: "Lead Details",
+            details: [
+              { label: "Brand", value: params.brandName },
+              { label: "Name", value: params.customerName },
+              { label: "Email", value: params.customerEmail },
+              { label: "Source", value: params.source },
+              { label: "Type", value: params.leadType },
+            ],
+          },
+          ...(params.notes?.trim()
+            ? [{ title: "Notes", content: params.notes.trim() }]
+            : []),
+        ],
+        ctaLabel: "View Inbox",
+        ctaUrl: inboxUrl,
+      }),
       text: `You have a new lead on OmaHub.
 
 Brand: ${params.brandName}
@@ -182,6 +230,17 @@ export async function sendInquiryReplyEmail(replyData: {
       from: "OmaHub <info@oma-hub.com>",
       to: [customerEmail],
       subject: `Re: ${originalSubject}`,
+      html: buildOmaHubEmailHtml({
+        preheader: `Reply from ${brandName}`,
+        title: "New Reply from OmaHub",
+        subtitle: brandName,
+        intro: `Hello ${customerName}, we have replied to your inquiry.`,
+        sections: [
+          { title: "Reply", content: replyMessage },
+          { title: "Your Original Message", content: originalMessage },
+        ],
+        footerNote: `Sent by ${senderName} via OmaHub.`,
+      }),
       text: `
 Dear ${customerName},
 
@@ -261,6 +320,21 @@ export async function sendNewsletterConfirmationEmail(formData: {
       from: "OmaHub <newsletter@oma-hub.com>",
       to: [email],
       subject: subject,
+      html: buildOmaHubEmailHtml({
+        preheader: subject,
+        title: "Newsletter Subscription",
+        subtitle: "Welcome to OmaHub",
+        intro: `Hi ${displayName},`,
+        sections: [
+          {
+            content: `${welcomeMessage}\n\nYou're now subscribed and will receive product drops, designer highlights, and curated updates from OmaHub.`,
+          },
+        ],
+        ctaLabel: "Explore OmaHub",
+        ctaUrl: process.env.NEXT_PUBLIC_SITE_URL || "https://oma-hub.com",
+        footerNote:
+          "You can unsubscribe at any time from the link in future newsletter emails.",
+      }),
       text: `
 Dear ${displayName},
 
@@ -400,137 +474,44 @@ export async function sendNewApplicationNotification(
           from: "OmaHub <info@oma-hub.com>",
           to: [adminEmail],
           subject: `📝 New Designer Application - ${application.brand_name}`,
-          html: `
-            <!DOCTYPE html>
-            <html>
-            <head>
-              <meta charset="utf-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <link rel="preconnect" href="https://fonts.googleapis.com">
-              <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-              <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-            </head>
-            <body style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #1E1E1E; background-color: #F6F0E8; margin: 0; padding: 20px;">
-              <div style="max-width: 600px; margin: 0 auto; background-color: #FFFDF8; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 24px rgba(58, 30, 45, 0.12);">
-                <!-- Header -->
-                <div style="background: linear-gradient(135deg, #3A1E2D 0%, #2A1520 100%); color: white; padding: 48px 40px; text-align: center;">
-                  <h1 style="margin: 0; font-size: 36px; font-weight: 700; letter-spacing: 1px; font-family: 'Playfair Display', Georgia, serif;">OmaHub</h1>
-                  <p style="margin: 12px 0 0 0; opacity: 0.95; font-size: 18px; font-weight: 300; letter-spacing: 0.5px;">New Designer Application</p>
-                </div>
-                
-                <!-- Content -->
-                <div style="padding: 40px;">
-                  <!-- Alert Banner -->
-                  <div style="background: linear-gradient(135deg, #F6F0E8 0%, #FFFDF8 100%); border-left: 4px solid #D4B285; padding: 24px; border-radius: 12px; margin-bottom: 32px; box-shadow: 0 2px 8px rgba(58, 30, 45, 0.06);">
-                    <h2 style="color: #1E1E1E; margin: 0 0 12px 0; font-size: 24px; font-weight: 600; font-family: 'Playfair Display', Georgia, serif;">📝 New Application Received</h2>
-                    <p style="margin: 0; color: #1E1E1E; font-size: 16px; line-height: 1.6;">
-                      A new designer application has been submitted and requires review.
-                    </p>
-                  </div>
-
-                  <!-- Application Details Card -->
-                  <div style="background: #FFFDF8; border: 1px solid #E5D6C6; border-radius: 12px; padding: 32px; margin-bottom: 32px; box-shadow: 0 2px 8px rgba(58, 30, 45, 0.04);">
-                    <h3 style="color: #1E1E1E; margin: 0 0 24px 0; font-size: 20px; font-weight: 600; font-family: 'Playfair Display', Georgia, serif; border-bottom: 2px solid #D4B285; padding-bottom: 12px;">Application Details</h3>
-                    <table style="width: 100%; border-collapse: collapse;">
-                      <tr>
-                        <td style="padding: 12px 0; color: #1E1E1E; font-weight: 500; width: 140px; font-size: 15px;">Brand Name:</td>
-                        <td style="padding: 12px 0; color: #1E1E1E; font-weight: 600; font-size: 15px;">${application.brand_name}</td>
-                      </tr>
-                      <tr>
-                        <td style="padding: 12px 0; color: #1E1E1E; font-weight: 500; font-size: 15px;">Designer:</td>
-                        <td style="padding: 12px 0; color: #1E1E1E; font-size: 15px;">${application.designer_name}</td>
-                      </tr>
-                      <tr>
-                        <td style="padding: 12px 0; color: #1E1E1E; font-weight: 500; font-size: 15px;">Email:</td>
-                        <td style="padding: 12px 0; font-size: 15px;">
-                          <a href="mailto:${application.email}" style="color: #1E1E1E; text-decoration: underline; text-decoration-color: #D4B285;">${application.email}</a>
-                        </td>
-                      </tr>
-                      ${application.phone ? `
-                      <tr>
-                        <td style="padding: 12px 0; color: #1E1E1E; font-weight: 500; font-size: 15px;">Phone:</td>
-                        <td style="padding: 12px 0; color: #1E1E1E; font-size: 15px;">${application.phone}</td>
-                      </tr>
-                      ` : ''}
-                      <tr>
-                        <td style="padding: 12px 0; color: #1E1E1E; font-weight: 500; font-size: 15px;">Location:</td>
-                        <td style="padding: 12px 0; color: #1E1E1E; font-size: 15px;">${application.location}</td>
-                      </tr>
-                      <tr>
-                        <td style="padding: 12px 0; color: #1E1E1E; font-weight: 500; font-size: 15px;">Category:</td>
-                        <td style="padding: 12px 0; font-size: 15px;">
-                          <span style="background: #F6F0E8; color: #1E1E1E; padding: 6px 16px; border-radius: 20px; font-size: 14px; font-weight: 500; display: inline-block; border: 1px solid #D4B285;">
-                            ${application.category}
-                          </span>
-                        </td>
-                      </tr>
-                      ${application.website ? `
-                      <tr>
-                        <td style="padding: 12px 0; color: #1E1E1E; font-weight: 500; font-size: 15px;">Website:</td>
-                        <td style="padding: 12px 0; font-size: 15px;">
-                          <a href="${application.website}" target="_blank" style="color: #1E1E1E; text-decoration: underline; text-decoration-color: #D4B285;">
-                            ${application.website}
-                          </a>
-                        </td>
-                      </tr>
-                      ` : ''}
-                      ${application.instagram ? `
-                      <tr>
-                        <td style="padding: 12px 0; color: #1E1E1E; font-weight: 500; font-size: 15px;">Instagram:</td>
-                        <td style="padding: 12px 0; font-size: 15px;">
-                          <a href="https://instagram.com/${application.instagram.replace(/^@/, '')}" target="_blank" style="color: #1E1E1E; text-decoration: underline; text-decoration-color: #D4B285;">
-                            @${application.instagram.replace(/^@/, '')}
-                          </a>
-                        </td>
-                      </tr>
-                      ` : ''}
-                      ${application.year_founded ? `
-                      <tr>
-                        <td style="padding: 12px 0; color: #1E1E1E; font-weight: 500; font-size: 15px;">Founded:</td>
-                        <td style="padding: 12px 0; color: #1E1E1E; font-size: 15px;">${application.year_founded}</td>
-                      </tr>
-                      ` : ''}
-                      <tr>
-                        <td style="padding: 12px 0; color: #1E1E1E; font-weight: 500; font-size: 15px;">Submitted:</td>
-                        <td style="padding: 12px 0; color: #1E1E1E; font-size: 15px;">${applicationDate}</td>
-                      </tr>
-                    </table>
-                  </div>
-
-                  <!-- Description Card -->
-                  <div style="background: #F6F0E8; border-left: 4px solid #D4B285; padding: 24px; border-radius: 12px; margin-bottom: 32px;">
-                    <h3 style="color: #1E1E1E; margin: 0 0 16px 0; font-size: 18px; font-weight: 600; font-family: 'Playfair Display', Georgia, serif;">Description</h3>
-                    <p style="margin: 0; color: #1E1E1E; line-height: 1.8; white-space: pre-wrap; font-size: 15px;">${application.description}</p>
-                  </div>
-
-                  <!-- CTA Button -->
-                  <div style="text-align: center; margin: 40px 0 32px 0;">
-                    <a href="${applicationUrl}" 
-                       style="display: inline-block; background: linear-gradient(135deg, #3A1E2D 0%, #2A1520 100%); color: white; padding: 16px 40px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; letter-spacing: 0.5px; box-shadow: 0 4px 12px rgba(58, 30, 45, 0.3); transition: all 0.3s ease;">
-                      Review Application
-                    </a>
-                  </div>
-
-                  <!-- Quick Access -->
-                  <div style="background: #FFFDF8; border: 1px solid #E5D6C6; padding: 20px; border-radius: 12px; margin-bottom: 24px;">
-                    <p style="margin: 0; color: #1E1E1E; font-size: 14px; line-height: 1.6;">
-                      <strong style="color: #1E1E1E;">Quick Access:</strong> You can also view all applications in the 
-                      <a href="${studioUrl}" style="color: #1E1E1E; text-decoration: underline; text-decoration-color: #D4B285; font-weight: 600;">Studio Applications Page</a>
-                    </p>
-                  </div>
-
-                  <!-- Footer -->
-                  <div style="border-top: 1px solid #E5D6C6; padding-top: 24px; margin-top: 32px;">
-                    <p style="color: #1E1E1E; font-size: 13px; margin: 0; line-height: 1.6;">
-                      This is an automated notification from <strong style="color: #1E1E1E;">OmaHub</strong>.<br>
-                      You're receiving this because you're a super admin.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </body>
-            </html>
-          `,
+          html: buildOmaHubEmailHtml({
+            preheader: `New application from ${application.brand_name}`,
+            title: "New Designer Application",
+            subtitle: application.brand_name,
+            intro:
+              "A new designer application has been submitted and is ready for review.",
+            sections: [
+              {
+                title: "Application Details",
+                details: [
+                  { label: "Brand Name", value: application.brand_name },
+                  { label: "Designer", value: application.designer_name },
+                  { label: "Email", value: application.email },
+                  ...(application.phone ? [{ label: "Phone", value: application.phone }] : []),
+                  { label: "Location", value: application.location },
+                  { label: "Category", value: application.category },
+                  ...(application.website
+                    ? [{ label: "Website", value: application.website }]
+                    : []),
+                  ...(application.instagram
+                    ? [{ label: "Instagram", value: `@${application.instagram.replace(/^@/, "")}` }]
+                    : []),
+                  ...(application.year_founded
+                    ? [{ label: "Founded", value: String(application.year_founded) }]
+                    : []),
+                  { label: "Submitted", value: applicationDate },
+                ],
+              },
+              {
+                title: "Description",
+                content: application.description,
+              },
+            ],
+            ctaLabel: "Review Application",
+            ctaUrl: applicationUrl,
+            footerNote:
+              "You received this because you are a super admin on OmaHub.",
+          }),
           text: `
 New Designer Application - ${application.brand_name}
 
@@ -658,75 +639,15 @@ export async function sendApplicationApprovalEmail(data: {
       };
     }
 
-    const { designerName, brandName, email, temporaryPassword, passwordResetLink, isNewUser } = data;
+    const {
+      designerName,
+      brandName,
+      email,
+      temporaryPassword,
+      passwordResetLink,
+      isNewUser,
+    } = data;
     const loginUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "https://oma-hub.com"}/login`;
-    const studioUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "https://oma-hub.com"}/studio`;
-
-    // Build password section - ALWAYS include temporary password for new users
-    let passwordSection = '';
-    
-    if (isNewUser) {
-      // For new users, ALWAYS show temporary password (it's always generated)
-      // Also show password reset link if available
-      passwordSection = `
-        <div style="background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; padding: 24px; margin: 20px 0;">
-          <h3 style="color: #1E1E1E; margin: 0 0 20px 0; font-size: 18px;">🔐 Your Login Credentials</h3>
-          
-          ${temporaryPassword ? `
-          <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 20px; margin-bottom: ${passwordResetLink ? '16px' : '0'}; border-radius: 4px;">
-            <p style="margin: 0 0 12px 0; color: #1E1E1E; font-weight: 600; font-size: 16px;">${passwordResetLink ? 'Option 1: ' : ''}Login with Temporary Password</p>
-            <p style="margin: 0 0 16px 0; color: #1E1E1E; font-size: 14px;">
-              You can log in immediately using these credentials:
-            </p>
-            <div style="background: #fff; padding: 16px; border-radius: 4px; margin-bottom: 12px;">
-              <p style="margin: 0 0 8px 0; color: #1E1E1E; font-size: 14px;">
-                <strong>Email:</strong> <span style="font-family: monospace; font-weight: 600;">${email}</span>
-              </p>
-              <p style="margin: 0; color: #1E1E1E; font-size: 14px;">
-                <strong>Temporary Password:</strong><br>
-                <code style="background: #f8f9fa; padding: 8px 12px; border-radius: 4px; font-family: monospace; font-size: 16px; font-weight: 700; letter-spacing: 1px; display: inline-block; margin-top: 8px; border: 2px solid #ffc107;">${temporaryPassword}</code>
-              </p>
-            </div>
-            <p style="margin: 12px 0 0 0; color: #1E1E1E; font-size: 13px; font-weight: 600;">
-              ⚠️ <strong>Important:</strong> Please change your password after your first login for security.
-            </p>
-          </div>
-          ` : ''}
-          
-          ${passwordResetLink ? `
-          <div style="background: #e8f5e9; border-left: 4px solid #4caf50; padding: 16px; border-radius: 4px;">
-            <p style="margin: 0 0 12px 0; color: #1E1E1E; font-weight: 600; font-size: 14px;">Option 2: Set Your Password (Recommended)</p>
-            <p style="margin: 0 0 16px 0; color: #1E1E1E; font-size: 13px;">
-              Click the button below to set your own secure password. This link expires in 7 days.
-            </p>
-            <div style="text-align: center; margin: 16px 0;">
-              <a href="${passwordResetLink}" 
-                 style="display: inline-block; background: #3a1e2d; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px;">
-                Set My Password
-              </a>
-            </div>
-            <p style="margin: 12px 0 0 0; color: #1E1E1E; font-size: 11px; text-align: center;">
-              Or copy: <code style="background: #fff; padding: 2px 6px; border-radius: 3px; font-family: monospace; font-size: 10px; word-break: break-all;">${passwordResetLink}</code>
-            </p>
-          </div>
-          ` : ''}
-          
-          ${!temporaryPassword && !passwordResetLink ? `
-          <p style="margin: 0; color: #1E1E1E;">
-            Your account has been created. Please use the "Forgot Password" feature to set your password.
-          </p>
-          ` : ''}
-        </div>
-      `;
-    } else {
-      passwordSection = `
-        <div style="background: #f8f9fa; border-left: 4px solid #3a1e2d; padding: 16px; margin: 20px 0; border-radius: 4px;">
-          <p style="margin: 0; color: #1E1E1E;">
-            You can log in using your existing account credentials.
-          </p>
-        </div>
-      `;
-    }
 
     console.log("📧 Sending application approval email to:", email);
 
@@ -734,70 +655,33 @@ export async function sendApplicationApprovalEmail(data: {
       from: "OmaHub <info@oma-hub.com>",
       to: [email],
       subject: `🎉 Your Application Has Been Approved - Welcome to OmaHub!`,
-      html: `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="utf-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        </head>
-        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #1E1E1E; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="background: #3a1e2d; color: white; padding: 40px; border-radius: 12px 12px 0 0; text-align: center;">
-            <h1 style="margin: 0; font-size: 28px; font-weight: 300; letter-spacing: 2px;">OmaHub</h1>
-            <p style="margin: 8px 0 0 0; opacity: 0.9; font-size: 16px;">Application Approved</p>
-          </div>
-          
-          <div style="background: white; padding: 40px; border-radius: 0 0 12px 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-            <div style="background: #e8f5e9; border-left: 4px solid #4caf50; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
-              <h2 style="color: #1E1E1E; margin: 0 0 12px 0; font-size: 22px;">🎉 Congratulations, ${designerName}!</h2>
-              <p style="margin: 0; color: #1E1E1E; font-size: 16px;">
-                Your application for <strong>${brandName}</strong> has been approved!
-              </p>
-            </div>
-
-            <p style="color: #1E1E1E; font-size: 16px; margin: 0 0 20px 0;">
-              We're thrilled to welcome you to OmaHub! Your brand has been set up and you now have access to manage your brand profile, products, and customer inquiries.
-            </p>
-
-            ${passwordSection}
-
-            <div style="background: #fff; border: 1px solid #e9ecef; border-radius: 8px; padding: 24px; margin: 30px 0;">
-              <h3 style="color: #1E1E1E; margin: 0 0 16px 0; font-size: 18px;">What's Next?</h3>
-              <ol style="margin: 0; padding-left: 20px; color: #1E1E1E;">
-                <li style="margin-bottom: 12px;">
-                  <strong>Log in to your Studio:</strong> Visit <a href="${loginUrl}" style="color: #1E1E1E; text-decoration: none; font-weight: 600;">${loginUrl}</a>
-                </li>
-                <li style="margin-bottom: 12px;">
-                  <strong>Access your brand dashboard:</strong> Once logged in, you'll be able to manage your brand from the <a href="${studioUrl}" style="color: #1E1E1E; text-decoration: none; font-weight: 600;">Studio</a>
-                </li>
-                <li style="margin-bottom: 12px;">
-                  <strong>Complete your brand profile:</strong> Add your brand logo, images, and complete product listings
-                </li>
-                <li style="margin-bottom: 0;">
-                  <strong>Start managing:</strong> Respond to customer inquiries, update your catalogue, and grow your presence on OmaHub
-                </li>
-              </ol>
-            </div>
-
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="${loginUrl}" style="display: inline-block; background: #3a1e2d; color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">
-                Log In to Studio
-              </a>
-            </div>
-
-            <div style="border-top: 1px solid #e9ecef; padding-top: 24px; margin-top: 30px;">
-              <p style="color: #1E1E1E; font-size: 14px; margin: 0 0 8px 0;">
-                If you have any questions or need assistance, please don't hesitate to reach out to our support team.
-              </p>
-              <p style="color: #1E1E1E; font-size: 14px; margin: 0;">
-                Welcome aboard!<br>
-                <strong>The OmaHub Team</strong>
-              </p>
-            </div>
-          </div>
-        </body>
-        </html>
-      `,
+      html: buildOmaHubEmailHtml({
+        preheader: `Your ${brandName} application has been approved`,
+        title: "Application Approved",
+        subtitle: brandName,
+        intro: `Congratulations ${designerName}, your application has been approved and your brand is now live on OmaHub.`,
+        sections: [
+          {
+            title: "Account Access",
+            content: isNewUser
+              ? `A new account was prepared for ${email}. Use your temporary password or password reset link to complete setup.`
+              : "You can sign in with your existing account credentials.",
+          },
+          ...(temporaryPassword
+            ? [{ title: "Temporary Password", content: temporaryPassword }]
+            : []),
+          ...(passwordResetLink
+            ? [{ title: "Set Your Password Link", content: passwordResetLink }]
+            : []),
+          {
+            title: "Next Steps",
+            content:
+              "1) Log into Studio.\n2) Complete your brand profile.\n3) Add products and start managing inquiries.",
+          },
+        ],
+        ctaLabel: "Log In to Studio",
+        ctaUrl: loginUrl,
+      }),
       text: `
 Congratulations, ${designerName}!
 
@@ -891,74 +775,26 @@ export async function sendApplicationRejectionEmail(data: {
       from: "OmaHub <info@oma-hub.com>",
       to: [email],
       subject: `Update on Your Application - ${brandName}`,
-      html: `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="utf-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <link rel="preconnect" href="https://fonts.googleapis.com">
-          <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-          <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-        </head>
-        <body style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #1E1E1E; background-color: #F6F0E8; margin: 0; padding: 20px;">
-          <div style="max-width: 600px; margin: 0 auto; background-color: #FFFDF8; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 24px rgba(58, 30, 45, 0.12);">
-            <!-- Header -->
-            <div style="background: linear-gradient(135deg, #3A1E2D 0%, #2A1520 100%); color: white; padding: 48px 40px; text-align: center;">
-              <h1 style="margin: 0; font-size: 36px; font-weight: 700; letter-spacing: 1px; font-family: 'Playfair Display', Georgia, serif;">OmaHub</h1>
-              <p style="margin: 12px 0 0 0; opacity: 0.95; font-size: 18px; font-weight: 300; letter-spacing: 0.5px;">Application Update</p>
-            </div>
-            
-            <!-- Content -->
-            <div style="padding: 40px;">
-              <!-- Notification Banner -->
-              <div style="background: linear-gradient(135deg, #FFF5F5 0%, #FFFDF8 100%); border-left: 4px solid #D4B285; padding: 24px; border-radius: 12px; margin-bottom: 32px; box-shadow: 0 2px 8px rgba(58, 30, 45, 0.06);">
-                <h2 style="color: #1E1E1E; margin: 0 0 12px 0; font-size: 24px; font-weight: 600; font-family: 'Playfair Display', Georgia, serif;">Thank You, ${designerName}</h2>
-                <p style="margin: 0; color: #1E1E1E; font-size: 16px; line-height: 1.6;">
-                  We've reviewed your application for <strong>${brandName}</strong> and unfortunately, we're unable to proceed at this time.
-                </p>
-              </div>
-
-              <p style="color: #1E1E1E; font-size: 16px; margin: 0 0 20px 0; line-height: 1.8;">
-                We appreciate the time and effort you put into your application. After careful consideration, we've decided not to move forward with your application at this moment.
-              </p>
-
-              ${notes ? `
-              <div style="background: #F6F0E8; border-left: 4px solid #D4B285; padding: 20px; border-radius: 12px; margin: 24px 0;">
-                <h3 style="color: #1E1E1E; margin: 0 0 12px 0; font-size: 18px; font-weight: 600; font-family: 'Playfair Display', Georgia, serif;">Feedback</h3>
-                <p style="margin: 0; color: #1E1E1E; line-height: 1.8; white-space: pre-wrap; font-size: 15px;">${notes}</p>
-              </div>
-              ` : ''}
-
-              <div style="background: #FFFDF8; border: 1px solid #E5D6C6; border-radius: 12px; padding: 24px; margin: 32px 0;">
-                <h3 style="color: #1E1E1E; margin: 0 0 16px 0; font-size: 18px; font-weight: 600; font-family: 'Playfair Display', Georgia, serif;">What's Next?</h3>
-                <p style="margin: 0 0 16px 0; color: #1E1E1E; font-size: 15px; line-height: 1.8;">
-                  We encourage you to continue developing your brand and portfolio. You're welcome to apply again in the future when your brand has evolved or meets our current criteria.
-                </p>
-                <p style="margin: 0; color: #1E1E1E; font-size: 15px; line-height: 1.8;">
-                  If you have any questions or would like to discuss your application further, please don't hesitate to reach out to our support team.
-                </p>
-              </div>
-
-              <div style="text-align: center; margin: 40px 0 32px 0;">
-                <a href="${joinUrl}" 
-                   style="display: inline-block; background: linear-gradient(135deg, #3A1E2D 0%, #2A1520 100%); color: white; padding: 16px 40px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; letter-spacing: 0.5px; box-shadow: 0 4px 12px rgba(58, 30, 45, 0.3);">
-                  Visit Our Website
-                </a>
-              </div>
-
-              <!-- Footer -->
-              <div style="border-top: 1px solid #E5D6C6; padding-top: 24px; margin-top: 32px;">
-                <p style="color: #1E1E1E; font-size: 13px; margin: 0; line-height: 1.6;">
-                  Thank you for your interest in OmaHub.<br>
-                  <strong style="color: #1E1E1E;">The OmaHub Team</strong>
-                </p>
-              </div>
-            </div>
-          </div>
-        </body>
-        </html>
-      `,
+      html: buildOmaHubEmailHtml({
+        preheader: `Application update for ${brandName}`,
+        title: "Application Update",
+        subtitle: brandName,
+        intro: `Thank you ${designerName} for applying to OmaHub.`,
+        sections: [
+          {
+            content:
+              "After review, we are unable to proceed with this application at the moment.",
+          },
+          ...(notes ? [{ title: "Feedback", content: notes }] : []),
+          {
+            title: "What Next",
+            content:
+              "You are welcome to apply again in the future as your brand evolves. If you have questions, please reply to this email.",
+          },
+        ],
+        ctaLabel: "Visit OmaHub",
+        ctaUrl: joinUrl,
+      }),
       text: `
 Dear ${designerName},
 
@@ -1024,7 +860,6 @@ export async function sendApplicationConfirmationEmail(data: {
 
     const { designerName, brandName, email } = data;
     const websiteUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "https://oma-hub.com"}`;
-    const joinUrl = `${websiteUrl}/join`;
 
     console.log("📧 Sending application confirmation email to:", email);
 
@@ -1032,67 +867,21 @@ export async function sendApplicationConfirmationEmail(data: {
       from: "OmaHub <info@oma-hub.com>",
       to: [email],
       subject: `Application Received - ${brandName}`,
-      html: `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="utf-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <link rel="preconnect" href="https://fonts.googleapis.com">
-          <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-          <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-        </head>
-        <body style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #1E1E1E; background-color: #F6F0E8; margin: 0; padding: 20px;">
-          <div style="max-width: 600px; margin: 0 auto; background-color: #FFFDF8; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 24px rgba(58, 30, 45, 0.12);">
-            <!-- Header -->
-            <div style="background: linear-gradient(135deg, #3A1E2D 0%, #2A1520 100%); color: white; padding: 48px 40px; text-align: center;">
-              <h1 style="margin: 0; font-size: 36px; font-weight: 700; letter-spacing: 1px; font-family: 'Playfair Display', Georgia, serif;">OmaHub</h1>
-              <p style="margin: 12px 0 0 0; opacity: 0.95; font-size: 18px; font-weight: 300; letter-spacing: 0.5px;">Application Received</p>
-            </div>
-            
-            <!-- Content -->
-            <div style="padding: 40px;">
-              <!-- Notification Banner -->
-              <div style="background: linear-gradient(135deg, #F6F0E8 0%, #FFFDF8 100%); border-left: 4px solid #D4B285; padding: 24px; border-radius: 12px; margin-bottom: 32px; box-shadow: 0 2px 8px rgba(58, 30, 45, 0.06);">
-                <h2 style="color: #1E1E1E; margin: 0 0 12px 0; font-size: 24px; font-weight: 600; font-family: 'Playfair Display', Georgia, serif;">Thank You, ${designerName}</h2>
-                <p style="margin: 0; color: #1E1E1E; font-size: 16px; line-height: 1.6;">
-                  We've successfully received your application for <strong>${brandName}</strong>.
-                </p>
-              </div>
-
-              <p style="color: #1E1E1E; font-size: 16px; margin: 0 0 20px 0; line-height: 1.8;">
-                Thank you for your interest in joining OmaHub. We appreciate you taking the time to submit your application and share your brand with us.
-              </p>
-
-              <div style="background: #FFFDF8; border: 1px solid #E5D6C6; border-radius: 12px; padding: 24px; margin: 32px 0;">
-                <h3 style="color: #1E1E1E; margin: 0 0 16px 0; font-size: 18px; font-weight: 600; font-family: 'Playfair Display', Georgia, serif;">What Happens Next?</h3>
-                <p style="margin: 0 0 16px 0; color: #1E1E1E; font-size: 15px; line-height: 1.8;">
-                  Our team will carefully review your application. We'll get back to you within <strong>3-5 days</strong> with an update on your application status.
-                </p>
-                <p style="margin: 0; color: #1E1E1E; font-size: 15px; line-height: 1.8;">
-                  If you have any questions or need to update your application, please don't hesitate to reach out to our support team.
-                </p>
-              </div>
-
-              <div style="text-align: center; margin: 40px 0 32px 0;">
-                <a href="${websiteUrl}" 
-                   style="display: inline-block; background: linear-gradient(135deg, #3A1E2D 0%, #2A1520 100%); color: white; padding: 16px 40px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; letter-spacing: 0.5px; box-shadow: 0 4px 12px rgba(58, 30, 45, 0.3);">
-                  Visit Our Website
-                </a>
-              </div>
-
-              <!-- Footer -->
-              <div style="border-top: 1px solid #E5D6C6; padding-top: 24px; margin-top: 32px;">
-                <p style="color: #1E1E1E; font-size: 13px; margin: 0; line-height: 1.6;">
-                  Thank you for your interest in OmaHub.<br>
-                  <strong style="color: #1E1E1E;">The OmaHub Team</strong>
-                </p>
-              </div>
-            </div>
-          </div>
-        </body>
-        </html>
-      `,
+      html: buildOmaHubEmailHtml({
+        preheader: `Application received for ${brandName}`,
+        title: "Application Received",
+        subtitle: brandName,
+        intro: `Thank you ${designerName}. We have successfully received your application.`,
+        sections: [
+          {
+            title: "What Happens Next",
+            content:
+              "Our team will review your application and share an update within 3-5 days. If anything changes, reply to this email and we will help.",
+          },
+        ],
+        ctaLabel: "Visit OmaHub",
+        ctaUrl: websiteUrl,
+      }),
       text: `
 Dear ${designerName},
 
