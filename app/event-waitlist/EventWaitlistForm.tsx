@@ -1,18 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { OMAHUB_PLATFORM_BRAND_ID_DEFAULT } from "@/lib/config/platformBrand";
 import { toast } from "sonner";
 import { getEmailValidationError } from "@/app/contact/contactValidation";
+
+const OTHER_DESIGNER_VALUE = "__other__";
+
+type DirectoryBrand = { id: string; name: string };
 
 type FormState = {
   name: string;
   email: string;
   phone: string;
-  requestedBrand: string;
   itemDescription: string;
   size: string;
   colour: string;
@@ -23,15 +34,22 @@ const IDS = {
   name: "evt-name",
   email: "evt-email",
   phone: "evt-phone",
-  requestedBrand: "evt-brand",
+  designerSelect: "evt-designer",
+  otherDesigner: "evt-other-designer",
   itemDescription: "evt-item",
   size: "evt-size",
   colour: "evt-colour",
   additionalNotes: "evt-notes",
 } as const;
 
-function errId(field: keyof typeof IDS) {
-  return `${IDS[field]}-error`;
+function errId(field: string) {
+  return `${field}-error`;
+}
+
+function isPlatformBrandRow(b: { id: string; name?: string | null }) {
+  if (b.id === OMAHUB_PLATFORM_BRAND_ID_DEFAULT) return true;
+  const n = (b.name ?? "").trim().toLowerCase();
+  return n === "omahub platform";
 }
 
 export function EventWaitlistForm() {
@@ -39,25 +57,100 @@ export function EventWaitlistForm() {
     name: "",
     email: "",
     phone: "",
-    requestedBrand: "",
     itemDescription: "",
     size: "",
     colour: "",
     additionalNotes: "",
   });
+  const [selectedDesignerId, setSelectedDesignerId] = useState<string>("");
+  const [otherDesignerName, setOtherDesignerName] = useState("");
+  const [brands, setBrands] = useState<DirectoryBrand[]>([]);
+  const [brandsLoading, setBrandsLoading] = useState(true);
+  const [brandsError, setBrandsError] = useState<string | null>(null);
   const [hpField, setHpField] = useState("");
-  const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>(
-    {}
-  );
+  const [errors, setErrors] = useState<
+    Partial<
+      Record<
+        keyof FormState | "designer" | "otherDesigner",
+        string | undefined
+      >
+    >
+  >({});
   const [submitting, setSubmitting] = useState(false);
 
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setBrandsLoading(true);
+      setBrandsError(null);
+      try {
+        const res = await fetch("/api/brands/public", { credentials: "same-origin" });
+        if (!res.ok) throw new Error("Could not load designers");
+        const json = (await res.json()) as { brands?: unknown[] };
+        const raw = Array.isArray(json.brands) ? json.brands : [];
+        const mapped: DirectoryBrand[] = raw
+          .map((row) => {
+            const r = row as { id?: unknown; name?: unknown };
+            const id = typeof r.id === "string" ? r.id : "";
+            const name = typeof r.name === "string" ? r.name.trim() : "";
+            return id && name ? { id, name } : null;
+          })
+          .filter((b): b is DirectoryBrand => b !== null)
+          .filter((b) => !isPlatformBrandRow(b))
+          .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
+        if (!cancelled) setBrands(mapped);
+      } catch {
+        if (!cancelled) {
+          setBrands([]);
+          setBrandsError("Designers could not be loaded. Refresh the page or use Contact.");
+        }
+      } finally {
+        if (!cancelled) setBrandsLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const showDesignerDropdown =
+    !brandsLoading && !brandsError && brands.length > 0;
+
+  const resolvedRequestedBrand = useMemo(() => {
+    if (!showDesignerDropdown) {
+      return otherDesignerName.trim();
+    }
+    if (!selectedDesignerId) return "";
+    if (selectedDesignerId === OTHER_DESIGNER_VALUE) {
+      return otherDesignerName.trim();
+    }
+    return brands.find((b) => b.id === selectedDesignerId)?.name?.trim() ?? "";
+  }, [
+    showDesignerDropdown,
+    selectedDesignerId,
+    otherDesignerName,
+    brands,
+  ]);
+
   function validate() {
-    const next: Partial<Record<keyof FormState, string>> = {};
+    const next: Partial<
+      Record<keyof FormState | "designer" | "otherDesigner", string>
+    > = {};
     if (!form.name.trim()) next.name = "Name is required";
     const emailErr = getEmailValidationError(form.email);
     if (emailErr) next.email = emailErr;
-    if (!form.requestedBrand.trim()) {
-      next.requestedBrand = "Designer or brand name is required";
+    if (showDesignerDropdown) {
+      if (!selectedDesignerId) {
+        next.designer = "Please choose a designer";
+      } else if (selectedDesignerId === OTHER_DESIGNER_VALUE) {
+        if (!otherDesignerName.trim()) {
+          next.otherDesigner = "Enter the designer or brand name";
+        }
+      }
+    } else if (!brandsLoading) {
+      if (!otherDesignerName.trim()) {
+        next.designer = "Designer or brand name is required";
+      }
     }
     if (!form.itemDescription.trim()) {
       next.itemDescription = "Describe the item or style you want";
@@ -67,7 +160,7 @@ export function EventWaitlistForm() {
     return Object.keys(next).length === 0;
   }
 
-  function onChange(
+  function onFieldChange(
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) {
     const { name, value } = e.target;
@@ -83,6 +176,12 @@ export function EventWaitlistForm() {
       toast.error("Please fix the errors in the form");
       return;
     }
+    const requestedBrand = resolvedRequestedBrand;
+    if (!requestedBrand) {
+      toast.error("Please choose a designer");
+      return;
+    }
+
     setSubmitting(true);
     try {
       const res = await fetch("/api/event-waitlist", {
@@ -92,7 +191,7 @@ export function EventWaitlistForm() {
           name: form.name.trim(),
           email: form.email.trim(),
           phone: form.phone.trim() || undefined,
-          requestedBrand: form.requestedBrand.trim(),
+          requestedBrand,
           itemDescription: form.itemDescription.trim(),
           size: form.size.trim(),
           colour: form.colour.trim() || undefined,
@@ -121,12 +220,13 @@ export function EventWaitlistForm() {
           name: "",
           email: "",
           phone: "",
-          requestedBrand: "",
           itemDescription: "",
           size: "",
           colour: "",
           additionalNotes: "",
         });
+        setSelectedDesignerId("");
+        setOtherDesignerName("");
         setHpField("");
         setErrors({});
       } else {
@@ -182,7 +282,7 @@ export function EventWaitlistForm() {
             id={IDS.name}
             name="name"
             value={form.name}
-            onChange={onChange}
+            onChange={onFieldChange}
             placeholder="Full name"
             aria-invalid={!!errors.name}
             aria-describedby={errors.name ? errId("name") : undefined}
@@ -204,7 +304,7 @@ export function EventWaitlistForm() {
             name="email"
             type="email"
             value={form.email}
-            onChange={onChange}
+            onChange={onFieldChange}
             placeholder="you@example.com"
             aria-invalid={!!errors.email}
             aria-describedby={errors.email ? errId("email") : undefined}
@@ -226,39 +326,134 @@ export function EventWaitlistForm() {
             name="phone"
             type="tel"
             value={form.phone}
-            onChange={onChange}
+            onChange={onFieldChange}
             placeholder="+234 …"
             className="border-oma-gold/30 bg-white focus-visible:ring-oma-plum"
           />
         </div>
 
         <div className="space-y-2">
-          <label
-            htmlFor={IDS.requestedBrand}
+          <span
+            id={`${IDS.designerSelect}-label`}
             className="block text-sm font-medium text-oma-black"
           >
             Designer / brand you want
-          </label>
-          <Input
-            id={IDS.requestedBrand}
-            name="requestedBrand"
-            value={form.requestedBrand}
-            onChange={onChange}
-            placeholder="e.g. name as shown on OmaHub or Instagram"
-            aria-invalid={!!errors.requestedBrand}
-            aria-describedby={
-              errors.requestedBrand ? errId("requestedBrand") : undefined
-            }
-            className="border-oma-gold/30 bg-white focus-visible:ring-oma-plum"
-          />
-          {errors.requestedBrand ? (
-            <p
-              id={errId("requestedBrand")}
-              className="text-sm text-red-500"
-              role="alert"
+          </span>
+          {showDesignerDropdown ? (
+            <Select
+              value={selectedDesignerId || undefined}
+              onValueChange={(v) => {
+                setSelectedDesignerId(v);
+                setErrors((prev) => ({
+                  ...prev,
+                  designer: undefined,
+                  otherDesigner: undefined,
+                }));
+                if (v !== OTHER_DESIGNER_VALUE) setOtherDesignerName("");
+              }}
             >
-              {errors.requestedBrand}
+              <SelectTrigger
+                id={IDS.designerSelect}
+                aria-labelledby={`${IDS.designerSelect}-label`}
+                aria-invalid={!!errors.designer}
+                aria-describedby={
+                  errors.designer ? errId("designer") : undefined
+                }
+                className="border-oma-gold/30 bg-white focus:ring-oma-plum"
+              >
+                <SelectValue placeholder="Select a designer" />
+              </SelectTrigger>
+              <SelectContent className="max-h-72">
+                {brands.map((b) => (
+                  <SelectItem key={b.id} value={b.id}>
+                    {b.name}
+                  </SelectItem>
+                ))}
+                <SelectItem value={OTHER_DESIGNER_VALUE}>
+                  Other / not listed
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          ) : brandsLoading ? (
+            <div
+              className="flex h-10 w-full items-center rounded-md border border-oma-gold/30 bg-white px-3 text-sm text-oma-cocoa/60"
+              aria-busy="true"
+            >
+              Loading designers…
+            </div>
+          ) : (
+            <>
+              <Input
+                id={IDS.designerSelect}
+                value={otherDesignerName}
+                onChange={(e) => {
+                  setOtherDesignerName(e.target.value);
+                  if (errors.designer) {
+                    setErrors((prev) => ({ ...prev, designer: undefined }));
+                  }
+                }}
+                placeholder="Designer or brand name"
+                aria-labelledby={`${IDS.designerSelect}-label`}
+                aria-invalid={!!errors.designer}
+                aria-describedby={
+                  errors.designer ? errId("designer") : undefined
+                }
+                className="border-oma-gold/30 bg-white focus-visible:ring-oma-plum"
+              />
+              {brandsError ? (
+                <p className="text-sm text-oma-cocoa/80" role="status">
+                  {brandsError}{" "}
+                  <Link
+                    href="/contact"
+                    className="text-oma-plum underline-offset-2 hover:underline"
+                  >
+                    Contact us
+                  </Link>
+                </p>
+              ) : null}
+            </>
+          )}
+          {errors.designer ? (
+            <p id={errId("designer")} className="text-sm text-red-500" role="alert">
+              {errors.designer}
             </p>
+          ) : null}
+
+          {showDesignerDropdown && selectedDesignerId === OTHER_DESIGNER_VALUE ? (
+            <div className="space-y-2 pt-1">
+              <label
+                htmlFor={IDS.otherDesigner}
+                className="block text-sm font-medium text-oma-black"
+              >
+                Designer or brand name
+              </label>
+              <Input
+                id={IDS.otherDesigner}
+                name="otherDesigner"
+                value={otherDesignerName}
+                onChange={(e) => {
+                  setOtherDesignerName(e.target.value);
+                  if (errors.otherDesigner) {
+                    setErrors((prev) => ({ ...prev, otherDesigner: undefined }));
+                  }
+                }}
+                placeholder="As you know them (Instagram, legal name, etc.)"
+                aria-invalid={!!errors.otherDesigner}
+                aria-describedby={
+                  errors.otherDesigner ? errId("otherDesigner") : undefined
+                }
+                className="border-oma-gold/30 bg-white focus-visible:ring-oma-plum"
+              />
+              {errors.otherDesigner ? (
+                <p
+                  id={errId("otherDesigner")}
+                  className="text-sm text-red-500"
+                  role="alert"
+                >
+                  {errors.otherDesigner}
+                </p>
+              ) : null}
+            </div>
           ) : null}
         </div>
 
@@ -273,7 +468,7 @@ export function EventWaitlistForm() {
             id={IDS.itemDescription}
             name="itemDescription"
             value={form.itemDescription}
-            onChange={onChange}
+            onChange={onFieldChange}
             rows={4}
             placeholder="Product title, look, fabric, or link if you have one"
             aria-invalid={!!errors.itemDescription}
@@ -301,7 +496,7 @@ export function EventWaitlistForm() {
             id={IDS.size}
             name="size"
             value={form.size}
-            onChange={onChange}
+            onChange={onFieldChange}
             placeholder="UK / EU / your usual — be specific"
             aria-invalid={!!errors.size}
             aria-describedby={errors.size ? errId("size") : undefined}
@@ -322,7 +517,7 @@ export function EventWaitlistForm() {
             id={IDS.colour}
             name="colour"
             value={form.colour}
-            onChange={onChange}
+            onChange={onFieldChange}
             placeholder="If applicable"
             className="border-oma-gold/30 bg-white focus-visible:ring-oma-plum"
           />
@@ -339,7 +534,7 @@ export function EventWaitlistForm() {
             id={IDS.additionalNotes}
             name="additionalNotes"
             value={form.additionalNotes}
-            onChange={onChange}
+            onChange={onFieldChange}
             rows={3}
             className="border-oma-gold/30 bg-white focus-visible:ring-oma-plum"
           />
@@ -347,8 +542,9 @@ export function EventWaitlistForm() {
 
         <Button
           type="submit"
-          disabled={submitting}
+          disabled={submitting || brandsLoading}
           className="w-full bg-oma-plum text-white hover:bg-oma-plum/90"
+          title={brandsLoading ? "Loading designer list…" : undefined}
         >
           {submitting ? "Sending…" : "Join the waitlist"}
         </Button>

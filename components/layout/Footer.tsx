@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { Instagram } from "lucide-react";
 
@@ -19,150 +21,133 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Column 2: Navigate */}
-          <div className="flex flex-col items-center md:items-start">
+          {/* Column 2: Navigate — use nav + div stack (not ul/li) to avoid hydration edge cases */}
+          <nav
+            aria-label="Footer navigation"
+            className="flex flex-col items-center md:items-start"
+          >
             <h3 className="text-xs font-medium uppercase tracking-wider text-oma-black mb-4">
               Navigate
             </h3>
-            <ul className="flex flex-col items-center space-y-3 md:items-start">
-              <li>
-                <Link
-                  href="/"
-                  className="text-sm text-oma-cocoa hover:text-oma-plum expand-underline focus-visible:outline-none focus-visible:ring-0"
-                >
-                  Home
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/about"
-                  className="text-sm text-oma-cocoa hover:text-oma-plum expand-underline focus-visible:outline-none focus-visible:ring-0"
-                >
-                  Our Story
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/directory"
-                  className="text-sm text-oma-cocoa hover:text-oma-plum expand-underline focus-visible:outline-none focus-visible:ring-0"
-                >
-                  Explore Designers
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/how-it-works"
-                  className="text-sm text-oma-cocoa hover:text-oma-plum expand-underline focus-visible:outline-none focus-visible:ring-0"
-                >
-                  How It Works
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/contact"
-                  className="text-sm text-oma-cocoa hover:text-oma-plum expand-underline focus-visible:outline-none focus-visible:ring-0"
-                >
-                  Contact Us
-                </Link>
-              </li>
-            </ul>
-          </div>
+            <div className="flex flex-col items-center gap-3 md:items-start">
+              <Link
+                href="/"
+                className="text-sm text-oma-cocoa hover:text-oma-plum expand-underline focus-visible:outline-none focus-visible:ring-0"
+              >
+                Home
+              </Link>
+              <Link
+                href="/about"
+                className="text-sm text-oma-cocoa hover:text-oma-plum expand-underline focus-visible:outline-none focus-visible:ring-0"
+              >
+                Our Story
+              </Link>
+              <Link
+                href="/directory"
+                className="text-sm text-oma-cocoa hover:text-oma-plum expand-underline focus-visible:outline-none focus-visible:ring-0"
+              >
+                Explore Designers
+              </Link>
+              <Link
+                href="/how-it-works"
+                className="text-sm text-oma-cocoa hover:text-oma-plum expand-underline focus-visible:outline-none focus-visible:ring-0"
+              >
+                How It Works
+              </Link>
+              <Link
+                href="/contact"
+                className="text-sm text-oma-cocoa hover:text-oma-plum expand-underline focus-visible:outline-none focus-visible:ring-0"
+              >
+                Contact Us
+              </Link>
+            </div>
+          </nav>
 
           {/* Column 3: Resources */}
-          <div className="flex flex-col items-center md:items-start">
+          <nav
+            aria-label="Footer resources"
+            className="flex flex-col items-center md:items-start"
+          >
             <h3 className="text-xs font-medium uppercase tracking-wider text-oma-black mb-4">
               Resources
             </h3>
-            <ul className="flex flex-col items-center space-y-3 md:items-start">
-              <li>
-                <Link
-                  href="/join"
-                  className="text-sm text-oma-cocoa hover:text-oma-plum expand-underline focus-visible:outline-none focus-visible:ring-0"
-                >
-                  Join the Hub
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/terms-of-service"
-                  className="text-sm text-oma-cocoa hover:text-oma-plum expand-underline focus-visible:outline-none focus-visible:ring-0"
-                >
-                  Terms & Conditions
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/privacy-policy"
-                  className="text-sm text-oma-cocoa hover:text-oma-plum expand-underline focus-visible:outline-none focus-visible:ring-0"
-                >
-                  Privacy Policy
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/faq"
-                  className="text-sm text-oma-cocoa hover:text-oma-plum expand-underline focus-visible:outline-none focus-visible:ring-0"
-                >
-                  FAQs
-                </Link>
-              </li>
-              <li>
-                <a
-                  href="https://luma.com/user/usr-10IvrGBF3vxclvm"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-oma-cocoa hover:text-oma-plum expand-underline focus-visible:outline-none focus-visible:ring-0"
-                >
-                  Events
-                </a>
-              </li>
-              <li>
-                <Link
-                  href="/event-waitlist"
-                  className="text-sm text-oma-cocoa hover:text-oma-plum expand-underline focus-visible:outline-none focus-visible:ring-0"
-                >
-                  Event preorder
-                </Link>
-              </li>
-            </ul>
-          </div>
+            <div className="flex flex-col items-center gap-3 md:items-start">
+              <Link
+                href="/join"
+                className="text-sm text-oma-cocoa hover:text-oma-plum expand-underline focus-visible:outline-none focus-visible:ring-0"
+              >
+                Join the Hub
+              </Link>
+              <Link
+                href="/terms-of-service"
+                className="text-sm text-oma-cocoa hover:text-oma-plum expand-underline focus-visible:outline-none focus-visible:ring-0"
+              >
+                Terms & Conditions
+              </Link>
+              <Link
+                href="/privacy-policy"
+                className="text-sm text-oma-cocoa hover:text-oma-plum expand-underline focus-visible:outline-none focus-visible:ring-0"
+              >
+                Privacy Policy
+              </Link>
+              <Link
+                href="/faq"
+                className="text-sm text-oma-cocoa hover:text-oma-plum expand-underline focus-visible:outline-none focus-visible:ring-0"
+              >
+                FAQs
+              </Link>
+              <a
+                href="https://luma.com/user/usr-10IvrGBF3vxclvm"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-oma-cocoa hover:text-oma-plum expand-underline focus-visible:outline-none focus-visible:ring-0"
+              >
+                Events
+              </a>
+              <Link
+                href="/event-waitlist"
+                className="text-sm text-oma-cocoa hover:text-oma-plum expand-underline focus-visible:outline-none focus-visible:ring-0"
+              >
+                Event preorder
+              </Link>
+            </div>
+          </nav>
 
           {/* Column 4: Connect */}
-          <div className="flex flex-col items-center md:items-start">
+          <nav
+            aria-label="Social links"
+            className="flex flex-col items-center md:items-start"
+          >
             <h3 className="text-xs font-medium uppercase tracking-wider text-oma-black mb-4">
               Connect
             </h3>
-            <ul className="flex flex-col items-center space-y-3 md:items-start">
-              <li>
-                <a
-                  href="https://www.instagram.com/_omahub/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-oma-cocoa hover:text-oma-plum flex items-center gap-2 group focus-visible:outline-none focus-visible:ring-0"
+            <div className="flex flex-col items-center gap-3 md:items-start">
+              <a
+                href="https://www.instagram.com/_omahub/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-oma-cocoa hover:text-oma-plum flex items-center gap-2 group focus-visible:outline-none focus-visible:ring-0"
+              >
+                <Instagram className="h-4 w-4 transition group-hover:text-oma-plum" />
+                <span className="expand-underline">@omahub</span>
+              </a>
+              <a
+                href="https://www.tiktok.com/@_omahub"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-oma-cocoa hover:text-oma-plum flex items-center gap-2 group focus-visible:outline-none focus-visible:ring-0"
+              >
+                <svg
+                  className="h-4 w-4 transition group-hover:text-oma-plum"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
                 >
-                  <Instagram className="h-4 w-4 transition group-hover:text-oma-plum" />
-                  <span className="expand-underline">@omahub</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://www.tiktok.com/@_omahub"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-oma-cocoa hover:text-oma-plum flex items-center gap-2 group focus-visible:outline-none focus-visible:ring-0"
-                >
-                  <svg
-                    className="h-4 w-4 transition group-hover:text-oma-plum"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M19.321 5.562a5.122 5.122 0 01-.443-.258 6.228 6.228 0 01-1.137-.966c-.849-.849-1.377-2.016-1.377-3.338h-3.159v13.8c0 2.748-2.241 4.986-4.986 4.986-2.748 0-4.986-2.241-4.986-4.986s2.241-4.986 4.986-4.986c.516 0 1.014.084 1.479.237v-3.286c-.465-.069-.942-.105-1.479-.105C4.037 6.66 0 10.697 0 15.78s4.037 9.12 9.12 9.12 9.12-4.037 9.12-9.12V9.042a9.158 9.158 0 005.16 1.563V7.446c-1.398 0-2.688-.564-3.616-1.471-.316-.316-.591-.669-.82-1.056-.229-.384-.409-.804-.523-1.257z" />
-                  </svg>
-                  <span className="expand-underline">TikTok</span>
-                </a>
-              </li>
-            </ul>
-          </div>
+                  <path d="M19.321 5.562a5.122 5.122 0 01-.443-.258 6.228 6.228 0 01-1.137-.966c-.849-.849-1.377-2.016-1.377-3.338h-3.159v13.8c0 2.748-2.241 4.986-4.986 4.986-2.748 0-4.986-2.241-4.986-4.986s2.241-4.986 4.986-4.986c.516 0 1.014.084 1.479.237v-3.286c-.465-.069-.942-.105-1.479-.105C4.037 6.66 0 10.697 0 15.78s4.037 9.12 9.12 9.12 9.12-4.037 9.12-9.12V9.042a9.158 9.158 0 005.16 1.563V7.446c-1.398 0-2.688-.564-3.616-1.471-.316-.316-.591-.669-.82-1.056-.229-.384-.409-.804-.523-1.257z" />
+                </svg>
+                <span className="expand-underline">TikTok</span>
+              </a>
+            </div>
+          </nav>
         </div>
 
         {/* Copyright */}

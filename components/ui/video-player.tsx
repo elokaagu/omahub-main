@@ -87,7 +87,15 @@ export function VideoPlayer({
     };
 
     const handleError = (e: Event) => {
-      console.error("VideoPlayer: decode/load error:", videoUrl, e);
+      const el = e.target as HTMLVideoElement;
+      const err = el.error;
+      if (process.env.NODE_ENV === "development") {
+        console.warn("VideoPlayer: load/decode failed", {
+          videoUrl,
+          code: err?.code,
+          message: err?.message,
+        });
+      }
       setIsLoading(false);
       setVideoDecodeFailed(true);
       onVideoError?.();
@@ -156,6 +164,7 @@ export function VideoPlayer({
   }
 
   if (videoUrl?.trim() && isPlayableVideo && !videoDecodeFailed) {
+    const src = videoUrl.trim();
     return (
       <div
         className={cn(
@@ -164,9 +173,16 @@ export function VideoPlayer({
           className
         )}
       >
+        {/*
+          Single `src` on <video>: multiple <source> rows with the same URL but
+          different `type` values make the browser pick the first type and fail
+          decode when the file is actually another format (common with Supabase).
+        */}
         <video
+          key={src}
           ref={videoRef}
           className="w-full h-full object-cover"
+          src={src}
           autoPlay={autoPlay}
           muted={muted}
           loop={loop}
@@ -175,9 +191,6 @@ export function VideoPlayer({
           preload="metadata"
           style={{ display: "block" }}
         >
-          <source src={videoUrl} type="video/mp4" />
-          <source src={videoUrl} type="video/webm" />
-          <source src={videoUrl} type="video/quicktime" />
           Your browser does not support the video tag.
         </video>
 
