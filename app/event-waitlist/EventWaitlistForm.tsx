@@ -1,18 +1,31 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { Check, ChevronsUpDown } from "lucide-react";
+import {
+  CatalogFieldPickers,
+  CUSTOM_PIECE_VALUE,
+  type CatalogProduct,
+} from "./CatalogFieldPickers";
 import { Button } from "@/components/ui/button";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { Input } from "@/components/ui/input";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
 import { OMAHUB_PLATFORM_BRAND_ID_DEFAULT } from "@/lib/config/platformBrand";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { getEmailValidationError } from "@/app/contact/contactValidation";
 
@@ -77,6 +90,24 @@ export function EventWaitlistForm() {
     >
   >({});
   const [submitting, setSubmitting] = useState(false);
+  const [designerPopoverOpen, setDesignerPopoverOpen] = useState(false);
+  const [brandProducts, setBrandProducts] = useState<CatalogProduct[]>([]);
+  const [productsLoading, setProductsLoading] = useState(false);
+  const [productsFetchError, setProductsFetchError] = useState<string | null>(
+    null
+  );
+  const [selectedProductId, setSelectedProductId] = useState("");
+  const designerChangeSeq = useRef(0);
+
+  const designerTriggerLabel = useMemo(() => {
+    if (!selectedDesignerId) return "Search or select a designer…";
+    if (selectedDesignerId === OTHER_DESIGNER_VALUE) {
+      return otherDesignerName.trim()
+        ? `Other: ${otherDesignerName.trim()}`
+        : "Other / not listed";
+    }
+    return brands.find((b) => b.id === selectedDesignerId)?.name ?? "Search or select a designer…";
+  }, [selectedDesignerId, otherDesignerName, brands]);
 
   useEffect(() => {
     let cancelled = false;
@@ -113,8 +144,93 @@ export function EventWaitlistForm() {
     };
   }, []);
 
+  useEffect(() => {
+    designerChangeSeq.current += 1;
+    const seq = designerChangeSeq.current;
+    setSelectedProductId("");
+    setBrandProducts([]);
+    setProductsFetchError(null);
+    setForm((f) => ({
+      ...f,
+      itemDescription: "",
+      size: "",
+      colour: "",
+    }));
+
+    if (
+      !selectedDesignerId ||
+      selectedDesignerId === OTHER_DESIGNER_VALUE
+    ) {
+      setProductsLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setProductsLoading(true);
+    const url = `/api/brands/${encodeURIComponent(selectedDesignerId)}/products?limit=500`;
+    fetch(url, { credentials: "same-origin" })
+      .then(async (res) => {
+        if (!res.ok) throw new Error("fetch_failed");
+        return res.json() as { products?: unknown[] };
+      })
+      .then((data) => {
+        if (cancelled || seq !== designerChangeSeq.current) return;
+        const raw = Array.isArray(data.products) ? data.products : [];
+        const mapped: CatalogProduct[] = [];
+        for (const row of raw) {
+          const o = row as Record<string, unknown>;
+          const id = typeof o.id === "string" ? o.id : "";
+          if (!id) continue;
+          const sizes = Array.isArray(o.sizes)
+            ? o.sizes.map((x) => String(x).trim()).filter(Boolean)
+            : [];
+          const colors = Array.isArray(o.colors)
+            ? o.colors.map((x) => String(x).trim()).filter(Boolean)
+            : [];
+          mapped.push({
+            id,
+            title: typeof o.title === "string" ? o.title : null,
+            category: typeof o.category === "string" ? o.category : null,
+            catalogue_title:
+              typeof o.catalogue_title === "string" ? o.catalogue_title : null,
+            sizes,
+            colors,
+          });
+        }
+        setBrandProducts(mapped);
+      })
+      .catch(() => {
+        if (!cancelled && seq === designerChangeSeq.current) {
+          setBrandProducts([]);
+          setProductsFetchError("Could not load this designer's catalogue.");
+        }
+      })
+      .finally(() => {
+        if (!cancelled && seq === designerChangeSeq.current) {
+          setProductsLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedDesignerId]);
+
   const showDesignerDropdown =
     !brandsLoading && !brandsError && brands.length > 0;
+
+  const catalogPickupMode =
+    showDesignerDropdown &&
+    !!selectedDesignerId &&
+    selectedDesignerId !== OTHER_DESIGNER_VALUE &&
+    !productsLoading &&
+    brandProducts.length > 0;
+
+  const catalogLoadingMode =
+    showDesignerDropdown &&
+    !!selectedDesignerId &&
+    selectedDesignerId !== OTHER_DESIGNER_VALUE &&
+    productsLoading;
 
   const resolvedRequestedBrand = useMemo(() => {
     if (!showDesignerDropdown) {
@@ -152,10 +268,31 @@ export function EventWaitlistForm() {
         next.designer = "Designer or brand name is required";
       }
     }
-    if (!form.itemDescription.trim()) {
-      next.itemDescription = "Describe the item or style you want";
+
+    if (catalogPickupMode) {
+      if (!selectedProductId) {
+        next.itemDescription = "Choose a product from the catalogue";
+      } else if (selectedProductId === CUSTOM_PIECE_VALUE) {
+        if (!form.itemDescription.trim()) {
+          next.itemDescription = "Describe the item or style you want";
+        }
+      }
+      const p = brandProducts.find((x) => x.id === selectedProductId);
+      if (p && selectedProductId !== CUSTOM_PIECE_VALUE) {
+        if (p.sizes.length > 0) {
+          if (!form.size.trim() || !p.sizes.includes(form.size.trim())) {
+            next.size = "Pick a size from the list (or contact us if unsure)";
+          }
+        } else if (!form.size.trim()) {
+          next.size = "Enter your size or measurements";
+        }
+      }
+    } else {
+      if (!form.itemDescription.trim()) {
+        next.itemDescription = "Describe the item or style you want";
+      }
+      if (!form.size.trim()) next.size = "Size is required";
     }
-    if (!form.size.trim()) next.size = "Size is required";
     setErrors(next);
     return Object.keys(next).length === 0;
   }
@@ -227,8 +364,12 @@ export function EventWaitlistForm() {
         });
         setSelectedDesignerId("");
         setOtherDesignerName("");
+        setSelectedProductId("");
+        setBrandProducts([]);
         setHpField("");
         setErrors({});
+        setDesignerPopoverOpen(false);
+        setProductsFetchError(null);
       } else {
         throw new Error("Unexpected response");
       }
@@ -340,40 +481,97 @@ export function EventWaitlistForm() {
             Designer / brand you want
           </span>
           {showDesignerDropdown ? (
-            <Select
-              value={selectedDesignerId || undefined}
-              onValueChange={(v) => {
-                setSelectedDesignerId(v);
-                setErrors((prev) => ({
-                  ...prev,
-                  designer: undefined,
-                  otherDesigner: undefined,
-                }));
-                if (v !== OTHER_DESIGNER_VALUE) setOtherDesignerName("");
-              }}
+            <Popover
+              open={designerPopoverOpen}
+              onOpenChange={setDesignerPopoverOpen}
             >
-              <SelectTrigger
-                id={IDS.designerSelect}
-                aria-labelledby={`${IDS.designerSelect}-label`}
-                aria-invalid={!!errors.designer}
-                aria-describedby={
-                  errors.designer ? errId("designer") : undefined
-                }
-                className="border-oma-gold/30 bg-white focus:ring-oma-plum"
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={designerPopoverOpen}
+                  aria-labelledby={`${IDS.designerSelect}-label`}
+                  id={IDS.designerSelect}
+                  aria-invalid={!!errors.designer}
+                  aria-describedby={
+                    errors.designer ? errId("designer") : undefined
+                  }
+                  disabled={brandsLoading}
+                  className={cn(
+                    "h-auto min-h-10 w-full justify-between border-oma-gold/30 bg-white py-2 text-left font-normal text-oma-black hover:bg-white focus-visible:ring-oma-plum",
+                    !selectedDesignerId && "text-oma-cocoa/70"
+                  )}
+                >
+                  <span className="line-clamp-2 pr-2">{designerTriggerLabel}</span>
+                  <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" aria-hidden />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent
+                className="p-0 w-[min(calc(100vw-2rem),28rem)]"
+                align="start"
+                sideOffset={4}
               >
-                <SelectValue placeholder="Select a designer" />
-              </SelectTrigger>
-              <SelectContent className="max-h-72">
-                {brands.map((b) => (
-                  <SelectItem key={b.id} value={b.id}>
-                    {b.name}
-                  </SelectItem>
-                ))}
-                <SelectItem value={OTHER_DESIGNER_VALUE}>
-                  Other / not listed
-                </SelectItem>
-              </SelectContent>
-            </Select>
+                <Command shouldFilter>
+                  <CommandInput placeholder="Search designers…" />
+                  <CommandList className="max-h-64">
+                    <CommandEmpty>No designer matches.</CommandEmpty>
+                    <CommandGroup heading="On OmaHub">
+                      {brands.map((b) => (
+                        <CommandItem
+                          key={b.id}
+                          value={b.name}
+                          onSelect={() => {
+                            setSelectedDesignerId(b.id);
+                            setOtherDesignerName("");
+                            setDesignerPopoverOpen(false);
+                            setErrors((prev) => ({
+                              ...prev,
+                              designer: undefined,
+                              otherDesigner: undefined,
+                            }));
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4 shrink-0",
+                              selectedDesignerId === b.id ? "opacity-100" : "opacity-0"
+                            )}
+                            aria-hidden
+                          />
+                          {b.name}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                    <CommandGroup>
+                      <CommandItem
+                        value="other not listed custom designer"
+                        onSelect={() => {
+                          setSelectedDesignerId(OTHER_DESIGNER_VALUE);
+                          setDesignerPopoverOpen(false);
+                          setErrors((prev) => ({
+                            ...prev,
+                            designer: undefined,
+                            otherDesigner: undefined,
+                          }));
+                        }}
+                      >
+                        <Check
+                          className={cn(
+                            "mr-2 h-4 w-4 shrink-0",
+                            selectedDesignerId === OTHER_DESIGNER_VALUE
+                              ? "opacity-100"
+                              : "opacity-0"
+                          )}
+                          aria-hidden
+                        />
+                        Other / not listed
+                      </CommandItem>
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           ) : brandsLoading ? (
             <div
               className="flex h-10 w-full items-center rounded-md border border-oma-gold/30 bg-white px-3 text-sm text-oma-cocoa/60"
@@ -457,71 +655,139 @@ export function EventWaitlistForm() {
           ) : null}
         </div>
 
-        <div className="space-y-2">
-          <label
-            htmlFor={IDS.itemDescription}
-            className="block text-sm font-medium text-oma-black"
-          >
-            Item or style
-          </label>
-          <Textarea
-            id={IDS.itemDescription}
-            name="itemDescription"
-            value={form.itemDescription}
-            onChange={onFieldChange}
-            rows={4}
-            placeholder="Product title, look, fabric, or link if you have one"
-            aria-invalid={!!errors.itemDescription}
-            aria-describedby={
-              errors.itemDescription ? errId("itemDescription") : undefined
+        {catalogLoadingMode ? (
+          <div className="space-y-3 rounded-md border border-oma-gold/25 bg-white/60 px-3 py-4 text-sm text-oma-cocoa/80">
+            Loading this designer&apos;s catalogue…
+          </div>
+        ) : catalogPickupMode ? (
+          <CatalogFieldPickers
+            products={brandProducts}
+            selectedProductId={selectedProductId}
+            onSelectProduct={(productId, itemLine) => {
+              setSelectedProductId(productId);
+              setForm((f) => ({
+                ...f,
+                itemDescription: itemLine,
+                size: "",
+                colour: "",
+              }));
+            }}
+            itemDescription={form.itemDescription}
+            size={form.size}
+            colour={form.colour}
+            onItemDescriptionChange={(v) =>
+              setForm((f) => ({ ...f, itemDescription: v }))
             }
-            className="border-oma-gold/30 bg-white focus-visible:ring-oma-plum"
+            onSizeChange={(v) => setForm((f) => ({ ...f, size: v }))}
+            onColourChange={(v) => setForm((f) => ({ ...f, colour: v }))}
+            errors={{
+              itemDescription: errors.itemDescription,
+              size: errors.size,
+            }}
+            onClearError={(key) =>
+              setErrors((prev) => ({ ...prev, [key]: undefined }))
+            }
           />
-          {errors.itemDescription ? (
-            <p
-              id={errId("itemDescription")}
-              className="text-sm text-red-500"
-              role="alert"
-            >
-              {errors.itemDescription}
-            </p>
-          ) : null}
-        </div>
+        ) : (
+          <>
+            {productsFetchError &&
+            showDesignerDropdown &&
+            selectedDesignerId &&
+            selectedDesignerId !== OTHER_DESIGNER_VALUE ? (
+              <p className="text-sm text-oma-cocoa/85" role="status">
+                {productsFetchError} Use the fields below or{" "}
+                <Link
+                  href="/contact"
+                  className="text-oma-plum underline-offset-2 hover:underline"
+                >
+                  contact us
+                </Link>
+                .
+              </p>
+            ) : null}
+            {showDesignerDropdown &&
+            selectedDesignerId &&
+            selectedDesignerId !== OTHER_DESIGNER_VALUE &&
+            !productsLoading &&
+            brandProducts.length === 0 ? (
+              <p className="text-sm text-oma-cocoa/85">
+                This designer has no in-stock pieces listed yet. Describe what
+                you want below — we&apos;ll still route it to them.
+              </p>
+            ) : null}
+            <div className="space-y-2">
+              <label
+                htmlFor={IDS.itemDescription}
+                className="block text-sm font-medium text-oma-black"
+              >
+                Item or style
+              </label>
+              <Textarea
+                id={IDS.itemDescription}
+                name="itemDescription"
+                value={form.itemDescription}
+                onChange={onFieldChange}
+                rows={4}
+                placeholder="Product title, look, fabric, or link if you have one"
+                aria-invalid={!!errors.itemDescription}
+                aria-describedby={
+                  errors.itemDescription ? errId("itemDescription") : undefined
+                }
+                className="border-oma-gold/30 bg-white focus-visible:ring-oma-plum"
+              />
+              {errors.itemDescription ? (
+                <p
+                  id={errId("itemDescription")}
+                  className="text-sm text-red-500"
+                  role="alert"
+                >
+                  {errors.itemDescription}
+                </p>
+              ) : null}
+            </div>
 
-        <div className="space-y-2">
-          <label htmlFor={IDS.size} className="block text-sm font-medium text-oma-black">
-            Size
-          </label>
-          <Input
-            id={IDS.size}
-            name="size"
-            value={form.size}
-            onChange={onFieldChange}
-            placeholder="UK / EU / your usual — be specific"
-            aria-invalid={!!errors.size}
-            aria-describedby={errors.size ? errId("size") : undefined}
-            className="border-oma-gold/30 bg-white focus-visible:ring-oma-plum"
-          />
-          {errors.size ? (
-            <p id={errId("size")} className="text-sm text-red-500" role="alert">
-              {errors.size}
-            </p>
-          ) : null}
-        </div>
+            <div className="space-y-2">
+              <label
+                htmlFor={IDS.size}
+                className="block text-sm font-medium text-oma-black"
+              >
+                Size
+              </label>
+              <Input
+                id={IDS.size}
+                name="size"
+                value={form.size}
+                onChange={onFieldChange}
+                placeholder="UK / EU / your usual — be specific"
+                aria-invalid={!!errors.size}
+                aria-describedby={errors.size ? errId("size") : undefined}
+                className="border-oma-gold/30 bg-white focus-visible:ring-oma-plum"
+              />
+              {errors.size ? (
+                <p id={errId("size")} className="text-sm text-red-500" role="alert">
+                  {errors.size}
+                </p>
+              ) : null}
+            </div>
 
-        <div className="space-y-2">
-          <label htmlFor={IDS.colour} className="block text-sm font-medium text-oma-black">
-            Colour or variant (optional)
-          </label>
-          <Input
-            id={IDS.colour}
-            name="colour"
-            value={form.colour}
-            onChange={onFieldChange}
-            placeholder="If applicable"
-            className="border-oma-gold/30 bg-white focus-visible:ring-oma-plum"
-          />
-        </div>
+            <div className="space-y-2">
+              <label
+                htmlFor={IDS.colour}
+                className="block text-sm font-medium text-oma-black"
+              >
+                Colour or variant (optional)
+              </label>
+              <Input
+                id={IDS.colour}
+                name="colour"
+                value={form.colour}
+                onChange={onFieldChange}
+                placeholder="If applicable"
+                className="border-oma-gold/30 bg-white focus-visible:ring-oma-plum"
+              />
+            </div>
+          </>
+        )}
 
         <div className="space-y-2">
           <label
@@ -542,9 +808,15 @@ export function EventWaitlistForm() {
 
         <Button
           type="submit"
-          disabled={submitting || brandsLoading}
+          disabled={submitting || brandsLoading || catalogLoadingMode}
           className="w-full bg-oma-plum text-white hover:bg-oma-plum/90"
-          title={brandsLoading ? "Loading designer list…" : undefined}
+          title={
+            brandsLoading
+              ? "Loading designer list…"
+              : catalogLoadingMode
+                ? "Loading catalogue…"
+                : undefined
+          }
         >
           {submitting ? "Sending…" : "Join the waitlist"}
         </Button>

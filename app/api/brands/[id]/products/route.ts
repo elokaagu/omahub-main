@@ -15,17 +15,61 @@ interface ProductRow {
   price: number | null;
   sale_price: number | null;
   category: string | null;
+  catalogue_id: string | null;
   in_stock: boolean | null;
-  sizes: string[] | null;
-  colors: string[] | null;
+  sizes: unknown;
+  colors: unknown;
   materials: string[] | null;
   is_custom: boolean | null;
   lead_time: string | null;
   created_at: string;
   service_type?: string | null;
+  catalogues?: { title: string | null } | { title: string | null }[] | null;
 }
 
-type PublicProduct = Omit<ProductRow, "service_type">;
+function normalizeStringList(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value
+      .map((v) => String(v).trim())
+      .filter((s) => s.length > 0);
+  }
+  if (typeof value === "string") {
+    const t = value.trim();
+    if (!t) return [];
+    try {
+      const parsed = JSON.parse(t) as unknown;
+      if (Array.isArray(parsed)) {
+        return parsed
+          .map((v) => String(v).trim())
+          .filter((s) => s.length > 0);
+      }
+    } catch {
+      /* fall through */
+    }
+    return t
+      .split(/[,;/|]/)
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+  }
+  return [];
+}
+
+function catalogueTitleFromRow(row: ProductRow): string | null {
+  const c = row.catalogues;
+  if (!c) return null;
+  if (Array.isArray(c)) {
+    const t = c[0]?.title;
+    return typeof t === "string" && t.trim() ? t.trim() : null;
+  }
+  const t = c.title;
+  return typeof t === "string" && t.trim() ? t.trim() : null;
+}
+
+type PublicProduct = Omit<ProductRow, "service_type" | "catalogues" | "sizes" | "colors"> & {
+  sizes: string[];
+  colors: string[];
+  catalogue_title: string | null;
+};
 
 function roundMoney(n: number): number {
   return Math.round(n * 100) / 100;
@@ -67,6 +111,7 @@ export async function GET(
         price,
         sale_price,
         category,
+        catalogue_id,
         in_stock,
         sizes,
         colors,
@@ -74,7 +119,10 @@ export async function GET(
         is_custom,
         lead_time,
         created_at,
-        service_type
+        service_type,
+        catalogues (
+          title
+        )
       `
       )
       .eq("brand_id", brandId)
@@ -117,10 +165,22 @@ export async function GET(
       }
     }
 
-    // Strip `service_type` from public payload (used only for filtering).
-    const publicProducts: PublicProduct[] = list.map(
-      ({ service_type: _st, ...rest }) => rest
-    );
+    // Strip `service_type` / embed from public payload; normalize list fields.
+    const publicProducts: PublicProduct[] = list.map((row) => {
+      const {
+        service_type: _st,
+        catalogues: _cat,
+        sizes: rawSizes,
+        colors: rawColors,
+        ...rest
+      } = row;
+      return {
+        ...rest,
+        sizes: normalizeStringList(rawSizes),
+        colors: normalizeStringList(rawColors),
+        catalogue_title: catalogueTitleFromRow(row),
+      };
+    });
 
     return NextResponse.json({
       products: publicProducts,
