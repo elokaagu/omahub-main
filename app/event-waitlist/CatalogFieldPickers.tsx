@@ -67,27 +67,25 @@ export function CatalogFieldPickers({
 
   const selectedProduct = useMemo(
     () => products.find((p) => p.id === selectedProductId),
-    [products, selectedProductId]
+    [products, selectedProductId],
   );
 
   const productGroups = useMemo(() => {
     const m = new Map<string, CatalogProduct[]>();
     for (const p of products) {
       const key =
-        p.catalogue_title?.trim() ||
-        p.category?.trim() ||
-        "All pieces";
+        p.catalogue_title?.trim() || p.category?.trim() || "All pieces";
       if (!m.has(key)) m.set(key, []);
       m.get(key)!.push(p);
     }
     return [...m.entries()].sort(([a], [b]) =>
-      a.localeCompare(b, undefined, { sensitivity: "base" })
+      a.localeCompare(b, undefined, { sensitivity: "base" }),
     );
   }, [products]);
 
   const productTriggerLabel =
     selectedProductId === CUSTOM_PIECE_VALUE
-      ? "Not listed — I'll describe it"
+      ? "Not listed - I'll describe it"
       : selectedProduct
         ? selectedProduct.title?.trim() || "Selected product"
         : "Search or select a product…";
@@ -130,11 +128,14 @@ export function CatalogFieldPickers({
               }
               className={cn(
                 "h-auto min-h-10 w-full justify-between border-oma-gold/30 bg-white py-2 text-left font-normal text-oma-black hover:bg-white focus-visible:ring-oma-plum",
-                !selectedProductId && "text-oma-cocoa/70"
+                !selectedProductId && "text-oma-cocoa/70",
               )}
             >
               <span className="line-clamp-2 pr-2">{productTriggerLabel}</span>
-              <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" aria-hidden />
+              <ChevronsUpDown
+                className="h-4 w-4 shrink-0 opacity-50"
+                aria-hidden
+              />
             </Button>
           </PopoverTrigger>
           <PopoverContent
@@ -161,7 +162,9 @@ export function CatalogFieldPickers({
                         <Check
                           className={cn(
                             "mr-2 h-4 w-4 shrink-0",
-                            selectedProductId === p.id ? "opacity-100" : "opacity-0"
+                            selectedProductId === p.id
+                              ? "opacity-100"
+                              : "opacity-0",
                           )}
                           aria-hidden
                         />
@@ -186,11 +189,11 @@ export function CatalogFieldPickers({
                         "mr-2 h-4 w-4 shrink-0",
                         selectedProductId === CUSTOM_PIECE_VALUE
                           ? "opacity-100"
-                          : "opacity-0"
+                          : "opacity-0",
                       )}
                       aria-hidden
                     />
-                    Not listed — describe manually
+                    Not listed - describe manually
                   </CommandItem>
                 </CommandGroup>
               </CommandList>
@@ -255,13 +258,16 @@ export function CatalogFieldPickers({
                 aria-describedby={errors.size ? "evt-size-error" : undefined}
                 className={cn(
                   "h-auto min-h-10 w-full justify-between border-oma-gold/30 bg-white py-2 text-left font-normal hover:bg-white focus-visible:ring-oma-plum",
-                  !size.trim() && "text-oma-cocoa/70"
+                  !size.trim() && "text-oma-cocoa/70",
                 )}
               >
                 <span className="line-clamp-2 pr-2">
                   {size.trim() ? size : "Search or select a size…"}
                 </span>
-                <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" aria-hidden />
+                <ChevronsUpDown
+                  className="h-4 w-4 shrink-0 opacity-50"
+                  aria-hidden
+                />
               </Button>
             </PopoverTrigger>
             <PopoverContent
@@ -287,7 +293,7 @@ export function CatalogFieldPickers({
                         <Check
                           className={cn(
                             "mr-2 h-4 w-4 shrink-0",
-                            size === s ? "opacity-100" : "opacity-0"
+                            size === s ? "opacity-100" : "opacity-0",
                           )}
                           aria-hidden
                         />
@@ -308,7 +314,7 @@ export function CatalogFieldPickers({
               onSizeChange(e.target.value);
               if (errors.size) onClearError("size");
             }}
-            placeholder="This piece has no preset sizes — enter yours (UK / EU / cm)"
+            placeholder="This piece has no preset sizes - enter yours (UK / EU / cm)"
             aria-invalid={!!errors.size}
             aria-describedby={errors.size ? "evt-size-error" : undefined}
             className="border-oma-gold/30 bg-white focus-visible:ring-oma-plum"
@@ -343,13 +349,16 @@ export function CatalogFieldPickers({
                 aria-labelledby="evt-colour-label"
                 className={cn(
                   "h-auto min-h-10 w-full justify-between border-oma-gold/30 bg-white py-2 text-left font-normal hover:bg-white focus-visible:ring-oma-plum",
-                  !colour.trim() && "text-oma-cocoa/70"
+                  !colour.trim() && "text-oma-cocoa/70",
                 )}
               >
                 <span className="line-clamp-2 pr-2">
                   {colour.trim() ? colour : "Search or select a colour…"}
                 </span>
-                <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" aria-hidden />
+                <ChevronsUpDown
+                  className="h-4 w-4 shrink-0 opacity-50"
+                  aria-hidden
+                />
               </Button>
             </PopoverTrigger>
             <PopoverContent
@@ -372,7 +381,7 @@ export function CatalogFieldPickers({
                       <Check
                         className={cn(
                           "mr-2 h-4 w-4 shrink-0",
-                          !colour.trim() ? "opacity-100" : "opacity-0"
+                          !colour.trim() ? "opacity-100" : "opacity-0",
                         )}
                         aria-hidden
                       />
@@ -390,7 +399,7 @@ export function CatalogFieldPickers({
                         <Check
                           className={cn(
                             "mr-2 h-4 w-4 shrink-0",
-                            colour === c ? "opacity-100" : "opacity-0"
+                            colour === c ? "opacity-100" : "opacity-0",
                           )}
                           aria-hidden
                         />
@@ -408,7 +417,7 @@ export function CatalogFieldPickers({
             name="colour"
             value={colour}
             onChange={(e) => onColourChange(e.target.value)}
-            placeholder="No preset colours — type if needed"
+            placeholder="No preset colours - type if needed"
             className="border-oma-gold/30 bg-white focus-visible:ring-oma-plum"
           />
         )}

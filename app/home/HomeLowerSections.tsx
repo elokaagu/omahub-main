@@ -15,7 +15,12 @@ const VideoPlayer = dynamic(
     import("@/components/ui/video-player").then((m) => ({
       default: m.VideoPlayer,
     })),
-  { ssr: false, loading: () => <div className="h-[500px] w-full animate-pulse bg-oma-beige/40 rounded-2xl" /> }
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-[500px] w-full animate-pulse bg-oma-beige/40 rounded-2xl" />
+    ),
+  },
 );
 
 export type HomeLowerSectionsProps = {
@@ -149,7 +154,7 @@ export default function HomeLowerSections({
                       showPlayButton={false}
                       onVideoError={() => {
                         console.warn(
-                          "Video failed to load for spotlight content"
+                          "Video failed to load for spotlight content",
                         );
                       }}
                     />
@@ -192,7 +197,7 @@ export default function HomeLowerSections({
                         &ldquo;{spotlightContent.brand_quote}&rdquo;
                       </p>
                       <p className="text-sm text-oma-cocoa/60 mt-2">
-                        — {spotlightContent.brand_quote_author}
+                        - {spotlightContent.brand_quote_author}
                       </p>
                     </div>
 
@@ -349,7 +354,7 @@ export default function HomeLowerSections({
                 >
                   <Link
                     href={`/directory?category=${encodeURIComponent(
-                      category.title
+                      category.title,
                     )}`}
                   >
                     View All {category.title}

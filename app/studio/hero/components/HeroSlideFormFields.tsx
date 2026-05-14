@@ -101,8 +101,7 @@ export function HeroSlideFormFields({
               maxSize={20}
             />
             <p className="text-xs text-oma-cocoa/70 mt-1">
-              High-resolution image (recommended: 1920x1080 or larger, max
-              20MB)
+              High-resolution image (recommended: 1920x1080 or larger, max 20MB)
             </p>
           </div>
           <div>
@@ -125,8 +124,9 @@ export function HeroSlideFormFields({
               !formData.link.includes("?") &&
               !formData.link.includes("#") && (
                 <p className="text-xs text-amber-600 mt-1">
-                  ⚠️ Simple paths like &quot;directory&quot; will be automatically
-                  prefixed with &quot;/&quot; for internal navigation
+                  ⚠️ Simple paths like &quot;directory&quot; will be
+                  automatically prefixed with &quot;/&quot; for internal
+                  navigation
                 </p>
               )}
           </div>
@@ -144,14 +144,14 @@ export function HeroSlideFormFields({
               onChange={(e) =>
                 onFieldChange(
                   "display_order",
-                  parseInt(e.target.value, 10) || 1
+                  parseInt(e.target.value, 10) || 1,
                 )
               }
             />
             <p className="text-xs text-oma-cocoa/70 mt-1">
               Whole number from 1 to {HERO_SLIDE_DISPLAY_ORDER_MAX} (lower
-              appears first). Suggested next slot is a hint only—two editors can
-              still pick the same number.
+              appears first). Suggested next slot is a hint only - two editors
+              can still pick the same number.
             </p>
             {orderSuggestionHint ? (
               <p className="text-xs text-oma-cocoa/60 mt-1">
@@ -178,9 +178,7 @@ export function HeroSlideFormFields({
                   onFieldChange("is_active", checked)
                 }
               />
-              <Label htmlFor="is_active">
-                Active (visible on homepage)
-              </Label>
+              <Label htmlFor="is_active">Active (visible on homepage)</Label>
             </div>
           </div>
         </div>

@@ -163,7 +163,7 @@ export default function CreateProductPage() {
 
   const isAuthOrAccessResolving = authLoading || accessLoading;
 
-  // Auth + studio access profile (useBrandOwnerAccess) — do not conflate with !user
+  // Auth + studio access profile (useBrandOwnerAccess) - do not conflate with !user
   if (isAuthOrAccessResolving) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-oma-beige/30 to-white">
@@ -235,9 +235,9 @@ export default function CreateProductPage() {
               Brand Assignment Needed
             </h1>
             <p className="text-gray-600 mb-4">
-              Your account is set up as a brand admin, but no brands are assigned
-              yet. Please contact the OmaHub team to assign your brand before
-              creating products.
+              Your account is set up as a brand admin, but no brands are
+              assigned yet. Please contact the OmaHub team to assign your brand
+              before creating products.
             </p>
             <Button asChild>
               <NavigationLink href="/studio">Go to Studio</NavigationLink>
@@ -269,7 +269,7 @@ export default function CreateProductPage() {
   // Check if selected brand is a tailor brand
   const isTailorBrand = (): boolean => {
     const selectedBrand = brands.find(
-      (brand) => brand.id === formData.brand_id
+      (brand) => brand.id === formData.brand_id,
     );
     return selectedBrand
       ? tailoredCategories.includes(selectedBrand.category)
@@ -371,7 +371,7 @@ export default function CreateProductPage() {
 
   const handleArrayChange = (
     field: "sizes" | "colors" | "materials",
-    value: string
+    value: string,
   ) => {
     if (!value.trim()) return;
 
@@ -383,7 +383,7 @@ export default function CreateProductPage() {
 
   const removeArrayItem = (
     field: "sizes" | "colors" | "materials",
-    index: number
+    index: number,
   ) => {
     setFormData((prev) => ({
       ...prev,
@@ -417,7 +417,7 @@ export default function CreateProductPage() {
 
   // Handle service type change
   const handleServiceTypeChange = (
-    serviceType: "product" | "service" | "consultation"
+    serviceType: "product" | "service" | "consultation",
   ) => {
     setFormData((prev) => ({
       ...prev,
@@ -438,7 +438,7 @@ export default function CreateProductPage() {
       const sessionCheck = await fetch("/api/auth/validate");
       if (!sessionCheck.ok) {
         toast.error(
-          "Your session has expired. Please refresh the page and sign in again."
+          "Your session has expired. Please refresh the page and sign in again.",
         );
         setTimeout(() => {
           router.refresh();
@@ -448,7 +448,7 @@ export default function CreateProductPage() {
     } catch (sessionError) {
       console.error("Session validation failed:", sessionError);
       toast.error(
-        "Unable to verify your session. Please refresh the page and try again."
+        "Unable to verify your session. Please refresh the page and try again.",
       );
       return;
     }
@@ -475,7 +475,7 @@ export default function CreateProductPage() {
       if (brandCurrency && formData.currency !== brandCurrency.code) {
         toast.error(
           `Currency must match this brand (${brandCurrency.symbol}${brandCurrency.code}). ` +
-            "Change the currency selector or pick a different brand."
+            "Change the currency selector or pick a different brand.",
         );
         return;
       }
@@ -580,7 +580,7 @@ export default function CreateProductPage() {
           error.message?.includes("column"))
       ) {
         toast.error(
-          "Database schema error. Some fields may not be supported yet. Please try again with fewer fields."
+          "Database schema error. Some fields may not be supported yet. Please try again with fewer fields.",
         );
       } else if (
         error instanceof Error &&
@@ -590,12 +590,15 @@ export default function CreateProductPage() {
           error.message?.includes("403"))
       ) {
         toast.error(
-          "Your session has expired. Please refresh the page and sign in again."
+          "Your session has expired. Please refresh the page and sign in again.",
         );
         setTimeout(() => {
           router.refresh();
         }, 1500);
-      } else if (error instanceof Error && error.message?.includes("currency")) {
+      } else if (
+        error instanceof Error &&
+        error.message?.includes("currency")
+      ) {
         toast.error(`Currency error: ${error.message}`);
       } else if (error instanceof Error) {
         toast.error(`Failed to create product: ${error.message}`);
@@ -625,7 +628,7 @@ export default function CreateProductPage() {
               <p className="text-black/80">Add a new product to the platform</p>
             </div>
           </div>
-          
+
           <div className="flex items-center justify-center min-h-[400px]">
             <div className="text-center">
               <div className="rounded-full h-12 w-12 border-b-2 border-oma-plum mx-auto mb-4"></div>
@@ -904,8 +907,12 @@ export default function CreateProductPage() {
                     <SelectContent>
                       <SelectItem value="">
                         <div className="flex items-center gap-2">
-                          <span className="text-gray-500">No currency specified</span>
-                          <span className="text-xs text-gray-400">(Contact designer for pricing)</span>
+                          <span className="text-gray-500">
+                            No currency specified
+                          </span>
+                          <span className="text-xs text-gray-400">
+                            (Contact designer for pricing)
+                          </span>
                         </div>
                       </SelectItem>
                       {CURRENCIES.map((currency) => (
@@ -913,7 +920,9 @@ export default function CreateProductPage() {
                           <div className="flex items-center gap-2">
                             <span>{currency.symbol}</span>
                             <span>{currency.code}</span>
-                            <span className="text-gray-500">({currency.name})</span>
+                            <span className="text-gray-500">
+                              ({currency.name})
+                            </span>
                           </div>
                         </SelectItem>
                       ))}
@@ -923,8 +932,9 @@ export default function CreateProductPage() {
                     <div className="space-y-1">
                       {selectedBrandCurrency ? (
                         <p className="text-xs text-muted-foreground">
-                          Brand default is {selectedBrandCurrency}. The product currency must match
-                          the brand when you save (same rule as on the edit screen).
+                          Brand default is {selectedBrandCurrency}. The product
+                          currency must match the brand when you save (same rule
+                          as on the edit screen).
                         </p>
                       ) : (
                         <p className="text-xs text-muted-foreground">
@@ -1226,7 +1236,7 @@ export default function CreateProductPage() {
                             setFormData((prev) => ({
                               ...prev,
                               specialties: prev.specialties.filter(
-                                (s) => s !== specialty
+                                (s) => s !== specialty,
                               ),
                             }));
                           } else {
@@ -1246,18 +1256,20 @@ export default function CreateProductPage() {
                     label="Custom specialties"
                     placeholder="Add custom specialty"
                     items={formData.specialties.filter(
-                      (s) => !tailorSpecialties.includes(s)
+                      (s) => !tailorSpecialties.includes(s),
                     )}
                     onAdd={(v) => handleSpecialtyChange(v)}
                     onRemove={(index) => {
                       const customOnly = formData.specialties.filter(
-                        (s) => !tailorSpecialties.includes(s)
+                        (s) => !tailorSpecialties.includes(s),
                       );
                       const toRemove = customOnly[index];
                       if (toRemove === undefined) return;
                       setFormData((prev) => ({
                         ...prev,
-                        specialties: prev.specialties.filter((s) => s !== toRemove),
+                        specialties: prev.specialties.filter(
+                          (s) => s !== toRemove,
+                        ),
                       }));
                     }}
                   />

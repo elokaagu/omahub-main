@@ -2,13 +2,21 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/supabase-admin";
 import { randomUUID } from "crypto";
 import { randomBytes } from "crypto";
-import { sendApplicationApprovalEmail, sendApplicationRejectionEmail } from "@/lib/services/emailService";
+import {
+  sendApplicationApprovalEmail,
+  sendApplicationRejectionEmail,
+} from "@/lib/services/emailService";
 import { requireSuperAdmin } from "@/lib/auth/requireSuperAdmin";
 
 // Force dynamic rendering for this route
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
-const VALID_APPLICATION_STATUSES = ["new", "reviewing", "approved", "rejected"] as const;
+const VALID_APPLICATION_STATUSES = [
+  "new",
+  "reviewing",
+  "approved",
+  "rejected",
+] as const;
 const APPLICATION_ID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -29,10 +37,10 @@ function normalizeApplicantEmail(email: unknown): string {
   return email.trim().toLowerCase();
 }
 
-/** Paginate through auth users — listUsers() defaults to a single page only. */
+/** Paginate through auth users - listUsers() defaults to a single page only. */
 async function findAuthUserIdByEmail(
   supabase: NonNullable<Awaited<ReturnType<typeof getAdminClient>>>,
-  emailNorm: string
+  emailNorm: string,
 ): Promise<string | null> {
   if (!emailNorm) return null;
   const perPage = 1000;
@@ -47,7 +55,7 @@ async function findAuthUserIdByEmail(
     }
     const users = data?.users ?? [];
     const match = users.find(
-      (u) => (u.email ?? "").trim().toLowerCase() === emailNorm
+      (u) => (u.email ?? "").trim().toLowerCase() === emailNorm,
     );
     if (match?.id) return match.id;
     if (users.length < perPage) break;
@@ -57,23 +65,26 @@ async function findAuthUserIdByEmail(
 
 async function broadcastProfileRefreshed(
   supabase: NonNullable<Awaited<ReturnType<typeof getAdminClient>>>,
-  profile: { id: string; email: string | null; role: string | null; owned_brands: unknown }
+  profile: {
+    id: string;
+    email: string | null;
+    role: string | null;
+    owned_brands: unknown;
+  },
 ) {
   try {
-    await supabase
-      .channel(`profile_updates_${profile.id}`)
-      .send({
-        type: "broadcast",
-        event: "profile_updated",
-        payload: {
-          user_id: profile.id,
-          email: profile.email,
-          role: profile.role,
-          owned_brands: profile.owned_brands,
-          updated_at: new Date().toISOString(),
-          trigger: "application_approved",
-        },
-      });
+    await supabase.channel(`profile_updates_${profile.id}`).send({
+      type: "broadcast",
+      event: "profile_updated",
+      payload: {
+        user_id: profile.id,
+        email: profile.email,
+        role: profile.role,
+        owned_brands: profile.owned_brands,
+        updated_at: new Date().toISOString(),
+        trigger: "application_approved",
+      },
+    });
   } catch (e) {
     console.warn("⚠️ Failed to broadcast profile update:", e);
   }
@@ -81,19 +92,25 @@ async function broadcastProfileRefreshed(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> | { id: string } }
+  { params }: { params: Promise<{ id: string }> | { id: string } },
 ) {
   try {
     const authz = await requireSuperAdmin();
     if (!authz.ok) {
-      return NextResponse.json({ error: authz.error }, { status: authz.status });
+      return NextResponse.json(
+        { error: authz.error },
+        { status: authz.status },
+      );
     }
 
     // Handle both sync and async params (Next.js 15 compatibility)
     const resolvedParams = await Promise.resolve(params);
     const id = resolvedParams.id?.trim();
     if (!isValidApplicationId(id)) {
-      return NextResponse.json({ error: "Invalid application ID" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid application ID" },
+        { status: 400 },
+      );
     }
 
     const body = await request.json();
@@ -103,7 +120,7 @@ export async function PUT(
     if (!status) {
       return NextResponse.json(
         { error: "Status is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -111,7 +128,7 @@ export async function PUT(
     if (!VALID_APPLICATION_STATUSES.includes(status)) {
       return NextResponse.json(
         { error: "Invalid status value" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -119,23 +136,23 @@ export async function PUT(
     if (notes !== undefined && normalizedNotes === undefined) {
       return NextResponse.json(
         { error: "Notes must be a string or null" },
-        { status: 400 }
+        { status: 400 },
       );
     }
     if (typeof normalizedNotes === "string" && normalizedNotes.length > 2000) {
       return NextResponse.json(
         { error: "Notes must be 2000 characters or fewer" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const supabase = await getAdminClient();
-    
+
     if (!supabase) {
       console.error("❌ Failed to get admin client");
       return NextResponse.json(
         { error: "Internal server error" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -152,7 +169,7 @@ export async function PUT(
         console.error("❌ Error fetching application:", fetchError);
         return NextResponse.json(
           { error: "Failed to fetch application data" },
-          { status: 500 }
+          { status: 500 },
         );
       }
 
@@ -174,12 +191,12 @@ export async function PUT(
       try {
         approvalWorkflowResult = await setupBrandAndUserAccess(
           applicationData,
-          supabase
+          supabase,
         );
         if (!approvalWorkflowResult.success) {
           console.error(
             "❌ Brand/user setup failed:",
-            approvalWorkflowResult.error
+            approvalWorkflowResult.error,
           );
           return NextResponse.json(
             {
@@ -188,7 +205,7 @@ export async function PUT(
                 approvalWorkflowResult.error ||
                 "Could not assign studio access or create the brand for this applicant. The application was not marked approved.",
             },
-            { status: 422 }
+            { status: 422 },
           );
         }
       } catch (workflowError) {
@@ -199,7 +216,7 @@ export async function PUT(
             error:
               "Could not complete account provisioning for this application. The application was not marked approved.",
           },
-          { status: 422 }
+          { status: 422 },
         );
       }
     }
@@ -207,7 +224,7 @@ export async function PUT(
     // Prepare update data
     const updateData: Record<string, unknown> = {
       status,
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
     };
 
     // Add notes if provided
@@ -233,7 +250,7 @@ export async function PUT(
       console.error("❌ Error updating application:", error);
       return NextResponse.json(
         { error: "Failed to update application" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -291,14 +308,13 @@ export async function PUT(
     return NextResponse.json({
       success: true,
       application: updatedApplication,
-      message: "Application updated successfully"
+      message: "Application updated successfully",
     });
-
   } catch (error) {
     console.error("💥 Error in application update API:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -308,7 +324,7 @@ export async function PUT(
  */
 async function setupBrandAndUserAccess(
   application: Record<string, any>,
-  supabase: NonNullable<Awaited<ReturnType<typeof getAdminClient>>>
+  supabase: NonNullable<Awaited<ReturnType<typeof getAdminClient>>>,
 ): Promise<{
   success: boolean;
   error?: string;
@@ -363,21 +379,24 @@ async function setupBrandAndUserAccess(
       // Brand already exists (was created during application submission)
       newBrand = existingBrand;
       brandId = existingBrand.id;
-      
+
       // Update the brand with any additional information from the application
       const brandUpdates: any = {
         description: application.description || existingBrand.description || "",
-        long_description: application.description || existingBrand.long_description || "",
+        long_description:
+          application.description || existingBrand.long_description || "",
         location: application.location || existingBrand.location,
         category: application.category || existingBrand.category,
-        categories:
-          application.category
-            ? [application.category]
-            : existingBrand.categories || [],
+        categories: application.category
+          ? [application.category]
+          : existingBrand.categories || [],
         website: application.website || existingBrand.website,
-        instagram: application.instagram ? `@${application.instagram.replace(/^@/, "")}` : existingBrand.instagram,
+        instagram: application.instagram
+          ? `@${application.instagram.replace(/^@/, "")}`
+          : existingBrand.instagram,
         whatsapp: application.phone || existingBrand.whatsapp,
-        founded_year: application.year_founded?.toString() || existingBrand.founded_year,
+        founded_year:
+          application.year_founded?.toString() || existingBrand.founded_year,
       };
 
       const { data: updatedBrand, error: updateError } = await supabase
@@ -388,7 +407,10 @@ async function setupBrandAndUserAccess(
         .single();
 
       if (updateError) {
-        console.warn("⚠️ Failed to update existing brand, but continuing:", updateError);
+        console.warn(
+          "⚠️ Failed to update existing brand, but continuing:",
+          updateError,
+        );
       } else if (updatedBrand) {
         newBrand = updatedBrand;
       }
@@ -409,7 +431,9 @@ async function setupBrandAndUserAccess(
         is_verified: false,
         contact_email: emailNorm,
         website: application.website || undefined,
-        instagram: application.instagram ? `@${application.instagram.replace(/^@/, "")}` : undefined,
+        instagram: application.instagram
+          ? `@${application.instagram.replace(/^@/, "")}`
+          : undefined,
         whatsapp: application.phone || undefined, // Map phone to whatsapp field
         founded_year: application.year_founded?.toString() || undefined,
       };
@@ -446,7 +470,10 @@ async function setupBrandAndUserAccess(
       .limit(1);
 
     if (profileLookupError) {
-      console.warn("⚠️ Error checking for existing profile:", profileLookupError);
+      console.warn(
+        "⚠️ Error checking for existing profile:",
+        profileLookupError,
+      );
     }
 
     const existingProfile = profileRows?.[0] ?? null;
@@ -472,7 +499,7 @@ async function setupBrandAndUserAccess(
           console.error("❌ Error creating auth user:", createAuthError);
           return {
             success: false,
-          error: "Failed to create user account",
+            error: "Failed to create user account",
             brandCreated: true,
             brand: newBrand,
             userCreated: false,
@@ -514,7 +541,7 @@ async function setupBrandAndUserAccess(
 
       const currentOwnedBrands = profileById.owned_brands || [];
       const brandAlreadyAssigned = currentOwnedBrands.includes(brandId);
-      
+
       // Always add the brand if it's not already there
       const updatedOwnedBrands = brandAlreadyAssigned
         ? currentOwnedBrands
@@ -581,7 +608,7 @@ async function setupBrandAndUserAccess(
         .from("profiles")
         .update({ owned_brands: fixedOwnedBrands })
         .eq("id", userId);
-      
+
       if (fixError) {
         console.error("❌ Failed to fix owned_brands:", fixError);
       } else {
@@ -617,16 +644,20 @@ async function setupBrandAndUserAccess(
       try {
         // Generate a password reset link that expires in 7 days
         const resetUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "https://oma-hub.com"}/reset-password`;
-        const { data: resetData, error: resetError } = await supabase.auth.admin.generateLink({
-          type: "recovery",
-          email: emailNorm,
-          options: {
-            redirectTo: resetUrl,
-          },
-        });
+        const { data: resetData, error: resetError } =
+          await supabase.auth.admin.generateLink({
+            type: "recovery",
+            email: emailNorm,
+            options: {
+              redirectTo: resetUrl,
+            },
+          });
 
         if (resetError) {
-          console.warn("⚠️ Failed to generate password reset link:", resetError);
+          console.warn(
+            "⚠️ Failed to generate password reset link:",
+            resetError,
+          );
           // Continue without reset link - temporary password will be used as fallback
         } else if (resetData?.properties?.action_link) {
           passwordResetLink = resetData.properties.action_link;
@@ -699,12 +730,15 @@ function generateTemporaryPassword(): string {
 
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> | { id: string } }
+  { params }: { params: Promise<{ id: string }> | { id: string } },
 ) {
   try {
     const authz = await requireSuperAdmin();
     if (!authz.ok) {
-      return NextResponse.json({ error: authz.error }, { status: authz.status });
+      return NextResponse.json(
+        { error: authz.error },
+        { status: authz.status },
+      );
     }
 
     // Handle both sync and async params (Next.js 15 compatibility)
@@ -714,17 +748,17 @@ export async function DELETE(
     if (!isValidApplicationId(id)) {
       return NextResponse.json(
         { error: "Invalid application ID" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const supabase = await getAdminClient();
-    
+
     if (!supabase) {
       console.error("❌ Failed to get admin client");
       return NextResponse.json(
         { error: "Internal server error" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -736,34 +770,44 @@ export async function DELETE(
       .single();
 
     if (fetchError) {
-      console.error("❌ [API] Error fetching application for deletion:", fetchError.code);
-      
+      console.error(
+        "❌ [API] Error fetching application for deletion:",
+        fetchError.code,
+      );
+
       // If it's a "not found" error (PGRST116), return 404
       if (fetchError.code === "PGRST116") {
         return NextResponse.json(
           { error: "Application not found" },
-          { status: 404 }
+          { status: 404 },
         );
       }
-      
+
       // Otherwise, it's a server error
       return NextResponse.json(
         { error: "Failed to fetch application" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
     if (!existingApplication) {
-      console.error("❌ [API] Application not found in database (no data returned):", id);
+      console.error(
+        "❌ [API] Application not found in database (no data returned):",
+        id,
+      );
       return NextResponse.json(
         { error: "Application not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
     // If the application is rejected, delete the associated brand
     let brandDeleted = false;
-    if (existingApplication.status === "rejected" && existingApplication.brand_name && existingApplication.email) {
+    if (
+      existingApplication.status === "rejected" &&
+      existingApplication.brand_name &&
+      existingApplication.email
+    ) {
       try {
         // Find the brand by name and email (matching how brands are created from applications)
         const { data: associatedBrand, error: brandFetchError } = await supabase
@@ -774,19 +818,26 @@ export async function DELETE(
           .maybeSingle();
 
         if (brandFetchError) {
-          console.warn("⚠️ [API] Error fetching associated brand:", brandFetchError);
+          console.warn(
+            "⚠️ [API] Error fetching associated brand:",
+            brandFetchError,
+          );
         } else if (associatedBrand) {
           // Check if there are other pending applications for this brand
-          const { data: otherApplications, error: otherAppsError } = await supabase
-            .from("designer_applications")
-            .select("id")
-            .eq("brand_name", existingApplication.brand_name)
-            .eq("email", existingApplication.email)
-            .neq("id", id)
-            .neq("status", "approved");
+          const { data: otherApplications, error: otherAppsError } =
+            await supabase
+              .from("designer_applications")
+              .select("id")
+              .eq("brand_name", existingApplication.brand_name)
+              .eq("email", existingApplication.email)
+              .neq("id", id)
+              .neq("status", "approved");
 
           if (otherAppsError) {
-            console.warn("⚠️ [API] Error checking for other applications:", otherAppsError);
+            console.warn(
+              "⚠️ [API] Error checking for other applications:",
+              otherAppsError,
+            );
           }
 
           // Only delete the brand if there are no other pending applications
@@ -797,7 +848,10 @@ export async function DELETE(
               .eq("id", associatedBrand.id);
 
             if (brandDeleteError) {
-              console.error("❌ [API] Error deleting associated brand:", brandDeleteError);
+              console.error(
+                "❌ [API] Error deleting associated brand:",
+                brandDeleteError,
+              );
               // Don't fail the application deletion if brand deletion fails
             } else {
               brandDeleted = true;
@@ -805,7 +859,10 @@ export async function DELETE(
           }
         }
       } catch (brandDeleteException) {
-        console.error("❌ [API] Exception while attempting to delete brand:", brandDeleteException);
+        console.error(
+          "❌ [API] Exception while attempting to delete brand:",
+          brandDeleteException,
+        );
         // Don't fail the application deletion if brand deletion fails
       }
     }
@@ -821,7 +878,7 @@ export async function DELETE(
       console.error("❌ [API] Error deleting application:", deleteError.code);
       return NextResponse.json(
         { error: "Failed to delete application" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -836,16 +893,15 @@ export async function DELETE(
       deletedApplication: {
         id,
         brand_name: existingApplication.brand_name,
-        designer_name: existingApplication.designer_name
+        designer_name: existingApplication.designer_name,
       },
-      brandDeleted: brandDeleted
+      brandDeleted: brandDeleted,
     });
-
   } catch (error) {
     console.error("💥 Error in application delete API:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

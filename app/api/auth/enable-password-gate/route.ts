@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
       auth.supabase,
       "private",
       auth.userId,
-      "enable_password_gate"
+      "enable_password_gate",
     );
 
     if (!result.ok) {
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
       changed: result.changed,
     });
 
-    // Secondary to DB — invalidate legacy public hint after successful write.
+    // Secondary to DB - invalidate legacy public hint after successful write.
     response.cookies.set("omahub-public", "", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -58,11 +58,11 @@ export async function POST(request: NextRequest) {
       JSON.stringify({
         event: "enable_password_gate_unexpected",
         message: error instanceof Error ? error.message : String(error),
-      })
+      }),
     );
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

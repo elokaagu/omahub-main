@@ -55,8 +55,8 @@ export default async function FAQPage() {
                     We couldn&apos;t load FAQs right now
                   </p>
                   <p className="mt-2 text-sm text-red-700/90">
-                    Please refresh the page or reach out via contact—we&apos;re
-                    happy to help.
+                    Please refresh the page or reach out via contact -
+                    we&apos;re happy to help.
                   </p>
                   <div className="mt-6 flex flex-wrap justify-center gap-3">
                     <Button

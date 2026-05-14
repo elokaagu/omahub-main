@@ -1,5 +1,5 @@
 /**
- * Service-role Supabase client. Do not import this file from client components —
+ * Service-role Supabase client. Do not import this file from client components  -
  * use `getAdminClientLazy` from `@/lib/supabase/adminClientLazy` instead so the
  * bundle does not pull service-role code into the browser.
  */
@@ -15,10 +15,12 @@ function validateAdminEnvVars() {
   if (!supabaseUrl || !supabaseServiceKey) {
     const error = new Error(
       "Missing required Supabase admin environment variables: set SUPABASE_SERVICE_ROLE_KEY and " +
-        "SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL (server-side only; never expose the service role key to the browser)."
+        "SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL (server-side only; never expose the service role key to the browser).",
     );
     console.error("❌ Supabase admin configuration error:", {
-      hasUrl: !!(process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL),
+      hasUrl: !!(
+        process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
+      ),
       hasServiceKey: !!supabaseServiceKey,
       env: process.env.NODE_ENV,
     });
@@ -53,30 +55,33 @@ function getSupabaseAdminInstance() {
 }
 
 // Export supabaseAdmin as a getter that lazily initializes
-export const supabaseAdmin = new Proxy({} as ReturnType<typeof createAdminClient>, {
-  get(target, prop) {
-    try {
+export const supabaseAdmin = new Proxy(
+  {} as ReturnType<typeof createAdminClient>,
+  {
+    get(target, prop) {
+      try {
+        const instance = getSupabaseAdminInstance();
+        const value = instance[prop as keyof typeof instance];
+        if (typeof value === "function") {
+          return value.bind(instance);
+        }
+        return value;
+      } catch (error) {
+        // Return a no-op function for methods to prevent crashes
+        if (typeof prop === "string" && prop.includes("auth")) {
+          console.error("Supabase admin client not available:", error);
+          return () => Promise.resolve({ data: null, error: error });
+        }
+        throw error;
+      }
+    },
+    set(target, prop, value) {
       const instance = getSupabaseAdminInstance();
-      const value = instance[prop as keyof typeof instance];
-      if (typeof value === 'function') {
-        return value.bind(instance);
-      }
-      return value;
-    } catch (error) {
-      // Return a no-op function for methods to prevent crashes
-      if (typeof prop === 'string' && prop.includes('auth')) {
-        console.error("Supabase admin client not available:", error);
-        return () => Promise.resolve({ data: null, error: error });
-      }
-      throw error;
-    }
+      (instance as any)[prop] = value;
+      return true;
+    },
   },
-  set(target, prop, value) {
-    const instance = getSupabaseAdminInstance();
-    (instance as any)[prop] = value;
-    return true;
-  }
-});
+);
 
 // Check if we're in a build process
 const isBuildTime =
@@ -167,62 +172,62 @@ export async function createProductsTable() {
     try {
       // Try a more direct approach using SQL
       const createTableQuery = `
-        -- Enable UUID extension
-        CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-        
-        -- Create products table if it doesn't exist
-        CREATE TABLE IF NOT EXISTS public.products (
-          id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-          title TEXT NOT NULL,
-          description TEXT NOT NULL,
-          price DECIMAL(10, 2) NOT NULL,
-          sale_price DECIMAL(10, 2),
-          image TEXT NOT NULL,
-          brand_id TEXT REFERENCES public.brands(id) ON DELETE CASCADE,
-          collection_id UUID REFERENCES public.collections(id) ON DELETE SET NULL,
-          category TEXT NOT NULL,
-          in_stock BOOLEAN DEFAULT true,
-          sizes TEXT[] DEFAULT '{}',
-          colors TEXT[] DEFAULT '{}',
-          created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-          updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
-        );
-        
-        -- Enable row level security
-        ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
-        
-        -- Create policies
-        -- Only create policies if they don't exist
-        DO $$
-        BEGIN
-          IF NOT EXISTS (
-            SELECT FROM pg_policies 
-            WHERE tablename = 'products' AND policyname = 'Anyone can view products'
-          ) THEN
-            CREATE POLICY "Anyone can view products" ON public.products
-              FOR SELECT USING (true);
-          END IF;
-          
-          IF NOT EXISTS (
-            SELECT FROM pg_policies 
-            WHERE tablename = 'products' AND policyname = 'Authenticated users can insert products'
-          ) THEN
-            CREATE POLICY "Authenticated users can insert products" ON public.products
-              FOR INSERT TO authenticated WITH CHECK (true);
-          END IF;
-          
-          IF NOT EXISTS (
-            SELECT FROM pg_policies 
-            WHERE tablename = 'products' AND policyname = 'Users can update their own products'
-          ) THEN
-            CREATE POLICY "Users can update their own products" ON public.products
-              FOR UPDATE TO authenticated USING (
-                EXISTS (SELECT 1 FROM public.brands b WHERE b.id = brand_id)
-              );
-          END IF;
-        END
-        $$;
-      `;
+  -- Enable UUID extension
+  CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+  
+  -- Create products table if it doesn't exist
+  CREATE TABLE IF NOT EXISTS public.products (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  title TEXT NOT NULL,
+  description TEXT NOT NULL,
+  price DECIMAL(10, 2) NOT NULL,
+  sale_price DECIMAL(10, 2),
+  image TEXT NOT NULL,
+  brand_id TEXT REFERENCES public.brands(id) ON DELETE CASCADE,
+  collection_id UUID REFERENCES public.collections(id) ON DELETE SET NULL,
+  category TEXT NOT NULL,
+  in_stock BOOLEAN DEFAULT true,
+  sizes TEXT[] DEFAULT '{}',
+  colors TEXT[] DEFAULT '{}',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+  );
+  
+  -- Enable row level security
+  ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
+  
+  -- Create policies
+  -- Only create policies if they don't exist
+  DO $$
+  BEGIN
+  IF NOT EXISTS (
+  SELECT FROM pg_policies 
+  WHERE tablename = 'products' AND policyname = 'Anyone can view products'
+  ) THEN
+  CREATE POLICY "Anyone can view products" ON public.products
+  FOR SELECT USING (true);
+  END IF;
+  
+  IF NOT EXISTS (
+  SELECT FROM pg_policies 
+  WHERE tablename = 'products' AND policyname = 'Authenticated users can insert products'
+  ) THEN
+  CREATE POLICY "Authenticated users can insert products" ON public.products
+  FOR INSERT TO authenticated WITH CHECK (true);
+  END IF;
+  
+  IF NOT EXISTS (
+  SELECT FROM pg_policies 
+  WHERE tablename = 'products' AND policyname = 'Users can update their own products'
+  ) THEN
+  CREATE POLICY "Users can update their own products" ON public.products
+  FOR UPDATE TO authenticated USING (
+  EXISTS (SELECT 1 FROM public.brands b WHERE b.id = brand_id)
+  );
+  END IF;
+  END
+  $$;
+  `;
 
       // Execute the SQL directly
       try {
@@ -232,10 +237,10 @@ export async function createProductsTable() {
         if (error) {
           console.log("SQL execution error:", error);
           console.log(
-            "This is likely because the execute_sql function is not available"
+            "This is likely because the execute_sql function is not available",
           );
           console.log(
-            "Please run the SQL script directly in the Supabase SQL editor:"
+            "Please run the SQL script directly in the Supabase SQL editor:",
           );
           console.log(createTableQuery);
 
@@ -248,7 +253,7 @@ export async function createProductsTable() {
       } catch (execError) {
         console.log("Exception during SQL execution:", execError);
         console.log(
-          "Please run the SQL script directly in the Supabase SQL editor:"
+          "Please run the SQL script directly in the Supabase SQL editor:",
         );
         console.log(createTableQuery);
 

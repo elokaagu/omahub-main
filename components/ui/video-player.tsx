@@ -28,8 +28,10 @@ interface VideoPlayerProps {
 /** Only treat URLs as video when they look like real media files (avoids image URLs mis-stored in `video_url`). */
 export function isLikelyVideoUrl(url: string): boolean {
   const path = url.split("?")[0].toLowerCase();
-  return /\.(mp4|webm|mov|m4v|ogv|avi|mkv|wmv|flv|3gp)(\b|$)/.test(path) ||
-    /\.m3u8(\b|$)/.test(path);
+  return (
+    /\.(mp4|webm|mov|m4v|ogv|avi|mkv|wmv|flv|3gp)(\b|$)/.test(path) ||
+    /\.m3u8(\b|$)/.test(path)
+  );
 }
 
 export function VideoPlayer({
@@ -56,7 +58,7 @@ export function VideoPlayer({
 
   const isPlayableVideo = useMemo(
     () => !!videoUrl?.trim() && isLikelyVideoUrl(videoUrl.trim()),
-    [videoUrl]
+    [videoUrl],
   );
 
   useEffect(() => {
@@ -124,7 +126,7 @@ export function VideoPlayer({
     (!isPlayableVideo && videoUrl?.trim()) ||
     "";
 
-  // Mis-tagged row: `video_url` is actually an image — render as image.
+  // Mis-tagged row: `video_url` is actually an image - render as image.
   if (videoUrl?.trim() && !isPlayableVideo) {
     if (!imageFallbackSrc) {
       return (
@@ -132,7 +134,7 @@ export function VideoPlayer({
           className={cn(
             "relative group overflow-hidden bg-gray-200 flex items-center justify-center",
             aspectRatioClasses[aspectRatio],
-            className
+            className,
           )}
         >
           <div className="text-gray-500 text-center">
@@ -147,7 +149,7 @@ export function VideoPlayer({
         className={cn(
           "relative group overflow-hidden",
           aspectRatioClasses[aspectRatio],
-          className
+          className,
         )}
       >
         <LazyImage
@@ -170,14 +172,14 @@ export function VideoPlayer({
         className={cn(
           "relative group overflow-hidden",
           aspectRatioClasses[aspectRatio],
-          className
+          className,
         )}
       >
         {/*
-          Single `src` on <video>: multiple <source> rows with the same URL but
-          different `type` values make the browser pick the first type and fail
-          decode when the file is actually another format (common with Supabase).
-        */}
+  Single `src` on <video>: multiple <source> rows with the same URL but
+  different `type` values make the browser pick the first type and fail
+  decode when the file is actually another format (common with Supabase).
+  */}
         <video
           key={src}
           ref={videoRef}
@@ -205,11 +207,8 @@ export function VideoPlayer({
     );
   }
 
-  // No video, or video failed — show still image
-  const imageToShow =
-    thumbnailUrl?.trim() ||
-    fallbackImageUrl?.trim() ||
-    "";
+  // No video, or video failed - show still image
+  const imageToShow = thumbnailUrl?.trim() || fallbackImageUrl?.trim() || "";
 
   if (!imageToShow) {
     return (
@@ -217,7 +216,7 @@ export function VideoPlayer({
         className={cn(
           "relative group overflow-hidden bg-gray-200 flex items-center justify-center",
           aspectRatioClasses[aspectRatio],
-          className
+          className,
         )}
       >
         <div className="text-gray-500 text-center">
@@ -233,7 +232,7 @@ export function VideoPlayer({
       className={cn(
         "relative group overflow-hidden",
         aspectRatioClasses[aspectRatio],
-        className
+        className,
       )}
     >
       <LazyImage

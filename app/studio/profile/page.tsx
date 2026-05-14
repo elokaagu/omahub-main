@@ -60,7 +60,7 @@ export default function ProfilePage() {
             avatar_url: data.avatar_url ?? "",
           });
         } else {
-          // No profile row in DB yet — local form only; role shown from session (not elevated in UI)
+          // No profile row in DB yet - local form only; role shown from session (not elevated in UI)
           const data: ProfileData = {
             id: user.id,
             email: user.email,
@@ -132,9 +132,7 @@ export default function ProfilePage() {
       });
 
       setProfileData((prev) =>
-        prev
-          ? { ...prev, first_name, last_name, avatar_url }
-          : prev
+        prev ? { ...prev, first_name, last_name, avatar_url } : prev,
       );
       setBaseline({ first_name, last_name, avatar_url });
 
@@ -146,7 +144,7 @@ export default function ProfilePage() {
         console.error("Auth context refresh failed after save:", refreshErr);
         toast.message(
           "Saved your profile, but the header may not update until you refresh.",
-          { duration: 6000 }
+          { duration: 6000 },
         );
       }
     } catch (error) {
@@ -245,8 +243,8 @@ export default function ProfilePage() {
 
               <CardFooter className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-xs text-muted-foreground order-2 sm:order-1">
-                  Avatar and name changes apply when you click Save — uploading a
-                  photo updates the preview only until then.
+                  Avatar and name changes apply when you click Save - uploading
+                  a photo updates the preview only until then.
                 </p>
                 <Button
                   type="submit"

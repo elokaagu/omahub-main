@@ -1,13 +1,13 @@
 const EMAIL_MAX = 320;
 const PASSWORD_MAX = 1024;
-/** Loose RFC-style check — Supabase remains source of truth for deliverability. */
+/** Loose RFC-style check - Supabase remains source of truth for deliverability. */
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export type ParsedLoginBody = { email: string; password: string };
 
-export function parseLoginCredentials(body: unknown):
-  | { ok: true; value: ParsedLoginBody }
-  | { ok: false; error: string } {
+export function parseLoginCredentials(
+  body: unknown,
+): { ok: true; value: ParsedLoginBody } | { ok: false; error: string } {
   if (body === null || typeof body !== "object") {
     return { ok: false, error: "Invalid request body" };
   }

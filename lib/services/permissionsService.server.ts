@@ -50,13 +50,18 @@ async function getUserRoleFromDatabase(userId: string): Promise<Role | null> {
 
     return profile.role as Role;
   } catch (error) {
-    console.error("❌ Server Permissions: Error fetching user role from database:", error);
+    console.error(
+      "❌ Server Permissions: Error fetching user role from database:",
+      error,
+    );
     return null;
   }
 }
 
-/** Role from `profiles` only — no email-based privilege fallback. */
-export async function getUserPermissions(userId: string): Promise<Permission[]> {
+/** Role from `profiles` only - no email-based privilege fallback. */
+export async function getUserPermissions(
+  userId: string,
+): Promise<Permission[]> {
   try {
     console.log("🔍 Server Permissions: Getting permissions for user:", userId);
 
@@ -67,7 +72,9 @@ export async function getUserPermissions(userId: string): Promise<Permission[]> 
       return rolePermissions[dbRole] || [];
     }
 
-    console.log("⚠️ Server Permissions: No role found, returning user permissions");
+    console.log(
+      "⚠️ Server Permissions: No role found, returning user permissions",
+    );
     return rolePermissions.user;
   } catch (error) {
     console.error("❌ Server Permissions: Error getting permissions:", error);
@@ -87,7 +94,7 @@ export async function getUserRole(userId: string): Promise<Role> {
 
 export async function hasPermission(
   userId: string,
-  permission: Permission
+  permission: Permission,
 ): Promise<boolean> {
   try {
     const permissions = await getUserPermissions(userId);

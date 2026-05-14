@@ -23,9 +23,9 @@ function ResetPasswordForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordReset, setPasswordReset] = useState(false);
-  /** Session / link verification only — never used for form validation. */
+  /** Session / link verification only - never used for form validation. */
   const [sessionError, setSessionError] = useState<string | null>(null);
-  /** Password rules, mismatch, and updateUser errors — shown on the form only. */
+  /** Password rules, mismatch, and updateUser errors - shown on the form only. */
   const [formError, setFormError] = useState<string | null>(null);
   const [isValidSession, setIsValidSession] = useState<boolean | null>(null);
 
@@ -38,7 +38,8 @@ function ResetPasswordForm() {
       try {
         setSessionError(null);
 
-        const { accessToken, refreshToken } = getRecoveryTokensFromUrl(searchParams);
+        const { accessToken, refreshToken } =
+          getRecoveryTokensFromUrl(searchParams);
 
         const fromHash =
           typeof window !== "undefined" &&
@@ -54,7 +55,7 @@ function ResetPasswordForm() {
           if (!supabase) {
             if (!cancelled) {
               setSessionError(
-                "Unable to connect to authentication. Please try again later."
+                "Unable to connect to authentication. Please try again later.",
               );
               setIsValidSession(false);
             }
@@ -62,17 +63,19 @@ function ResetPasswordForm() {
           }
 
           devLog("Setting session from URL tokens…");
-          const { data, error: setSessionErr } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken,
-          });
+          const { data, error: setSessionErr } = await supabase.auth.setSession(
+            {
+              access_token: accessToken,
+              refresh_token: refreshToken,
+            },
+          );
 
           if (cancelled) return;
 
           if (setSessionErr) {
             console.error("Error setting recovery session:", setSessionErr);
             setSessionError(
-              "Invalid or expired reset link. Please request a new password reset."
+              "Invalid or expired reset link. Please request a new password reset.",
             );
             setIsValidSession(false);
             return;
@@ -84,7 +87,7 @@ function ResetPasswordForm() {
               window.history.replaceState(
                 null,
                 "",
-                window.location.pathname + window.location.search
+                window.location.pathname + window.location.search,
               );
             }
             setIsValidSession(true);
@@ -95,7 +98,7 @@ function ResetPasswordForm() {
         if (!supabase) {
           if (!cancelled) {
             setSessionError(
-              "Unable to connect to authentication. Please try again later."
+              "Unable to connect to authentication. Please try again later.",
             );
             setIsValidSession(false);
           }
@@ -112,7 +115,7 @@ function ResetPasswordForm() {
         if (getSessionErr) {
           console.error("Error getting session:", getSessionErr);
           setSessionError(
-            "Unable to verify reset session. Please request a new password reset."
+            "Unable to verify reset session. Please request a new password reset.",
           );
           setIsValidSession(false);
           return;
@@ -123,7 +126,7 @@ function ResetPasswordForm() {
           setIsValidSession(true);
         } else {
           setSessionError(
-            "Invalid or expired reset link. Please request a new password reset."
+            "Invalid or expired reset link. Please request a new password reset.",
           );
           setIsValidSession(false);
         }
@@ -131,7 +134,7 @@ function ResetPasswordForm() {
         console.error("Session check error:", err);
         if (!cancelled) {
           setSessionError(
-            "Unable to verify reset session. Please request a new password reset."
+            "Unable to verify reset session. Please request a new password reset.",
           );
           setIsValidSession(false);
         }
@@ -231,7 +234,7 @@ function ResetPasswordForm() {
 
       let message = "Failed to update password. Please try again.";
       const raw =
-        err instanceof Error ? err.message?.toLowerCase() ?? "" : "";
+        err instanceof Error ? (err.message?.toLowerCase() ?? "") : "";
 
       if (raw.includes("new password should be different")) {
         message =
@@ -431,9 +434,7 @@ function ResetPasswordForm() {
                 <button
                   type="button"
                   className="absolute inset-y-0 right-0 flex items-center pr-3"
-                  onClick={() =>
-                    setShowConfirmPassword(!showConfirmPassword)
-                  }
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   aria-label={
                     showConfirmPassword ? "Hide password" : "Show password"
                   }

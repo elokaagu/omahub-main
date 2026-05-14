@@ -1,6 +1,6 @@
 import type { Transition, Variants } from "framer-motion";
 
-/** Default entrance timing — shared so tweaks stay consistent app-wide. */
+/** Default entrance timing - shared so tweaks stay consistent app-wide. */
 export const baseTransition: Transition = {
   duration: 0.5,
   ease: "easeOut",
@@ -46,7 +46,7 @@ export const staggerChildren: Variants = {
 };
 
 export function slideInFrom(
-  direction: "left" | "right" | "up" | "down"
+  direction: "left" | "right" | "up" | "down",
 ): Variants {
   const offset =
     direction === "left"
@@ -90,13 +90,13 @@ export const scaleIn: Variants = {
   },
 };
 
-/** Container variant for staggered lists — alias of `staggerChildren` for clearer parent/child pairing. */
+/** Container variant for staggered lists - alias of `staggerChildren` for clearer parent/child pairing. */
 export const staggerContainer: Variants = staggerChildren;
 
 /** Default child variant to pair with `staggerContainer` / `staggerChildren`. */
 export const staggerItem: Variants = fadeIn;
 
-/** Semantic aliases — use these when naming by intent rather than mechanics. */
+/** Semantic aliases - use these when naming by intent rather than mechanics. */
 export const sectionReveal: Variants = fadeIn;
 export const cardEntrance: Variants = scaleIn;
 export const modalFade: Variants = fadeIn;

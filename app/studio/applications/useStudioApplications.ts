@@ -18,7 +18,7 @@ export function useStudioApplications(fetchEnabled: boolean) {
     string | null
   >(null);
   const [deletingApplication, setDeletingApplication] = useState<string | null>(
-    null
+    null,
   );
 
   const fetchAbortRef = useRef<AbortController | null>(null);
@@ -42,7 +42,7 @@ export function useStudioApplications(fetchEnabled: boolean) {
       devLog("✅ [Applications] Set", apps.length, "applications in state");
       if (apps.length === 0) {
         devWarn(
-          "⚠️ [Applications] No applications found (DB empty, wrong table, or RLS)."
+          "⚠️ [Applications] No applications found (DB empty, wrong table, or RLS).",
         );
       }
 
@@ -77,7 +77,11 @@ export function useStudioApplications(fetchEnabled: boolean) {
   }, [fetchEnabled, fetchApplications]);
 
   const updateApplicationStatus = useCallback(
-    async (applicationId: string, status: ApplicationStatus, notes?: string) => {
+    async (
+      applicationId: string,
+      status: ApplicationStatus,
+      notes?: string,
+    ) => {
       try {
         setUpdatingApplicationId(applicationId);
 
@@ -90,8 +94,8 @@ export function useStudioApplications(fetchEnabled: boolean) {
                   notes: notes ?? app.notes,
                   updated_at: new Date().toISOString(),
                 }
-              : app
-          )
+              : app,
+          ),
         );
 
         setSelectedApplication((prev) =>
@@ -102,7 +106,7 @@ export function useStudioApplications(fetchEnabled: boolean) {
                 notes: notes ?? prev.notes,
                 updated_at: new Date().toISOString(),
               }
-            : prev
+            : prev,
         );
 
         const serverApp = await updateStudioApplication(applicationId, {
@@ -113,11 +117,11 @@ export function useStudioApplications(fetchEnabled: boolean) {
         if (serverApp) {
           setApplications((prev) =>
             prev.map((app) =>
-              app.id === applicationId ? { ...app, ...serverApp } : app
-            )
+              app.id === applicationId ? { ...app, ...serverApp } : app,
+            ),
           );
           setSelectedApplication((prev) =>
-            prev?.id === applicationId ? { ...prev, ...serverApp } : prev
+            prev?.id === applicationId ? { ...prev, ...serverApp } : prev,
           );
         }
 
@@ -128,7 +132,7 @@ export function useStudioApplications(fetchEnabled: boolean) {
               : status === "rejected"
                 ? "rejected"
                 : "updated"
-          } successfully`
+          } successfully`,
         );
 
         if (status === "approved" || status === "rejected") {
@@ -137,14 +141,14 @@ export function useStudioApplications(fetchEnabled: boolean) {
       } catch (err) {
         console.error("❌ Update error:", err);
         toast.error(
-          err instanceof Error ? err.message : "Failed to update application"
+          err instanceof Error ? err.message : "Failed to update application",
         );
         await fetchApplications();
       } finally {
         setUpdatingApplicationId(null);
       }
     },
-    [fetchApplications]
+    [fetchApplications],
   );
 
   const deleteApplication = useCallback(
@@ -160,9 +164,11 @@ export function useStudioApplications(fetchEnabled: boolean) {
           brand_name: snapshot?.brand_name,
         });
 
-        setApplications((prev) => prev.filter((app) => app.id !== applicationId));
+        setApplications((prev) =>
+          prev.filter((app) => app.id !== applicationId),
+        );
         setSelectedApplication((prev) =>
-          prev?.id === applicationId ? null : prev
+          prev?.id === applicationId ? null : prev,
         );
 
         const result = await deleteStudioApplication(applicationId);
@@ -170,7 +176,7 @@ export function useStudioApplications(fetchEnabled: boolean) {
         if (result.notFound) {
           sawNotFound = true;
           devWarn(
-            "⚠️ [Applications] 404 on delete — treating as already removed"
+            "⚠️ [Applications] 404 on delete - treating as already removed",
           );
           toast.success("Application removed (was already deleted)");
           await fetchApplications();
@@ -183,20 +189,20 @@ export function useStudioApplications(fetchEnabled: boolean) {
       } catch (err) {
         console.error("❌ [Applications] Delete error:", err);
         toast.error(
-          err instanceof Error ? err.message : "Failed to delete application"
+          err instanceof Error ? err.message : "Failed to delete application",
         );
 
         if (snapshot) {
           devLog(
             "🔄 [Applications] Reverting optimistic delete:",
-            snapshot.brand_name
+            snapshot.brand_name,
           );
           setApplications((prev) => {
             if (!prev.find((app) => app.id === applicationId)) {
               return [...prev, snapshot].sort(
                 (a, b) =>
                   new Date(b.created_at).getTime() -
-                  new Date(a.created_at).getTime()
+                  new Date(a.created_at).getTime(),
               );
             }
             return prev;
@@ -210,7 +216,7 @@ export function useStudioApplications(fetchEnabled: boolean) {
         setDeletingApplication(null);
       }
     },
-    [applications, fetchApplications]
+    [applications, fetchApplications],
   );
 
   return {

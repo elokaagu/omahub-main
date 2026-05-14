@@ -61,11 +61,11 @@ import PageViewsCard from "./PageViewsCard";
 
 const COLORS = ["#6B46C1", "#F59E0B", "#10B981", "#EF4444", "#8B5CF6"]; // OmaHub color palette: plum, amber, emerald, red, violet
 
-/** Outer shell for overview / analytics blocks — consistent padding and rhythm */
+/** Outer shell for overview / analytics blocks - consistent padding and rhythm */
 const DASHBOARD_SECTION =
   "rounded-2xl border border-oma-beige/70 bg-gradient-to-br from-white via-oma-cream/30 to-oma-beige/15 p-6 shadow-sm sm:p-8";
 
-/** Inner stat tiles — same height band and alignment as siblings */
+/** Inner stat tiles - same height band and alignment as siblings */
 const METRIC_CARD =
   "flex min-h-[7.5rem] flex-col justify-center rounded-xl border border-black/[0.06] bg-white p-5 text-left shadow-sm";
 
@@ -134,7 +134,9 @@ function SessionDebugInfo() {
         <p>
           <strong>Session Expires:</strong>{" "}
           {supabaseSession?.expires_at
-            ? new Date(supabaseSession.expires_at * 1000).toLocaleString("en-GB")
+            ? new Date(supabaseSession.expires_at * 1000).toLocaleString(
+                "en-GB",
+              )
             : "N/A"}
         </p>
         <p className="text-xs text-gray-500">
@@ -235,7 +237,7 @@ export default function LeadsTrackingDashboard({
       let filteredLeads = data.leads || [];
       if (isBrandAdmin && effectiveOwnedBrands.length > 0) {
         filteredLeads = filteredLeads.filter((lead: Lead) =>
-          effectiveOwnedBrands.includes(lead.brand_id)
+          effectiveOwnedBrands.includes(lead.brand_id),
         );
       }
       setLeads(filteredLeads);
@@ -244,7 +246,7 @@ export default function LeadsTrackingDashboard({
     } catch (error) {
       console.error("Leads fetch error:", error);
       setLeadsError(
-        error instanceof Error ? error.message : "Failed to fetch leads"
+        error instanceof Error ? error.message : "Failed to fetch leads",
       );
     } finally {
       setLeadsLoading(false);
@@ -256,14 +258,17 @@ export default function LeadsTrackingDashboard({
       setAnalyticsLoading(true);
       setAnalyticsError(null);
 
-      const response = await fetch(`/api/leads?action=analytics&_t=${Date.now()}`, {
-        credentials: "include",
-        headers: {
-          "Cache-Control": "no-cache, no-store, must-revalidate",
-          Pragma: "no-cache",
-          Expires: "0",
+      const response = await fetch(
+        `/api/leads?action=analytics&_t=${Date.now()}`,
+        {
+          credentials: "include",
+          headers: {
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            Pragma: "no-cache",
+            Expires: "0",
+          },
         },
-      });
+      );
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || "Failed to fetch analytics");
@@ -274,7 +279,7 @@ export default function LeadsTrackingDashboard({
     } catch (error) {
       console.error("Analytics fetch error:", error);
       setAnalyticsError(
-        error instanceof Error ? error.message : "Failed to fetch analytics"
+        error instanceof Error ? error.message : "Failed to fetch analytics",
       );
     } finally {
       setAnalyticsLoading(false);
@@ -304,7 +309,7 @@ export default function LeadsTrackingDashboard({
             errorText,
           });
           throw new Error(
-            `Failed to fetch brand analytics: ${response.status} ${response.statusText}`
+            `Failed to fetch brand analytics: ${response.status} ${response.statusText}`,
           );
         }
 
@@ -318,7 +323,7 @@ export default function LeadsTrackingDashboard({
       setPlatformError(
         error instanceof Error
           ? error.message
-          : "Failed to fetch platform analytics"
+          : "Failed to fetch platform analytics",
       );
     } finally {
       setPlatformLoading(false);
@@ -398,7 +403,10 @@ export default function LeadsTrackingDashboard({
     if (!user) return;
 
     const tick = () => {
-      if (typeof document !== "undefined" && document.visibilityState === "hidden") {
+      if (
+        typeof document !== "undefined" &&
+        document.visibilityState === "hidden"
+      ) {
         return;
       }
       if (process.env.NODE_ENV === "development") {
@@ -422,14 +430,16 @@ export default function LeadsTrackingDashboard({
       const { leadId, leadName } = event.detail || {};
       console.log("🔄 Lead deleted event received:", { leadId, leadName });
       console.log("🔄 Refreshing dashboard data...");
-      
+
       // Remove the deleted lead from local state immediately for better UX
       setLeads((prevLeads) => {
-        const newLeads = prevLeads.filter(lead => lead.id !== leadId);
-        console.log(`🔄 Updated local leads state: ${prevLeads.length} → ${newLeads.length} leads`);
+        const newLeads = prevLeads.filter((lead) => lead.id !== leadId);
+        console.log(
+          `🔄 Updated local leads state: ${prevLeads.length} → ${newLeads.length} leads`,
+        );
         return newLeads;
       });
-      
+
       // Add a small delay to ensure database has been updated, then refresh all data
       setTimeout(() => {
         fetchLeads();
@@ -445,18 +455,20 @@ export default function LeadsTrackingDashboard({
       const { leadId, newStatus } = event.detail || {};
       console.log("🔄 Lead updated event received:", { leadId, newStatus });
       console.log("🔄 Refreshing dashboard data...");
-      
+
       // Refresh all data immediately
       fetchLeads();
       fetchAnalytics();
       if (isSuperAdmin || (isBrandAdmin && effectiveOwnedBrands.length > 0)) {
         fetchPlatformAnalytics();
       }
-      
+
       console.log("✅ Dashboard data refreshed after lead update");
     };
 
-    console.log("🎧 Setting up event listeners for leadDeleted and leadUpdated");
+    console.log(
+      "🎧 Setting up event listeners for leadDeleted and leadUpdated",
+    );
     window.addEventListener("leadDeleted", handleLeadDeleted);
     window.addEventListener("leadUpdated", handleLeadUpdated);
 
@@ -471,7 +483,7 @@ export default function LeadsTrackingDashboard({
   const handleFieldUpdate = async (
     leadId: string,
     field: string,
-    value: string | number
+    value: string | number,
   ) => {
     setUpdatingLead(leadId);
     try {
@@ -499,8 +511,8 @@ export default function LeadsTrackingDashboard({
       // Update local state
       setLeads((prevLeads) =>
         prevLeads.map((lead) =>
-          lead.id === leadId ? { ...lead, ...updatedLead } : lead
-        )
+          lead.id === leadId ? { ...lead, ...updatedLead } : lead,
+        ),
       );
 
       toast.success(`${field.replace("_", " ")} updated successfully`);
@@ -515,15 +527,13 @@ export default function LeadsTrackingDashboard({
   // Handle status change
   const handleStatusChange = async (
     leadId: string,
-    newStatus: Lead["status"]
+    newStatus: Lead["status"],
   ) => {
     await handleFieldUpdate(leadId, "status", newStatus);
   };
 
   if (authLoading) {
-    return (
-      <p className="py-8 text-center text-sm text-gray-600">Loading…</p>
-    );
+    return <p className="py-8 text-center text-sm text-gray-600">Loading…</p>;
   }
 
   // Show authentication required state
@@ -651,9 +661,7 @@ export default function LeadsTrackingDashboard({
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-4 lg:grid-cols-5">
-              <Card
-                className={cn(METRIC_CARD, "border-l-4 border-l-oma-plum")}
-              >
+              <Card className={cn(METRIC_CARD, "border-l-4 border-l-oma-plum")}>
                 <h3 className="text-sm font-medium text-oma-cocoa">
                   Total Brands
                 </h3>
@@ -688,9 +696,7 @@ export default function LeadsTrackingDashboard({
                   {platformAnalytics?.recentReviews || 0} this month
                 </p>
               </Card>
-              <Card
-                className={cn(METRIC_CARD, "border-l-4 border-l-blue-500")}
-              >
+              <Card className={cn(METRIC_CARD, "border-l-4 border-l-blue-500")}>
                 <PageViewsCard
                   totalBrands={platformAnalytics?.totalBrands || 0}
                   totalReviews={platformAnalytics?.totalReviews || 0}
@@ -775,9 +781,7 @@ export default function LeadsTrackingDashboard({
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <Card
-                className={cn(METRIC_CARD, "border-l-4 border-l-oma-plum")}
-              >
+              <Card className={cn(METRIC_CARD, "border-l-4 border-l-oma-plum")}>
                 <h3 className="text-sm font-medium text-oma-cocoa">
                   Your Brands
                 </h3>
@@ -857,9 +861,7 @@ export default function LeadsTrackingDashboard({
         </header>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card
-            className={cn(METRIC_CARD, "border-l-4 border-l-oma-plum")}
-          >
+          <Card className={cn(METRIC_CARD, "border-l-4 border-l-oma-plum")}>
             <h3 className="text-sm font-medium text-oma-cocoa">Total Leads</h3>
             <p className="mt-1 text-2xl font-canela tabular-nums text-oma-plum">
               {analytics?.total_leads || 0}
@@ -868,9 +870,7 @@ export default function LeadsTrackingDashboard({
               This month: {analytics?.this_month_leads || 0}
             </p>
           </Card>
-          <Card
-            className={cn(METRIC_CARD, "border-l-4 border-l-oma-beige")}
-          >
+          <Card className={cn(METRIC_CARD, "border-l-4 border-l-oma-beige")}>
             <h3 className="text-sm font-medium text-oma-cocoa">
               Qualified Leads
             </h3>
@@ -879,9 +879,7 @@ export default function LeadsTrackingDashboard({
             </p>
             <p className="mt-1 text-sm text-oma-cocoa">Ready for follow-up</p>
           </Card>
-          <Card
-            className={cn(METRIC_CARD, "border-l-4 border-l-emerald-500")}
-          >
+          <Card className={cn(METRIC_CARD, "border-l-4 border-l-emerald-500")}>
             <h3 className="text-sm font-medium text-oma-cocoa">
               Conversion Rate
             </h3>
@@ -892,9 +890,7 @@ export default function LeadsTrackingDashboard({
               Converted: {analytics?.converted_leads || 0}
             </p>
           </Card>
-          <Card
-            className={cn(METRIC_CARD, "border-l-4 border-l-amber-500")}
-          >
+          <Card className={cn(METRIC_CARD, "border-l-4 border-l-amber-500")}>
             <h3 className="text-sm font-medium text-oma-cocoa">
               Total Bookings
             </h3>
@@ -929,11 +925,11 @@ export default function LeadsTrackingDashboard({
 
       {/* Charts Section - REMOVED */}
       {/* 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div>Leads by Source Chart - REMOVED</div>
-        <div>Revenue Metrics - REMOVED</div>
-      </div>
-      */}
+  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+  <div>Leads by Source Chart - REMOVED</div>
+  <div>Revenue Metrics - REMOVED</div>
+  </div>
+  */}
 
       {/* Debug Information (Development Only) */}
       {process.env.NODE_ENV === "development" && (
@@ -1166,207 +1162,207 @@ export default function LeadsTrackingDashboard({
 
       {/* Google Analytics Section - Super Admin Only - Commented out for future use */}
       {/* {isSuperAdmin && (
-        <Card className="border-oma-beige mt-6">
-          <CardHeader className="bg-oma-cream/30">
-            <div className="flex justify-between items-center">
-              <CardTitle className="font-canela text-oma-plum">
-                Google Analytics Overview
-              </CardTitle>
-              <div className="flex items-center gap-2">
-                <Badge
-                  variant="outline"
-                  className="border-oma-beige text-oma-cocoa"
-                >
-                  Super Admin Only
-                </Badge>
-                <Badge
-                  variant={
-                    vercelAnalytics?.source === "vercel"
-                      ? "default"
-                      : "secondary"
-                  }
-                  className={
-                    vercelAnalytics?.source === "vercel"
-                      ? "bg-green-100 text-green-800"
-                      : "bg-gray-100 text-gray-800"
-                  }
-                >
-                  {vercelAnalytics?.source === "vercel"
-                    ? "Real Data"
-                    : "Estimated Data"}
-                </Badge>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="p-6">
-            {/* Data Source Info */}
+  <Card className="border-oma-beige mt-6">
+  <CardHeader className="bg-oma-cream/30">
+  <div className="flex justify-between items-center">
+  <CardTitle className="font-canela text-oma-plum">
+  Google Analytics Overview
+  </CardTitle>
+  <div className="flex items-center gap-2">
+  <Badge
+  variant="outline"
+  className="border-oma-beige text-oma-cocoa"
+  >
+  Super Admin Only
+  </Badge>
+  <Badge
+  variant={
+  vercelAnalytics?.source === "vercel"
+  ? "default"
+  : "secondary"
+  }
+  className={
+  vercelAnalytics?.source === "vercel"
+  ? "bg-green-100 text-green-800"
+  : "bg-gray-100 text-gray-800"
+  }
+  >
+  {vercelAnalytics?.source === "vercel"
+  ? "Real Data"
+  : "Estimated Data"}
+  </Badge>
+  </div>
+  </div>
+  </CardHeader>
+  <CardContent className="p-6">
+  {/* Data Source Info */}
       {/* {vercelAnalytics?.source !== "vercel" && (
-              <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <div className="flex items-center gap-2 text-yellow-800">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                  </svg>
-                  <span className="text-sm font-medium">
-                    {vercelAnalytics?.message || "Analytics not configured. Showing estimated data based on platform metrics."}
-                  </span>
-                </div>
-                <p className="text-xs text-yellow-700 mt-1 ml-6">
-                  To see real analytics data, enable Vercel Analytics in your project dashboard.
-                </p>
-              </div>
-            )}
+  <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+  <div className="flex items-center gap-2 text-yellow-800">
+  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+  </svg>
+  <span className="text-sm font-medium">
+  {vercelAnalytics?.message || "Analytics not configured. Showing estimated data based on platform metrics."}
+  </span>
+  </div>
+  <p className="text-xs text-yellow-700 mt-1 ml-6">
+  To see real analytics data, enable Vercel Analytics in your project dashboard.
+  </p>
+  </div>
+  )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {/* Page Views */}
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+  {/* Page Views */}
       {/* <div className="text-center p-4 bg-oma-cream/20 rounded-lg border border-oma-beige">
-                <div className="text-2xl font-bold text-oma-plum">
-                  {vercelAnalytics?.pageviews?.toLocaleString() ||
-                    platformAnalytics?.totalPageViews?.toLocaleString() ||
-                    "1,247"}
-                </div>
-                <div className="text-sm text-oma-cocoa font-medium">
-                  Total Page Views
-                </div>
-                <div className="text-xs text-oma-cocoa/70 mt-1">
-                  Last 30 days
-                </div>
-              </div>
+  <div className="text-2xl font-bold text-oma-plum">
+  {vercelAnalytics?.pageviews?.toLocaleString() ||
+  platformAnalytics?.totalPageViews?.toLocaleString() ||
+  "1,247"}
+  </div>
+  <div className="text-sm text-oma-cocoa font-medium">
+  Total Page Views
+  </div>
+  <div className="text-xs text-oma-cocoa/70 mt-1">
+  Last 30 days
+  </div>
+  </div>
 
-              {/* Unique Visitors */}
+  {/* Unique Visitors */}
       {/* <div className="text-center p-4 bg-oma-cream/20 rounded-lg border border-oma-beige">
-                <div className="text-2xl font-bold text-oma-plum">
-                  {vercelAnalytics?.visitors?.toLocaleString() || "342"}
-                </div>
-                <div className="text-sm text-oma-cocoa font-medium">
-                  Unique Visitors
-                </div>
-                <div className="text-xs text-oma-cocoa/70 mt-1">
-                  Last 30 days
-                </div>
-              </div>
+  <div className="text-2xl font-bold text-oma-plum">
+  {vercelAnalytics?.visitors?.toLocaleString() || "342"}
+  </div>
+  <div className="text-sm text-oma-cocoa font-medium">
+  Unique Visitors
+  </div>
+  <div className="text-xs text-oma-cocoa/70 mt-1">
+  Last 30 days
+  </div>
+  </div>
 
-              {/* Conversion Rate */}
+  {/* Conversion Rate */}
       {/* <div className="text-center p-4 bg-oma-cream/20 rounded-lg border border-oma-beige">
-                <div className="text-2xl font-bold text-oma-plum">
-                  {analytics?.conversion_rate
-                    ? `${(analytics.conversion_rate * 100).toFixed(1)}%`
-                    : "0%"}
-                </div>
-                <div className="text-sm text-oma-cocoa font-medium">
-                  Conversion Rate
-                </div>
-                <div className="text-xs text-oma-cocoa/70 mt-1">
-                  Leads to Conversion
-                </div>
-              </div>
+  <div className="text-2xl font-bold text-oma-plum">
+  {analytics?.conversion_rate
+  ? `${(analytics.conversion_rate * 100).toFixed(1)}%`
+  : "0%"}
+  </div>
+  <div className="text-sm text-oma-cocoa font-medium">
+  Conversion Rate
+  </div>
+  <div className="text-xs text-oma-cocoa/70 mt-1">
+  Leads to Conversion
+  </div>
+  </div>
 
-              {/* Top Performing Page */}
+  {/* Top Performing Page */}
       {/* <div className="text-center p-4 bg-oma-cream/20 rounded-lg border border-oma-beige">
-                <div className="text-lg font-bold text-oma-plum truncate">
-                  {vercelAnalytics?.top_page || "Directory"}
-                </div>
-                <div className="text-sm text-oma-cocoa font-medium">
-                  Top Page
-                </div>
-                <div className="text-xs text-oma-cocoa/70 mt-1">
-                  Most Visited
-                </div>
-              </div>
-            </div>
+  <div className="text-lg font-bold text-oma-plum truncate">
+  {vercelAnalytics?.top_page || "Directory"}
+  </div>
+  <div className="text-sm text-oma-cocoa font-medium">
+  Top Page
+  </div>
+  <div className="text-xs text-oma-cocoa/70 mt-1">
+  Most Visited
+  </div>
+  </div>
+  </div>
 
-            {/* Traffic Sources */}
+  {/* Traffic Sources */}
       {/* <div className="mt-6">
-              <h4 className="font-medium text-oma-plum mb-3">
-                Traffic Sources
-              </h4>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {vercelAnalytics?.sources &&
-                Object.keys(vercelAnalytics.sources).length > 0 ? (
-                  Object.entries(vercelAnalytics.sources).map(
-                    ([source, count]) => (
-                      <div
-                        key={source}
-                        className="text-center p-3 bg-oma-cream/10 rounded-lg border border-oma-beige"
-                      >
-                        <div className="text-lg font-semibold text-oma-cocoa">
-                          {count?.toLocaleString() || "0"}
-                        </div>
-                        <div className="text-xs text-oma-cocoa/70 capitalize">
-                          {source.replace(/_/g, " ")}
-                        </div>
-                      </div>
-                    )
-                  )
-                ) : (
-                  <>
-                    <div className="text-center p-3 bg-oma-cream/10 rounded-lg border border-oma-beige">
-                      <div className="text-lg font-semibold text-oma-cocoa">
-                        456
-                      </div>
-                      <div className="text-xs text-oma-cocoa/70">Direct</div>
-                    </div>
-                    <div className="text-center p-3 bg-oma-cream/10 rounded-lg border border-oma-beige">
-                      <div className="text-lg font-semibold text-oma-cocoa">
-                        234
-                      </div>
-                      <div className="text-xs text-oma-cocoa/70">
-                        Organic Search
-                      </div>
-                    </div>
-                    <div className="text-center p-3 bg-oma-cream/10 rounded-lg border border-oma-beige">
-                      <div className="text-lg font-semibold text-oma-cocoa">
-                        189
-                      </div>
-                      <div className="text-xs text-oma-cocoa/70">
-                        Social Media
-                      </div>
-                    </div>
-                    <div className="text-center p-3 bg-oma-cream/10 rounded-lg border border-oma-beige">
-                      <div className="text-lg font-semibold text-oma-cocoa">
-                        123
-                      </div>
-                      <div className="text-xs text-oma-cocoa/70">Referral</div>
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
+  <h4 className="font-medium text-oma-plum mb-3">
+  Traffic Sources
+  </h4>
+  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+  {vercelAnalytics?.sources &&
+  Object.keys(vercelAnalytics.sources).length > 0 ? (
+  Object.entries(vercelAnalytics.sources).map(
+  ([source, count]) => (
+  <div
+  key={source}
+  className="text-center p-3 bg-oma-cream/10 rounded-lg border border-oma-beige"
+  >
+  <div className="text-lg font-semibold text-oma-cocoa">
+  {count?.toLocaleString() || "0"}
+  </div>
+  <div className="text-xs text-oma-cocoa/70 capitalize">
+  {source.replace(/_/g, " ")}
+  </div>
+  </div>
+  )
+  )
+  ) : (
+  <>
+  <div className="text-center p-3 bg-oma-cream/10 rounded-lg border border-oma-beige">
+  <div className="text-lg font-semibold text-oma-cocoa">
+  456
+  </div>
+  <div className="text-xs text-oma-cocoa/70">Direct</div>
+  </div>
+  <div className="text-center p-3 bg-oma-cream/10 rounded-lg border border-oma-beige">
+  <div className="text-lg font-semibold text-oma-cocoa">
+  234
+  </div>
+  <div className="text-xs text-oma-cocoa/70">
+  Organic Search
+  </div>
+  </div>
+  <div className="text-center p-3 bg-oma-cream/10 rounded-lg border border-oma-beige">
+  <div className="text-lg font-semibold text-oma-cocoa">
+  189
+  </div>
+  <div className="text-xs text-oma-cocoa/70">
+  Social Media
+  </div>
+  </div>
+  <div className="text-center p-3 bg-oma-cream/10 rounded-lg border border-oma-beige">
+  <div className="text-lg font-semibold text-oma-cocoa">
+  123
+  </div>
+  <div className="text-xs text-oma-cocoa/70">Referral</div>
+  </div>
+  </>
+  )}
+  </div>
+  </div>
 
-            {/* Recent Activity */}
+  {/* Recent Activity */}
       {/* <div className="mt-6">
-              <h4 className="font-medium text-oma-plum mb-3">
-                Recent Activity
-              </h4>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between p-3 bg-oma-cream/10 rounded-lg border border-oma-beige">
-                  <span className="text-sm text-oma-cocoa">
-                    Last lead submission
-                  </span>
-                  <span className="text-sm font-medium text-oma-plum">
-                    {analytics?.monthly_trends?.[
-                      analytics.monthly_trends.length - 1
-                    ]?.month
-                      ? new Date(
-                          analytics.monthly_trends[
-                            analytics.monthly_trends.length - 1
-                          ].month
-                        ).toLocaleDateString("en-GB")
-                      : "2 days ago"}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-oma-cream/10 rounded-lg border border-oma-beige">
-                  <span className="text-sm text-oma-cocoa">
-                    Total leads this month
-                  </span>
-                  <span className="text-sm font-medium text-oma-plum">
-                    {analytics?.this_month_leads || "23"}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )} */}
+  <h4 className="font-medium text-oma-plum mb-3">
+  Recent Activity
+  </h4>
+  <div className="space-y-2">
+  <div className="flex items-center justify-between p-3 bg-oma-cream/10 rounded-lg border border-oma-beige">
+  <span className="text-sm text-oma-cocoa">
+  Last lead submission
+  </span>
+  <span className="text-sm font-medium text-oma-plum">
+  {analytics?.monthly_trends?.[
+  analytics.monthly_trends.length - 1
+  ]?.month
+  ? new Date(
+  analytics.monthly_trends[
+  analytics.monthly_trends.length - 1
+  ].month
+  ).toLocaleDateString("en-GB")
+  : "2 days ago"}
+  </span>
+  </div>
+  <div className="flex items-center justify-between p-3 bg-oma-cream/10 rounded-lg border border-oma-beige">
+  <span className="text-sm text-oma-cocoa">
+  Total leads this month
+  </span>
+  <span className="text-sm font-medium text-oma-plum">
+  {analytics?.this_month_leads || "23"}
+  </span>
+  </div>
+  </div>
+  </div>
+  </CardContent>
+  </Card>
+  )} */}
     </div>
   );
 }

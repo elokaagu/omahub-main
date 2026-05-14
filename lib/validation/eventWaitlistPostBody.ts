@@ -1,5 +1,9 @@
 import { z } from "zod";
 
+/** First line of `leads.notes` for sitewide event preorder signups; used to filter in Studio. */
+export const EVENT_WAITLIST_LEAD_NOTES_MARKER =
+  "EVENT PREORDER / WAITLIST (sitewide)" as const;
+
 export const eventWaitlistPostBodySchema = z
   .object({
     name: z.string().trim().min(1).max(500),
@@ -30,7 +34,7 @@ export function stripEventWaitlistHoneypotFields(raw: unknown): unknown {
 
 export function buildEventWaitlistLeadNotes(p: EventWaitlistPostBody): string {
   const lines = [
-    "EVENT PREORDER / WAITLIST (sitewide)",
+    EVENT_WAITLIST_LEAD_NOTES_MARKER,
     `Designer / brand requested: ${p.requestedBrand}`,
     `Item / style: ${p.itemDescription}`,
     `Size: ${p.size}`,

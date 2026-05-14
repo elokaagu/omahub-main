@@ -26,7 +26,7 @@ function toSonnerOptions(
   type: AppToastSeverity,
   duration: number | undefined,
   description?: string,
-  action?: ShowToastInput["action"]
+  action?: ShowToastInput["action"],
 ) {
   const ms = duration ?? DEFAULT_DURATION_MS[type];
   return {
@@ -75,7 +75,7 @@ export function showToast({
 }
 
 /**
- * @deprecated Prefer `showToast` — this is not a hook (no state/effects). Kept for any legacy imports.
+ * @deprecated Prefer `showToast` - this is not a hook (no state/effects). Kept for any legacy imports.
  */
 export function useToast() {
   return { toast: showToast };

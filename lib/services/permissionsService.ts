@@ -36,7 +36,7 @@ const rolePermissions: Record<Role, Permission[]> = {
 
 /** Sync permission list from a profile role (no network). */
 export function permissionsForProfileRole(
-  role: string | null | undefined
+  role: string | null | undefined,
 ): Permission[] {
   if (!role) return rolePermissions.user;
   const key = role as Role;
@@ -64,8 +64,10 @@ async function getUserRoleFromDatabase(userId: string): Promise<Role | null> {
   }
 }
 
-/** Role from `profiles` only — no email-list fallback. */
-export async function getUserPermissions(userId: string): Promise<Permission[]> {
+/** Role from `profiles` only - no email-list fallback. */
+export async function getUserPermissions(
+  userId: string,
+): Promise<Permission[]> {
   try {
     const dbRole = await getUserRoleFromDatabase(userId);
     return permissionsForProfileRole(dbRole);
@@ -87,7 +89,7 @@ export async function getUserRole(userId: string): Promise<Role> {
 
 export async function hasPermission(
   userId: string,
-  permission: Permission
+  permission: Permission,
 ): Promise<boolean> {
   try {
     const permissions = await getUserPermissions(userId);

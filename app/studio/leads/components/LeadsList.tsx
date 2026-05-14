@@ -82,7 +82,8 @@ export function LeadsList({
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-oma-cocoa">
                   <div>
-                    <span className="font-medium">Email:</span> {lead.contact_email}
+                    <span className="font-medium">Email:</span>{" "}
+                    {lead.contact_email?.trim() ? lead.contact_email : "-"}
                   </div>
                   {lead.contact_phone && (
                     <div>

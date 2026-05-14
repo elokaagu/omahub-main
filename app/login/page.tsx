@@ -16,7 +16,7 @@ function LoginWordmark() {
     >
       <Image
         src="/lovable-uploads/omahub-logo.png"
-        alt="OmaHub — home"
+        alt="OmaHub - home"
         width={140}
         height={36}
         className="h-8 w-auto brightness-0"
@@ -63,7 +63,7 @@ export default async function LoginPage() {
 
       <LoginHeroGalleryClient slides={heroSlides} />
 
-      {/* Mobile hero strip — first live brand cover when available */}
+      {/* Mobile hero strip - first live brand cover when available */}
       <div className="relative mt-2 h-44 w-full shrink-0 overflow-hidden rounded-t-3xl lg:hidden">
         <Image
           src={mobileCover}

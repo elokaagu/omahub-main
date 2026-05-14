@@ -47,7 +47,7 @@ function sanitizeCorruptedAuthStorage() {
   if (typeof window === "undefined") return;
   try {
     const keys = Object.keys(localStorage).filter(
-      (k) => k.startsWith("sb-") && k.includes("auth-token")
+      (k) => k.startsWith("sb-") && k.includes("auth-token"),
     );
     for (const key of keys) {
       const raw = localStorage.getItem(key);
@@ -74,7 +74,7 @@ function instantiateBrowserClient() {
 /**
  * Browser Supabase client. In the browser this always returns the same instance
  * (one GoTrue client / one auth storage adapter) to avoid "Multiple GoTrueClient instances" warnings.
- * On the server, each call returns a new browser-oriented client — prefer `createServerSupabaseClient`
+ * On the server, each call returns a new browser-oriented client - prefer `createServerSupabaseClient`
  * or `createApiRouteSupabaseClient` in Route Handlers.
  */
 export function createClient() {
@@ -122,12 +122,12 @@ export async function createServerSupabaseClient() {
 export function createAdminClient(): SupabaseClient {
   if (!supabaseServiceKey) {
     throw new Error(
-      "SUPABASE_SERVICE_ROLE_KEY is required for admin operations"
+      "SUPABASE_SERVICE_ROLE_KEY is required for admin operations",
     );
   }
   if (!supabaseUrlForServiceRole) {
     throw new Error(
-      "SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL is required for admin operations"
+      "SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL is required for admin operations",
     );
   }
 
@@ -157,7 +157,7 @@ export function createApiRouteSupabaseClient(request: Request) {
             }
             return acc;
           },
-          {} as Record<string, string>
+          {} as Record<string, string>,
         );
 
         return cookies[name];
@@ -182,14 +182,19 @@ function getSupabaseInstance() {
       const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
       if (!url || !key) {
-        console.error("❌ Supabase environment variables not available in browser:", {
-          hasUrl: !!url,
-          hasKey: !!key,
-          allEnvKeys: Object.keys(process.env).filter((k) => k.includes("SUPABASE")),
-        });
+        console.error(
+          "❌ Supabase environment variables not available in browser:",
+          {
+            hasUrl: !!url,
+            hasKey: !!key,
+            allEnvKeys: Object.keys(process.env).filter((k) =>
+              k.includes("SUPABASE"),
+            ),
+          },
+        );
         throw new Error(
           "Supabase environment variables not available. " +
-            "Please ensure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are set."
+            "Please ensure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are set.",
         );
       }
     }
@@ -205,30 +210,33 @@ function getSupabaseInstance() {
 }
 
 // Export supabase as a getter that lazily initializes
-export const supabase = new Proxy({} as ReturnType<typeof createBrowserClient>, {
-  get(target, prop) {
-    try {
+export const supabase = new Proxy(
+  {} as ReturnType<typeof createBrowserClient>,
+  {
+    get(target, prop) {
+      try {
+        const instance = getSupabaseInstance();
+        const value = instance[prop as keyof typeof instance];
+        if (typeof value === "function") {
+          return value.bind(instance);
+        }
+        return value;
+      } catch (error) {
+        // Return a no-op function for methods to prevent crashes
+        if (typeof prop === "string" && prop.includes("auth")) {
+          console.error("Supabase client not available:", error);
+          return () => Promise.resolve({ data: null, error: error });
+        }
+        throw error;
+      }
+    },
+    set(target, prop, value) {
       const instance = getSupabaseInstance();
-      const value = instance[prop as keyof typeof instance];
-      if (typeof value === 'function') {
-        return value.bind(instance);
-      }
-      return value;
-    } catch (error) {
-      // Return a no-op function for methods to prevent crashes
-      if (typeof prop === 'string' && prop.includes('auth')) {
-        console.error("Supabase client not available:", error);
-        return () => Promise.resolve({ data: null, error: error });
-      }
-      throw error;
-    }
+      (instance as any)[prop] = value;
+      return true;
+    },
   },
-  set(target, prop, value) {
-    const instance = getSupabaseInstance();
-    (instance as any)[prop] = value;
-    return true;
-  }
-});
+);
 
 // Helper to clear corrupted auth data
 export function clearAuthData() {

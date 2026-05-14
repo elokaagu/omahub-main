@@ -78,7 +78,7 @@ async function getGoogleAnalyticsPageViews(): Promise<number | null> {
   } catch (error) {
     console.warn(
       "Failed to fetch Google Analytics data, trying Vercel Analytics:",
-      error
+      error,
     );
     return null;
   }
@@ -119,7 +119,7 @@ async function getVercelPageViews(): Promise<number | null> {
   } catch (error) {
     console.warn(
       "Failed to fetch Vercel analytics data, using estimated views:",
-      error
+      error,
     );
     return null;
   }
@@ -141,7 +141,7 @@ async function getRealPageViews(): Promise<number | null> {
 
   // Both failed, return null to use estimated views
   console.log(
-    "ℹ️ No real analytics data available, using estimated page views"
+    "ℹ️ No real analytics data available, using estimated page views",
   );
   return null;
 }
@@ -154,7 +154,7 @@ function calculateEstimatedPageViews(
   totalReviews: number,
   totalProducts: number,
   verifiedBrands: number,
-  recentBrands: number
+  recentBrands: number,
 ): number {
   // Enhanced formula based on realistic engagement patterns
   // Base formula: (brands * 25) + (reviews * 8) + (products * 15) + (verified_brands * 50)
@@ -164,7 +164,7 @@ function calculateEstimatedPageViews(
       totalReviews * 8 +
       totalProducts * 15 +
       verifiedBrands * 50 +
-      recentBrands * 100 // New brands get initial traffic boost
+      recentBrands * 100, // New brands get initial traffic boost
   );
 }
 
@@ -194,7 +194,7 @@ function handleDatabaseError(error: any, operation: string) {
     error.code === "42501"
   ) {
     throw new Error(
-      "You don't have permission to view analytics data. Please log in with an admin account."
+      "You don't have permission to view analytics data. Please log in with an admin account.",
     );
   }
 
@@ -207,16 +207,16 @@ function handleDatabaseError(error: any, operation: string) {
   }
 
   throw new Error(
-    `Failed to ${operation}: ${error.message || "Unknown error"}`
+    `Failed to ${operation}: ${error.message || "Unknown error"}`,
   );
 }
 
 /**
  * Get comprehensive analytics data for the dashboard.
- * @param serverClient — When provided (e.g. from `requireSuperAdmin().supabase`), skips client `checkAuth` and uses this server session for queries (API routes).
+ * @param serverClient - When provided (e.g. from `requireSuperAdmin().supabase`), skips client `checkAuth` and uses this server session for queries (API routes).
  */
 export async function getAnalyticsData(
-  serverClient?: SupabaseClient
+  serverClient?: SupabaseClient,
 ): Promise<AnalyticsData> {
   try {
     if (!serverClient) {
@@ -237,13 +237,13 @@ export async function getAnalyticsData(
     ] = await Promise.all([
       // All brands with their review counts
       db.from("brands").select(`
-          id, 
-          name, 
-          rating, 
-          is_verified, 
-          created_at,
-          reviews:reviews(rating, created_at)
-        `),
+  id, 
+  name, 
+  rating, 
+  is_verified, 
+  created_at,
+  reviews:reviews(rating, created_at)
+  `),
 
       // All reviews
       db.from("reviews").select("id, rating, created_at, brand_id"),
@@ -294,17 +294,21 @@ export async function getAnalyticsData(
     const activeBrands = brands.filter(
       (brand) =>
         (brand.reviews && brand.reviews.length > 0) ||
-        new Date(brand.created_at) > ninetyDaysAgo
+        new Date(brand.created_at) > ninetyDaysAgo,
     ).length;
 
     // Calculate average rating from brands
     const brandRatings = brands
       .map((brand) => brand.rating)
-      .filter((rating): rating is number => rating !== null && rating !== undefined);
+      .filter(
+        (rating): rating is number => rating !== null && rating !== undefined,
+      );
     const averageRating =
       brandRatings.length > 0
-        ? brandRatings.reduce((acc: number, rating: number) => acc + rating, 0) /
-          brandRatings.length
+        ? brandRatings.reduce(
+            (acc: number, rating: number) => acc + rating,
+            0,
+          ) / brandRatings.length
         : 0;
 
     // Process reviews data
@@ -313,8 +317,9 @@ export async function getAnalyticsData(
     // Calculate review distribution
     const reviewDistribution = [1, 2, 3, 4, 5].map((rating) => ({
       rating,
-      count: reviews.filter((review: AnalyticsReviewQueryRow) => review.rating === rating)
-        .length,
+      count: reviews.filter(
+        (review: AnalyticsReviewQueryRow) => review.rating === rating,
+      ).length,
     }));
 
     // Get product counts with stock information
@@ -326,13 +331,13 @@ export async function getAnalyticsData(
     // Calculate estimated page views (since we don't have real analytics)
     const totalPageViews = Math.max(
       totalBrands * 150 + totalReviews * 25,
-      1000
+      1000,
     );
 
     // Get top brands by rating and review count
     const topBrands = brands
       .filter(
-        (brand) => brand.rating && brand.reviews && brand.reviews.length > 0
+        (brand) => brand.rating && brand.reviews && brand.reviews.length > 0,
       )
       .sort((a: AnalyticsBrandQueryRow, b: AnalyticsBrandQueryRow) => {
         const aScore = (a.rating || 0) * Math.log((a.reviews?.length ?? 0) + 1);
@@ -388,11 +393,11 @@ export async function syncBrandRatings(): Promise<{
 
     // Get all brands with their reviews
     const { data: brands, error } = await supabase.from("brands").select(`
-        id, 
-        name, 
-        rating,
-        reviews:reviews(rating)
-      `);
+  id, 
+  name, 
+  rating,
+  reviews:reviews(rating)
+  `);
 
     if (error) throw error;
 
@@ -405,7 +410,7 @@ export async function syncBrandRatings(): Promise<{
         const calculatedRating =
           brand.reviews.reduce(
             (sum: number, review: any) => sum + (review.rating || 0),
-            0
+            0,
           ) / brand.reviews.length;
 
         const roundedRating = Math.round(calculatedRating * 10) / 10;
@@ -420,12 +425,12 @@ export async function syncBrandRatings(): Promise<{
           if (updateError) {
             console.error(
               `❌ Error updating rating for ${brand.name}:`,
-              updateError
+              updateError,
             );
             errors++;
           } else {
             console.log(
-              `✅ Updated ${brand.name}: ${brand.rating} → ${roundedRating}`
+              `✅ Updated ${brand.name}: ${brand.rating} → ${roundedRating}`,
             );
             updated++;
           }
@@ -434,7 +439,7 @@ export async function syncBrandRatings(): Promise<{
     }
 
     console.log(
-      `✅ Rating sync complete: ${updated} updated, ${errors} errors`
+      `✅ Rating sync complete: ${updated} updated, ${errors} errors`,
     );
     return { updated, errors };
   } catch (error) {
@@ -524,17 +529,19 @@ export async function getReviewTrendsData(): Promise<ReviewTrendsData[]> {
     const monthlyData: { [key: string]: { total: number; ratings: number[] } } =
       {};
 
-    (reviews || []).forEach((review: { created_at: string; rating: number }) => {
-      const month = new Date(review.created_at).toLocaleDateString("en-GB", {
-        year: "numeric",
-        month: "short",
-      });
-      if (!monthlyData[month]) {
-        monthlyData[month] = { total: 0, ratings: [] };
-      }
-      monthlyData[month].total += 1;
-      monthlyData[month].ratings.push(review.rating);
-    });
+    (reviews || []).forEach(
+      (review: { created_at: string; rating: number }) => {
+        const month = new Date(review.created_at).toLocaleDateString("en-GB", {
+          year: "numeric",
+          month: "short",
+        });
+        if (!monthlyData[month]) {
+          monthlyData[month] = { total: 0, ratings: [] };
+        }
+        monthlyData[month].total += 1;
+        monthlyData[month].ratings.push(review.rating);
+      },
+    );
 
     // Generate last 6 months
     const months = [];
@@ -574,7 +581,7 @@ export async function getReviewTrendsData(): Promise<ReviewTrendsData[]> {
  * Get analytics data filtered for a specific brand owner
  */
 export async function getBrandOwnerAnalyticsData(
-  ownedBrandIds: string[]
+  ownedBrandIds: string[],
 ): Promise<AnalyticsData> {
   try {
     if (!supabase) {
@@ -583,7 +590,7 @@ export async function getBrandOwnerAnalyticsData(
 
     console.log(
       "🔄 Fetching brand owner analytics data for brands:",
-      ownedBrandIds
+      ownedBrandIds,
     );
 
     if (!ownedBrandIds || ownedBrandIds.length === 0) {
@@ -615,13 +622,13 @@ export async function getBrandOwnerAnalyticsData(
           .from("brands")
           .select(
             `
-          id, 
-          name, 
-          rating, 
-          is_verified, 
-          created_at,
-          reviews:reviews(rating, created_at)
-        `
+  id, 
+  name, 
+  rating, 
+  is_verified, 
+  created_at,
+  reviews:reviews(rating, created_at)
+  `,
           )
           .in("id", ownedBrandIds),
 
@@ -669,7 +676,7 @@ export async function getBrandOwnerAnalyticsData(
         ? reviews.reduce(
             (sum: number, review: AnalyticsReviewQueryRow) =>
               sum + (review.rating || 0),
-            0
+            0,
           ) / reviews.length
         : 0;
 
@@ -685,7 +692,7 @@ export async function getBrandOwnerAnalyticsData(
       totalBrands * 15 +
         totalReviews * 5 +
         totalProducts * 10 +
-        verifiedBrands * 30
+        verifiedBrands * 30,
     );
 
     const analyticsData: AnalyticsData = {
@@ -714,7 +721,7 @@ export async function getBrandOwnerAnalyticsData(
  * Get brand growth data filtered for specific brands (shows collection growth instead)
  */
 export async function getBrandOwnerGrowthData(
-  ownedBrandIds: string[]
+  ownedBrandIds: string[],
 ): Promise<{ month: string; brands: number }[]> {
   try {
     if (!supabase) {
@@ -727,7 +734,7 @@ export async function getBrandOwnerGrowthData(
 
     console.log(
       "🔄 Fetching brand owner growth data for brands:",
-      ownedBrandIds
+      ownedBrandIds,
     );
 
     // For brand owners, growth is typically about collections/products, not new brands
@@ -759,7 +766,7 @@ export async function getBrandOwnerGrowthData(
       const monthIndex = months.findIndex(
         (m) =>
           m.date.getMonth() === createdDate.getMonth() &&
-          m.date.getFullYear() === createdDate.getFullYear()
+          m.date.getFullYear() === createdDate.getFullYear(),
       );
       if (monthIndex !== -1) {
         months[monthIndex].products++;
@@ -785,7 +792,7 @@ export async function getBrandOwnerGrowthData(
  * Get review trends data filtered for specific brands
  */
 export async function getBrandOwnerReviewTrends(
-  ownedBrandIds: string[]
+  ownedBrandIds: string[],
 ): Promise<{ month: string; reviews: number; avgRating: number }[]> {
   try {
     if (!supabase) {
@@ -798,7 +805,7 @@ export async function getBrandOwnerReviewTrends(
 
     console.log(
       "🔄 Fetching brand owner review trends for brands:",
-      ownedBrandIds
+      ownedBrandIds,
     );
 
     const { data, error } = await supabase
@@ -827,7 +834,7 @@ export async function getBrandOwnerReviewTrends(
       const monthIndex = months.findIndex(
         (m) =>
           m.date.getMonth() === createdDate.getMonth() &&
-          m.date.getFullYear() === createdDate.getFullYear()
+          m.date.getFullYear() === createdDate.getFullYear(),
       );
       if (monthIndex !== -1) {
         months[monthIndex].reviews.push(review.rating);

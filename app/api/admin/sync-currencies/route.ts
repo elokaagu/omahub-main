@@ -20,7 +20,7 @@ function summarizeSyncFailures(
     brandName: string;
     success: boolean;
     error?: string;
-  }>
+  }>,
 ) {
   return results
     .filter((r) => !r.success)
@@ -31,7 +31,7 @@ function summarizeSyncFailures(
     }));
 }
 
-// GET — super_admin: inspect brand/product currency mismatches (uses service client inside util)
+// GET - super_admin: inspect brand/product currency mismatches (uses service client inside util)
 export async function GET() {
   try {
     const auth = await requireSuperAdmin();
@@ -43,7 +43,7 @@ export async function GET() {
     if (!admin) {
       return NextResponse.json(
         { error: "Server configuration error" },
-        { status: 503 }
+        { status: 503 },
       );
     }
 
@@ -53,7 +53,7 @@ export async function GET() {
       console.error("sync-currencies GET: inconsistency check failed");
       return NextResponse.json(
         { error: "Failed to check currency inconsistencies" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -66,12 +66,12 @@ export async function GET() {
     console.error("sync-currencies GET:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
-// POST — super_admin: sync all product currencies to match brand currency (mutating)
+// POST - super_admin: sync all product currencies to match brand currency (mutating)
 export async function POST() {
   try {
     const auth = await requireSuperAdmin();
@@ -85,7 +85,7 @@ export async function POST() {
           error: "Currency sync already in progress",
           code: "SYNC_IN_PROGRESS",
         },
-        { status: 409 }
+        { status: 409 },
       );
     }
     currencySyncInFlight = true;
@@ -95,13 +95,15 @@ export async function POST() {
       if (!admin) {
         return NextResponse.json(
           { error: "Server configuration error" },
-          { status: 503 }
+          { status: 503 },
         );
       }
 
       const syncResult = await syncAllBrandCurrencies();
 
-      const successfulSyncs = syncResult.results.filter((r) => r.success).length;
+      const successfulSyncs = syncResult.results.filter(
+        (r) => r.success,
+      ).length;
       const failedSyncs = syncResult.results.filter((r) => !r.success).length;
       const totalBrands = syncResult.results.length;
 
@@ -115,7 +117,7 @@ export async function POST() {
             failedSyncs,
             failures: summarizeSyncFailures(syncResult.results),
           },
-          { status: 500 }
+          { status: 500 },
         );
       }
 
@@ -133,7 +135,7 @@ export async function POST() {
     console.error("sync-currencies POST:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

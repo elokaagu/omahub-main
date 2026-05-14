@@ -37,7 +37,7 @@ export default function OfflinePage() {
 
   useEffect(() => {
     setSwEnvAvailable(
-      typeof navigator !== "undefined" && "serviceWorker" in navigator
+      typeof navigator !== "undefined" && "serviceWorker" in navigator,
     );
     applyNavigatorStatus();
 
@@ -75,13 +75,13 @@ export default function OfflinePage() {
 
   /**
    * Tell a *waiting* service worker to call skipWaiting() (see `public/sw-enhanced.js`).
-   * This does not test the network—it only applies a queued worker update, if any.
+   * This does not test the network - it only applies a queued worker update, if any.
    */
   const handleApplyPendingWorkerUpdate = async () => {
     setSwAdvanceHint(null);
     if (!("serviceWorker" in navigator)) {
       setSwAdvanceHint(
-        "Service workers are not available in this browser or context."
+        "Service workers are not available in this browser or context.",
       );
       return;
     }
@@ -94,29 +94,29 @@ export default function OfflinePage() {
       if (reg.waiting) {
         reg.waiting.postMessage({ type: "SKIP_WAITING" });
         setSwAdvanceHint(
-          "Pending update applied. Reload the page to run the new version."
+          "Pending update applied. Reload the page to run the new version.",
         );
         return;
       }
       if (reg.installing) {
         setSwAdvanceHint(
-          "An update is still installing. Wait a few seconds, then try again or reload this tab."
+          "An update is still installing. Wait a few seconds, then try again or reload this tab.",
         );
         return;
       }
       setSwAdvanceHint(
-        "No queued worker update. If content looks old, reload this tab."
+        "No queued worker update. If content looks old, reload this tab.",
       );
     } catch {
       setSwAdvanceHint(
-        "Could not reach the service worker. Try reloading this tab."
+        "Could not reach the service worker. Try reloading this tab.",
       );
     }
   };
 
   /**
    * Re-check connectivity: browser signal + lightweight same-origin request.
-   * (Does not post SKIP_WAITING—that is for activating a waiting worker, not for reachability.)
+   * (Does not post SKIP_WAITING - that is for activating a waiting worker, not for reachability.)
    */
   const handleRetryConnection = async () => {
     setConnectionHint(null);
@@ -127,7 +127,7 @@ export default function OfflinePage() {
       if (!navigator.onLine) {
         setConnectivity("offline");
         setConnectionHint(
-          "Your browser still reports no connection. Check Wi‑Fi or mobile data."
+          "Your browser still reports no connection. Check Wi‑Fi or mobile data.",
         );
         return;
       }
@@ -146,12 +146,12 @@ export default function OfflinePage() {
         setConnectionHint(
           res.ok
             ? "We can reach OmaHub. Reload this tab for the latest content."
-            : "You're online, but the app returned an error. Try reloading this tab or try again later."
+            : "You're online, but the app returned an error. Try reloading this tab or try again later.",
         );
       } catch {
         setConnectivity("offline");
         setConnectionHint(
-          "We still can't reach the server. You may be on a captive portal or offline."
+          "We still can't reach the server. You may be on a captive portal or offline.",
         );
       } finally {
         window.clearTimeout(timeoutId);
@@ -293,7 +293,7 @@ export default function OfflinePage() {
             <ul className="space-y-1 text-sm text-green-800">
               <li>• This page and the app shell (if cached by your device)</li>
               <li>
-                • Pages you visited recently might open from cache—images and
+                • Pages you visited recently might open from cache - images and
                 API data are not guaranteed
               </li>
               <li>
@@ -310,15 +310,11 @@ export default function OfflinePage() {
                 "h-2 w-2 rounded-full",
                 isUnknown && "animate-pulse bg-slate-400",
                 connectivity === "online" && "bg-green-500",
-                connectivity === "offline" && "bg-red-500"
+                connectivity === "offline" && "bg-red-500",
               )}
               aria-hidden
             />
-            {isUnknown
-              ? "Checking…"
-              : isOnline
-                ? "Connected"
-                : "Offline"}
+            {isUnknown ? "Checking…" : isOnline ? "Connected" : "Offline"}
           </div>
         </div>
 
@@ -330,7 +326,7 @@ export default function OfflinePage() {
             <p className="mt-2 text-xs leading-relaxed text-gray-600">
               If OmaHub released a new offline cache version, you can ask a{" "}
               <em>waiting</em> worker to activate. This is not a connection
-              check—use &quot;Retry connection&quot; for that.
+              check - use &quot;Retry connection&quot; for that.
             </p>
             <Button
               type="button"

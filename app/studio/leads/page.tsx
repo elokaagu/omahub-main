@@ -59,7 +59,8 @@ export default function StudioLeadsPage() {
       filtered = filtered.filter(
         (lead) =>
           lead.customer_name.toLowerCase().includes(q) ||
-          lead.contact_email.toLowerCase().includes(q) ||
+          (lead.contact_email &&
+            lead.contact_email.toLowerCase().includes(q)) ||
           (lead.notes && lead.notes.toLowerCase().includes(q))
       );
     }

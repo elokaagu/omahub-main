@@ -24,7 +24,7 @@ import {
 export const dynamic = "force-dynamic";
 
 /**
- * Public: POST (anonymous lead capture) — rate limit, honeypot, validation, direct email.
+ * Public: POST (anonymous lead capture) - rate limit, honeypot, validation, direct email.
  * Authenticated studio: POST/GET/PUT/DELETE delegate to the same handlers as /api/admin/leads
  * so permissions and validation stay in one place.
  *
@@ -32,7 +32,7 @@ export const dynamic = "force-dynamic";
  */
 
 function normalizeLegacyPutBody(
-  body: unknown
+  body: unknown,
 ): { id: string; data: Record<string, unknown> } | null {
   if (!body || typeof body !== "object") return null;
   const b = body as Record<string, unknown>;
@@ -57,7 +57,7 @@ function normalizeLegacyPutBody(
 
 async function legacyListGET(
   request: NextRequest,
-  ctx: Parameters<typeof handleLeadsListGET>[1]
+  ctx: Parameters<typeof handleLeadsListGET>[1],
 ) {
   const res = await handleLeadsListGET(request, ctx);
   if (!res.ok) return res;
@@ -72,7 +72,7 @@ async function legacyListGET(
   const url = new URL(request.url);
   const limit = Math.min(
     100,
-    Math.max(1, parseInt(url.searchParams.get("limit") || "50", 10) || 50)
+    Math.max(1, parseInt(url.searchParams.get("limit") || "50", 10) || 50),
   );
 
   return NextResponse.json({
@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
     if (auth.ok) {
       return handlePostLead(body, auth.ctx);
     }
-    // Invalid session or missing profile — stop. Wrong role (403) — allow public capture (e.g. shopper on brand page).
+    // Invalid session or missing profile - stop. Wrong role (403) - allow public capture (e.g. shopper on brand page).
     if (auth.response.status === 401 || auth.response.status === 404) {
       return auth.response;
     }
@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
   if (!checkPublicLeadRateLimit(getPublicLeadRateLimitClientKey(request))) {
     return NextResponse.json(
       { error: "Too many submissions. Please try again later." },
-      { status: 429 }
+      { status: 429 },
     );
   }
 
@@ -128,7 +128,7 @@ export async function POST(request: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json(
       { error: "Invalid or incomplete submission" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
     if (!admin) {
       return NextResponse.json(
         { error: "Service temporarily unavailable." },
-        { status: 503 }
+        { status: 503 },
       );
     }
 
@@ -151,8 +151,11 @@ export async function POST(request: NextRequest) {
 
     if (brandError || !brand) {
       return NextResponse.json(
-        { error: "We could not process this request. Please verify the brand and try again." },
-        { status: 400 }
+        {
+          error:
+            "We could not process this request. Please verify the brand and try again.",
+        },
+        { status: 400 },
       );
     }
 
@@ -174,10 +177,14 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (leadError || !lead) {
-      console.error("Public lead insert error:", leadError?.code, leadError?.message);
+      console.error(
+        "Public lead insert error:",
+        leadError?.code,
+        leadError?.message,
+      );
       return NextResponse.json(
         { error: "Unable to save your request. Please try again later." },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -195,10 +202,13 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, lead });
   } catch (e) {
-    console.error("Public lead POST failed:", e instanceof Error ? e.message : e);
+    console.error(
+      "Public lead POST failed:",
+      e instanceof Error ? e.message : e,
+    );
     return NextResponse.json(
       { error: "Unable to complete your request." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -222,7 +232,7 @@ export async function GET(request: NextRequest) {
     console.error("GET /api/leads error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -243,7 +253,7 @@ export async function PUT(request: NextRequest) {
     if (!normalized) {
       return NextResponse.json(
         { error: "Invalid request body" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -252,7 +262,7 @@ export async function PUT(request: NextRequest) {
     console.error("PUT /api/leads error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -265,7 +275,10 @@ export async function DELETE(request: NextRequest) {
     const url = new URL(request.url);
     let id = url.searchParams.get("id");
 
-    if (!id && request.headers.get("content-type")?.includes("application/json")) {
+    if (
+      !id &&
+      request.headers.get("content-type")?.includes("application/json")
+    ) {
       try {
         const b = (await request.json()) as { id?: string };
         if (typeof b?.id === "string") id = b.id;
@@ -277,7 +290,7 @@ export async function DELETE(request: NextRequest) {
     if (!id) {
       return NextResponse.json(
         { error: "Lead ID is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -295,7 +308,7 @@ export async function DELETE(request: NextRequest) {
     console.error("DELETE /api/leads error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -125,10 +125,11 @@ export default function EditProductPage() {
           getAllCollections(),
         ]);
 
-        const result = (await Promise.race([
-          dataPromise,
-          timeoutPromise,
-        ])) as [Product | null, Brand[], Catalogue[]];
+        const result = (await Promise.race([dataPromise, timeoutPromise])) as [
+          Product | null,
+          Brand[],
+          Catalogue[],
+        ];
 
         if (cancelled) return;
 
@@ -187,7 +188,9 @@ export default function EditProductPage() {
         console.error("Error fetching product data:", error);
         const msg = error instanceof Error ? error.message : "";
         if (msg === "Request timeout") {
-          toast.error("Request timed out. Please try again or go back to products.");
+          toast.error(
+            "Request timed out. Please try again or go back to products.",
+          );
           setProductTimeout(true);
         } else {
           toast.error("Failed to load product data.");
@@ -292,7 +295,9 @@ export default function EditProductPage() {
             <div className="text-center">
               <div className="rounded-full h-12 w-12 border-b-2 border-oma-plum mx-auto mb-4"></div>
               <p className="text-gray-600">Loading product data...</p>
-              <p className="text-sm text-gray-500 mt-2">If this takes too long, please refresh the page</p>
+              <p className="text-sm text-gray-500 mt-2">
+                If this takes too long, please refresh the page
+              </p>
             </div>
           </div>
         </div>
@@ -310,7 +315,8 @@ export default function EditProductPage() {
               Product Loading Timeout
             </h1>
             <p className="text-gray-600 mb-4">
-              The product data is taking too long to load. This might be due to network issues.
+              The product data is taking too long to load. This might be due to
+              network issues.
             </p>
             <div className="space-y-2">
               <Button
@@ -416,7 +422,7 @@ export default function EditProductPage() {
 
   const handleArrayChange = (
     field: "sizes" | "colors" | "materials",
-    value: string
+    value: string,
   ) => {
     if (value.trim()) {
       setFormData((prev) => ({
@@ -428,7 +434,7 @@ export default function EditProductPage() {
 
   const removeArrayItem = (
     field: "sizes" | "colors" | "materials",
-    index: number
+    index: number,
   ) => {
     setFormData((prev) => ({
       ...prev,
@@ -456,14 +462,14 @@ export default function EditProductPage() {
 
     // 🔒 ENFORCE CURRENCY VALIDATION
     const selectedBrand = brands.find(
-      (brand) => brand.id === formData.brand_id
+      (brand) => brand.id === formData.brand_id,
     );
     if (selectedBrand) {
       const brandCurrency = getBrandCurrency(selectedBrand);
       if (brandCurrency && formData.currency !== brandCurrency.code) {
         toast.error(
           `Currency mismatch! This brand uses ${brandCurrency.symbol}${brandCurrency.code}. ` +
-            `Please change the product currency to ${brandCurrency.code} or contact support if you need to use a different currency.`
+            `Please change the product currency to ${brandCurrency.code} or contact support if you need to use a different currency.`,
         );
         return;
       }
@@ -528,7 +534,7 @@ export default function EditProductPage() {
         error?.message?.includes("column")
       ) {
         toast.error(
-          "Database schema issue detected. Please contact administrator."
+          "Database schema issue detected. Please contact administrator.",
         );
       } else if (error?.message?.includes("foreign key")) {
         toast.error("Invalid brand or collection selected");
@@ -817,7 +823,7 @@ export default function EditProductPage() {
                     <p className="text-xs text-muted-foreground">
                       Changing brand sets currency to{" "}
                       {brands.find((b) => b.id === formData.brand_id)?.name}
-                      &apos;s default ({selectedBrandCurrency || "—"}); you can
+                      &apos;s default ({selectedBrandCurrency || "-"}); you can
                       change it here, but it must match the brand when you save.
                     </p>
                   )}
@@ -1142,7 +1148,12 @@ export default function EditProductPage() {
 
           {/* Submit Button */}
           <div className="flex gap-4">
-            <Button type="button" variant="outline" asChild className="border-gray-300 text-black hover:bg-gray-100">
+            <Button
+              type="button"
+              variant="outline"
+              asChild
+              className="border-gray-300 text-black hover:bg-gray-100"
+            >
               <NavigationLink href="/studio/products">Cancel</NavigationLink>
             </Button>
             <Button

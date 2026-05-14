@@ -5,7 +5,7 @@ export const BRAND_NAME_LIMIT = 50;
 
 /** Full list including NONE (explore pricing) for edit flows. */
 export const STUDIO_CURRENCIES = [
-  { code: "NONE", symbol: "—", name: "No Currency (Explore brand for prices)" },
+  { code: "NONE", symbol: "-", name: "No Currency (Explore brand for prices)" },
   { code: "NGN", symbol: "₦", name: "Nigerian Naira" },
   { code: "KES", symbol: "KSh", name: "Kenyan Shilling" },
   { code: "GHS", symbol: "GHS", name: "Ghanaian Cedi" },
@@ -22,7 +22,7 @@ export const STUDIO_CURRENCIES = [
 
 /** Currency dropdown when entering numeric min/max (create + edit price fields). */
 export const STUDIO_CURRENCIES_FOR_PRICE_SELECT = STUDIO_CURRENCIES.filter(
-  (c) => c.code !== "NONE"
+  (c) => c.code !== "NONE",
 );
 
 export function getStudioBrandCategoryNames(): string[] {

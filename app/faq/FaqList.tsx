@@ -1,8 +1,6 @@
 import { ChevronDown } from "lucide-react";
 import type { PublicFaq } from "@/lib/types/publicFaq";
-import {
-  faqAnswerLooksLikeHtml,
-} from "@/lib/faqAnswerRendering";
+import { faqAnswerLooksLikeHtml } from "@/lib/faqAnswerRendering";
 import { cn } from "@/lib/utils";
 
 type FaqListProps = {
@@ -15,7 +13,8 @@ export function FaqList({ faqs }: FaqListProps) {
       <div className="rounded-xl border border-oma-gold/20 bg-oma-beige/40 px-6 py-12 text-center">
         <p className="font-canela text-lg text-oma-plum">No FAQs yet</p>
         <p className="mt-2 text-sm text-oma-cocoa/80">
-          We are updating this page—please check back soon or contact us below.
+          We are updating this page - please check back soon or contact us
+          below.
         </p>
       </div>
     );
@@ -31,7 +30,7 @@ export function FaqList({ faqs }: FaqListProps) {
           <summary
             className={cn(
               "flex cursor-pointer list-none items-center justify-between gap-4 p-6 font-canela text-lg font-semibold text-oma-plum",
-              "marker:content-none [&::-webkit-details-marker]:hidden"
+              "marker:content-none [&::-webkit-details-marker]:hidden",
             )}
           >
             <span className="text-left">{faq.question}</span>

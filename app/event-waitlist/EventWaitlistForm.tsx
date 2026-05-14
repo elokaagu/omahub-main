@@ -83,10 +83,7 @@ export function EventWaitlistForm() {
   const [hpField, setHpField] = useState("");
   const [errors, setErrors] = useState<
     Partial<
-      Record<
-        keyof FormState | "designer" | "otherDesigner",
-        string | undefined
-      >
+      Record<keyof FormState | "designer" | "otherDesigner", string | undefined>
     >
   >({});
   const [submitting, setSubmitting] = useState(false);
@@ -94,7 +91,7 @@ export function EventWaitlistForm() {
   const [brandProducts, setBrandProducts] = useState<CatalogProduct[]>([]);
   const [productsLoading, setProductsLoading] = useState(false);
   const [productsFetchError, setProductsFetchError] = useState<string | null>(
-    null
+    null,
   );
   const [selectedProductId, setSelectedProductId] = useState("");
   const designerChangeSeq = useRef(0);
@@ -106,7 +103,10 @@ export function EventWaitlistForm() {
         ? `Other: ${otherDesignerName.trim()}`
         : "Other / not listed";
     }
-    return brands.find((b) => b.id === selectedDesignerId)?.name ?? "Search or select a designer…";
+    return (
+      brands.find((b) => b.id === selectedDesignerId)?.name ??
+      "Search or select a designer…"
+    );
   }, [selectedDesignerId, otherDesignerName, brands]);
 
   useEffect(() => {
@@ -115,7 +115,9 @@ export function EventWaitlistForm() {
       setBrandsLoading(true);
       setBrandsError(null);
       try {
-        const res = await fetch("/api/brands/public", { credentials: "same-origin" });
+        const res = await fetch("/api/brands/public", {
+          credentials: "same-origin",
+        });
         if (!res.ok) throw new Error("Could not load designers");
         const json = (await res.json()) as { brands?: unknown[] };
         const raw = Array.isArray(json.brands) ? json.brands : [];
@@ -128,12 +130,16 @@ export function EventWaitlistForm() {
           })
           .filter((b): b is DirectoryBrand => b !== null)
           .filter((b) => !isPlatformBrandRow(b))
-          .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
+          .sort((a, b) =>
+            a.name.localeCompare(b.name, undefined, { sensitivity: "base" }),
+          );
         if (!cancelled) setBrands(mapped);
       } catch {
         if (!cancelled) {
           setBrands([]);
-          setBrandsError("Designers could not be loaded. Refresh the page or use Contact.");
+          setBrandsError(
+            "Designers could not be loaded. Refresh the page or use Contact.",
+          );
         }
       } finally {
         if (!cancelled) setBrandsLoading(false);
@@ -157,10 +163,7 @@ export function EventWaitlistForm() {
       colour: "",
     }));
 
-    if (
-      !selectedDesignerId ||
-      selectedDesignerId === OTHER_DESIGNER_VALUE
-    ) {
+    if (!selectedDesignerId || selectedDesignerId === OTHER_DESIGNER_VALUE) {
       setProductsLoading(false);
       return;
     }
@@ -241,12 +244,7 @@ export function EventWaitlistForm() {
       return otherDesignerName.trim();
     }
     return brands.find((b) => b.id === selectedDesignerId)?.name?.trim() ?? "";
-  }, [
-    showDesignerDropdown,
-    selectedDesignerId,
-    otherDesignerName,
-    brands,
-  ]);
+  }, [showDesignerDropdown, selectedDesignerId, otherDesignerName, brands]);
 
   function validate() {
     const next: Partial<
@@ -298,7 +296,7 @@ export function EventWaitlistForm() {
   }
 
   function onFieldChange(
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
@@ -351,7 +349,7 @@ export function EventWaitlistForm() {
       const data = (await res.json()) as { success?: boolean };
       if (data.success) {
         toast.success(
-          "You are on the list. Check your inbox for a confirmation email."
+          "You are on the list. Check your inbox for a confirmation email.",
         );
         setForm({
           name: "",
@@ -416,7 +414,10 @@ export function EventWaitlistForm() {
         />
 
         <div className="space-y-2">
-          <label htmlFor={IDS.name} className="block text-sm font-medium text-oma-black">
+          <label
+            htmlFor={IDS.name}
+            className="block text-sm font-medium text-oma-black"
+          >
             Your name
           </label>
           <Input
@@ -437,7 +438,10 @@ export function EventWaitlistForm() {
         </div>
 
         <div className="space-y-2">
-          <label htmlFor={IDS.email} className="block text-sm font-medium text-oma-black">
+          <label
+            htmlFor={IDS.email}
+            className="block text-sm font-medium text-oma-black"
+          >
             Email
           </label>
           <Input
@@ -452,14 +456,21 @@ export function EventWaitlistForm() {
             className="border-oma-gold/30 bg-white focus-visible:ring-oma-plum"
           />
           {errors.email ? (
-            <p id={errId("email")} className="text-sm text-red-500" role="alert">
+            <p
+              id={errId("email")}
+              className="text-sm text-red-500"
+              role="alert"
+            >
               {errors.email}
             </p>
           ) : null}
         </div>
 
         <div className="space-y-2">
-          <label htmlFor={IDS.phone} className="block text-sm font-medium text-oma-black">
+          <label
+            htmlFor={IDS.phone}
+            className="block text-sm font-medium text-oma-black"
+          >
             Phone (optional)
           </label>
           <Input
@@ -500,11 +511,16 @@ export function EventWaitlistForm() {
                   disabled={brandsLoading}
                   className={cn(
                     "h-auto min-h-10 w-full justify-between border-oma-gold/30 bg-white py-2 text-left font-normal text-oma-black hover:bg-white focus-visible:ring-oma-plum",
-                    !selectedDesignerId && "text-oma-cocoa/70"
+                    !selectedDesignerId && "text-oma-cocoa/70",
                   )}
                 >
-                  <span className="line-clamp-2 pr-2">{designerTriggerLabel}</span>
-                  <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" aria-hidden />
+                  <span className="line-clamp-2 pr-2">
+                    {designerTriggerLabel}
+                  </span>
+                  <ChevronsUpDown
+                    className="h-4 w-4 shrink-0 opacity-50"
+                    aria-hidden
+                  />
                 </Button>
               </PopoverTrigger>
               <PopoverContent
@@ -535,7 +551,9 @@ export function EventWaitlistForm() {
                           <Check
                             className={cn(
                               "mr-2 h-4 w-4 shrink-0",
-                              selectedDesignerId === b.id ? "opacity-100" : "opacity-0"
+                              selectedDesignerId === b.id
+                                ? "opacity-100"
+                                : "opacity-0",
                             )}
                             aria-hidden
                           />
@@ -561,7 +579,7 @@ export function EventWaitlistForm() {
                             "mr-2 h-4 w-4 shrink-0",
                             selectedDesignerId === OTHER_DESIGNER_VALUE
                               ? "opacity-100"
-                              : "opacity-0"
+                              : "opacity-0",
                           )}
                           aria-hidden
                         />
@@ -612,12 +630,17 @@ export function EventWaitlistForm() {
             </>
           )}
           {errors.designer ? (
-            <p id={errId("designer")} className="text-sm text-red-500" role="alert">
+            <p
+              id={errId("designer")}
+              className="text-sm text-red-500"
+              role="alert"
+            >
               {errors.designer}
             </p>
           ) : null}
 
-          {showDesignerDropdown && selectedDesignerId === OTHER_DESIGNER_VALUE ? (
+          {showDesignerDropdown &&
+          selectedDesignerId === OTHER_DESIGNER_VALUE ? (
             <div className="space-y-2 pt-1">
               <label
                 htmlFor={IDS.otherDesigner}
@@ -632,7 +655,10 @@ export function EventWaitlistForm() {
                 onChange={(e) => {
                   setOtherDesignerName(e.target.value);
                   if (errors.otherDesigner) {
-                    setErrors((prev) => ({ ...prev, otherDesigner: undefined }));
+                    setErrors((prev) => ({
+                      ...prev,
+                      otherDesigner: undefined,
+                    }));
                   }
                 }}
                 placeholder="As you know them (Instagram, legal name, etc.)"
@@ -712,7 +738,7 @@ export function EventWaitlistForm() {
             brandProducts.length === 0 ? (
               <p className="text-sm text-oma-cocoa/85">
                 This designer has no in-stock pieces listed yet. Describe what
-                you want below — we&apos;ll still route it to them.
+                you want below - we&apos;ll still route it to them.
               </p>
             ) : null}
             <div className="space-y-2">
@@ -758,13 +784,17 @@ export function EventWaitlistForm() {
                 name="size"
                 value={form.size}
                 onChange={onFieldChange}
-                placeholder="UK / EU / your usual — be specific"
+                placeholder="UK / EU / your usual - be specific"
                 aria-invalid={!!errors.size}
                 aria-describedby={errors.size ? errId("size") : undefined}
                 className="border-oma-gold/30 bg-white focus-visible:ring-oma-plum"
               />
               {errors.size ? (
-                <p id={errId("size")} className="text-sm text-red-500" role="alert">
+                <p
+                  id={errId("size")}
+                  className="text-sm text-red-500"
+                  role="alert"
+                >
                   {errors.size}
                 </p>
               ) : null}

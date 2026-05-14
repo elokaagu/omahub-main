@@ -17,8 +17,7 @@ type Supabase = Awaited<ReturnType<typeof createServerSupabaseClient>>;
 
 const BRAND_FIELDS =
   "id, name, image, category, location, is_verified, rating" as const;
-const CATALOGUE_FIELDS =
-  "id, title, image, brand_id, description" as const;
+const CATALOGUE_FIELDS = "id, title, image, brand_id, description" as const;
 const PRODUCT_FIELDS =
   "id, title, image, brand_id, price, sale_price, category, brand:brands(id, name, location, price_range, currency)" as const;
 
@@ -27,21 +26,21 @@ const PRODUCT_FIELDS =
  */
 export async function enrichUserFavourites(
   supabase: Supabase,
-  rows: FavouriteRow[]
+  rows: FavouriteRow[],
 ): Promise<EnrichedFavourite[]> {
   const brandIds = [
     ...new Set(
-      rows.filter((r) => r.item_type === "brand").map((r) => r.item_id)
+      rows.filter((r) => r.item_type === "brand").map((r) => r.item_id),
     ),
   ];
   const catalogueIds = [
     ...new Set(
-      rows.filter((r) => r.item_type === "catalogue").map((r) => r.item_id)
+      rows.filter((r) => r.item_type === "catalogue").map((r) => r.item_id),
     ),
   ];
   const productIds = [
     ...new Set(
-      rows.filter((r) => r.item_type === "product").map((r) => r.item_id)
+      rows.filter((r) => r.item_type === "product").map((r) => r.item_id),
     ),
   ];
 
@@ -61,16 +60,22 @@ export async function enrichUserFavourites(
   ]);
 
   const brandMap = new Map(
-    (brandsRes.data ?? []).map((b) => [String(b.id), b as Record<string, unknown>])
+    (brandsRes.data ?? []).map((b) => [
+      String(b.id),
+      b as Record<string, unknown>,
+    ]),
   );
   const catalogueMap = new Map(
     (cataloguesRes.data ?? []).map((c) => [
       String(c.id),
       c as Record<string, unknown>,
-    ])
+    ]),
   );
   const productMap = new Map(
-    (productsRes.data ?? []).map((p) => [String(p.id), p as Record<string, unknown>])
+    (productsRes.data ?? []).map((p) => [
+      String(p.id),
+      p as Record<string, unknown>,
+    ]),
   );
 
   const out: EnrichedFavourite[] = [];
@@ -132,12 +137,12 @@ export function partitionFavouritesByType(items: EnrichedFavourite[]) {
 /** Best-effort cache refresh; RPC may not exist in all environments. */
 export async function tryRefreshFavouritesCache(
   supabase: Supabase,
-  userId: string
+  userId: string,
 ): Promise<void> {
   const { error } = await supabase.rpc("refresh_favourites_cache", {
     user_id: userId,
   });
   if (error) {
-    // Expected when RPC is not deployed — avoid noisy logs.
+    // Expected when RPC is not deployed - avoid noisy logs.
   }
 }

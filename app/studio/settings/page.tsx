@@ -30,7 +30,7 @@ import { useStudioPermissions } from "@/hooks/useStudioPermissions";
 export default function SettingsPage() {
   const { user, loading } = useAuth();
   const { permissions, loading: permissionsLoading } = useStudioPermissions(
-    user?.id
+    user?.id,
   );
   const [isChangingStatus, setIsChangingStatus] = useState(false);
   const [platformStatus, setPlatformStatus] = useState<{
@@ -43,8 +43,7 @@ export default function SettingsPage() {
 
   // Check if user has super admin permissions
   const hasSettingsPermission = permissions.includes("studio.settings.manage");
-  const isSuperAdmin =
-    user?.role === "super_admin" || hasSettingsPermission;
+  const isSuperAdmin = user?.role === "super_admin" || hasSettingsPermission;
 
   const fetchPlatformStatus = useCallback(async () => {
     try {
@@ -100,7 +99,7 @@ export default function SettingsPage() {
 
       if (response.ok && data.success) {
         toast.success(
-          "Platform is now public! Password gate has been removed."
+          "Platform is now public! Password gate has been removed.",
         );
         setPlatformStatus({ isPublic: true, status: "public" });
       } else {
@@ -128,7 +127,7 @@ export default function SettingsPage() {
 
       if (response.ok && data.success) {
         toast.success(
-          "Platform is now private! Password gate has been enabled."
+          "Platform is now private! Password gate has been enabled.",
         );
         setPlatformStatus({ isPublic: false, status: "private" });
       } else {
@@ -236,7 +235,7 @@ export default function SettingsPage() {
                   {platformStatus?.fallback ===
                     "missing_row_defaults_to_private" && (
                     <p className="text-xs text-oma-cocoa/75 mb-3 rounded-md bg-oma-beige/50 px-2.5 py-2">
-                      No database row for platform visibility yet — effective
+                      No database row for platform visibility yet - effective
                       status is private until you use Make Public or Make
                       Private.
                     </p>
@@ -307,7 +306,9 @@ export default function SettingsPage() {
                       !platformStatus?.isPublic ||
                       Boolean(statusError)
                     }
-                    variant={!platformStatus?.isPublic ? "secondary" : "outline"}
+                    variant={
+                      !platformStatus?.isPublic ? "secondary" : "outline"
+                    }
                     className="flex items-center gap-2 flex-1"
                   >
                     {isChangingStatus ? (
@@ -456,17 +457,17 @@ export default function SettingsPage() {
                 <div className="flex items-start gap-2">
                   <MessageSquare className="h-4 w-4 text-oma-plum mt-0.5 flex-shrink-0" />
                   <p>
-                    <strong>FAQ Management:</strong> Organise helpful information
-                    for your users with categorised questions and rich text
-                    answers.
+                    <strong>FAQ Management:</strong> Organise helpful
+                    information for your users with categorised questions and
+                    rich text answers.
                   </p>
                 </div>
                 <div className="flex items-start gap-2">
                   <Settings className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
                   <p>
                     <strong>Access Control:</strong> These management tools
-                    require super admin privileges to ensure content security and
-                    compliance.
+                    require super admin privileges to ensure content security
+                    and compliance.
                   </p>
                 </div>
               </div>

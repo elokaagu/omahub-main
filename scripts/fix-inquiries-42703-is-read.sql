@@ -1,7 +1,7 @@
--- Fix: Postgres 42703 — column inquiries.is_read does not exist
+-- Fix: Postgres 42703 - column inquiries.is_read does not exist
 -- The Studio inbox API selects is_read / read_at / replied_at on public.inquiries.
 -- Run this in the Supabase Dashboard → SQL Editor (production DB), or:
---   supabase db push   (applies supabase/migrations/20260415180000_inquiries_read_columns.sql)
+--  supabase db push  (applies supabase/migrations/20260415180000_inquiries_read_columns.sql)
 -- Safe to run more than once (IF NOT EXISTS).
 
 ALTER TABLE public.inquiries

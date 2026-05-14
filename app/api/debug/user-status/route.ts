@@ -10,8 +10,8 @@ type Check = "ok" | "fail";
 /**
  * Super-admin-only coarse health checks for session DB paths (no PII or row payloads).
  *
- * `checks.profile_row` — can read own `profiles.id` under RLS.
- * `checks.brands_probe` — can run a minimal `brands` read (RLS as super_admin).
+ * `checks.profile_row` - can read own `profiles.id` under RLS.
+ * `checks.brands_probe` - can run a minimal `brands` read (RLS as super_admin).
  *
  * Production: set `ENABLE_DEBUG_USER_STATUS=true` or returns 404.
  */
@@ -50,18 +50,18 @@ export async function GET() {
       JSON.stringify({
         event: "debug_user_status_unhandled",
         name: e instanceof Error ? e.name : "unknown",
-      })
+      }),
     );
     return NextResponse.json(
       { ok: false, error: "Internal server error" },
-      { status: 500, headers: { "Cache-Control": "private, no-store" } }
+      { status: 500, headers: { "Cache-Control": "private, no-store" } },
     );
   }
 }
 
 async function probeProfileRow(
   supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>,
-  userId: string
+  userId: string,
 ): Promise<Check> {
   const { data, error } = await supabase
     .from("profiles")
@@ -74,13 +74,16 @@ async function probeProfileRow(
       JSON.stringify({
         event: "debug_user_status_profile_probe",
         code: error.code ?? "unknown",
-      })
+      }),
     );
     return "fail";
   }
   if (!data) {
     console.error(
-      JSON.stringify({ event: "debug_user_status_profile_probe", code: "no_row" })
+      JSON.stringify({
+        event: "debug_user_status_profile_probe",
+        code: "no_row",
+      }),
     );
     return "fail";
   }
@@ -88,7 +91,7 @@ async function probeProfileRow(
 }
 
 async function probeBrandsReadable(
-  supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>
+  supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>,
 ): Promise<Check> {
   const { error } = await supabase.from("brands").select("id").limit(1);
 
@@ -97,7 +100,7 @@ async function probeBrandsReadable(
       JSON.stringify({
         event: "debug_user_status_brands_probe",
         code: error.code ?? "unknown",
-      })
+      }),
     );
     return "fail";
   }

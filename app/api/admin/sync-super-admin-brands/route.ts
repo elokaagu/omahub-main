@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 /**
  * Backfills `profiles.owned_brands` for every super_admin with all brand IDs.
- * Prefer RBAC where super_admin bypasses brand scope so this stays unnecessary — see product/auth design.
+ * Prefer RBAC where super_admin bypasses brand scope so this stays unnecessary - see product/auth design.
  */
 
 /** Best-effort lock per server instance; not distributed across lambdas. */
@@ -39,7 +39,7 @@ export async function POST() {
           error: "Super admin brand sync already in progress",
           code: "SYNC_IN_PROGRESS",
         },
-        { status: 409 }
+        { status: 409 },
       );
     }
     syncInFlight = true;
@@ -55,7 +55,7 @@ export async function POST() {
       if (!adminDb) {
         return NextResponse.json(
           { error: "Server configuration error" },
-          { status: 503 }
+          { status: 503 },
         );
       }
 
@@ -67,11 +67,11 @@ export async function POST() {
         console.error(
           "sync-super-admin-brands: brands fetch failed:",
           brandsError.code,
-          brandsError.message
+          brandsError.message,
         );
         return NextResponse.json(
           { error: "Failed to fetch brands" },
-          { status: 500 }
+          { status: 500 },
         );
       }
 
@@ -86,11 +86,11 @@ export async function POST() {
         console.error(
           "sync-super-admin-brands: profiles fetch failed:",
           superAdminsError.code,
-          superAdminsError.message
+          superAdminsError.message,
         );
         return NextResponse.json(
           { error: "Failed to fetch super admins" },
-          { status: 500 }
+          { status: 500 },
         );
       }
 
@@ -101,51 +101,54 @@ export async function POST() {
           id: string;
           owned_brands: string[] | null;
         }): Promise<SuperAdminBrandSyncDetail> => {
-        const currentBrands = Array.isArray(admin.owned_brands)
-          ? admin.owned_brands
-          : [];
-        const missingBrands = allBrandIds.filter(
-          (brandId: string) => !currentBrands.includes(brandId)
-        );
+          const currentBrands = Array.isArray(admin.owned_brands)
+            ? admin.owned_brands
+            : [];
+          const missingBrands = allBrandIds.filter(
+            (brandId: string) => !currentBrands.includes(brandId),
+          );
 
-        if (missingBrands.length === 0) {
+          if (missingBrands.length === 0) {
+            return {
+              success: true as const,
+              userId: admin.id,
+              brandsAdded: 0,
+            };
+          }
+
+          const updatedBrands = [
+            ...new Set([...currentBrands, ...allBrandIds]),
+          ];
+
+          const { error: updateError } = await adminDb
+            .from("profiles")
+            .update({
+              owned_brands: updatedBrands,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", admin.id);
+
+          if (updateError) {
+            console.error(
+              "sync-super-admin-brands: profile update failed:",
+              admin.id,
+              updateError.code,
+              updateError.message,
+            );
+            return {
+              success: false as const,
+              userId: admin.id,
+              error: updateError.message,
+            };
+          }
+
           return {
             success: true as const,
             userId: admin.id,
-            brandsAdded: 0,
+            brandsAdded: missingBrands.length,
           };
-        }
-
-        const updatedBrands = [...new Set([...currentBrands, ...allBrandIds])];
-
-        const { error: updateError } = await adminDb
-          .from("profiles")
-          .update({
-            owned_brands: updatedBrands,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", admin.id);
-
-        if (updateError) {
-          console.error(
-            "sync-super-admin-brands: profile update failed:",
-            admin.id,
-            updateError.code,
-            updateError.message
-          );
-          return {
-            success: false as const,
-            userId: admin.id,
-            error: updateError.message,
-          };
-        }
-
-        return {
-          success: true as const,
-          userId: admin.id,
-          brandsAdded: missingBrands.length,
-        };
-      });
+        },
+      );
 
       const settled = await Promise.allSettled(updatePromises);
 
@@ -159,29 +162,32 @@ export async function POST() {
       };
 
       settled.forEach(
-        (result: PromiseSettledResult<SuperAdminBrandSyncDetail>, index: number) => {
-        if (result.status === "fulfilled") {
-          const value = result.value;
-          summary.details.push(value);
-          if (value.success) {
-            summary.successful++;
-            summary.totalBrandsAdded += value.brandsAdded;
+        (
+          result: PromiseSettledResult<SuperAdminBrandSyncDetail>,
+          index: number,
+        ) => {
+          if (result.status === "fulfilled") {
+            const value = result.value;
+            summary.details.push(value);
+            if (value.success) {
+              summary.successful++;
+              summary.totalBrandsAdded += value.brandsAdded;
+            } else {
+              summary.failed++;
+            }
           } else {
             summary.failed++;
+            const fallbackId = admins[index]?.id ?? "unknown";
+            summary.details.push({
+              success: false,
+              userId: fallbackId,
+              error:
+                result.reason instanceof Error
+                  ? result.reason.message
+                  : String(result.reason),
+            });
           }
-        } else {
-          summary.failed++;
-          const fallbackId = admins[index]?.id ?? "unknown";
-          summary.details.push({
-            success: false,
-            userId: fallbackId,
-            error:
-              result.reason instanceof Error
-                ? result.reason.message
-                : String(result.reason),
-          });
-        }
-      }
+        },
       );
 
       console.log("sync-super-admin-brands complete", {
@@ -204,7 +210,7 @@ export async function POST() {
     console.error("sync-super-admin-brands:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

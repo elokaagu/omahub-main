@@ -65,15 +65,22 @@ export const EMPTY_LEAD_STATS: LeadStats = {
 
 type LeadApiRow = Lead & {
   brands?: Lead["brand"];
+  customer_email?: string;
+  customer_phone?: string | null;
 };
 
 export function normalizeLead(raw: LeadApiRow): Lead {
   const brand = raw.brand ?? raw.brands;
+  const email =
+    raw.contact_email?.trim() ||
+    raw.customer_email?.trim() ||
+    "";
+  const phone = raw.contact_phone ?? raw.customer_phone ?? undefined;
   return {
     id: raw.id,
     customer_name: raw.customer_name,
-    contact_email: raw.contact_email,
-    contact_phone: raw.contact_phone,
+    contact_email: email,
+    contact_phone: phone ?? undefined,
     source: raw.source,
     lead_type: raw.lead_type,
     status: raw.status,

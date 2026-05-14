@@ -9,7 +9,7 @@ const isBuildTime =
   process.env.NODE_ENV === "production" &&
   !process.env.NEXT_PUBLIC_SUPABASE_URL;
 
-/** Same browser singleton as AuthContext (`supabase-unified`) — avoids multiple GoTrue clients. */
+/** Same browser singleton as AuthContext (`supabase-unified`) - avoids multiple GoTrue clients. */
 export const getSupabaseClient = () => supabase;
 
 export const isSupabaseAvailable = () => !!supabase;
@@ -22,14 +22,14 @@ if (
   supabase.auth.onAuthStateChange(
     (event: AuthChangeEvent, session: Session | null) => {
       console.log("Auth state changed:", event, !!session);
-    }
+    },
   );
 }
 
 // Helper function to safely execute database operations
 export async function safeDbOperation<T>(
   operation: () => Promise<T>,
-  fallback: T
+  fallback: T,
 ): Promise<T> {
   // Skip actual database operations during build time
   if (isBuildTime) {

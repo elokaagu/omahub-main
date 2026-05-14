@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic";
 
 /**
  * GET: RLS enforces active-only rows for anon; super_admin may list inactive via query flags.
- * See scripts/create-faq-management-system.sql — "Public read access to active FAQs".
+ * See scripts/create-faq-management-system.sql - "Public read access to active FAQs".
  */
 export async function GET(request: NextRequest) {
   try {
@@ -37,8 +37,7 @@ export async function GET(request: NextRequest) {
       isSuperAdmin = prof?.role === "super_admin";
     }
 
-    const wantsUnpublished =
-      includeInactive || isActiveRaw === "false";
+    const wantsUnpublished = includeInactive || isActiveRaw === "false";
 
     if (wantsUnpublished && !isSuperAdmin) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -80,7 +79,7 @@ export async function GET(request: NextRequest) {
       console.error("[admin/faqs GET] query failed", { code: error.code });
       return NextResponse.json(
         { error: "Failed to fetch FAQs" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -89,7 +88,7 @@ export async function GET(request: NextRequest) {
     console.error("[admin/faqs GET] unexpected error");
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -98,10 +97,7 @@ export async function POST(request: NextRequest) {
   try {
     const auth = await requireSuperAdmin();
     if (!auth.ok) {
-      return NextResponse.json(
-        { error: auth.error },
-        { status: auth.status }
-      );
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
     let body: unknown;
@@ -130,7 +126,7 @@ export async function POST(request: NextRequest) {
       console.error("[admin/faqs POST] insert failed", { code: error.code });
       return NextResponse.json(
         { error: "Failed to create FAQ" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -139,7 +135,7 @@ export async function POST(request: NextRequest) {
     console.error("[admin/faqs POST] unexpected error");
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -148,10 +144,7 @@ export async function PUT(request: NextRequest) {
   try {
     const auth = await requireSuperAdmin();
     if (!auth.ok) {
-      return NextResponse.json(
-        { error: auth.error },
-        { status: auth.status }
-      );
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
     let body: unknown;
@@ -161,10 +154,9 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
     }
 
-    const parsed =
-      faqPatchSchema.safeParse(body).success
-        ? faqPatchSchema.safeParse(body)
-        : faqUpdateSchema.safeParse(body);
+    const parsed = faqPatchSchema.safeParse(body).success
+      ? faqPatchSchema.safeParse(body)
+      : faqUpdateSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json({ error: "Invalid request" }, { status: 400 });
     }
@@ -195,7 +187,7 @@ export async function PUT(request: NextRequest) {
       console.error("[admin/faqs PUT] update failed", { code: error.code });
       return NextResponse.json(
         { error: "Failed to update FAQ" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -204,7 +196,7 @@ export async function PUT(request: NextRequest) {
     console.error("[admin/faqs PUT] unexpected error");
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -213,10 +205,7 @@ export async function DELETE(request: NextRequest) {
   try {
     const auth = await requireSuperAdmin();
     if (!auth.ok) {
-      return NextResponse.json(
-        { error: auth.error },
-        { status: auth.status }
-      );
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
     const idRaw = new URL(request.url).searchParams.get("id");
@@ -234,7 +223,7 @@ export async function DELETE(request: NextRequest) {
       console.error("[admin/faqs DELETE] failed", { code: error.code });
       return NextResponse.json(
         { error: "Failed to delete FAQ" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -243,7 +232,7 @@ export async function DELETE(request: NextRequest) {
     console.error("[admin/faqs DELETE] unexpected error");
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

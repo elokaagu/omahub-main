@@ -25,7 +25,7 @@ export function ContactFormSection() {
     subject: "",
     message: "",
   });
-  /** Honeypot — must stay empty for legitimate submissions */
+  /** Honeypot - must stay empty for legitimate submissions */
   const [hpField, setHpField] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -55,7 +55,7 @@ export function ContactFormSection() {
   };
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -105,7 +105,7 @@ export function ContactFormSection() {
 
       if (result.success) {
         toast.success(
-          result.message || "Your message has been sent successfully!"
+          result.message || "Your message has been sent successfully!",
         );
         setFormData({ name: "", email: "", subject: "", message: "" });
         setHpField("");
@@ -157,7 +157,11 @@ export function ContactFormSection() {
             className="bg-white border-oma-gold/30 focus-visible:ring-oma-plum"
           />
           {errors.name ? (
-            <p id={errorId("name")} className="text-sm text-red-500" role="alert">
+            <p
+              id={errorId("name")}
+              className="text-sm text-red-500"
+              role="alert"
+            >
               {errors.name}
             </p>
           ) : null}
@@ -264,11 +268,7 @@ export function ContactFormSection() {
           disabled={isSubmitting}
           className="w-full bg-oma-plum hover:bg-oma-plum/90 text-white py-3"
         >
-          {isSubmitting ? (
-            "Sending Message..."
-          ) : (
-            "Send Message"
-          )}
+          {isSubmitting ? "Sending Message..." : "Send Message"}
         </Button>
       </form>
     </div>

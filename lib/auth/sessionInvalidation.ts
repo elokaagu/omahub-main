@@ -19,12 +19,12 @@ export function isJwtLikeAuthError(message: string): boolean {
 
 /** Best-effort server sign-out so SSR cookie adapter clears Supabase cookies. */
 export async function signOutServerSafe(
-  supabase: Pick<SupabaseClient, "auth">
+  supabase: Pick<SupabaseClient, "auth">,
 ): Promise<void> {
   try {
     await supabase.auth.signOut();
   } catch {
-    // ignore — response still tells client to re-authenticate
+    // ignore - response still tells client to re-authenticate
   }
 }
 
@@ -34,7 +34,7 @@ export async function signOutServerSafe(
  * that do not match `@supabase/ssr` project-scoped cookies.
  */
 export async function corruptedSessionResponse(
-  supabase: Pick<SupabaseClient, "auth">
+  supabase: Pick<SupabaseClient, "auth">,
 ): Promise<NextResponse> {
   await signOutServerSafe(supabase);
   return NextResponse.json(SESSION_INVALID_BODY, {

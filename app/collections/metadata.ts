@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import { generateSEOMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = generateSEOMetadata({
-  title: "OmaHub Collections — Discover Africa's Next Generation of Designers",
+  title: "OmaHub Collections - Discover Africa's Next Generation of Designers",
   description:
     "Explore curated collections from emerging and established African designers. Seasonal edits, limited drops, and pieces from verified studios you won't find on generic marketplaces.",
   keywords: [

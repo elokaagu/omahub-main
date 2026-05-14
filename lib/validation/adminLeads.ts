@@ -67,6 +67,8 @@ export const leadsListQuerySchema = z.object({
   priority: leadPrioritySchema.optional(),
   brandId: z.string().min(1).max(200).optional(),
   search: z.string().optional(),
+  /** When `"1"` or `"true"`, list only sitewide event-waitlist leads (super_admin only). */
+  eventWaitlist: z.string().max(10).optional(),
 });
 
 export function parseLeadsListQuery(searchParams: URLSearchParams) {
@@ -78,6 +80,7 @@ export function parseLeadsListQuery(searchParams: URLSearchParams) {
     priority: searchParams.get("priority") ?? undefined,
     brandId: searchParams.get("brandId") ?? undefined,
     search: searchParams.get("search") ?? undefined,
+    eventWaitlist: searchParams.get("eventWaitlist") ?? undefined,
   };
   return leadsListQuerySchema.safeParse(raw);
 }
@@ -86,7 +89,9 @@ export function parseLeadsListQuery(searchParams: URLSearchParams) {
  * Sanitize free-text for PostgREST `.or()` ilike clauses: commas split OR branches;
  * % and _ are LIKE wildcards.
  */
-export function sanitizeLeadSearch(raw: string | undefined): string | undefined {
+export function sanitizeLeadSearch(
+  raw: string | undefined,
+): string | undefined {
   if (raw == null) return undefined;
   const t = raw.trim().slice(0, 120);
   if (!t) return undefined;
@@ -170,9 +175,11 @@ export const postLeadsBodySchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("interaction"), data: interactionCreateSchema }),
 ]);
 
-function stripUndefined<T extends Record<string, unknown>>(o: T): Record<string, unknown> {
+function stripUndefined<T extends Record<string, unknown>>(
+  o: T,
+): Record<string, unknown> {
   return Object.fromEntries(
-    Object.entries(o).filter(([, v]) => v !== undefined)
+    Object.entries(o).filter(([, v]) => v !== undefined),
   ) as Record<string, unknown>;
 }
 
@@ -199,11 +206,14 @@ export const leadUpdateInputSchema = z
 
 export type LeadUpdateInput = z.infer<typeof leadUpdateInputSchema>;
 
-export function normalizeLeadUpdatePatch(input: LeadUpdateInput): Record<string, unknown> {
+export function normalizeLeadUpdatePatch(
+  input: LeadUpdateInput,
+): Record<string, unknown> {
   const { timeline, project_timeline, ...rest } = input;
   const next: Record<string, unknown> = { ...rest };
   if (timeline !== undefined) next.project_timeline = timeline;
-  else if (project_timeline !== undefined) next.project_timeline = project_timeline;
+  else if (project_timeline !== undefined)
+    next.project_timeline = project_timeline;
   return stripUndefined(next);
 }
 
@@ -230,7 +240,7 @@ export const bookingUpdateInputSchema = z
 export type BookingUpdateInput = z.infer<typeof bookingUpdateInputSchema>;
 
 export function normalizeBookingUpdatePatch(
-  input: BookingUpdateInput
+  input: BookingUpdateInput,
 ): Record<string, unknown> {
   return stripUndefined({ ...input } as Record<string, unknown>);
 }
@@ -253,7 +263,7 @@ export type CommissionStructureUpdateInput = z.infer<
 >;
 
 export function normalizeCommissionStructureUpdatePatch(
-  input: CommissionStructureUpdateInput
+  input: CommissionStructureUpdateInput,
 ): Record<string, unknown> {
   return stripUndefined({ ...input } as Record<string, unknown>);
 }
@@ -288,7 +298,7 @@ export function parseDeleteLeadsQuery(searchParams: URLSearchParams) {
   });
 }
 
-/** POST /api/admin/leads — flat body, strict (no unknown keys). */
+/** POST /api/admin/leads - flat body, strict (no unknown keys). */
 export const postAdminLeadBodySchema = leadCreateInputSchema;
 
 /** PUT /api/admin/leads */

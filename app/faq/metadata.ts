@@ -4,7 +4,7 @@ import { generateSEOMetadata } from "@/lib/seo";
 export const metadata: Metadata = generateSEOMetadata({
   title: "How OmaHub Works | Answers for Shoppers, Stylists & Designers",
   description:
-    "Straight answers on discovering curated African fashion, contacting designers, commissions, tailoring, and getting started—whether you are buying, styling, or building a brand on OmaHub.",
+    "Straight answers on discovering curated African fashion, contacting designers, commissions, tailoring, and getting started - whether you are buying, styling, or building a brand on OmaHub.",
   keywords: [
     "how OmaHub works",
     "how to find African fashion designers",
@@ -24,12 +24,5 @@ export const metadata: Metadata = generateSEOMetadata({
   type: "website",
   author: "OmaHub",
   section: "FAQ",
-  tags: [
-    "faq",
-    "onboarding",
-    "how it works",
-    "designers",
-    "shoppers",
-    "trust",
-  ],
+  tags: ["faq", "onboarding", "how it works", "designers", "shoppers", "trust"],
 });

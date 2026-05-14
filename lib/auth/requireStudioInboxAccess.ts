@@ -24,7 +24,7 @@ export type RequireStudioInboxAccessResult =
 
 /**
  * Session user with profiles.role in super_admin | brand_admin.
- * No email-based privilege fallback — profile row must exist and match.
+ * No email-based privilege fallback - profile row must exist and match.
  */
 export async function requireStudioInboxAccess(): Promise<RequireStudioInboxAccessResult> {
   const supabase = await createServerSupabaseClient();

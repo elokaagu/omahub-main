@@ -4,7 +4,7 @@ import { generateSEOMetadata } from "@/lib/seo";
 export const metadata: Metadata = generateSEOMetadata({
   title: "Event Preorder & Waitlist | OmaHub",
   description:
-    "Reserve interest for Saturday event pieces — tell us the designer, item, and size. One simple form; OmaHub coordinates with the brand on your behalf.",
+    "Reserve interest for Saturday event pieces - tell us the designer, item, and size. One simple form; OmaHub coordinates with the brand on your behalf.",
   keywords: [
     "OmaHub preorder",
     "designer waitlist",

@@ -31,6 +31,7 @@ import {
   X,
   FileText,
   Mail,
+  List,
 } from "@/lib/utils/iconImports";
 import { TailoringEventProvider } from "@/contexts/NavigationContext";
 import ErrorBoundary from "../components/ErrorBoundary";
@@ -205,6 +206,14 @@ function buildNavigationItems(
       icon: Mail,
       permission: "studio.users.manage",
       customLabel: "Subscriptions",
+      showForRoles: ["super_admin"],
+    },
+    {
+      href: "/studio/waitlist",
+      label: "Waitlist",
+      icon: List,
+      permission: "studio.users.manage",
+      customLabel: "Waitlist",
       showForRoles: ["super_admin"],
     },
     {

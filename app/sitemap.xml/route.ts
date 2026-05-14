@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient as createAnonServerClient } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase-unified";
 
-/** Sitemap is SEO data, not user-specific — cache and refresh periodically. */
+/** Sitemap is SEO data, not user-specific - cache and refresh periodically. */
 export const revalidate = 3600;
 
 type SitemapPage = {
@@ -104,7 +104,7 @@ function createSitemapSupabaseClient() {
   } catch (e) {
     console.warn(
       "Sitemap: SUPABASE_SERVICE_ROLE_KEY unavailable, using anon client (RLS applies)",
-      e
+      e,
     );
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -138,12 +138,12 @@ function generateSitemap(pages: SitemapPage[]) {
       const loc = escapeXml(page.url);
       const lastmod =
         page.lastModified != null && page.lastModified !== ""
-          ? `\n    <lastmod>${escapeXml(page.lastModified)}</lastmod>`
+          ? `\n  <lastmod>${escapeXml(page.lastModified)}</lastmod>`
           : "";
       return `  <url>
-    <loc>${loc}</loc>${lastmod}
-    <changefreq>${escapeXml(page.changeFrequency)}</changefreq>
-    <priority>${page.priority}</priority>
+  <loc>${loc}</loc>${lastmod}
+  <changefreq>${escapeXml(page.changeFrequency)}</changefreq>
+  <priority>${page.priority}</priority>
   </url>`;
     })
     .join("\n");
@@ -154,7 +154,9 @@ ${body}
 </urlset>`;
 }
 
-function lastModFromRow(updatedAt: string | null | undefined): string | undefined {
+function lastModFromRow(
+  updatedAt: string | null | undefined,
+): string | undefined {
   if (updatedAt == null || updatedAt === "") return undefined;
   return updatedAt;
 }

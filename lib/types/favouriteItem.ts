@@ -1,6 +1,6 @@
 /**
  * Normalised favourite row for UI (enriched GET / optimistic add).
- * Always use `item_type` to distinguish brand / catalogue / product — do not infer from optional fields.
+ * Always use `item_type` to distinguish brand / catalogue / product - do not infer from optional fields.
  */
 export type FavouriteItem = {
   id: string;

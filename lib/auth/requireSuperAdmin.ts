@@ -9,7 +9,7 @@ export type RequireSuperAdminResult =
 /**
  * Session-authenticated user with `profiles.role === super_admin`.
  * Uses the unified server client (cookie adapter); no service role.
- * No email-based or other out-of-band privilege elevation — profile row must match.
+ * No email-based or other out-of-band privilege elevation - profile row must match.
  */
 export async function requireSuperAdmin(): Promise<RequireSuperAdminResult> {
   const supabase = await createServerSupabaseClient();

@@ -27,18 +27,18 @@ export async function sendContactEmail(formData: {
     const resend = getResendInstance();
     if (!resend) {
       console.error(
-        "❌ Resend API key not configured - email service unavailable"
+        "❌ Resend API key not configured - email service unavailable",
       );
       console.error(
-        "💡 Please add RESEND_API_KEY environment variable to enable email sending"
+        "💡 Please add RESEND_API_KEY environment variable to enable email sending",
       );
       console.error(
-        "📖 See EMAIL_SERVICE_SETUP.md for detailed setup instructions"
+        "📖 See EMAIL_SERVICE_SETUP.md for detailed setup instructions",
       );
       console.error("🔍 RESEND_API_KEY check:", {
         exists: !!process.env.RESEND_API_KEY,
         length: process.env.RESEND_API_KEY?.length || 0,
-        startsWith: process.env.RESEND_API_KEY?.substring(0, 3) || "N/A"
+        startsWith: process.env.RESEND_API_KEY?.substring(0, 3) || "N/A",
       });
       return {
         success: false,
@@ -50,7 +50,7 @@ export async function sendContactEmail(formData: {
     // Determine recipient - use provided 'to' email or fallback to admin
     const recipientEmail = formData.to || "info@oma-hub.com";
     const studioInboxUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "https://oma-hub.com"}/studio/inbox`;
-    
+
     console.log("📧 Sending contact email via Resend to:", recipientEmail);
     const { data, error } = await resend.emails.send({
       from: "OmaHub <info@oma-hub.com>",
@@ -85,7 +85,7 @@ Subject: ${formData.subject}
 
 Message:
 ${formData.message}
-      `,
+  `,
       replyTo: formData.email,
     });
 
@@ -126,7 +126,7 @@ export async function sendNewLeadNotificationToBrand(params: {
     const { error } = await resend.emails.send({
       from: "OmaHub <info@oma-hub.com>",
       to: [params.to],
-      subject: `New lead — ${params.brandName}`,
+      subject: `New lead - ${params.brandName}`,
       replyTo: params.customerEmail,
       html: buildOmaHubEmailHtml({
         preheader: `New lead for ${params.brandName}`,
@@ -166,7 +166,7 @@ Reply directly to this email to reach the customer.`,
         "New lead notification email error:",
         typeof error === "object" && error !== null && "message" in error
           ? String((error as { message?: string }).message)
-          : String(error)
+          : String(error),
       );
       return { success: false, error: "Send failed" };
     }
@@ -174,7 +174,7 @@ Reply directly to this email to reach the customer.`,
   } catch (e) {
     console.error(
       "New lead notification exception:",
-      e instanceof Error ? e.message : e
+      e instanceof Error ? e.message : e,
     );
     return { success: false, error: "Send failed" };
   }
@@ -200,7 +200,8 @@ export async function sendEventWaitlistConfirmationToCustomer(params: {
       to: [params.to],
       subject: "We received your preorder interest",
       html: buildOmaHubEmailHtml({
-        preheader: "OmaHub will follow up about your Saturday preorder request.",
+        preheader:
+          "OmaHub will follow up about your Saturday preorder request.",
         title: "You are on the list",
         subtitle: "Event preorder / waitlist",
         intro: `Hi ${params.customerName}, thanks for sharing what you would like reserved. Our team has your details and will follow up with next steps.`,
@@ -229,7 +230,7 @@ Size: ${params.size}
 
 We will follow up with next steps. Visit ${siteUrl}
 
-— OmaHub`,
+- OmaHub`,
     });
 
     if (error) {
@@ -237,7 +238,7 @@ We will follow up with next steps. Visit ${siteUrl}
         "Event waitlist confirmation email error:",
         typeof error === "object" && error !== null && "message" in error
           ? String((error as { message?: string }).message)
-          : String(error)
+          : String(error),
       );
       return { success: false, error: "Send failed" };
     }
@@ -245,7 +246,7 @@ We will follow up with next steps. Visit ${siteUrl}
   } catch (e) {
     console.error(
       "Event waitlist confirmation exception:",
-      e instanceof Error ? e.message : e
+      e instanceof Error ? e.message : e,
     );
     return { success: false, error: "Send failed" };
   }
@@ -266,7 +267,7 @@ export async function sendInquiryReplyEmail(replyData: {
     const resend = getResendInstance();
     if (!resend) {
       console.error(
-        "❌ Resend API key not configured - cannot send inquiry reply email"
+        "❌ Resend API key not configured - cannot send inquiry reply email",
       );
       console.error("💡 Customer will not receive email notification of reply");
       console.error("📖 See EMAIL_SERVICE_SETUP.md for setup instructions");
@@ -274,7 +275,7 @@ export async function sendInquiryReplyEmail(replyData: {
       console.error("🔍 RESEND_API_KEY check:", {
         exists: !!process.env.RESEND_API_KEY,
         length: process.env.RESEND_API_KEY?.length || 0,
-        startsWith: process.env.RESEND_API_KEY?.substring(0, 3) || "N/A"
+        startsWith: process.env.RESEND_API_KEY?.substring(0, 3) || "N/A",
       });
       return {
         success: false,
@@ -329,7 +330,7 @@ OmaHub Team
 
 ---
 This is an automated response from the OmaHub platform.
-      `,
+  `,
       replyTo: isFromSuperAdmin ? "support@oma-hub.com" : "info@oma-hub.com",
     });
 
@@ -357,7 +358,7 @@ export async function sendNewsletterConfirmationEmail(formData: {
     const resend = getResendInstance();
     if (!resend) {
       console.error(
-        "❌ Resend API key not configured - cannot send newsletter confirmation email"
+        "❌ Resend API key not configured - cannot send newsletter confirmation email",
       );
       console.error("💡 Subscriber will not receive confirmation email");
       console.error("📖 See EMAIL_SERVICE_SETUP.md for setup instructions");
@@ -365,7 +366,7 @@ export async function sendNewsletterConfirmationEmail(formData: {
       console.error("🔍 RESEND_API_KEY check:", {
         exists: !!process.env.RESEND_API_KEY,
         length: process.env.RESEND_API_KEY?.length || 0,
-        startsWith: process.env.RESEND_API_KEY?.substring(0, 3) || "N/A"
+        startsWith: process.env.RESEND_API_KEY?.substring(0, 3) || "N/A",
       });
       return {
         success: false,
@@ -375,18 +376,19 @@ export async function sendNewsletterConfirmationEmail(formData: {
     }
 
     const { email, firstName, lastName, isReactivation = false } = formData;
-    
-    const displayName = firstName === "there" ? "there" : `${firstName} ${lastName}`.trim();
-    const subject = isReactivation 
-      ? "Welcome back to OmaHub Newsletter!" 
+
+    const displayName =
+      firstName === "there" ? "there" : `${firstName} ${lastName}`.trim();
+    const subject = isReactivation
+      ? "Welcome back to OmaHub Newsletter!"
       : "Welcome to OmaHub Newsletter!";
-    
+
     const welcomeMessage = isReactivation
       ? "Welcome back! We're thrilled to have you back in our community."
       : "Welcome to our community! We're excited to have you join us.";
 
     console.log("📧 Sending newsletter confirmation email to:", email);
-    
+
     const { data, error } = await resend.emails.send({
       from: "OmaHub <newsletter@oma-hub.com>",
       to: [email],
@@ -428,7 +430,7 @@ The OmaHub Team
 
 ---
 This is an automated confirmation email. Please do not reply to this message.
-      `,
+  `,
       replyTo: "newsletter@oma-hub.com",
     });
 
@@ -437,7 +439,10 @@ This is an automated confirmation email. Please do not reply to this message.
       throw error;
     }
 
-    console.log("✅ Newsletter confirmation email sent successfully:", data?.id);
+    console.log(
+      "✅ Newsletter confirmation email sent successfully:",
+      data?.id,
+    );
     return { success: true, data };
   } catch (error) {
     console.error("💥 Failed to send newsletter confirmation email:", error);
@@ -472,21 +477,21 @@ export async function sendNewApplicationNotification(
     year_founded?: number;
     created_at: string;
   },
-  adminEmails: string[]
+  adminEmails: string[],
 ) {
   try {
     // Get Resend instance (lazy initialization)
     const resend = getResendInstance();
     if (!resend) {
       console.error(
-        "❌ Resend API key not configured - cannot send new application notification"
+        "❌ Resend API key not configured - cannot send new application notification",
       );
       console.error("💡 Super admins will not receive email notification");
       console.error("📖 See EMAIL_SERVICE_SETUP.md for setup instructions");
       console.error("🔍 RESEND_API_KEY check:", {
         exists: !!process.env.RESEND_API_KEY,
         length: process.env.RESEND_API_KEY?.length || 0,
-        startsWith: process.env.RESEND_API_KEY?.substring(0, 3) || "N/A"
+        startsWith: process.env.RESEND_API_KEY?.substring(0, 3) || "N/A",
       });
       return {
         success: false,
@@ -495,16 +500,23 @@ export async function sendNewApplicationNotification(
       };
     }
 
-    const applicationDate = new Date(application.created_at).toLocaleString("en-GB");
+    const applicationDate = new Date(application.created_at).toLocaleString(
+      "en-GB",
+    );
     const studioUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "https://oma-hub.com"}/studio/applications`;
     const applicationUrl = `${studioUrl}?id=${application.id}`;
 
-    console.log("📧 Sending new application notification to super admins:", adminEmails);
+    console.log(
+      "📧 Sending new application notification to super admins:",
+      adminEmails,
+    );
     console.log(`📊 Total super admins to notify: ${adminEmails.length}`);
 
     // Validate that we have emails to send to
     if (!adminEmails || adminEmails.length === 0) {
-      console.error("❌ No super admin emails provided - cannot send notification");
+      console.error(
+        "❌ No super admin emails provided - cannot send notification",
+      );
       return {
         success: false,
         error: "No super admin emails provided",
@@ -515,8 +527,8 @@ export async function sendNewApplicationNotification(
     }
 
     // Filter out any invalid emails
-    const validEmails = adminEmails.filter(email => {
-      if (!email || typeof email !== 'string' || !email.includes('@')) {
+    const validEmails = adminEmails.filter((email) => {
+      if (!email || typeof email !== "string" || !email.includes("@")) {
         console.warn(`⚠️ Invalid email address skipped: ${email}`);
         return false;
       }
@@ -534,7 +546,10 @@ export async function sendNewApplicationNotification(
       };
     }
 
-    console.log(`✅ Sending to ${validEmails.length} valid super admin email(s):`, validEmails);
+    console.log(
+      `✅ Sending to ${validEmails.length} valid super admin email(s):`,
+      validEmails,
+    );
 
     // Send email to each super admin
     const emailResults = [];
@@ -558,17 +573,29 @@ export async function sendNewApplicationNotification(
                   { label: "Brand Name", value: application.brand_name },
                   { label: "Designer", value: application.designer_name },
                   { label: "Email", value: application.email },
-                  ...(application.phone ? [{ label: "Phone", value: application.phone }] : []),
+                  ...(application.phone
+                    ? [{ label: "Phone", value: application.phone }]
+                    : []),
                   { label: "Location", value: application.location },
                   { label: "Category", value: application.category },
                   ...(application.website
                     ? [{ label: "Website", value: application.website }]
                     : []),
                   ...(application.instagram
-                    ? [{ label: "Instagram", value: `@${application.instagram.replace(/^@/, "")}` }]
+                    ? [
+                        {
+                          label: "Instagram",
+                          value: `@${application.instagram.replace(/^@/, "")}`,
+                        },
+                      ]
                     : []),
                   ...(application.year_founded
-                    ? [{ label: "Founded", value: String(application.year_founded) }]
+                    ? [
+                        {
+                          label: "Founded",
+                          value: String(application.year_founded),
+                        },
+                      ]
                     : []),
                   { label: "Submitted", value: applicationDate },
                 ],
@@ -592,12 +619,12 @@ Application Details:
 - Brand Name: ${application.brand_name}
 - Designer: ${application.designer_name}
 - Email: ${application.email}
-${application.phone ? `- Phone: ${application.phone}` : ''}
+${application.phone ? `- Phone: ${application.phone}` : ""}
 - Location: ${application.location}
 - Category: ${application.category}
-${application.website ? `- Website: ${application.website}` : ''}
-${application.instagram ? `- Instagram: @${application.instagram.replace(/^@/, '')}` : ''}
-${application.year_founded ? `- Founded: ${application.year_founded}` : ''}
+${application.website ? `- Website: ${application.website}` : ""}
+${application.instagram ? `- Instagram: @${application.instagram.replace(/^@/, "")}` : ""}
+${application.year_founded ? `- Founded: ${application.year_founded}` : ""}
 - Submitted: ${applicationDate}
 
 Description:
@@ -608,7 +635,7 @@ View all applications: ${studioUrl}
 
 This is an automated notification from OmaHub.
 You're receiving this because you're a super admin.
-          `,
+  `,
           replyTo: "info@oma-hub.com",
         });
 
@@ -617,26 +644,29 @@ You're receiving this because you're a super admin.
             error,
             message: error.message,
             code: (error as any).code,
-            details: error
+            details: error,
           });
-          emailResults.push({ 
-            email: adminEmail, 
-            success: false, 
-            error: error.message || JSON.stringify(error) 
+          emailResults.push({
+            email: adminEmail,
+            success: false,
+            error: error.message || JSON.stringify(error),
           });
         } else {
-          console.log(`✅ New application notification sent successfully to ${adminEmail}`);
+          console.log(
+            `✅ New application notification sent successfully to ${adminEmail}`,
+          );
           emailResults.push({ email: adminEmail, success: true, data });
         }
       } catch (emailError) {
         console.error(
           `❌ Error sending notification to ${adminEmail}:`,
-          emailError
+          emailError,
         );
         emailResults.push({
           email: adminEmail,
           success: false,
-          error: emailError instanceof Error ? emailError.message : "Unknown error",
+          error:
+            emailError instanceof Error ? emailError.message : "Unknown error",
         });
       }
     }
@@ -645,23 +675,29 @@ You're receiving this because you're a super admin.
     const failureCount = emailResults.filter((r) => !r.success).length;
 
     // Log detailed results
-    console.log(`📊 Email sending results: ${successCount} successful, ${failureCount} failed`);
-    
+    console.log(
+      `📊 Email sending results: ${successCount} successful, ${failureCount} failed`,
+    );
+
     if (successCount > 0) {
-      const successfulEmails = emailResults.filter(r => r.success).map(r => r.email);
+      const successfulEmails = emailResults
+        .filter((r) => r.success)
+        .map((r) => r.email);
       console.log(
         `✅ Sent new application notifications to ${successCount} admin(s):`,
-        successfulEmails
+        successfulEmails,
       );
     }
     if (failureCount > 0) {
-      const failedEmails = emailResults.filter(r => !r.success).map(r => ({
-        email: r.email,
-        error: r.error
-      }));
+      const failedEmails = emailResults
+        .filter((r) => !r.success)
+        .map((r) => ({
+          email: r.email,
+          error: r.error,
+        }));
       console.warn(
         `⚠️ Failed to send notifications to ${failureCount} admin(s):`,
-        failedEmails
+        failedEmails,
       );
     }
 
@@ -693,7 +729,7 @@ export async function sendApplicationApprovalEmail(data: {
     const resend = getResendInstance();
     if (!resend) {
       console.error(
-        "❌ Resend API key not configured - cannot send application approval email"
+        "❌ Resend API key not configured - cannot send application approval email",
       );
       console.error("💡 Designer will not receive approval notification");
       console.error("📖 See EMAIL_SERVICE_SETUP.md for setup instructions");
@@ -701,7 +737,7 @@ export async function sendApplicationApprovalEmail(data: {
       console.error("🔍 RESEND_API_KEY check:", {
         exists: !!process.env.RESEND_API_KEY,
         length: process.env.RESEND_API_KEY?.length || 0,
-        startsWith: process.env.RESEND_API_KEY?.substring(0, 3) || "N/A"
+        startsWith: process.env.RESEND_API_KEY?.substring(0, 3) || "N/A",
       });
       return {
         success: false,
@@ -760,10 +796,13 @@ Your application for ${brandName} has been approved!
 
 We're thrilled to welcome you to OmaHub! Your brand has been set up and you now have access to manage your brand profile, products, and customer inquiries.
 
-${isNewUser
-  ? `Your Login Credentials:
+${
+  isNewUser
+    ? `Your Login Credentials:
 
-${temporaryPassword ? `${passwordResetLink ? 'Option 1: ' : ''}Login with Temporary Password
+${
+  temporaryPassword
+    ? `${passwordResetLink ? "Option 1: " : ""}Login with Temporary Password
 You can log in immediately using these credentials:
 
 Email: ${email}
@@ -771,15 +810,22 @@ Temporary Password: ${temporaryPassword}
 
 ⚠️ Important: Please change your password after your first login for security.
 
-${passwordResetLink ? '\n' : ''}` : ''}${passwordResetLink ? `Option 2: Set Your Password (Recommended)
+${passwordResetLink ? "\n" : ""}`
+    : ""
+}${
+        passwordResetLink
+          ? `Option 2: Set Your Password (Recommended)
 Click the link below to set your own secure password. This link expires in 7 days.
 
 Set My Password: ${passwordResetLink}
 
 If the link doesn't work, copy and paste it into your browser.
 
-` : ''}${!temporaryPassword && !passwordResetLink ? `Your account has been created. Please use the "Forgot Password" feature to set your password.` : ''}`
-  : `You can log in using your existing account credentials.`}
+`
+          : ""
+      }${!temporaryPassword && !passwordResetLink ? `Your account has been created. Please use the "Forgot Password" feature to set your password.` : ""}`
+    : `You can log in using your existing account credentials.`
+}
 
 What's Next?
 
@@ -792,7 +838,7 @@ If you have any questions or need assistance, please don't hesitate to reach out
 
 Welcome aboard!
 The OmaHub Team
-      `,
+  `,
       replyTo: "info@oma-hub.com",
     });
 
@@ -801,7 +847,10 @@ The OmaHub Team
       throw error;
     }
 
-    console.log("✅ Application approval email sent successfully:", emailData?.id);
+    console.log(
+      "✅ Application approval email sent successfully:",
+      emailData?.id,
+    );
     return { success: true, data: emailData };
   } catch (error) {
     console.error("💥 Failed to send application approval email:", error);
@@ -820,7 +869,7 @@ export async function sendApplicationRejectionEmail(data: {
     const resend = getResendInstance();
     if (!resend) {
       console.error(
-        "❌ Resend API key not configured - cannot send application rejection email"
+        "❌ Resend API key not configured - cannot send application rejection email",
       );
       console.error("💡 Designer will not receive rejection notification");
       console.error("📖 See EMAIL_SERVICE_SETUP.md for setup instructions");
@@ -828,7 +877,7 @@ export async function sendApplicationRejectionEmail(data: {
       console.error("🔍 RESEND_API_KEY check:", {
         exists: !!process.env.RESEND_API_KEY,
         length: process.env.RESEND_API_KEY?.length || 0,
-        startsWith: process.env.RESEND_API_KEY?.substring(0, 3) || "N/A"
+        startsWith: process.env.RESEND_API_KEY?.substring(0, 3) || "N/A",
       });
       return {
         success: false,
@@ -873,7 +922,7 @@ Thank you for your interest in OmaHub and for taking the time to submit your app
 
 After careful consideration, we've decided not to move forward with your application at this time.
 
-${notes ? `\nFeedback:\n${notes}\n` : ''}
+${notes ? `\nFeedback:\n${notes}\n` : ""}
 
 We encourage you to continue developing your brand and portfolio. You're welcome to apply again in the future when your brand has evolved or meets our current criteria.
 
@@ -885,7 +934,7 @@ Best regards,
 The OmaHub Team
 
 Visit us: ${joinUrl}
-      `,
+  `,
       replyTo: "info@oma-hub.com",
     });
 
@@ -894,7 +943,10 @@ Visit us: ${joinUrl}
       throw error;
     }
 
-    console.log("✅ Application rejection email sent successfully:", emailData?.id);
+    console.log(
+      "✅ Application rejection email sent successfully:",
+      emailData?.id,
+    );
     return { success: true, data: emailData };
   } catch (error) {
     console.error("💥 Failed to send application rejection email:", error);
@@ -912,7 +964,7 @@ export async function sendApplicationConfirmationEmail(data: {
     const resend = getResendInstance();
     if (!resend) {
       console.error(
-        "❌ Resend API key not configured - cannot send application confirmation email"
+        "❌ Resend API key not configured - cannot send application confirmation email",
       );
       console.error("💡 Designer will not receive confirmation notification");
       console.error("📖 See EMAIL_SERVICE_SETUP.md for setup instructions");
@@ -920,7 +972,7 @@ export async function sendApplicationConfirmationEmail(data: {
       console.error("🔍 RESEND_API_KEY check:", {
         exists: !!process.env.RESEND_API_KEY,
         length: process.env.RESEND_API_KEY?.length || 0,
-        startsWith: process.env.RESEND_API_KEY?.substring(0, 3) || "N/A"
+        startsWith: process.env.RESEND_API_KEY?.substring(0, 3) || "N/A",
       });
       return {
         success: false,
@@ -972,32 +1024,53 @@ Best regards,
 The OmaHub Team
 
 Visit us: ${websiteUrl}
-      `,
+  `,
       replyTo: "info@oma-hub.com",
     });
 
     if (error) {
       console.error("❌ [CONFIRMATION EMAIL] Resend API error:", error);
-      console.error("❌ [CONFIRMATION EMAIL] Error type:", error?.constructor?.name || typeof error);
-      console.error("❌ [CONFIRMATION EMAIL] Error details:", JSON.stringify(error, null, 2));
-      const errorMessage = error instanceof Error ? error.message : (error as any)?.message || String(error);
-      return { 
-        success: false, 
-        error: errorMessage 
+      console.error(
+        "❌ [CONFIRMATION EMAIL] Error type:",
+        error?.constructor?.name || typeof error,
+      );
+      console.error(
+        "❌ [CONFIRMATION EMAIL] Error details:",
+        JSON.stringify(error, null, 2),
+      );
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : (error as any)?.message || String(error);
+      return {
+        success: false,
+        error: errorMessage,
       };
     }
 
-    console.log("✅ [CONFIRMATION EMAIL] Application confirmation email sent successfully:", emailData?.id);
+    console.log(
+      "✅ [CONFIRMATION EMAIL] Application confirmation email sent successfully:",
+      emailData?.id,
+    );
     console.log("✅ [CONFIRMATION EMAIL] Email sent to:", email);
     return { success: true, data: emailData };
   } catch (error) {
-    console.error("💥 [CONFIRMATION EMAIL] Failed to send application confirmation email:", error);
-    console.error("💥 [CONFIRMATION EMAIL] Error type:", error instanceof Error ? error.constructor.name : typeof error);
-    console.error("💥 [CONFIRMATION EMAIL] Error message:", error instanceof Error ? error.message : String(error));
+    console.error(
+      "💥 [CONFIRMATION EMAIL] Failed to send application confirmation email:",
+      error,
+    );
+    console.error(
+      "💥 [CONFIRMATION EMAIL] Error type:",
+      error instanceof Error ? error.constructor.name : typeof error,
+    );
+    console.error(
+      "💥 [CONFIRMATION EMAIL] Error message:",
+      error instanceof Error ? error.message : String(error),
+    );
     const errorMessage = error instanceof Error ? error.message : String(error);
-    return { 
-      success: false, 
-      error: errorMessage 
+    return {
+      success: false,
+      error: errorMessage,
     };
   }
 }

@@ -11,7 +11,9 @@ import { toast } from "sonner";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-function classifyResetError(err: unknown): "rate_limit" | "connectivity" | "other" {
+function classifyResetError(
+  err: unknown,
+): "rate_limit" | "connectivity" | "other" {
   const msg =
     err instanceof Error ? err.message : typeof err === "string" ? err : "";
   const lower = msg.toLowerCase();
@@ -62,17 +64,17 @@ export default function ForgotPasswordPage() {
       const kind = classifyResetError(err);
       if (kind === "rate_limit") {
         toast.error(
-          "Too many attempts. Please wait a few minutes and try again."
+          "Too many attempts. Please wait a few minutes and try again.",
         );
         return;
       }
       if (kind === "connectivity") {
         toast.error(
-          "We couldn’t reach the server. Check your connection and try again."
+          "We couldn’t reach the server. Check your connection and try again.",
         );
         return;
       }
-      // Do not reveal whether the account exists — same outcome as success
+      // Do not reveal whether the account exists - same outcome as success
     } finally {
       setLoading(false);
     }
@@ -80,7 +82,7 @@ export default function ForgotPasswordPage() {
     setEmail(normalized);
     setEmailSent(true);
     toast.success(
-      "If an account exists for that address, we’ve sent reset instructions."
+      "If an account exists for that address, we’ve sent reset instructions.",
     );
   };
 

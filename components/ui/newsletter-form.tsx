@@ -43,7 +43,8 @@ export function NewsletterForm({ location, className }: NewsletterFormProps) {
         setSuccess(true);
         toast({
           title: "Successfully subscribed",
-          description: data.message || "Thank you for joining our fashion community.",
+          description:
+            data.message || "Thank you for joining our fashion community.",
         });
         setEmail("");
         setFirstName("");
@@ -165,22 +166,18 @@ export function NewsletterForm({ location, className }: NewsletterFormProps) {
                     className="bg-white border-oma-gold/20 focus-visible:ring-oma-plum"
                   />
                 </div>
-                
+
                 <Button
                   type="submit"
                   disabled={loading}
                   className="w-full bg-[#391c25] hover:bg-[#391c25]/90 text-white"
                 >
-                  {loading ? (
-                    "Subscribing..."
-                  ) : (
-                    "Subscribe"
-                  )}
+                  {loading ? "Subscribing..." : "Subscribe"}
                 </Button>
-                
+
                 <p className="text-xs text-oma-cocoa/70 mt-3">
                   Join our community to discover new designers and collections.
-                  No spam&mdash;just style.
+                  No spam, just style.
                   {location && <span className="ml-1">From {location}.</span>}
                 </p>
               </form>

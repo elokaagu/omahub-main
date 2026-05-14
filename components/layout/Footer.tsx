@@ -21,7 +21,7 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Column 2: Navigate — use nav + div stack (not ul/li) to avoid hydration edge cases */}
+          {/* Column 2: Navigate - use nav + div stack (not ul/li) to avoid hydration edge cases */}
           <nav
             aria-label="Footer navigation"
             className="flex flex-col items-center md:items-start"

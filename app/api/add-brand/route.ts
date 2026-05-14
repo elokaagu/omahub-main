@@ -13,13 +13,13 @@ export async function GET() {
       error:
         "Method not allowed. Use POST with an authenticated super-admin session.",
     },
-    { status: 405, headers: { Allow: "POST" } }
+    { status: 405, headers: { Allow: "POST" } },
   );
 }
 
 /**
  * Idempotent upsert of the Ebhs Couture seed brand (super-admin only).
- * Not a general-purpose brand API — see studio/admin flows for that.
+ * Not a general-purpose brand API - see studio/admin flows for that.
  */
 export async function POST() {
   try {
@@ -43,7 +43,7 @@ export async function POST() {
       console.error("[api/add-brand] Admin client unavailable");
       return NextResponse.json(
         { error: "Service temporarily unavailable" },
-        { status: 503 }
+        { status: 503 },
       );
     }
 
@@ -65,7 +65,7 @@ export async function POST() {
       });
       return NextResponse.json(
         { error: "Failed to save brand" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -75,7 +75,7 @@ export async function POST() {
         message: "Brand saved successfully",
         brand: data,
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (err) {
     console.error("[api/add-brand] Unexpected error", {
@@ -84,7 +84,7 @@ export async function POST() {
     });
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

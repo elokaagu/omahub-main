@@ -35,7 +35,7 @@ const CURATED_CATEGORY_IDS = [
 ];
 
 const tailoredCategories = getCategoriesForDirectory().filter((cat) =>
-  CURATED_CATEGORY_IDS.includes(cat.id)
+  CURATED_CATEGORY_IDS.includes(cat.id),
 );
 
 const categoryToSpecialtiesMap: Record<string, string[]> = {
@@ -58,7 +58,7 @@ const categoryToSpecialtiesMap: Record<string, string[]> = {
 const ALL_CATEGORIES_VALUE = "__all";
 
 function normalizeSpecialties(
-  specialties: TailorRowWithBrand["specialties"] | string | null | undefined
+  specialties: TailorRowWithBrand["specialties"] | string | null | undefined,
 ): string[] {
   if (specialties == null || specialties === "") return [];
   if (Array.isArray(specialties)) {
@@ -77,7 +77,7 @@ function normalizeSpecialties(
 
 function matchesCategoryOrSpecialty(
   tailor: TailorRowWithBrand,
-  category: string
+  category: string,
 ): boolean {
   if (tailor.brand?.category === category) return true;
   const mappedSpecialties = categoryToSpecialtiesMap[category] ?? [category];
@@ -86,8 +86,10 @@ function matchesCategoryOrSpecialty(
     mappedSpecialties.some((mappedSpecialty) => {
       const tailorValue = tailorSpecialty.toLowerCase();
       const mappedValue = mappedSpecialty.toLowerCase();
-      return tailorValue.includes(mappedValue) || mappedValue.includes(tailorValue);
-    })
+      return (
+        tailorValue.includes(mappedValue) || mappedValue.includes(tailorValue)
+      );
+    }),
   );
 }
 
@@ -98,8 +100,8 @@ function TailorDirectoryMeta({ tailor }: { tailor: TailorRowWithBrand }) {
       <div className="mb-1 font-canela text-xl text-black">
         {brand?.name || tailor.title}
       </div>
-      <div className="mb-1 text-sm text-black">{brand?.category ?? "—"}</div>
-      <div className="text-sm text-black">{brand?.location ?? "—"}</div>
+      <div className="mb-1 text-sm text-black">{brand?.category ?? "-"}</div>
+      <div className="text-sm text-black">{brand?.location ?? "-"}</div>
     </>
   );
 }
@@ -180,7 +182,9 @@ export default function TailorsClient() {
     return tailors
       .filter((tailor) => Boolean(tailor.brand))
       .filter((tailor) =>
-        activeCategory ? matchesCategoryOrSpecialty(tailor, activeCategory) : true
+        activeCategory
+          ? matchesCategoryOrSpecialty(tailor, activeCategory)
+          : true,
       )
       .filter((tailor) => {
         if (!normalizedSearchTerm) return true;
@@ -242,7 +246,9 @@ export default function TailorsClient() {
       <div className="mx-auto max-w-7xl px-6 py-12">
         <FadeIn>
           <div className="mb-12 text-center">
-            <h1 className="mb-4 font-canela text-5xl text-black">Our Designers</h1>
+            <h1 className="mb-4 font-canela text-5xl text-black">
+              Our Designers
+            </h1>
             <p className="mx-auto max-w-3xl text-xl text-oma-cocoa/80">
               Discover skilled artisans creating bespoke garments with precision
               and passion
@@ -268,7 +274,7 @@ export default function TailorsClient() {
                   value={selectedCategory || ALL_CATEGORIES_VALUE}
                   onValueChange={(value) =>
                     setSelectedCategory(
-                      value === ALL_CATEGORIES_VALUE ? "" : value
+                      value === ALL_CATEGORIES_VALUE ? "" : value,
                     )
                   }
                 >
@@ -357,7 +363,7 @@ export default function TailorsClient() {
                         </Card>
                       </motion.div>
                     </StaggerItem>
-                  ) : null
+                  ) : null,
                 )}
               </StaggerContainer>
             </motion.div>
@@ -404,7 +410,7 @@ export default function TailorsClient() {
                         </Card>
                       </motion.div>
                     </StaggerItem>
-                  ) : null
+                  ) : null,
                 )}
               </StaggerContainer>
             </motion.div>

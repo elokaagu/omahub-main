@@ -49,7 +49,9 @@ type LoginHeroGalleryClientProps = {
   slides: LoginHeroSlide[];
 };
 
-export function LoginHeroGalleryClient({ slides }: LoginHeroGalleryClientProps) {
+export function LoginHeroGalleryClient({
+  slides,
+}: LoginHeroGalleryClientProps) {
   const effective = buildEffectiveSlides(slides);
   const [api, setApi] = useState<CarouselApi | null>(null);
 
@@ -95,7 +97,7 @@ export function LoginHeroGalleryClient({ slides }: LoginHeroGalleryClientProps) 
                 <div className="relative mx-auto aspect-[4/5] w-[88%] max-w-md overflow-hidden rounded-2xl shadow-2xl ring-1 ring-black/5">
                   <Image
                     src={slide.imageUrl}
-                    alt={`${slide.brandName} — featured on OmaHub`}
+                    alt={`${slide.brandName} - featured on OmaHub`}
                     fill
                     className="object-cover"
                     sizes="(min-width: 1024px) 38vw, 0px"

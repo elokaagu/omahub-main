@@ -1,4 +1,4 @@
-/** Verbose studio applications logging — development only. */
+/** Verbose studio applications logging - development only. */
 export function devLog(...args: unknown[]) {
   if (process.env.NODE_ENV === "development") {
     console.log(...args);

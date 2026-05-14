@@ -14,7 +14,7 @@ export const CURRENCIES: Currency[] = [
   // Special option for no currency
   {
     code: "NONE",
-    symbol: "—",
+    symbol: "-",
     name: "No Currency (Explore brand for prices)",
     country: "None",
     defaultLocation: [],
@@ -146,7 +146,7 @@ export function getCurrencyByLocation(location: string): Currency | undefined {
 
   // First try exact country match
   const countryMatch = CURRENCIES.find(
-    (c) => c.country.toLowerCase() === normalizedLocation
+    (c) => c.country.toLowerCase() === normalizedLocation,
   );
   if (countryMatch) return countryMatch;
 
@@ -155,8 +155,8 @@ export function getCurrencyByLocation(location: string): Currency | undefined {
     c.defaultLocation?.some(
       (loc) =>
         loc.toLowerCase().includes(normalizedLocation) ||
-        normalizedLocation.includes(loc.toLowerCase())
-    )
+        normalizedLocation.includes(loc.toLowerCase()),
+    ),
   );
   if (locationMatch) return locationMatch;
 
@@ -165,8 +165,8 @@ export function getCurrencyByLocation(location: string): Currency | undefined {
     c.defaultLocation?.some(
       (loc) =>
         loc.toLowerCase().includes(normalizedLocation) ||
-        normalizedLocation.includes(loc.toLowerCase())
-    )
+        normalizedLocation.includes(loc.toLowerCase()),
+    ),
   );
 }
 
@@ -176,7 +176,7 @@ export function getCurrencyByLocation(location: string): Currency | undefined {
  * @returns Currency object or undefined
  */
 export function extractCurrencyFromPriceRange(
-  priceRange: string
+  priceRange: string,
 ): Currency | undefined {
   if (!priceRange || priceRange === "Contact for pricing") {
     return undefined;
@@ -184,7 +184,7 @@ export function extractCurrencyFromPriceRange(
 
   // Parse price range to extract currency symbol (e.g., "₦15,000 - ₦120,000")
   const priceRangeMatch = priceRange.match(
-    /^([^\d,]+)(\d+(?:,\d+)*)\s*-\s*([^\d,]+)(\d+(?:,\d+)*)$/
+    /^([^\d,]+)(\d+(?:,\d+)*)\s*-\s*([^\d,]+)(\d+(?:,\d+)*)$/,
   );
 
   if (priceRangeMatch) {
@@ -204,7 +204,7 @@ export function extractCurrencyFromPriceRange(
  * @returns Currency object or fallback based on location
  */
 export function getBrandCurrency(
-  brand: { location?: string; price_range?: string; currency?: string } | null
+  brand: { location?: string; price_range?: string; currency?: string } | null,
 ): Currency | null {
   // Debug logging for currency issues
   if (process.env.NODE_ENV === "development") {
@@ -227,13 +227,13 @@ export function getBrandCurrency(
     if (currencyFromField) {
       console.log(
         "getBrandCurrency: Found currency from currency field:",
-        currencyFromField
+        currencyFromField,
       );
       return currencyFromField;
     } else {
       console.log(
         "getBrandCurrency: Invalid currency code in field:",
-        brand.currency
+        brand.currency,
       );
     }
   }
@@ -244,13 +244,13 @@ export function getBrandCurrency(
     if (currencyFromPrice) {
       console.log(
         "getBrandCurrency: Found currency from price_range (fallback):",
-        currencyFromPrice
+        currencyFromPrice,
       );
       return currencyFromPrice;
     } else {
       console.log(
         "getBrandCurrency: Could not extract currency from price_range:",
-        brand.price_range
+        brand.price_range,
       );
     }
   }
@@ -261,13 +261,13 @@ export function getBrandCurrency(
     if (currencyFromLocation) {
       console.log(
         "getBrandCurrency: Found currency from location:",
-        currencyFromLocation
+        currencyFromLocation,
       );
       return currencyFromLocation;
     } else {
       console.log(
         "getBrandCurrency: Could not find currency for location:",
-        brand.location
+        brand.location,
       );
     }
   }
@@ -285,17 +285,19 @@ export function getBrandCurrency(
  */
 export function formatPriceWithBrandCurrency(
   price: string | number,
-  brand: { location?: string; price_range?: string } | null
+  brand: { location?: string; price_range?: string } | null,
 ): string {
   const currency = getBrandCurrency(brand);
-  
+
   if (!currency) {
     // Try to use brand location to determine currency
     if (brand?.location) {
       const locationCurrency = getCurrencyByLocation(brand.location);
       if (locationCurrency) {
         const numericPrice =
-          typeof price === "string" ? parseFloat(price.replace(/,/g, "")) : price;
+          typeof price === "string"
+            ? parseFloat(price.replace(/,/g, ""))
+            : price;
 
         if (isNaN(numericPrice)) {
           return `${locationCurrency.symbol}0`;
@@ -310,7 +312,7 @@ export function formatPriceWithBrandCurrency(
         return `${locationCurrency.symbol}${formattedPrice}`;
       }
     }
-    
+
     // Last resort: use USD as default currency
     const numericPrice =
       typeof price === "string" ? parseFloat(price.replace(/,/g, "")) : price;
@@ -327,7 +329,7 @@ export function formatPriceWithBrandCurrency(
 
     return `$${formattedPrice}`;
   }
-  
+
   const numericPrice =
     typeof price === "string" ? parseFloat(price.replace(/,/g, "")) : price;
 
@@ -354,7 +356,7 @@ export function formatPriceWithBrandCurrency(
 export function formatPriceRangeWithBrandCurrency(
   minPrice: string | number,
   maxPrice: string | number,
-  brand: { location?: string; price_range?: string } | null
+  brand: { location?: string; price_range?: string } | null,
 ): string {
   const currency = getBrandCurrency(brand);
 
@@ -389,11 +391,11 @@ export function formatPriceRangeWithBrandCurrency(
         return `${locationCurrency.symbol}${formattedMin} - ${locationCurrency.symbol}${formattedMax}`;
       }
     }
-    
+
     // Last resort: use USD as default currency
     return `$${formattedMin} - $${formattedMax}`;
   }
-  
+
   return `${currency.symbol}${formattedMin} - ${currency.symbol}${formattedMax}`;
 }
 
@@ -459,21 +461,24 @@ export function validateBrandCurrency(brand: {
  */
 export function validateProductCurrency(
   productCurrency: string,
-  brand: { location?: string; price_range?: string; currency?: string } | null | undefined
+  brand:
+    | { location?: string; price_range?: string; currency?: string }
+    | null
+    | undefined,
 ): { isValid: boolean; errorMessage?: string; brandCurrency?: string } {
   if (!brand) {
     return {
       isValid: false,
-      errorMessage: "Brand information not available for currency validation"
+      errorMessage: "Brand information not available for currency validation",
     };
   }
 
   const brandCurrency = getBrandCurrency(brand);
-  
+
   if (!brandCurrency) {
     return {
       isValid: false,
-      errorMessage: "Brand currency could not be determined"
+      errorMessage: "Brand currency could not be determined",
     };
   }
 
@@ -481,13 +486,13 @@ export function validateProductCurrency(
     return {
       isValid: false,
       errorMessage: `Currency mismatch! Product uses ${productCurrency} but brand uses ${brandCurrency.code} (${brandCurrency.symbol})`,
-      brandCurrency: brandCurrency.code
+      brandCurrency: brandCurrency.code,
     };
   }
 
   return {
     isValid: true,
-    brandCurrency: brandCurrency.code
+    brandCurrency: brandCurrency.code,
   };
 }
 
@@ -498,25 +503,43 @@ export function validateProductCurrency(
  */
 export function validateProductsCurrency(
   products: Array<{ id: string; currency: string; brand_id: string }>,
-  brands: Array<{ id: string; location?: string; price_range?: string; currency?: string }>
+  brands: Array<{
+    id: string;
+    location?: string;
+    price_range?: string;
+    currency?: string;
+  }>,
 ): {
   valid: Array<{ id: string; currency: string; brand_id: string }>;
-  invalid: Array<{ id: string; currency: string; brand_id: string; errorMessage: string; expectedCurrency: string }>;
+  invalid: Array<{
+    id: string;
+    currency: string;
+    brand_id: string;
+    errorMessage: string;
+    expectedCurrency: string;
+  }>;
 } {
   const valid: Array<{ id: string; currency: string; brand_id: string }> = [];
-  const invalid: Array<{ id: string; currency: string; brand_id: string; errorMessage: string; expectedCurrency: string }> = [];
+  const invalid: Array<{
+    id: string;
+    currency: string;
+    brand_id: string;
+    errorMessage: string;
+    expectedCurrency: string;
+  }> = [];
 
-  products.forEach(product => {
-    const brand = brands.find(b => b.id === product.brand_id);
+  products.forEach((product) => {
+    const brand = brands.find((b) => b.id === product.brand_id);
     const validation = validateProductCurrency(product.currency, brand);
-    
+
     if (validation.isValid) {
       valid.push(product);
     } else {
       invalid.push({
         ...product,
-        errorMessage: validation.errorMessage || "Unknown currency validation error",
-        expectedCurrency: validation.brandCurrency || "Unknown"
+        errorMessage:
+          validation.errorMessage || "Unknown currency validation error",
+        expectedCurrency: validation.brandCurrency || "Unknown",
       });
     }
   });

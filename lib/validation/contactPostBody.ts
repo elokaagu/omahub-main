@@ -2,7 +2,7 @@ import { z } from "zod";
 
 const hpIssue = { message: "Invalid request", path: ["_contact_hp"] };
 
-/** Designer contact (modal) — `_contact_hp` must stay empty (hidden field). */
+/** Designer contact (modal) - `_contact_hp` must stay empty (hidden field). */
 export const brandContactBodySchema = z
   .object({
     name: z.string().trim().min(1).max(200),
@@ -15,10 +15,10 @@ export const brandContactBodySchema = z
   .strip()
   .refine(
     (data) => !(data._contact_hp && data._contact_hp.trim().length > 0),
-    hpIssue
+    hpIssue,
   );
 
-/** General /contact page — message min length aligned with client validation. */
+/** General /contact page - message min length aligned with client validation. */
 export const generalContactBodySchema = z
   .object({
     name: z.string().trim().min(1).max(200),
@@ -30,7 +30,7 @@ export const generalContactBodySchema = z
   .strip()
   .refine(
     (data) => !(data._contact_hp && data._contact_hp.trim().length > 0),
-    hpIssue
+    hpIssue,
   );
 
 export type BrandContactParsed = z.infer<typeof brandContactBodySchema>;

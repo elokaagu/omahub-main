@@ -42,7 +42,7 @@ const FIELD_FOCUS_ORDER: FormFieldName[] = [
 ];
 
 function zodFieldErrorsToRecord(
-  fieldErrors: Record<string, string[] | undefined>
+  fieldErrors: Record<string, string[] | undefined>,
 ): Record<string, string> {
   const out: Record<string, string> = {};
   for (const [key, msgs] of Object.entries(fieldErrors)) {
@@ -52,11 +52,13 @@ function zodFieldErrorsToRecord(
   return out;
 }
 
-function parseApplicationResponse(json: unknown): {
-  ok: true;
-  applicationId: string;
-  message?: string;
-} | { ok: false; error: string } {
+function parseApplicationResponse(json: unknown):
+  | {
+      ok: true;
+      applicationId: string;
+      message?: string;
+    }
+  | { ok: false; error: string } {
   if (!json || typeof json !== "object") {
     return { ok: false, error: "Invalid response from server." };
   }
@@ -103,7 +105,7 @@ export function JoinApplicationForm() {
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
+    >,
   ) => {
     const { name, value } = e.target;
     clearFieldError(name);
@@ -121,9 +123,7 @@ export function JoinApplicationForm() {
       setFieldErrors(next);
       const firstInvalid = FIELD_FOCUS_ORDER.find((k) => next[k]);
       if (firstInvalid) {
-        queueMicrotask(() =>
-          document.getElementById(firstInvalid)?.focus()
-        );
+        queueMicrotask(() => document.getElementById(firstInvalid)?.focus());
       }
       toast({
         title: "Please fix the highlighted fields",
@@ -160,7 +160,7 @@ export function JoinApplicationForm() {
           title: "Application received",
           description:
             result.message ??
-            "Thank you—we've saved your application and sent a confirmation.",
+            "Thank you - we've saved your application and sent a confirmation.",
         });
         setShowConfirmationModal(true);
         setFormData({ ...EMPTY_FORM });
@@ -202,11 +202,7 @@ export function JoinApplicationForm() {
 
   return (
     <>
-      <form
-        noValidate
-        onSubmit={handleSubmit}
-        className="space-y-6"
-      >
+      <form noValidate onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-4">
           <div>
             <Label htmlFor="brandName">Brand Name *</Label>
@@ -361,7 +357,7 @@ export function JoinApplicationForm() {
                 onChange={handleChange}
                 className={cn(
                   "h-10 w-full rounded-md border bg-white px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                  inputClass("category")
+                  inputClass("category"),
                 )}
               >
                 <option value="">Select a category</option>

@@ -4,7 +4,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
-/** Material-style “standard” easing — snappier than linear / default ease. */
+/** Material-style “standard” easing - snappier than linear / default ease. */
 export const MOTION_EASE = [0.4, 0, 0.2, 1] as const;
 
 type PageTransitionProps = {
