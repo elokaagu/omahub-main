@@ -161,8 +161,8 @@ export async function POST(request: NextRequest) {
       .insert({
         brand_id: p.brandId,
         customer_name: p.name,
-        contact_email: p.email,
-        contact_phone: p.phone ?? null,
+        customer_email: p.email,
+        customer_phone: p.phone?.trim() || null,
         source: p.source,
         lead_type: p.leadType,
         notes: p.notes ?? null,
