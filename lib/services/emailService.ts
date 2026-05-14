@@ -180,7 +180,7 @@ Reply directly to this email to reach the customer.`,
   }
 }
 
-/** Shopper confirmation after sitewide event preorder / waitlist signup. */
+/** Shopper confirmation after sitewide product preorder / waitlist signup. */
 export async function sendEventWaitlistConfirmationToCustomer(params: {
   to: string;
   customerName: string;
@@ -201,9 +201,9 @@ export async function sendEventWaitlistConfirmationToCustomer(params: {
       subject: "We received your preorder interest",
       html: buildOmaHubEmailHtml({
         preheader:
-          "OmaHub will follow up about your Saturday preorder request.",
+          "OmaHub will follow up about your preorder request.",
         title: "You are on the list",
-        subtitle: "Event preorder / waitlist",
+        subtitle: "Product preorder / waitlist",
         intro: `Hi ${params.customerName}, thanks for sharing what you would like reserved. Our team has your details and will follow up with next steps.`,
         sections: [
           {
@@ -222,7 +222,7 @@ export async function sendEventWaitlistConfirmationToCustomer(params: {
       }),
       text: `Hi ${params.customerName},
 
-Thanks for joining the OmaHub event preorder / waitlist.
+Thanks for joining the OmaHub product preorder / waitlist.
 
 Designer / brand: ${params.requestedBrand}
 Item / style: ${params.itemDescription}

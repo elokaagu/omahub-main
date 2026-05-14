@@ -195,7 +195,7 @@ export default function StudioEventWaitlistPage() {
         <div className="max-w-2xl mx-auto px-6 py-16 text-center">
           <h1 className="text-2xl font-canela text-oma-plum mb-2">Waitlist</h1>
           <p className="text-oma-cocoa mb-6">
-            Only super admins can view sitewide event preorder signups.
+            Only super admins can view sitewide product preorder signups.
           </p>
           <Button
             asChild
@@ -215,10 +215,10 @@ export default function StudioEventWaitlistPage() {
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h1 className="text-3xl font-canela text-oma-plum mb-2">
-              Event waitlist
+              Product preorder waitlist
             </h1>
             <p className="text-oma-cocoa max-w-2xl">
-              Everyone who submitted the sitewide event preorder form. Each row
+              Everyone who submitted the sitewide product preorder form. Each row
               is a platform lead with designer, item, size, and notes in the
               details block.
             </p>
@@ -299,7 +299,7 @@ export default function StudioEventWaitlistPage() {
                   {error && leads.length === 0
                     ? "Use the banner above or try again when your connection is stable."
                     : leads.length === 0
-                      ? "Submissions from the event preorder page will appear here."
+                      ? "Submissions from the product preorder page will appear here."
                       : "Try a different search term."}
                 </p>
                 {error && leads.length === 0 && (

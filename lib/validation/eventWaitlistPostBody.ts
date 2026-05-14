@@ -1,8 +1,15 @@
 import { z } from "zod";
 
-/** First line of `leads.notes` for sitewide event preorder signups; used to filter in Studio. */
-export const EVENT_WAITLIST_LEAD_NOTES_MARKER =
-  "EVENT PREORDER / WAITLIST (sitewide)" as const;
+/** First line written to `leads.notes` for this form. */
+export const SITEWIDE_PREORDER_WAITLIST_NOTES_FIRST_LINE =
+  "PRODUCT PREORDER / WAITLIST (sitewide)" as const;
+
+/**
+ * Shared by legacy rows (`EVENT PREORDER / …`) and current rows (`PRODUCT PREORDER / …`).
+ * Used in Studio waitlist list filter.
+ */
+export const SITEWIDE_PREORDER_WAITLIST_NOTES_FILTER =
+  "PREORDER / WAITLIST (sitewide)" as const;
 
 export const eventWaitlistPostBodySchema = z
   .object({
@@ -34,7 +41,7 @@ export function stripEventWaitlistHoneypotFields(raw: unknown): unknown {
 
 export function buildEventWaitlistLeadNotes(p: EventWaitlistPostBody): string {
   const lines = [
-    EVENT_WAITLIST_LEAD_NOTES_MARKER,
+    SITEWIDE_PREORDER_WAITLIST_NOTES_FIRST_LINE,
     `Designer / brand requested: ${p.requestedBrand}`,
     `Item / style: ${p.itemDescription}`,
     `Size: ${p.size}`,

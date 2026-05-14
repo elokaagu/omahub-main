@@ -48,6 +48,7 @@ type Props = {
   onClearError: (key: keyof FieldErrors) => void;
 };
 
+/** Product / size / colour: Popover + Command comboboxes (searchable dropdowns) tied to live catalogue data. */
 export function CatalogFieldPickers({
   products,
   selectedProductId,

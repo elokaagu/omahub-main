@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import type { LeadsAdminContext } from "@/lib/auth/requireLeadsAdmin";
 import { getOmaHubPlatformBrandId } from "@/lib/config/platformBrand";
-import { EVENT_WAITLIST_LEAD_NOTES_MARKER } from "@/lib/validation/eventWaitlistPostBody";
+import { SITEWIDE_PREORDER_WAITLIST_NOTES_FILTER } from "@/lib/validation/eventWaitlistPostBody";
 import { computeFallbackLeadsAnalytics } from "@/lib/services/adminLeadsAnalytics";
 import {
   brandAdminOwnsBrand,
@@ -124,7 +124,7 @@ export async function handleLeadsListGET(
   if (eventWaitlist) {
     query = query
       .eq("brand_id", getOmaHubPlatformBrandId())
-      .ilike("notes", `%${EVENT_WAITLIST_LEAD_NOTES_MARKER}%`);
+      .ilike("notes", `%${SITEWIDE_PREORDER_WAITLIST_NOTES_FILTER}%`);
   } else if (q.brandId) {
     if (
       profile.role === "brand_admin" &&

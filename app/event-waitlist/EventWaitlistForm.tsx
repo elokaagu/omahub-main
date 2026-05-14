@@ -31,6 +31,11 @@ import { getEmailValidationError } from "@/app/contact/contactValidation";
 
 const OTHER_DESIGNER_VALUE = "__other__";
 
+/**
+ * Designer + catalogue flows use Popover + Command comboboxes (searchable
+ * dropdowns), not native HTML select elements, so long brand and product lists stay usable.
+ */
+
 type DirectoryBrand = { id: string; name: string };
 
 type FormState = {
@@ -383,7 +388,7 @@ export function EventWaitlistForm() {
   return (
     <div className="rounded-lg bg-oma-beige p-8">
       <p className="mb-6 text-sm text-oma-cocoa/85">
-        Prefer email only? You can still reach us at{" "}
+        Custom request, you can reach us at{" "}
         <a
           href="mailto:info@oma-hub.com"
           className="text-oma-plum underline-offset-2 hover:underline"

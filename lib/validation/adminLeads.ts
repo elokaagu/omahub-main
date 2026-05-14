@@ -67,7 +67,7 @@ export const leadsListQuerySchema = z.object({
   priority: leadPrioritySchema.optional(),
   brandId: z.string().min(1).max(200).optional(),
   search: z.string().optional(),
-  /** When `"1"` or `"true"`, list only sitewide event-waitlist leads (super_admin only). */
+  /** When `"1"` or `"true"`, list only sitewide product preorder / waitlist leads (super_admin only). */
   eventWaitlist: z.string().max(10).optional(),
 });
 

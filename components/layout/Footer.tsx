@@ -108,7 +108,7 @@ export default function Footer() {
                 href="/event-waitlist"
                 className="text-sm text-oma-cocoa hover:text-oma-plum expand-underline focus-visible:outline-none focus-visible:ring-0"
               >
-                Event preorder
+                Product preorder
               </Link>
             </div>
           </nav>
