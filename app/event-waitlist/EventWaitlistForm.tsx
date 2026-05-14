@@ -199,6 +199,11 @@ export function EventWaitlistForm() {
           const colors = Array.isArray(o.colors)
             ? o.colors.map((x) => String(x).trim()).filter(Boolean)
             : [];
+          const imageRaw = o.image;
+          const image =
+            typeof imageRaw === "string" && imageRaw.trim()
+              ? imageRaw.trim()
+              : null;
           mapped.push({
             id,
             title: typeof o.title === "string" ? o.title : null,
@@ -207,6 +212,7 @@ export function EventWaitlistForm() {
               typeof o.catalogue_title === "string" ? o.catalogue_title : null,
             sizes,
             colors,
+            image,
           });
         }
         setBrandProducts(mapped);

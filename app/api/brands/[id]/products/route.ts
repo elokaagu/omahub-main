@@ -23,6 +23,8 @@ interface ProductRow {
   is_custom: boolean | null;
   lead_time: string | null;
   created_at: string;
+  image: string | null;
+  images: unknown;
   service_type?: string | null;
   catalogues?: { title: string | null } | { title: string | null }[] | null;
 }
@@ -65,7 +67,24 @@ function catalogueTitleFromRow(row: ProductRow): string | null {
   return typeof t === "string" && t.trim() ? t.trim() : null;
 }
 
-type PublicProduct = Omit<ProductRow, "service_type" | "catalogues" | "sizes" | "colors"> & {
+/** First still image URL for cards / waitlist (prefers `images[0]`, then `image`). */
+function mainImageFromRow(row: ProductRow): string | null {
+  if (Array.isArray(row.images)) {
+    for (const x of row.images) {
+      const u = String(x ?? "").trim();
+      if (u) return u;
+    }
+  }
+  if (typeof row.image === "string" && row.image.trim()) {
+    return row.image.trim();
+  }
+  return null;
+}
+
+type PublicProduct = Omit<
+  ProductRow,
+  "service_type" | "catalogues" | "sizes" | "colors" | "images"
+> & {
   sizes: string[];
   colors: string[];
   catalogue_title: string | null;
@@ -120,6 +139,8 @@ export async function GET(
         lead_time,
         created_at,
         service_type,
+        image,
+        images,
         catalogues (
           title
         )
@@ -172,10 +193,12 @@ export async function GET(
         catalogues: _cat,
         sizes: rawSizes,
         colors: rawColors,
+        images: _rawImages,
         ...rest
       } = row;
       return {
         ...rest,
+        image: mainImageFromRow(row),
         sizes: normalizeStringList(rawSizes),
         colors: normalizeStringList(rawColors),
         catalogue_title: catalogueTitleFromRow(row),

@@ -18,10 +18,48 @@ import {
 } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { isImageLikeUrl } from "@/lib/product/mediaUrl";
 import {
   FreeTextColourComboField,
   FreeTextSizeComboField,
 } from "./FreeTextComboFields";
+
+function CatalogProductThumb({
+  url,
+  alt,
+  size = "sm",
+  className,
+}: {
+  url: string | null;
+  alt: string;
+  size?: "sm" | "md";
+  className?: string;
+}) {
+  const [broken, setBroken] = useState(false);
+  if (!isImageLikeUrl(url) || broken || !url) return null;
+  const frame =
+    size === "sm"
+      ? "h-9 w-9 shrink-0"
+      : "h-24 w-24 shrink-0 sm:h-28 sm:w-28";
+  return (
+    <span
+      className={cn(
+        "relative overflow-hidden rounded-md border border-oma-gold/20 bg-oma-cream",
+        frame,
+        className,
+      )}
+    >
+      <img
+        src={url}
+        alt={alt.trim() || "Product"}
+        className="h-full w-full object-cover"
+        loading="lazy"
+        decoding="async"
+        onError={() => setBroken(true)}
+      />
+    </span>
+  );
+}
 
 /** Pick this to type a piece that is not in the brand's live catalogue. */
 export const CUSTOM_PIECE_VALUE = "__custom_piece__";
@@ -33,6 +71,8 @@ export type CatalogProduct = {
   catalogue_title: string | null;
   sizes: string[];
   colors: string[];
+  /** Resolved main still for display (from `images[0]` or `image`). */
+  image: string | null;
 };
 
 type FieldErrors = Partial<Record<"itemDescription" | "size", string>>;
@@ -131,11 +171,19 @@ export function CatalogFieldPickers({
                 errors.itemDescription ? "evt-itemDescription-error" : undefined
               }
               className={cn(
-                "h-auto min-h-10 w-full justify-between border-oma-gold/30 bg-white py-2 text-left font-normal text-oma-black hover:bg-white focus-visible:ring-oma-plum",
+                "h-auto min-h-10 w-full justify-between gap-2 border-oma-gold/30 bg-white py-2 text-left font-normal text-oma-black hover:bg-white focus-visible:ring-oma-plum",
                 !selectedProductId && "text-oma-cocoa/70",
               )}
             >
-              <span className="line-clamp-2 pr-2">{productTriggerLabel}</span>
+              <div className="flex min-w-0 flex-1 items-center gap-2">
+                {selectedProductId !== CUSTOM_PIECE_VALUE && selectedProduct ? (
+                  <CatalogProductThumb
+                    url={selectedProduct.image}
+                    alt={selectedProduct.title?.trim() || "Selected product"}
+                  />
+                ) : null}
+                <span className="line-clamp-2 pr-2">{productTriggerLabel}</span>
+              </div>
               <ChevronsUpDown
                 className="h-4 w-4 shrink-0 opacity-50"
                 aria-hidden
@@ -172,7 +220,11 @@ export function CatalogFieldPickers({
                           )}
                           aria-hidden
                         />
-                        <span className="line-clamp-2">
+                        <CatalogProductThumb
+                          url={p.image}
+                          alt={p.title?.trim() || "Product"}
+                        />
+                        <span className="line-clamp-2 min-w-0 flex-1">
                           {p.title?.trim() || "Untitled piece"}
                         </span>
                       </CommandItem>
@@ -222,10 +274,19 @@ export function CatalogFieldPickers({
             className="border-oma-gold/30 bg-white focus-visible:ring-oma-plum"
           />
         ) : selectedProductId ? (
-          <p className="rounded-md border border-oma-gold/20 bg-white/80 px-3 py-2 text-xs text-oma-cocoa/90">
-            <span className="font-medium text-oma-black">Selected:</span>{" "}
-            {itemDescription}
-          </p>
+          <div className="flex gap-3 rounded-md border border-oma-gold/20 bg-white/80 px-3 py-2 text-xs text-oma-cocoa/90">
+            {selectedProduct ? (
+              <CatalogProductThumb
+                url={selectedProduct.image}
+                alt={selectedProduct.title?.trim() || "Selected product"}
+                size="md"
+              />
+            ) : null}
+            <p className="min-w-0 flex-1 self-center leading-snug">
+              <span className="font-medium text-oma-black">Selected:</span>{" "}
+              {itemDescription}
+            </p>
+          </div>
         ) : null}
         {errors.itemDescription ? (
           <p
