@@ -180,6 +180,77 @@ Reply directly to this email to reach the customer.`,
   }
 }
 
+/** Shopper confirmation after sitewide event preorder / waitlist signup. */
+export async function sendEventWaitlistConfirmationToCustomer(params: {
+  to: string;
+  customerName: string;
+  requestedBrand: string;
+  itemDescription: string;
+  size: string;
+}): Promise<{ success: boolean; error?: string }> {
+  try {
+    const resend = getResendInstance();
+    if (!resend) {
+      return { success: false, error: "Email not configured" };
+    }
+
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://oma-hub.com";
+    const { error } = await resend.emails.send({
+      from: "OmaHub <info@oma-hub.com>",
+      to: [params.to],
+      subject: "We received your preorder interest",
+      html: buildOmaHubEmailHtml({
+        preheader: "OmaHub will follow up about your Saturday preorder request.",
+        title: "You are on the list",
+        subtitle: "Event preorder / waitlist",
+        intro: `Hi ${params.customerName}, thanks for sharing what you would like reserved. Our team has your details and will follow up with next steps.`,
+        sections: [
+          {
+            title: "Your request",
+            details: [
+              { label: "Designer / brand", value: params.requestedBrand },
+              { label: "Item / style", value: params.itemDescription },
+              { label: "Size", value: params.size },
+            ],
+          },
+        ],
+        ctaLabel: "Visit OmaHub",
+        ctaUrl: siteUrl,
+        footerNote:
+          "Questions? Reply to this email or write to info@oma-hub.com.",
+      }),
+      text: `Hi ${params.customerName},
+
+Thanks for joining the OmaHub event preorder / waitlist.
+
+Designer / brand: ${params.requestedBrand}
+Item / style: ${params.itemDescription}
+Size: ${params.size}
+
+We will follow up with next steps. Visit ${siteUrl}
+
+— OmaHub`,
+    });
+
+    if (error) {
+      console.error(
+        "Event waitlist confirmation email error:",
+        typeof error === "object" && error !== null && "message" in error
+          ? String((error as { message?: string }).message)
+          : String(error)
+      );
+      return { success: false, error: "Send failed" };
+    }
+    return { success: true };
+  } catch (e) {
+    console.error(
+      "Event waitlist confirmation exception:",
+      e instanceof Error ? e.message : e
+    );
+    return { success: false, error: "Send failed" };
+  }
+}
+
 export async function sendInquiryReplyEmail(replyData: {
   customerName: string;
   customerEmail: string;

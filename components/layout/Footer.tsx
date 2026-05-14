@@ -116,6 +116,14 @@ export default function Footer() {
                   Events
                 </a>
               </li>
+              <li>
+                <Link
+                  href="/event-waitlist"
+                  className="text-sm text-oma-cocoa hover:text-oma-plum expand-underline focus-visible:outline-none focus-visible:ring-0"
+                >
+                  Event preorder
+                </Link>
+              </li>
             </ul>
           </div>
 
