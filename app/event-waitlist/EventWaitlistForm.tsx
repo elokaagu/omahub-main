@@ -28,6 +28,10 @@ import { OMAHUB_PLATFORM_BRAND_ID_DEFAULT } from "@/lib/config/platformBrand";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { getEmailValidationError } from "@/app/contact/contactValidation";
+import {
+  FreeTextColourComboField,
+  FreeTextSizeComboField,
+} from "./FreeTextComboFields";
 
 const OTHER_DESIGNER_VALUE = "__other__";
 
@@ -778,21 +782,23 @@ export function EventWaitlistForm() {
             </div>
 
             <div className="space-y-2">
-              <label
-                htmlFor={IDS.size}
+              <span
+                id={`${IDS.size}-label`}
                 className="block text-sm font-medium text-oma-black"
               >
                 Size
-              </label>
-              <Input
+              </span>
+              <FreeTextSizeComboField
                 id={IDS.size}
-                name="size"
+                labelId={`${IDS.size}-label`}
                 value={form.size}
-                onChange={onFieldChange}
-                placeholder="UK / EU / your usual - be specific"
-                aria-invalid={!!errors.size}
-                aria-describedby={errors.size ? errId("size") : undefined}
-                className="border-oma-gold/30 bg-white focus-visible:ring-oma-plum"
+                onChange={(v) => {
+                  setForm((f) => ({ ...f, size: v }));
+                  if (errors.size)
+                    setErrors((prev) => ({ ...prev, size: undefined }));
+                }}
+                error={errors.size}
+                errId={errId("size")}
               />
               {errors.size ? (
                 <p
@@ -806,19 +812,17 @@ export function EventWaitlistForm() {
             </div>
 
             <div className="space-y-2">
-              <label
-                htmlFor={IDS.colour}
+              <span
+                id={`${IDS.colour}-label`}
                 className="block text-sm font-medium text-oma-black"
               >
                 Colour or variant (optional)
-              </label>
-              <Input
+              </span>
+              <FreeTextColourComboField
                 id={IDS.colour}
-                name="colour"
+                labelId={`${IDS.colour}-label`}
                 value={form.colour}
-                onChange={onFieldChange}
-                placeholder="If applicable"
-                className="border-oma-gold/30 bg-white focus-visible:ring-oma-plum"
+                onChange={(v) => setForm((f) => ({ ...f, colour: v }))}
               />
             </div>
           </>

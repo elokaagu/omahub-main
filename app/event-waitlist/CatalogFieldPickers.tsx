@@ -11,7 +11,6 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { Input } from "@/components/ui/input";
 import {
   Popover,
   PopoverContent,
@@ -19,6 +18,10 @@ import {
 } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import {
+  FreeTextColourComboField,
+  FreeTextSizeComboField,
+} from "./FreeTextComboFields";
 
 /** Pick this to type a piece that is not in the brand's live catalogue. */
 export const CUSTOM_PIECE_VALUE = "__custom_piece__";
@@ -307,18 +310,16 @@ export function CatalogFieldPickers({
             </PopoverContent>
           </Popover>
         ) : (
-          <Input
+          <FreeTextSizeComboField
             id="evt-size"
-            name="size"
+            labelId="evt-size-label"
             value={size}
-            onChange={(e) => {
-              onSizeChange(e.target.value);
-              if (errors.size) onClearError("size");
+            onChange={(v) => {
+              onSizeChange(v);
+              onClearError("size");
             }}
-            placeholder="This piece has no preset sizes - enter yours (UK / EU / cm)"
-            aria-invalid={!!errors.size}
-            aria-describedby={errors.size ? "evt-size-error" : undefined}
-            className="border-oma-gold/30 bg-white focus-visible:ring-oma-plum"
+            error={errors.size}
+            errId="evt-size-error"
           />
         )}
         {errors.size ? (
@@ -413,13 +414,11 @@ export function CatalogFieldPickers({
             </PopoverContent>
           </Popover>
         ) : (
-          <Input
+          <FreeTextColourComboField
             id="evt-colour"
-            name="colour"
+            labelId="evt-colour-label"
             value={colour}
-            onChange={(e) => onColourChange(e.target.value)}
-            placeholder="No preset colours - type if needed"
-            className="border-oma-gold/30 bg-white focus-visible:ring-oma-plum"
+            onChange={onColourChange}
           />
         )}
       </div>
