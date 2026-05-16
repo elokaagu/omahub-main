@@ -16,6 +16,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { cmdkSelectHandlers } from "./cmdkSelectHandlers";
 
 type FreeTextSizeFieldProps = {
   id: string;
@@ -49,6 +50,7 @@ export function FreeTextSizeComboField({
         setOpen(next);
         if (next) setDraft(value);
       }}
+      modal
     >
       <PopoverTrigger asChild>
         <Button
@@ -101,10 +103,10 @@ export function FreeTextSizeComboField({
               {draft.trim() ? (
                 <CommandItem
                   value={`__manual_size__${draft}`}
-                  onSelect={() => {
+                  {...cmdkSelectHandlers(() => {
                     onChange(draft.trim());
                     setOpen(false);
-                  }}
+                  })}
                 >
                   Use &quot;{draft.trim()}&quot;
                 </CommandItem>
@@ -148,6 +150,7 @@ export function FreeTextColourComboField({
         setOpen(next);
         if (next) setDraft(value);
       }}
+      modal
     >
       <PopoverTrigger asChild>
         <Button
@@ -198,10 +201,10 @@ export function FreeTextColourComboField({
             <CommandGroup>
               <CommandItem
                 value="__manual_colour_none__"
-                onSelect={() => {
+                {...cmdkSelectHandlers(() => {
                   onChange("");
                   setOpen(false);
-                }}
+                })}
               >
                 <Check
                   className={cn(
@@ -215,10 +218,10 @@ export function FreeTextColourComboField({
               {draft.trim() ? (
                 <CommandItem
                   value={`__manual_colour__${draft}`}
-                  onSelect={() => {
+                  {...cmdkSelectHandlers(() => {
                     onChange(draft.trim());
                     setOpen(false);
-                  }}
+                  })}
                 >
                   Use &quot;{draft.trim()}&quot;
                 </CommandItem>

@@ -27,6 +27,13 @@ export async function POST(request: NextRequest) {
   }
 
   if (isEventWaitlistHoneypotTriggered(body)) {
+    console.error(
+      JSON.stringify({
+        event: "event_waitlist_honeypot_triggered",
+        path: "/api/event-waitlist",
+        userAgent: request.headers.get("user-agent") ?? "",
+      })
+    );
     return NextResponse.json({ success: true });
   }
 
@@ -107,8 +114,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Await sends so the serverless function does not exit before Resend completes.
+    const customerEmailResult = await sendEventWaitlistConfirmationToCustomer({
+      to: p.email,
+      customerName: p.name,
+      requestedBrand: p.requestedBrand,
+      itemDescription: p.itemDescription,
+      size: p.size,
+    });
+
+    if (!customerEmailResult.success) {
+      console.error("event_waitlist_customer_email_failed", {
+        to: p.email,
+        error: customerEmailResult.error,
+      });
+    }
+
     if (brand.contact_email) {
-      void sendNewLeadNotificationToBrand({
+      const brandEmailResult = await sendNewLeadNotificationToBrand({
         to: brand.contact_email,
         brandName: brand.name ?? "OmaHub",
         customerName: p.name,
@@ -117,15 +140,14 @@ export async function POST(request: NextRequest) {
         leadType: "product_interest",
         notes,
       });
-    }
 
-    void sendEventWaitlistConfirmationToCustomer({
-      to: p.email,
-      customerName: p.name,
-      requestedBrand: p.requestedBrand,
-      itemDescription: p.itemDescription,
-      size: p.size,
-    });
+      if (!brandEmailResult.success) {
+        console.error("event_waitlist_brand_email_failed", {
+          to: brand.contact_email,
+          error: brandEmailResult.error,
+        });
+      }
+    }
 
     return NextResponse.json({ success: true });
   } catch (e) {

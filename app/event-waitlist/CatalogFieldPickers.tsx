@@ -23,6 +23,12 @@ import {
   FreeTextColourComboField,
   FreeTextSizeComboField,
 } from "./FreeTextComboFields";
+import { cmdkSelectHandlers } from "./cmdkSelectHandlers";
+
+export function buildCatalogPieceLine(p: CatalogProduct): string {
+  const t = p.title?.trim() || "Product";
+  return `${t} (product ${p.id})`;
+}
 
 function CatalogProductThumb({
   url,
@@ -134,11 +140,6 @@ export function CatalogFieldPickers({
         ? selectedProduct.title?.trim() || "Selected product"
         : "Search or select a product…";
 
-  const pieceLineForProduct = (p: CatalogProduct) => {
-    const t = p.title?.trim() || "Product";
-    return `${t} (product ${p.id})`;
-  };
-
   const sizePickable =
     !!selectedProductId &&
     selectedProductId !== CUSTOM_PIECE_VALUE &&
@@ -158,7 +159,7 @@ export function CatalogFieldPickers({
           Pulled from this designer&apos;s live OmaHub catalogue (collections
           and in-stock pieces).
         </p>
-        <Popover open={productOpen} onOpenChange={setProductOpen}>
+        <Popover open={productOpen} onOpenChange={setProductOpen} modal>
           <PopoverTrigger asChild>
             <Button
               type="button"
@@ -205,11 +206,11 @@ export function CatalogFieldPickers({
                       <CommandItem
                         key={p.id}
                         value={`${p.title ?? ""} ${p.category ?? ""} ${p.catalogue_title ?? ""} ${p.id}`}
-                        onSelect={() => {
-                          onSelectProduct(p.id, pieceLineForProduct(p));
+                        {...cmdkSelectHandlers(() => {
+                          onSelectProduct(p.id, buildCatalogPieceLine(p));
                           setProductOpen(false);
                           onClearError("itemDescription");
-                        }}
+                        })}
                       >
                         <Check
                           className={cn(
@@ -234,11 +235,11 @@ export function CatalogFieldPickers({
                 <CommandGroup>
                   <CommandItem
                     value="not listed describe manually custom"
-                    onSelect={() => {
+                    {...cmdkSelectHandlers(() => {
                       onSelectProduct(CUSTOM_PIECE_VALUE, "");
                       setProductOpen(false);
                       onClearError("itemDescription");
-                    }}
+                    })}
                   >
                     <Check
                       className={cn(
@@ -311,7 +312,7 @@ export function CatalogFieldPickers({
             Choose a product first to see sizes from the listing.
           </p>
         ) : selectedProduct!.sizes.length > 0 ? (
-          <Popover open={sizeOpen} onOpenChange={setSizeOpen}>
+          <Popover open={sizeOpen} onOpenChange={setSizeOpen} modal>
             <PopoverTrigger asChild>
               <Button
                 type="button"
@@ -349,11 +350,11 @@ export function CatalogFieldPickers({
                       <CommandItem
                         key={s}
                         value={s}
-                        onSelect={() => {
+                        {...cmdkSelectHandlers(() => {
                           onSizeChange(s);
                           setSizeOpen(false);
                           onClearError("size");
-                        }}
+                        })}
                       >
                         <Check
                           className={cn(
@@ -402,7 +403,7 @@ export function CatalogFieldPickers({
             Choose a product first to see colours from the listing.
           </p>
         ) : selectedProduct!.colors.length > 0 ? (
-          <Popover open={colourOpen} onOpenChange={setColourOpen}>
+          <Popover open={colourOpen} onOpenChange={setColourOpen} modal>
             <PopoverTrigger asChild>
               <Button
                 type="button"
@@ -436,10 +437,10 @@ export function CatalogFieldPickers({
                   <CommandGroup>
                     <CommandItem
                       value="__none__ no colour preference"
-                      onSelect={() => {
+                      {...cmdkSelectHandlers(() => {
                         onColourChange("");
                         setColourOpen(false);
-                      }}
+                      })}
                     >
                       <Check
                         className={cn(
@@ -454,10 +455,10 @@ export function CatalogFieldPickers({
                       <CommandItem
                         key={c}
                         value={c}
-                        onSelect={() => {
+                        {...cmdkSelectHandlers(() => {
                           onColourChange(c);
                           setColourOpen(false);
-                        }}
+                        })}
                       >
                         <Check
                           className={cn(

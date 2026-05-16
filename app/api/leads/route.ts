@@ -189,7 +189,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (brand.contact_email) {
-      void sendNewLeadNotificationToBrand({
+      const brandEmailResult = await sendNewLeadNotificationToBrand({
         to: brand.contact_email,
         brandName: brand.name ?? "Your brand",
         customerName: p.name,
@@ -198,6 +198,12 @@ export async function POST(request: NextRequest) {
         leadType: p.leadType,
         notes: p.notes,
       });
+      if (!brandEmailResult.success) {
+        console.error("public_lead_brand_email_failed", {
+          to: brand.contact_email,
+          error: brandEmailResult.error,
+        });
+      }
     }
 
     return NextResponse.json({ success: true, lead });

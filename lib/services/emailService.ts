@@ -191,13 +191,24 @@ export async function sendEventWaitlistConfirmationToCustomer(params: {
   try {
     const resend = getResendInstance();
     if (!resend) {
+      console.error(
+        "❌ Resend API key not configured - event waitlist confirmation not sent",
+      );
+      console.error("🎯 Intended recipient:", params.to);
+      console.error("📖 See EMAIL_SERVICE_SETUP.md for setup instructions");
+      console.error("🔍 RESEND_API_KEY check:", {
+        exists: !!process.env.RESEND_API_KEY,
+        length: process.env.RESEND_API_KEY?.length || 0,
+        startsWith: process.env.RESEND_API_KEY?.substring(0, 3) || "N/A",
+      });
       return { success: false, error: "Email not configured" };
     }
 
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://oma-hub.com";
-    const { error } = await resend.emails.send({
+    const { data, error } = await resend.emails.send({
       from: "OmaHub <info@oma-hub.com>",
       to: [params.to],
+      replyTo: "info@oma-hub.com",
       subject: "We received your preorder interest",
       html: buildOmaHubEmailHtml({
         preheader:
@@ -242,6 +253,12 @@ We will follow up with next steps. Visit ${siteUrl}
       );
       return { success: false, error: "Send failed" };
     }
+    console.log(
+      "✅ Event waitlist confirmation sent:",
+      data?.id,
+      "to:",
+      params.to,
+    );
     return { success: true };
   } catch (e) {
     console.error(

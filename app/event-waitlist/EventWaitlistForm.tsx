@@ -4,10 +4,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Check, ChevronsUpDown } from "lucide-react";
 import {
+  buildCatalogPieceLine,
   CatalogFieldPickers,
   CUSTOM_PIECE_VALUE,
   type CatalogProduct,
 } from "./CatalogFieldPickers";
+import { cmdkSelectHandlers } from "./cmdkSelectHandlers";
 import { Button } from "@/components/ui/button";
 import {
   Command,
@@ -289,6 +291,8 @@ export function EventWaitlistForm() {
         if (!form.itemDescription.trim()) {
           next.itemDescription = "Describe the item or style you want";
         }
+      } else if (!brandProducts.some((x) => x.id === selectedProductId)) {
+        next.itemDescription = "Choose a product from the catalogue";
       }
       const p = brandProducts.find((x) => x.id === selectedProductId);
       if (p && selectedProductId !== CUSTOM_PIECE_VALUE) {
@@ -332,6 +336,17 @@ export function EventWaitlistForm() {
       return;
     }
 
+    let itemDescription = form.itemDescription.trim();
+    if (
+      catalogPickupMode &&
+      selectedProductId &&
+      selectedProductId !== CUSTOM_PIECE_VALUE &&
+      !itemDescription
+    ) {
+      const p = brandProducts.find((x) => x.id === selectedProductId);
+      if (p) itemDescription = buildCatalogPieceLine(p);
+    }
+
     setSubmitting(true);
     try {
       const res = await fetch("/api/event-waitlist", {
@@ -342,7 +357,7 @@ export function EventWaitlistForm() {
           email: form.email.trim(),
           phone: form.phone.trim() || undefined,
           requestedBrand,
-          itemDescription: form.itemDescription.trim(),
+          itemDescription,
           size: form.size.trim(),
           colour: form.colour.trim() || undefined,
           additionalNotes: form.additionalNotes.trim() || undefined,
@@ -419,13 +434,19 @@ export function EventWaitlistForm() {
       <form className="space-y-5" noValidate onSubmit={onSubmit}>
         <input
           type="text"
-          name="_evt_hp_field"
+          name="evt_company"
           value={hpField}
           onChange={(e) => setHpField(e.target.value)}
           autoComplete="off"
           tabIndex={-1}
-          className="absolute left-[-9999px] h-0 w-0 opacity-0"
+          readOnly
+          data-1p-ignore
+          data-lpignore="true"
+          data-bwignore
+          data-form-type="other"
+          onFocus={(e) => e.currentTarget.removeAttribute("readonly")}
           aria-hidden
+          className="pointer-events-none absolute -left-[9999px] h-px w-px overflow-hidden opacity-0"
         />
 
         <div className="space-y-2">
@@ -510,6 +531,7 @@ export function EventWaitlistForm() {
             <Popover
               open={designerPopoverOpen}
               onOpenChange={setDesignerPopoverOpen}
+              modal
             >
               <PopoverTrigger asChild>
                 <Button
@@ -552,7 +574,7 @@ export function EventWaitlistForm() {
                         <CommandItem
                           key={b.id}
                           value={b.name}
-                          onSelect={() => {
+                          {...cmdkSelectHandlers(() => {
                             setSelectedDesignerId(b.id);
                             setOtherDesignerName("");
                             setDesignerPopoverOpen(false);
@@ -561,7 +583,7 @@ export function EventWaitlistForm() {
                               designer: undefined,
                               otherDesigner: undefined,
                             }));
-                          }}
+                          })}
                         >
                           <Check
                             className={cn(
@@ -579,7 +601,7 @@ export function EventWaitlistForm() {
                     <CommandGroup>
                       <CommandItem
                         value="other not listed custom designer"
-                        onSelect={() => {
+                        {...cmdkSelectHandlers(() => {
                           setSelectedDesignerId(OTHER_DESIGNER_VALUE);
                           setDesignerPopoverOpen(false);
                           setErrors((prev) => ({
@@ -587,7 +609,7 @@ export function EventWaitlistForm() {
                             designer: undefined,
                             otherDesigner: undefined,
                           }));
-                        }}
+                        })}
                       >
                         <Check
                           className={cn(
