@@ -140,11 +140,12 @@ export function CatalogFieldPickers({
         ? selectedProduct.title?.trim() || "Selected product"
         : "Search or select a product…";
 
-  const sizePickable =
-    !!selectedProductId &&
+  const hasProductChoice = !!selectedProductId;
+  const manualPieceMode = selectedProductId === CUSTOM_PIECE_VALUE;
+  const cataloguePieceMode =
+    hasProductChoice &&
     selectedProductId !== CUSTOM_PIECE_VALUE &&
     !!selectedProduct;
-  const colourPickable = sizePickable;
 
   return (
     <>
@@ -307,11 +308,23 @@ export function CatalogFieldPickers({
         >
           Size
         </span>
-        {!sizePickable ? (
+        {!hasProductChoice ? (
           <p className="text-xs text-oma-cocoa/70">
             Choose a product first to see sizes from the listing.
           </p>
-        ) : selectedProduct!.sizes.length > 0 ? (
+        ) : manualPieceMode ? (
+          <FreeTextSizeComboField
+            id="evt-size"
+            labelId="evt-size-label"
+            value={size}
+            onChange={(v) => {
+              onSizeChange(v);
+              onClearError("size");
+            }}
+            error={errors.size}
+            errId="evt-size-error"
+          />
+        ) : cataloguePieceMode && selectedProduct!.sizes.length > 0 ? (
           <Popover open={sizeOpen} onOpenChange={setSizeOpen} modal>
             <PopoverTrigger asChild>
               <Button
@@ -371,7 +384,7 @@ export function CatalogFieldPickers({
               </Command>
             </PopoverContent>
           </Popover>
-        ) : (
+        ) : cataloguePieceMode ? (
           <FreeTextSizeComboField
             id="evt-size"
             labelId="evt-size-label"
@@ -383,7 +396,7 @@ export function CatalogFieldPickers({
             error={errors.size}
             errId="evt-size-error"
           />
-        )}
+        ) : null}
         {errors.size ? (
           <p id="evt-size-error" className="text-sm text-red-500" role="alert">
             {errors.size}
@@ -398,11 +411,18 @@ export function CatalogFieldPickers({
         >
           Colour or variant (optional)
         </span>
-        {!colourPickable ? (
+        {!hasProductChoice ? (
           <p className="text-xs text-oma-cocoa/70">
             Choose a product first to see colours from the listing.
           </p>
-        ) : selectedProduct!.colors.length > 0 ? (
+        ) : manualPieceMode ? (
+          <FreeTextColourComboField
+            id="evt-colour"
+            labelId="evt-colour-label"
+            value={colour}
+            onChange={onColourChange}
+          />
+        ) : cataloguePieceMode && selectedProduct!.colors.length > 0 ? (
           <Popover open={colourOpen} onOpenChange={setColourOpen} modal>
             <PopoverTrigger asChild>
               <Button
@@ -475,14 +495,14 @@ export function CatalogFieldPickers({
               </Command>
             </PopoverContent>
           </Popover>
-        ) : (
+        ) : cataloguePieceMode ? (
           <FreeTextColourComboField
             id="evt-colour"
             labelId="evt-colour-label"
             value={colour}
             onChange={onColourChange}
           />
-        )}
+        ) : null}
       </div>
     </>
   );

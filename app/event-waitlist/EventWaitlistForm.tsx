@@ -291,6 +291,9 @@ export function EventWaitlistForm() {
         if (!form.itemDescription.trim()) {
           next.itemDescription = "Describe the item or style you want";
         }
+        if (!form.size.trim()) {
+          next.size = "Enter your size or measurements";
+        }
       } else if (!brandProducts.some((x) => x.id === selectedProductId)) {
         next.itemDescription = "Choose a product from the catalogue";
       }
@@ -330,10 +333,13 @@ export function EventWaitlistForm() {
       toast.error("Please fix the errors in the form");
       return;
     }
-    const requestedBrand = resolvedRequestedBrand;
+    let requestedBrand = resolvedRequestedBrand;
     if (!requestedBrand) {
       toast.error("Please choose a designer");
       return;
+    }
+    if (selectedDesignerId === OTHER_DESIGNER_VALUE) {
+      requestedBrand = `[Not on OmaHub] ${requestedBrand}`;
     }
 
     let itemDescription = form.itemDescription.trim();
@@ -345,6 +351,13 @@ export function EventWaitlistForm() {
     ) {
       const p = brandProducts.find((x) => x.id === selectedProductId);
       if (p) itemDescription = buildCatalogPieceLine(p);
+    }
+    if (
+      catalogPickupMode &&
+      selectedProductId === CUSTOM_PIECE_VALUE &&
+      itemDescription
+    ) {
+      itemDescription = `[Not in catalogue] ${itemDescription}`;
     }
 
     setSubmitting(true);
