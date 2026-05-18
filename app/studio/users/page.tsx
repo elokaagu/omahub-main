@@ -332,6 +332,7 @@ export default function UsersPage() {
         },
         credentials: "include",
         body: JSON.stringify({
+          ...(editingUser ? { id: editingUser.id } : {}),
           email: formData.email,
           role: formData.role,
           owned_brands: formData.selectedBrands,
@@ -555,11 +556,10 @@ export default function UsersPage() {
                     onChange={(e) => handleInputChange("email", e.target.value)}
                     placeholder="user@example.com"
                     required
-                    disabled={!!editingUser} // Disable email editing for existing users
                   />
                   {editingUser && (
                     <p className="text-xs text-muted-foreground">
-                      Email cannot be changed for existing users
+                      Changing the email will update their login address immediately.
                     </p>
                   )}
                 </div>

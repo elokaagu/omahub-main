@@ -147,7 +147,7 @@ export async function POST(request: NextRequest) {
       return jsonValidationError(parsed.error);
     }
 
-    const { email, role, owned_brands } = parsed.data;
+    const { id: requestedId, email, role, owned_brands } = parsed.data;
 
     let adminDb;
     try {
@@ -180,6 +180,99 @@ export async function POST(request: NextRequest) {
       finalOwnedBrands = (allBrands ?? []).map((b: { id: string }) => b.id);
     } else {
       finalOwnedBrands = owned_brands ?? [];
+    }
+
+    // When an id is provided we're updating by ID (supports email changes)
+    if (requestedId) {
+      const { data: profileById, error: byIdError } = await adminDb
+        .from("profiles")
+        .select("id, email")
+        .eq("id", requestedId)
+        .maybeSingle();
+
+      if (byIdError) {
+        console.error("admin/users POST: lookup by id failed:", byIdError.code, byIdError.message);
+        return NextResponse.json({ error: "Error looking up user" }, { status: 500 });
+      }
+      if (!profileById) {
+        return NextResponse.json({ error: "User not found" }, { status: 404 });
+      }
+
+      const emailChanged = profileById.email?.toLowerCase() !== email;
+
+      if (emailChanged) {
+        // Check new email isn't already in use by a different profile
+        const { data: conflictRows } = await adminDb
+          .from("profiles")
+          .select("id")
+          .ilike("email", email)
+          .neq("id", requestedId)
+          .limit(1);
+
+        if (conflictRows && conflictRows.length > 0) {
+          return NextResponse.json(
+            { error: "This email address is already in use by another account" },
+            { status: 409 }
+          );
+        }
+
+        // Update email in Supabase Auth (email_confirm: true skips confirmation email)
+        const { error: authEmailError } = await adminDb.auth.admin.updateUserById(
+          requestedId,
+          { email, email_confirm: true }
+        );
+        if (authEmailError) {
+          console.error("admin/users POST: auth email update failed:", authEmailError.message);
+          return NextResponse.json(
+            { error: "Failed to update email in authentication system" },
+            { status: 500 }
+          );
+        }
+      }
+
+      const { count: brandCount } = await adminDb
+        .from("brands")
+        .select("id", { count: "exact", head: true });
+
+      const validateSuperAdminBrands = () => {
+        if (role !== "super_admin") return true;
+        if (brandCount == null) return true;
+        return finalOwnedBrands.length === brandCount;
+      };
+
+      const { data: updatedUser, error: updateError } = await adminDb
+        .from("profiles")
+        .update({
+          ...(emailChanged ? { email } : {}),
+          role,
+          owned_brands: finalOwnedBrands,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", requestedId)
+        .select()
+        .single();
+
+      if (updateError) {
+        console.error("admin/users POST: update by id failed:", updateError.code, updateError.message);
+        return NextResponse.json({ error: "Failed to update user" }, { status: 500 });
+      }
+
+      if (!validateSuperAdminBrands()) {
+        return NextResponse.json(
+          { error: "Super admin brand assignment validation failed" },
+          { status: 500 }
+        );
+      }
+
+      await tryBroadcastProfileUpdate(adminDb, updatedUser, auth.userId);
+
+      return NextResponse.json({
+        user: updatedUser,
+        action: "updated" as const,
+        autoAssignedBrands: role === "super_admin" ? finalOwnedBrands.length : 0,
+        profileRefreshTriggered: updatedUser.id !== auth.userId,
+        validation: role === "super_admin" ? "passed" : "not_applicable",
+      });
     }
 
     const { data: existingRows, error: checkError } = await adminDb

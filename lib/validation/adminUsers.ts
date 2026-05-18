@@ -28,6 +28,7 @@ const brandIdSchema = z.string().min(1).max(200);
 
 export const adminUserUpsertBodySchema = z
   .object({
+    id: z.string().uuid().optional(),
     email: z
       .string()
       .trim()
