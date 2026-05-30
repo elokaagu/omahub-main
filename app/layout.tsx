@@ -7,6 +7,7 @@ import { fontSans, fontDisplay } from "./fonts";
 import { Toaster } from "sonner";
 import { Analytics } from "@vercel/analytics/react";
 import GoogleTagManager from "@/components/analytics/GoogleTagManager";
+import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.oma-hub.com";
 const SITE_DESCRIPTION =
@@ -111,6 +112,7 @@ export default async function RootLayout({
         <Toaster position="top-right" duration={2000} />
         <Analytics />
         <GoogleTagManager />
+        <GoogleAnalytics />
       </body>
     </html>
   );
