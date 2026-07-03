@@ -87,12 +87,25 @@ export function EditorialHero({
           {/* Poster card for the next edition */}
           {upcomingEdition && (
             <div className="hidden justify-end lg:flex">
-              <div className="relative flex aspect-[3/4] w-full max-w-sm flex-col justify-between border border-oma-gold/30 bg-gradient-to-b from-white/[0.04] to-oma-gold/10 p-8">
+              <div className="relative flex aspect-[3/4] w-full max-w-sm flex-col justify-between overflow-hidden border border-oma-gold/30 bg-gradient-to-b from-white/[0.04] to-oma-gold/10 p-8">
+                {/* Ghosted campaign image, kept dim while the theme stays under wraps */}
+                <div
+                  aria-hidden
+                  className="absolute inset-0 bg-cover bg-center opacity-40"
+                  style={{
+                    backgroundImage:
+                      "url(/images/editions/next-edition-poster.jpg)",
+                  }}
+                />
+                <div
+                  aria-hidden
+                  className="absolute inset-0 bg-gradient-to-t from-oma-plum via-oma-plum/50 to-oma-plum/20"
+                />
                 <div
                   aria-hidden
                   className="absolute -right-16 -top-16 h-48 w-48 rounded-full border border-oma-gold/30"
                 />
-                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oma-gold">
+                <p className="relative text-xs font-semibold uppercase tracking-[0.3em] text-oma-gold">
                   OmaHub — {upcomingEdition.city}
                 </p>
 
@@ -103,7 +116,7 @@ export function EditorialHero({
                   African Fashion · Curated
                 </p>
 
-                <div>
+                <div className="relative">
                   <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oma-gold">
                     Next edition
                   </p>

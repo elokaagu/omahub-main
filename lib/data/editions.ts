@@ -73,6 +73,8 @@ export const editions: Edition[] = [
       "OmaHub's first full pop-up — designers from across the diaspora, curated and verified.",
     story:
       "Our first full London pop-up. Eight brands from across the diaspora came together for a day of discovery — every piece curated, every designer verified in person. Summer Experience set the template for how OmaHub editions run: theme first, campaign second, community always.",
+    coverImage:
+      "https://gswduyodzdgucjscjtvz.supabase.co/storage/v1/object/public/hero-images/2a14c31f_1755989245289.jpg",
     brandNames: [],
   },
   {
@@ -92,6 +94,8 @@ export const editions: Edition[] = [
       "A panel on wellness, health, and body positivity with a doctor, nutritionist, and two designers — where fashion met the body conversation.",
     story:
       "The edition that started it all. In partnership with Gather House Africa, Unboxed brought a doctor, a nutritionist, and two designers to the same table for a conversation about wellness, health, and body positivity — where fashion met the body conversation. Six designers showed alongside the panel.",
+    coverImage:
+      "https://gswduyodzdgucjscjtvz.supabase.co/storage/v1/object/public/spotlight-images/main/2a14c31f_1774219775328.jpg",
     brandNames: [],
   },
 ];
