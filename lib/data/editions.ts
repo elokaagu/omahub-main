@@ -34,7 +34,12 @@ export interface Edition {
   videoThumbnail?: string;
   coverImage?: string;
   /** Event photography shown in the edition's gallery */
-  gallery?: { src: string; alt: string }[];
+  gallery?: {
+    src: string;
+    alt: string;
+    /** Full-resolution version offered as a download; falls back to `src` */
+    downloadSrc?: string;
+  }[];
   /** Directory names of brands that showed at this edition */
   brandNames: string[];
   applicationsOpen?: boolean;
@@ -118,20 +123,64 @@ export const editions: Edition[] = [
       "https://gswduyodzdgucjscjtvz.supabase.co/storage/v1/object/public/spotlight-images/main/2a14c31f_1774219775328.jpg",
     gallery: [
       {
-        src: "/images/editions/unboxed-01.jpg",
-        alt: "Seated model in a sculptural printed gown",
+        src: "/images/editions/unboxed-gallery/unboxed-19.jpg",
+        alt: "The OmaHub team and guests together after the panel",
+        downloadSrc:
+          "https://gswduyodzdgucjscjtvz.supabase.co/storage/v1/object/public/edition-galleries/unboxed-the-body-edition/unboxed-19-original.jpg?download=unboxed-19.jpg",
       },
       {
-        src: "/images/editions/unboxed-02.jpg",
-        alt: "Bronze satin and sequins on the staircase",
+        src: "/images/editions/unboxed-gallery/unboxed-04.jpg",
+        alt: "A guest in a red taffeta gown reviewing notes ahead of the panel",
+        downloadSrc:
+          "https://gswduyodzdgucjscjtvz.supabase.co/storage/v1/object/public/edition-galleries/unboxed-the-body-edition/unboxed-04-original.jpg?download=unboxed-04.jpg",
       },
       {
-        src: "/images/editions/unboxed-03.jpg",
-        alt: "Numbers-print batik mini dress in the studio",
+        src: "/images/editions/unboxed-gallery/unboxed-22.jpg",
+        alt: "A panel guest mid-story, gesturing beside a tablet",
+        downloadSrc:
+          "https://gswduyodzdgucjscjtvz.supabase.co/storage/v1/object/public/edition-galleries/unboxed-the-body-edition/unboxed-22-original.jpg?download=unboxed-22.jpg",
       },
       {
-        src: "/images/editions/unboxed-04.jpg",
-        alt: "The cocktail edit — two evening looks side by side",
+        src: "/images/editions/unboxed-gallery/unboxed-20.jpg",
+        alt: "Two guests in conversation between panel sessions",
+        downloadSrc:
+          "https://gswduyodzdgucjscjtvz.supabase.co/storage/v1/object/public/edition-galleries/unboxed-the-body-edition/unboxed-20-original.jpg?download=unboxed-20.jpg",
+      },
+      {
+        src: "/images/editions/unboxed-gallery/unboxed-11.jpg",
+        alt: "A guest speaking mid-conversation in a red off-shoulder gown",
+        downloadSrc:
+          "https://gswduyodzdgucjscjtvz.supabase.co/storage/v1/object/public/edition-galleries/unboxed-the-body-edition/unboxed-11-original.jpg?download=unboxed-11.jpg",
+      },
+      {
+        src: "/images/editions/unboxed-gallery/unboxed-37.jpg",
+        alt: "Two guests catching up beside the styling rail",
+        downloadSrc:
+          "https://gswduyodzdgucjscjtvz.supabase.co/storage/v1/object/public/edition-galleries/unboxed-the-body-edition/unboxed-37-original.jpg?download=unboxed-37.jpg",
+      },
+      {
+        src: "/images/editions/unboxed-gallery/unboxed-06.jpg",
+        alt: "Wide view of the panel setup as the OmaHub team films",
+        downloadSrc:
+          "https://gswduyodzdgucjscjtvz.supabase.co/storage/v1/object/public/edition-galleries/unboxed-the-body-edition/unboxed-06-original.jpg?download=unboxed-06.jpg",
+      },
+      {
+        src: "/images/editions/unboxed-gallery/unboxed-33.jpg",
+        alt: "A candid moment between guests and the OmaHub team",
+        downloadSrc:
+          "https://gswduyodzdgucjscjtvz.supabase.co/storage/v1/object/public/edition-galleries/unboxed-the-body-edition/unboxed-33-original.jpg?download=unboxed-33.jpg",
+      },
+      {
+        src: "/images/editions/unboxed-gallery/unboxed-35.jpg",
+        alt: "A guest smiling backstage as the photographer works",
+        downloadSrc:
+          "https://gswduyodzdgucjscjtvz.supabase.co/storage/v1/object/public/edition-galleries/unboxed-the-body-edition/unboxed-35-original.jpg?download=unboxed-35.jpg",
+      },
+      {
+        src: "/images/editions/unboxed-gallery/unboxed-31.jpg",
+        alt: "Behind the scenes on the styling rack",
+        downloadSrc:
+          "https://gswduyodzdgucjscjtvz.supabase.co/storage/v1/object/public/edition-galleries/unboxed-the-body-edition/unboxed-31-original.jpg?download=unboxed-31.jpg",
       },
     ],
     brandNames: [],

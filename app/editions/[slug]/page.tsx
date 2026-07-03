@@ -153,7 +153,7 @@ export default async function EditionPage({
               {edition.gallery.map((photo, i) => (
                 <div
                   key={photo.src}
-                  className={`overflow-hidden rounded-2xl ${
+                  className={`group relative overflow-hidden rounded-2xl ${
                     i % 2 === 1 ? "mt-6 sm:mt-10" : ""
                   }`}
                 >
@@ -161,8 +161,31 @@ export default async function EditionPage({
                     src={photo.src}
                     alt={photo.alt}
                     loading="lazy"
-                    className="aspect-[3/4] w-full object-cover transition-transform duration-500 hover:scale-105"
+                    className="aspect-[3/4] w-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />
+                  <a
+                    href={photo.downloadSrc || photo.src}
+                    download
+                    aria-label={`Download original photo: ${photo.alt}`}
+                    title="Download original"
+                    className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-oma-black/50 text-white opacity-0 backdrop-blur-sm transition-opacity duration-200 hover:bg-oma-black/70 focus-visible:opacity-100 group-hover:opacity-100"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="h-4 w-4"
+                      aria-hidden
+                    >
+                      <path d="M12 3v12" />
+                      <path d="M7 10l5 5 5-5" />
+                      <path d="M5 21h14" />
+                    </svg>
+                  </a>
                 </div>
               ))}
             </div>
