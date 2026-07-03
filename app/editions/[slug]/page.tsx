@@ -56,7 +56,7 @@ export default async function EditionPage({
     <main className="min-h-screen bg-oma-cream">
       {/* Edition hero */}
       <section
-        className="relative bg-oma-plum bg-cover bg-top pb-20 pt-24 text-white sm:pb-28 sm:pt-32"
+        className="relative flex min-h-[85vh] flex-col justify-end bg-oma-plum bg-cover bg-top pb-16 pt-10 text-white sm:min-h-screen sm:pb-20 sm:pt-14"
         style={
           edition.coverImage
             ? { backgroundImage: `url(${edition.coverImage})` }
@@ -69,7 +69,7 @@ export default async function EditionPage({
             className="absolute inset-0 bg-gradient-to-t from-oma-plum via-oma-plum/80 to-oma-plum/40"
           />
         )}
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="relative mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
           <Link
             href="/editions"
             className="text-xs font-semibold uppercase tracking-[0.25em] text-white/50 transition-colors hover:text-oma-gold"

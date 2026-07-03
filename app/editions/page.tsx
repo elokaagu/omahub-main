@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { getAllEditions } from "@/lib/data/editions";
 import { EditionCard } from "@/app/home/editorial/EditionCard";
 
@@ -13,9 +14,15 @@ export default function EditionsArchivePage() {
 
   return (
     <main className="min-h-screen bg-oma-beige">
-      <section className="bg-oma-plum pb-20 pt-24 text-white sm:pb-24 sm:pt-32">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oma-gold">
+      <section className="flex min-h-[60vh] flex-col justify-end bg-oma-plum pb-16 pt-10 text-white sm:min-h-[70vh] sm:pb-20 sm:pt-14">
+        <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+          <Link
+            href="/"
+            className="text-xs font-semibold uppercase tracking-[0.25em] text-white/50 transition-colors hover:text-oma-gold"
+          >
+            ← OmaHub
+          </Link>
+          <p className="mt-8 text-xs font-semibold uppercase tracking-[0.3em] text-oma-gold">
             OmaHub editions
           </p>
           <h1 className="mt-3 font-canela text-5xl sm:text-6xl">

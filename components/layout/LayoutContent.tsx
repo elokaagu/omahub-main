@@ -14,6 +14,11 @@ export default function LayoutContent({ children }: { children: React.ReactNode 
   const { isNavigating, forceReset } = useNavigation();
   const isHomePage = pathname === "/";
   const isStudioPage = pathname?.startsWith("/studio") || false;
+  // Editions pages run full-bleed cinematic banners with their own
+  // in-page back links, so the fixed site header is hidden here too.
+  const isEditionPage =
+    pathname === "/editions" || pathname?.startsWith("/editions/") || false;
+  const hideHeader = isStudioPage || isEditionPage;
 
   // Emergency reset for stuck navigation states
   useEffect(() => {
@@ -32,10 +37,10 @@ export default function LayoutContent({ children }: { children: React.ReactNode 
   return (
     <>
       <NavigationProgressBar visible={isNavigating} />
-      {!isStudioPage && <Header />}
+      {!hideHeader && <Header />}
       <main
         className={
-          isHomePage || isStudioPage ? "" : "pt-20"
+          isHomePage || hideHeader ? "" : "pt-20"
         }
       >
         {isStudioPage ? (
