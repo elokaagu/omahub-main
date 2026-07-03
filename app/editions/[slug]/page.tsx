@@ -55,7 +55,7 @@ export default async function EditionPage({
     <main className="min-h-screen bg-oma-cream">
       {/* Edition hero */}
       <section
-        className="relative bg-oma-plum bg-cover bg-center py-20 text-white sm:py-28"
+        className="relative bg-oma-plum bg-cover bg-center pb-20 pt-24 text-white sm:pb-28 sm:pt-32"
         style={
           edition.coverImage
             ? { backgroundImage: `url(${edition.coverImage})` }
