@@ -1,24 +1,34 @@
-import dynamic from "next/dynamic";
-import { Loading } from "@/components/ui/loading";
 import { StructuredData } from "@/components/seo/StructuredData";
-import { getHomeBootstrapPayload } from "@/lib/home/getHomeBootstrapPayload";
-
-const HomeContent = dynamic(() => import("./HomeContent"), {
-  loading: () => (
-    <div className="flex justify-center items-center min-h-screen">
-      <Loading size="lg" />
-    </div>
-  ),
-});
+import {
+  getLatestPastEdition,
+  getPastEditions,
+  getUpcomingEdition,
+} from "@/lib/data/editions";
+import { getEditorialHomeBrands } from "@/lib/home/getEditorialHomeData";
+import { EditorialHero } from "./home/editorial/EditorialHero";
+import { ArchiveSection } from "./home/editorial/ArchiveSection";
+import { WorkedWithSection } from "./home/editorial/WorkedWithSection";
+import { TwoListsSection } from "./home/editorial/TwoListsSection";
 
 export const revalidate = 120;
 
 export default async function Home() {
-  let initialBootstrap = null;
+  const upcomingEdition = getUpcomingEdition();
+  const latestPastEdition = getLatestPastEdition();
+
+  // Homepage archive shows the two latest past editions plus the upcoming
+  // placeholder — three cards max, older editions live at /editions.
+  const pastEditions = getPastEditions(upcomingEdition ? 2 : 3);
+  const archiveEditions = upcomingEdition
+    ? [...pastEditions, upcomingEdition]
+    : pastEditions;
+
+  let workedWithBrands: Awaited<ReturnType<typeof getEditorialHomeBrands>> =
+    [];
   try {
-    initialBootstrap = await getHomeBootstrapPayload();
+    workedWithBrands = await getEditorialHomeBrands();
   } catch (e) {
-    console.error("home_bootstrap_page_error", e);
+    console.error("editorial_home_brands_error", e);
   }
 
   return (
@@ -28,7 +38,7 @@ export default async function Home() {
         data={{
           name: "OmaHub",
           description:
-            "Premium fashion and tailoring platform connecting Africa's finest designers with a global audience",
+            "Where African fashion finds its audience — storytelling-led editions spotlighting verified African designers",
           url: "https://www.oma-hub.com",
           logo: "https://www.oma-hub.com/logo.png",
         }}
@@ -38,11 +48,18 @@ export default async function Home() {
         data={{
           name: "OmaHub",
           url: "https://www.oma-hub.com",
-          description: "Premium fashion and tailoring platform",
+          description:
+            "Where African fashion finds its audience — editorially curated editions and a verified designer directory",
         }}
       />
-      <main className="min-h-screen bg-gradient-to-b from-oma-beige/50 to-white">
-        <HomeContent initialBootstrap={initialBootstrap} />
+      <main className="min-h-screen bg-oma-cream">
+        <EditorialHero
+          upcomingEdition={upcomingEdition}
+          latestPastEdition={latestPastEdition}
+        />
+        <ArchiveSection editions={archiveEditions} />
+        <WorkedWithSection brands={workedWithBrands} />
+        <TwoListsSection />
       </main>
     </>
   );

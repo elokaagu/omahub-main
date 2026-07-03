@@ -38,6 +38,7 @@ const collectionItems = collections.map((category) => ({
 
 const navigation = [
   { name: "Home", href: "/" },
+  { name: "Archive", href: "/editions" },
   { name: "How It Works", href: "/how-it-works" },
   { name: "About", href: "/about" },
 ];
@@ -498,6 +499,13 @@ export default function Header() {
                     className="-mx-3 block rounded-lg px-3 py-3 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 transition-colors"
                   >
                     Home
+                  </NavigationLink>
+                  <NavigationLink
+                    href="/editions"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="-mx-3 block rounded-lg px-3 py-3 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 transition-colors"
+                  >
+                    Archive
                   </NavigationLink>
                   <NavigationLink
                     href="/how-it-works"
