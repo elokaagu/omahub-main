@@ -153,7 +153,7 @@ export default async function EditionPage({
               {edition.gallery.map((photo, i) => (
                 <div
                   key={photo.src}
-                  className={`group relative overflow-hidden rounded-2xl ${
+                  className={`group relative self-start overflow-hidden rounded-2xl ${
                     i % 2 === 1 ? "mt-6 sm:mt-10" : ""
                   }`}
                 >
