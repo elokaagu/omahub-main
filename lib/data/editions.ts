@@ -33,6 +33,8 @@ export interface Edition {
   videoUrl?: string;
   videoThumbnail?: string;
   coverImage?: string;
+  /** Event photography shown in the edition's gallery */
+  gallery?: { src: string; alt: string }[];
   /** Directory names of brands that showed at this edition */
   brandNames: string[];
   applicationsOpen?: boolean;
@@ -75,6 +77,24 @@ export const editions: Edition[] = [
       "Our first full London pop-up. Eight brands from across the diaspora came together for a day of discovery — every piece curated, every designer verified in person. Summer Experience set the template for how OmaHub editions run: theme first, campaign second, community always.",
     coverImage:
       "https://gswduyodzdgucjscjtvz.supabase.co/storage/v1/object/public/hero-images/2a14c31f_1755989245289.jpg",
+    gallery: [
+      {
+        src: "/images/editions/summer-01.jpg",
+        alt: "Model in a green tank surrounded by summer florals",
+      },
+      {
+        src: "/images/editions/summer-02.jpg",
+        alt: "Geometric-print halter dress shot in the garden",
+      },
+      {
+        src: "/images/editions/summer-03.jpg",
+        alt: "Yellow lace-back gown against a sunlit arch",
+      },
+      {
+        src: "/images/editions/summer-04.jpg",
+        alt: "Hand-beaded bag in citrus tones",
+      },
+    ],
     brandNames: [],
   },
   {
@@ -96,6 +116,24 @@ export const editions: Edition[] = [
       "The edition that started it all. In partnership with Gather House Africa, Unboxed brought a doctor, a nutritionist, and two designers to the same table for a conversation about wellness, health, and body positivity — where fashion met the body conversation. Six designers showed alongside the panel.",
     coverImage:
       "https://gswduyodzdgucjscjtvz.supabase.co/storage/v1/object/public/spotlight-images/main/2a14c31f_1774219775328.jpg",
+    gallery: [
+      {
+        src: "/images/editions/unboxed-01.jpg",
+        alt: "Seated model in a sculptural printed gown",
+      },
+      {
+        src: "/images/editions/unboxed-02.jpg",
+        alt: "Bronze satin and sequins on the staircase",
+      },
+      {
+        src: "/images/editions/unboxed-03.jpg",
+        alt: "Numbers-print batik mini dress in the studio",
+      },
+      {
+        src: "/images/editions/unboxed-04.jpg",
+        alt: "The cocktail edit — two evening looks side by side",
+      },
+    ],
     brandNames: [],
   },
 ];

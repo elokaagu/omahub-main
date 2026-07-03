@@ -27,7 +27,7 @@ export function EditionVideo({
   title,
 }: EditionVideoProps) {
   return (
-    <div className="overflow-hidden">
+    <div className="overflow-hidden rounded-2xl">
       <VideoPlayer
         videoUrl={videoUrl}
         thumbnailUrl={thumbnailUrl}

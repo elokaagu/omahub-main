@@ -87,11 +87,11 @@ export function EditorialHero({
           {/* Poster card for the next edition */}
           {upcomingEdition && (
             <div className="hidden justify-end lg:flex">
-              <div className="relative flex aspect-[3/4] w-full max-w-sm flex-col justify-between overflow-hidden border border-oma-gold/30 bg-gradient-to-b from-white/[0.04] to-oma-gold/10 p-8">
-                {/* Ghosted campaign image, kept dim while the theme stays under wraps */}
+              <div className="relative flex aspect-[3/4] w-full max-w-sm flex-col justify-between overflow-hidden rounded-2xl border border-oma-gold/30 bg-gradient-to-b from-white/[0.04] to-oma-gold/10 p-8">
+                {/* Campaign image behind a plum wash that keeps the text legible */}
                 <div
                   aria-hidden
-                  className="absolute inset-0 bg-cover bg-center opacity-40"
+                  className="absolute inset-0 bg-cover bg-center"
                   style={{
                     backgroundImage:
                       "url(/images/editions/next-edition-poster.jpg)",
@@ -99,7 +99,7 @@ export function EditorialHero({
                 />
                 <div
                   aria-hidden
-                  className="absolute inset-0 bg-gradient-to-t from-oma-plum via-oma-plum/50 to-oma-plum/20"
+                  className="absolute inset-0 bg-gradient-to-t from-oma-plum/90 via-oma-plum/40 to-oma-plum/10"
                 />
                 <div
                   aria-hidden

@@ -42,6 +42,10 @@ const navigation = [
   { name: "How It Works", href: "/how-it-works" },
   { name: "About", href: "/about" },
 ];
+
+// Category dropdowns (Collections / Tailored) hidden while the site leads
+// with editions; discovery stays available via the directory.
+const SHOW_CATEGORY_NAV = false;
 const isDev = process.env.NODE_ENV === "development";
 
 // Fallback navigation items
@@ -330,8 +334,21 @@ export default function Header() {
 
         {/* Desktop navigation */}
         <div className="hidden lg:flex lg:items-center lg:gap-x-8">
+          <NavigationLink
+            href="/editions"
+            className={cn(
+              "text-sm font-semibold leading-6",
+              scrolled || !isHomePage
+                ? "text-oma-black hover:text-oma-plum"
+                : "text-white hover:text-white/80"
+            )}
+          >
+            Archive
+          </NavigationLink>
+
           {/* Direct category rendering like mobile */}
-          {dynamicNavigationItems.map((category) => {
+          {SHOW_CATEGORY_NAV &&
+          dynamicNavigationItems.map((category) => {
             return (
               <div key={category.title} className="relative group">
                 <button
@@ -531,6 +548,7 @@ export default function Header() {
                 </div>
 
                 {/* Categories */}
+                {SHOW_CATEGORY_NAV && (
                 <div className="flex flex-col gap-y-2 bg-white/40 backdrop-blur-lg rounded-2xl border border-oma-gold/20 shadow-2xl p-4 z-[1200]">
                   <h3 className="text-xs font-medium uppercase tracking-wider text-gray-500 mb-3">
                     Categories
@@ -595,6 +613,7 @@ export default function Header() {
                       </div>
                     ))}
                 </div>
+                )}
 
                 {/* User Section */}
                 <div className="border-t border-gray-200 pt-6">

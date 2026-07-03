@@ -139,6 +139,37 @@ export default async function EditionPage({
         </div>
       </section>
 
+      {/* Event gallery */}
+      {edition.gallery && edition.gallery.length > 0 && (
+        <section className="bg-oma-beige py-16 sm:py-20">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oma-cocoa">
+              In pictures
+            </p>
+            <h2 className="mt-3 font-canela text-3xl text-oma-black sm:text-4xl">
+              Moments from the edition
+            </h2>
+            <div className="mt-10 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
+              {edition.gallery.map((photo, i) => (
+                <div
+                  key={photo.src}
+                  className={`overflow-hidden rounded-2xl ${
+                    i % 2 === 1 ? "mt-6 sm:mt-10" : ""
+                  }`}
+                >
+                  <img
+                    src={photo.src}
+                    alt={photo.alt}
+                    loading="lazy"
+                    className="aspect-[3/4] w-full object-cover transition-transform duration-500 hover:scale-105"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Brand lineup, in motion */}
       {lineupBrands.length > 0 ? (
         <section className="bg-white py-16 sm:py-20">
