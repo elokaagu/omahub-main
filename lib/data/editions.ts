@@ -73,31 +73,75 @@ export const editions: Edition[] = [
     status: "past",
     dateLabel: "Summer 2026",
     sortDate: "2026-06-15",
-    city: "London",
-    country: "United Kingdom",
+    city: "Lagos",
+    country: "Nigeria",
     lineupLabel: "8 brands",
     excerpt:
       "OmaHub's first full pop-up — designers from across the diaspora, curated and verified.",
     story:
-      "Our first full London pop-up. Eight brands from across the diaspora came together for a day of discovery — every piece curated, every designer verified in person. Summer Experience set the template for how OmaHub editions run: theme first, campaign second, community always.",
+      "Our first full pop-up, in Lagos. Eight brands from across the diaspora came together for a day of discovery — every piece curated, every designer verified in person. Summer Experience set the template for how OmaHub editions run: theme first, campaign second, community always.",
     coverImage:
       "https://gswduyodzdgucjscjtvz.supabase.co/storage/v1/object/public/hero-images/2a14c31f_1755989245289.jpg",
     gallery: [
       {
-        src: "/images/editions/summer-01.jpg",
-        alt: "Model in a green tank surrounded by summer florals",
+        src: "/images/editions/summer-gallery/summer-19.jpg",
+        alt: "The OmaHub team and guests together at the pop-up",
+        downloadSrc:
+          "https://gswduyodzdgucjscjtvz.supabase.co/storage/v1/object/public/edition-galleries/summer-experience/summer-19-original.jpg?download=summer-19.jpg",
       },
       {
-        src: "/images/editions/summer-02.jpg",
-        alt: "Geometric-print halter dress shot in the garden",
+        src: "/images/editions/summer-gallery/summer-04.jpg",
+        alt: "A guest in a red taffeta gown backstage at the pop-up",
+        downloadSrc:
+          "https://gswduyodzdgucjscjtvz.supabase.co/storage/v1/object/public/edition-galleries/summer-experience/summer-04-original.jpg?download=summer-04.jpg",
       },
       {
-        src: "/images/editions/summer-03.jpg",
-        alt: "Yellow lace-back gown against a sunlit arch",
+        src: "/images/editions/summer-gallery/summer-22.jpg",
+        alt: "A guest mid-story, gesturing beside a tablet",
+        downloadSrc:
+          "https://gswduyodzdgucjscjtvz.supabase.co/storage/v1/object/public/edition-galleries/summer-experience/summer-22-original.jpg?download=summer-22.jpg",
       },
       {
-        src: "/images/editions/summer-04.jpg",
-        alt: "Hand-beaded bag in citrus tones",
+        src: "/images/editions/summer-gallery/summer-20.jpg",
+        alt: "Two guests in conversation at the pop-up",
+        downloadSrc:
+          "https://gswduyodzdgucjscjtvz.supabase.co/storage/v1/object/public/edition-galleries/summer-experience/summer-20-original.jpg?download=summer-20.jpg",
+      },
+      {
+        src: "/images/editions/summer-gallery/summer-11.jpg",
+        alt: "A guest speaking mid-conversation in a red off-shoulder gown",
+        downloadSrc:
+          "https://gswduyodzdgucjscjtvz.supabase.co/storage/v1/object/public/edition-galleries/summer-experience/summer-11-original.jpg?download=summer-11.jpg",
+      },
+      {
+        src: "/images/editions/summer-gallery/summer-37.jpg",
+        alt: "Two guests catching up beside the styling rail",
+        downloadSrc:
+          "https://gswduyodzdgucjscjtvz.supabase.co/storage/v1/object/public/edition-galleries/summer-experience/summer-37-original.jpg?download=summer-37.jpg",
+      },
+      {
+        src: "/images/editions/summer-gallery/summer-06.jpg",
+        alt: "Wide view of the pop-up as the OmaHub team films",
+        downloadSrc:
+          "https://gswduyodzdgucjscjtvz.supabase.co/storage/v1/object/public/edition-galleries/summer-experience/summer-06-original.jpg?download=summer-06.jpg",
+      },
+      {
+        src: "/images/editions/summer-gallery/summer-33.jpg",
+        alt: "A candid moment between guests and the OmaHub team",
+        downloadSrc:
+          "https://gswduyodzdgucjscjtvz.supabase.co/storage/v1/object/public/edition-galleries/summer-experience/summer-33-original.jpg?download=summer-33.jpg",
+      },
+      {
+        src: "/images/editions/summer-gallery/summer-35.jpg",
+        alt: "A guest smiling backstage as the photographer works",
+        downloadSrc:
+          "https://gswduyodzdgucjscjtvz.supabase.co/storage/v1/object/public/edition-galleries/summer-experience/summer-35-original.jpg?download=summer-35.jpg",
+      },
+      {
+        src: "/images/editions/summer-gallery/summer-31.jpg",
+        alt: "Behind the scenes on the styling rack",
+        downloadSrc:
+          "https://gswduyodzdgucjscjtvz.supabase.co/storage/v1/object/public/edition-galleries/summer-experience/summer-31-original.jpg?download=summer-31.jpg",
       },
     ],
     brandNames: [],
@@ -121,68 +165,6 @@ export const editions: Edition[] = [
       "The edition that started it all. In partnership with Gather House Africa, Unboxed brought a doctor, a nutritionist, and two designers to the same table for a conversation about wellness, health, and body positivity — where fashion met the body conversation. Six designers showed alongside the panel.",
     coverImage:
       "https://gswduyodzdgucjscjtvz.supabase.co/storage/v1/object/public/spotlight-images/main/2a14c31f_1774219775328.jpg",
-    gallery: [
-      {
-        src: "/images/editions/unboxed-gallery/unboxed-19.jpg",
-        alt: "The OmaHub team and guests together after the panel",
-        downloadSrc:
-          "https://gswduyodzdgucjscjtvz.supabase.co/storage/v1/object/public/edition-galleries/unboxed-the-body-edition/unboxed-19-original.jpg?download=unboxed-19.jpg",
-      },
-      {
-        src: "/images/editions/unboxed-gallery/unboxed-04.jpg",
-        alt: "A guest in a red taffeta gown reviewing notes ahead of the panel",
-        downloadSrc:
-          "https://gswduyodzdgucjscjtvz.supabase.co/storage/v1/object/public/edition-galleries/unboxed-the-body-edition/unboxed-04-original.jpg?download=unboxed-04.jpg",
-      },
-      {
-        src: "/images/editions/unboxed-gallery/unboxed-22.jpg",
-        alt: "A panel guest mid-story, gesturing beside a tablet",
-        downloadSrc:
-          "https://gswduyodzdgucjscjtvz.supabase.co/storage/v1/object/public/edition-galleries/unboxed-the-body-edition/unboxed-22-original.jpg?download=unboxed-22.jpg",
-      },
-      {
-        src: "/images/editions/unboxed-gallery/unboxed-20.jpg",
-        alt: "Two guests in conversation between panel sessions",
-        downloadSrc:
-          "https://gswduyodzdgucjscjtvz.supabase.co/storage/v1/object/public/edition-galleries/unboxed-the-body-edition/unboxed-20-original.jpg?download=unboxed-20.jpg",
-      },
-      {
-        src: "/images/editions/unboxed-gallery/unboxed-11.jpg",
-        alt: "A guest speaking mid-conversation in a red off-shoulder gown",
-        downloadSrc:
-          "https://gswduyodzdgucjscjtvz.supabase.co/storage/v1/object/public/edition-galleries/unboxed-the-body-edition/unboxed-11-original.jpg?download=unboxed-11.jpg",
-      },
-      {
-        src: "/images/editions/unboxed-gallery/unboxed-37.jpg",
-        alt: "Two guests catching up beside the styling rail",
-        downloadSrc:
-          "https://gswduyodzdgucjscjtvz.supabase.co/storage/v1/object/public/edition-galleries/unboxed-the-body-edition/unboxed-37-original.jpg?download=unboxed-37.jpg",
-      },
-      {
-        src: "/images/editions/unboxed-gallery/unboxed-06.jpg",
-        alt: "Wide view of the panel setup as the OmaHub team films",
-        downloadSrc:
-          "https://gswduyodzdgucjscjtvz.supabase.co/storage/v1/object/public/edition-galleries/unboxed-the-body-edition/unboxed-06-original.jpg?download=unboxed-06.jpg",
-      },
-      {
-        src: "/images/editions/unboxed-gallery/unboxed-33.jpg",
-        alt: "A candid moment between guests and the OmaHub team",
-        downloadSrc:
-          "https://gswduyodzdgucjscjtvz.supabase.co/storage/v1/object/public/edition-galleries/unboxed-the-body-edition/unboxed-33-original.jpg?download=unboxed-33.jpg",
-      },
-      {
-        src: "/images/editions/unboxed-gallery/unboxed-35.jpg",
-        alt: "A guest smiling backstage as the photographer works",
-        downloadSrc:
-          "https://gswduyodzdgucjscjtvz.supabase.co/storage/v1/object/public/edition-galleries/unboxed-the-body-edition/unboxed-35-original.jpg?download=unboxed-35.jpg",
-      },
-      {
-        src: "/images/editions/unboxed-gallery/unboxed-31.jpg",
-        alt: "Behind the scenes on the styling rack",
-        downloadSrc:
-          "https://gswduyodzdgucjscjtvz.supabase.co/storage/v1/object/public/edition-galleries/unboxed-the-body-edition/unboxed-31-original.jpg?download=unboxed-31.jpg",
-      },
-    ],
     brandNames: [],
   },
 ];

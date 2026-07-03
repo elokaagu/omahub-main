@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { editions, getEditionBySlug } from "@/lib/data/editions";
 import { getBrandsByNames } from "@/lib/home/getEditorialHomeData";
 import { FullWidthBrandRow } from "@/components/ui/full-width-brand-row";
+import { LazyImage } from "@/components/ui/lazy-image";
 import { EmailCaptureForm } from "@/app/home/editorial/EmailCaptureForm";
 import { EditionVideo } from "./EditionVideo";
 
@@ -55,7 +56,7 @@ export default async function EditionPage({
     <main className="min-h-screen bg-oma-cream">
       {/* Edition hero */}
       <section
-        className="relative bg-oma-plum bg-cover bg-center pb-20 pt-24 text-white sm:pb-28 sm:pt-32"
+        className="relative bg-oma-plum bg-cover bg-top pb-20 pt-24 text-white sm:pb-28 sm:pt-32"
         style={
           edition.coverImage
             ? { backgroundImage: `url(${edition.coverImage})` }
@@ -157,11 +158,12 @@ export default async function EditionPage({
                     i % 2 === 1 ? "mt-6 sm:mt-10" : ""
                   }`}
                 >
-                  <img
+                  <LazyImage
                     src={photo.src}
                     alt={photo.alt}
-                    loading="lazy"
-                    className="aspect-[3/4] w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    aspectRatio="portrait"
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                    quality={80}
                   />
                   <a
                     href={photo.downloadSrc || photo.src}

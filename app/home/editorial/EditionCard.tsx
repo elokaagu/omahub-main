@@ -43,7 +43,7 @@ export function EditionCard({ edition }: { edition: Edition }) {
     ? {
         backgroundImage: `linear-gradient(to top, rgba(30,15,23,0.85), rgba(58,30,45,0.35)), url(${edition.coverImage})`,
         backgroundSize: "cover",
-        backgroundPosition: "center",
+        backgroundPosition: "top center",
       }
     : undefined;
 
