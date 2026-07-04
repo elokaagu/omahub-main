@@ -1,9 +1,5 @@
 import { StructuredData } from "@/components/seo/StructuredData";
-import {
-  getLatestPastEdition,
-  getPastEditions,
-  getUpcomingEdition,
-} from "@/lib/data/editions";
+import { getPastEditions, getUpcomingEdition } from "@/lib/data/editions";
 import { getEditorialHomeBrands } from "@/lib/home/getEditorialHomeData";
 import { EditorialHero } from "./home/editorial/EditorialHero";
 import { ArchiveSection } from "./home/editorial/ArchiveSection";
@@ -14,7 +10,6 @@ export const revalidate = 120;
 
 export default async function Home() {
   const upcomingEdition = getUpcomingEdition();
-  const latestPastEdition = getLatestPastEdition();
 
   // Homepage archive shows the two latest past editions plus the upcoming
   // placeholder — three cards max, older editions live at /editions.
@@ -53,10 +48,7 @@ export default async function Home() {
         }}
       />
       <main className="min-h-screen bg-oma-cream">
-        <EditorialHero
-          upcomingEdition={upcomingEdition}
-          latestPastEdition={latestPastEdition}
-        />
+        <EditorialHero />
         <ArchiveSection editions={archiveEditions} />
         <WorkedWithSection brands={workedWithBrands} />
         <TwoListsSection />
