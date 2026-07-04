@@ -49,7 +49,7 @@ export function TwoListsSection() {
             </h3>
             <p className="mt-4 flex-1 text-sm leading-relaxed text-white/75">
               Apply for upcoming editions. Get application windows, industry
-              insights, and edition themes — before anyone else.
+              insights, and edition themes, before anyone else.
             </p>
             <div className="mt-8">
               <Link

@@ -81,7 +81,7 @@ export default async function EditionPage({
           </p>
           <h1 className="mt-4 max-w-3xl font-canela text-5xl leading-tight sm:text-7xl">
             {edition.status === "upcoming" && !edition.themeAnnounced
-              ? `Edition ${edition.number} — TBA`
+              ? `Edition ${edition.number}: TBA`
               : edition.title}
           </h1>
           <p className="mt-6 text-sm uppercase tracking-[0.2em] text-white/70">
@@ -226,7 +226,7 @@ export default async function EditionPage({
           </h2>
           <p className="mt-4 text-sm leading-relaxed text-white/70">
             Early access to drops, event previews, and exclusive edition
-            content — before it goes public.
+            content, before it goes public.
           </p>
           <div className="mt-8 flex justify-center">
             <EmailCaptureForm

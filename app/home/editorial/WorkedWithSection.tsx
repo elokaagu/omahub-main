@@ -28,7 +28,7 @@ export function WorkedWithSection({ brands }: WorkedWithSectionProps) {
     <section className="bg-white py-16 sm:py-20">
       <FullWidthBrandRow
         title="Brands we've worked with"
-        subtitle="Every brand here has shown at an OmaHub edition — curated and verified in person."
+        subtitle="Every brand here has shown at an OmaHub edition, curated and verified in person."
         brands={brands}
       />
       <div className="mt-10 text-center">

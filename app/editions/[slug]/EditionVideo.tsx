@@ -31,7 +31,7 @@ export function EditionVideo({
       <VideoPlayer
         videoUrl={videoUrl}
         thumbnailUrl={thumbnailUrl}
-        alt={`${title} — edition film`}
+        alt={`${title}, edition film`}
         className="aspect-video w-full"
         aspectRatio="16/9"
         sizes="(max-width: 1024px) 100vw, 1024px"

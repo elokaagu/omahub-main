@@ -6,7 +6,7 @@ import { EditionCard } from "@/app/home/editorial/EditionCard";
 export const metadata: Metadata = {
   title: "The Archive | OmaHub",
   description:
-    "Every OmaHub edition — storytelling-led events spotlighting verified African designers, from London to Lagos.",
+    "Every OmaHub edition: storytelling-led events spotlighting verified African designers, from London to Lagos.",
 };
 
 export default function EditionsArchivePage() {
@@ -29,7 +29,7 @@ export default function EditionsArchivePage() {
             The Archive
           </h1>
           <p className="mt-6 max-w-xl text-lg leading-relaxed text-white/75">
-            Every edition is a story — the theme, the designers, the room.
+            Every edition is a story: the theme, the designers, the room.
             Newest first. This is what separates OmaHub from a directory.
           </p>
         </div>

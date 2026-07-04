@@ -60,7 +60,7 @@ export const editions: Edition[] = [
     excerpt:
       "Applications are open. The theme is being kept close until launch.",
     story:
-      "OmaHub is between editions. The next drop spotlights African designers you need to know — verified, curated, and ready to wear.",
+      "OmaHub is between editions. The next drop spotlights African designers you need to know: verified, curated, and ready to wear.",
     brandNames: [],
     applicationsOpen: true,
     themeAnnounced: false,
@@ -77,9 +77,9 @@ export const editions: Edition[] = [
     country: "Nigeria",
     lineupLabel: "8 brands",
     excerpt:
-      "OmaHub's first full pop-up — designers from across the diaspora, curated and verified.",
+      "OmaHub's first full pop-up: designers from across the diaspora, curated and verified.",
     story:
-      "Our first full pop-up, in Lagos. Eight brands from across the diaspora came together for a day of discovery — every piece curated, every designer verified in person. Summer Experience set the template for how OmaHub editions run: theme first, campaign second, community always.",
+      "Our first full pop-up, in Lagos. Eight brands from across the diaspora came together for a day of discovery: every piece curated, every designer verified in person. Summer Experience set the template for how OmaHub editions run: theme first, campaign second, community always.",
     coverImage:
       "https://gswduyodzdgucjscjtvz.supabase.co/storage/v1/object/public/hero-images/2a14c31f_1755989245289.jpg",
     gallery: [
@@ -149,8 +149,8 @@ export const editions: Edition[] = [
   {
     slug: "unboxed-the-body-edition",
     number: "01",
-    title: "Unboxed — The Body Edition",
-    cardTitle: "Unboxed —\nThe Body Edition",
+    title: "Unboxed: The Body Edition",
+    cardTitle: "Unboxed\nThe Body Edition",
     status: "past",
     dateLabel: "December 2025",
     sortDate: "2025-12-06",
@@ -160,9 +160,9 @@ export const editions: Edition[] = [
     partner: "Gather House Africa",
     lineupLabel: "6 designers",
     excerpt:
-      "A panel on wellness, health, and body positivity with a doctor, nutritionist, and two designers — where fashion met the body conversation.",
+      "A panel on wellness, health, and body positivity with a doctor, nutritionist, and two designers: where fashion met the body conversation.",
     story:
-      "The edition that started it all. In partnership with Gather House Africa, Unboxed brought a doctor, a nutritionist, and two designers to the same table for a conversation about wellness, health, and body positivity — where fashion met the body conversation. Six designers showed alongside the panel.",
+      "The edition that started it all. In partnership with Gather House Africa, Unboxed brought a doctor, a nutritionist, and two designers to the same table for a conversation about wellness, health, and body positivity: where fashion met the body conversation. Six designers showed alongside the panel.",
     coverImage:
       "https://gswduyodzdgucjscjtvz.supabase.co/storage/v1/object/public/spotlight-images/main/2a14c31f_1774219775328.jpg",
     brandNames: [],
