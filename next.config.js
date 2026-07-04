@@ -266,7 +266,7 @@ const nextConfig = {
           {
             key: "Content-Security-Policy",
             value:
-              "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; media-src 'self' https: data:; font-src 'self' data:; connect-src 'self' https: wss: https://gswduyodzdgucjscjtvz.supabase.co;",
+              "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; media-src 'self' https: data:; font-src 'self' data:; frame-src 'self' https://player.vimeo.com; connect-src 'self' https: wss: https://gswduyodzdgucjscjtvz.supabase.co;",
           },
         ],
       },
@@ -276,16 +276,6 @@ const nextConfig = {
           {
             key: "Cache-Control",
             value: "public, max-age=300, stale-while-revalidate=600",
-          },
-        ],
-      },
-      {
-        source: "/(.*)",
-        headers: [
-          {
-            key: "Content-Security-Policy",
-            value:
-              "connect-src 'self' https: wss: https://gswduyodzdgucjscjtvz.supabase.co;",
           },
         ],
       },

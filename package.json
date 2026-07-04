@@ -72,6 +72,7 @@
     "@tiptap/react": "^2.25.0",
     "@tiptap/starter-kit": "^2.25.0",
     "@vercel/analytics": "^1.5.0",
+    "@vimeo/player": "^2.30.4",
     "class-variance-authority": "0.7.0",
     "clsx": "^2.1.0",
     "cmdk": "0.2.0",
