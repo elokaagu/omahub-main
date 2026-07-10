@@ -1,9 +1,7 @@
 import { StructuredData } from "@/components/seo/StructuredData";
 import { getPastEditions, getUpcomingEdition } from "@/lib/data/editions";
-import { getEditorialHomeBrands } from "@/lib/home/getEditorialHomeData";
 import { EditorialHero } from "./home/editorial/EditorialHero";
 import { ArchiveSection } from "./home/editorial/ArchiveSection";
-import { WorkedWithSection } from "./home/editorial/WorkedWithSection";
 import { TwoListsSection } from "./home/editorial/TwoListsSection";
 
 export const revalidate = 120;
@@ -17,14 +15,6 @@ export default async function Home() {
   const archiveEditions = upcomingEdition
     ? [...pastEditions, upcomingEdition]
     : pastEditions;
-
-  let workedWithBrands: Awaited<ReturnType<typeof getEditorialHomeBrands>> =
-    [];
-  try {
-    workedWithBrands = await getEditorialHomeBrands();
-  } catch (e) {
-    console.error("editorial_home_brands_error", e);
-  }
 
   return (
     <>
@@ -50,7 +40,6 @@ export default async function Home() {
       <main className="min-h-screen bg-oma-cream">
         <EditorialHero />
         <ArchiveSection editions={archiveEditions} />
-        <WorkedWithSection brands={workedWithBrands} />
         <TwoListsSection />
       </main>
     </>

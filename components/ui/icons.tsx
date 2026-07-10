@@ -169,4 +169,5 @@ export const {
   Tag,
   Clock,
   Dot,
+  ShoppingBag,
 } = LucideIcons;

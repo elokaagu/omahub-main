@@ -12,6 +12,7 @@ import {
   Heart,
   Palette,
   LogOut,
+  ShoppingBag,
 } from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -289,34 +290,12 @@ export default function Header() {
     >
       <nav
         className={cn(
-          "mx-auto flex w-full items-center justify-between p-6 lg:px-8",
+          "relative mx-auto flex w-full items-center justify-between p-6 lg:px-8",
           mobileMenuOpen ? "hidden lg:flex" : "flex"
         )}
       >
-        {/* Logo */}
-        <div className="flex lg:flex-1">
-          <NavigationLink href="/" className="-m-1.5 p-1.5">
-            <span className="sr-only">OmaHub</span>
-            <div className="relative">
-              <Image
-                className={cn(
-                  "h-6 w-auto transition-all duration-300",
-                  scrolled || !isHomePage
-                    ? "brightness-0"
-                    : "brightness-0 invert"
-                )}
-                src="/lovable-uploads/omahub-logo.png"
-                alt="OmaHub"
-                width={120}
-                height={32}
-                priority
-              />
-            </div>
-          </NavigationLink>
-        </div>
-
-        {/* Mobile menu button */}
-        <div className="flex lg:hidden">
+        {/* Menu button, opens the same drawer at every breakpoint */}
+        <div className="flex flex-1">
           <button
             type="button"
             className={cn(
@@ -332,118 +311,83 @@ export default function Header() {
           </button>
         </div>
 
-        {/* Desktop navigation */}
-        <div className="hidden lg:flex lg:items-center lg:gap-x-8">
-          <NavigationLink
-            href="/editions"
+        {/* Logo, centered */}
+        <NavigationLink
+          href="/"
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 p-1.5"
+        >
+          <span className="sr-only">OmaHub</span>
+          <div className="relative">
+            <Image
+              className={cn(
+                "h-6 w-auto transition-all duration-300",
+                scrolled || !isHomePage
+                  ? "brightness-0"
+                  : "brightness-0 invert"
+              )}
+              src="/lovable-uploads/omahub-logo.png"
+              alt="OmaHub"
+              width={120}
+              height={32}
+              priority
+            />
+          </div>
+        </NavigationLink>
+
+        {/* Icon actions: search, account, shop */}
+        <div className="flex flex-1 items-center justify-end gap-x-2">
+          <button
+            type="button"
+            onClick={triggerSearchModal}
             className={cn(
-              "text-sm font-semibold leading-6",
+              "inline-flex size-10 shrink-0 items-center justify-center rounded-full transition-colors duration-200",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset",
               scrolled || !isHomePage
-                ? "text-oma-black hover:text-oma-plum"
-                : "text-white hover:text-white/80"
+                ? "text-oma-black hover:text-oma-plum hover:bg-oma-beige/20 focus-visible:ring-oma-plum/35"
+                : "text-white hover:bg-white/10 focus-visible:ring-white/40"
             )}
+            aria-label="Search"
           >
-            Archive
-          </NavigationLink>
+            <Search className="h-5 w-5 shrink-0" aria-hidden />
+          </button>
 
-          {/* Direct category rendering like mobile */}
-          {SHOW_CATEGORY_NAV &&
-          dynamicNavigationItems.map((category) => {
-            return (
-              <div key={category.title} className="relative group">
-                <button
-                  className={cn(
-                    "text-sm font-semibold leading-6 gap-x-2 bg-transparent flex items-center",
-                    scrolled || !isHomePage
-                      ? "text-oma-black hover:text-oma-plum"
-                      : "text-white hover:text-white/80"
-                  )}
-                >
-                  {category.title}
-                  <ChevronDown className="h-4 w-4" />
-                </button>
-                <div
-                  className="absolute top-full left-0 mt-2 min-w-[400px] max-w-[min(99vw,700px)] bg-white/90 backdrop-blur-lg rounded-2xl shadow-2xl border border-oma-gold/30 ring-1 ring-oma-plum/10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 mx-4 sm:mx-6 md:mx-8 lg:mx-12"
-                  style={{ boxSizing: "border-box", right: 0, left: "auto" }}
-                >
-                  <div
-                    className="px-8 py-6 w-full"
-                    style={{ boxSizing: "border-box" }}
-                  >
-                    <div className="mb-4">
-                      <h3 className="text-sm font-medium text-gray-900">
-                        {category.title}
-                      </h3>
-                    </div>
-                    <div className="grid grid-cols-2 gap-x-8 gap-y-2">
-                      {category.items.map((item) => (
-                        <NavigationLink
-                          key={item.title}
-                          href={item.href}
-                          className="block rounded-md p-2 text-sm hover:bg-oma-beige/40 transition-colors whitespace-nowrap max-w-md"
-                        >
-                          <span className="font-medium text-gray-900 whitespace-nowrap block">
-                            {item.title}
-                          </span>
-                        </NavigationLink>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-
-          <div className="hidden lg:flex lg:flex-1 lg:items-center lg:justify-end lg:gap-x-6">
-            <button
-              type="button"
-              onClick={triggerSearchModal}
+          {user ? (
+            <HeaderUserMenu
+              scrolled={scrolled}
+              isHomePage={isHomePage}
+              showStudio={showStudioInNav}
+              onStudioNavigate={handleStudioNavigation}
+              studioNavigating={isNavigatingToStudio}
+            />
+          ) : (
+            <NavigationLink
+              href="/login"
+              aria-label="Sign in"
               className={cn(
                 "inline-flex size-10 shrink-0 items-center justify-center rounded-full transition-colors duration-200",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset",
                 scrolled || !isHomePage
                   ? "text-oma-black hover:text-oma-plum hover:bg-oma-beige/20 focus-visible:ring-oma-plum/35"
-                  : "bg-white/10 text-white backdrop-blur-sm hover:bg-white/20 hover:text-white/90 focus-visible:ring-white/40"
-              )}
-              aria-label="Search"
-            >
-              <Search className="h-5 w-5 shrink-0" aria-hidden />
-            </button>
-
-            <Button
-              asChild
-              variant="outline"
-              className={cn(
-                "transition-colors font-semibold",
-                scrolled || !isHomePage
-                  ? "border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white"
-                  : "border-white text-white bg-black/20 hover:bg-black/40 hover:text-white hover:border-white/50"
+                  : "text-white hover:bg-white/10 focus-visible:ring-white/40"
               )}
             >
-              <NavigationLink href="/directory">Explore Brands</NavigationLink>
-            </Button>
+              <User className="h-5 w-5 shrink-0" aria-hidden />
+            </NavigationLink>
+          )}
 
-            {user ? (
-              <HeaderUserMenu
-                scrolled={scrolled}
-                isHomePage={isHomePage}
-                showStudio={showStudioInNav}
-                onStudioNavigate={handleStudioNavigation}
-                studioNavigating={isNavigatingToStudio}
-              />
-            ) : (
-              <Button
-                asChild
-                className={cn(
-                  scrolled || !isHomePage
-                    ? "bg-oma-plum hover:bg-oma-plum/90 text-white"
-                    : "bg-white text-oma-plum hover:bg-white/90"
-                )}
-              >
-                <NavigationLink href="/login">Sign In</NavigationLink>
-              </Button>
+          <NavigationLink
+            href="/directory"
+            aria-label="Explore brands"
+            className={cn(
+              "inline-flex size-10 shrink-0 items-center justify-center rounded-full transition-colors duration-200",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset",
+              scrolled || !isHomePage
+                ? "text-oma-black hover:text-oma-plum hover:bg-oma-beige/20 focus-visible:ring-oma-plum/35"
+                : "text-white hover:bg-white/10 focus-visible:ring-white/40"
             )}
-          </div>
+          >
+            <ShoppingBag className="h-5 w-5 shrink-0" aria-hidden />
+          </NavigationLink>
         </div>
       </nav>
 
