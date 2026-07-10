@@ -56,7 +56,7 @@ export function VimeoBackgroundVideo({ videoId }: VimeoBackgroundVideoProps) {
         src={`https://player.vimeo.com/video/${videoId}?background=1&autoplay=1&loop=1&muted=1&app_id=122963`}
         title="Art Of Adornment, OmaHub short film"
         allow="autoplay; fullscreen"
-        className="absolute left-1/2 top-1/2 h-[56.25vw] min-h-full w-[177.78vh] min-w-full -translate-x-1/2 -translate-y-1/2"
+        className="absolute left-1/2 top-1/2 h-[56.25vw] min-h-full w-[177.78vh] min-w-full -translate-x-1/2 -translate-y-1/2 scale-[1.03]"
       />
 
       <button
