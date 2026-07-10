@@ -7,7 +7,6 @@ import {
 import { getEditorialHomeBrands } from "@/lib/home/getEditorialHomeData";
 import { EditorialHero } from "./home/editorial/EditorialHero";
 import { ArchiveSection } from "./home/editorial/ArchiveSection";
-import { FilmSection } from "./home/editorial/FilmSection";
 import { WorkedWithSection } from "./home/editorial/WorkedWithSection";
 import { TwoListsSection } from "./home/editorial/TwoListsSection";
 
@@ -59,7 +58,6 @@ export default async function Home() {
           latestPastEdition={latestPastEdition}
         />
         <ArchiveSection editions={archiveEditions} />
-        <FilmSection />
         <WorkedWithSection brands={workedWithBrands} />
         <TwoListsSection />
       </main>

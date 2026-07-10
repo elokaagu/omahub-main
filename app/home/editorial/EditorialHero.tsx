@@ -22,7 +22,10 @@ export function EditorialHero({
 
   return (
     <section className="relative min-h-[92vh] overflow-hidden bg-oma-plum text-white">
-      <BackgroundVideo src="/videos/hero-loop.mp4" />
+      <BackgroundVideo
+        src="/videos/hero-loop.mp4"
+        poster="/images/hero-loop-poster.jpg"
+      />
 
       {/* Plum wash so the film reads as a backdrop, not a distraction */}
       <div
@@ -97,14 +100,17 @@ export function EditorialHero({
           {upcomingEdition && (
             <div className="hidden justify-end lg:flex">
               <div className="relative flex aspect-[3/4] w-full max-w-sm flex-col justify-between overflow-hidden rounded-2xl border border-oma-gold/30 bg-gradient-to-b from-white/[0.04] to-oma-gold/10 p-8">
-                {/* Campaign image behind a plum wash that keeps the text legible */}
-                <div
+                {/* Same short film, cropped into the card, behind a plum wash */}
+                <video
                   aria-hidden
-                  className="absolute inset-0 bg-cover bg-center"
-                  style={{
-                    backgroundImage:
-                      "url(/images/editions/next-edition-poster.jpg)",
-                  }}
+                  src="/videos/hero-loop.mp4"
+                  poster="/images/hero-loop-poster.jpg"
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  preload="none"
+                  className="absolute inset-0 h-full w-full object-cover"
                 />
                 <div
                   aria-hidden
