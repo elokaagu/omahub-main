@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Edition } from "@/lib/data/editions";
+import { BackgroundVideo } from "./BackgroundVideo";
 import { EmailCaptureForm } from "./EmailCaptureForm";
 
 type EditorialHeroProps = {
@@ -20,7 +21,15 @@ export function EditorialHero({
     : "OmaHub, between editions";
 
   return (
-    <section className="relative overflow-hidden bg-oma-plum text-white">
+    <section className="relative min-h-[92vh] overflow-hidden bg-oma-plum text-white">
+      <BackgroundVideo src="/videos/hero-loop.mp4" />
+
+      {/* Plum wash so the film reads as a backdrop, not a distraction */}
+      <div
+        aria-hidden
+        className="absolute inset-0 bg-gradient-to-t from-oma-plum via-oma-plum/80 to-oma-plum/50"
+      />
+
       {/* Subtle diagonal grid, per the editorial mockup */}
       <div
         aria-hidden
