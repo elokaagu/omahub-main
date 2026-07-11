@@ -9,7 +9,7 @@ import type { Edition } from "@/lib/data/editions";
 export function EditionCard({ edition }: { edition: Edition }) {
   if (edition.status === "upcoming") {
     return (
-      <div className="flex aspect-[3/4] flex-col justify-between rounded-2xl bg-oma-plum p-8 text-white">
+      <div className="flex min-h-[520px] flex-col justify-between rounded-2xl bg-oma-plum p-8 text-white sm:min-h-[560px]">
         <div className="flex flex-1 flex-col items-center justify-center gap-6">
           <span
             aria-hidden
