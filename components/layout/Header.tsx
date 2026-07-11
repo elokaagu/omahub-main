@@ -290,12 +290,12 @@ export default function Header() {
     >
       <nav
         className={cn(
-          "relative mx-auto flex w-full items-center justify-between p-6 lg:px-8",
-          mobileMenuOpen ? "hidden lg:flex" : "flex"
+          "mx-auto grid w-full grid-cols-[1fr_auto_1fr] items-center gap-2 p-6 lg:px-8",
+          mobileMenuOpen ? "hidden lg:grid" : "grid"
         )}
       >
         {/* Menu button, opens the same drawer at every breakpoint */}
-        <div className="flex flex-1">
+        <div className="flex justify-self-start">
           <button
             type="button"
             className={cn(
@@ -311,36 +311,34 @@ export default function Header() {
           </button>
         </div>
 
-        {/* Logo, centered */}
-        <NavigationLink
-          href="/"
-          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 p-1.5"
-        >
+        {/* Logo, centered in its own grid track so it can never overlap
+            the menu button or icon actions on narrow viewports */}
+        <NavigationLink href="/" className="justify-self-center p-1.5">
           <span className="sr-only">OmaHub</span>
           <div className="relative">
             <Image
               className={cn(
-                "h-6 w-auto transition-all duration-300",
+                "h-5 w-auto transition-all duration-300 sm:h-6",
                 scrolled || !isHomePage
                   ? "brightness-0"
                   : "brightness-0 invert"
               )}
               src="/lovable-uploads/omahub-logo.png"
               alt="OmaHub"
-              width={120}
-              height={32}
+              width={126}
+              height={25}
               priority
             />
           </div>
         </NavigationLink>
 
         {/* Icon actions: search, account, shop */}
-        <div className="flex flex-1 items-center justify-end gap-x-2">
+        <div className="flex items-center justify-self-end gap-x-1 sm:gap-x-2">
           <button
             type="button"
             onClick={triggerSearchModal}
             className={cn(
-              "inline-flex size-10 shrink-0 items-center justify-center rounded-full transition-colors duration-200",
+              "inline-flex size-9 shrink-0 items-center justify-center rounded-full transition-colors duration-200 sm:size-10",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset",
               scrolled || !isHomePage
                 ? "text-oma-black hover:text-oma-plum hover:bg-oma-beige/20 focus-visible:ring-oma-plum/35"
@@ -364,7 +362,7 @@ export default function Header() {
               href="/login"
               aria-label="Sign in"
               className={cn(
-                "inline-flex size-10 shrink-0 items-center justify-center rounded-full transition-colors duration-200",
+                "inline-flex size-9 shrink-0 items-center justify-center rounded-full transition-colors duration-200 sm:size-10",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset",
                 scrolled || !isHomePage
                   ? "text-oma-black hover:text-oma-plum hover:bg-oma-beige/20 focus-visible:ring-oma-plum/35"
@@ -379,7 +377,7 @@ export default function Header() {
             href="/directory"
             aria-label="Explore brands"
             className={cn(
-              "inline-flex size-10 shrink-0 items-center justify-center rounded-full transition-colors duration-200",
+              "inline-flex size-9 shrink-0 items-center justify-center rounded-full transition-colors duration-200 sm:size-10",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset",
               scrolled || !isHomePage
                 ? "text-oma-black hover:text-oma-plum hover:bg-oma-beige/20 focus-visible:ring-oma-plum/35"
@@ -396,7 +394,7 @@ export default function Header() {
         ref={overlayRef}
         id="mobile-menu-overlay"
         className={cn(
-          "fixed inset-0 z-[1100] w-full min-h-screen overflow-y-auto bg-white px-6 py-6 ring-1 ring-gray-900/10 transform transition-transform duration-300 ease-in-out transition-opacity lg:hidden",
+          "fixed inset-0 z-[1100] w-full min-h-screen overflow-y-auto bg-white px-6 py-6 ring-1 ring-gray-900/10 transform transition duration-300 ease-in-out lg:hidden will-change-transform",
           mobileMenuOpen
             ? "translate-x-0 opacity-100"
             : "translate-x-full opacity-0 pointer-events-none"
@@ -412,8 +410,8 @@ export default function Header() {
               className="h-6 w-auto"
               src="/lovable-uploads/omahub-logo.png"
               alt="OmaHub"
-              width={120}
-              height={32}
+              width={126}
+              height={25}
             />
           </NavigationLink>
           <button
