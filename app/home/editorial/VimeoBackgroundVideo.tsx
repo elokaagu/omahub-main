@@ -5,6 +5,7 @@ import Player from "@vimeo/player";
 
 type VimeoBackgroundVideoProps = {
   videoId: string;
+  posterUrl?: string;
 };
 
 /**
@@ -13,9 +14,14 @@ type VimeoBackgroundVideoProps = {
  * controls or branding) rather than a locally re-compressed snippet. The
  * iframe is sized with the standard vh/vw cover trick since iframes can't
  * use object-fit. A single mute/unmute icon sits in the corner, since
- * autoplay requires starting muted.
+ * autoplay requires starting muted. An optional poster frame paints behind
+ * the iframe so the first frame is instant instead of a blank/plum flash
+ * while Vimeo's player boots up.
  */
-export function VimeoBackgroundVideo({ videoId }: VimeoBackgroundVideoProps) {
+export function VimeoBackgroundVideo({
+  videoId,
+  posterUrl,
+}: VimeoBackgroundVideoProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const playerRef = useRef<Player | null>(null);
   const [muted, setMuted] = useState(true);
@@ -51,6 +57,13 @@ export function VimeoBackgroundVideo({ videoId }: VimeoBackgroundVideoProps) {
 
   return (
     <div className="absolute inset-0 overflow-hidden motion-reduce:hidden">
+      {posterUrl && (
+        <div
+          aria-hidden
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: `url(${posterUrl})` }}
+        />
+      )}
       <iframe
         ref={iframeRef}
         src={`https://player.vimeo.com/video/${videoId}?background=1&autoplay=1&loop=1&muted=1&app_id=122963`}

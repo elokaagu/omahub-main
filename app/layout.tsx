@@ -103,6 +103,20 @@ export default async function RootLayout({
       lang="en"
       className={`${fontSans.variable} ${fontDisplay.variable}`}
     >
+      <head>
+        {/* Open the connection to Vimeo's player and CDN ahead of time so
+            the hero video's iframe doesn't pay the DNS/TLS handshake cost
+            after it mounts. */}
+        <link rel="preconnect" href="https://player.vimeo.com" />
+        <link rel="preconnect" href="https://i.vimeocdn.com" />
+        <link
+          rel="preconnect"
+          href="https://f.vimeocdn.com"
+          crossOrigin="anonymous"
+        />
+        <link rel="dns-prefetch" href="https://player.vimeo.com" />
+        <link rel="dns-prefetch" href="https://f.vimeocdn.com" />
+      </head>
       <body>
         <Preloader>
           <RootLayoutClient initialAuth={initialAuth}>
