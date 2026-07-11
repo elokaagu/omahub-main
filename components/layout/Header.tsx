@@ -394,7 +394,7 @@ export default function Header() {
         ref={overlayRef}
         id="mobile-menu-overlay"
         className={cn(
-          "fixed inset-0 z-[1100] w-full min-h-screen overflow-y-auto bg-white px-6 py-6 ring-1 ring-gray-900/10 transform transition duration-300 ease-in-out lg:hidden will-change-transform",
+          "fixed inset-0 z-[1100] w-full min-h-screen overflow-y-auto bg-white px-6 py-6 ring-1 ring-gray-900/10 transform transition duration-300 ease-in-out will-change-transform",
           mobileMenuOpen
             ? "translate-x-0 opacity-100"
             : "translate-x-full opacity-0 pointer-events-none"
