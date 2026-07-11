@@ -1,5 +1,6 @@
 import { StructuredData } from "@/components/seo/StructuredData";
 import { getPastEditions, getUpcomingEdition } from "@/lib/data/editions";
+import { getAllEditionImages } from "@/lib/services/editionImagesService";
 import { EditorialHero } from "./home/editorial/EditorialHero";
 import { ArchiveSection } from "./home/editorial/ArchiveSection";
 import { TwoListsSection } from "./home/editorial/TwoListsSection";
@@ -12,9 +13,25 @@ export default async function Home() {
   // Homepage archive shows the two latest past editions plus the upcoming
   // placeholder, three cards max, older editions live at /editions.
   const pastEditions = getPastEditions(upcomingEdition ? 2 : 3);
-  const archiveEditions = upcomingEdition
+  const staticArchiveEditions = upcomingEdition
     ? [...pastEditions, upcomingEdition]
     : pastEditions;
+
+  let adminImages: Awaited<ReturnType<typeof getAllEditionImages>> = [];
+  try {
+    adminImages = await getAllEditionImages();
+  } catch (e) {
+    console.error("home_archive_admin_images_error", e);
+  }
+  const coverBySlug = new Map(
+    adminImages
+      .filter((i) => i.kind === "cover")
+      .map((i) => [i.edition_slug, i.image_url])
+  );
+  const archiveEditions = staticArchiveEditions.map((edition) => ({
+    ...edition,
+    coverImage: coverBySlug.get(edition.slug) || edition.coverImage,
+  }));
 
   return (
     <>

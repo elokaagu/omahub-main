@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getAllEditions } from "@/lib/data/editions";
+import { getAllEditionImages } from "@/lib/services/editionImagesService";
 import { EditionCard } from "@/app/home/editorial/EditionCard";
 
 export const metadata: Metadata = {
@@ -9,8 +10,26 @@ export const metadata: Metadata = {
     "Every OmaHub edition: storytelling-led events spotlighting verified African designers, from London to Lagos.",
 };
 
-export default function EditionsArchivePage() {
-  const editions = getAllEditions();
+export const revalidate = 120;
+
+export default async function EditionsArchivePage() {
+  const staticEditions = getAllEditions();
+
+  let adminImages: Awaited<ReturnType<typeof getAllEditionImages>> = [];
+  try {
+    adminImages = await getAllEditionImages();
+  } catch (e) {
+    console.error("editions_archive_admin_images_error", e);
+  }
+  const coverBySlug = new Map(
+    adminImages
+      .filter((i) => i.kind === "cover")
+      .map((i) => [i.edition_slug, i.image_url])
+  );
+  const editions = staticEditions.map((edition) => ({
+    ...edition,
+    coverImage: coverBySlug.get(edition.slug) || edition.coverImage,
+  }));
 
   return (
     <main className="min-h-screen bg-oma-beige">

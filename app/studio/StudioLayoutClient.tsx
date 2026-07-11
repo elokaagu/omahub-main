@@ -32,6 +32,7 @@ import {
   FileText,
   Mail,
   List,
+  Calendar,
 } from "@/lib/utils/iconImports";
 import { TailoringEventProvider } from "@/contexts/NavigationContext";
 import ErrorBoundary from "../components/ErrorBoundary";
@@ -170,6 +171,12 @@ function buildNavigationItems(
       href: "/studio/spotlight",
       label: "Spotlight",
       icon: ImageIcon,
+      permission: "studio.hero.manage",
+    },
+    {
+      href: "/studio/editions",
+      label: "Edition Photos",
+      icon: Calendar,
       permission: "studio.hero.manage",
     },
     {

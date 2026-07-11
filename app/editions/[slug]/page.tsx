@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { editions, getEditionBySlug } from "@/lib/data/editions";
 import { getBrandsByNames } from "@/lib/home/getEditorialHomeData";
+import { getEditionImages } from "@/lib/services/editionImagesService";
 import { FullWidthBrandRow } from "@/components/ui/full-width-brand-row";
 import { LazyImage } from "@/components/ui/lazy-image";
 import { EmailCaptureForm } from "@/app/home/editorial/EmailCaptureForm";
@@ -32,15 +33,37 @@ export default async function EditionPage({
 }: {
   params: { slug: string };
 }) {
-  const edition = getEditionBySlug(params.slug);
-  if (!edition) notFound();
+  const staticEdition = getEditionBySlug(params.slug);
+  if (!staticEdition) notFound();
 
   let lineupBrands: Awaited<ReturnType<typeof getBrandsByNames>> = [];
   try {
-    lineupBrands = await getBrandsByNames(edition.brandNames);
+    lineupBrands = await getBrandsByNames(staticEdition.brandNames);
   } catch (e) {
     console.error("edition_lineup_brands_error", e);
   }
+
+  // Admin-managed photos (Studio > Edition Photos) overlay the codebase's
+  // seed data: a new cover replaces the static one, gallery photos append.
+  let adminImages: Awaited<ReturnType<typeof getEditionImages>> = [];
+  try {
+    adminImages = await getEditionImages(params.slug);
+  } catch (e) {
+    console.error("edition_admin_images_error", e);
+  }
+  const adminCover = adminImages.find((i) => i.kind === "cover")?.image_url;
+  const adminGallery: NonNullable<typeof staticEdition.gallery> = adminImages
+    .filter((i) => i.kind === "gallery")
+    .map((i) => ({
+      src: i.image_url,
+      alt: i.alt_text || staticEdition.title,
+    }));
+
+  const edition = {
+    ...staticEdition,
+    coverImage: adminCover || staticEdition.coverImage,
+    gallery: [...(staticEdition.gallery || []), ...adminGallery],
+  };
 
   const snapshot = [
     { label: "City", value: edition.city },
@@ -63,13 +86,9 @@ export default async function EditionPage({
             : undefined
         }
       >
-        {edition.coverImage && (
-          <div
-            aria-hidden
-            className="absolute inset-0 bg-gradient-to-t from-oma-plum via-oma-plum/80 to-oma-plum/40"
-          />
-        )}
-        <div className="relative mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div
+          className="relative mx-auto w-full max-w-7xl px-4 [text-shadow:0_2px_16px_rgb(0_0_0_/_45%)] sm:px-6 lg:px-8"
+        >
           <Link
             href="/editions"
             className="text-xs font-semibold uppercase tracking-[0.25em] text-white/50 transition-colors hover:text-oma-gold"
