@@ -31,7 +31,7 @@ export async function EditorialHero() {
   const posterUrl = await getVimeoPosterUrl(HERO_VIDEO_ID);
 
   return (
-    <section className="relative min-h-[92vh] overflow-hidden bg-oma-plum">
+    <section className="relative min-h-screen overflow-hidden bg-oma-plum">
       <VimeoBackgroundVideo videoId={HERO_VIDEO_ID} posterUrl={posterUrl} />
     </section>
   );
