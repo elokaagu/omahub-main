@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getAllEditions } from "@/lib/data/editions";
+import { getAllEditions, getLatestPastEdition } from "@/lib/data/editions";
 import { getAllEditionImages } from "@/lib/services/editionImagesService";
 import { EditionCard } from "@/app/home/editorial/EditionCard";
 
@@ -31,10 +31,18 @@ export default async function EditionsArchivePage() {
     coverImage: coverBySlug.get(edition.slug) || edition.coverImage,
   }));
 
+  const latestPastEdition = getLatestPastEdition();
+  const heroImage = latestPastEdition
+    ? coverBySlug.get(latestPastEdition.slug) || latestPastEdition.coverImage
+    : undefined;
+
   return (
     <main className="min-h-screen bg-oma-beige">
-      <section className="flex min-h-[60vh] flex-col justify-end bg-oma-plum pb-16 pt-10 text-white sm:min-h-[70vh] sm:pb-20 sm:pt-14">
-        <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+      <section
+        className="relative flex min-h-[60vh] flex-col justify-end bg-oma-plum bg-cover bg-top pb-16 pt-10 text-white sm:min-h-[70vh] sm:pb-20 sm:pt-14"
+        style={heroImage ? { backgroundImage: `url(${heroImage})` } : undefined}
+      >
+        <div className="relative mx-auto w-full max-w-7xl px-4 [text-shadow:0_2px_16px_rgb(0_0_0_/_45%)] sm:px-6 lg:px-8">
           <Link
             href="/"
             className="text-xs font-semibold uppercase tracking-[0.25em] text-white/50 transition-colors hover:text-oma-gold"
