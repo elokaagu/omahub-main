@@ -215,7 +215,7 @@ export default async function EditionPage({
       )}
 
       {/* Brand lineup, in motion */}
-      {lineupBrands.length > 0 ? (
+      {lineupBrands.length > 0 && (
         <section className="bg-white py-16 sm:py-20">
           <FullWidthBrandRow
             title="The lineup"
@@ -223,18 +223,6 @@ export default async function EditionPage({
             brands={lineupBrands}
           />
         </section>
-      ) : (
-        edition.status === "past" && (
-          <section className="bg-white py-16 text-center sm:py-20">
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oma-cocoa">
-              The lineup
-            </p>
-            <p className="mx-auto mt-4 max-w-md px-4 text-sm leading-relaxed text-oma-black/70">
-              The full brand lineup for this edition is being added to the
-              archive.
-            </p>
-          </section>
-        )
       )}
 
       {/* Next-edition CTA */}
