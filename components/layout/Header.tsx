@@ -389,12 +389,23 @@ export default function Header() {
         </div>
       </nav>
 
-      {/* Mobile menu */}
+      {/* Backdrop, dims the page behind the drawer and closes it on click */}
+      <div
+        aria-hidden
+        onClick={() => setMobileMenuOpen(false)}
+        className={cn(
+          "fixed inset-0 z-[1090] bg-oma-black/40 transition-opacity duration-300 ease-in-out",
+          mobileMenuOpen ? "opacity-100" : "pointer-events-none opacity-0"
+        )}
+      />
+
+      {/* Menu drawer: a fixed-width panel sliding in from the right, not a
+          full-screen takeover */}
       <div
         ref={overlayRef}
         id="mobile-menu-overlay"
         className={cn(
-          "fixed inset-0 z-[1100] w-full min-h-screen overflow-y-auto bg-white px-6 py-6 ring-1 ring-gray-900/10 transform transition duration-300 ease-in-out will-change-transform",
+          "fixed inset-y-0 right-0 z-[1100] w-full max-w-sm overflow-y-auto bg-white px-6 py-6 shadow-2xl ring-1 ring-gray-900/10 transform transition duration-300 ease-in-out will-change-transform sm:max-w-md",
           mobileMenuOpen
             ? "translate-x-0 opacity-100"
             : "translate-x-full opacity-0 pointer-events-none"
