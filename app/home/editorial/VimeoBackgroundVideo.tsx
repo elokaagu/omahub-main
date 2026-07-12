@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Player from "@vimeo/player";
+import { cn } from "@/lib/utils";
 
 type VimeoBackgroundVideoProps = {
   videoId: string;
@@ -16,7 +17,9 @@ type VimeoBackgroundVideoProps = {
  * use object-fit. A single mute/unmute icon sits in the corner, since
  * autoplay requires starting muted. An optional poster frame paints behind
  * the iframe so the first frame is instant instead of a blank/plum flash
- * while Vimeo's player boots up.
+ * while Vimeo's player boots up; the iframe itself stays transparent until
+ * playback actually starts, then cross-fades in over the poster instead of
+ * popping in the moment the (still-loading, often blank) player mounts.
  */
 export function VimeoBackgroundVideo({
   videoId,
@@ -25,17 +28,21 @@ export function VimeoBackgroundVideo({
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const playerRef = useRef<Player | null>(null);
   const [muted, setMuted] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   useEffect(() => {
     if (!iframeRef.current) return;
     const player = new Player(iframeRef.current);
     playerRef.current = player;
+    const handlePlay = () => setIsPlaying(true);
+    player.on("play", handlePlay);
     // Deliberately no player.destroy() here: it physically removes the
     // iframe from the DOM, which breaks the postMessage channel the moment
     // React 18 Strict Mode's dev-only double-invoke (mount -> cleanup ->
     // mount) runs this cleanup. React already removes the iframe node on a
     // genuine unmount, so we just drop our reference to the player.
     return () => {
+      player.off("play", handlePlay);
       playerRef.current = null;
     };
   }, []);
@@ -69,7 +76,10 @@ export function VimeoBackgroundVideo({
         src={`https://player.vimeo.com/video/${videoId}?background=1&autoplay=1&loop=1&muted=1&app_id=122963`}
         title="Art Of Adornment, OmaHub short film"
         allow="autoplay; fullscreen"
-        className="absolute left-1/2 top-1/2 h-[56.25vw] min-h-full w-[177.78vh] min-w-full -translate-x-1/2 -translate-y-1/2 scale-[1.03]"
+        className={cn(
+          "absolute left-1/2 top-1/2 h-[56.25vw] min-h-full w-[177.78vh] min-w-full -translate-x-1/2 -translate-y-1/2 scale-[1.03] opacity-0 transition-opacity duration-700 ease-out",
+          isPlaying && "opacity-100"
+        )}
       />
 
       <button
