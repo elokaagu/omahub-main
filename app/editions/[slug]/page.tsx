@@ -126,36 +126,37 @@ export default async function EditionPage({
         </div>
       </section>
 
-      {/* Edition film */}
-      {edition.videoUrl && (
-        <section className="bg-oma-cream py-16 sm:py-20">
-          <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-            <p className="mb-6 text-xs font-semibold uppercase tracking-[0.3em] text-oma-cocoa">
-              Watch the edition
-            </p>
-            <EditionVideo
-              videoUrl={edition.videoUrl}
-              thumbnailUrl={edition.videoThumbnail}
-              title={edition.title}
-            />
-          </div>
-        </section>
-      )}
-
-      {/* The story */}
+      {/* The story, with the event recap video alongside it */}
       <section className="bg-oma-cream py-16 sm:py-20">
-        <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oma-cocoa">
-            The story
-          </p>
-          <p className="mt-6 font-canela text-2xl leading-relaxed text-oma-black sm:text-3xl">
-            {edition.story}
-          </p>
-          {edition.partner && (
-            <p className="mt-6 text-sm uppercase tracking-[0.2em] text-oma-cocoa">
-              In partnership with {edition.partner}
-            </p>
-          )}
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid gap-10 lg:grid-cols-3 lg:gap-16">
+            <div className="max-w-3xl lg:col-span-2">
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oma-cocoa">
+                The story
+              </p>
+              <p className="mt-6 font-canela text-2xl leading-relaxed text-oma-black sm:text-3xl">
+                {edition.story}
+              </p>
+              {edition.partner && (
+                <p className="mt-6 text-sm uppercase tracking-[0.2em] text-oma-cocoa">
+                  In partnership with {edition.partner}
+                </p>
+              )}
+            </div>
+
+            {edition.videoUrl && (
+              <div className="lg:col-span-1">
+                <p className="mb-4 text-xs font-semibold uppercase tracking-[0.3em] text-oma-cocoa">
+                  Watch the edition
+                </p>
+                <EditionVideo
+                  videoUrl={edition.videoUrl}
+                  thumbnailUrl={edition.videoThumbnail}
+                  title={edition.title}
+                />
+              </div>
+            )}
+          </div>
         </div>
       </section>
 
