@@ -1,6 +1,6 @@
 import { supabase } from "@/lib/supabase";
 
-export type EditionImageKind = "cover" | "gallery";
+export type EditionImageKind = "cover" | "gallery" | "story";
 
 export interface EditionImage {
   id: string;
@@ -18,6 +18,8 @@ export interface AddEditionImageData {
   image_url: string;
   alt_text?: string | null;
   kind: EditionImageKind;
+  /** Story photos only: which paragraph (0-indexed) the photo follows. */
+  position?: number;
 }
 
 /** All admin-managed images for one edition, cover first then gallery order. */
@@ -78,7 +80,8 @@ async function assertSuperAdmin(userId: string): Promise<void> {
 /**
  * Add an edition image (super admin only). A new cover replaces any existing
  * cover for that edition, since only one photo can lead the archive card and
- * detail page hero at a time. Gallery images are appended.
+ * detail page hero at a time. Gallery images are appended. Story photos use
+ * an explicit paragraph position instead of appending.
  */
 export async function addEditionImage(
   userId: string,
@@ -97,7 +100,7 @@ export async function addEditionImage(
     if (deleteError) throw deleteError;
   }
 
-  let displayOrder = 0;
+  let displayOrder = data.position ?? 0;
   if (data.kind === "gallery") {
     const { data: existing, error: existingError } = await supabase
       .from("edition_images")
@@ -110,9 +113,10 @@ export async function addEditionImage(
     displayOrder = (existing?.[0]?.display_order ?? -1) + 1;
   }
 
+  const { position, ...insertData } = data;
   const { data: inserted, error } = await supabase
     .from("edition_images")
-    .insert({ ...data, display_order: displayOrder })
+    .insert({ ...insertData, display_order: displayOrder })
     .select()
     .single();
 

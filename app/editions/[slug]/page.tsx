@@ -65,6 +65,17 @@ export default async function EditionPage({
     gallery: [...(staticEdition.gallery || []), ...adminGallery],
   };
 
+  // Story photos: admin-placed images that drop in after a given paragraph
+  // (display_order holds the 0-indexed paragraph they follow).
+  const storyParagraphs = edition.story.split(/\n+/).map((p) => p.trim()).filter(Boolean);
+  const storyPhotosByParagraph = new Map<number, typeof adminImages>();
+  for (const image of adminImages) {
+    if (image.kind !== "story") continue;
+    const list = storyPhotosByParagraph.get(image.display_order) || [];
+    list.push(image);
+    storyPhotosByParagraph.set(image.display_order, list);
+  }
+
   const snapshot = [
     { label: "City", value: edition.city },
     { label: "Country", value: edition.country },
@@ -134,9 +145,24 @@ export default async function EditionPage({
               <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oma-cocoa">
                 The story
               </p>
-              <p className="mt-6 font-canela text-2xl leading-relaxed text-oma-black sm:text-3xl">
-                {edition.story}
-              </p>
+              {storyParagraphs.map((paragraph, i) => (
+                <div key={i}>
+                  <p className="mt-6 font-canela text-2xl leading-relaxed text-oma-black sm:text-3xl">
+                    {paragraph}
+                  </p>
+                  {storyPhotosByParagraph.get(i)?.map((photo) => (
+                    <div key={photo.id} className="mt-6 overflow-hidden rounded-2xl">
+                      <LazyImage
+                        src={photo.image_url}
+                        alt={photo.alt_text || edition.title}
+                        aspectRatio="landscape"
+                        sizes="(max-width: 1024px) 100vw, 640px"
+                        quality={85}
+                      />
+                    </div>
+                  ))}
+                </div>
+              ))}
               {edition.partner && (
                 <p className="mt-6 text-sm uppercase tracking-[0.2em] text-oma-cocoa">
                   In partnership with {edition.partner}
