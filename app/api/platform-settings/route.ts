@@ -2,12 +2,21 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase-unified";
 import { parsePlatformSettingsUpdate } from "@/lib/validation/platformSettingsBody";
 
-const SETTING_KEYS = ["about_omahub", "our_story", "tailored_services"] as const;
+const SETTING_KEYS = [
+  "about_omahub",
+  "our_story",
+  "tailored_services",
+  "hero_video_id",
+] as const;
 
-const MAP_DB_TO_API: Record<(typeof SETTING_KEYS)[number], "about" | "ourStory" | "tailoredServices"> = {
+const MAP_DB_TO_API: Record<
+  (typeof SETTING_KEYS)[number],
+  "about" | "ourStory" | "tailoredServices" | "heroVideoId"
+> = {
   about_omahub: "about",
   our_story: "ourStory",
   tailored_services: "tailoredServices",
+  hero_video_id: "heroVideoId",
 };
 
 export async function GET() {
@@ -30,6 +39,7 @@ export async function GET() {
       about: "",
       ourStory: "",
       tailoredServices: "",
+      heroVideoId: "",
     };
 
     for (const row of data ?? []) {
@@ -90,7 +100,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { about, ourStory, tailoredServices } = parsed.data;
+    const { about, ourStory, tailoredServices, heroVideoId } = parsed.data;
     const now = new Date().toISOString();
 
     const updates = [] as Array<{ key: string; value: string; updated_at: string }>;
@@ -103,6 +113,9 @@ export async function POST(req: NextRequest) {
     }
     if (tailoredServices !== undefined) {
       updates.push({ key: "tailored_services", value: tailoredServices, updated_at: now });
+    }
+    if (heroVideoId !== undefined) {
+      updates.push({ key: "hero_video_id", value: heroVideoId, updated_at: now });
     }
 
     const { error: upsertError } = await supabase

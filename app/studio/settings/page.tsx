@@ -11,6 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   FileText,
   HelpCircle,
@@ -22,6 +23,7 @@ import {
   Globe,
   Eye,
   EyeOff,
+  Film,
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -40,10 +42,55 @@ export default function SettingsPage() {
   } | null>(null);
   const [isLoadingStatus, setIsLoadingStatus] = useState(true);
   const [statusError, setStatusError] = useState<string | null>(null);
+  const [heroVideoId, setHeroVideoId] = useState("");
+  const [isLoadingVideoId, setIsLoadingVideoId] = useState(true);
+  const [isSavingVideoId, setIsSavingVideoId] = useState(false);
 
   // Check if user has super admin permissions
   const hasSettingsPermission = permissions.includes("studio.settings.manage");
   const isSuperAdmin = user?.role === "super_admin" || hasSettingsPermission;
+
+  const fetchHeroVideoId = useCallback(async () => {
+    try {
+      setIsLoadingVideoId(true);
+      const response = await fetch("/api/platform-settings");
+      const data = await response.json();
+      if (response.ok && typeof data.heroVideoId === "string") {
+        setHeroVideoId(data.heroVideoId);
+      }
+    } catch (error) {
+      console.error("Error fetching hero video id:", error);
+    } finally {
+      setIsLoadingVideoId(false);
+    }
+  }, []);
+
+  const handleSaveHeroVideoId = async () => {
+    const trimmed = heroVideoId.trim();
+    if (!/^\d+$/.test(trimmed)) {
+      toast.error("Enter just the numeric Vimeo video ID");
+      return;
+    }
+    setIsSavingVideoId(true);
+    try {
+      const response = await fetch("/api/platform-settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ heroVideoId: trimmed }),
+      });
+      const data = await response.json();
+      if (response.ok && data.success) {
+        toast.success("Homepage video updated");
+      } else {
+        toast.error(data.error || "Failed to update the homepage video");
+      }
+    } catch (error) {
+      console.error("Error saving hero video id:", error);
+      toast.error("Something went wrong. Please try again.");
+    } finally {
+      setIsSavingVideoId(false);
+    }
+  };
 
   const fetchPlatformStatus = useCallback(async () => {
     try {
@@ -74,8 +121,9 @@ export default function SettingsPage() {
   useEffect(() => {
     if (isSuperAdmin) {
       void fetchPlatformStatus();
+      void fetchHeroVideoId();
     }
-  }, [isSuperAdmin, fetchPlatformStatus]);
+  }, [isSuperAdmin, fetchPlatformStatus, fetchHeroVideoId]);
 
   if (loading || !user || permissionsLoading) {
     return (
@@ -325,6 +373,48 @@ export default function SettingsPage() {
                   </Button>
                 </>
               )}
+            </CardFooter>
+          </Card>
+
+          {/* Homepage Video */}
+          <Card className="border-oma-beige">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-oma-plum font-canela">
+                <Film className="h-5 w-5" />
+                Homepage Video
+              </CardTitle>
+              <CardDescription className="text-oma-cocoa">
+                Swap the film playing in the homepage hero
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-oma-cocoa/80 mb-4">
+                Paste the numeric video ID from the film&apos;s Vimeo URL
+                (e.g. the <code>1206857643</code> in
+                vimeo.com/1206857643). Update this whenever you have a new
+                campaign or edition recap ready.
+              </p>
+              {isLoadingVideoId ? (
+                <div className="text-center py-2">
+                  <div className="h-5 w-5 border-2 border-oma-plum border-t-transparent rounded-full mx-auto" />
+                </div>
+              ) : (
+                <Input
+                  value={heroVideoId}
+                  onChange={(e) => setHeroVideoId(e.target.value)}
+                  placeholder="1206857643"
+                  inputMode="numeric"
+                />
+              )}
+            </CardContent>
+            <CardFooter>
+              <Button
+                onClick={handleSaveHeroVideoId}
+                disabled={isSavingVideoId || isLoadingVideoId}
+                className="w-full bg-oma-plum hover:bg-oma-plum/90 text-white"
+              >
+                {isSavingVideoId ? "Saving…" : "Save Video"}
+              </Button>
             </CardFooter>
           </Card>
 

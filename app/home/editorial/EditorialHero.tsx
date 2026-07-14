@@ -1,6 +1,5 @@
 import { VimeoBackgroundVideo } from "./VimeoBackgroundVideo";
-
-const HERO_VIDEO_ID = "1206857643";
+import { getHeroVideoId } from "@/lib/services/heroVideoSetting";
 
 async function getVimeoPosterUrl(videoId: string): Promise<string | undefined> {
   try {
@@ -25,14 +24,17 @@ async function getVimeoPosterUrl(videoId: string): Promise<string | undefined> {
  * Homepage hero: just the film, full-bleed, no overlay. Streams the HQ
  * upload from Vimeo rather than a locally re-compressed snippet. A static
  * poster frame (fetched via Vimeo's oEmbed API) paints instantly behind the
- * iframe so there's no blank/plum flash while the player boots up.
+ * iframe so there's no blank/plum flash while the player boots up. The video
+ * itself is swappable from Studio > Settings (falls back to the launch film
+ * if no override has been set).
  */
 export async function EditorialHero() {
-  const posterUrl = await getVimeoPosterUrl(HERO_VIDEO_ID);
+  const heroVideoId = await getHeroVideoId();
+  const posterUrl = await getVimeoPosterUrl(heroVideoId);
 
   return (
     <section className="relative min-h-screen overflow-hidden bg-oma-plum">
-      <VimeoBackgroundVideo videoId={HERO_VIDEO_ID} posterUrl={posterUrl} />
+      <VimeoBackgroundVideo videoId={heroVideoId} posterUrl={posterUrl} />
     </section>
   );
 }
