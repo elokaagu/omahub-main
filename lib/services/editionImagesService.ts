@@ -1,6 +1,6 @@
 import { supabase } from "@/lib/supabase";
 
-export type EditionImageKind = "cover" | "gallery" | "story";
+export type EditionImageKind = "cover" | "gallery" | "story" | "partner";
 
 export interface EditionImage {
   id: string;
@@ -101,12 +101,12 @@ export async function addEditionImage(
   }
 
   let displayOrder = data.position ?? 0;
-  if (data.kind === "gallery") {
+  if (data.kind === "gallery" || data.kind === "partner") {
     const { data: existing, error: existingError } = await supabase
       .from("edition_images")
       .select("display_order")
       .eq("edition_slug", data.edition_slug)
-      .eq("kind", "gallery")
+      .eq("kind", data.kind)
       .order("display_order", { ascending: false })
       .limit(1);
     if (existingError) throw existingError;

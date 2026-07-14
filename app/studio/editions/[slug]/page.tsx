@@ -49,6 +49,8 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
   const [isUploadingGallery, setIsUploadingGallery] = useState(false);
   const [isUploadingStory, setIsUploadingStory] = useState(false);
   const [storyPosition, setStoryPosition] = useState(0);
+  const [isUploadingPartner, setIsUploadingPartner] = useState(false);
+  const [partnerName, setPartnerName] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const refetch = useCallback(async () => {
@@ -85,6 +87,9 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
   const gallery = images.filter((i) => i.kind === "gallery");
   const storyPhotos = images
     .filter((i) => i.kind === "story")
+    .sort((a, b) => a.display_order - b.display_order);
+  const partners = images
+    .filter((i) => i.kind === "partner")
     .sort((a, b) => a.display_order - b.display_order);
   const effectiveCover = cover?.image_url || edition.coverImage;
   const storyParagraphs = edition.story
@@ -155,6 +160,29 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
       );
     } finally {
       setIsUploadingStory(false);
+    }
+  };
+
+  const handlePartnerUpload = async (url: string) => {
+    if (!user) return;
+    try {
+      setIsUploadingPartner(true);
+      await addEditionImage(user.id, {
+        edition_slug: slug,
+        image_url: url,
+        kind: "partner",
+        alt_text: partnerName.trim() || null,
+      });
+      toast.success("Partner logo added");
+      setPartnerName("");
+      await refetch();
+    } catch (error) {
+      console.error("Error adding partner logo:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to add partner logo"
+      );
+    } finally {
+      setIsUploadingPartner(false);
     }
   };
 
@@ -413,6 +441,96 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
             This edition has no story text yet, so there&apos;s nowhere to
             place a photo. Add the story in lib/data/editions.ts first.
           </p>
+        )}
+      </section>
+
+      <section className="mb-12">
+        <h2 className="text-lg font-semibold text-oma-black mb-1">
+          Partners
+        </h2>
+        <p className="text-sm text-oma-cocoa mb-4">
+          Logos shown in the &quot;Our partners&quot; strip underneath the
+          edition (e.g. venues, co-hosts).
+        </p>
+
+        {partners.length > 0 && (
+          <div className="mb-6 flex flex-wrap gap-4">
+            {partners.map((partner) => (
+              <div
+                key={partner.id}
+                className="group relative flex items-center gap-3 rounded-xl border border-gray-200 p-3"
+              >
+                <img
+                  src={partner.image_url}
+                  alt={partner.alt_text || "Partner"}
+                  className="h-10 w-20 shrink-0 object-contain"
+                />
+                <p className="text-sm text-oma-black">
+                  {partner.alt_text || (
+                    <span className="italic text-oma-cocoa/60">Unnamed</span>
+                  )}
+                </p>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <button
+                      type="button"
+                      aria-label="Remove partner"
+                      disabled={deletingId === partner.id}
+                      className="flex h-7 w-7 items-center justify-center rounded-full text-oma-cocoa/60 transition-colors hover:bg-red-50 hover:text-red-600"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Remove partner</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This removes the logo from the edition&apos;s
+                        partners strip. This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => void handleDelete(partner.id)}
+                        className="bg-red-600 hover:bg-red-700"
+                      >
+                        Remove
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <label className="mb-2 block text-sm font-medium text-oma-black">
+          Partner name
+        </label>
+        <input
+          type="text"
+          value={partnerName}
+          onChange={(e) => setPartnerName(e.target.value)}
+          placeholder="e.g. Gather House Africa"
+          className="mb-4 w-full max-w-xs rounded-md border border-gray-300 px-3 py-2 text-sm"
+        />
+        <FileUpload
+          key={partners.length}
+          onUploadComplete={handlePartnerUpload}
+          bucket="edition-galleries"
+          path={`${slug}/partners`}
+          accept={{
+            "image/png": [".png"],
+            "image/jpeg": [".jpg", ".jpeg"],
+            "image/webp": [".webp"],
+            "image/svg+xml": [".svg"],
+          }}
+          maxSize={5}
+          hidePreview
+        />
+        {isUploadingPartner && (
+          <p className="mt-2 text-sm text-oma-cocoa">Adding partner logo…</p>
         )}
       </section>
     </div>

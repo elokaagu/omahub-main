@@ -76,6 +76,10 @@ export default async function EditionPage({
     storyPhotosByParagraph.set(image.display_order, list);
   }
 
+  const partnerLogos = adminImages
+    .filter((i) => i.kind === "partner")
+    .sort((a, b) => a.display_order - b.display_order);
+
   const snapshot = [
     { label: "City", value: edition.city },
     { label: "Country", value: edition.country },
@@ -249,6 +253,35 @@ export default async function EditionPage({
             subtitle={`The brands that showed at ${edition.title}`}
             brands={lineupBrands}
           />
+        </section>
+      )}
+
+      {/* Partners */}
+      {partnerLogos.length > 0 && (
+        <section className="border-t border-oma-cocoa/15 bg-oma-beige py-16 sm:py-20">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oma-cocoa">
+              Our partners
+            </p>
+            <div className="mt-8 flex flex-wrap items-center gap-x-12 gap-y-8">
+              {partnerLogos.map((partner) => (
+                <div key={partner.id} className="flex items-center gap-3">
+                  {/* Plain img, not LazyImage: logos need object-contain (no
+                      cropping), which LazyImage doesn't expose. */}
+                  <img
+                    src={partner.image_url}
+                    alt={partner.alt_text || "Partner"}
+                    className="h-12 w-24 shrink-0 object-contain"
+                  />
+                  {partner.alt_text && (
+                    <p className="text-sm font-medium text-oma-black">
+                      {partner.alt_text}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
         </section>
       )}
 
