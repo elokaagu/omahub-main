@@ -45,7 +45,7 @@ export function mapBrandToProfileData(
     isVerified: brand.is_verified || undefined,
     image: brand.brand_images?.[0]?.storage_path
       ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${brand.brand_images[0].storage_path}`
-      : undefined,
+      : brand.image || undefined,
     website: brand.website,
     instagram: brand.instagram || undefined,
     whatsapp: brand.whatsapp || undefined,

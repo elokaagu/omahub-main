@@ -52,6 +52,10 @@ export const designerApplicationBodySchema = z
       .union([z.string(), z.null()])
       .optional()
       .transform((v) => (v == null ? null : emptyToNull(v))),
+    imageUrls: z
+      .array(z.string().trim().url())
+      .min(1, "Please upload at least one photo")
+      .max(3, "Up to 3 photos"),
   })
   .strip();
 

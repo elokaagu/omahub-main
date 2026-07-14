@@ -136,6 +136,35 @@ export function ApplicationDetailModal({
             <p className="text-sm whitespace-pre-wrap">{application.description}</p>
           </div>
 
+          {application.image_urls && application.image_urls.length > 0 && (
+            <div>
+              <span className="block text-sm font-medium text-oma-cocoa mb-1">
+                Photos
+              </span>
+              <div className="flex flex-wrap gap-3">
+                {application.image_urls.map((url) => (
+                  <a
+                    key={url}
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block h-24 w-24 overflow-hidden rounded-lg border border-gray-200"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={url}
+                      alt={`${application.brand_name} photo`}
+                      className="h-full w-full object-cover"
+                    />
+                  </a>
+                ))}
+              </div>
+              <p className="mt-1 text-xs text-oma-cocoa/60">
+                These become the brand&apos;s profile photos on approval.
+              </p>
+            </div>
+          )}
+
           <div>
             <span className="block text-sm font-medium text-oma-cocoa mb-1">
               Status

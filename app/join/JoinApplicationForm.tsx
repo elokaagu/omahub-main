@@ -7,11 +7,82 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { X, Loader2, ImagePlus } from "lucide-react";
 import {
   designerApplicationFormSchema,
   joinFormCategoryOptions,
 } from "@/lib/validation/designerApplicationForm";
 import ApplicationConfirmationModal from "@/components/ApplicationConfirmationModal";
+
+const MAX_PHOTOS = 3;
+
+type PhotoSlot = { url: string | null; uploading: boolean };
+
+/** One upload slot: click to pick a file. Upload is handled by the parent
+ * (via onFileSelected) so slot state stays in one place. */
+function PhotoUploadSlot({
+  slot,
+  onFileSelected,
+  onRemove,
+}: {
+  slot: PhotoSlot;
+  onFileSelected: (file: File) => void;
+  onRemove: () => void;
+}) {
+  const inputId = `photo-slot-${Math.random().toString(36).slice(2)}`;
+
+  if (slot.url) {
+    return (
+      <div className="relative h-28 w-28 overflow-hidden rounded-lg border border-oma-gold/20">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={slot.url}
+          alt="Uploaded brand photo"
+          className="h-full w-full object-cover"
+        />
+        <button
+          type="button"
+          onClick={onRemove}
+          aria-label="Remove photo"
+          className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white hover:bg-red-600"
+        >
+          <X className="h-3.5 w-3.5" />
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <label
+      htmlFor={inputId}
+      className={cn(
+        "flex h-28 w-28 cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-oma-gold/40 text-oma-cocoa transition-colors hover:border-oma-gold hover:text-oma-plum",
+        slot.uploading && "pointer-events-none opacity-60",
+      )}
+    >
+      {slot.uploading ? (
+        <Loader2 className="h-5 w-5 animate-spin" />
+      ) : (
+        <ImagePlus className="h-5 w-5" />
+      )}
+      <span className="text-xs">
+        {slot.uploading ? "Uploading…" : "Add photo"}
+      </span>
+      <input
+        id={inputId}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        className="hidden"
+        disabled={slot.uploading}
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          e.target.value = "";
+          if (file) onFileSelected(file);
+        }}
+      />
+    </label>
+  );
+}
 
 const EMPTY_FORM = {
   brandName: "",
@@ -81,6 +152,9 @@ function parseApplicationResponse(json: unknown):
 export function JoinApplicationForm() {
   const [formData, setFormData] = useState({ ...EMPTY_FORM });
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [photoSlots, setPhotoSlots] = useState<PhotoSlot[]>(
+    Array.from({ length: MAX_PHOTOS }, () => ({ url: null, uploading: false })),
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [submittedApplicationId, setSubmittedApplicationId] = useState<
@@ -112,12 +186,73 @@ export function JoinApplicationForm() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handlePhotoSelected = async (index: number, file: File) => {
+    clearFieldError("imageUrls");
+    setPhotoSlots((prev) =>
+      prev.map((s, i) => (i === index ? { ...s, uploading: true } : s)),
+    );
+
+    const body = new FormData();
+    body.append("file", file);
+    try {
+      const res = await fetch("/api/designer-application/upload-image", {
+        method: "POST",
+        body,
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || typeof json.url !== "string") {
+        toast({
+          title: "Upload failed",
+          description:
+            typeof json.error === "string" ? json.error : "Please try again.",
+          variant: "destructive",
+        });
+        setPhotoSlots((prev) =>
+          prev.map((s, i) => (i === index ? { ...s, uploading: false } : s)),
+        );
+        return;
+      }
+      setPhotoSlots((prev) =>
+        prev.map((s, i) =>
+          i === index ? { url: json.url, uploading: false } : s,
+        ),
+      );
+    } catch {
+      toast({
+        title: "Upload failed",
+        description: "Please check your connection and try again.",
+        variant: "destructive",
+      });
+      setPhotoSlots((prev) =>
+        prev.map((s, i) => (i === index ? { ...s, uploading: false } : s)),
+      );
+    }
+  };
+
+  const handlePhotoRemove = (index: number) => {
+    setPhotoSlots((prev) =>
+      prev.map((s, i) => (i === index ? { url: null, uploading: false } : s)),
+    );
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
 
+    if (photoSlots.some((s) => s.uploading)) {
+      toast({
+        title: "Please wait for your photos to finish uploading",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setFieldErrors({});
-    const parsed = designerApplicationFormSchema.safeParse(formData);
+    const imageUrls = photoSlots.map((s) => s.url).filter((u): u is string => !!u);
+    const parsed = designerApplicationFormSchema.safeParse({
+      ...formData,
+      imageUrls,
+    });
     if (!parsed.success) {
       const next = zodFieldErrorsToRecord(parsed.error.flatten().fieldErrors);
       setFieldErrors(next);
@@ -126,7 +261,9 @@ export function JoinApplicationForm() {
         queueMicrotask(() => document.getElementById(firstInvalid)?.focus());
       }
       toast({
-        title: "Please fix the highlighted fields",
+        title: next.imageUrls
+          ? next.imageUrls
+          : "Please fix the highlighted fields",
         variant: "destructive",
       });
       return;
@@ -164,6 +301,12 @@ export function JoinApplicationForm() {
         });
         setShowConfirmationModal(true);
         setFormData({ ...EMPTY_FORM });
+        setPhotoSlots(
+          Array.from({ length: MAX_PHOTOS }, () => ({
+            url: null,
+            uploading: false,
+          })),
+        );
       } else {
         const errorMessage = !result.ok
           ? result.error
@@ -395,6 +538,29 @@ export function JoinApplicationForm() {
                 role="alert"
               >
                 {err("description")}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <Label>Photos of your work *</Label>
+            <p className="mb-2 text-sm text-muted-foreground">
+              Upload 1-3 photos - these populate your brand profile if
+              you&apos;re approved.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              {photoSlots.map((slot, i) => (
+                <PhotoUploadSlot
+                  key={i}
+                  slot={slot}
+                  onFileSelected={(file) => void handlePhotoSelected(i, file)}
+                  onRemove={() => handlePhotoRemove(i)}
+                />
+              ))}
+            </div>
+            {fieldErrors.imageUrls && (
+              <p className="mt-1 text-sm text-destructive" role="alert">
+                {fieldErrors.imageUrls}
               </p>
             )}
           </div>

@@ -37,6 +37,19 @@ function normalizeApplicantEmail(email: unknown): string {
   return email.trim().toLowerCase();
 }
 
+/**
+ * `brand_images.storage_path` is a path relative to the "brand-assets"
+ * bucket, not a full URL. Application photos are uploaded to that same
+ * bucket (see /api/designer-application/upload-image), so their public URL
+ * always has this prefix - strip it back off to get the relative path.
+ */
+function extractBrandAssetsStoragePath(url: string): string | null {
+  const base = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!base) return null;
+  const prefix = `${base}/storage/v1/object/public/brand-assets/`;
+  return url.startsWith(prefix) ? url.slice(prefix.length) : null;
+}
+
 /** Paginate through auth users - listUsers() defaults to a single page only. */
 async function findAuthUserIdByEmail(
   supabase: NonNullable<Awaited<ReturnType<typeof getAdminClient>>>,
@@ -397,6 +410,8 @@ async function setupBrandAndUserAccess(
         whatsapp: application.phone || existingBrand.whatsapp,
         founded_year:
           application.year_founded?.toString() || existingBrand.founded_year,
+        image:
+          existingBrand.image || application.image_urls?.[0] || undefined,
       };
 
       const { data: updatedBrand, error: updateError } = await supabase
@@ -436,6 +451,7 @@ async function setupBrandAndUserAccess(
           : undefined,
         whatsapp: application.phone || undefined, // Map phone to whatsapp field
         founded_year: application.year_founded?.toString() || undefined,
+        image: application.image_urls?.[0] || undefined,
       };
 
       const { data: createdBrand, error: brandError } = await supabase
@@ -455,6 +471,46 @@ async function setupBrandAndUserAccess(
 
       newBrand = createdBrand;
       brandCreated = true;
+    }
+
+    // Step 1b: Copy the applicant's submitted photos into brand_images (the
+    // table the public brand profile page actually reads), unless this brand
+    // already has some (avoids piling up duplicates on re-approval).
+    if (application.image_urls && application.image_urls.length > 0) {
+      try {
+        const { data: existingBrandImages } = await supabase
+          .from("brand_images")
+          .select("id")
+          .eq("brand_id", brandId)
+          .limit(1);
+
+        if (!existingBrandImages || existingBrandImages.length === 0) {
+          const rows = (application.image_urls as string[])
+            .map((url, index) => ({
+              brand_id: brandId,
+              role: index === 0 ? "cover" : "gallery",
+              storage_path: extractBrandAssetsStoragePath(url),
+            }))
+            .filter((row) => !!row.storage_path);
+
+          if (rows.length > 0) {
+            const { error: brandImagesError } = await supabase
+              .from("brand_images")
+              .insert(rows);
+            if (brandImagesError) {
+              console.warn(
+                "⚠️ Failed to copy application photos to brand_images:",
+                brandImagesError,
+              );
+            }
+          }
+        }
+      } catch (brandImagesException) {
+        console.warn(
+          "⚠️ Exception copying application photos to brand_images:",
+          brandImagesException,
+        );
+      }
     }
 
     // Step 2: Check if user exists

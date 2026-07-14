@@ -37,4 +37,5 @@ export interface DesignerApplication {
   updated_at: string;
   brand_id?: string | null;
   brand_verified?: boolean;
+  image_urls?: string[] | null;
 }

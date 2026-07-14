@@ -97,6 +97,7 @@ export async function POST(request: NextRequest) {
       category: body.category,
       description: body.description,
       year_founded: yearFounded,
+      image_urls: body.imageUrls,
       status: "new" as const,
     };
 
