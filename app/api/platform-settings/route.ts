@@ -7,16 +7,18 @@ const SETTING_KEYS = [
   "our_story",
   "tailored_services",
   "hero_video_id",
+  "welcome_video_id",
 ] as const;
 
 const MAP_DB_TO_API: Record<
   (typeof SETTING_KEYS)[number],
-  "about" | "ourStory" | "tailoredServices" | "heroVideoId"
+  "about" | "ourStory" | "tailoredServices" | "heroVideoId" | "welcomeVideoId"
 > = {
   about_omahub: "about",
   our_story: "ourStory",
   tailored_services: "tailoredServices",
   hero_video_id: "heroVideoId",
+  welcome_video_id: "welcomeVideoId",
 };
 
 export async function GET() {
@@ -40,6 +42,7 @@ export async function GET() {
       ourStory: "",
       tailoredServices: "",
       heroVideoId: "",
+      welcomeVideoId: "",
     };
 
     for (const row of data ?? []) {
@@ -100,7 +103,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { about, ourStory, tailoredServices, heroVideoId } = parsed.data;
+    const { about, ourStory, tailoredServices, heroVideoId, welcomeVideoId } =
+      parsed.data;
     const now = new Date().toISOString();
 
     const updates = [] as Array<{ key: string; value: string; updated_at: string }>;
@@ -116,6 +120,9 @@ export async function POST(req: NextRequest) {
     }
     if (heroVideoId !== undefined) {
       updates.push({ key: "hero_video_id", value: heroVideoId, updated_at: now });
+    }
+    if (welcomeVideoId !== undefined) {
+      updates.push({ key: "welcome_video_id", value: welcomeVideoId, updated_at: now });
     }
 
     const { error: upsertError } = await supabase

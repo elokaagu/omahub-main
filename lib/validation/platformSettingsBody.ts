@@ -13,6 +13,7 @@ export const platformSettingsUpdateSchema = z
     ourStory: contentField.optional(),
     tailoredServices: contentField.optional(),
     heroVideoId: videoIdField.optional(),
+    welcomeVideoId: videoIdField.optional(),
   })
   .strict()
   .refine(
@@ -20,7 +21,8 @@ export const platformSettingsUpdateSchema = z
       data.about !== undefined ||
       data.ourStory !== undefined ||
       data.tailoredServices !== undefined ||
-      data.heroVideoId !== undefined,
+      data.heroVideoId !== undefined ||
+      data.welcomeVideoId !== undefined,
     { message: "At least one setting field is required" }
   );
 

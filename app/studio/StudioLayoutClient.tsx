@@ -33,6 +33,7 @@ import {
   Mail,
   List,
   Calendar,
+  Sparkles,
 } from "@/lib/utils/iconImports";
 import { TailoringEventProvider } from "@/contexts/NavigationContext";
 import ErrorBoundary from "../components/ErrorBoundary";
@@ -127,6 +128,12 @@ function buildNavigationItems(
   ];
 
   const permissionItems: NavigationItem[] = [
+    {
+      href: "/studio/welcome",
+      label: "Welcome",
+      icon: Sparkles,
+      permission: "studio.access",
+    },
     {
       href: "/studio/brands",
       label: "Brands",

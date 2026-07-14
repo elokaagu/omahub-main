@@ -45,23 +45,33 @@ export default function SettingsPage() {
   const [heroVideoId, setHeroVideoId] = useState("");
   const [isLoadingVideoId, setIsLoadingVideoId] = useState(true);
   const [isSavingVideoId, setIsSavingVideoId] = useState(false);
+  const [welcomeVideoId, setWelcomeVideoId] = useState("");
+  const [isLoadingWelcomeVideoId, setIsLoadingWelcomeVideoId] = useState(true);
+  const [isSavingWelcomeVideoId, setIsSavingWelcomeVideoId] = useState(false);
 
   // Check if user has super admin permissions
   const hasSettingsPermission = permissions.includes("studio.settings.manage");
   const isSuperAdmin = user?.role === "super_admin" || hasSettingsPermission;
 
-  const fetchHeroVideoId = useCallback(async () => {
+  const fetchVideoSettings = useCallback(async () => {
     try {
       setIsLoadingVideoId(true);
+      setIsLoadingWelcomeVideoId(true);
       const response = await fetch("/api/platform-settings");
       const data = await response.json();
-      if (response.ok && typeof data.heroVideoId === "string") {
-        setHeroVideoId(data.heroVideoId);
+      if (response.ok) {
+        if (typeof data.heroVideoId === "string") {
+          setHeroVideoId(data.heroVideoId);
+        }
+        if (typeof data.welcomeVideoId === "string") {
+          setWelcomeVideoId(data.welcomeVideoId);
+        }
       }
     } catch (error) {
-      console.error("Error fetching hero video id:", error);
+      console.error("Error fetching video settings:", error);
     } finally {
       setIsLoadingVideoId(false);
+      setIsLoadingWelcomeVideoId(false);
     }
   }, []);
 
@@ -89,6 +99,33 @@ export default function SettingsPage() {
       toast.error("Something went wrong. Please try again.");
     } finally {
       setIsSavingVideoId(false);
+    }
+  };
+
+  const handleSaveWelcomeVideoId = async () => {
+    const trimmed = welcomeVideoId.trim();
+    if (!/^\d+$/.test(trimmed)) {
+      toast.error("Enter just the numeric Vimeo video ID");
+      return;
+    }
+    setIsSavingWelcomeVideoId(true);
+    try {
+      const response = await fetch("/api/platform-settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ welcomeVideoId: trimmed }),
+      });
+      const data = await response.json();
+      if (response.ok && data.success) {
+        toast.success("Designer welcome video updated");
+      } else {
+        toast.error(data.error || "Failed to update the welcome video");
+      }
+    } catch (error) {
+      console.error("Error saving welcome video id:", error);
+      toast.error("Something went wrong. Please try again.");
+    } finally {
+      setIsSavingWelcomeVideoId(false);
     }
   };
 
@@ -121,9 +158,9 @@ export default function SettingsPage() {
   useEffect(() => {
     if (isSuperAdmin) {
       void fetchPlatformStatus();
-      void fetchHeroVideoId();
+      void fetchVideoSettings();
     }
-  }, [isSuperAdmin, fetchPlatformStatus, fetchHeroVideoId]);
+  }, [isSuperAdmin, fetchPlatformStatus, fetchVideoSettings]);
 
   if (loading || !user || permissionsLoading) {
     return (
@@ -414,6 +451,47 @@ export default function SettingsPage() {
                 className="w-full bg-oma-plum hover:bg-oma-plum/90 text-white"
               >
                 {isSavingVideoId ? "Saving…" : "Save Video"}
+              </Button>
+            </CardFooter>
+          </Card>
+
+          {/* Designer Welcome Video */}
+          <Card className="border-oma-beige">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-oma-plum font-canela">
+                <Film className="h-5 w-5" />
+                Designer Welcome Video
+              </CardTitle>
+              <CardDescription className="text-oma-cocoa">
+                Shown to designers on the &quot;Welcome&quot; page in Studio
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-oma-cocoa/80 mb-4">
+                Introduces how OmaHub works and sets expectations for new
+                designers. Paste the numeric Vimeo video ID, same as the
+                homepage video above.
+              </p>
+              {isLoadingWelcomeVideoId ? (
+                <div className="text-center py-2">
+                  <div className="h-5 w-5 border-2 border-oma-plum border-t-transparent rounded-full mx-auto" />
+                </div>
+              ) : (
+                <Input
+                  value={welcomeVideoId}
+                  onChange={(e) => setWelcomeVideoId(e.target.value)}
+                  placeholder="1206857643"
+                  inputMode="numeric"
+                />
+              )}
+            </CardContent>
+            <CardFooter>
+              <Button
+                onClick={handleSaveWelcomeVideoId}
+                disabled={isSavingWelcomeVideoId || isLoadingWelcomeVideoId}
+                className="w-full bg-oma-plum hover:bg-oma-plum/90 text-white"
+              >
+                {isSavingWelcomeVideoId ? "Saving…" : "Save Video"}
               </Button>
             </CardFooter>
           </Card>

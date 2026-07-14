@@ -140,4 +140,5 @@ export {
   Square,
   Circle,
   Triangle,
+  Sparkles,
 } from "lucide-react";
