@@ -24,6 +24,7 @@ import {
   Eye,
   EyeOff,
   Film,
+  UserPlus,
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -48,6 +49,9 @@ export default function SettingsPage() {
   const [welcomeVideoId, setWelcomeVideoId] = useState("");
   const [isLoadingWelcomeVideoId, setIsLoadingWelcomeVideoId] = useState(true);
   const [isSavingWelcomeVideoId, setIsSavingWelcomeVideoId] = useState(false);
+  const [customerSignupEnabled, setCustomerSignupEnabled] = useState(false);
+  const [isLoadingSignupSetting, setIsLoadingSignupSetting] = useState(true);
+  const [isSavingSignupSetting, setIsSavingSignupSetting] = useState(false);
 
   // Check if user has super admin permissions
   const hasSettingsPermission = permissions.includes("studio.settings.manage");
@@ -57,6 +61,7 @@ export default function SettingsPage() {
     try {
       setIsLoadingVideoId(true);
       setIsLoadingWelcomeVideoId(true);
+      setIsLoadingSignupSetting(true);
       const response = await fetch("/api/platform-settings");
       const data = await response.json();
       if (response.ok) {
@@ -66,14 +71,45 @@ export default function SettingsPage() {
         if (typeof data.welcomeVideoId === "string") {
           setWelcomeVideoId(data.welcomeVideoId);
         }
+        setCustomerSignupEnabled(data.customerSignupEnabled === "true");
       }
     } catch (error) {
       console.error("Error fetching video settings:", error);
     } finally {
       setIsLoadingVideoId(false);
       setIsLoadingWelcomeVideoId(false);
+      setIsLoadingSignupSetting(false);
     }
   }, []);
+
+  const handleToggleCustomerSignup = async (nextEnabled: boolean) => {
+    setIsSavingSignupSetting(true);
+    try {
+      const response = await fetch("/api/platform-settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customerSignupEnabled: nextEnabled ? "true" : "false",
+        }),
+      });
+      const data = await response.json();
+      if (response.ok && data.success) {
+        setCustomerSignupEnabled(nextEnabled);
+        toast.success(
+          nextEnabled
+            ? "Customer signup is now open"
+            : "Customer signup is now hidden"
+        );
+      } else {
+        toast.error(data.error || "Failed to update this setting");
+      }
+    } catch (error) {
+      console.error("Error saving customer signup setting:", error);
+      toast.error("Something went wrong. Please try again.");
+    } finally {
+      setIsSavingSignupSetting(false);
+    }
+  };
 
   const handleSaveHeroVideoId = async () => {
     const trimmed = heroVideoId.trim();
@@ -493,6 +529,73 @@ export default function SettingsPage() {
               >
                 {isSavingWelcomeVideoId ? "Saving…" : "Save Video"}
               </Button>
+            </CardFooter>
+          </Card>
+
+          {/* Customer Accounts */}
+          <Card className="border-oma-beige">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-oma-plum font-canela">
+                <UserPlus className="h-5 w-5" />
+                Customer Accounts
+              </CardTitle>
+              <CardDescription className="text-oma-cocoa">
+                Control whether new customers can sign up
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {isLoadingSignupSetting ? (
+                <div className="text-center py-2">
+                  <div className="h-5 w-5 border-2 border-oma-plum border-t-transparent rounded-full mx-auto" />
+                </div>
+              ) : (
+                <>
+                  <div className="mb-4">
+                    <div
+                      className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium ${
+                        customerSignupEnabled
+                          ? "bg-green-100 text-green-800 border border-green-200"
+                          : "bg-amber-100 text-amber-800 border border-amber-200"
+                      }`}
+                    >
+                      {customerSignupEnabled
+                        ? "Signup is open"
+                        : "Signup is hidden"}
+                    </div>
+                  </div>
+                  <p className="text-sm text-oma-cocoa/80">
+                    {customerSignupEnabled
+                      ? "Visitors can create a customer account from the header and /signup."
+                      : "OmaHub isn't selling directly through the site yet, so \"Sign up\" is hidden everywhere for regular visitors. \"Sign in\" still works normally, since designers and admins need it. Turn this on when preorders launch with the next edition."}
+                  </p>
+                </>
+              )}
+            </CardContent>
+            <CardFooter className="flex gap-2">
+              {!isLoadingSignupSetting && (
+                <>
+                  <Button
+                    onClick={() => handleToggleCustomerSignup(true)}
+                    disabled={isSavingSignupSetting || customerSignupEnabled}
+                    variant={customerSignupEnabled ? "secondary" : "default"}
+                    className={`flex-1 ${
+                      !customerSignupEnabled
+                        ? "bg-oma-plum hover:bg-oma-plum/90 text-white"
+                        : ""
+                    }`}
+                  >
+                    Open Signup
+                  </Button>
+                  <Button
+                    onClick={() => handleToggleCustomerSignup(false)}
+                    disabled={isSavingSignupSetting || !customerSignupEnabled}
+                    variant={!customerSignupEnabled ? "secondary" : "outline"}
+                    className="flex-1"
+                  >
+                    Hide Signup
+                  </Button>
+                </>
+              )}
             </CardFooter>
           </Card>
 

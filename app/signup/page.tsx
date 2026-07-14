@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useCustomerSignupEnabled } from "@/hooks/useCustomerSignupEnabled";
 
 const LOGIN_CONFIRM_MESSAGE =
   "Check your email for a confirmation link before signing in.";
@@ -205,7 +206,31 @@ function SignupForm() {
   );
 }
 
+function SignupNotYetOpen() {
+  return (
+    <div className="rounded-lg bg-white px-4 py-8 text-center shadow sm:px-10">
+      <p className="text-sm leading-relaxed text-oma-cocoa">
+        Customer accounts aren&apos;t needed yet - OmaHub is currently
+        focused on helping you discover African designers, not checkout on
+        the site. Accounts open up alongside preorders at our next edition.
+      </p>
+      <p className="mt-4 text-sm text-oma-cocoa">
+        A designer?{" "}
+        <Link
+          href="/join"
+          className="font-medium text-oma-plum hover:text-oma-plum/80"
+        >
+          Apply here
+        </Link>{" "}
+        instead.
+      </p>
+    </div>
+  );
+}
+
 export default function SignupPage() {
+  const customerSignupEnabled = useCustomerSignupEnabled();
+
   return (
     <div className="flex min-h-screen flex-col justify-center bg-gradient-to-b from-oma-beige/50 to-white py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
@@ -218,9 +243,13 @@ export default function SignupPage() {
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white px-4 py-8 shadow sm:rounded-lg sm:px-10">
-          <SignupForm />
-        </div>
+        {customerSignupEnabled ? (
+          <div className="bg-white px-4 py-8 shadow sm:rounded-lg sm:px-10">
+            <SignupForm />
+          </div>
+        ) : (
+          <SignupNotYetOpen />
+        )}
       </div>
     </div>
   );

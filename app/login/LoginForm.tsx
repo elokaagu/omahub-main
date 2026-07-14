@@ -14,9 +14,11 @@ import { Eye, EyeOff } from "lucide-react";
 import { deriveLoginUrlState } from "./loginSearchParams";
 import { describeSignInFailure } from "./describeSignInFailure";
 import { LoginAuthBanners } from "./LoginAuthBanners";
+import { useCustomerSignupEnabled } from "@/hooks/useCustomerSignupEnabled";
 
 function LoginFormInner() {
   const searchParams = useSearchParams();
+  const customerSignupEnabled = useCustomerSignupEnabled();
   const urlState = useMemo(
     () =>
       deriveLoginUrlState(
@@ -175,15 +177,17 @@ function LoginFormInner() {
         </form>
       </div>
 
-      <p className="mt-6 text-center text-xs text-oma-cocoa/80 sm:text-sm">
-        New to OmaHub?{" "}
-        <Link
-          href="/signup"
-          className="font-semibold text-oma-plum underline-offset-4 hover:underline"
-        >
-          Create an account
-        </Link>
-      </p>
+      {customerSignupEnabled && (
+        <p className="mt-6 text-center text-xs text-oma-cocoa/80 sm:text-sm">
+          New to OmaHub?{" "}
+          <Link
+            href="/signup"
+            className="font-semibold text-oma-plum underline-offset-4 hover:underline"
+          >
+            Create an account
+          </Link>
+        </p>
+      )}
     </>
   );
 }

@@ -17,6 +17,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { signIn, signUp } from "@/lib/services/authService";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCustomerSignupEnabled } from "@/hooks/useCustomerSignupEnabled";
 
 interface AuthRequiredModalProps {
   isOpen: boolean;
@@ -33,10 +34,12 @@ export function AuthRequiredModal({
   onClose,
   title = "Authentication Required",
   message = "Please sign in to continue with this action.",
-  showSignUp = true,
+  showSignUp: showSignUpProp = true,
   redirectTo,
   onSuccess,
 }: AuthRequiredModalProps) {
+  const customerSignupEnabled = useCustomerSignupEnabled();
+  const showSignUp = showSignUpProp && customerSignupEnabled;
   const [isSignIn, setIsSignIn] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");

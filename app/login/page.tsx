@@ -4,6 +4,7 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import { LoginForm } from "./LoginForm";
 import { LoginHeroGalleryClient } from "./LoginHeroGalleryClient";
 import { getLoginHeroBrandSlides } from "@/lib/brands/getLoginHeroBrandSlides";
+import { getCustomerSignupEnabled } from "@/lib/services/customerSignupSetting";
 
 const MOBILE_FALLBACK_IMAGE =
   "/lovable-uploads/bb152c0b-6378-419b-a0e6-eafce44631b2.png";
@@ -29,6 +30,7 @@ function LoginWordmark() {
 export default async function LoginPage() {
   const heroSlides = await getLoginHeroBrandSlides();
   const mobileCover = heroSlides[0]?.imageUrl ?? MOBILE_FALLBACK_IMAGE;
+  const customerSignupEnabled = await getCustomerSignupEnabled();
 
   return (
     <div className="flex min-h-[calc(100vh-5rem)] w-full flex-col bg-[#FAF9F6] lg:flex-row lg:min-h-[calc(100dvh-5rem)]">
@@ -42,14 +44,20 @@ export default async function LoginPage() {
               Welcome back
             </h1>
             <p className="mt-3 text-sm leading-relaxed text-oma-cocoa sm:text-base">
-              Enter your credentials, or{" "}
-              <Link
-                href="/signup"
-                className="font-semibold text-oma-plum underline-offset-4 hover:underline"
-              >
-                sign up
-              </Link>{" "}
-              to join OmaHub.
+              {customerSignupEnabled ? (
+                <>
+                  Enter your credentials, or{" "}
+                  <Link
+                    href="/signup"
+                    className="font-semibold text-oma-plum underline-offset-4 hover:underline"
+                  >
+                    sign up
+                  </Link>{" "}
+                  to join OmaHub.
+                </>
+              ) : (
+                "Enter your credentials to continue."
+              )}
             </p>
           </div>
 

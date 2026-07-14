@@ -31,6 +31,7 @@ import { supabase } from "@/lib/supabase";
 import { checkCategoryHasBrands } from "@/lib/services/categoryService";
 import { triggerSearchModal } from "@/components/ui/search-modal";
 import { useStudioPermissions } from "@/hooks/useStudioPermissions";
+import { useCustomerSignupEnabled } from "@/hooks/useCustomerSignupEnabled";
 
 const collectionItems = collections.map((category) => ({
   name: category,
@@ -89,6 +90,7 @@ const fallbackNavigationItems: NavigationItem[] = [
 
 export default function Header() {
   const { user, signOut } = useAuth();
+  const customerSignupEnabled = useCustomerSignupEnabled();
   const { hasStudioAccess } = useStudioPermissions(user?.id);
   const showStudioInNav =
     user?.role === "admin" ||
@@ -666,14 +668,19 @@ export default function Header() {
                         Sign In
                       </NavigationLink>
 
-                      {/* Sign Up Link */}
-                      <NavigationLink
-                        href="/signup"
-                        onClick={() => setMobileMenuOpen(false)}
-                        className="-mx-3 block text-center rounded-lg px-3 py-2 text-sm leading-7 text-oma-plum hover:bg-oma-beige/50 transition-colors"
-                      >
-                        Don't have an account? Sign up
-                      </NavigationLink>
+                      {/* Sign Up Link: hidden while customer signup is off
+                          (Studio > Settings > Customer Accounts). Designers
+                          apply via /join instead, and already get an account
+                          on approval. */}
+                      {customerSignupEnabled && (
+                        <NavigationLink
+                          href="/signup"
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="-mx-3 block text-center rounded-lg px-3 py-2 text-sm leading-7 text-oma-plum hover:bg-oma-beige/50 transition-colors"
+                        >
+                          Don't have an account? Sign up
+                        </NavigationLink>
+                      )}
                     </div>
                   )}
                 </div>

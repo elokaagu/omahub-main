@@ -8,18 +8,32 @@ const SETTING_KEYS = [
   "tailored_services",
   "hero_video_id",
   "welcome_video_id",
+  "customer_signup_enabled",
 ] as const;
 
 const MAP_DB_TO_API: Record<
   (typeof SETTING_KEYS)[number],
-  "about" | "ourStory" | "tailoredServices" | "heroVideoId" | "welcomeVideoId"
+  | "about"
+  | "ourStory"
+  | "tailoredServices"
+  | "heroVideoId"
+  | "welcomeVideoId"
+  | "customerSignupEnabled"
 > = {
   about_omahub: "about",
   our_story: "ourStory",
   tailored_services: "tailoredServices",
   hero_video_id: "heroVideoId",
   welcome_video_id: "welcomeVideoId",
+  customer_signup_enabled: "customerSignupEnabled",
 };
+
+/**
+ * No row yet = customer signup is off: OmaHub isn't selling directly through
+ * the site yet, so there's no reason to push customers to create accounts
+ * until preorders launch with the next edition.
+ */
+const DEFAULT_CUSTOMER_SIGNUP_ENABLED = "false";
 
 export async function GET() {
   try {
@@ -43,6 +57,7 @@ export async function GET() {
       tailoredServices: "",
       heroVideoId: "",
       welcomeVideoId: "",
+      customerSignupEnabled: DEFAULT_CUSTOMER_SIGNUP_ENABLED,
     };
 
     for (const row of data ?? []) {
@@ -103,8 +118,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { about, ourStory, tailoredServices, heroVideoId, welcomeVideoId } =
-      parsed.data;
+    const {
+      about,
+      ourStory,
+      tailoredServices,
+      heroVideoId,
+      welcomeVideoId,
+      customerSignupEnabled,
+    } = parsed.data;
     const now = new Date().toISOString();
 
     const updates = [] as Array<{ key: string; value: string; updated_at: string }>;
@@ -123,6 +144,13 @@ export async function POST(req: NextRequest) {
     }
     if (welcomeVideoId !== undefined) {
       updates.push({ key: "welcome_video_id", value: welcomeVideoId, updated_at: now });
+    }
+    if (customerSignupEnabled !== undefined) {
+      updates.push({
+        key: "customer_signup_enabled",
+        value: customerSignupEnabled,
+        updated_at: now,
+      });
     }
 
     const { error: upsertError } = await supabase
