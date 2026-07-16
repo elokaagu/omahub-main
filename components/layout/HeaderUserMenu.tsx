@@ -23,8 +23,6 @@ import {
 import type { User as AuthUser } from "@/lib/services/authService";
 
 type HeaderUserMenuProps = {
-  scrolled: boolean;
-  isHomePage: boolean;
   showStudio: boolean;
   onStudioNavigate: () => void | Promise<void>;
   studioNavigating: boolean;
@@ -39,8 +37,6 @@ function displayLabel(user: AuthUser) {
 }
 
 export function HeaderUserMenu({
-  scrolled,
-  isHomePage,
   showStudio,
   onStudioNavigate,
   studioNavigating,
@@ -52,7 +48,6 @@ export function HeaderUserMenu({
 
   if (!user) return null;
 
-  const onHero = !scrolled && isHomePage;
   const label = displayLabel(user);
 
   const handleSignOut = async () => {
@@ -81,12 +76,7 @@ export function HeaderUserMenu({
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className={cn(
-            "inline-flex h-10 shrink-0 select-none items-center gap-2 rounded-lg border px-3 text-sm font-medium outline-none transition-[color,background-color,border-color] duration-200 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-oma-plum/40",
-            onHero
-              ? "border-white/35 bg-white/12 text-white hover:bg-white/20 backdrop-blur-sm"
-              : "border-gray-200 bg-gray-50 text-gray-900 shadow-sm hover:bg-gray-100"
-          )}
+          className="inline-flex h-10 shrink-0 select-none items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm font-medium text-gray-900 shadow-sm outline-none transition-[color,background-color,border-color] duration-200 hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-oma-plum/40"
           aria-expanded={open}
           aria-haspopup="menu"
           aria-label={`Account menu for ${label}`}
@@ -103,14 +93,7 @@ export function HeaderUserMenu({
               </AvatarFallback>
             </Avatar>
           ) : (
-            <span
-              className={cn(
-                "flex h-7 w-7 items-center justify-center rounded-full border",
-                onHero
-                  ? "border-white/40 bg-white/15 text-white"
-                  : "border-gray-200 bg-white text-gray-700"
-              )}
-            >
+            <span className="flex h-7 w-7 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700">
               <User className="h-3.5 w-3.5" aria-hidden />
             </span>
           )}

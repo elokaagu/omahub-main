@@ -16,7 +16,7 @@ import { HeaderUserMenu } from "@/components/layout/HeaderUserMenu";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigation } from "@/contexts/NavigationContext";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { triggerSearchModal } from "@/components/ui/search-modal";
 import { useStudioPermissions } from "@/hooks/useStudioPermissions";
 import { useCustomerSignupEnabled } from "@/hooks/useCustomerSignupEnabled";
@@ -43,23 +43,11 @@ export default function Header() {
     hasStudioAccess;
   const { setIsNavigating } = useNavigation();
   const router = useRouter();
-  const pathname = usePathname();
-  const isHomePage = pathname === "/";
   const [menuOpen, setMenuOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
   const [isNavigatingToStudio, setIsNavigatingToStudio] = useState(false);
   const drawerRef = useRef<HTMLDivElement>(null);
 
   const closeMenu = () => setMenuOpen(false);
-
-  // Header background: solid once scrolled or off the (transparent) home hero.
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const handleScroll = () => setScrolled(window.scrollY > 20);
-    handleScroll();
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   // Lock page scroll while the drawer is open.
   useEffect(() => {
@@ -138,34 +126,20 @@ export default function Header() {
     }
   };
 
-  const onDark = !scrolled && isHomePage;
-
   const iconButtonClass = cn(
     "inline-flex size-9 shrink-0 items-center justify-center rounded-full transition-colors duration-200 sm:size-10",
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset",
-    onDark
-      ? "text-white hover:bg-white/10 focus-visible:ring-white/40"
-      : "text-oma-black hover:text-oma-plum hover:bg-oma-beige/20 focus-visible:ring-oma-plum/35"
+    "text-oma-black hover:text-oma-plum hover:bg-oma-beige/20 focus-visible:ring-oma-plum/35"
   );
 
   return (
-    <header
-      className={cn(
-        "fixed top-0 left-0 right-0 z-[1000] transition-all duration-300",
-        onDark
-          ? "bg-transparent"
-          : "bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-100"
-      )}
-    >
+    <header className="fixed top-0 left-0 right-0 z-[1000] border-b border-gray-100 bg-white/95 shadow-sm backdrop-blur-md transition-all duration-300">
       <nav className="mx-auto grid w-full grid-cols-[1fr_auto_1fr] items-center gap-2 p-6 lg:px-8">
         {/* Menu button, opens the drawer at every breakpoint */}
         <div className="flex justify-self-start">
           <button
             type="button"
-            className={cn(
-              "-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 transition-colors",
-              onDark ? "text-white" : "text-oma-black"
-            )}
+            className="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-oma-black transition-colors"
             onClick={() => setMenuOpen(true)}
             aria-expanded={menuOpen}
             aria-controls="site-menu"
@@ -179,10 +153,7 @@ export default function Header() {
         <NavigationLink href="/" className="justify-self-center p-1.5">
           <span className="sr-only">OmaHub</span>
           <Image
-            className={cn(
-              "h-5 w-auto transition-all duration-300 sm:h-6",
-              onDark ? "brightness-0 invert" : "brightness-0"
-            )}
+            className="h-5 w-auto brightness-0 transition-all duration-300 sm:h-6"
             src="/lovable-uploads/omahub-logo.png"
             alt="OmaHub"
             width={126}
@@ -204,8 +175,6 @@ export default function Header() {
 
           {user ? (
             <HeaderUserMenu
-              scrolled={scrolled}
-              isHomePage={isHomePage}
               showStudio={showStudioInNav}
               onStudioNavigate={handleStudioNavigation}
               studioNavigating={isNavigatingToStudio}

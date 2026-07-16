@@ -21,7 +21,7 @@ export function EditorialHero({
     : "OmaHub, between editions";
 
   return (
-    <section className="relative overflow-hidden bg-oma-black text-white">
+    <section className="relative overflow-hidden bg-oma-cream text-oma-black">
       {/* Subtle diagonal grid, per the editorial mockup */}
       <div
         aria-hidden
@@ -32,12 +32,18 @@ export function EditorialHero({
         }}
       />
 
+      {/* Fades the cream background into the beige of the section below */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-oma-beige sm:h-56"
+      />
+
       <div className="relative z-10 mx-auto flex min-h-[92vh] max-w-7xl flex-col justify-center px-4 py-24 sm:px-6 lg:px-8">
         <div className="grid items-center gap-12 lg:grid-cols-[3fr_2fr]">
           <div>
             <div className="mb-10 flex items-center gap-4">
               <span aria-hidden className="h-px w-12 bg-oma-gold" />
-              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oma-gold sm:text-sm">
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oma-cocoa sm:text-sm">
                 {eyebrow}
               </p>
             </div>
@@ -45,17 +51,17 @@ export function EditorialHero({
             <h1 className="font-canela text-5xl leading-[1.05] sm:text-7xl lg:text-8xl">
               African fashion,
               <br />
-              <span className="text-oma-gold">curated for you.</span>
+              <span className="text-oma-plum">curated for you.</span>
             </h1>
 
-            <p className="mt-8 max-w-xl text-lg leading-relaxed text-white/80">
+            <p className="mt-8 max-w-xl text-lg leading-relaxed text-oma-black/70">
               OmaHub is between editions. The next drop spotlights African
               designers you need to know, verified, curated, and ready to
               wear. Get early access.
             </p>
 
             {upcomingEdition?.applicationsOpen && (
-              <p className="mt-8 flex items-center gap-3 text-sm font-semibold uppercase tracking-[0.2em] text-oma-gold">
+              <p className="mt-8 flex items-center gap-3 text-sm font-semibold uppercase tracking-[0.2em] text-oma-plum">
                 <span
                   aria-hidden
                   className="h-2 w-2 rounded-full bg-oma-gold"
@@ -67,7 +73,7 @@ export function EditorialHero({
             <div className="mt-8">
               <EmailCaptureForm
                 source="website"
-                variant="dark"
+                variant="light"
                 buttonLabel="Notify me"
                 successMessage="You're in. Early access details land in your inbox first."
               />
@@ -76,7 +82,7 @@ export function EditorialHero({
             {latestPastEdition && (
               <Link
                 href={`/editions/${latestPastEdition.slug}`}
-                className="mt-10 inline-flex items-center gap-2 text-sm uppercase tracking-[0.2em] text-white/60 transition-colors hover:text-oma-gold"
+                className="mt-10 inline-flex items-center gap-2 text-sm uppercase tracking-[0.2em] text-oma-cocoa transition-colors hover:text-oma-plum"
               >
                 Watch, OmaHub Edition {latestPastEdition.number}
                 <span aria-hidden>→</span>
@@ -86,7 +92,7 @@ export function EditorialHero({
 
           {/* Hero video for the next edition */}
           <div className="hidden justify-end lg:flex">
-            <div className="relative aspect-[3/4] w-full max-w-sm overflow-hidden rounded-2xl border border-oma-gold/30 bg-oma-black/20 shadow-2xl">
+            <div className="relative aspect-[3/4] w-full max-w-sm overflow-hidden rounded-2xl border border-oma-gold/50 bg-oma-black/20 shadow-2xl">
               <video
                 className="absolute inset-0 h-full w-full object-cover"
                 src="/omahub_hero.mp4"
