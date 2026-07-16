@@ -1,91 +1,35 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import Link from "next/link";
 import Image from "next/image";
 import {
   Menu,
   X,
   Search,
-  ChevronDown,
+  ChevronRight,
   User,
-  Heart,
-  Palette,
-  LogOut,
   ShoppingBag,
 } from "@/components/ui/icons";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { NavigationLink } from "@/components/ui/navigation-link";
 import { HeaderUserMenu } from "@/components/layout/HeaderUserMenu";
-import { collections } from "@/lib/data/directory";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigation } from "@/contexts/NavigationContext";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useRouter, usePathname } from "next/navigation";
-import {
-  getNavigationItems,
-  type NavigationItem,
-} from "@/components/ui/navigation";
-import { supabase } from "@/lib/supabase";
-import { checkCategoryHasBrands } from "@/lib/services/categoryService";
 import { triggerSearchModal } from "@/components/ui/search-modal";
 import { useStudioPermissions } from "@/hooks/useStudioPermissions";
 import { useCustomerSignupEnabled } from "@/hooks/useCustomerSignupEnabled";
 
-const collectionItems = collections.map((category) => ({
-  name: category,
-  href: `/directory?category=${category.replace(/ /g, "+")}`,
-}));
+const isDev = process.env.NODE_ENV === "development";
 
-const navigation = [
+// Primary navigation shown in the drawer, in order.
+const primaryLinks: { name: string; href: string; accent?: boolean }[] = [
   { name: "Home", href: "/" },
   { name: "Archive", href: "/editions" },
   { name: "How It Works", href: "/how-it-works" },
   { name: "About", href: "/about" },
-];
-
-// Category dropdowns (Collections / Tailored) hidden while the site leads
-// with editions; discovery stays available via the directory.
-const SHOW_CATEGORY_NAV = false;
-const isDev = process.env.NODE_ENV === "development";
-
-// Fallback navigation items
-const fallbackNavigationItems: NavigationItem[] = [
-  {
-    title: "Collections",
-    href: "/collections",
-    description: "Discover curated fashion collections and styles",
-    items: [
-      {
-        title: "High End Fashion",
-        href: "/directory?category=High+End+Fashion",
-      },
-      { title: "Ready to Wear", href: "/directory?category=Ready+to+Wear" },
-      {
-        title: "Vacation & Resort",
-        href: "/directory?category=Vacation+%26+Resort",
-      },
-      { title: "Made to Measure", href: "/directory?category=Made+to+Measure" },
-      {
-        title: "Streetwear & Urban",
-        href: "/directory?category=Streetwear+%26+Urban",
-      },
-      { title: "Accessories", href: "/directory?category=Accessories" },
-    ],
-  },
-  {
-    title: "Tailored",
-    href: "/tailored",
-    description: "Masters of craft creating perfectly fitted garments",
-    items: [
-      { title: "Browse All Tailors", href: "/tailors" },
-      { title: "Bridal", href: "/directory?category=Bridal" },
-      { title: "Custom Design", href: "/directory?category=Custom+Design" },
-      { title: "Evening Gowns", href: "/directory?category=Evening+Gowns" },
-      { title: "Alterations", href: "/directory?category=Alterations" },
-    ],
-  },
+  { name: "Explore Brands", href: "/directory", accent: true },
 ];
 
 export default function Header() {
@@ -101,140 +45,72 @@ export default function Header() {
   const router = useRouter();
   const pathname = usePathname();
   const isHomePage = pathname === "/";
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [isNavigatingToStudio, setIsNavigatingToStudio] = useState(false);
-  const [dynamicNavigationItems, setDynamicNavigationItems] = useState<
-    NavigationItem[]
-  >(fallbackNavigationItems);
-  const [collectionsHasBrands, setCollectionsHasBrands] = useState(false);
-  const [tailoredHasBrands, setTailoredHasBrands] = useState(false);
-  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
-  const overlayRef = useRef<HTMLDivElement>(null);
+  const drawerRef = useRef<HTMLDivElement>(null);
 
-  // Focus trap for accessibility
+  const closeMenu = () => setMenuOpen(false);
+
+  // Header background: solid once scrolled or off the (transparent) home hero.
   useEffect(() => {
-    if (mobileMenuOpen && overlayRef.current) {
-      const focusable = overlayRef.current.querySelectorAll<HTMLElement>(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-      );
-      if (focusable.length) focusable[0].focus();
-      const handleTab = (e: KeyboardEvent) => {
-        if (!overlayRef.current) return;
-        const focusableEls = overlayRef.current.querySelectorAll<HTMLElement>(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-        );
-        const first = focusableEls[0];
-        const last = focusableEls[focusableEls.length - 1];
-        if (e.key === "Tab") {
-          if (e.shiftKey) {
-            if (document.activeElement === first) {
-              e.preventDefault();
-              last.focus();
-            }
-          } else {
-            if (document.activeElement === last) {
-              e.preventDefault();
-              first.focus();
-            }
-          }
-        }
-      };
-      document.addEventListener("keydown", handleTab);
-      return () => document.removeEventListener("keydown", handleTab);
-    }
-  }, [mobileMenuOpen]);
-
-  // Close menu on resize to lg or above
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth >= 1024) setMobileMenuOpen(false);
-    };
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  useEffect(() => {
-    const hasAdminAccess =
-      user?.role === "admin" ||
-      user?.role === "super_admin" ||
-      user?.role === "brand_admin" ||
-      hasStudioAccess;
-    if (isDev) {
-      console.log("Header user state:", {
-        userId: user?.id,
-        userRole: user?.role,
-        hasAdminAccess,
-        isSuperAdmin: user?.role === "super_admin",
-      });
-    }
-
     if (typeof window === "undefined") return;
-
-    const handleScroll = () => {
-      const isScrolled = window.scrollY > 20;
-      setScrolled(isScrolled);
-    };
-
-    window.addEventListener("scroll", handleScroll);
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [user, hasStudioAccess]);
-
-  useEffect(() => {
-    async function loadDynamicNavigation() {
-      try {
-        if (isDev) {
-          console.log("Header: Starting to load dynamic navigation...");
-        }
-
-        // Load dynamic navigation items
-        const dynamicItems = await getNavigationItems();
-        if (isDev) {
-          console.log("Header: Dynamic items loaded:", dynamicItems);
-        }
-
-        setDynamicNavigationItems(dynamicItems);
-
-        // Check if categories have brands (for mobile menu filtering)
-        const [collectionsHasBrands, tailoredHasBrands] = await Promise.all([
-          checkCategoryHasBrands("Collections"),
-          checkCategoryHasBrands("Tailored"),
-        ]);
-
-        setCollectionsHasBrands(collectionsHasBrands);
-        setTailoredHasBrands(tailoredHasBrands);
-
-        if (isDev) {
-          console.log("Header: Dynamic navigation loaded successfully", {
-            itemsCount: dynamicItems.length,
-            collectionsHasBrands,
-            tailoredHasBrands,
-          });
-        }
-      } catch (error) {
-        if (isDev) {
-          console.error("Header: Error loading dynamic navigation:", error);
-        }
-        // Fallback to static navigation on error
-        setDynamicNavigationItems(fallbackNavigationItems);
-      }
-    }
-
-    loadDynamicNavigation();
   }, []);
 
+  // Lock page scroll while the drawer is open.
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (mobileMenuOpen) {
-      document.body.classList.add("overflow-hidden");
-    } else {
-      document.body.classList.remove("overflow-hidden");
-    }
-    // Clean up on unmount
-    return () => {
-      document.body.classList.remove("overflow-hidden");
+    document.body.classList.toggle("overflow-hidden", menuOpen);
+    return () => document.body.classList.remove("overflow-hidden");
+  }, [menuOpen]);
+
+  // Close on Escape, close when the viewport grows to desktop, and trap
+  // focus inside the drawer while it's open.
+  useEffect(() => {
+    if (!menuOpen) return;
+
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) closeMenu();
     };
-  }, [mobileMenuOpen]);
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        closeMenu();
+        return;
+      }
+      if (e.key !== "Tab" || !drawerRef.current) return;
+      const focusable = drawerRef.current.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+
+    // Move focus into the drawer on open.
+    const firstFocusable = drawerRef.current?.querySelector<HTMLElement>(
+      'a[href], button:not([disabled])'
+    );
+    firstFocusable?.focus();
+
+    window.addEventListener("resize", handleResize);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [menuOpen]);
 
   const handleSignOut = async () => {
     try {
@@ -246,92 +122,73 @@ export default function Header() {
   };
 
   const handleStudioNavigation = async () => {
-    if (isDev) {
-      console.log("Header: Studio navigation initiated");
-    }
-
     setIsNavigatingToStudio(true);
     setIsNavigating(true);
-
     try {
-      // Add a timeout to prevent indefinite loading
-      const navigationTimeout = setTimeout(() => {
-        if (isDev) {
-          console.warn("Header: Studio navigation timeout, resetting state");
-        }
+      const timeout = setTimeout(() => {
         setIsNavigatingToStudio(false);
         setIsNavigating(false);
       }, 5000);
-
-      // Use router.push for better navigation handling
       await router.push("/studio");
-
-      // Clear timeout if navigation succeeds
-      clearTimeout(navigationTimeout);
-
-      if (isDev) {
-        console.log("Header: Studio navigation completed");
-      }
+      clearTimeout(timeout);
     } catch (error) {
-      if (isDev) {
-        console.error("Header: Error navigating to studio:", error);
-      }
+      if (isDev) console.error("Header: Error navigating to studio:", error);
       setIsNavigatingToStudio(false);
       setIsNavigating(false);
     }
   };
 
+  const onDark = !scrolled && isHomePage;
+
+  const iconButtonClass = cn(
+    "inline-flex size-9 shrink-0 items-center justify-center rounded-full transition-colors duration-200 sm:size-10",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset",
+    onDark
+      ? "text-white hover:bg-white/10 focus-visible:ring-white/40"
+      : "text-oma-black hover:text-oma-plum hover:bg-oma-beige/20 focus-visible:ring-oma-plum/35"
+  );
+
   return (
     <header
       className={cn(
         "fixed top-0 left-0 right-0 z-[1000] transition-all duration-300",
-        scrolled || !isHomePage
-          ? "bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-100"
-          : "bg-transparent"
+        onDark
+          ? "bg-transparent"
+          : "bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-100"
       )}
     >
-      <nav
-        className={cn(
-          "mx-auto grid w-full grid-cols-[1fr_auto_1fr] items-center gap-2 p-6 lg:px-8",
-          mobileMenuOpen ? "hidden lg:grid" : "grid"
-        )}
-      >
-        {/* Menu button, opens the same drawer at every breakpoint */}
+      <nav className="mx-auto grid w-full grid-cols-[1fr_auto_1fr] items-center gap-2 p-6 lg:px-8">
+        {/* Menu button, opens the drawer at every breakpoint */}
         <div className="flex justify-self-start">
           <button
             type="button"
             className={cn(
-              "-m-2.5 inline-flex items-center justify-center rounded-md p-2.5",
-              scrolled || !isHomePage ? "text-oma-black" : "text-white"
+              "-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 transition-colors",
+              onDark ? "text-white" : "text-oma-black"
             )}
-            onClick={() => setMobileMenuOpen(true)}
-            aria-expanded={mobileMenuOpen}
-            aria-controls="mobile-menu-overlay"
+            onClick={() => setMenuOpen(true)}
+            aria-expanded={menuOpen}
+            aria-controls="site-menu"
           >
             <span className="sr-only">Open main menu</span>
             <Menu className="h-6 w-6" aria-hidden="true" />
           </button>
         </div>
 
-        {/* Logo, centered in its own grid track so it can never overlap
-            the menu button or icon actions on narrow viewports */}
+        {/* Logo, centered in its own grid track */}
         <NavigationLink href="/" className="justify-self-center p-1.5">
           <span className="sr-only">OmaHub</span>
-          <div className="relative">
-            <Image
-              className={cn(
-                "h-5 w-auto transition-all duration-300 sm:h-6",
-                scrolled || !isHomePage
-                  ? "brightness-0"
-                  : "brightness-0 invert"
-              )}
-              src="/lovable-uploads/omahub-logo.png"
-              alt="OmaHub"
-              width={126}
-              height={25}
-              priority
-            />
-          </div>
+          <Image
+            className={cn(
+              "h-5 w-auto transition-all duration-300 sm:h-6",
+              onDark ? "brightness-0 invert" : "brightness-0"
+            )}
+            src="/lovable-uploads/omahub-logo.png"
+            alt="OmaHub"
+            width={126}
+            height={25}
+            priority
+          />
         </NavigationLink>
 
         {/* Icon actions: search, account, shop */}
@@ -339,13 +196,7 @@ export default function Header() {
           <button
             type="button"
             onClick={triggerSearchModal}
-            className={cn(
-              "inline-flex size-9 shrink-0 items-center justify-center rounded-full transition-colors duration-200 sm:size-10",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset",
-              scrolled || !isHomePage
-                ? "text-oma-black hover:text-oma-plum hover:bg-oma-beige/20 focus-visible:ring-oma-plum/35"
-                : "text-white hover:bg-white/10 focus-visible:ring-white/40"
-            )}
+            className={iconButtonClass}
             aria-label="Search"
           >
             <Search className="h-5 w-5 shrink-0" aria-hidden />
@@ -363,13 +214,7 @@ export default function Header() {
             <NavigationLink
               href="/login"
               aria-label="Sign in"
-              className={cn(
-                "inline-flex size-9 shrink-0 items-center justify-center rounded-full transition-colors duration-200 sm:size-10",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset",
-                scrolled || !isHomePage
-                  ? "text-oma-black hover:text-oma-plum hover:bg-oma-beige/20 focus-visible:ring-oma-plum/35"
-                  : "text-white hover:bg-white/10 focus-visible:ring-white/40"
-              )}
+              className={iconButtonClass}
             >
               <User className="h-5 w-5 shrink-0" aria-hidden />
             </NavigationLink>
@@ -378,49 +223,41 @@ export default function Header() {
           <NavigationLink
             href="/directory"
             aria-label="Explore brands"
-            className={cn(
-              "inline-flex size-9 shrink-0 items-center justify-center rounded-full transition-colors duration-200 sm:size-10",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset",
-              scrolled || !isHomePage
-                ? "text-oma-black hover:text-oma-plum hover:bg-oma-beige/20 focus-visible:ring-oma-plum/35"
-                : "text-white hover:bg-white/10 focus-visible:ring-white/40"
-            )}
+            className={iconButtonClass}
           >
             <ShoppingBag className="h-5 w-5 shrink-0" aria-hidden />
           </NavigationLink>
         </div>
       </nav>
 
-      {/* Backdrop, dims the page behind the drawer and closes it on click */}
+      {/* Backdrop */}
       <div
         aria-hidden
-        onClick={() => setMobileMenuOpen(false)}
+        onClick={closeMenu}
         className={cn(
-          "fixed inset-0 z-[1090] bg-oma-black/40 transition-opacity duration-300 ease-in-out",
-          mobileMenuOpen ? "opacity-100" : "pointer-events-none opacity-0"
+          "fixed inset-0 z-[1090] bg-oma-black/50 backdrop-blur-sm transition-opacity duration-300 ease-smooth",
+          menuOpen ? "opacity-100" : "pointer-events-none opacity-0"
         )}
       />
 
-      {/* Menu drawer: a fixed-width panel sliding in from the right, not a
-          full-screen takeover */}
+      {/* Drawer */}
       <div
-        ref={overlayRef}
-        id="mobile-menu-overlay"
-        className={cn(
-          "fixed inset-y-0 right-0 z-[1100] w-full max-w-sm overflow-y-auto bg-white px-6 py-6 shadow-2xl ring-1 ring-gray-900/10 transform transition duration-300 ease-in-out will-change-transform sm:max-w-md",
-          mobileMenuOpen
-            ? "translate-x-0 opacity-100"
-            : "translate-x-full opacity-0 pointer-events-none"
-        )}
-        tabIndex={-1}
-        aria-modal="true"
+        ref={drawerRef}
+        id="site-menu"
         role="dialog"
+        aria-modal="true"
+        aria-label="Main menu"
+        className={cn(
+          "fixed inset-y-0 right-0 z-[1100] flex h-full w-full max-w-sm flex-col bg-oma-plum text-oma-cream shadow-2xl transition-transform duration-300 ease-smooth will-change-transform",
+          menuOpen ? "translate-x-0" : "translate-x-full"
+        )}
       >
-        <div className="flex items-center justify-between">
-          <NavigationLink href="/" className="-m-1.5 p-1.5">
-            <span className="sr-only">OmaHub</span>
+        {/* Drawer header */}
+        <div className="flex shrink-0 items-center justify-between border-b border-white/10 px-6 py-5">
+          <NavigationLink href="/" onClick={closeMenu} className="p-1">
+            <span className="sr-only">OmaHub home</span>
             <Image
-              className="h-6 w-auto"
+              className="h-6 w-auto brightness-0 invert"
               src="/lovable-uploads/omahub-logo.png"
               alt="OmaHub"
               width={126}
@@ -429,264 +266,171 @@ export default function Header() {
           </NavigationLink>
           <button
             type="button"
-            className="-m-2.5 rounded-md p-2.5 text-gray-700"
-            onClick={() => setMobileMenuOpen(false)}
+            onClick={closeMenu}
+            className="inline-flex size-10 items-center justify-center rounded-full text-oma-cream/80 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-oma-gold/50"
           >
             <span className="sr-only">Close menu</span>
-            <X className="h-6 w-6" aria-hidden="true" />
+            <X className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
 
-        <div className="mt-6 flow-root">
-          <div className="-my-6 divide-y divide-gray-500/10">
-            <div className="flex-1 overflow-y-auto px-6 py-4 max-h-[calc(100vh-80px)]">
-              <div className="space-y-6">
-                {/* Search Bar - Moved to top */}
-                <div className="space-y-2">
-                  <h3 className="text-xs font-medium uppercase tracking-wider text-gray-500 mb-3">
-                    Search
-                  </h3>
-                  <button
-                    onClick={() => {
-                      setMobileMenuOpen(false);
-                      triggerSearchModal();
-                    }}
-                    className="flex items-center w-full px-3 py-3 text-left text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 transition-colors rounded-lg border border-gray-200"
-                  >
-                    <Search className="h-5 w-5 mr-3 text-gray-400" />
-                    <span className="text-gray-500">
-                      Search brands, collections...
-                    </span>
-                  </button>
-                </div>
+        {/* Scrollable body */}
+        <div className="flex-1 overflow-y-auto overscroll-contain px-6 py-8">
+          {/* Search */}
+          <button
+            type="button"
+            onClick={() => {
+              closeMenu();
+              triggerSearchModal();
+            }}
+            className="group flex w-full items-center gap-3 rounded-full border border-white/15 bg-white/5 px-5 py-3.5 text-left text-sm text-oma-cream/60 transition-colors hover:border-oma-gold/50 hover:text-oma-cream focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-oma-gold/50"
+          >
+            <Search className="h-4 w-4 shrink-0 text-oma-gold" aria-hidden />
+            <span>Search brands, collections…</span>
+          </button>
 
-                {/* Main Navigation */}
-                <div className="space-y-2">
-                  <h3 className="text-xs font-medium uppercase tracking-wider text-gray-500 mb-3">
-                    About
-                  </h3>
+          {/* Primary navigation */}
+          <nav className="mt-9" aria-label="Primary">
+            <p className="mb-4 text-[0.7rem] font-semibold uppercase tracking-[0.28em] text-oma-gold/80">
+              Explore
+            </p>
+            <ul className="flex flex-col">
+              {primaryLinks.map((link) => (
+                <li key={link.href}>
                   <NavigationLink
-                    href="/"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="-mx-3 block rounded-lg px-3 py-3 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 transition-colors"
+                    href={link.href}
+                    onClick={closeMenu}
+                    className={cn(
+                      "group flex items-center justify-between border-b border-white/8 py-3.5 font-canela text-2xl transition-colors",
+                      link.accent
+                        ? "text-oma-gold hover:text-oma-gold/80"
+                        : "text-oma-cream hover:text-oma-gold"
+                    )}
                   >
-                    Home
+                    <span>{link.name}</span>
+                    <ChevronRight
+                      className="h-5 w-5 -translate-x-1 text-oma-gold/60 opacity-0 transition-all duration-200 group-hover:translate-x-0 group-hover:opacity-100"
+                      aria-hidden
+                    />
                   </NavigationLink>
-                  <NavigationLink
-                    href="/editions"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="-mx-3 block rounded-lg px-3 py-3 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 transition-colors"
-                  >
-                    Archive
-                  </NavigationLink>
-                  <NavigationLink
-                    href="/how-it-works"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="-mx-3 block rounded-lg px-3 py-3 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 transition-colors"
-                  >
-                    How It Works
-                  </NavigationLink>
-                  <NavigationLink
-                    href="/about"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="-mx-3 block rounded-lg px-3 py-3 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 transition-colors"
-                  >
-                    About
-                  </NavigationLink>
-                  <NavigationLink
-                    href="/directory"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="-mx-3 block rounded-lg px-3 py-3 text-base font-semibold leading-7 text-oma-plum hover:bg-oma-beige/50 transition-colors"
-                  >
-                    Explore Brands
-                  </NavigationLink>
-                </div>
+                </li>
+              ))}
+            </ul>
+          </nav>
 
-                {/* Categories */}
-                {SHOW_CATEGORY_NAV && (
-                <div className="flex flex-col gap-y-2 bg-white/40 backdrop-blur-lg rounded-2xl border border-oma-gold/20 shadow-2xl p-4 z-[1200]">
-                  <h3 className="text-xs font-medium uppercase tracking-wider text-gray-500 mb-3">
-                    Categories
-                  </h3>
-                  {dynamicNavigationItems
-                    .filter((category) => {
-                      if (category.title === "Collections")
-                        return collectionsHasBrands;
-                      if (category.title === "Tailored")
-                        return tailoredHasBrands;
-                      return true;
-                    })
-                    .map((category) => (
-                      <div key={category.title} className="mb-2">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setExpandedCategory(
-                              expandedCategory === category.title
-                                ? null
-                                : category.title
-                            )
-                          }
-                          className="flex items-center justify-between w-full rounded-lg px-3 py-3 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 transition-colors focus:outline-none"
-                          aria-expanded={expandedCategory === category.title}
-                          aria-controls={`category-items-${category.title}`}
-                        >
-                          <span>{category.title}</span>
-                          <ChevronDown
-                            className={cn(
-                              "h-4 w-4 ml-2 transition-transform",
-                              expandedCategory === category.title
-                                ? "rotate-180"
-                                : "rotate-0"
-                            )}
-                          />
-                        </button>
-                        {expandedCategory === category.title && (
-                          <div
-                            id={`category-items-${category.title}`}
-                            className="flex flex-col gap-y-1 pl-4 mt-1"
-                          >
-                            {category.items.map((item) => (
-                              <NavigationLink
-                                key={item.title}
-                                href={item.href}
-                                onClick={() => setMobileMenuOpen(false)}
-                                className="block rounded-lg px-3 py-2 text-sm leading-7 text-gray-700 hover:bg-gray-50 transition-colors"
-                              >
-                                <div className="flex items-center justify-between">
-                                  <span>{item.title}</span>
-                                  {item.count && (
-                                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                                      {item.count}
-                                    </span>
-                                  )}
-                                </div>
-                              </NavigationLink>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                </div>
+          {/* Account links (signed in) */}
+          {user && (
+            <div className="mt-9">
+              <p className="mb-4 text-[0.7rem] font-semibold uppercase tracking-[0.28em] text-oma-gold/80">
+                Account
+              </p>
+
+              <div className="mb-4 flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                {user.avatar_url ? (
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage
+                      src={user.avatar_url}
+                      alt={`${user.first_name || ""} ${user.last_name || ""}`}
+                    />
+                    <AvatarFallback>
+                      <User className="h-5 w-5" />
+                    </AvatarFallback>
+                  </Avatar>
+                ) : (
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-oma-gold/90 text-oma-plum">
+                    <User className="h-5 w-5" />
+                  </div>
                 )}
-
-                {/* User Section */}
-                <div className="border-t border-gray-200 pt-6">
-                  {user ? (
-                    <div className="space-y-3">
-                      <h3 className="text-xs font-medium uppercase tracking-wider text-gray-500 mb-3">
-                        Account
-                      </h3>
-
-                      {/* User Info */}
-                      <div className="flex items-center gap-3 px-3 py-2 bg-gray-50 rounded-lg">
-                        {user.avatar_url ? (
-                          <Avatar className="h-8 w-8">
-                            <AvatarImage
-                              src={user.avatar_url}
-                              alt={`${user.first_name || ""} ${user.last_name || ""}`}
-                            />
-                            <AvatarFallback>
-                              <User className="h-4 w-4" />
-                            </AvatarFallback>
-                          </Avatar>
-                        ) : (
-                          <div className="h-8 w-8 bg-oma-plum rounded-full flex items-center justify-center">
-                            <User className="h-4 w-4 text-white" />
-                          </div>
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate">
-                            {user.first_name
-                              ? `${user.first_name} ${user.last_name || ""}`.trim()
-                              : user.email}
-                          </p>
-                          <p className="text-xs text-gray-500 truncate">
-                            {user.role === "admin" ||
-                            user.role === "super_admin"
-                              ? "Admin"
-                              : "Member"}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* User Menu Items */}
-                      <NavigationLink
-                        href="/profile"
-                        onClick={() => setMobileMenuOpen(false)}
-                        className="-mx-3 flex items-center gap-3 rounded-lg px-3 py-3 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 transition-colors"
-                      >
-                        <span>Profile</span>
-                      </NavigationLink>
-
-                      <NavigationLink
-                        href="/favourites"
-                        onClick={() => setMobileMenuOpen(false)}
-                        className="-mx-3 flex items-center gap-3 rounded-lg px-3 py-3 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 transition-colors"
-                      >
-                        <span>Favourites</span>
-                      </NavigationLink>
-
-                      {/* Studio Access for Admins */}
-                      {showStudioInNav && (
-                        <button
-                          onClick={() => {
-                            setMobileMenuOpen(false);
-                            handleStudioNavigation();
-                          }}
-                          disabled={isNavigatingToStudio}
-                          className="-mx-3 flex items-center gap-3 rounded-lg px-3 py-3 text-base font-semibold leading-7 text-oma-plum hover:bg-oma-beige/50 transition-colors disabled:opacity-50 w-full text-left"
-                        >
-                          <span>Studio {isNavigatingToStudio && "..."}</span>
-                        </button>
-                      )}
-
-                      {/* Sign Out */}
-                      <button
-                        onClick={() => {
-                          setMobileMenuOpen(false);
-                          handleSignOut();
-                        }}
-                        className="-mx-3 flex items-center gap-3 rounded-lg px-3 py-3 text-base font-semibold leading-7 text-red-600 hover:bg-red-50 transition-colors w-full text-left"
-                      >
-                        <span>Sign Out</span>
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      <h3 className="text-xs font-medium uppercase tracking-wider text-gray-500 mb-3">
-                        Account
-                      </h3>
-
-                      {/* Sign In Button */}
-                      <NavigationLink
-                        href="/login"
-                        onClick={() => setMobileMenuOpen(false)}
-                        className="-mx-3 flex items-center justify-center gap-3 rounded-lg px-3 py-4 text-base font-semibold leading-7 bg-oma-plum text-white hover:bg-oma-plum/90 transition-colors"
-                      >
-                        <User className="h-5 w-5" />
-                        Sign In
-                      </NavigationLink>
-
-                      {/* Sign Up Link: hidden while customer signup is off
-                          (Studio > Settings > Customer Accounts). Designers
-                          apply via /join instead, and already get an account
-                          on approval. */}
-                      {customerSignupEnabled && (
-                        <NavigationLink
-                          href="/signup"
-                          onClick={() => setMobileMenuOpen(false)}
-                          className="-mx-3 block text-center rounded-lg px-3 py-2 text-sm leading-7 text-oma-plum hover:bg-oma-beige/50 transition-colors"
-                        >
-                          Don't have an account? Sign up
-                        </NavigationLink>
-                      )}
-                    </div>
-                  )}
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-oma-cream">
+                    {user.first_name
+                      ? `${user.first_name} ${user.last_name || ""}`.trim()
+                      : user.email}
+                  </p>
+                  <p className="truncate text-xs text-oma-cream/50">
+                    {user.role === "admin" || user.role === "super_admin"
+                      ? "Admin"
+                      : "Member"}
+                  </p>
                 </div>
               </div>
+
+              <ul className="flex flex-col">
+                <li>
+                  <NavigationLink
+                    href="/profile"
+                    onClick={closeMenu}
+                    className="flex items-center justify-between border-b border-white/8 py-3 text-base text-oma-cream transition-colors hover:text-oma-gold"
+                  >
+                    <span>Profile</span>
+                    <ChevronRight className="h-4 w-4 text-oma-gold/50" aria-hidden />
+                  </NavigationLink>
+                </li>
+                <li>
+                  <NavigationLink
+                    href="/favourites"
+                    onClick={closeMenu}
+                    className="flex items-center justify-between border-b border-white/8 py-3 text-base text-oma-cream transition-colors hover:text-oma-gold"
+                  >
+                    <span>Favourites</span>
+                    <ChevronRight className="h-4 w-4 text-oma-gold/50" aria-hidden />
+                  </NavigationLink>
+                </li>
+                {showStudioInNav && (
+                  <li>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        closeMenu();
+                        handleStudioNavigation();
+                      }}
+                      disabled={isNavigatingToStudio}
+                      className="flex w-full items-center justify-between border-b border-white/8 py-3 text-left text-base text-oma-cream transition-colors hover:text-oma-gold disabled:opacity-50"
+                    >
+                      <span>Studio{isNavigatingToStudio ? "…" : ""}</span>
+                      <ChevronRight className="h-4 w-4 text-oma-gold/50" aria-hidden />
+                    </button>
+                  </li>
+                )}
+              </ul>
             </div>
-          </div>
+          )}
+        </div>
+
+        {/* Pinned footer: primary action */}
+        <div className="shrink-0 border-t border-white/10 px-6 py-5">
+          {user ? (
+            <button
+              type="button"
+              onClick={() => {
+                closeMenu();
+                handleSignOut();
+              }}
+              className="flex w-full items-center justify-center rounded-full border border-white/20 px-5 py-3 text-sm font-semibold uppercase tracking-[0.15em] text-oma-cream transition-colors hover:border-white/40 hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-oma-gold/50"
+            >
+              Sign Out
+            </button>
+          ) : (
+            <div className="space-y-3">
+              <NavigationLink
+                href="/login"
+                onClick={closeMenu}
+                className="flex w-full items-center justify-center rounded-full bg-oma-gold px-5 py-3.5 text-sm font-semibold uppercase tracking-[0.15em] text-oma-plum transition-colors hover:bg-oma-gold/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-oma-gold/60 focus-visible:ring-offset-2 focus-visible:ring-offset-oma-plum"
+              >
+                Sign In
+              </NavigationLink>
+              {customerSignupEnabled && (
+                <NavigationLink
+                  href="/signup"
+                  onClick={closeMenu}
+                  className="block text-center text-sm text-oma-cream/70 transition-colors hover:text-oma-gold"
+                >
+                  Don&apos;t have an account?{" "}
+                  <span className="font-medium text-oma-gold">Sign up</span>
+                </NavigationLink>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </header>
