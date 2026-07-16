@@ -84,57 +84,21 @@ export function EditorialHero({
             )}
           </div>
 
-          {/* Poster card for the next edition */}
-          {upcomingEdition && (
-            <div className="hidden justify-end lg:flex">
-              <div className="relative flex aspect-[3/4] w-full max-w-sm flex-col justify-between overflow-hidden rounded-2xl border border-oma-gold/30 bg-gradient-to-b from-white/[0.04] to-oma-gold/10 p-8">
-                {/* Campaign image behind a plum wash that keeps the text legible */}
-                <div
-                  aria-hidden
-                  className="absolute inset-0 bg-cover bg-center"
-                  style={{
-                    backgroundImage:
-                      "url(/images/editions/next-edition-poster.jpg)",
-                  }}
-                />
-                <div
-                  aria-hidden
-                  className="absolute inset-0 bg-gradient-to-t from-oma-plum/90 via-oma-plum/40 to-oma-plum/10"
-                />
-                <div
-                  aria-hidden
-                  className="absolute -right-16 -top-16 h-48 w-48 rounded-full border border-oma-gold/30"
-                />
-                <p className="relative text-xs font-semibold uppercase tracking-[0.3em] text-oma-gold">
-                  OmaHub, {upcomingEdition.city}
-                </p>
-
-                <p
-                  aria-hidden
-                  className="absolute bottom-8 right-8 top-8 flex items-center text-[10px] uppercase tracking-[0.4em] text-oma-gold/70 [writing-mode:vertical-rl]"
-                >
-                  African Fashion · Curated
-                </p>
-
-                <div className="relative">
-                  <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oma-gold">
-                    Next edition
-                  </p>
-                  <div className="mt-2 flex items-end justify-between gap-4">
-                    <p className="font-canela text-3xl">
-                      {upcomingEdition.themeAnnounced
-                        ? upcomingEdition.title
-                        : "TBA"}{" "}
-                      · {upcomingEdition.dateLabel}
-                    </p>
-                    <span className="font-canela text-7xl leading-none text-oma-gold/50">
-                      {upcomingEdition.number}
-                    </span>
-                  </div>
-                </div>
-              </div>
+          {/* Hero video for the next edition */}
+          <div className="hidden justify-end lg:flex">
+            <div className="relative aspect-[3/4] w-full max-w-sm overflow-hidden rounded-2xl border border-oma-gold/30 bg-oma-black/20 shadow-2xl">
+              <video
+                className="absolute inset-0 h-full w-full object-cover"
+                src="/omahub_hero.mp4"
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="auto"
+                aria-label="OmaHub hero film"
+              />
             </div>
-          )}
+          </div>
         </div>
       </div>
     </section>
