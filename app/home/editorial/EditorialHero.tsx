@@ -21,7 +21,7 @@ export function EditorialHero({
     : "OmaHub, between editions";
 
   return (
-    <section className="relative overflow-hidden bg-oma-plum text-white">
+    <section className="relative overflow-hidden bg-oma-black text-white">
       {/* Subtle diagonal grid, per the editorial mockup */}
       <div
         aria-hidden
