@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Edition } from "@/lib/data/editions";
 import { EmailCaptureForm } from "./EmailCaptureForm";
+import { HeroFilmCard } from "./HeroFilmCard";
 
 type EditorialHeroProps = {
   upcomingEdition: Edition | null;
@@ -86,18 +87,7 @@ export function EditorialHero({
 
           {/* Hero video for the next edition */}
           <div className="hidden justify-end lg:flex">
-            <div className="relative aspect-[3/4] w-full max-w-sm overflow-hidden rounded-2xl border border-oma-gold/50 bg-oma-black/20 shadow-2xl">
-              <video
-                className="absolute inset-0 h-full w-full object-cover"
-                src="/omahub_hero.mp4"
-                autoPlay
-                muted
-                loop
-                playsInline
-                preload="auto"
-                aria-label="OmaHub hero film"
-              />
-            </div>
+            <HeroFilmCard />
           </div>
         </div>
       </div>
