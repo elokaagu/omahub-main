@@ -223,7 +223,7 @@ export default async function EditionPage({
                     download
                     aria-label={`Download original photo: ${photo.alt}`}
                     title="Download original"
-                    className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-oma-black/50 text-white opacity-0 backdrop-blur-sm transition-opacity duration-200 hover:bg-oma-black/70 focus-visible:opacity-100 group-hover:opacity-100"
+                    className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-oma-black/50 text-white backdrop-blur-sm transition-opacity duration-200 hover:bg-oma-black/70 focus-visible:opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
