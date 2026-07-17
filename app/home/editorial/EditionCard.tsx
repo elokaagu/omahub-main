@@ -9,7 +9,16 @@ import type { Edition } from "@/lib/data/editions";
 export function EditionCard({ edition }: { edition: Edition }) {
   if (edition.status === "upcoming") {
     return (
-      <div className="flex min-h-[520px] flex-col justify-between rounded-2xl bg-oma-plum p-8 text-white sm:min-h-[560px]">
+      <div className="group relative flex min-h-[520px] flex-col justify-between rounded-2xl bg-oma-plum p-8 text-white sm:min-h-[560px]">
+        {/* Whole-card click target, painted above the plain text but below
+            the "Join the list" link so that link stays its own focusable
+            element (see the same pattern on the past-edition card below). */}
+        <Link
+          href="/#join-the-list"
+          className="absolute inset-0 z-[5] rounded-2xl"
+          aria-label={`Join the list for Edition ${edition.number}`}
+        />
+
         <div className="flex flex-1 flex-col items-center justify-center gap-6">
           <span
             aria-hidden
@@ -30,7 +39,7 @@ export function EditionCard({ edition }: { edition: Edition }) {
           </p>
           <Link
             href="/#join-the-list"
-            className="mt-4 inline-flex items-center gap-2 border-b border-oma-gold/60 pb-0.5 text-xs font-semibold uppercase tracking-[0.2em] text-oma-gold transition-colors hover:text-white"
+            className="relative z-10 mt-4 inline-flex items-center gap-2 border-b border-oma-gold/60 pb-0.5 text-xs font-semibold uppercase tracking-[0.2em] text-oma-gold transition-colors hover:text-white"
           >
             Join the list <span aria-hidden>→</span>
           </Link>
@@ -65,11 +74,13 @@ export function EditionCard({ edition }: { edition: Edition }) {
         className="absolute right-6 top-6 h-20 w-20 rounded-full border border-oma-gold/30 transition-transform duration-500 group-hover:scale-110"
       />
 
-      {/* Whole-card click target; the "Read the edition" link below sits on
-          top of it so it remains its own focusable, discoverable link. */}
+      {/* Whole-card click target, painted above the plain text content
+          (which has no z-index of its own) but below the "Read the
+          edition" link, which keeps its own z-10 so it remains its own
+          focusable, discoverable link. */}
       <Link
         href={`/editions/${edition.slug}`}
-        className="absolute inset-0"
+        className="absolute inset-0 z-[5]"
         aria-label={edition.title}
       />
 
