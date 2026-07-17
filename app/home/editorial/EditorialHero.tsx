@@ -21,7 +21,7 @@ export function EditorialHero({
     : "OmaHub, between editions";
 
   return (
-    <section className="relative overflow-hidden bg-oma-cream text-oma-black">
+    <section className="relative overflow-hidden bg-gradient-to-b from-[#FAF1E4] to-oma-beige text-oma-black">
       {/* Subtle diagonal grid, per the editorial mockup */}
       <div
         aria-hidden
@@ -30,12 +30,6 @@ export function EditorialHero({
           backgroundImage:
             "repeating-linear-gradient(45deg, transparent, transparent 46px, #D4B285 46px, #D4B285 47px), repeating-linear-gradient(-45deg, transparent, transparent 46px, #D4B285 46px, #D4B285 47px)",
         }}
-      />
-
-      {/* Fades the cream background into the beige of the section below */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-oma-beige sm:h-56"
       />
 
       <div className="relative z-10 mx-auto flex min-h-[92vh] max-w-7xl flex-col justify-center px-4 py-24 sm:px-6 lg:px-8">
