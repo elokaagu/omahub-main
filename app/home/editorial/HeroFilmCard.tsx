@@ -1,40 +1,26 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * The looping film in the hero's video card. Deferred until the card is
- * near the viewport (IntersectionObserver) so the video file doesn't
- * compete with the hero's text/fonts on first paint, then blurs and fades
- * in once the first frame is actually ready to play.
+ * The looping film in the hero's video card. Deferred until after mount so
+ * it's absent from the initial server-rendered HTML - the browser's preload
+ * scanner never discovers it, so it doesn't compete with the hero's
+ * text/fonts on first paint. Once the first frame is actually ready to
+ * play, it cross-fades from a blurred, slightly scaled-up placeholder into
+ * the sharp video.
  */
 export function HeroFilmCard() {
-  const containerRef = useRef<HTMLDivElement>(null);
   const [shouldLoad, setShouldLoad] = useState(false);
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting) {
-          setShouldLoad(true);
-          observer.disconnect();
-        }
-      },
-      { rootMargin: "200px" }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
+    setShouldLoad(true);
   }, []);
 
   return (
-    <div
-      ref={containerRef}
-      className="relative aspect-[3/4] w-full max-w-sm overflow-hidden rounded-2xl border border-oma-gold/50 bg-oma-black/20 shadow-2xl"
-    >
+    <div className="relative aspect-[3/4] w-full max-w-sm overflow-hidden rounded-2xl border border-oma-gold/50 bg-oma-black/20 shadow-2xl">
       {shouldLoad && (
         <video
           className={cn(
