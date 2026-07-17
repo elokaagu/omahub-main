@@ -133,8 +133,11 @@ export default function Header() {
   );
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-[1000] border-b border-gray-100 bg-white/95 shadow-sm backdrop-blur-md transition-all duration-300">
-      <nav className="mx-auto grid w-full grid-cols-[1fr_auto_1fr] items-center gap-2 p-6 lg:px-8">
+    // No filter/transform/backdrop-filter on this element: it must stay a
+    // plain positioned ancestor so the fixed backdrop + drawer below size
+    // against the viewport, not this header's own (much smaller) box.
+    <header className="fixed top-0 left-0 right-0 z-[1000] transition-all duration-300">
+      <nav className="mx-auto grid w-full grid-cols-[1fr_auto_1fr] items-center gap-2 border-b border-gray-100 bg-white/95 p-6 shadow-sm backdrop-blur-md lg:px-8">
         {/* Menu button, opens the drawer at every breakpoint */}
         <div className="flex justify-self-start">
           <button
