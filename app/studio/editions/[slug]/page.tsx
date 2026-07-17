@@ -52,6 +52,9 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
   const [isUploadingPartner, setIsUploadingPartner] = useState(false);
   const [partnerName, setPartnerName] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [videoUrlInput, setVideoUrlInput] = useState("");
+  const [videoThumbnailInput, setVideoThumbnailInput] = useState("");
+  const [isSavingVideo, setIsSavingVideo] = useState(false);
 
   const refetch = useCallback(async () => {
     const rows = await getEditionImages(slug);
@@ -61,6 +64,13 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
   useEffect(() => {
     void refetch();
   }, [refetch]);
+
+  // Prefill the video fields once the current one loads (or changes).
+  useEffect(() => {
+    const video = images?.find((i) => i.kind === "video");
+    setVideoUrlInput(video?.image_url || "");
+    setVideoThumbnailInput(video?.alt_text || "");
+  }, [images]);
 
   if (!edition) {
     return (
@@ -84,6 +94,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
   }
 
   const cover = images.find((i) => i.kind === "cover");
+  const video = images.find((i) => i.kind === "video");
   const gallery = images.filter((i) => i.kind === "gallery");
   const storyPhotos = images
     .filter((i) => i.kind === "story")
@@ -186,6 +197,50 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
     }
   };
 
+  const handleVideoSave = async () => {
+    if (!user) return;
+    const url = videoUrlInput.trim();
+    if (!url) {
+      toast.error("Add a video URL first");
+      return;
+    }
+    try {
+      setIsSavingVideo(true);
+      await addEditionImage(user.id, {
+        edition_slug: slug,
+        image_url: url,
+        kind: "video",
+        alt_text: videoThumbnailInput.trim() || null,
+      });
+      toast.success("Video updated");
+      await refetch();
+    } catch (error) {
+      console.error("Error setting edition video:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to update video"
+      );
+    } finally {
+      setIsSavingVideo(false);
+    }
+  };
+
+  const handleVideoRemove = async () => {
+    if (!user || !video) return;
+    try {
+      setIsSavingVideo(true);
+      await deleteEditionImage(user.id, video.id);
+      toast.success("Video removed");
+      await refetch();
+    } catch (error) {
+      console.error("Error removing edition video:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to remove video"
+      );
+    } finally {
+      setIsSavingVideo(false);
+    }
+  };
+
   const handleDelete = async (id: string) => {
     if (!user) return;
     try {
@@ -258,6 +313,86 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
         {isUploadingCover && (
           <p className="mt-2 text-sm text-oma-cocoa">Saving cover photo…</p>
         )}
+      </section>
+
+      <section className="mb-12">
+        <h2 className="text-lg font-semibold text-oma-black mb-1">Video</h2>
+        <p className="text-sm text-oma-cocoa mb-4">
+          Plays alongside &quot;The story&quot; on the edition page. Paste a
+          direct link to a video file (e.g. an .mp4 URL) - a new one replaces
+          the current video. The thumbnail shows before playback starts.
+        </p>
+
+        {video?.image_url && (
+          <div className="mb-4 max-w-sm overflow-hidden rounded-xl bg-oma-black">
+            <video
+              key={video.id}
+              src={video.image_url}
+              poster={video.alt_text || undefined}
+              controls
+              className="aspect-video w-full"
+            />
+          </div>
+        )}
+
+        <label className="mb-2 block text-sm font-medium text-oma-black">
+          Video URL
+        </label>
+        <input
+          type="url"
+          value={videoUrlInput}
+          onChange={(e) => setVideoUrlInput(e.target.value)}
+          placeholder="https://.../edition-recap.mp4"
+          className="mb-4 w-full max-w-md rounded-md border border-gray-300 px-3 py-2 text-sm"
+        />
+
+        <label className="mb-2 block text-sm font-medium text-oma-black">
+          Thumbnail URL (optional)
+        </label>
+        <input
+          type="url"
+          value={videoThumbnailInput}
+          onChange={(e) => setVideoThumbnailInput(e.target.value)}
+          placeholder="https://.../edition-recap-thumbnail.jpg"
+          className="mb-4 w-full max-w-md rounded-md border border-gray-300 px-3 py-2 text-sm"
+        />
+
+        <div className="flex items-center gap-3">
+          <Button
+            type="button"
+            onClick={() => void handleVideoSave()}
+            disabled={isSavingVideo}
+          >
+            {isSavingVideo ? "Saving…" : video ? "Update video" : "Save video"}
+          </Button>
+          {video && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button type="button" variant="outline" disabled={isSavingVideo}>
+                  Remove
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Remove video</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This removes the video from the edition page. This action
+                    cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => void handleVideoRemove()}
+                    className="bg-red-600 hover:bg-red-700"
+                  >
+                    Remove
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
+        </div>
       </section>
 
       <section className="mb-12">

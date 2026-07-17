@@ -1,6 +1,11 @@
 import { supabase } from "@/lib/supabase";
 
-export type EditionImageKind = "cover" | "gallery" | "story" | "partner";
+export type EditionImageKind =
+  | "cover"
+  | "gallery"
+  | "story"
+  | "partner"
+  | "video";
 
 export interface EditionImage {
   id: string;
@@ -78,10 +83,11 @@ async function assertSuperAdmin(userId: string): Promise<void> {
 }
 
 /**
- * Add an edition image (super admin only). A new cover replaces any existing
- * cover for that edition, since only one photo can lead the archive card and
- * detail page hero at a time. Gallery images are appended. Story photos use
- * an explicit paragraph position instead of appending.
+ * Add an edition image (super admin only). A new cover or video replaces
+ * any existing one of that kind for that edition, since only one can lead
+ * the archive card / detail page hero (cover) or play in the story section
+ * (video) at a time. Gallery images are appended. Story photos use an
+ * explicit paragraph position instead of appending.
  */
 export async function addEditionImage(
   userId: string,
@@ -91,12 +97,12 @@ export async function addEditionImage(
 
   await assertSuperAdmin(userId);
 
-  if (data.kind === "cover") {
+  if (data.kind === "cover" || data.kind === "video") {
     const { error: deleteError } = await supabase
       .from("edition_images")
       .delete()
       .eq("edition_slug", data.edition_slug)
-      .eq("kind", "cover");
+      .eq("kind", data.kind);
     if (deleteError) throw deleteError;
   }
 

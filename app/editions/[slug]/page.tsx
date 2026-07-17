@@ -52,6 +52,7 @@ export default async function EditionPage({
     console.error("edition_admin_images_error", e);
   }
   const adminCover = adminImages.find((i) => i.kind === "cover")?.image_url;
+  const adminVideo = adminImages.find((i) => i.kind === "video");
   const adminGallery: NonNullable<typeof staticEdition.gallery> = adminImages
     .filter((i) => i.kind === "gallery")
     .map((i) => ({
@@ -62,6 +63,8 @@ export default async function EditionPage({
   const edition = {
     ...staticEdition,
     coverImage: adminCover || staticEdition.coverImage,
+    videoUrl: adminVideo?.image_url || staticEdition.videoUrl,
+    videoThumbnail: adminVideo?.alt_text || staticEdition.videoThumbnail,
     gallery: [...(staticEdition.gallery || []), ...adminGallery],
   };
 
