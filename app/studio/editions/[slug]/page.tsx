@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { cn } from "@/lib/utils";
 import { getEditionBySlug } from "@/lib/data/editions";
 import {
   getEditionImages,
@@ -54,6 +55,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [videoUrlInput, setVideoUrlInput] = useState("");
   const [videoThumbnailInput, setVideoThumbnailInput] = useState("");
+  const [videoPosition, setVideoPosition] = useState<0 | 1>(0);
   const [isSavingVideo, setIsSavingVideo] = useState(false);
 
   const refetch = useCallback(async () => {
@@ -70,6 +72,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
     const video = images?.find((i) => i.kind === "video");
     setVideoUrlInput(video?.image_url || "");
     setVideoThumbnailInput(video?.alt_text || "");
+    setVideoPosition(video?.display_order === 1 ? 1 : 0);
   }, [images]);
 
   if (!edition) {
@@ -211,6 +214,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
         image_url: url,
         kind: "video",
         alt_text: videoThumbnailInput.trim() || null,
+        position: videoPosition,
       });
       toast.success("Video updated");
       await refetch();
@@ -356,6 +360,36 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
           placeholder="https://.../edition-recap-thumbnail.jpg"
           className="mb-4 w-full max-w-md rounded-md border border-gray-300 px-3 py-2 text-sm"
         />
+
+        <label className="mb-2 block text-sm font-medium text-oma-black">
+          Position next to the story
+        </label>
+        <div className="mb-4 flex gap-2">
+          <button
+            type="button"
+            onClick={() => setVideoPosition(0)}
+            className={cn(
+              "rounded-md border px-3 py-2 text-sm",
+              videoPosition === 0
+                ? "border-oma-black bg-oma-black text-white"
+                : "border-gray-300 text-oma-black hover:bg-gray-50"
+            )}
+          >
+            Right of the text
+          </button>
+          <button
+            type="button"
+            onClick={() => setVideoPosition(1)}
+            className={cn(
+              "rounded-md border px-3 py-2 text-sm",
+              videoPosition === 1
+                ? "border-oma-black bg-oma-black text-white"
+                : "border-gray-300 text-oma-black hover:bg-gray-50"
+            )}
+          >
+            Left of the text
+          </button>
+        </div>
 
         <div className="flex items-center gap-3">
           <Button

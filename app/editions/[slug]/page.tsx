@@ -8,6 +8,7 @@ import { FullWidthBrandRow } from "@/components/ui/full-width-brand-row";
 import { LazyImage } from "@/components/ui/lazy-image";
 import { EmailCaptureForm } from "@/app/home/editorial/EmailCaptureForm";
 import { EditionVideo } from "./EditionVideo";
+import { cn } from "@/lib/utils";
 
 export const revalidate = 120;
 
@@ -83,6 +84,10 @@ export default async function EditionPage({
     .filter((i) => i.kind === "partner")
     .sort((a, b) => a.display_order - b.display_order);
 
+  // Video position: display_order doubles as a left/right flag on the
+  // video's own row (1 = left, 0/default = right), set from Studio.
+  const videoOnLeft = adminVideo?.display_order === 1;
+
   const snapshot = [
     { label: "City", value: edition.city },
     { label: "Country", value: edition.country },
@@ -148,7 +153,12 @@ export default async function EditionPage({
       <section className="bg-oma-cream py-16 sm:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid gap-10 lg:grid-cols-3 lg:gap-16">
-            <div className="max-w-3xl lg:col-span-2">
+            <div
+              className={cn(
+                "max-w-3xl lg:col-span-2",
+                videoOnLeft && "lg:order-2"
+              )}
+            >
               <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oma-cocoa">
                 The story
               </p>
@@ -178,7 +188,12 @@ export default async function EditionPage({
             </div>
 
             {edition.videoUrl && (
-              <div className="lg:col-span-1">
+              <div
+                className={cn(
+                  "lg:col-span-1",
+                  videoOnLeft && "lg:order-1"
+                )}
+              >
                 <p className="mb-4 text-xs font-semibold uppercase tracking-[0.3em] text-oma-cocoa">
                   Watch the edition
                 </p>
