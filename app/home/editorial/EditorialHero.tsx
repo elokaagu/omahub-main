@@ -38,7 +38,7 @@ export function EditorialHero({
           <div>
             <div className="mb-10 flex items-center gap-4">
               <span aria-hidden className="h-px w-12 bg-oma-gold" />
-              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oma-cocoa sm:text-sm">
+              <p className="text-xs font-bold uppercase tracking-[0.3em] text-oma-cocoa sm:text-sm">
                 {eyebrow}
               </p>
             </div>

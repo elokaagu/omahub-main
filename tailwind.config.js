@@ -66,7 +66,7 @@ export default {
         "oma-beige": "#F6F0E8",
         "oma-gold": "#D4B285",
         "oma-cocoa": "#A07F68",
-        "oma-plum": "#3A1E2D",
+        "oma-plum": "#3D2B1F",
         "oma-black": "#1E1E1E",
         "oma-cream": "#FFFDF8",
       },
