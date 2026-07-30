@@ -63,12 +63,13 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
-        "oma-beige": "#F6F0E8",
-        "oma-gold": "#D4B285",
-        "oma-cocoa": "#A07F68",
-        "oma-plum": "#3D2B1F",
+        "oma-beige": "#EDE3D9",
+        "oma-gold": "#E1AD01",
+        "oma-cocoa": "#8F5956",
+        "oma-plum": "#613C3A",
         "oma-black": "#1E1E1E",
-        "oma-cream": "#FFFDF8",
+        "oma-cream": "#F8F5F2",
+        "oma-coral": "#E8505B",
       },
       fontFamily: {
         sans: [

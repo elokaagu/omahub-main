@@ -29,7 +29,7 @@ export function EditorialHero({
         className="absolute inset-0 opacity-[0.06]"
         style={{
           backgroundImage:
-            "repeating-linear-gradient(45deg, transparent, transparent 46px, #D4B285 46px, #D4B285 47px), repeating-linear-gradient(-45deg, transparent, transparent 46px, #D4B285 46px, #D4B285 47px)",
+            "repeating-linear-gradient(45deg, transparent, transparent 46px, #E1AD01 46px, #E1AD01 47px), repeating-linear-gradient(-45deg, transparent, transparent 46px, #E1AD01 46px, #E1AD01 47px)",
         }}
       />
 
