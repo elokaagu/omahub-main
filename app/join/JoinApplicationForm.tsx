@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { X, Loader2, ImagePlus } from "lucide-react";
 import {
@@ -165,7 +165,6 @@ export function JoinApplicationForm() {
     designerName: string;
     email: string;
   } | null>(null);
-  const { toast } = useToast();
 
   const clearFieldError = (name: string) => {
     setFieldErrors((prev) => {
@@ -201,11 +200,9 @@ export function JoinApplicationForm() {
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok || typeof json.url !== "string") {
-        toast({
-          title: "Upload failed",
+        toast.error("Upload failed", {
           description:
             typeof json.error === "string" ? json.error : "Please try again.",
-          variant: "destructive",
         });
         setPhotoSlots((prev) =>
           prev.map((s, i) => (i === index ? { ...s, uploading: false } : s)),
@@ -218,10 +215,8 @@ export function JoinApplicationForm() {
         ),
       );
     } catch {
-      toast({
-        title: "Upload failed",
+      toast.error("Upload failed", {
         description: "Please check your connection and try again.",
-        variant: "destructive",
       });
       setPhotoSlots((prev) =>
         prev.map((s, i) => (i === index ? { ...s, uploading: false } : s)),
@@ -240,10 +235,7 @@ export function JoinApplicationForm() {
     if (isSubmitting) return;
 
     if (photoSlots.some((s) => s.uploading)) {
-      toast({
-        title: "Please wait for your photos to finish uploading",
-        variant: "destructive",
-      });
+      toast.error("Please wait for your photos to finish uploading");
       return;
     }
 
@@ -260,12 +252,9 @@ export function JoinApplicationForm() {
       if (firstInvalid) {
         queueMicrotask(() => document.getElementById(firstInvalid)?.focus());
       }
-      toast({
-        title: next.imageUrls
-          ? next.imageUrls
-          : "Please fix the highlighted fields",
-        variant: "destructive",
-      });
+      toast.error(
+        next.imageUrls ? next.imageUrls : "Please fix the highlighted fields",
+      );
       return;
     }
 
@@ -293,8 +282,7 @@ export function JoinApplicationForm() {
           designerName: formData.designerName,
           email: formData.email,
         });
-        toast({
-          title: "Application received",
+        toast.success("Application received", {
           description:
             result.message ??
             "Thank you - we've saved your application and sent a confirmation.",
@@ -311,22 +299,14 @@ export function JoinApplicationForm() {
         const errorMessage = !result.ok
           ? result.error
           : "Failed to submit application.";
-        toast({
-          title: "Submission error",
-          description: errorMessage,
-          variant: "destructive",
-        });
+        toast.error("Submission error", { description: errorMessage });
       }
     } catch (error) {
       const errorMessage =
         error instanceof Error
           ? error.message
           : "There was an error submitting your application. Please check your connection and try again.";
-      toast({
-        title: "Submission error",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      toast.error("Submission error", { description: errorMessage });
     } finally {
       setIsSubmitting(false);
     }
