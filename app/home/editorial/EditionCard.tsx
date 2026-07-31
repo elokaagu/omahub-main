@@ -57,7 +57,7 @@ export function EditionCard({ edition }: { edition: Edition }) {
     : undefined;
 
   return (
-    <article className="group relative flex min-h-[520px] flex-col justify-end overflow-hidden rounded-2xl bg-gradient-to-b from-[#804F4D] to-oma-plum shadow-sm ring-1 ring-oma-cocoa/10 transition-shadow duration-300 hover:shadow-lg sm:min-h-[560px]">
+    <article className="group relative flex min-h-[520px] flex-col justify-end overflow-hidden rounded-2xl bg-gradient-to-b from-[#5a2f42] to-oma-plum shadow-sm ring-1 ring-oma-cocoa/10 transition-shadow duration-300 hover:shadow-lg sm:min-h-[560px]">
       {/* Campaign photo, full-bleed behind everything */}
       <div
         aria-hidden
