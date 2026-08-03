@@ -1,5 +1,5 @@
 import { unstable_cache } from "next/cache";
-import type { InstagramPost } from "./types";
+import type { InstagramMediaType, InstagramPost } from "./types";
 
 const POST_LIMIT = 8;
 const CACHE_SECONDS = 60 * 60;
@@ -123,17 +123,18 @@ async function fetchOEmbedPosts(): Promise<InstagramPost[]> {
 
       if (!payload.thumbnail_url) return null;
 
-      return {
+      const post: InstagramPost = {
         id: `oembed-${index}-${postUrl}`,
         permalink: postUrl,
         imageUrl: payload.thumbnail_url,
-        caption: payload.title,
-        mediaType: "IMAGE" as const,
+        mediaType: "IMAGE" satisfies InstagramMediaType,
+        ...(payload.title ? { caption: payload.title } : {}),
       };
+      return post;
     }),
   );
 
-  return posts.filter((post): post is InstagramPost => Boolean(post));
+  return posts.filter((post): post is InstagramPost => post !== null);
 }
 
 async function buildInstagramPosts(): Promise<InstagramPost[]> {

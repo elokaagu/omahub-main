@@ -1,5 +1,5 @@
 type JsonLdProps = {
-  data: Record<string, unknown> | Array<Record<string, unknown>>;
+  data: unknown | unknown[];
 };
 
 /** Server-rendered JSON-LD for crawlers and answer engines. */
