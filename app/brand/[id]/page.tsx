@@ -1,12 +1,13 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getBrandCollections } from "@/lib/services/brandService";
+import { getBrandCollections, getApplicationImageUrlsForBrand } from "@/lib/services/brandService";
 import {
   generateBreadcrumbStructuredData,
   generateSEOMetadata,
   generateStructuredData,
   optimizeMetaDescription,
 } from "@/lib/seo";
+import { resolveBrandProfileImageUrl } from "@/lib/brands/directoryListingImage";
 import { JsonLd } from "@/components/seo/JsonLd";
 import ClientBrandProfile from "./ClientBrandProfile";
 import { getCachedBrandById } from "./cachedBrand";
@@ -46,6 +47,16 @@ export async function generateMetadata({
       `Discover ${brand.name}, a premium fashion brand${brand.location ? ` from ${brand.location}` : ""}. Explore their unique collections and connect with their expert team.`;
 
     const description = trimMetaDescription(rawDescription);
+    let applicationImageUrls: string[] | undefined;
+    if (!resolveBrandProfileImageUrl(brand as any)) {
+      applicationImageUrls = await getApplicationImageUrlsForBrand(
+        brand.name,
+        brand.contact_email,
+      );
+    }
+    const profileImage =
+      resolveBrandProfileImageUrl(brand as any, applicationImageUrls) ||
+      "/OmaHubBanner.png";
 
     return generateSEOMetadata({
       title: `${brand.name} - Premium Fashion Brand`,
@@ -63,9 +74,7 @@ export async function generateMetadata({
       ].filter(Boolean),
       url: `/brand/${params.id}`,
       type: "profile",
-      image: brand.brand_images?.[0]?.storage_path
-        ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${brand.brand_images[0].storage_path}`
-        : "/OmaHubBanner.png",
+      image: profileImage,
       author: brand.name,
       brand: brand.name,
       category: brand.category,
@@ -87,11 +96,22 @@ export default async function BrandPage({ params }: BrandPageProps) {
   }
 
   const collections = await getBrandCollections(params.id);
-  const initialBrandData = mapBrandToProfileData(brand as any, collections as any);
+  let applicationImageUrls: string[] | undefined;
+  if (!resolveBrandProfileImageUrl(brand as any)) {
+    applicationImageUrls = await getApplicationImageUrlsForBrand(
+      brand.name,
+      brand.contact_email,
+    );
+  }
+  const initialBrandData = mapBrandToProfileData(
+    brand as any,
+    collections as any,
+    applicationImageUrls,
+  );
 
-  const brandImage = brand.brand_images?.[0]?.storage_path
-    ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${brand.brand_images[0].storage_path}`
-    : brand.image;
+  const brandImage =
+    resolveBrandProfileImageUrl(brand as any, applicationImageUrls) ||
+    brand.image;
 
   const socialLinks = [
     brand.instagram,

@@ -6,10 +6,15 @@ import useReviews from "@/lib/hooks/useReviews";
 import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
 import { getProductsByBrand } from "@/lib/services/productService";
-import { getBrandById, getBrandCollections } from "@/lib/services/brandService";
+import {
+  getBrandById,
+  getBrandCollections,
+  getApplicationImageUrlsForBrand,
+} from "@/lib/services/brandService";
 import { toast } from "sonner";
 import { Review } from "@/lib/hooks/useReviews";
 import { mapBrandToProfileData } from "./brandProfileMapper";
+import { resolveBrandProfileImageUrl } from "@/lib/brands/directoryListingImage";
 import { BrandHeaderSection } from "./BrandHeaderSection";
 import { BrandProductsSection } from "./BrandProductsSection";
 import { BrandCollectionsSection } from "./BrandCollectionsSection";
@@ -129,9 +134,17 @@ export default function ClientBrandProfile({
         ]);
 
         if (brand) {
+          let applicationImageUrls: string[] | undefined;
+          if (!resolveBrandProfileImageUrl(brand as any)) {
+            applicationImageUrls = await getApplicationImageUrlsForBrand(
+              brand.name,
+              brand.contact_email,
+            );
+          }
           const formattedBrandData: BrandProfileData = mapBrandToProfileData(
             brand as any,
-            collections as any
+            collections as any,
+            applicationImageUrls,
           );
           setBrandData(formattedBrandData);
         }

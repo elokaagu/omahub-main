@@ -10,7 +10,7 @@ import { getProfile, isAdmin } from "./authService";
 import { getAdminClientLazy } from "@/lib/supabase/adminClientLazy";
 
 import { clearCollectionsCache } from "./collectionService";
-import { isUsableBrandCardImageUrl } from "@/lib/brands/directoryListingImage";
+import { isUsableBrandCardImageUrl, pickPrimaryBrandImageUrl } from "@/lib/brands/directoryListingImage";
 
 // Cache configuration
 let brandsCache: {
@@ -28,6 +28,18 @@ const CACHE_EXPIRY = 30 * 1000; // 30 seconds for stable performance
 
 // Define essential fields to reduce payload size
 const ESSENTIAL_BRAND_FIELDS = "*";
+
+function resolveBrandRowImage(item: BrandsQueryRow): string {
+  const fromBrandImages = pickPrimaryBrandImageUrl(
+    item.brand_images as BrandImage[] | null | undefined,
+  );
+  if (fromBrandImages) return fromBrandImages;
+
+  const legacy = item.image?.trim();
+  if (legacy && isUsableBrandCardImageUrl(legacy)) return legacy;
+
+  return "/placeholder-image.jpg";
+}
 
 /** Row from `brands` queries with `products(count)` and `brand_images` embeds */
 type BrandsQueryRow = {
@@ -274,9 +286,7 @@ export async function getAllBrandsWithProductCounts(): Promise<
         rating: item.rating || 4.5,
         is_verified: item.is_verified || false,
         // Construct image URL from brand_images relationship
-        image: item.brand_images?.[0]?.storage_path
-          ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${item.brand_images[0].storage_path}`
-          : item.image || "/placeholder-image.jpg", // Fallback to old image field for backward compatibility
+        image: resolveBrandRowImage(item),
         brand_images: (item.brand_images || []) as BrandImage[],
         product_count: item.products?.[0]?.count || 0,
         // Include video fields
@@ -352,9 +362,7 @@ export async function getAllBrands(
           rating: item.rating || 4.5,
           is_verified: item.is_verified || false,
           // Construct image URL from brand_images relationship
-          image: item.brand_images?.[0]?.storage_path
-            ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${item.brand_images[0].storage_path}`
-            : item.image || "/placeholder-image.jpg", // Fallback to old image field for backward compatibility
+          image: resolveBrandRowImage(item),
           brand_images: (item.brand_images || []) as BrandImage[],
           video_url: item.video_url || undefined,
           video_thumbnail: item.video_thumbnail || undefined,
@@ -445,9 +453,7 @@ export async function getAllBrands(
         rating: item.rating || 4.5,
         is_verified: item.is_verified || false,
         // Construct image URL from brand_images relationship
-        image: item.brand_images?.[0]?.storage_path
-          ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${item.brand_images[0].storage_path}`
-          : item.image || "/placeholder-image.jpg", // Fallback to old image field for backward compatibility
+        image: resolveBrandRowImage(item),
         video_url: item.video_url || undefined,
         video_thumbnail: item.video_thumbnail || undefined,
         // Include the new normalized images
@@ -661,6 +667,35 @@ export async function getBrandById(id: string): Promise<Brand | null> {
 
   console.log(`Successfully fetched brand: ${data.name} (${data.id})`);
   return data;
+}
+
+/**
+ * Approved designer-application photos for a brand (used when profile images
+ * were not copied into brand_images yet).
+ */
+export async function getApplicationImageUrlsForBrand(
+  brandName: string,
+  contactEmail?: string | null,
+): Promise<string[]> {
+  if (!supabase || !brandName.trim()) return [];
+
+  let query = supabase
+    .from("designer_applications")
+    .select("image_urls")
+    .eq("status", "approved")
+    .eq("brand_name", brandName.trim());
+
+  if (contactEmail?.trim()) {
+    query = query.ilike("email", contactEmail.trim());
+  }
+
+  const { data, error } = await query
+    .order("updated_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error || !data?.image_urls) return [];
+  return (data.image_urls as string[]).filter((url) => url?.trim());
 }
 
 /**

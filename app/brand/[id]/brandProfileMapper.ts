@@ -1,9 +1,5 @@
 import type { BrandProfileData } from "./types";
-import {
-  DIRECTORY_LISTING_FALLBACK_LOGO,
-  isUsableBrandCardImageUrl,
-  resolveBrandDirectoryCardImageUrl,
-} from "@/lib/brands/directoryListingImage";
+import { resolveBrandProfileImageUrl } from "@/lib/brands/directoryListingImage";
 
 type BrandRecord = {
   id: string;
@@ -36,16 +32,13 @@ type CollectionRecord = {
 
 export function mapBrandToProfileData(
   brand: BrandRecord,
-  collections: CollectionRecord[]
+  collections: CollectionRecord[],
+  applicationImageUrls?: string[] | null,
 ): BrandProfileData {
-  const resolvedImage = resolveBrandDirectoryCardImageUrl(brand as any);
-  const profileImage =
-    isUsableBrandCardImageUrl(resolvedImage) &&
-    resolvedImage !== DIRECTORY_LISTING_FALLBACK_LOGO
-      ? resolvedImage
-      : isUsableBrandCardImageUrl(brand.video_thumbnail)
-        ? brand.video_thumbnail!.trim()
-        : undefined;
+  const profileImage = resolveBrandProfileImageUrl(
+    brand as any,
+    applicationImageUrls,
+  );
 
   return {
     id: brand.id,

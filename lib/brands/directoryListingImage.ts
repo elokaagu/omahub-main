@@ -1,4 +1,5 @@
 import type { Brand } from "@/lib/supabase";
+import { brandAssetsPublicUrl } from "@/lib/brands/applicationBrandImages";
 
 /** Shown in BrandCard when there is no Supabase asset or valid legacy URL. */
 export const DIRECTORY_LISTING_FALLBACK_LOGO = "/brand/omahub-logo.png";
@@ -11,33 +12,86 @@ const BROKEN_IMAGE_FALLBACKS = new Set([
   "/placeholder.svg",
 ]);
 
+type BrandImageLike = {
+  role?: string | null;
+  storage_path?: string | null;
+};
+
 /** True when `url` is non-empty and not a known placeholder (legacy `brands.image`, logos, etc.). */
 export function isUsableBrandCardImageUrl(url: string | null | undefined): boolean {
   const t = url?.trim() ?? "";
   return t.length > 0 && !BROKEN_IMAGE_FALLBACKS.has(t);
 }
 
+function storagePathToPublicUrl(path: string | null | undefined): string | null {
+  const trimmed = path?.trim();
+  if (!trimmed) return null;
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+    return isUsableBrandCardImageUrl(trimmed) ? trimmed : null;
+  }
+  const url = brandAssetsPublicUrl(trimmed);
+  return isUsableBrandCardImageUrl(url) ? url : null;
+}
+
+/** Prefer the application cover photo, then any synced brand image. */
+export function pickPrimaryBrandImageUrl(
+  brandImages: BrandImageLike[] | null | undefined,
+): string | null {
+  if (!brandImages?.length) return null;
+
+  const cover = brandImages.find((img) => img.role === "cover");
+  const coverUrl = storagePathToPublicUrl(cover?.storage_path);
+  if (coverUrl) return coverUrl;
+
+  for (const img of brandImages) {
+    const url = storagePathToPublicUrl(img.storage_path);
+    if (url) return url;
+  }
+
+  return null;
+}
+
 /**
- * Same resolution rules as the directory / BrandCard image (API `image`, then `brand_images[0]`).
+ * Profile / directory image: application cover in `brand_images`, then legacy
+ * `brands.image` (often the first application URL saved on approval).
  */
 export function resolveBrandDirectoryCardImageUrl(brand: Brand): string {
+  const fromBrandImages = pickPrimaryBrandImageUrl(brand.brand_images);
+  if (fromBrandImages) return fromBrandImages;
+
   const fromApi = brand.image?.trim() ?? "";
-  if (fromApi && !BROKEN_IMAGE_FALLBACKS.has(fromApi)) {
+  if (isUsableBrandCardImageUrl(fromApi)) {
     return fromApi;
   }
 
   const fromLogo = brand.logo_url?.trim() ?? "";
-  if (fromLogo && !BROKEN_IMAGE_FALLBACKS.has(fromLogo)) {
+  if (isUsableBrandCardImageUrl(fromLogo)) {
     return fromLogo;
   }
 
-  const path = brand.brand_images?.[0]?.storage_path?.trim();
-  const base = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-  if (path && base) {
-    return `${base}/storage/v1/object/public/brand-assets/${path}`;
+  const fromVideo = brand.video_thumbnail?.trim() ?? "";
+  if (isUsableBrandCardImageUrl(fromVideo)) {
+    return fromVideo;
   }
 
   return DIRECTORY_LISTING_FALLBACK_LOGO;
+}
+
+/** Profile image URL when application photos are available but not yet synced. */
+export function resolveBrandProfileImageUrl(
+  brand: Brand,
+  applicationImageUrls?: string[] | null,
+): string | undefined {
+  const resolved = resolveBrandDirectoryCardImageUrl(brand);
+  if (isUsableBrandCardImageUrl(resolved) && resolved !== DIRECTORY_LISTING_FALLBACK_LOGO) {
+    return resolved;
+  }
+
+  const fromApplication = applicationImageUrls
+    ?.map((url) => url.trim())
+    .find(isUsableBrandCardImageUrl);
+
+  return fromApplication || undefined;
 }
 
 /**
