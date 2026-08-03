@@ -20,6 +20,8 @@ import {
 import { HeroSlideFormFields } from "../components/HeroSlideFormFields";
 import { HeroSlidePreview } from "../components/HeroSlidePreview";
 import { SuperAdminHeroGate } from "../SuperAdminHeroGate";
+import { useAutosave } from "@/lib/hooks/useAutosave";
+import { AutosaveIndicator } from "@/components/studio/AutosaveIndicator";
 
 type HeroEditLoadState =
   | { type: "loading" }
@@ -55,7 +57,6 @@ function EditHeroSlideInner() {
   const [loadState, setLoadState] = useState<HeroEditLoadState>({
     type: "loading",
   });
-  const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState<UpdateHeroSlideData>({
     image: "",
     title: "",
@@ -65,6 +66,21 @@ function EditHeroSlideInner() {
     is_editorial: true,
     display_order: 1,
     is_active: true,
+  });
+  const [formBaseline, setFormBaseline] = useState<
+    UpdateHeroSlideData | undefined
+  >(undefined);
+
+  const { status: autosaveStatus, lastSavedAt } = useAutosave({
+    data: formData,
+    baseline: formBaseline,
+    enabled: loadState.type === "ready" && Boolean(user && slideId),
+    debounceMs: 1000,
+    shouldSkip: (data) => Boolean(validateHeroSlideForm(data as HeroSlideFormShape)),
+    onSave: async (data) => {
+      if (!user || !slideId) return;
+      await updateHeroSlide(user.id, slideId, data);
+    },
   });
 
   const loadHeroSlide = useCallback(async () => {
@@ -80,6 +96,16 @@ function EditHeroSlideInner() {
       }
 
       setFormData({
+        image: slide.image,
+        title: slide.title,
+        subtitle: slide.subtitle || "",
+        link: slide.link || "",
+        hero_title: slide.hero_title || "",
+        is_editorial: slide.is_editorial,
+        display_order: slide.display_order,
+        is_active: slide.is_active,
+      });
+      setFormBaseline({
         image: slide.image,
         title: slide.title,
         subtitle: slide.subtitle || "",
@@ -138,17 +164,7 @@ function EditHeroSlideInner() {
       return;
     }
 
-    try {
-      setIsSaving(true);
-      await updateHeroSlide(user.id, slideId, formData);
-      toast.success("Hero slide updated successfully");
-      router.push("/studio/hero");
-    } catch (error) {
-      console.error("Error updating hero slide:", error);
-      toast.error("Failed to update hero slide");
-    } finally {
-      setIsSaving(false);
-    }
+    router.push("/studio/hero");
   };
 
   if (!slideId) {
@@ -230,21 +246,24 @@ function EditHeroSlideInner() {
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-8">
-      <div className="flex items-center gap-4 mb-8">
-        <Button asChild variant="outline" size="sm">
-          <NavigationLink href="/studio/hero">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Hero Slides
-          </NavigationLink>
-        </Button>
-        <div>
-          <h1 className="text-3xl font-canela text-oma-black mb-2">
-            Edit Hero Slide
-          </h1>
-          <p className="text-oma-cocoa">
-            Update the hero slide for the homepage carousel
-          </p>
+      <div className="flex flex-wrap items-start justify-between gap-4 mb-8">
+        <div className="flex items-center gap-4">
+          <Button asChild variant="outline" size="sm">
+            <NavigationLink href="/studio/hero">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Hero Slides
+            </NavigationLink>
+          </Button>
+          <div>
+            <h1 className="text-3xl font-canela text-oma-black mb-2">
+              Edit Hero Slide
+            </h1>
+            <p className="text-oma-cocoa">
+              Changes save automatically to Supabase
+            </p>
+          </div>
         </div>
+        <AutosaveIndicator status={autosaveStatus} lastSavedAt={lastSavedAt} />
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
@@ -255,24 +274,16 @@ function EditHeroSlideInner() {
         />
         <HeroSlidePreview formData={formData as HeroSlideFormShape} />
 
-        {/* Submit Button */}
         <div className="flex justify-end gap-4">
           <Button type="button" variant="outline" asChild>
-            <NavigationLink href="/studio/hero">Cancel</NavigationLink>
+            <NavigationLink href="/studio/hero">Back to list</NavigationLink>
           </Button>
           <Button
             type="submit"
-            disabled={isSaving}
+            disabled={autosaveStatus === "saving"}
             className="bg-oma-plum hover:bg-oma-plum/90"
           >
-            {isSaving ? (
-              <>
-                <div className="h-4 w-4 mr-2 rounded-full border border-current border-t-transparent" />
-                Saving...
-              </>
-            ) : (
-              "Save Changes"
-            )}
+            Done
           </Button>
         </div>
       </form>

@@ -30,6 +30,8 @@ import {
 } from "@/components/ui/select";
 import { FileUpload } from "@/components/ui/file-upload";
 import { CollectionImageManager } from "@/components/studio/CollectionImageManager";
+import { AutosaveIndicator } from "@/components/studio/AutosaveIndicator";
+import { useAutosave } from "@/lib/hooks/useAutosave";
 import { ArrowLeft, Save } from "lucide-react";
 import { toast } from "sonner";
 import { CollectionEditUnavailable } from "./CollectionEditUnavailable";
@@ -62,8 +64,27 @@ export default function EditCataloguePage({
   const [brands, setBrands] = useState<Brand[]>([]);
   const [loadStatus, setLoadStatus] = useState<LoadStatus>("loading");
   const [loadErrorDetail, setLoadErrorDetail] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<CollectionFormFields>(emptyForm);
+  const [formBaseline, setFormBaseline] = useState<
+    CollectionFormFields | undefined
+  >(undefined);
+
+  const { status: autosaveStatus, lastSavedAt } = useAutosave({
+    data: form,
+    baseline: formBaseline,
+    enabled: loadStatus === "ready",
+    debounceMs: 1000,
+    shouldSkip: (data) =>
+      !data.title.trim() || !data.brandId || !data.image.trim(),
+    onSave: async (data) => {
+      await updateCollection(id, {
+        title: data.title,
+        description: data.description.trim() || undefined,
+        brand_id: data.brandId,
+        image: data.image,
+      });
+    },
+  });
 
   const loadCollection = useCallback(async () => {
     setLoadStatus("loading");
@@ -83,6 +104,12 @@ export default function EditCataloguePage({
 
       setBrands(brandsData);
       setForm({
+        title: catalogueData.title,
+        description: catalogueData.description || "",
+        brandId: catalogueData.brand_id,
+        image: catalogueData.image,
+      });
+      setFormBaseline({
         title: catalogueData.title,
         description: catalogueData.description || "",
         brandId: catalogueData.brand_id,
@@ -123,23 +150,7 @@ export default function EditCataloguePage({
       return;
     }
 
-    setSaving(true);
-    try {
-      await updateCollection(id, {
-        title: form.title,
-        description: form.description.trim() || undefined,
-        brand_id: form.brandId,
-        image: form.image,
-      });
-
-      toast.success("Collection updated successfully");
-      router.push("/studio/collections");
-    } catch (error) {
-      console.error("Error updating collection:", error);
-      toast.error("Failed to update collection");
-    } finally {
-      setSaving(false);
-    }
+    router.push("/studio/collections");
   };
 
   const handleImageUpload = (url: string) => {
@@ -196,13 +207,16 @@ export default function EditCataloguePage({
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-      <div className="flex items-center mb-8">
-        <Button variant="outline" size="icon" className="mr-4" asChild>
-          <Link href="/studio/collections" aria-label="Back to collections">
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
-        </Button>
-        <h1 className="text-3xl font-canela text-gray-900">Edit Collection</h1>
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
+        <div className="flex items-center">
+          <Button variant="outline" size="icon" className="mr-4" asChild>
+            <Link href="/studio/collections" aria-label="Back to collections">
+              <ArrowLeft className="h-4 w-4" />
+            </Link>
+          </Button>
+          <h1 className="text-3xl font-canela text-gray-900">Edit Collection</h1>
+        </div>
+        <AutosaveIndicator status={autosaveStatus} lastSavedAt={lastSavedAt} />
       </div>
 
       <div className="space-y-8">
@@ -210,7 +224,7 @@ export default function EditCataloguePage({
           <CardHeader>
             <CardTitle>Collection Details</CardTitle>
             <CardDescription>
-              Update your collection information
+              Changes save automatically to Supabase
             </CardDescription>
           </CardHeader>
           <CardContent className="p-6">
@@ -283,10 +297,10 @@ export default function EditCataloguePage({
                 <Button
                   type="submit"
                   className="bg-oma-plum hover:bg-oma-plum/90 flex items-center gap-2"
-                  disabled={saving}
+                  disabled={autosaveStatus === "saving"}
                 >
                   <Save className="h-4 w-4" />
-                  {saving ? "Saving..." : "Save Changes"}
+                  Done
                 </Button>
               </div>
             </form>

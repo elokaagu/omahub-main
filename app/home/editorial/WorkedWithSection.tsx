@@ -32,7 +32,6 @@ export function WorkedWithSection({ brands }: WorkedWithSectionProps) {
         title="Brands we've worked with"
         subtitle="Every brand here has shown at an OmaHub edition, curated and verified in person."
         brands={brands}
-        scrollable={false}
       />
       <div className="mt-10 text-center">
         <Link

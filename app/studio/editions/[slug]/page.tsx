@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import { getEditionBySlug } from "@/lib/data/editions";
@@ -24,6 +24,8 @@ import {
   getStoryParagraphs,
 } from "@/lib/editions/storyContent";
 import { parseEditionVideo } from "@/lib/editions/editionVideoUrl";
+import { useAutosave } from "@/lib/hooks/useAutosave";
+import { AutosaveIndicator } from "@/components/studio/AutosaveIndicator";
 import { AuthImage } from "@/components/ui/auth-image";
 import { Button } from "@/components/ui/button";
 import { FileUpload } from "@/components/ui/file-upload";
@@ -78,7 +80,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
   const [videoUrlInput, setVideoUrlInput] = useState("");
   const [videoThumbnailInput, setVideoThumbnailInput] = useState("");
   const [videoPosition, setVideoPosition] = useState<0 | 1>(0);
-  const [isSavingVideo, setIsSavingVideo] = useState(false);
+  const [isRemovingVideo, setIsRemovingVideo] = useState(false);
   const [lineupEntries, setLineupEntries] = useState<EditionLineupBrand[] | null>(
     null,
   );
@@ -96,6 +98,44 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
     const rows = await getEditionLineup(slug);
     setLineupEntries(rows);
   }, [slug]);
+
+  const videoDraft = useMemo(
+    () => ({
+      url: videoUrlInput,
+      thumbnail: videoThumbnailInput,
+      position: videoPosition,
+    }),
+    [videoUrlInput, videoThumbnailInput, videoPosition],
+  );
+
+  const videoBaseline = useMemo(() => {
+    const currentVideo = images?.find((i) => i.kind === "video");
+    return {
+      url: currentVideo?.image_url || "",
+      thumbnail: currentVideo?.alt_text || "",
+      position: (currentVideo?.display_order === 1 ? 1 : 0) as 0 | 1,
+    };
+  }, [images]);
+
+  const { status: videoAutosaveStatus, lastSavedAt: videoLastSavedAt } =
+    useAutosave({
+      data: videoDraft,
+      baseline: images ? videoBaseline : undefined,
+      enabled: Boolean(user && images),
+      debounceMs: 900,
+      shouldSkip: (draft) => !draft.url.trim(),
+      onSave: async (draft) => {
+        if (!user) return;
+        await addEditionImage(user.id, {
+          edition_slug: slug,
+          image_url: draft.url.trim(),
+          kind: "video",
+          alt_text: draft.thumbnail.trim() || null,
+          position: draft.position,
+        });
+        await refetch();
+      },
+    });
 
   useEffect(() => {
     void refetch();
@@ -257,39 +297,14 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
     }
   };
 
-  const handleVideoSave = async () => {
-    if (!user) return;
-    const url = videoUrlInput.trim();
-    if (!url) {
-      toast.error("Add a video URL first");
-      return;
-    }
-    try {
-      setIsSavingVideo(true);
-      await addEditionImage(user.id, {
-        edition_slug: slug,
-        image_url: url,
-        kind: "video",
-        alt_text: videoThumbnailInput.trim() || null,
-        position: videoPosition,
-      });
-      toast.success("Video updated");
-      await refetch();
-    } catch (error) {
-      console.error("Error setting edition video:", error);
-      toast.error(
-        error instanceof Error ? error.message : "Failed to update video"
-      );
-    } finally {
-      setIsSavingVideo(false);
-    }
-  };
-
   const handleVideoRemove = async () => {
     if (!user || !video) return;
     try {
-      setIsSavingVideo(true);
+      setIsRemovingVideo(true);
       await deleteEditionImage(user.id, video.id);
+      setVideoUrlInput("");
+      setVideoThumbnailInput("");
+      setVideoPosition(0);
       toast.success("Video removed");
       await refetch();
     } catch (error) {
@@ -298,7 +313,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
         error instanceof Error ? error.message : "Failed to remove video"
       );
     } finally {
-      setIsSavingVideo(false);
+      setIsRemovingVideo(false);
     }
   };
 
@@ -333,13 +348,14 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
     }
   };
 
-  const handleAddLineupBrand = async () => {
-    if (!user || !selectedLineupBrandId) return;
+  const handleAddLineupBrand = async (brandId?: string) => {
+    const targetBrandId = brandId || selectedLineupBrandId;
+    if (!user || !targetBrandId) return;
     try {
       setIsAddingLineupBrand(true);
       await addEditionLineupBrand(user.id, {
         edition_slug: slug,
-        brand_id: selectedLineupBrandId,
+        brand_id: targetBrandId,
       });
       toast.success("Brand added to lineup");
       setSelectedLineupBrandId("");
@@ -373,21 +389,27 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
-      <div className="flex items-center gap-4 mb-8">
-        <Button asChild variant="outline" size="sm">
-          <NavigationLink href="/studio/editions">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
-          </NavigationLink>
-        </Button>
-        <div>
-          <h1 className="text-3xl font-canela text-oma-black mb-1">
-            {edition.title}
-          </h1>
-          <p className="text-oma-cocoa">
-            Edition {edition.number} · {edition.dateLabel}
-          </p>
+      <div className="flex flex-wrap items-start justify-between gap-4 mb-8">
+        <div className="flex items-center gap-4">
+          <Button asChild variant="outline" size="sm">
+            <NavigationLink href="/studio/editions">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back
+            </NavigationLink>
+          </Button>
+          <div>
+            <h1 className="text-3xl font-canela text-oma-black mb-1">
+              {edition.title}
+            </h1>
+            <p className="text-oma-cocoa">
+              Edition {edition.number} · {edition.dateLabel}
+            </p>
+          </div>
         </div>
+        <AutosaveIndicator
+          status={videoAutosaveStatus}
+          lastSavedAt={videoLastSavedAt}
+        />
       </div>
 
       <section className="mb-12">
@@ -437,7 +459,8 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
           (or left, if you choose below). Paste a{" "}
           <strong>Vimeo link</strong> (e.g. vimeo.com/1206857643), a direct{" "}
           <strong>.mp4 URL</strong>, or upload a video file. Add an optional
-          thumbnail for mp4 files — it shows before playback starts.
+          thumbnail for mp4 files — it shows before playback starts. Changes
+          save automatically to Supabase.
         </p>
 
         {video?.image_url && (() => {
@@ -482,7 +505,6 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
           key={`video-upload-${video?.id ?? "none"}`}
           onUploadComplete={(url) => {
             setVideoUrlInput(url);
-            toast.success("Video uploaded — click Save video to publish");
           }}
           bucket="edition-galleries"
           path={`${slug}/video`}
@@ -509,7 +531,6 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
           key={`video-thumb-${video?.id ?? "none"}-${videoThumbnailInput}`}
           onUploadComplete={(url) => {
             setVideoThumbnailInput(url);
-            toast.success("Thumbnail uploaded — click Save video to apply");
           }}
           bucket="edition-galleries"
           path={`${slug}/video-thumbnail`}
@@ -553,17 +574,14 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
         </div>
 
         <div className="flex items-center gap-3">
-          <Button
-            type="button"
-            onClick={() => void handleVideoSave()}
-            disabled={isSavingVideo}
-          >
-            {isSavingVideo ? "Saving…" : video ? "Update video" : "Save video"}
-          </Button>
+          <AutosaveIndicator
+            status={videoAutosaveStatus}
+            lastSavedAt={videoLastSavedAt}
+          />
           {video && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button type="button" variant="outline" disabled={isSavingVideo}>
+                <Button type="button" variant="outline" disabled={isRemovingVideo}>
                   Remove
                 </Button>
               </AlertDialogTrigger>
@@ -889,12 +907,22 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
             </label>
             <Select
               value={selectedLineupBrandId || "__none"}
-              onValueChange={(value) =>
-                setSelectedLineupBrandId(value === "__none" ? "" : value)
-              }
+              onValueChange={(value) => {
+                if (value === "__none") {
+                  setSelectedLineupBrandId("");
+                  return;
+                }
+                setSelectedLineupBrandId(value);
+                void handleAddLineupBrand(value);
+              }}
+              disabled={isAddingLineupBrand || availableLineupBrands.length === 0}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select a brand" />
+                <SelectValue
+                  placeholder={
+                    isAddingLineupBrand ? "Adding…" : "Select a brand"
+                  }
+                />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="__none">Select a brand</SelectItem>
@@ -905,15 +933,10 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
                 ))}
               </SelectContent>
             </Select>
+            <p className="mt-2 text-xs text-oma-cocoa/70">
+              Selecting a brand adds it to the lineup and saves immediately.
+            </p>
           </div>
-          <Button
-            type="button"
-            onClick={() => void handleAddLineupBrand()}
-            disabled={!selectedLineupBrandId || isAddingLineupBrand}
-            className="bg-oma-plum hover:bg-oma-plum/90"
-          >
-            {isAddingLineupBrand ? "Adding…" : "Add to lineup"}
-          </Button>
         </div>
 
         {lineupBrands.length === 0 && (
