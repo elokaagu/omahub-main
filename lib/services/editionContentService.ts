@@ -1,3 +1,4 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import type { Edition, EditionStatus } from "@/lib/data/editions";
 
@@ -39,10 +40,11 @@ export type EditionContentInput = {
   theme_announced?: boolean;
 };
 
-async function assertSuperAdmin(userId: string): Promise<void> {
-  if (!supabase) throw new Error("Supabase client not available");
-
-  const { data: profile, error } = await supabase
+async function assertSuperAdmin(
+  userId: string,
+  client: SupabaseClient,
+): Promise<void> {
+  const { data: profile, error } = await client
     .from("profiles")
     .select("role")
     .eq("id", userId)
@@ -56,10 +58,12 @@ async function assertSuperAdmin(userId: string): Promise<void> {
 
 export async function getEditionContent(
   editionSlug: string,
+  client?: SupabaseClient,
 ): Promise<EditionContentRecord | null> {
-  if (!supabase) return null;
+  const db = client ?? supabase;
+  if (!db) return null;
 
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("edition_content")
     .select("*")
     .eq("edition_slug", editionSlug)
@@ -93,10 +97,12 @@ export async function upsertEditionContent(
   userId: string,
   editionSlug: string,
   input: EditionContentInput,
+  client?: SupabaseClient,
 ): Promise<EditionContentRecord> {
-  if (!supabase) throw new Error("Supabase client not available");
+  const db = client ?? supabase;
+  if (!db) throw new Error("Supabase client not available");
 
-  await assertSuperAdmin(userId);
+  await assertSuperAdmin(userId, db);
 
   const payload = {
     edition_slug: editionSlug,
@@ -105,7 +111,7 @@ export async function upsertEditionContent(
     updated_at: new Date().toISOString(),
   };
 
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("edition_content")
     .upsert(payload, { onConflict: "edition_slug" })
     .select()

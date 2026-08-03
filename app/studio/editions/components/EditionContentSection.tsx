@@ -25,6 +25,43 @@ export type EditionEditorDraft = EditionContentInput & {
   story_html: string;
 };
 
+type EditionSavePayload = Pick<
+  EditionEditorDraft,
+  | "title"
+  | "card_title"
+  | "excerpt"
+  | "story_html"
+  | "status"
+  | "date_label"
+  | "sort_date"
+  | "city"
+  | "country"
+  | "venue"
+  | "partner"
+  | "lineup_label"
+  | "applications_open"
+  | "theme_announced"
+>;
+
+function toSavePayload(draft: EditionEditorDraft): EditionSavePayload {
+  return {
+    title: draft.title,
+    card_title: draft.card_title,
+    excerpt: draft.excerpt,
+    story_html: draft.story_html,
+    status: draft.status,
+    date_label: draft.date_label,
+    sort_date: draft.sort_date,
+    city: draft.city,
+    country: draft.country,
+    venue: draft.venue,
+    partner: draft.partner,
+    lineup_label: draft.lineup_label,
+    applications_open: draft.applications_open,
+    theme_announced: draft.theme_announced,
+  };
+}
+
 type EditionContentSectionProps = {
   slug: string;
   staticEdition: Edition;
@@ -63,33 +100,17 @@ export function EditionContentSection({
   initialDraft,
 }: EditionContentSectionProps) {
   const [draft, setDraft] = useState<EditionEditorDraft>(initialDraft);
-  const [baseline, setBaseline] = useState(initialDraft);
+  const [baseline, setBaseline] = useState<EditionSavePayload>(() =>
+    toSavePayload(initialDraft),
+  );
   const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   useEffect(() => {
     setDraft(initialDraft);
-    setBaseline(initialDraft);
+    setBaseline(toSavePayload(initialDraft));
   }, [initialDraft]);
 
-  const savePayload = useMemo(
-    () => ({
-      title: draft.title,
-      card_title: draft.card_title,
-      excerpt: draft.excerpt,
-      story_html: draft.story_html,
-      status: draft.status,
-      date_label: draft.date_label,
-      sort_date: draft.sort_date,
-      city: draft.city,
-      country: draft.country,
-      venue: draft.venue,
-      partner: draft.partner,
-      lineup_label: draft.lineup_label,
-      applications_open: draft.applications_open,
-      theme_announced: draft.theme_announced,
-    }),
-    [draft],
-  );
+  const savePayload = useMemo(() => toSavePayload(draft), [draft]);
 
   const { status, lastSavedAt } = useAutosave({
     data: savePayload,
@@ -99,6 +120,7 @@ export function EditionContentSection({
     onSave: async (data) => {
       const response = await fetch(`/api/studio/editions/${slug}/content`, {
         method: "PUT",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
@@ -106,7 +128,7 @@ export function EditionContentSection({
         const body = await response.json().catch(() => ({}));
         throw new Error(body.error || "Failed to save edition");
       }
-      setBaseline({ ...draft });
+      setBaseline(data);
     },
   });
 

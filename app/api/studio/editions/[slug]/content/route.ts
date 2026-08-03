@@ -23,7 +23,7 @@ export async function GET(
     return NextResponse.json({ error: "Edition not found" }, { status: 404 });
   }
 
-  const content = await getEditionContent(params.slug);
+  const content = await getEditionContent(params.slug, authz.supabase);
   return NextResponse.json({ content, staticEdition });
 }
 
@@ -49,7 +49,12 @@ export async function PUT(
   }
 
   try {
-    const saved = await upsertEditionContent(authz.userId, params.slug, body);
+    const saved = await upsertEditionContent(
+      authz.userId,
+      params.slug,
+      body,
+      authz.supabase,
+    );
     return NextResponse.json({ success: true, content: saved });
   } catch (error) {
     console.error("edition_content_save_error", error);
