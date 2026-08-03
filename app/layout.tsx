@@ -8,6 +8,7 @@ import { Toaster } from "sonner";
 import { Analytics } from "@vercel/analytics/react";
 import GoogleTagManager from "@/components/analytics/GoogleTagManager";
 import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
+import { InstagramFeedSection } from "@/components/layout/InstagramFeedSection";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.oma-hub.com";
 const SITE_DESCRIPTION =
@@ -119,7 +120,10 @@ export default async function RootLayout({
       </head>
       <body>
         <Preloader>
-          <RootLayoutClient initialAuth={initialAuth}>
+          <RootLayoutClient
+            initialAuth={initialAuth}
+            instagramFeed={<InstagramFeedSection />}
+          >
             {children}
           </RootLayoutClient>
         </Preloader>

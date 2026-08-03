@@ -9,7 +9,13 @@ import { NavigationProgressBar } from "@/components/ui/navigation-progress-bar";
 import { SearchModal } from "@/components/ui/search-modal";
 import { PageTransition } from "@/components/ui/page-transition";
 
-export default function LayoutContent({ children }: { children: React.ReactNode }) {
+export default function LayoutContent({
+  children,
+  instagramFeed = null,
+}: {
+  children: React.ReactNode;
+  instagramFeed?: React.ReactNode;
+}) {
   const pathname = usePathname();
   const { isNavigating, forceReset } = useNavigation();
   const isHomePage = pathname === "/";
@@ -53,6 +59,7 @@ export default function LayoutContent({ children }: { children: React.ReactNode 
           </PageTransition>
         )}
       </main>
+      {!isStudioPage && instagramFeed}
       {!isStudioPage && <Footer />}
       <SearchModal />
     </>

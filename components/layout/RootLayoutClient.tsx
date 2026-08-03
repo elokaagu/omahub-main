@@ -11,11 +11,13 @@ import LayoutContent from "./LayoutContent";
 interface RootLayoutClientProps {
   children: React.ReactNode;
   initialAuth?: ServerAuthHydration | null;
+  instagramFeed?: React.ReactNode;
 }
 
 export default function RootLayoutClient({
   children,
   initialAuth = null,
+  instagramFeed = null,
 }: RootLayoutClientProps) {
   return (
     <ErrorBoundary>
@@ -23,7 +25,9 @@ export default function RootLayoutClient({
         <NavigationProvider>
           <FavouritesProvider>
             <AuthModalProvider>
-              <LayoutContent>{children}</LayoutContent>
+              <LayoutContent instagramFeed={instagramFeed}>
+                {children}
+              </LayoutContent>
             </AuthModalProvider>
           </FavouritesProvider>
         </NavigationProvider>
