@@ -32,11 +32,10 @@ export function EditorialHero({
         }}
       />
 
-      <div className="relative z-10 mx-auto max-w-7xl px-4 pb-12 pt-[calc(3.5rem+env(safe-area-inset-top,0px))] sm:px-6 sm:pb-16 sm:pt-20 lg:px-8 lg:pb-24 lg:pt-24">
+      <div className="relative z-10 mx-auto max-w-7xl px-4 pb-12 pt-[calc(3.5rem+env(safe-area-inset-top,0px))] sm:px-6 sm:pb-16 sm:pt-[calc(4rem+env(safe-area-inset-top,0px))] lg:px-8 lg:pb-24 lg:pt-24">
         <div className="flex flex-col gap-10 lg:grid lg:min-h-[calc(100svh-6rem)] lg:grid-cols-[minmax(0,46%)_minmax(0,54%)] lg:items-center lg:gap-x-14 xl:gap-x-20">
           <div className="flex flex-col justify-center lg:py-10">
-            <div className="mb-6 flex items-center gap-3 sm:mb-8 sm:gap-4 lg:mb-10">
-              <span aria-hidden className="h-px w-10 shrink-0 bg-oma-gold sm:w-12" />
+            <div className="mb-6 sm:mb-8 lg:mb-10">
               <p className="text-[0.65rem] font-bold uppercase leading-snug tracking-[0.25em] text-oma-cocoa sm:text-xs sm:tracking-[0.3em]">
                 {eyebrow}
               </p>

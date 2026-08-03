@@ -26,6 +26,8 @@ type HeaderUserMenuProps = {
   showStudio: boolean;
   onStudioNavigate: () => void | Promise<void>;
   studioNavigating: boolean;
+  /** Icon-only in the top bar on small screens to match other nav actions */
+  compact?: boolean;
 };
 
 function displayLabel(user: AuthUser) {
@@ -40,6 +42,7 @@ export function HeaderUserMenu({
   showStudio,
   onStudioNavigate,
   studioNavigating,
+  compact = false,
 }: HeaderUserMenuProps) {
   const { user, signOut } = useAuth();
   const router = useRouter();
@@ -76,13 +79,23 @@ export function HeaderUserMenu({
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className="inline-flex h-10 shrink-0 select-none items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm font-medium text-gray-900 shadow-sm outline-none transition-[color,background-color,border-color] duration-200 hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-oma-plum/40"
+          className={cn(
+            "inline-flex shrink-0 select-none items-center justify-center outline-none transition-[color,background-color,border-color] duration-200 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-oma-plum/40",
+            compact
+              ? "size-9 rounded-full text-oma-black hover:bg-oma-beige/20 hover:text-oma-plum sm:size-10 md:h-10 md:w-auto md:gap-2 md:rounded-lg md:border md:border-gray-200 md:bg-gray-50 md:px-3 md:text-sm md:font-medium md:text-gray-900 md:shadow-sm md:hover:bg-gray-100"
+              : "h-10 gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm font-medium text-gray-900 shadow-sm hover:bg-gray-100"
+          )}
           aria-expanded={open}
           aria-haspopup="menu"
           aria-label={`Account menu for ${label}`}
         >
           {user.avatar_url ? (
-            <Avatar className="h-7 w-7 border border-black/5">
+            <Avatar
+              className={cn(
+                "border border-black/5",
+                compact ? "size-7 md:size-7" : "size-7"
+              )}
+            >
               <AvatarImage
                 src={user.avatar_url}
                 alt=""
@@ -93,13 +106,28 @@ export function HeaderUserMenu({
               </AvatarFallback>
             </Avatar>
           ) : (
-            <span className="flex h-7 w-7 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700">
+            <span
+              className={cn(
+                "flex items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700",
+                compact ? "size-7" : "size-7"
+              )}
+            >
               <User className="h-3.5 w-3.5" aria-hidden />
             </span>
           )}
-          <span className="max-w-[120px] truncate">{label}</span>
           <span
-            className="inline-flex size-4 shrink-0 items-center justify-center"
+            className={cn(
+              "truncate",
+              compact ? "hidden max-w-[120px] md:inline" : "max-w-[120px]"
+            )}
+          >
+            {label}
+          </span>
+          <span
+            className={cn(
+              "inline-flex size-4 shrink-0 items-center justify-center",
+              compact && "hidden md:inline-flex"
+            )}
             aria-hidden
           >
             <ChevronDown

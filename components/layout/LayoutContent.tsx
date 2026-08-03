@@ -40,7 +40,9 @@ export default function LayoutContent({ children }: { children: React.ReactNode 
       {!hideHeader && <Header />}
       <main
         className={
-          isHomePage || hideHeader ? "" : "pt-20"
+          isHomePage || hideHeader
+            ? ""
+            : "pt-[calc(3.5rem+env(safe-area-inset-top,0px))] sm:pt-[calc(4rem+env(safe-area-inset-top,0px))]"
         }
       >
         {isStudioPage ? (
