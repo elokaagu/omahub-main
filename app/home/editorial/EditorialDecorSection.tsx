@@ -3,9 +3,11 @@
 import Image from "next/image";
 import { AnimateOnScroll } from "@/components/ui/animate-on-scroll";
 
+const SITE_IMAGES = "/site%20images";
+
 const DECORATIVE_IMAGES = [
   {
-    src: "/home/editorial/decorative-line-art.png",
+    src: `${SITE_IMAGES}/Placeholder.png`,
     alt: "Line art illustration of three faces in profile",
     sizes: "(max-width: 1024px) 100vw, 25vw",
     wrapperClassName: "lg:col-span-3",
@@ -13,7 +15,7 @@ const DECORATIVE_IMAGES = [
     aspectClassName: "aspect-[3/4] sm:aspect-[4/5]",
   },
   {
-    src: "/home/editorial/decorative-portrait.png",
+    src: `${SITE_IMAGES}/Placeholder-2.png`,
     alt: "Illustrated portrait with bold red and coral graphic shapes",
     sizes: "(max-width: 1024px) 100vw, 42vw",
     wrapperClassName: "lg:col-span-5",
@@ -21,7 +23,7 @@ const DECORATIVE_IMAGES = [
     aspectClassName: "aspect-[4/3] sm:aspect-[5/4]",
   },
   {
-    src: "/home/editorial/decorative-stamps.png",
+    src: `${SITE_IMAGES}/Placeholder-1.png`,
     alt: "Collage of vintage postage stamp illustrations",
     sizes: "(max-width: 1024px) 100vw, 33vw",
     wrapperClassName: "lg:col-span-4",
