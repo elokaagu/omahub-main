@@ -20,7 +20,7 @@ export function HeroFilmCard() {
   }, []);
 
   return (
-    <div className="relative aspect-[3/4] w-full max-w-md overflow-hidden rounded-2xl border border-oma-gold/50 bg-oma-black/20 shadow-2xl">
+    <div className="relative aspect-[3/4] w-full max-w-2xl overflow-hidden rounded-2xl border border-oma-gold/50 bg-oma-black/20 shadow-2xl">
       {shouldLoad && (
         <video
           className={cn(

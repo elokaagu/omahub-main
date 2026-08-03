@@ -34,7 +34,7 @@ export function EditorialHero({
       />
 
       <div className="relative z-10 mx-auto flex min-h-[92vh] max-w-7xl flex-col justify-center px-4 py-24 sm:px-6 lg:px-8">
-        <div className="grid items-center gap-12 lg:grid-cols-[3fr_2fr]">
+        <div className="grid items-center gap-12 lg:grid-cols-[1fr_1fr]">
           <div>
             <div className="mb-10 flex items-center gap-4">
               <span aria-hidden className="h-px w-12 bg-oma-gold" />
@@ -86,7 +86,7 @@ export function EditorialHero({
           </div>
 
           {/* Hero video for the next edition */}
-          <div className="hidden justify-end lg:flex">
+          <div className="hidden w-full lg:flex lg:justify-end">
             <HeroFilmCard />
           </div>
         </div>
