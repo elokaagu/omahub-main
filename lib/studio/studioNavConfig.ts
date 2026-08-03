@@ -4,6 +4,7 @@
  */
 export const STUDIO_HIDDEN_NAV_HREFS = new Set([
   "/studio/collections",
+  "/studio/products",
   "/studio/services",
   "/studio/portfolio",
 ]);
