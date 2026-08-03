@@ -3,12 +3,12 @@
 import Image from "next/image";
 import { AnimateOnScroll } from "@/components/ui/animate-on-scroll";
 
-const SITE_IMAGES = "/site%20images";
+const SITE_IMAGES = "/site-images";
 
 const DECORATIVE_IMAGES = [
   {
     src: `${SITE_IMAGES}/Placeholder.png`,
-    alt: "Line art illustration of three faces in profile",
+    alt: "Continuous line drawing of three faces in profile",
     sizes: "(max-width: 1024px) 100vw, 25vw",
     wrapperClassName: "lg:col-span-3",
     imageClassName: "object-contain object-bottom",
@@ -16,7 +16,7 @@ const DECORATIVE_IMAGES = [
   },
   {
     src: `${SITE_IMAGES}/Placeholder-2.png`,
-    alt: "Illustrated portrait with bold red and coral graphic shapes",
+    alt: "Illustrated portrait with bold red circle and coral accents",
     sizes: "(max-width: 1024px) 100vw, 42vw",
     wrapperClassName: "lg:col-span-5",
     imageClassName: "object-cover object-center",
