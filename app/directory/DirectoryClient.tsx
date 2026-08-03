@@ -3,6 +3,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { FadeIn } from "@/app/components/ui/animations";
+import {
+  AnimateOnScroll,
+  StaggerOnScroll,
+  StaggerOnScrollItem,
+} from "@/components/ui/animate-on-scroll";
 import { useAllBrands } from "@/lib/hooks/useBrands";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -106,9 +111,11 @@ export default function DirectoryClient() {
   return (
     <div className="container mx-auto px-4 py-4 sm:py-6 mx-4 sm:mx-6 md:mx-8 lg:mx-12">
       <div className="mb-3 sm:mb-4">
-        <p className="text-sm sm:text-base text-gray-600">
-          Discover and connect with our curated selection of brands
-        </p>
+        <AnimateOnScroll animation="slideUp" duration={0.6}>
+          <p className="text-sm sm:text-base text-gray-600">
+            Discover and connect with our curated selection of brands
+          </p>
+        </AnimateOnScroll>
       </div>
 
       {errorMessage && !loading ? (
@@ -244,28 +251,31 @@ export default function DirectoryClient() {
             </p>
           </div>
 
-          <div
+          <StaggerOnScroll
             className={cn(
               "grid gap-3 sm:gap-4",
               isGridView
                 ? "grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
                 : "grid-cols-1"
             )}
+            staggerDelay={0.06}
+            delay={0.04}
           >
             {filteredBrands.map((brand) => (
-              <BrandCard
-                key={brand.id}
-                {...brand}
-                category={
-                  brand.categories && brand.categories.length > 0
-                    ? brand.categories.join(", ")
-                    : brand.category
-                }
-                isPortrait={!isGridView}
-                rating={brandRatings[brand.id] ?? 0}
-              />
+              <StaggerOnScrollItem key={brand.id} animation="scale">
+                <BrandCard
+                  {...brand}
+                  category={
+                    brand.categories && brand.categories.length > 0
+                      ? brand.categories.join(", ")
+                      : brand.category
+                  }
+                  isPortrait={!isGridView}
+                  rating={brandRatings[brand.id] ?? 0}
+                />
+              </StaggerOnScrollItem>
             ))}
-          </div>
+          </StaggerOnScroll>
 
           {filteredBrands.length === 0 &&
           !error &&

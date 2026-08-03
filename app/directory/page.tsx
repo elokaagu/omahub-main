@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { SectionHeader } from "@/components/ui/section-header";
+import { AnimatedSectionHeader } from "@/components/ui/animated-section-header";
 import ClientWrapper from "./ClientWrapper";
 
 export { metadata } from "./metadata";
@@ -23,7 +23,7 @@ export default function DirectoryPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-oma-beige/30 to-white">
       <div className="max-w-7xl mx-auto px-6 py-8">
-        <SectionHeader
+        <AnimatedSectionHeader
           title="Brand Directory"
           subtitle="Discover talented designers and artisans"
           centered={true}

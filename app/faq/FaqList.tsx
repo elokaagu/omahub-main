@@ -1,7 +1,10 @@
+"use client";
+
 import { ChevronDown } from "lucide-react";
 import type { PublicFaq } from "@/lib/types/publicFaq";
 import { faqAnswerLooksLikeHtml } from "@/lib/faqAnswerRendering";
 import { cn } from "@/lib/utils";
+import { StaggerOnScroll, StaggerOnScrollItem } from "@/components/ui/animate-on-scroll";
 
 type FaqListProps = {
   faqs: PublicFaq[];
@@ -21,38 +24,37 @@ export function FaqList({ faqs }: FaqListProps) {
   }
 
   return (
-    <div className="space-y-4">
+    <StaggerOnScroll className="space-y-4" staggerDelay={0.08}>
       {faqs.map((faq) => (
-        <details
-          key={faq.id}
-          className="group rounded-xl border border-oma-plum/20 bg-white/80 shadow-sm backdrop-blur-sm transition-all open:border-oma-plum/35 open:shadow-lg"
-        >
-          <summary
-            className={cn(
-              "flex cursor-pointer list-none items-center justify-between gap-4 p-6 font-canela text-lg font-semibold text-oma-plum",
-              "marker:content-none [&::-webkit-details-marker]:hidden",
-            )}
-          >
-            <span className="text-left">{faq.question}</span>
-            <ChevronDown
-              className="h-5 w-5 shrink-0 text-oma-plum transition-transform duration-300 group-open:rotate-180"
-              aria-hidden
-            />
-          </summary>
-          <div className="border-t border-oma-plum/10 px-6 pb-6 pt-2">
-            {faqAnswerLooksLikeHtml(faq.answer) ? (
-              <div
-                className="markdown-content max-w-none pt-2 font-source leading-relaxed text-oma-cocoa [&_a]:text-oma-plum [&_a]:underline [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:mb-3 [&_p:last-child]:mb-0 [&_ul]:list-disc [&_ul]:pl-5"
-                dangerouslySetInnerHTML={{ __html: faq.answer }}
+        <StaggerOnScrollItem key={faq.id} animation="slideUp">
+          <details className="group rounded-xl border border-oma-plum/20 bg-white/80 shadow-sm backdrop-blur-sm transition-all open:border-oma-plum/35 open:shadow-lg">
+            <summary
+              className={cn(
+                "flex cursor-pointer list-none items-center justify-between gap-4 p-6 font-canela text-lg font-semibold text-oma-plum",
+                "marker:content-none [&::-webkit-details-marker]:hidden",
+              )}
+            >
+              <span className="text-left">{faq.question}</span>
+              <ChevronDown
+                className="h-5 w-5 shrink-0 text-oma-plum transition-transform duration-300 group-open:rotate-180"
+                aria-hidden
               />
-            ) : (
-              <div className="whitespace-pre-wrap pt-2 font-source leading-relaxed text-oma-cocoa">
-                {faq.answer}
-              </div>
-            )}
-          </div>
-        </details>
+            </summary>
+            <div className="border-t border-oma-plum/10 px-6 pb-6 pt-2">
+              {faqAnswerLooksLikeHtml(faq.answer) ? (
+                <div
+                  className="markdown-content max-w-none pt-2 font-source leading-relaxed text-oma-cocoa [&_a]:text-oma-plum [&_a]:underline [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:mb-3 [&_p:last-child]:mb-0 [&_ul]:list-disc [&_ul]:pl-5"
+                  dangerouslySetInnerHTML={{ __html: faq.answer }}
+                />
+              ) : (
+                <div className="whitespace-pre-wrap pt-2 font-source leading-relaxed text-oma-cocoa">
+                  {faq.answer}
+                </div>
+              )}
+            </div>
+          </details>
+        </StaggerOnScrollItem>
       ))}
-    </div>
+    </StaggerOnScroll>
   );
 }

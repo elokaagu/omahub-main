@@ -10,6 +10,7 @@ import { EditorialHero } from "./home/editorial/EditorialHero";
 import { ArchiveSection } from "./home/editorial/ArchiveSection";
 import { FilmSection } from "./home/editorial/FilmSection";
 import { WorkedWithSection } from "./home/editorial/WorkedWithSection";
+import { EditorialDecorSection } from "./home/editorial/EditorialDecorSection";
 import { TwoListsSection } from "./home/editorial/TwoListsSection";
 
 export const revalidate = 120;
@@ -77,6 +78,7 @@ export default async function Home() {
         <ArchiveSection editions={archiveEditions} />
         <FilmSection />
         <WorkedWithSection brands={workedWithBrands} />
+        <EditorialDecorSection />
         <TwoListsSection />
       </main>
     </>
