@@ -20,7 +20,7 @@ export function ArchiveSection({ editions }: ArchiveSectionProps) {
           <div className="flex flex-col gap-4 border-b border-oma-cocoa/20 pb-6 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oma-cocoa">
-                Past editions
+                OmaHub editions
               </p>
               <h2 className="mt-2 font-canela text-3xl text-oma-black sm:text-4xl lg:text-5xl">
                 The Archive
@@ -43,7 +43,7 @@ export function ArchiveSection({ editions }: ArchiveSectionProps) {
               delay={0.08 + index * 0.12}
               duration={0.7}
             >
-              <EditionCard edition={edition} />
+              <EditionCard edition={edition} compact />
             </AnimateOnScroll>
           ))}
         </div>

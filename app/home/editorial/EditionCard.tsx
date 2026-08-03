@@ -2,116 +2,106 @@
 
 import Link from "next/link";
 import type { Edition } from "@/lib/data/editions";
+import { cn } from "@/lib/utils";
+
+type EditionCardProps = {
+  edition: Edition;
+  /** Homepage cards show less copy — title, metadata, and CTA only. */
+  compact?: boolean;
+};
 
 /**
- * Archive card: the campaign photo fills the entire card, with a plum scrim
- * rising from the bottom to keep the title, metadata, and blurb legible.
- * Upcoming editions render as a dark placeholder with a join-the-list CTA.
+ * Archive card: campaign photo (or plum gradient for upcoming editions)
+ * with a dark bottom scrim so title and metadata stay legible.
  */
-export function EditionCard({ edition }: { edition: Edition }) {
-  if (edition.status === "upcoming") {
-    return (
-      <div className="group relative flex min-h-[440px] flex-col justify-between rounded-2xl bg-oma-plum p-6 text-white sm:min-h-[520px] sm:p-8 lg:min-h-[560px]">
-        {/* Whole-card click target, painted above the plain text but below
-            the "Join the list" link so that link stays its own focusable
-            element (see the same pattern on the past-edition card below). */}
-        <Link
-          href="/#join-the-list"
-          className="absolute inset-0 z-[5] rounded-2xl"
-          aria-label={`Join the list for Edition ${edition.number}`}
-        />
+export function EditionCard({ edition, compact = false }: EditionCardProps) {
+  const isUpcoming = edition.status === "upcoming";
+  const href = isUpcoming ? "/#join-the-list" : `/editions/${edition.slug}`;
+  const ctaLabel = isUpcoming ? "Join the list" : "Read the edition";
 
-        <div className="flex flex-1 flex-col items-center justify-center gap-6">
-          <span
-            aria-hidden
-            className="flex h-14 w-14 items-center justify-center rounded-full border border-oma-gold/50 text-2xl font-light text-oma-gold"
-          >
-            +
-          </span>
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oma-gold">
-            Coming {edition.dateLabel}
-          </p>
-        </div>
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.25em] text-oma-gold/80">
-            Edition {edition.number}
-          </p>
-          <p className="mt-3 text-sm leading-relaxed text-white/80">
-            {edition.excerpt}
-          </p>
-          <Link
-            href="/#join-the-list"
-            className="relative z-10 mt-4 inline-flex items-center gap-2 border-b border-oma-gold/60 pb-0.5 text-xs font-semibold uppercase tracking-[0.2em] text-oma-gold transition-colors hover:text-white"
-          >
-            Join the list <span aria-hidden>→</span>
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
-  const coverStyle = edition.coverImage
-    ? {
-        backgroundImage: `url(${edition.coverImage})`,
-        backgroundSize: "cover",
-        backgroundPosition: "top center",
-      }
-    : undefined;
+  const coverStyle =
+    !isUpcoming && edition.coverImage
+      ? {
+          backgroundImage: `url(${edition.coverImage})`,
+          backgroundSize: "cover",
+          backgroundPosition: "top center",
+        }
+      : undefined;
 
   return (
-    <article className="group relative flex min-h-[440px] flex-col justify-end overflow-hidden rounded-2xl bg-gradient-to-b from-[#735048] to-[#613C3A] shadow-sm ring-1 ring-oma-cocoa/10 transition-shadow duration-300 hover:shadow-lg sm:min-h-[520px] lg:min-h-[560px]">
-      {/* Campaign photo, full-bleed behind everything */}
+    <article
+      className={cn(
+        "group relative flex min-h-[440px] flex-col justify-end overflow-hidden rounded-2xl shadow-sm ring-1 ring-oma-cocoa/10 transition-shadow duration-300 hover:shadow-lg sm:min-h-[520px] lg:min-h-[560px]",
+        isUpcoming
+          ? "bg-gradient-to-br from-[#735048] to-oma-plum"
+          : "bg-gradient-to-b from-[#735048] to-[#613C3A]"
+      )}
+    >
+      {!isUpcoming && (
+        <div
+          aria-hidden
+          className="absolute inset-0 transition-transform duration-700 ease-out group-hover:scale-105"
+          style={coverStyle}
+        />
+      )}
+
+      {/* Dark scrim — tall enough to protect text on bright photography */}
       <div
         aria-hidden
-        className="absolute inset-0 transition-transform duration-700 ease-out group-hover:scale-105"
-        style={coverStyle}
-      />
-      {/* Scrim rising from the bottom so the text stays legible over any photo */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-[55%] bg-gradient-to-t from-oma-plum/75 via-oma-plum/25 to-transparent"
-      />
-      <div
-        aria-hidden
-        className="absolute right-6 top-6 h-20 w-20 rounded-full border border-oma-gold/30 transition-transform duration-500 group-hover:scale-110"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-[70%] bg-gradient-to-t from-oma-plum/95 via-oma-plum/60 to-transparent"
       />
 
-      {/* Whole-card click target, painted above the plain text content
-          (which has no z-index of its own) but below the "Read the
-          edition" link, which keeps its own z-10 so it remains its own
-          focusable, discoverable link. */}
       <Link
-        href={`/editions/${edition.slug}`}
-        className="absolute inset-0 z-[5]"
-        aria-label={edition.title}
+        href={href}
+        className="absolute inset-0 z-[5] rounded-2xl"
+        aria-label={
+          isUpcoming
+            ? `Join the list for Edition ${edition.number}`
+            : edition.title
+        }
       />
 
-      <div className="relative flex flex-col p-6 text-white">
+      <div className="relative flex flex-col p-6 text-white [text-shadow:0_2px_14px_rgb(0_0_0_/_50%)] sm:p-8">
         <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-oma-gold">
-          Edition {edition.number} · {edition.dateLabel}
+          Edition {edition.number} ·{" "}
+          {isUpcoming ? `Coming ${edition.dateLabel}` : edition.dateLabel}
         </p>
+
         <h3 className="mt-2 whitespace-pre-line font-canela text-2xl leading-snug sm:text-3xl">
-          {edition.cardTitle}
+          {isUpcoming && !edition.themeAnnounced
+            ? `Edition ${edition.number}`
+            : edition.cardTitle}
         </h3>
 
-        <div className="mt-4 flex flex-col gap-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-white/70">
-          <span>
-            {edition.city}
-            {edition.venue ? ` · ${edition.venue}` : ""}
-          </span>
-          {edition.lineupLabel && (
-            <span className="text-oma-gold">{edition.lineupLabel}</span>
-          )}
-        </div>
-        <p className="mt-3 text-sm leading-relaxed text-white/85">
-          {edition.excerpt}
-        </p>
+        {!isUpcoming && (edition.city || edition.lineupLabel) && (
+          <div className="mt-4 flex flex-col gap-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-white/75">
+            {(edition.city || edition.venue) && (
+              <span>
+                {edition.city}
+                {edition.venue ? ` · ${edition.venue}` : ""}
+              </span>
+            )}
+            {edition.lineupLabel && (
+              <span className="text-oma-gold">{edition.lineupLabel}</span>
+            )}
+          </div>
+        )}
+
+        {!compact && !isUpcoming && edition.excerpt && (
+          <p className="mt-3 text-sm leading-relaxed text-white/85">
+            {edition.excerpt}
+          </p>
+        )}
+
         <Link
-          href={`/editions/${edition.slug}`}
+          href={href}
           className="relative z-10 mt-5 inline-flex w-fit items-center gap-2 border-b border-oma-gold/50 pb-0.5 text-xs font-semibold uppercase tracking-[0.2em] text-oma-gold transition-colors hover:border-oma-gold hover:text-white"
         >
-          Read the edition{" "}
-          <span aria-hidden className="transition-transform duration-300 group-hover:translate-x-1">
+          {ctaLabel}{" "}
+          <span
+            aria-hidden
+            className="transition-transform duration-300 group-hover:translate-x-1"
+          >
             →
           </span>
         </Link>
