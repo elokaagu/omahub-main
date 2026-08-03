@@ -156,13 +156,16 @@ export default async function EditionPage({
 
       {/* Geography & event snapshot */}
       <section className="border-b border-oma-cocoa/15 bg-oma-beige">
-        <div className="mx-auto grid max-w-7xl grid-cols-2 divide-x divide-oma-cocoa/15 px-4 sm:px-6 md:grid-cols-5 lg:px-8">
+        <div className="mx-auto grid max-w-7xl grid-cols-1 divide-y divide-oma-cocoa/15 sm:grid-cols-2 sm:divide-x sm:divide-y-0 md:grid-cols-5">
           {snapshot.map((item) => (
-            <div key={item.label} className="px-4 py-8 first:pl-0">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-oma-cocoa">
+            <div
+              key={item.label}
+              className="px-4 py-6 sm:px-5 sm:py-8 md:px-4 md:first:pl-0 lg:px-8"
+            >
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-oma-cocoa sm:text-[11px] sm:tracking-[0.25em]">
                 {item.label}
               </p>
-              <p className="mt-2 font-canela text-xl text-oma-black">
+              <p className="mt-1.5 font-canela text-lg text-oma-black sm:mt-2 sm:text-xl">
                 {item.value}
               </p>
             </div>
@@ -171,11 +174,11 @@ export default async function EditionPage({
       </section>
 
       {/* The story, with optional recap video in the sidebar */}
-      <section className="bg-oma-cream py-16 sm:py-20">
+      <section className="bg-oma-cream py-12 sm:py-16 lg:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div
             className={cn(
-              "grid gap-10 lg:gap-16",
+              "grid gap-8 sm:gap-10 lg:gap-16",
               hasStoryVideo &&
                 "lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:items-start",
             )}
@@ -200,7 +203,7 @@ export default async function EditionPage({
 
               {storyParagraphs.map((paragraph, index) => (
                 <div key={index}>
-                  <p className="mt-6 font-canela text-2xl leading-relaxed text-oma-black sm:text-3xl">
+                  <p className="mt-5 font-canela text-xl leading-relaxed text-oma-black sm:mt-6 sm:text-2xl lg:text-3xl">
                     {paragraph}
                   </p>
                   {inlineStoryPhotos.get(index)?.map((photo) => (
@@ -237,7 +240,7 @@ export default async function EditionPage({
 
       {/* Event gallery */}
       {edition.gallery && edition.gallery.length > 0 && (
-        <section className="bg-oma-beige py-16 sm:py-20">
+        <section className="bg-oma-beige py-12 sm:py-16 lg:py-20">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oma-cocoa">
               In pictures
@@ -245,12 +248,12 @@ export default async function EditionPage({
             <h2 className="mt-3 font-canela text-3xl text-oma-black sm:text-4xl">
               Moments from the edition
             </h2>
-            <div className="mt-10 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
+            <div className="mt-10 grid grid-cols-2 gap-3 sm:mt-10 sm:gap-6 lg:grid-cols-4">
               {edition.gallery.map((photo, i) => (
                 <div
                   key={photo.src}
                   className={`group relative self-start overflow-hidden rounded-2xl ${
-                    i % 2 === 1 ? "mt-6 sm:mt-10" : ""
+                    i % 2 === 1 ? "sm:mt-10" : ""
                   }`}
                 >
                   <LazyImage
@@ -292,7 +295,7 @@ export default async function EditionPage({
 
       {/* Brand lineup — brands that showed at this edition */}
       {lineupBrands.length > 0 && (
-        <section className="border-t border-oma-cocoa/10 bg-white py-16 sm:py-20">
+        <section className="border-t border-oma-cocoa/10 bg-white py-12 sm:py-16 lg:py-20">
           <FullWidthBrandRow
             title="The lineup"
             subtitle={
@@ -312,20 +315,21 @@ export default async function EditionPage({
       />
 
       {/* Next-edition CTA */}
-      <section className="bg-oma-plum py-16 text-white sm:py-20">
+      <section className="bg-oma-plum py-12 text-white sm:py-20">
         <div className="mx-auto max-w-3xl px-4 text-center sm:px-6">
-          <h2 className="font-canela text-3xl sm:text-4xl">
+          <h2 className="font-canela text-2xl sm:text-4xl">
             Don&apos;t miss the next edition
           </h2>
-          <p className="mt-4 text-sm leading-relaxed text-white/70">
+          <p className="mt-3 text-sm leading-relaxed text-white/70 sm:mt-4">
             Early access to drops, event previews, and exclusive edition
             content, before it goes public.
           </p>
-          <div className="mt-8 flex justify-center">
+          <div className="mt-6 flex justify-center sm:mt-8">
             <EmailCaptureForm
               source="website"
               variant="dark"
               buttonLabel="Notify me"
+              className="w-full"
             />
           </div>
         </div>
