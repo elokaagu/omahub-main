@@ -56,8 +56,9 @@ function EditionsPhotoManagementContent() {
           Edition Photos
         </h1>
         <p className="text-oma-cocoa">
-          Add or remove the cover photo and gallery images for each edition.
-          Edition copy (title, story, lineup) still lives in code.
+          Manage cover, inline story photos, the bottom gallery grid, video,
+          and partners for each edition. Edition copy (title, story, lineup)
+          still lives in code.
         </p>
       </div>
 
@@ -66,6 +67,8 @@ function EditionsPhotoManagementContent() {
           const images = imagesBySlug[edition.slug] || [];
           const dynamicCover = images.find((i) => i.kind === "cover")?.image_url;
           const galleryCount = images.filter((i) => i.kind === "gallery").length;
+          const inlineStoryCount = images.filter((i) => i.kind === "story").length;
+          const partnerCount = images.filter((i) => i.kind === "partner").length;
           const previewImage = dynamicCover || edition.coverImage;
 
           return (
@@ -102,8 +105,12 @@ function EditionsPhotoManagementContent() {
                         Edition {edition.number} · {edition.dateLabel}
                       </p>
                       <p className="mt-2 text-sm text-oma-cocoa">
-                        {galleryCount} admin-added gallery{" "}
-                        {galleryCount === 1 ? "photo" : "photos"}
+                        {inlineStoryCount} inline story{" "}
+                        {inlineStoryCount === 1 ? "photo" : "photos"} ·{" "}
+                        {galleryCount} gallery grid{" "}
+                        {galleryCount === 1 ? "photo" : "photos"} ·{" "}
+                        {partnerCount}{" "}
+                        {partnerCount === 1 ? "partner" : "partners"}
                       </p>
                     </div>
 

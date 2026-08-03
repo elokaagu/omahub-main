@@ -4,10 +4,16 @@ import { notFound } from "next/navigation";
 import { editions, getEditionBySlug } from "@/lib/data/editions";
 import { getBrandsByNames } from "@/lib/home/getEditorialHomeData";
 import { getEditionImages } from "@/lib/services/editionImagesService";
+import {
+  getStoryParagraphs,
+  groupInlineStoryPhotos,
+} from "@/lib/editions/storyContent";
 import { FullWidthBrandRow } from "@/components/ui/full-width-brand-row";
 import { LazyImage } from "@/components/ui/lazy-image";
 import { EmailCaptureForm } from "@/app/home/editorial/EmailCaptureForm";
 import { EditionVideo } from "./EditionVideo";
+import { EditionInlinePhoto } from "./EditionInlinePhoto";
+import { EditionPartnersSection } from "./EditionPartnersSection";
 import { cn } from "@/lib/utils";
 
 export const revalidate = 120;
@@ -69,16 +75,10 @@ export default async function EditionPage({
     gallery: [...(staticEdition.gallery || []), ...adminGallery],
   };
 
-  // Story photos: admin-placed images that drop in after a given paragraph
-  // (display_order holds the 0-indexed paragraph they follow).
-  const storyParagraphs = edition.story.split(/\n+/).map((p) => p.trim()).filter(Boolean);
-  const storyPhotosByParagraph = new Map<number, typeof adminImages>();
-  for (const image of adminImages) {
-    if (image.kind !== "story") continue;
-    const list = storyPhotosByParagraph.get(image.display_order) || [];
-    list.push(image);
-    storyPhotosByParagraph.set(image.display_order, list);
-  }
+  // Inline story photos sit between paragraphs (display_order = paragraph index
+  // they follow; -1 renders before the opening paragraph).
+  const storyParagraphs = getStoryParagraphs(edition.story);
+  const inlineStoryPhotos = groupInlineStoryPhotos(adminImages);
 
   const partnerLogos = adminImages
     .filter((i) => i.kind === "partner")
@@ -162,29 +162,29 @@ export default async function EditionPage({
               <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oma-cocoa">
                 The story
               </p>
-              {storyParagraphs.map((paragraph, i) => (
-                <div key={i}>
+
+              {inlineStoryPhotos.get(-1)?.map((photo) => (
+                <EditionInlinePhoto
+                  key={photo.id}
+                  src={photo.image_url}
+                  alt={photo.alt_text || edition.title}
+                />
+              ))}
+
+              {storyParagraphs.map((paragraph, index) => (
+                <div key={index}>
                   <p className="mt-6 font-canela text-2xl leading-relaxed text-oma-black sm:text-3xl">
                     {paragraph}
                   </p>
-                  {storyPhotosByParagraph.get(i)?.map((photo) => (
-                    <div key={photo.id} className="mt-6 overflow-hidden rounded-2xl">
-                      <LazyImage
-                        src={photo.image_url}
-                        alt={photo.alt_text || edition.title}
-                        aspectRatio="landscape"
-                        sizes="(max-width: 1024px) 100vw, 640px"
-                        quality={85}
-                      />
-                    </div>
+                  {inlineStoryPhotos.get(index)?.map((photo) => (
+                    <EditionInlinePhoto
+                      key={photo.id}
+                      src={photo.image_url}
+                      alt={photo.alt_text || edition.title}
+                    />
                   ))}
                 </div>
               ))}
-              {edition.partner && (
-                <p className="mt-6 text-sm uppercase tracking-[0.2em] text-oma-cocoa">
-                  In partnership with {edition.partner}
-                </p>
-              )}
             </div>
 
             {edition.videoUrl && (
@@ -274,34 +274,11 @@ export default async function EditionPage({
         </section>
       )}
 
-      {/* Partners */}
-      {partnerLogos.length > 0 && (
-        <section className="border-t border-oma-cocoa/15 bg-oma-beige py-16 sm:py-20">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oma-cocoa">
-              Our partners
-            </p>
-            <div className="mt-8 flex flex-wrap items-center gap-x-12 gap-y-8">
-              {partnerLogos.map((partner) => (
-                <div key={partner.id} className="flex items-center gap-3">
-                  {/* Plain img, not LazyImage: logos need object-contain (no
-                      cropping), which LazyImage doesn't expose. */}
-                  <img
-                    src={partner.image_url}
-                    alt={partner.alt_text || "Partner"}
-                    className="h-12 w-24 shrink-0 object-contain"
-                  />
-                  {partner.alt_text && (
-                    <p className="text-sm font-medium text-oma-black">
-                      {partner.alt_text}
-                    </p>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
+      {/* Partners — always the last content block before the CTA */}
+      <EditionPartnersSection
+        partnerLogos={partnerLogos}
+        staticPartnerName={edition.partner}
+      />
 
       {/* Next-edition CTA */}
       <section className="bg-oma-plum py-16 text-white sm:py-20">

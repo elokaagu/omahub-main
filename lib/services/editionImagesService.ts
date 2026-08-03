@@ -130,6 +130,38 @@ export async function addEditionImage(
   return inserted;
 }
 
+/** Update an edition image's placement or label (super admin only). */
+export async function updateEditionImage(
+  userId: string,
+  id: string,
+  data: { position?: number; alt_text?: string | null },
+): Promise<EditionImage> {
+  if (!supabase) throw new Error("Supabase client not available");
+
+  await assertSuperAdmin(userId);
+
+  const updates: Record<string, unknown> = {
+    updated_at: new Date().toISOString(),
+  };
+
+  if (data.position !== undefined) {
+    updates.display_order = data.position;
+  }
+  if (data.alt_text !== undefined) {
+    updates.alt_text = data.alt_text;
+  }
+
+  const { data: updated, error } = await supabase
+    .from("edition_images")
+    .update(updates)
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) throw new Error(`Database error: ${error.message}`);
+  return updated;
+}
+
 /** Delete an edition image (super admin only). */
 export async function deleteEditionImage(
   userId: string,

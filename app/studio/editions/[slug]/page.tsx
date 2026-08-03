@@ -8,8 +8,13 @@ import {
   getEditionImages,
   addEditionImage,
   deleteEditionImage,
+  updateEditionImage,
   type EditionImage,
 } from "@/lib/services/editionImagesService";
+import {
+  describeStoryPhotoPosition,
+  getStoryParagraphs,
+} from "@/lib/editions/storyContent";
 import { AuthImage } from "@/components/ui/auth-image";
 import { Button } from "@/components/ui/button";
 import { FileUpload } from "@/components/ui/file-upload";
@@ -49,7 +54,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
   const [isUploadingCover, setIsUploadingCover] = useState(false);
   const [isUploadingGallery, setIsUploadingGallery] = useState(false);
   const [isUploadingStory, setIsUploadingStory] = useState(false);
-  const [storyPosition, setStoryPosition] = useState(0);
+  const [storyPosition, setStoryPosition] = useState(-1);
   const [isUploadingPartner, setIsUploadingPartner] = useState(false);
   const [partnerName, setPartnerName] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -106,10 +111,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
     .filter((i) => i.kind === "partner")
     .sort((a, b) => a.display_order - b.display_order);
   const effectiveCover = cover?.image_url || edition.coverImage;
-  const storyParagraphs = edition.story
-    .split(/\n+/)
-    .map((p) => p.trim())
-    .filter(Boolean);
+  const storyParagraphs = getStoryParagraphs(edition.story);
 
   const handleCoverUpload = async (url: string) => {
     if (!user) return;
@@ -242,6 +244,20 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
       );
     } finally {
       setIsSavingVideo(false);
+    }
+  };
+
+  const handleStoryPhotoMove = async (id: string, position: number) => {
+    if (!user) return;
+    try {
+      await updateEditionImage(user.id, id, { position });
+      toast.success("Photo placement updated");
+      await refetch();
+    } catch (error) {
+      console.error("Error moving story photo:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to update placement"
+      );
     }
   };
 
@@ -431,11 +447,152 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
 
       <section className="mb-12">
         <h2 className="text-lg font-semibold text-oma-black mb-1">
-          Gallery photos
+          Inline story photos
         </h2>
         <p className="text-sm text-oma-cocoa mb-4">
-          Shown in the &quot;In pictures&quot; section on the edition page.
-          Added here in addition to any photos already in the codebase.
+          Placed inside &quot;The story&quot; on the edition page — between
+          paragraphs, not in the gallery grid at the bottom. Paragraphs come
+          from the story text in lib/data/editions.ts (split on blank lines).
+        </p>
+
+        {storyPhotos.length > 0 && (
+          <div className="mb-6 space-y-4">
+            {storyPhotos.map((image) => (
+              <div
+                key={image.id}
+                className="flex flex-col gap-4 rounded-xl border border-gray-200 p-4 sm:flex-row sm:items-center"
+              >
+                <div className="group relative w-full max-w-[220px] shrink-0 overflow-hidden rounded-xl">
+                  <AuthImage
+                    src={image.image_url}
+                    alt={image.alt_text || edition.title}
+                    aspectRatio="landscape"
+                    className="w-full"
+                    sizes="220px"
+                    quality={70}
+                  />
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <button
+                        type="button"
+                        aria-label="Remove photo"
+                        disabled={deletingId === image.id}
+                        className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-oma-black/60 text-white opacity-0 backdrop-blur-sm transition-opacity duration-200 hover:bg-red-600 focus-visible:opacity-100 group-hover:opacity-100"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Remove photo</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This removes it from the story. This action cannot be
+                          undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => void handleDelete(image.id)}
+                          className="bg-red-600 hover:bg-red-700"
+                        >
+                          Remove
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-oma-black">
+                    {describeStoryPhotoPosition(
+                      image.display_order,
+                      storyParagraphs.length,
+                    )}
+                  </p>
+                  {storyParagraphs.length > 0 && (
+                    <label className="mt-3 block text-xs font-medium uppercase tracking-[0.12em] text-oma-cocoa">
+                      Move to
+                    </label>
+                  )}
+                  {storyParagraphs.length > 0 && (
+                    <select
+                      value={image.display_order}
+                      onChange={(e) =>
+                        void handleStoryPhotoMove(
+                          image.id,
+                          Number(e.target.value),
+                        )
+                      }
+                      className="mt-1 w-full max-w-md rounded-md border border-gray-300 px-3 py-2 text-sm"
+                    >
+                      <option value={-1}>Before the first paragraph</option>
+                      {storyParagraphs.map((paragraph, index) => (
+                        <option key={index} value={index}>
+                          After paragraph {index + 1}: &quot;
+                          {paragraph.slice(0, 40)}
+                          {paragraph.length > 40 ? "…" : ""}&quot;
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {storyParagraphs.length > 0 ? (
+          <>
+            <label className="mb-2 block text-sm font-medium text-oma-black">
+              Insert photo
+            </label>
+            <select
+              value={storyPosition}
+              onChange={(e) => setStoryPosition(Number(e.target.value))}
+              className="mb-4 w-full max-w-md rounded-md border border-gray-300 px-3 py-2 text-sm"
+            >
+              <option value={-1}>Before the first paragraph</option>
+              {storyParagraphs.map((paragraph, index) => (
+                <option key={index} value={index}>
+                  After paragraph {index + 1}: &quot;{paragraph.slice(0, 40)}
+                  {paragraph.length > 40 ? "…" : ""}&quot;
+                </option>
+              ))}
+            </select>
+            <FileUpload
+              key={`${storyPosition}-${storyPhotos.length}`}
+              onUploadComplete={handleStoryUpload}
+              bucket="edition-galleries"
+              path={`${slug}/story`}
+              accept={{
+                "image/png": [".png"],
+                "image/jpeg": [".jpg", ".jpeg"],
+                "image/webp": [".webp"],
+              }}
+              maxSize={20}
+              hidePreview
+            />
+            {isUploadingStory && (
+              <p className="mt-2 text-sm text-oma-cocoa">Adding photo…</p>
+            )}
+          </>
+        ) : (
+          <p className="text-sm text-oma-cocoa/70">
+            This edition has no story text yet, so there&apos;s nowhere to
+            place an inline photo. Add the story in lib/data/editions.ts first.
+          </p>
+        )}
+      </section>
+
+      <section className="mb-12">
+        <h2 className="text-lg font-semibold text-oma-black mb-1">
+          Gallery grid (bottom of page)
+        </h2>
+        <p className="text-sm text-oma-cocoa mb-4">
+          Shown together in the &quot;In pictures&quot; section near the bottom
+          of the edition page — not inline with the story. Use &quot;Inline
+          story photos&quot; above to place images between paragraphs.
         </p>
 
         {gallery.length > 0 && (
@@ -513,113 +670,13 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
 
       <section className="mb-12">
         <h2 className="text-lg font-semibold text-oma-black mb-1">
-          Story photos
+          Partners (bottom of page)
         </h2>
         <p className="text-sm text-oma-cocoa mb-4">
-          Dropped in between paragraphs of &quot;The story&quot; on the
-          edition page. Paragraphs are split on blank lines in the story
-          text (lib/data/editions.ts).
-        </p>
-
-        {storyPhotos.length > 0 && (
-          <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-            {storyPhotos.map((image) => (
-              <div key={image.id} className="group relative overflow-hidden rounded-xl">
-                <AuthImage
-                  src={image.image_url}
-                  alt={image.alt_text || edition.title}
-                  aspectRatio="landscape"
-                  className="w-full"
-                  sizes="200px"
-                  quality={70}
-                />
-                <span className="absolute left-2 top-2 rounded-full bg-oma-black/60 px-2 py-1 text-[11px] font-medium text-white backdrop-blur-sm">
-                  After ¶{image.display_order + 1}
-                </span>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <button
-                      type="button"
-                      aria-label="Remove photo"
-                      disabled={deletingId === image.id}
-                      className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-oma-black/60 text-white opacity-0 backdrop-blur-sm transition-opacity duration-200 hover:bg-red-600 focus-visible:opacity-100 group-hover:opacity-100"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Remove photo</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This removes it from the story. This action cannot be
-                        undone.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={() => void handleDelete(image.id)}
-                        className="bg-red-600 hover:bg-red-700"
-                      >
-                        Remove
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {storyParagraphs.length > 0 ? (
-          <>
-            <label className="mb-2 block text-sm font-medium text-oma-black">
-              Insert after paragraph
-            </label>
-            <select
-              value={storyPosition}
-              onChange={(e) => setStoryPosition(Number(e.target.value))}
-              className="mb-4 w-full max-w-xs rounded-md border border-gray-300 px-3 py-2 text-sm"
-            >
-              {storyParagraphs.map((paragraph, i) => (
-                <option key={i} value={i}>
-                  Paragraph {i + 1}: &quot;{paragraph.slice(0, 40)}
-                  {paragraph.length > 40 ? "…" : ""}&quot;
-                </option>
-              ))}
-            </select>
-            <FileUpload
-              key={`${storyPosition}-${storyPhotos.length}`}
-              onUploadComplete={handleStoryUpload}
-              bucket="edition-galleries"
-              path={`${slug}/story`}
-              accept={{
-                "image/png": [".png"],
-                "image/jpeg": [".jpg", ".jpeg"],
-                "image/webp": [".webp"],
-              }}
-              maxSize={20}
-              hidePreview
-            />
-            {isUploadingStory && (
-              <p className="mt-2 text-sm text-oma-cocoa">Adding photo…</p>
-            )}
-          </>
-        ) : (
-          <p className="text-sm text-oma-cocoa/70">
-            This edition has no story text yet, so there&apos;s nowhere to
-            place a photo. Add the story in lib/data/editions.ts first.
-          </p>
-        )}
-      </section>
-
-      <section className="mb-12">
-        <h2 className="text-lg font-semibold text-oma-black mb-1">
-          Partners
-        </h2>
-        <p className="text-sm text-oma-cocoa mb-4">
-          Logos shown in the &quot;Our partners&quot; strip underneath the
-          edition (e.g. venues, co-hosts).
+          Logos and names shown in the &quot;Our partners&quot; section at the
+          very bottom of the edition page — after the story, gallery, and
+          lineup. Any partner name set in lib/data/editions.ts also appears
+          here.
         </p>
 
         {partners.length > 0 && (
