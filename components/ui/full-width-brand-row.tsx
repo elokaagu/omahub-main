@@ -45,7 +45,6 @@ export function FullWidthBrandRow({
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
-  const [isHovered, setIsHovered] = useState(false);
 
   // Update scroll indicators
   const updateScrollIndicators = () => {
@@ -85,27 +84,23 @@ export function FullWidthBrandRow({
   return (
     <div className={cn("w-full overflow-hidden", className)}>
       {/* Section Header left-aligned with logo and cards */}
-      <div className="mb-4 max-w-7xl mx-auto px-6 lg:px-8">
-        <h2 className="text-2xl sm:text-3xl md:text-4xl font-canela text-oma-black mb-2 text-left">
+      <div className="mx-auto mb-4 max-w-7xl px-4 sm:px-6 lg:px-8">
+        <h2 className="mb-2 text-left font-canela text-2xl text-oma-black sm:text-3xl md:text-4xl">
           {title}
         </h2>
         {subtitle && (
-          <p className="text-sm sm:text-base text-oma-cocoa/80 max-w-2xl text-left">
+          <p className="max-w-2xl text-left text-sm text-oma-cocoa/80 sm:text-base">
             {subtitle}
           </p>
         )}
       </div>
 
       {/* Scrollable Brand Row - Left aligned with header, right overflows full width */}
-      <div
-        className="relative"
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-      >
+      <div className="relative">
         <div
           ref={scrollRef}
           onScroll={updateScrollIndicators}
-          className="flex gap-2 sm:gap-3 overflow-x-auto scrollbar-hide snap-x snap-mandatory scroll-smooth pb-4 brand-row-scroll pl-6 lg:pl-8"
+          className="brand-row-scroll flex snap-x snap-mandatory scroll-smooth gap-2 overflow-x-auto pb-4 pl-4 scrollbar-hide sm:gap-3 sm:pl-6 lg:pl-8"
         >
           {brands.map((brand, index) => (
             <FadeIn key={brand.id} delay={index * 0.08}>
@@ -157,35 +152,35 @@ export function FullWidthBrandRow({
           )}
         </div>
 
-        {/* Mobile Navigation Arrows */}
-        {isHovered && (
-          <>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => scroll("left")}
-              disabled={!canScrollLeft}
-              className={cn(
-                "absolute left-2 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-white/90 backdrop-blur-sm border-oma-cocoa/20 hover:border-oma-plum shadow-lg lg:hidden transition-all duration-200",
-                !canScrollLeft && "opacity-50 cursor-not-allowed"
-              )}
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => scroll("right")}
-              disabled={!canScrollRight}
-              className={cn(
-                "absolute right-2 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-white/90 backdrop-blur-sm border-oma-cocoa/20 hover:border-oma-plum shadow-lg lg:hidden transition-all duration-200",
-                !canScrollRight && "opacity-50 cursor-not-allowed"
-              )}
-            >
-              <ChevronRight className="h-5 w-5" />
-            </Button>
-          </>
-        )}
+        {/* Mobile / tablet scroll arrows */}
+        <>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => scroll("left")}
+            disabled={!canScrollLeft}
+            aria-label="Scroll brands left"
+            className={cn(
+              "absolute left-2 top-1/2 h-10 w-10 -translate-y-1/2 rounded-full border-oma-cocoa/20 bg-white/90 shadow-lg backdrop-blur-sm transition-all duration-200 hover:border-oma-plum lg:hidden",
+              !canScrollLeft && "cursor-not-allowed opacity-50"
+            )}
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => scroll("right")}
+            disabled={!canScrollRight}
+            aria-label="Scroll brands right"
+            className={cn(
+              "absolute right-2 top-1/2 h-10 w-10 -translate-y-1/2 rounded-full border-oma-cocoa/20 bg-white/90 shadow-lg backdrop-blur-sm transition-all duration-200 hover:border-oma-plum lg:hidden",
+              !canScrollRight && "cursor-not-allowed opacity-50"
+            )}
+          >
+            <ChevronRight className="h-5 w-5" />
+          </Button>
+        </>
       </div>
 
       {/* Scroll Indicators */}

@@ -25,7 +25,7 @@ export function WorkedWithSection({ brands }: WorkedWithSectionProps) {
   if (brands.length === 0) return null;
 
   return (
-    <section className="bg-white py-16 sm:py-20">
+    <section className="bg-white py-14 sm:py-16 lg:py-20">
       <FullWidthBrandRow
         title="Brands we've worked with"
         subtitle="Every brand here has shown at an OmaHub edition, curated and verified in person."

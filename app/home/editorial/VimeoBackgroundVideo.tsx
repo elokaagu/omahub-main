@@ -63,7 +63,7 @@ export function VimeoBackgroundVideo({
   };
 
   return (
-    <div className="absolute inset-0 overflow-hidden motion-reduce:hidden">
+    <div className="absolute inset-0 overflow-hidden">
       {posterUrl && (
         <div
           aria-hidden
@@ -77,7 +77,7 @@ export function VimeoBackgroundVideo({
         title="Art Of Adornment, OmaHub short film"
         allow="autoplay; fullscreen"
         className={cn(
-          "absolute left-1/2 top-1/2 h-[56.25vw] min-h-full w-[177.78vh] min-w-full -translate-x-1/2 -translate-y-1/2 scale-[1.03] opacity-0 transition-opacity duration-700 ease-out",
+          "absolute left-1/2 top-1/2 h-[56.25vw] min-h-full w-[177.78vh] min-w-full -translate-x-1/2 -translate-y-1/2 scale-[1.03] opacity-0 transition-opacity duration-700 ease-out motion-reduce:hidden",
           isPlaying && "opacity-100"
         )}
       />
@@ -87,7 +87,7 @@ export function VimeoBackgroundVideo({
         onClick={toggleMute}
         aria-label={muted ? "Unmute video" : "Mute video"}
         aria-pressed={!muted}
-        className="absolute bottom-6 left-6 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-oma-black/40 text-white backdrop-blur-sm transition-colors hover:bg-oma-black/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-oma-gold"
+        className="absolute bottom-4 left-4 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-oma-black/40 text-white backdrop-blur-sm transition-colors hover:bg-oma-black/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-oma-gold sm:bottom-6 sm:left-6"
       >
         {muted ? (
           <svg

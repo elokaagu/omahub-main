@@ -19,7 +19,7 @@ export function HeroFilmCard() {
     <div
       className={cn(
         "relative w-full overflow-hidden rounded-2xl border border-oma-gold/50 bg-oma-black/20 shadow-2xl",
-        "h-[min(78vh,680px)] max-w-none"
+        "h-[min(88vw,420px)] sm:h-[min(72vw,480px)] lg:h-[min(78vh,680px)]"
       )}
     >
       {shouldLoad && (

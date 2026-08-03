@@ -7,19 +7,19 @@ import { EmailCaptureForm } from "./EmailCaptureForm";
  */
 export function TwoListsSection() {
   return (
-    <section id="join-the-list" className="bg-oma-cream py-20 sm:py-24">
+    <section id="join-the-list" className="bg-oma-cream py-14 sm:py-20 lg:py-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oma-cocoa">
             Two lists, two journeys
           </p>
-          <h2 className="mt-2 font-canela text-4xl text-oma-black sm:text-5xl">
+          <h2 className="mt-2 font-canela text-3xl text-oma-black sm:text-4xl lg:text-5xl">
             Stay close to the next edition
           </h2>
         </div>
 
-        <div className="mt-12 grid gap-8 md:grid-cols-2">
-          <div className="flex flex-col rounded-2xl border border-oma-cocoa/20 bg-white p-8 sm:p-10">
+        <div className="mt-8 grid gap-6 sm:mt-12 sm:gap-8 md:grid-cols-2">
+          <div className="flex flex-col rounded-2xl border border-oma-cocoa/20 bg-white p-6 sm:p-8 lg:p-10">
             <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oma-cocoa">
               Community
             </p>
@@ -40,7 +40,7 @@ export function TwoListsSection() {
             </div>
           </div>
 
-          <div className="flex flex-col rounded-2xl bg-oma-plum p-8 text-white sm:p-10">
+          <div className="flex flex-col rounded-2xl bg-oma-plum p-6 text-white sm:p-8 lg:p-10">
             <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oma-gold">
               Designers &amp; Brands
             </p>

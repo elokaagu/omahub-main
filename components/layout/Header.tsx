@@ -129,31 +129,34 @@ export default function Header() {
   const iconButtonClass = cn(
     "inline-flex size-9 shrink-0 items-center justify-center rounded-full transition-colors duration-200 sm:size-10",
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset",
-    "text-oma-black hover:text-oma-plum hover:bg-oma-beige/20 focus-visible:ring-oma-plum/35"
+    "text-oma-black hover:bg-oma-beige/20 hover:text-oma-plum focus-visible:ring-oma-plum/35"
   );
+
+  const menuButtonClass =
+    "-m-1 inline-flex items-center justify-center rounded-md p-2 text-oma-black transition-colors hover:text-oma-plum sm:-m-2.5 sm:p-2.5";
 
   return (
     // No filter/transform/backdrop-filter on this element: it must stay a
     // plain positioned ancestor so the fixed backdrop + drawer below size
     // against the viewport, not this header's own (much smaller) box.
     <header className="fixed top-0 left-0 right-0 z-[1000] transition-all duration-300">
-      <nav className="mx-auto grid w-full grid-cols-[1fr_auto_1fr] items-center gap-2 border-b border-gray-100 bg-white/95 p-6 shadow-sm backdrop-blur-md lg:px-8">
+      <nav className="mx-auto grid h-14 w-full grid-cols-[auto_1fr_auto] items-center gap-2 border-b border-gray-100 bg-white/95 px-4 shadow-sm backdrop-blur-md sm:h-16 sm:gap-3 sm:px-6 lg:px-8">
         {/* Menu button, opens the drawer at every breakpoint */}
-        <div className="flex justify-self-start">
+        <div className="flex min-w-0 justify-self-start">
           <button
             type="button"
-            className="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-oma-black transition-colors"
+            className={menuButtonClass}
             onClick={() => setMenuOpen(true)}
             aria-expanded={menuOpen}
             aria-controls="site-menu"
           >
             <span className="sr-only">Open main menu</span>
-            <Menu className="h-6 w-6" aria-hidden="true" />
+            <Menu className="h-5 w-5 sm:h-6 sm:w-6" aria-hidden="true" />
           </button>
         </div>
 
         {/* Logo, centered in its own grid track */}
-        <NavigationLink href="/" className="justify-self-center p-1.5">
+        <NavigationLink href="/" className="justify-self-center p-1 sm:p-1.5">
           <span className="sr-only">OmaHub</span>
           <Image
             className="h-5 w-auto brightness-0 transition-all duration-300 sm:h-6"
@@ -166,7 +169,7 @@ export default function Header() {
         </NavigationLink>
 
         {/* Icon actions: search, account, shop */}
-        <div className="flex items-center justify-self-end gap-x-1 sm:gap-x-2">
+        <div className="flex min-w-0 items-center justify-self-end gap-x-0.5 sm:gap-x-1">
           <button
             type="button"
             onClick={triggerSearchModal}

@@ -30,23 +30,23 @@ export async function FilmSection() {
   const posterUrl = await getVimeoPosterUrl(videoId);
 
   return (
-    <section className="relative min-h-screen overflow-hidden bg-oma-plum">
+    <section className="relative min-h-[min(100svh,820px)] overflow-hidden bg-oma-plum sm:min-h-screen">
       <VimeoBackgroundVideo videoId={videoId} posterUrl={posterUrl} />
 
       <div
         aria-hidden
-        className="absolute inset-0 bg-gradient-to-t from-oma-plum via-oma-plum/30 to-transparent"
+        className="absolute inset-0 bg-gradient-to-t from-oma-plum via-oma-plum/40 to-oma-plum/20"
       />
 
-      <div className="relative z-10 flex min-h-screen flex-col items-start justify-end px-4 pb-20 pt-24 sm:px-6 lg:px-8">
+      <div className="relative z-10 flex min-h-[min(100svh,820px)] flex-col items-start justify-end px-4 pb-12 pt-16 sm:min-h-screen sm:px-6 sm:pb-20 sm:pt-24 lg:px-8">
         <div className="mx-auto w-full max-w-7xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oma-gold">
+          <p className="text-[0.65rem] font-semibold uppercase tracking-[0.25em] text-oma-gold sm:text-xs sm:tracking-[0.3em]">
             The short film
           </p>
-          <h2 className="mt-3 font-canela text-4xl text-white sm:text-5xl">
+          <h2 className="mt-2 font-canela text-3xl text-white sm:mt-3 sm:text-4xl lg:text-5xl">
             Art Of Adornment
           </h2>
-          <p className="mt-4 max-w-xl text-lg leading-relaxed text-white/80">
+          <p className="mt-3 max-w-xl text-base leading-relaxed text-white/80 sm:mt-4 sm:text-lg">
             The designers behind the diaspora&apos;s most exciting labels, in
             their own words.
           </p>

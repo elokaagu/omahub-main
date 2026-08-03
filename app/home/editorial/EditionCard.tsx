@@ -9,7 +9,7 @@ import type { Edition } from "@/lib/data/editions";
 export function EditionCard({ edition }: { edition: Edition }) {
   if (edition.status === "upcoming") {
     return (
-      <div className="group relative flex min-h-[520px] flex-col justify-between rounded-2xl bg-oma-plum p-8 text-white sm:min-h-[560px]">
+      <div className="group relative flex min-h-[440px] flex-col justify-between rounded-2xl bg-oma-plum p-6 text-white sm:min-h-[520px] sm:p-8 lg:min-h-[560px]">
         {/* Whole-card click target, painted above the plain text but below
             the "Join the list" link so that link stays its own focusable
             element (see the same pattern on the past-edition card below). */}
@@ -57,7 +57,7 @@ export function EditionCard({ edition }: { edition: Edition }) {
     : undefined;
 
   return (
-    <article className="group relative flex min-h-[520px] flex-col justify-end overflow-hidden rounded-2xl bg-gradient-to-b from-[#5a2f42] to-oma-plum shadow-sm ring-1 ring-oma-cocoa/10 transition-shadow duration-300 hover:shadow-lg sm:min-h-[560px]">
+    <article className="group relative flex min-h-[440px] flex-col justify-end overflow-hidden rounded-2xl bg-gradient-to-b from-[#735048] to-[#613C3A] shadow-sm ring-1 ring-oma-cocoa/10 transition-shadow duration-300 hover:shadow-lg sm:min-h-[520px] lg:min-h-[560px]">
       {/* Campaign photo, full-bleed behind everything */}
       <div
         aria-hidden
