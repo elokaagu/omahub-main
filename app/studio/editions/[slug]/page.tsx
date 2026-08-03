@@ -12,9 +12,18 @@ import {
   type EditionImage,
 } from "@/lib/services/editionImagesService";
 import {
+  getEditionLineup,
+  addEditionLineupBrand,
+  deleteEditionLineupBrand,
+  type EditionLineupBrand,
+} from "@/lib/services/editionLineupService";
+import { getAllBrands } from "@/lib/services/brandService";
+import type { Brand } from "@/lib/supabase";
+import {
   describeStoryPhotoPosition,
   getStoryParagraphs,
 } from "@/lib/editions/storyContent";
+import { parseEditionVideo } from "@/lib/editions/editionVideoUrl";
 import { AuthImage } from "@/components/ui/auth-image";
 import { Button } from "@/components/ui/button";
 import { FileUpload } from "@/components/ui/file-upload";
@@ -34,6 +43,14 @@ import {
 import { ArrowLeft, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { SuperAdminHeroGate } from "@/app/studio/hero/SuperAdminHeroGate";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { BrandCard } from "@/components/ui/brand-card";
 
 export default function EditionPhotoManagementPage({
   params,
@@ -62,15 +79,46 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
   const [videoThumbnailInput, setVideoThumbnailInput] = useState("");
   const [videoPosition, setVideoPosition] = useState<0 | 1>(0);
   const [isSavingVideo, setIsSavingVideo] = useState(false);
+  const [lineupEntries, setLineupEntries] = useState<EditionLineupBrand[] | null>(
+    null,
+  );
+  const [allBrands, setAllBrands] = useState<Brand[]>([]);
+  const [selectedLineupBrandId, setSelectedLineupBrandId] = useState("");
+  const [isAddingLineupBrand, setIsAddingLineupBrand] = useState(false);
+  const [deletingLineupId, setDeletingLineupId] = useState<string | null>(null);
 
   const refetch = useCallback(async () => {
     const rows = await getEditionImages(slug);
     setImages(rows);
   }, [slug]);
 
+  const refetchLineup = useCallback(async () => {
+    const rows = await getEditionLineup(slug);
+    setLineupEntries(rows);
+  }, [slug]);
+
   useEffect(() => {
     void refetch();
   }, [refetch]);
+
+  useEffect(() => {
+    void refetchLineup();
+  }, [refetchLineup]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const brands = await getAllBrands();
+        if (!cancelled) setAllBrands(brands);
+      } catch (error) {
+        console.error("Error loading brands for lineup:", error);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Prefill the video fields once the current one loads (or changes).
   useEffect(() => {
@@ -93,7 +141,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
     );
   }
 
-  if (!images) {
+  if (!images || lineupEntries === null) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <Loading />
@@ -112,6 +160,13 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
     .sort((a, b) => a.display_order - b.display_order);
   const effectiveCover = cover?.image_url || edition.coverImage;
   const storyParagraphs = getStoryParagraphs(edition.story);
+  const lineupBrandIds = new Set(lineupEntries.map((entry) => entry.brand_id));
+  const lineupBrands = lineupEntries
+    .map((entry) => allBrands.find((brand) => brand.id === entry.brand_id))
+    .filter((brand): brand is Brand => Boolean(brand));
+  const availableLineupBrands = allBrands.filter(
+    (brand) => !lineupBrandIds.has(brand.id),
+  );
 
   const handleCoverUpload = async (url: string) => {
     if (!user) return;
@@ -278,6 +333,44 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
     }
   };
 
+  const handleAddLineupBrand = async () => {
+    if (!user || !selectedLineupBrandId) return;
+    try {
+      setIsAddingLineupBrand(true);
+      await addEditionLineupBrand(user.id, {
+        edition_slug: slug,
+        brand_id: selectedLineupBrandId,
+      });
+      toast.success("Brand added to lineup");
+      setSelectedLineupBrandId("");
+      await refetchLineup();
+    } catch (error) {
+      console.error("Error adding lineup brand:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to add brand",
+      );
+    } finally {
+      setIsAddingLineupBrand(false);
+    }
+  };
+
+  const handleRemoveLineupBrand = async (id: string) => {
+    if (!user) return;
+    try {
+      setDeletingLineupId(id);
+      await deleteEditionLineupBrand(user.id, id);
+      toast.success("Brand removed from lineup");
+      await refetchLineup();
+    } catch (error) {
+      console.error("Error removing lineup brand:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to remove brand",
+      );
+    } finally {
+      setDeletingLineupId(null);
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
       <div className="flex items-center gap-4 mb-8">
@@ -336,24 +429,42 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
       </section>
 
       <section className="mb-12">
-        <h2 className="text-lg font-semibold text-oma-black mb-1">Video</h2>
+        <h2 className="text-lg font-semibold text-oma-black mb-1">
+          Story sidebar video
+        </h2>
         <p className="text-sm text-oma-cocoa mb-4">
-          Plays alongside &quot;The story&quot; on the edition page. Paste a
-          direct link to a video file (e.g. an .mp4 URL) - a new one replaces
-          the current video. The thumbnail shows before playback starts.
+          Appears to the right of &quot;The story&quot; on the edition page
+          (or left, if you choose below). Paste a{" "}
+          <strong>Vimeo link</strong> (e.g. vimeo.com/1206857643), a direct{" "}
+          <strong>.mp4 URL</strong>, or upload a video file. Add an optional
+          thumbnail for mp4 files — it shows before playback starts.
         </p>
 
-        {video?.image_url && (
-          <div className="mb-4 max-w-sm overflow-hidden rounded-xl bg-oma-black">
-            <video
-              key={video.id}
-              src={video.image_url}
-              poster={video.alt_text || undefined}
-              controls
-              className="aspect-video w-full"
-            />
-          </div>
-        )}
+        {video?.image_url && (() => {
+          const parsed = parseEditionVideo(video.image_url);
+          return (
+            <div className="mb-4 max-w-md overflow-hidden rounded-xl bg-oma-black ring-1 ring-oma-cocoa/10">
+              {parsed?.type === "vimeo" ? (
+                <div className="aspect-video w-full">
+                  <iframe
+                    src={parsed.embedUrl}
+                    title="Edition video preview"
+                    allow="autoplay; fullscreen; picture-in-picture"
+                    className="h-full w-full border-0"
+                  />
+                </div>
+              ) : (
+                <video
+                  key={video.id}
+                  src={video.image_url}
+                  poster={video.alt_text || undefined}
+                  controls
+                  className="aspect-video w-full"
+                />
+              )}
+            </div>
+          );
+        })()}
 
         <label className="mb-2 block text-sm font-medium text-oma-black">
           Video URL
@@ -362,22 +473,56 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
           type="url"
           value={videoUrlInput}
           onChange={(e) => setVideoUrlInput(e.target.value)}
-          placeholder="https://.../edition-recap.mp4"
-          className="mb-4 w-full max-w-md rounded-md border border-gray-300 px-3 py-2 text-sm"
+          placeholder="https://vimeo.com/1206857643 or https://.../recap.mp4"
+          className="mb-4 w-full max-w-lg rounded-md border border-gray-300 px-3 py-2 text-sm"
         />
 
-        <label className="mb-2 block text-sm font-medium text-oma-black">
-          Thumbnail URL (optional)
+        <p className="mb-2 text-xs text-oma-cocoa/80">Or upload a video file</p>
+        <FileUpload
+          key={`video-upload-${video?.id ?? "none"}`}
+          onUploadComplete={(url) => {
+            setVideoUrlInput(url);
+            toast.success("Video uploaded — click Save video to publish");
+          }}
+          bucket="edition-galleries"
+          path={`${slug}/video`}
+          accept={{
+            "video/mp4": [".mp4"],
+            "video/webm": [".webm"],
+            "video/quicktime": [".mov"],
+          }}
+          maxSize={150}
+          hidePreview
+        />
+
+        <label className="mb-2 mt-6 block text-sm font-medium text-oma-black">
+          Thumbnail URL (optional, for mp4 files)
         </label>
         <input
           type="url"
           value={videoThumbnailInput}
           onChange={(e) => setVideoThumbnailInput(e.target.value)}
-          placeholder="https://.../edition-recap-thumbnail.jpg"
-          className="mb-4 w-full max-w-md rounded-md border border-gray-300 px-3 py-2 text-sm"
+          placeholder="https://.../recap-thumbnail.jpg"
+          className="mb-3 w-full max-w-lg rounded-md border border-gray-300 px-3 py-2 text-sm"
+        />
+        <FileUpload
+          key={`video-thumb-${video?.id ?? "none"}-${videoThumbnailInput}`}
+          onUploadComplete={(url) => {
+            setVideoThumbnailInput(url);
+            toast.success("Thumbnail uploaded — click Save video to apply");
+          }}
+          bucket="edition-galleries"
+          path={`${slug}/video-thumbnail`}
+          accept={{
+            "image/png": [".png"],
+            "image/jpeg": [".jpg", ".jpeg"],
+            "image/webp": [".webp"],
+          }}
+          maxSize={10}
+          hidePreview
         />
 
-        <label className="mb-2 block text-sm font-medium text-oma-black">
+        <label className="mb-2 mt-6 block text-sm font-medium text-oma-black">
           Position next to the story
         </label>
         <div className="mb-4 flex gap-2">
@@ -670,11 +815,122 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
 
       <section className="mb-12">
         <h2 className="text-lg font-semibold text-oma-black mb-1">
+          Lineup brands
+        </h2>
+        <p className="text-sm text-oma-cocoa mb-4">
+          Brands that showed at this edition — rendered as the scrolling
+          &quot;The lineup&quot; row on the edition page, using the same cards
+          as the homepage brand rows. The lineup label on the archive card
+          {edition.lineupLabel
+            ? ` (${edition.lineupLabel})`
+            : ""}{" "}
+          still comes from code.
+        </p>
+
+        {lineupBrands.length > 0 && (
+          <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {lineupEntries.map((entry) => {
+              const brand = allBrands.find((b) => b.id === entry.brand_id);
+              if (!brand) return null;
+
+              return (
+                <div key={entry.id} className="group relative">
+                  <BrandCard
+                    id={brand.id}
+                    name={brand.name}
+                    image={brand.image || "/placeholder-image.jpg"}
+                    category={brand.category}
+                    location={brand.location}
+                    isVerified={brand.is_verified}
+                    rating={brand.rating}
+                    video_url={brand.video_url || undefined}
+                    video_thumbnail={brand.video_thumbnail || undefined}
+                  />
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <button
+                        type="button"
+                        aria-label={`Remove ${brand.name} from lineup`}
+                        disabled={deletingLineupId === entry.id}
+                        className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-oma-black/60 text-white opacity-0 backdrop-blur-sm transition-opacity duration-200 hover:bg-red-600 focus-visible:opacity-100 group-hover:opacity-100"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Remove from lineup</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          {brand.name} will no longer appear in the edition&apos;s
+                          brand row. This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => void handleRemoveLineupBrand(entry.id)}
+                          className="bg-red-600 hover:bg-red-700"
+                        >
+                          Remove
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+          <div className="flex-1 max-w-md">
+            <label className="mb-2 block text-sm font-medium text-oma-black">
+              Add brand from directory
+            </label>
+            <Select
+              value={selectedLineupBrandId || "__none"}
+              onValueChange={(value) =>
+                setSelectedLineupBrandId(value === "__none" ? "" : value)
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select a brand" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none">Select a brand</SelectItem>
+                {availableLineupBrands.map((brand) => (
+                  <SelectItem key={brand.id} value={brand.id}>
+                    {brand.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Button
+            type="button"
+            onClick={() => void handleAddLineupBrand()}
+            disabled={!selectedLineupBrandId || isAddingLineupBrand}
+            className="bg-oma-plum hover:bg-oma-plum/90"
+          >
+            {isAddingLineupBrand ? "Adding…" : "Add to lineup"}
+          </Button>
+        </div>
+
+        {lineupBrands.length === 0 && (
+          <p className="mt-4 text-sm text-oma-cocoa/70">
+            No lineup brands yet. Add brands above to populate the scrolling row
+            at the bottom of the edition page.
+          </p>
+        )}
+      </section>
+
+      <section className="mb-12">
+        <h2 className="text-lg font-semibold text-oma-black mb-1">
           Partners (bottom of page)
         </h2>
         <p className="text-sm text-oma-cocoa mb-4">
           Logos and names shown in the &quot;Our partners&quot; section at the
-          very bottom of the edition page — after the story, gallery, and
+          very bottom of the edition page — after the story, gallery, and brand
           lineup. Any partner name set in lib/data/editions.ts also appears
           here.
         </p>

@@ -55,29 +55,42 @@ export function EmailCaptureForm({
 
   if (status === "success") {
     return (
-      <p
+      <div
         role="status"
         className={cn(
-          "text-sm tracking-wide",
-          isDark ? "text-oma-gold" : "text-oma-plum",
-          className
+          "inline-flex max-w-md items-center gap-3 rounded-2xl px-5 py-4 text-sm tracking-wide",
+          isDark
+            ? "bg-white/10 text-oma-gold ring-1 ring-white/15 backdrop-blur-sm"
+            : "bg-oma-plum/5 text-oma-plum ring-1 ring-oma-plum/10",
+          className,
         )}
       >
-        {successMessage}
-      </p>
+        <span
+          aria-hidden
+          className={cn(
+            "flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold",
+            isDark ? "bg-oma-gold/20 text-oma-gold" : "bg-oma-plum/10 text-oma-plum",
+          )}
+        >
+          ✓
+        </span>
+        <span>{successMessage}</span>
+      </div>
     );
   }
 
   return (
     <form
       onSubmit={handleSubmit}
-      className={cn("w-full max-w-md", className)}
+      className={cn("w-full max-w-lg", className)}
       noValidate={false}
     >
       <div
         className={cn(
-          "flex items-center gap-2 border-b pb-2",
-          isDark ? "border-white/30" : "border-oma-plum/30"
+          "group flex flex-col gap-3 rounded-2xl p-2 transition-shadow duration-300 focus-within:ring-2 sm:flex-row sm:items-center sm:rounded-full sm:p-1.5",
+          isDark
+            ? "bg-white/10 ring-1 ring-white/15 backdrop-blur-md focus-within:ring-oma-gold/40"
+            : "bg-white shadow-[0_8px_30px_rgb(97_60_58_/_8%)] ring-1 ring-oma-cocoa/10 focus-within:ring-oma-plum/25",
         )}
       >
         <input
@@ -88,12 +101,13 @@ export function EmailCaptureForm({
           placeholder={placeholder}
           aria-label="Email address"
           className={cn(
-            "flex-1 bg-transparent text-base outline-none min-h-[44px]",
+            "min-h-[48px] flex-1 rounded-xl bg-transparent px-4 text-base outline-none sm:rounded-full sm:px-5",
             isDark
-              ? "text-white placeholder:text-white/40"
-              : "text-oma-black placeholder:text-oma-cocoa/60"
+              ? "text-white placeholder:text-white/45"
+              : "text-oma-black placeholder:text-oma-cocoa/55",
           )}
         />
+
         {/* Honeypot — hidden from real users, matches the API's spam check */}
         <input
           type="text"
@@ -105,21 +119,29 @@ export function EmailCaptureForm({
           aria-hidden="true"
           className="hidden"
         />
+
         <button
           type="submit"
           disabled={status === "submitting"}
           className={cn(
-            "shrink-0 text-sm font-semibold uppercase tracking-[0.2em] transition-colors min-h-[44px] px-2 disabled:opacity-50",
+            "inline-flex min-h-[48px] shrink-0 items-center justify-center rounded-xl px-6 text-xs font-semibold uppercase tracking-[0.18em] transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-60 sm:rounded-full sm:px-7",
             isDark
-              ? "text-oma-gold hover:text-white"
-              : "text-oma-plum hover:text-oma-cocoa"
+              ? "bg-oma-gold text-oma-plum hover:bg-oma-gold/90 hover:shadow-[0_4px_20px_rgb(212_175_55_/_25%)]"
+              : "bg-oma-plum text-white hover:bg-oma-plum/90 hover:shadow-[0_4px_20px_rgb(97_60_58_/_18%)]",
           )}
         >
           {status === "submitting" ? "Sending…" : buttonLabel}
         </button>
       </div>
+
       {status === "error" && (
-        <p className="mt-2 text-sm text-red-400">
+        <p
+          role="alert"
+          className={cn(
+            "mt-3 text-sm",
+            isDark ? "text-red-300" : "text-red-600",
+          )}
+        >
           Something went wrong. Please try again.
         </p>
       )}

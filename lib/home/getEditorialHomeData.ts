@@ -55,3 +55,21 @@ export async function getBrandsByNames(
     .filter((brand) => wanted.has(brand.name.trim().toLowerCase()))
     .map(toWorkedWithBrand);
 }
+
+/**
+ * Resolve studio-managed lineup brand IDs to live brand cards, preserving
+ * the order saved in edition_lineup_brands.
+ */
+export async function getBrandsByIds(
+  ids: string[],
+): Promise<WorkedWithBrand[]> {
+  if (ids.length === 0) return [];
+
+  const brands = await getAllBrands(false, false);
+  const byId = new Map(brands.map((brand) => [brand.id, brand]));
+
+  return ids
+    .map((id) => byId.get(id))
+    .filter((brand): brand is Brand => Boolean(brand))
+    .map(toWorkedWithBrand);
+}

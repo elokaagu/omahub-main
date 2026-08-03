@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { getAllEditions } from "@/lib/data/editions";
 import { getAllEditionImages, type EditionImage } from "@/lib/services/editionImagesService";
+import { getAllEditionLineupBrands } from "@/lib/services/editionLineupService";
 import { AuthImage } from "@/components/ui/auth-image";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -24,24 +25,35 @@ function EditionsPhotoManagementContent() {
   const [imagesBySlug, setImagesBySlug] = useState<Record<string, EditionImage[]> | null>(
     null
   );
+  const [lineupCountBySlug, setLineupCountBySlug] = useState<Record<string, number> | null>(
+    null,
+  );
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const images = await getAllEditionImages();
+      const [images, lineupRows] = await Promise.all([
+        getAllEditionImages(),
+        getAllEditionLineupBrands(),
+      ]);
       if (cancelled) return;
       const grouped: Record<string, EditionImage[]> = {};
       for (const image of images) {
         (grouped[image.edition_slug] ??= []).push(image);
       }
+      const lineupCounts: Record<string, number> = {};
+      for (const row of lineupRows) {
+        lineupCounts[row.edition_slug] = (lineupCounts[row.edition_slug] ?? 0) + 1;
+      }
       setImagesBySlug(grouped);
+      setLineupCountBySlug(lineupCounts);
     })();
     return () => {
       cancelled = true;
     };
   }, []);
 
-  if (!imagesBySlug) {
+  if (!imagesBySlug || !lineupCountBySlug) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <Loading />
@@ -56,9 +68,9 @@ function EditionsPhotoManagementContent() {
           Edition Photos
         </h1>
         <p className="text-oma-cocoa">
-          Manage cover, inline story photos, the bottom gallery grid, video,
-          and partners for each edition. Edition copy (title, story, lineup)
-          still lives in code.
+          Manage cover, inline story photos, the bottom gallery grid, lineup
+          brands, video, and partners for each edition. Edition copy (title,
+          story, lineup label) still lives in code.
         </p>
       </div>
 
@@ -69,6 +81,7 @@ function EditionsPhotoManagementContent() {
           const galleryCount = images.filter((i) => i.kind === "gallery").length;
           const inlineStoryCount = images.filter((i) => i.kind === "story").length;
           const partnerCount = images.filter((i) => i.kind === "partner").length;
+          const lineupCount = lineupCountBySlug[edition.slug] || 0;
           const previewImage = dynamicCover || edition.coverImage;
 
           return (
@@ -109,6 +122,8 @@ function EditionsPhotoManagementContent() {
                         {inlineStoryCount === 1 ? "photo" : "photos"} ·{" "}
                         {galleryCount} gallery grid{" "}
                         {galleryCount === 1 ? "photo" : "photos"} ·{" "}
+                        {lineupCount} lineup{" "}
+                        {lineupCount === 1 ? "brand" : "brands"} ·{" "}
                         {partnerCount}{" "}
                         {partnerCount === 1 ? "partner" : "partners"}
                       </p>
