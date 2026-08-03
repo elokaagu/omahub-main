@@ -9,9 +9,9 @@ type EditorialHeroProps = {
 };
 
 /**
- * Between-editions hero: cinematic, editorial, no shop in sight. The only
- * CTA is the email capture for early access to the next edition. The
- * looping film lives further down the page in FilmSection, not here.
+ * Between-editions hero: editorial split layout with copy on the left
+ * (~46%) and a tall film card on the right (~54%). The only CTA is
+ * email capture for early access to the next edition.
  */
 export function EditorialHero({
   upcomingEdition,
@@ -23,7 +23,6 @@ export function EditorialHero({
 
   return (
     <section className="relative overflow-hidden bg-gradient-to-b from-[#FAF1E4] to-oma-beige text-oma-black">
-      {/* Subtle diagonal grid, per the editorial mockup */}
       <div
         aria-hidden
         className="absolute inset-0 opacity-[0.06]"
@@ -33,39 +32,38 @@ export function EditorialHero({
         }}
       />
 
-      <div className="relative z-10 mx-auto flex min-h-[92vh] max-w-7xl flex-col justify-center px-4 py-24 sm:px-6 lg:px-8">
-        <div className="grid items-center gap-12 lg:grid-cols-[1fr_1fr]">
-          <div>
-            <div className="mb-10 flex items-center gap-4">
+      <div className="relative z-10 mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-24 lg:px-8">
+        <div className="grid min-h-[calc(100svh-6rem)] items-center gap-12 lg:grid-cols-[minmax(0,46%)_minmax(0,54%)] lg:gap-x-14 xl:gap-x-20">
+          <div className="flex flex-col justify-center lg:py-10">
+            <div className="mb-8 flex items-center gap-4 lg:mb-10">
               <span aria-hidden className="h-px w-12 bg-oma-gold" />
               <p className="text-xs font-bold uppercase tracking-[0.3em] text-oma-cocoa sm:text-sm">
                 {eyebrow}
               </p>
             </div>
 
-            <h1 className="font-canela text-5xl leading-[1.05] sm:text-7xl lg:text-8xl">
-              African fashion,
-              <br />
+            <h1 className="max-w-[12ch] font-canela text-[2.625rem] leading-[1.06] tracking-tight sm:text-5xl lg:text-[3.25rem] lg:leading-[1.05] xl:text-6xl">
+              African fashion,{" "}
               <span className="text-oma-plum">curated for you.</span>
             </h1>
 
-            <p className="mt-8 max-w-xl text-lg leading-relaxed text-oma-black/70">
+            <p className="mt-6 max-w-md text-base leading-relaxed text-oma-black/70 sm:mt-8 sm:text-lg">
               OmaHub is between editions. The next drop spotlights African
               designers you need to know, verified, curated, and ready to
               wear. Get early access.
             </p>
 
             {upcomingEdition?.applicationsOpen && (
-              <p className="mt-8 flex items-center gap-3 text-sm font-semibold uppercase tracking-[0.2em] text-oma-plum">
+              <p className="mt-6 flex items-center gap-3 text-sm font-semibold uppercase tracking-[0.2em] text-oma-plum sm:mt-8">
                 <span
                   aria-hidden
-                  className="h-2 w-2 rounded-full bg-oma-gold"
+                  className="h-2 w-2 shrink-0 rounded-full bg-oma-gold"
                 />
                 Applications open for Edition {upcomingEdition.number}
               </p>
             )}
 
-            <div className="mt-8">
+            <div className="mt-6 sm:mt-8">
               <EmailCaptureForm
                 source="website"
                 variant="light"
@@ -77,7 +75,7 @@ export function EditorialHero({
             {latestPastEdition && (
               <Link
                 href={`/editions/${latestPastEdition.slug}`}
-                className="mt-10 inline-flex items-center gap-2 text-sm uppercase tracking-[0.2em] text-oma-cocoa transition-colors hover:text-oma-plum"
+                className="mt-8 inline-flex items-center gap-2 text-sm uppercase tracking-[0.2em] text-oma-cocoa transition-colors hover:text-oma-plum sm:mt-10"
               >
                 Watch, OmaHub Edition {latestPastEdition.number}
                 <span aria-hidden>→</span>
@@ -85,8 +83,7 @@ export function EditorialHero({
             )}
           </div>
 
-          {/* Hero video for the next edition */}
-          <div className="hidden w-full lg:flex lg:justify-end">
+          <div className="hidden lg:flex lg:items-center lg:justify-end">
             <HeroFilmCard />
           </div>
         </div>
