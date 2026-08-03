@@ -239,8 +239,8 @@ export default function Header() {
         aria-modal="true"
         aria-label="Main menu"
         className={cn(
-          "fixed inset-y-0 right-0 z-[1100] flex h-full w-full max-w-[min(100vw,22rem)] flex-col bg-oma-plum text-oma-cream shadow-2xl transition-transform duration-300 ease-smooth will-change-transform",
-          menuOpen ? "translate-x-0" : "translate-x-full"
+          "fixed inset-y-0 left-0 z-[1100] flex h-full w-full max-w-[min(100vw,22rem)] flex-col bg-oma-plum text-oma-cream shadow-2xl transition-transform duration-300 ease-smooth will-change-transform",
+          menuOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
         <div className="flex shrink-0 items-center justify-between border-b border-white/10 px-5 py-4 sm:px-6 sm:py-5">

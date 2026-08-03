@@ -8,12 +8,11 @@ async function getVimeoPosterUrl(videoId: string): Promise<string | undefined> {
       `https://vimeo.com/api/oembed.json?url=${encodeURIComponent(
         `https://vimeo.com/${videoId}`
       )}&width=1280`,
-      { next: { revalidate: 60 * 60 * 24 } }
+      { next: { revalidate: 3600 } }
     );
     if (!res.ok) return undefined;
     const data = await res.json();
     if (typeof data.thumbnail_url !== "string") return undefined;
-    // Request a sharper frame for the loading poster.
     return data.thumbnail_url.replace(/_\d+x\d+/, "_1280x720");
   } catch (e) {
     console.error("vimeo_oembed_poster_fetch_failed", e);
