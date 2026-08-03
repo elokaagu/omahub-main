@@ -40,6 +40,7 @@ import ErrorBoundary from "../components/ErrorBoundary";
 import type { Database } from "@/lib/types/supabase";
 import { StudioInitialDataProvider } from "@/contexts/StudioInitialDataContext";
 import { PageTransition } from "@/components/ui/page-transition";
+import { isStudioNavItemHidden } from "@/lib/studio/studioNavConfig";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
@@ -245,6 +246,7 @@ function buildNavigationItems(
   ];
 
   const filteredItems = permissionItems.filter((item) => {
+    if (isStudioNavItemHidden(item.href)) return false;
     if (item.permission === "studio.access") return true;
     const hasPermission = permissions.includes(item.permission as any);
     if (item.showForRoles && role) {

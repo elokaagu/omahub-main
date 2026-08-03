@@ -9,6 +9,7 @@ import {
 } from "@/lib/seo";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { getCachedProductWithBrand } from "@/lib/product/getProductWithBrandCached";
+import { getCataloguesPubliclyVisible } from "@/lib/services/catalogueVisibilitySetting";
 import { getProductOgImageUrl } from "@/lib/utils/productImageUtils";
 import ClientProductPage from "./ClientProductPage";
 
@@ -105,6 +106,10 @@ export async function generateMetadata({
 }
 
 export default async function ProductPage({ params }: ProductPageProps) {
+  if (!(await getCataloguesPubliclyVisible())) {
+    notFound();
+  }
+
   try {
     const data = await getCachedProductWithBrand(params.id);
 

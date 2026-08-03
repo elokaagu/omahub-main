@@ -1,4 +1,10 @@
 import { z } from "zod";
+import { STUDIO_CURRENCIES_FOR_PRICE_SELECT } from "@/lib/brands/studioBrandFormConstants";
+import { buildJoinApplicationPricing } from "@/lib/brands/joinApplicationPricing";
+
+const validCurrencyCodes = new Set<string>(
+  STUDIO_CURRENCIES_FOR_PRICE_SELECT.map((c) => c.code),
+);
 
 const emptyToNull = (s: string | undefined) => {
   if (s == null) return null;
@@ -52,12 +58,37 @@ export const designerApplicationBodySchema = z
       .union([z.string(), z.null()])
       .optional()
       .transform((v) => (v == null ? null : emptyToNull(v))),
+    currency: z
+      .string()
+      .trim()
+      .default("USD")
+      .refine((v) => validCurrencyCodes.has(v), {
+        message: "Please select a valid currency",
+      }),
+    priceMin: z
+      .union([z.string(), z.null()])
+      .optional()
+      .transform((v) => (v == null ? null : emptyToNull(v))),
+    priceMax: z
+      .union([z.string(), z.null()])
+      .optional()
+      .transform((v) => (v == null ? null : emptyToNull(v))),
+    contactForPricing: z.boolean().optional().default(false),
     imageUrls: z
       .array(z.string().trim().url())
       .min(1, "Please upload at least one photo")
       .max(3, "Up to 3 photos"),
   })
-  .strip();
+  .strip()
+  .transform((data) => {
+    const { priceRange, currency } = buildJoinApplicationPricing({
+      currency: data.currency,
+      priceMin: data.priceMin,
+      priceMax: data.priceMax,
+      contactForPricing: data.contactForPricing,
+    });
+    return { ...data, priceRange, currency };
+  });
 
 export type DesignerApplicationBody = z.infer<typeof designerApplicationBodySchema>;
 

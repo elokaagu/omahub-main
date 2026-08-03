@@ -26,12 +26,15 @@ interface ClientBrandProfileProps {
   brandId: string;
   /** When provided (from the server page), skips the initial client brand/collections fetch. */
   initialBrandData?: BrandProfileData;
+  /** When false, collections and products stay hidden until a pop-up/edition launch. */
+  cataloguesPubliclyVisible?: boolean;
   onReviewSubmitted?: () => Promise<void>;
 }
 
 export default function ClientBrandProfile({
   brandId,
   initialBrandData,
+  cataloguesPubliclyVisible = false,
   onReviewSubmitted,
 }: ClientBrandProfileProps) {
   const { user } = useAuth();
@@ -103,12 +106,16 @@ export default function ClientBrandProfile({
     }
   }, [fetchReviews, brandId]);
 
-  // Show products by default if there are no collections
+  // Show products by default if there are no collections (only when catalogues are public)
   useEffect(() => {
-    if (brandData && brandData.collections.length === 0) {
+    if (
+      cataloguesPubliclyVisible &&
+      brandData &&
+      brandData.collections.length === 0
+    ) {
       setShowAllProducts(true);
     }
-  }, [brandData]);
+  }, [brandData, cataloguesPubliclyVisible]);
 
   // Fetch products when showAllProducts is toggled
   useEffect(() => {
@@ -245,19 +252,24 @@ export default function ClientBrandProfile({
           brandData={brandData}
           reviewsCount={reviews.length}
           showAllProducts={showAllProducts}
+          cataloguesPubliclyVisible={cataloguesPubliclyVisible}
           onScrollToCollections={scrollToCollections}
           onToggleProducts={handleToggleProducts}
           onOpenContactModal={handleOpenContactModal}
         />
 
-        <BrandProductsSection
-          showAllProducts={showAllProducts}
-          productsLoading={productsLoading}
-          products={products}
-          brandData={brandData}
-        />
+        {cataloguesPubliclyVisible ? (
+          <>
+            <BrandProductsSection
+              showAllProducts={showAllProducts}
+              productsLoading={productsLoading}
+              products={products}
+              brandData={brandData}
+            />
 
-        <BrandCollectionsSection collections={brandData.collections} />
+            <BrandCollectionsSection collections={brandData.collections} />
+          </>
+        ) : null}
 
         <BrandInfoSection
           brandData={brandData}

@@ -97,6 +97,8 @@ export async function POST(request: NextRequest) {
       category: body.category,
       description: body.description,
       year_founded: yearFounded,
+      price_range: body.priceRange,
+      currency: body.currency,
       image_urls: body.imageUrls,
       status: "new" as const,
     };

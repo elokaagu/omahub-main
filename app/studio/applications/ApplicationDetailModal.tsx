@@ -129,6 +129,27 @@ export function ApplicationDetailModal({
             <Badge variant="outline">{application.category}</Badge>
           </div>
 
+          {(application.price_range || application.currency) && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {application.price_range && (
+                <div>
+                  <span className="block text-sm font-medium text-oma-cocoa mb-1">
+                    Price Range
+                  </span>
+                  <p className="text-sm">{application.price_range}</p>
+                </div>
+              )}
+              {application.currency && (
+                <div>
+                  <span className="block text-sm font-medium text-oma-cocoa mb-1">
+                    Currency
+                  </span>
+                  <p className="text-sm">{application.currency}</p>
+                </div>
+              )}
+            </div>
+          )}
+
           <div>
             <span className="block text-sm font-medium text-oma-cocoa mb-1">
               Description
@@ -181,30 +202,52 @@ export function ApplicationDetailModal({
 
           {application.brand_id && (
             <div className="bg-oma-beige/50 border border-oma-gold/30 rounded-lg p-4">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
                 <div className="flex items-center gap-2">
                   <CheckCircle className="h-5 w-5 text-oma-gold" />
                   <div>
                     <span className="block text-sm font-medium text-oma-plum mb-1">
-                      Brand Created
+                      {application.status === "approved"
+                        ? "Live Brand Profile"
+                        : "Brand Created"}
                     </span>
                     <p className="text-xs text-oma-cocoa">
-                      {application.brand_verified ? "Verified" : "Unverified"} •
-                      Brand is ready for approval
+                      {application.brand_verified ? "Verified" : "Unverified"}
+                      {application.status === "approved"
+                        ? " • Public profile on OmaHub"
+                        : " • Brand is ready for approval"}
                     </p>
                   </div>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    window.open(`/studio/brands/${application.brand_id}`, "_blank")
-                  }
-                  className="flex items-center gap-2"
-                >
-                  <ExternalLink className="h-4 w-4" />
-                  View Brand
-                </Button>
+                <div className="flex items-center gap-2">
+                  {application.status === "approved" && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        window.open(`/brand/${application.brand_id}`, "_blank")
+                      }
+                      className="flex items-center gap-2"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                      View Public Profile
+                    </Button>
+                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      window.open(
+                        `/studio/brands/${application.brand_id}`,
+                        "_blank",
+                      )
+                    }
+                    className="flex items-center gap-2"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    Studio
+                  </Button>
+                </div>
               </div>
             </div>
           )}

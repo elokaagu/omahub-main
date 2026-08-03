@@ -11,7 +11,9 @@ import {
   getPrimaryApplicationImageUrl,
   syncApplicationPhotosToBrandImages,
 } from "@/lib/brands/applicationBrandImages";
+import { EXPLORE_PRICING_LABEL } from "@/lib/brands/joinApplicationPricing";
 import { isUsableBrandCardImageUrl } from "@/lib/brands/directoryListingImage";
+import { invalidateBrandsCache } from "@/lib/services/brandService";
 
 // Force dynamic rendering for this route
 export const dynamic = "force-dynamic";
@@ -190,6 +192,7 @@ export async function PUT(
       userCreated?: boolean;
       temporaryPassword?: string;
       passwordResetLink?: string;
+      brandProfileUrl?: string;
     } | null = null;
 
     if (status === "approved" && applicationData) {
@@ -268,6 +271,7 @@ export async function PUT(
           temporaryPassword: approvalWorkflowResult.temporaryPassword,
           passwordResetLink: approvalWorkflowResult.passwordResetLink,
           isNewUser: approvalWorkflowResult.userCreated || false,
+          brandProfileUrl: approvalWorkflowResult.brandProfileUrl,
         });
 
         if (!emailResult.success) {
@@ -283,6 +287,7 @@ export async function PUT(
         message:
           "Application approved successfully. Brand and user access have been set up.",
         brand: approvalWorkflowResult.brand,
+        brandProfileUrl: approvalWorkflowResult.brandProfileUrl,
         user: approvalWorkflowResult.user
           ? {
               email: (approvalWorkflowResult.user as { email?: string }).email,
@@ -339,6 +344,7 @@ async function setupBrandAndUserAccess(
   userCreated?: boolean;
   temporaryPassword?: string;
   passwordResetLink?: string;
+  brandProfileUrl?: string;
 }> {
   try {
     const emailNorm = normalizeApplicantEmail(application.email);
@@ -386,6 +392,16 @@ async function setupBrandAndUserAccess(
     const primaryApplicationImage =
       getPrimaryApplicationImageUrl(applicationImageUrls);
 
+    const priceRange =
+      typeof application.price_range === "string" &&
+      application.price_range.trim()
+        ? application.price_range.trim()
+        : EXPLORE_PRICING_LABEL;
+    const currency =
+      typeof application.currency === "string" && application.currency.trim()
+        ? application.currency.trim()
+        : "USD";
+
     if (existingBrand) {
       // Brand already exists (was created during application submission)
       newBrand = existingBrand;
@@ -408,6 +424,8 @@ async function setupBrandAndUserAccess(
         whatsapp: application.phone || existingBrand.whatsapp,
         founded_year:
           application.year_founded?.toString() || existingBrand.founded_year,
+        price_range: priceRange,
+        currency,
         image:
           (isUsableBrandCardImageUrl(existingBrand.image)
             ? existingBrand.image
@@ -440,12 +458,12 @@ async function setupBrandAndUserAccess(
         description: application.description || "",
         long_description: application.description || "",
         location: application.location,
-        price_range: "explore brand for prices",
-        currency: "USD", // Default currency, can be updated later
+        price_range: priceRange,
+        currency,
         category: application.category,
         categories: [application.category],
         rating: 5.0,
-        is_verified: false,
+        is_verified: true,
         contact_email: emailNorm,
         website: application.website || undefined,
         instagram: application.instagram
@@ -647,7 +665,7 @@ async function setupBrandAndUserAccess(
       owned_brands: profile.owned_brands,
     });
 
-    // Step 4: Verify the brand (set is_verified to true)
+    // Step 4: Ensure the brand is verified (public profile visible on site)
     const { error: verifyError } = await supabase
       .from("brands")
       .update({ is_verified: true })
@@ -656,11 +674,16 @@ async function setupBrandAndUserAccess(
     if (verifyError) {
       console.warn("⚠️ Failed to verify brand, but continuing:", verifyError);
     } else {
-      // Update the brand object to reflect verification
       if (newBrand) {
         newBrand.is_verified = true;
       }
     }
+
+    invalidateBrandsCache();
+
+    const siteUrl =
+      process.env.NEXT_PUBLIC_SITE_URL || "https://oma-hub.com";
+    const brandProfileUrl = `${siteUrl}/brand/${brandId}`;
 
     // Generate password reset link for new users (more secure than sending password)
     let passwordResetLink: string | undefined = undefined;
@@ -696,10 +719,11 @@ async function setupBrandAndUserAccess(
       success: true,
       brand: newBrand,
       user: profile,
-      brandCreated: brandCreated, // Use the actual flag
+      brandCreated: brandCreated,
       userCreated,
       temporaryPassword: userCreated ? temporaryPassword : undefined,
       passwordResetLink: passwordResetLink,
+      brandProfileUrl,
     };
   } catch (error) {
     console.error("💥 Error in setupBrandAndUserAccess:", error);

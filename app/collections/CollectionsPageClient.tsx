@@ -292,11 +292,13 @@ function CollectionCarouselSection({
 interface CollectionsPageClientProps {
   initialCollections: CatalogueWithBrand[];
   initialLoadError: string | null;
+  cataloguesPubliclyVisible?: boolean;
 }
 
 export default function CollectionsPageClient({
   initialCollections,
   initialLoadError,
+  cataloguesPubliclyVisible = false,
 }: CollectionsPageClientProps) {
   const [catalogues, setCatalogues] = useState<CatalogueWithBrand[]>(
     initialCollections
@@ -410,6 +412,27 @@ export default function CollectionsPageClient({
 
   const cataloguesByCategory = groupCataloguesByCategory(filteredCatalogues);
   const productsByCategory = groupProductsByCategory(filteredProducts);
+
+  if (!cataloguesPubliclyVisible) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-oma-beige/30 to-white">
+        <div className="max-w-7xl mx-auto px-6 py-24">
+          <div className="text-center max-w-lg mx-auto">
+            <h1 className="text-3xl font-canela text-oma-cocoa mb-4">
+              Collections coming soon
+            </h1>
+            <p className="text-oma-cocoa/70 mb-8">
+              Designer catalogues will be showcased when the next OmaHub
+              pop-up launches. Explore brand profiles in the directory for now.
+            </p>
+            <Button asChild className="bg-oma-plum hover:bg-oma-plum/90">
+              <Link href="/directory">Browse Designers</Link>
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (initialLoadError) {
     return (

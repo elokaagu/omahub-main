@@ -25,6 +25,7 @@ import {
   EyeOff,
   Film,
   UserPlus,
+  ShoppingBag,
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -52,6 +53,12 @@ export default function SettingsPage() {
   const [customerSignupEnabled, setCustomerSignupEnabled] = useState(false);
   const [isLoadingSignupSetting, setIsLoadingSignupSetting] = useState(true);
   const [isSavingSignupSetting, setIsSavingSignupSetting] = useState(false);
+  const [cataloguesPubliclyVisible, setCataloguesPubliclyVisible] =
+    useState(false);
+  const [isLoadingCatalogueSetting, setIsLoadingCatalogueSetting] =
+    useState(true);
+  const [isSavingCatalogueSetting, setIsSavingCatalogueSetting] =
+    useState(false);
 
   // Check if user has super admin permissions
   const hasSettingsPermission = permissions.includes("studio.settings.manage");
@@ -62,6 +69,7 @@ export default function SettingsPage() {
       setIsLoadingVideoId(true);
       setIsLoadingWelcomeVideoId(true);
       setIsLoadingSignupSetting(true);
+      setIsLoadingCatalogueSetting(true);
       const response = await fetch("/api/platform-settings");
       const data = await response.json();
       if (response.ok) {
@@ -72,6 +80,7 @@ export default function SettingsPage() {
           setWelcomeVideoId(data.welcomeVideoId);
         }
         setCustomerSignupEnabled(data.customerSignupEnabled === "true");
+        setCataloguesPubliclyVisible(data.cataloguesPubliclyVisible === "true");
       }
     } catch (error) {
       console.error("Error fetching video settings:", error);
@@ -79,8 +88,38 @@ export default function SettingsPage() {
       setIsLoadingVideoId(false);
       setIsLoadingWelcomeVideoId(false);
       setIsLoadingSignupSetting(false);
+      setIsLoadingCatalogueSetting(false);
     }
   }, []);
+
+  const handleToggleCataloguesVisible = async (nextVisible: boolean) => {
+    setIsSavingCatalogueSetting(true);
+    try {
+      const response = await fetch("/api/platform-settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          cataloguesPubliclyVisible: nextVisible ? "true" : "false",
+        }),
+      });
+      const data = await response.json();
+      if (response.ok && data.success) {
+        setCataloguesPubliclyVisible(nextVisible);
+        toast.success(
+          nextVisible
+            ? "Catalogues and products are now visible on the public site"
+            : "Catalogues and products are now hidden — brand profiles stay live",
+        );
+      } else {
+        toast.error(data.error || "Failed to update this setting");
+      }
+    } catch (error) {
+      console.error("Error saving catalogue visibility setting:", error);
+      toast.error("Something went wrong. Please try again.");
+    } finally {
+      setIsSavingCatalogueSetting(false);
+    }
+  };
 
   const handleToggleCustomerSignup = async (nextEnabled: boolean) => {
     setIsSavingSignupSetting(true);
@@ -593,6 +632,79 @@ export default function SettingsPage() {
                     className="flex-1"
                   >
                     Hide Signup
+                  </Button>
+                </>
+              )}
+            </CardFooter>
+          </Card>
+
+          {/* Public catalogues & products */}
+          <Card className="border-oma-beige">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-oma-plum font-canela">
+                <ShoppingBag className="h-5 w-5" />
+                Catalogues & Products
+              </CardTitle>
+              <CardDescription className="text-oma-cocoa">
+                Control whether shoppers can browse collections and products
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {isLoadingCatalogueSetting ? (
+                <div className="text-center py-2">
+                  <div className="h-5 w-5 border-2 border-oma-plum border-t-transparent rounded-full mx-auto" />
+                </div>
+              ) : (
+                <>
+                  <div className="mb-4">
+                    <div
+                      className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium ${
+                        cataloguesPubliclyVisible
+                          ? "bg-green-100 text-green-800 border border-green-200"
+                          : "bg-amber-100 text-amber-800 border border-amber-200"
+                      }`}
+                    >
+                      {cataloguesPubliclyVisible
+                        ? "Catalogues are live"
+                        : "Catalogues are hidden"}
+                    </div>
+                  </div>
+                  <p className="text-sm text-oma-cocoa/80">
+                    {cataloguesPubliclyVisible
+                      ? "Brand profiles, collections, and products are visible on the public site."
+                      : "Brand profiles stay visible in the directory, but collections and products are hidden until you turn this on — e.g. when the next pop-up or edition launches."}
+                  </p>
+                </>
+              )}
+            </CardContent>
+            <CardFooter className="flex gap-2">
+              {!isLoadingCatalogueSetting && (
+                <>
+                  <Button
+                    onClick={() => handleToggleCataloguesVisible(true)}
+                    disabled={
+                      isSavingCatalogueSetting || cataloguesPubliclyVisible
+                    }
+                    variant={cataloguesPubliclyVisible ? "secondary" : "default"}
+                    className={`flex-1 ${
+                      !cataloguesPubliclyVisible
+                        ? "bg-oma-plum hover:bg-oma-plum/90 text-white"
+                        : ""
+                    }`}
+                  >
+                    Show Catalogues
+                  </Button>
+                  <Button
+                    onClick={() => handleToggleCataloguesVisible(false)}
+                    disabled={
+                      isSavingCatalogueSetting || !cataloguesPubliclyVisible
+                    }
+                    variant={
+                      !cataloguesPubliclyVisible ? "secondary" : "outline"
+                    }
+                    className="flex-1"
+                  >
+                    Hide Catalogues
                   </Button>
                 </>
               )}

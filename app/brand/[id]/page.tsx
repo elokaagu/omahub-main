@@ -9,6 +9,7 @@ import {
 } from "@/lib/seo";
 import { resolveBrandProfileImageUrl } from "@/lib/brands/directoryListingImage";
 import { JsonLd } from "@/components/seo/JsonLd";
+import { getCataloguesPubliclyVisible } from "@/lib/services/catalogueVisibilitySetting";
 import ClientBrandProfile from "./ClientBrandProfile";
 import { getCachedBrandById } from "./cachedBrand";
 import { mapBrandToProfileData } from "./brandProfileMapper";
@@ -108,6 +109,7 @@ export default async function BrandPage({ params }: BrandPageProps) {
     collections as any,
     applicationImageUrls,
   );
+  const cataloguesPubliclyVisible = await getCataloguesPubliclyVisible();
 
   const brandImage =
     resolveBrandProfileImageUrl(brand as any, applicationImageUrls) ||
@@ -146,6 +148,7 @@ export default async function BrandPage({ params }: BrandPageProps) {
       key={params.id}
       brandId={params.id}
       initialBrandData={initialBrandData}
+      cataloguesPubliclyVisible={cataloguesPubliclyVisible}
     />
     </>
   );

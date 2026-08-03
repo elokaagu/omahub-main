@@ -5,6 +5,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { X, Loader2, ImagePlus } from "lucide-react";
@@ -12,6 +20,11 @@ import {
   designerApplicationFormSchema,
   joinFormCategoryOptions,
 } from "@/lib/validation/designerApplicationForm";
+import {
+  STUDIO_CURRENCIES_FOR_PRICE_SELECT,
+  getFoundingYearOptions,
+} from "@/lib/brands/studioBrandFormConstants";
+import { formatPriceRange } from "@/lib/utils/priceFormatter";
 import ApplicationConfirmationModal from "@/components/ApplicationConfirmationModal";
 
 const MAX_PHOTOS = 3;
@@ -95,9 +108,30 @@ const EMPTY_FORM = {
   category: "",
   description: "",
   yearFounded: "",
-} as const;
+  currency: "USD",
+  priceMin: "",
+  priceMax: "",
+  contactForPricing: false,
+};
 
-type FormFieldName = keyof typeof EMPTY_FORM;
+type FormData = {
+  brandName: string;
+  designerName: string;
+  email: string;
+  phone: string;
+  website: string;
+  instagram: string;
+  location: string;
+  category: string;
+  description: string;
+  yearFounded: string;
+  currency: string;
+  priceMin: string;
+  priceMax: string;
+  contactForPricing: boolean;
+};
+
+type FormFieldName = keyof FormData;
 
 const FIELD_FOCUS_ORDER: FormFieldName[] = [
   "brandName",
@@ -108,9 +142,14 @@ const FIELD_FOCUS_ORDER: FormFieldName[] = [
   "instagram",
   "location",
   "category",
+  "currency",
+  "priceMin",
+  "priceMax",
   "description",
   "yearFounded",
 ];
+
+const foundingYearOptions = getFoundingYearOptions();
 
 function zodFieldErrorsToRecord(
   fieldErrors: Record<string, string[] | undefined>,
@@ -150,7 +189,7 @@ function parseApplicationResponse(json: unknown):
 }
 
 export function JoinApplicationForm() {
-  const [formData, setFormData] = useState({ ...EMPTY_FORM });
+  const [formData, setFormData] = useState<FormData>({ ...EMPTY_FORM });
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [photoSlots, setPhotoSlots] = useState<PhotoSlot[]>(
     Array.from({ length: MAX_PHOTOS }, () => ({ url: null, uploading: false })),
@@ -181,6 +220,11 @@ export function JoinApplicationForm() {
     >,
   ) => {
     const { name, value } = e.target;
+    clearFieldError(name);
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSelectChange = (name: FormFieldName, value: string) => {
     clearFieldError(name);
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -322,6 +366,9 @@ export function JoinApplicationForm() {
 
   const inputClass = (name: FormFieldName) =>
     cn("border-oma-gold/20", err(name) && "border-destructive");
+
+  const selectTriggerClass = (name: FormFieldName) =>
+    cn("border-oma-gold/20 bg-white", err(name) && "border-destructive");
 
   return (
     <>
@@ -474,22 +521,28 @@ export function JoinApplicationForm() {
 
             <div>
               <Label htmlFor="category">Primary Category *</Label>
-              <select
-                {...fieldShell("category")}
-                value={formData.category}
-                onChange={handleChange}
-                className={cn(
-                  "h-10 w-full rounded-md border bg-white px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                  inputClass("category"),
-                )}
+              <Select
+                value={formData.category || undefined}
+                onValueChange={(value) => handleSelectChange("category", value)}
               >
-                <option value="">Select a category</option>
-                {joinFormCategoryOptions.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger
+                  id="category"
+                  aria-invalid={!!err("category") || undefined}
+                  aria-describedby={
+                    err("category") ? "category-error" : undefined
+                  }
+                  className={selectTriggerClass("category")}
+                >
+                  <SelectValue placeholder="Select a category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {joinFormCategoryOptions.map((cat) => (
+                    <SelectItem key={cat} value={cat}>
+                      {cat}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               {err("category") && (
                 <p
                   id="category-error"
@@ -499,6 +552,109 @@ export function JoinApplicationForm() {
                   {err("category")}
                 </p>
               )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <Label htmlFor="currency">Currency *</Label>
+              <Select
+                value={formData.currency}
+                onValueChange={(value) => handleSelectChange("currency", value)}
+              >
+                <SelectTrigger
+                  id="currency"
+                  aria-invalid={!!err("currency") || undefined}
+                  aria-describedby={
+                    err("currency") ? "currency-error" : undefined
+                  }
+                  className={selectTriggerClass("currency")}
+                >
+                  <SelectValue placeholder="Select currency" />
+                </SelectTrigger>
+                <SelectContent>
+                  {STUDIO_CURRENCIES_FOR_PRICE_SELECT.map((currency) => (
+                    <SelectItem key={currency.code} value={currency.code}>
+                      {currency.symbol} - {currency.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {err("currency") && (
+                <p
+                  id="currency-error"
+                  className="mt-1 text-sm text-destructive"
+                  role="alert"
+                >
+                  {err("currency")}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <Label>Price Range *</Label>
+              <div className="grid grid-cols-2 gap-2">
+                <Input
+                  {...fieldShell("priceMin")}
+                  type="number"
+                  min={0}
+                  value={formData.priceMin}
+                  onChange={handleChange}
+                  className={inputClass("priceMin")}
+                  placeholder="Min"
+                  disabled={formData.contactForPricing}
+                />
+                <Input
+                  {...fieldShell("priceMax")}
+                  type="number"
+                  min={0}
+                  value={formData.priceMax}
+                  onChange={handleChange}
+                  className={inputClass("priceMax")}
+                  placeholder="Max"
+                  disabled={formData.contactForPricing}
+                />
+              </div>
+              {!formData.contactForPricing &&
+              formData.priceMin &&
+              formData.priceMax &&
+              formData.currency ? (
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Preview:{" "}
+                  {formatPriceRange(
+                    formData.priceMin,
+                    formData.priceMax,
+                    STUDIO_CURRENCIES_FOR_PRICE_SELECT.find(
+                      (c) => c.code === formData.currency,
+                    )?.symbol || "$",
+                  )}
+                </p>
+              ) : null}
+              {(err("priceMin") || err("priceMax")) && (
+                <p className="mt-1 text-sm text-destructive" role="alert">
+                  {err("priceMin") || err("priceMax")}
+                </p>
+              )}
+              <div className="mt-2 flex items-center space-x-2">
+                <Checkbox
+                  id="contactForPricing"
+                  checked={formData.contactForPricing}
+                  onCheckedChange={(checked) => {
+                    clearFieldError("priceMin");
+                    clearFieldError("priceMax");
+                    setFormData((prev) => ({
+                      ...prev,
+                      contactForPricing: checked === true,
+                    }));
+                  }}
+                />
+                <Label
+                  htmlFor="contactForPricing"
+                  className="cursor-pointer text-sm font-normal text-muted-foreground"
+                >
+                  Explore brand for prices (prefer not to show specific prices)
+                </Label>
+              </div>
             </div>
           </div>
 
@@ -547,17 +703,31 @@ export function JoinApplicationForm() {
 
           <div>
             <Label htmlFor="yearFounded">Year Founded</Label>
-            <Input
-              {...fieldShell("yearFounded")}
-              type="number"
-              inputMode="numeric"
-              min={1900}
-              max={new Date().getFullYear() + 1}
-              value={formData.yearFounded}
-              onChange={handleChange}
-              className={inputClass("yearFounded")}
-              placeholder="e.g. 2020"
-            />
+            <Select
+              value={formData.yearFounded || undefined}
+              onValueChange={(value) =>
+                handleSelectChange("yearFounded", value === "__none__" ? "" : value)
+              }
+            >
+              <SelectTrigger
+                id="yearFounded"
+                aria-invalid={!!err("yearFounded") || undefined}
+                aria-describedby={
+                  err("yearFounded") ? "yearFounded-error" : undefined
+                }
+                className={selectTriggerClass("yearFounded")}
+              >
+                <SelectValue placeholder="Select founding year" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">Not specified</SelectItem>
+                {foundingYearOptions.map((year) => (
+                  <SelectItem key={year} value={year}>
+                    {year}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             {err("yearFounded") && (
               <p
                 id="yearFounded-error"

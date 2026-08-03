@@ -34,6 +34,38 @@ export const designerApplicationFormSchema =
         });
       }
     }
+    if (!data.contactForPricing) {
+      const min = data.priceMin?.trim();
+      const max = data.priceMax?.trim();
+      if (!min || !max) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["priceMin"],
+          message: "Enter a minimum and maximum price, or choose contact for pricing",
+        });
+      } else {
+        const minNum = parseFloat(min);
+        const maxNum = parseFloat(max);
+        if (
+          Number.isNaN(minNum) ||
+          Number.isNaN(maxNum) ||
+          minNum < 0 ||
+          maxNum < 0
+        ) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["priceMin"],
+            message: "Enter valid price numbers",
+          });
+        } else if (minNum > maxNum) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["priceMax"],
+            message: "Maximum price must be greater than or equal to minimum",
+          });
+        }
+      }
+    }
   });
 
 export type DesignerApplicationFormInput = z.input<

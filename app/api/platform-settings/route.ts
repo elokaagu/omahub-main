@@ -9,6 +9,7 @@ const SETTING_KEYS = [
   "hero_video_id",
   "welcome_video_id",
   "customer_signup_enabled",
+  "catalogues_publicly_visible",
 ] as const;
 
 const MAP_DB_TO_API: Record<
@@ -19,6 +20,7 @@ const MAP_DB_TO_API: Record<
   | "heroVideoId"
   | "welcomeVideoId"
   | "customerSignupEnabled"
+  | "cataloguesPubliclyVisible"
 > = {
   about_omahub: "about",
   our_story: "ourStory",
@@ -26,6 +28,7 @@ const MAP_DB_TO_API: Record<
   hero_video_id: "heroVideoId",
   welcome_video_id: "welcomeVideoId",
   customer_signup_enabled: "customerSignupEnabled",
+  catalogues_publicly_visible: "cataloguesPubliclyVisible",
 };
 
 /**
@@ -34,6 +37,7 @@ const MAP_DB_TO_API: Record<
  * until preorders launch with the next edition.
  */
 const DEFAULT_CUSTOMER_SIGNUP_ENABLED = "false";
+const DEFAULT_CATALOGUES_PUBLICLY_VISIBLE = "false";
 
 export async function GET() {
   try {
@@ -58,6 +62,7 @@ export async function GET() {
       heroVideoId: "",
       welcomeVideoId: "",
       customerSignupEnabled: DEFAULT_CUSTOMER_SIGNUP_ENABLED,
+      cataloguesPubliclyVisible: DEFAULT_CATALOGUES_PUBLICLY_VISIBLE,
     };
 
     for (const row of data ?? []) {
@@ -125,6 +130,7 @@ export async function POST(req: NextRequest) {
       heroVideoId,
       welcomeVideoId,
       customerSignupEnabled,
+      cataloguesPubliclyVisible,
     } = parsed.data;
     const now = new Date().toISOString();
 
@@ -149,6 +155,13 @@ export async function POST(req: NextRequest) {
       updates.push({
         key: "customer_signup_enabled",
         value: customerSignupEnabled,
+        updated_at: now,
+      });
+    }
+    if (cataloguesPubliclyVisible !== undefined) {
+      updates.push({
+        key: "catalogues_publicly_visible",
+        value: cataloguesPubliclyVisible,
         updated_at: now,
       });
     }

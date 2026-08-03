@@ -12,6 +12,7 @@ interface BrandHeaderSectionProps {
   brandData: BrandProfileData;
   reviewsCount: number;
   showAllProducts: boolean;
+  cataloguesPubliclyVisible?: boolean;
   onScrollToCollections: () => void;
   onToggleProducts: () => void;
   onOpenContactModal: () => void;
@@ -21,6 +22,7 @@ export function BrandHeaderSection({
   brandData,
   reviewsCount,
   showAllProducts,
+  cataloguesPubliclyVisible = false,
   onScrollToCollections,
   onToggleProducts,
   onOpenContactModal,
@@ -71,7 +73,7 @@ export function BrandHeaderSection({
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-        {brandData.collections.length > 0 && (
+        {cataloguesPubliclyVisible && brandData.collections.length > 0 && (
           <Button
             onClick={onScrollToCollections}
             className="bg-oma-plum hover:bg-oma-plum/90 w-full sm:w-auto min-h-[44px] text-sm sm:text-base"
@@ -79,14 +81,16 @@ export function BrandHeaderSection({
             View Collections
           </Button>
         )}
-        <Button
-          onClick={onToggleProducts}
-          variant="outline"
-          className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white w-full sm:w-auto min-h-[44px] text-sm sm:text-base"
-        >
-          <ShoppingBag size={16} className="mr-2 flex-shrink-0" />
-          {showAllProducts ? "Hide Products" : "View All Products"}
-        </Button>
+        {cataloguesPubliclyVisible && (
+          <Button
+            onClick={onToggleProducts}
+            variant="outline"
+            className="border-oma-plum text-oma-plum hover:bg-oma-plum hover:text-white w-full sm:w-auto min-h-[44px] text-sm sm:text-base"
+          >
+            <ShoppingBag size={16} className="mr-2 flex-shrink-0" />
+            {showAllProducts ? "Hide Products" : "View All Products"}
+          </Button>
+        )}
         {brandData.whatsapp && isValidWhatsAppNumber(brandData.whatsapp) && (
           <WhatsAppContact
             phoneNumber={brandData.whatsapp}

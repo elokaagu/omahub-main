@@ -740,6 +740,7 @@ export async function sendApplicationApprovalEmail(data: {
   temporaryPassword?: string;
   passwordResetLink?: string;
   isNewUser: boolean;
+  brandProfileUrl?: string;
 }) {
   try {
     // Get Resend instance (lazy initialization)
@@ -770,6 +771,7 @@ export async function sendApplicationApprovalEmail(data: {
       temporaryPassword,
       passwordResetLink,
       isNewUser,
+      brandProfileUrl,
     } = data;
     const loginUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "https://oma-hub.com"}/login`;
 
@@ -785,6 +787,14 @@ export async function sendApplicationApprovalEmail(data: {
         subtitle: brandName,
         intro: `Congratulations ${designerName}, your application has been approved and your brand is now live on OmaHub.`,
         sections: [
+          ...(brandProfileUrl
+            ? [
+                {
+                  title: "Your Brand Profile",
+                  content: `Your public brand page is live at:\n${brandProfileUrl}`,
+                },
+              ]
+            : []),
           {
             title: "Account Access",
             content: isNewUser
@@ -803,8 +813,8 @@ export async function sendApplicationApprovalEmail(data: {
               "1) Log into Studio.\n2) Complete your brand profile.\n3) Add products and start managing inquiries.",
           },
         ],
-        ctaLabel: "Log In to Studio",
-        ctaUrl: loginUrl,
+        ctaLabel: brandProfileUrl ? "View Your Brand Profile" : "Log In to Studio",
+        ctaUrl: brandProfileUrl || loginUrl,
       }),
       text: `
 Congratulations, ${designerName}!
@@ -846,7 +856,7 @@ If the link doesn't work, copy and paste it into your browser.
 
 What's Next?
 
-1. Log in to your Studio: ${loginUrl}
+${brandProfileUrl ? `View your brand profile: ${brandProfileUrl}\n\n` : ""}1. Log in to your Studio: ${loginUrl}
 2. Access your brand dashboard: Once logged in, you'll be able to manage your brand from the Studio
 3. Complete your brand profile: Add your brand logo, images, and complete product listings
 4. Start managing: Respond to customer inquiries, update your catalogue, and grow your presence on OmaHub

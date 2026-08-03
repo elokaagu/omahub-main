@@ -17,6 +17,8 @@ type ApplicationRow = {
   category: string | null;
   description: string | null;
   year_founded: number | null;
+  price_range: string | null;
+  currency: string | null;
   image_urls: string[] | null;
   status: string | null;
   notes: string | null;
@@ -54,7 +56,7 @@ export async function GET(_request: NextRequest) {
     const { data: applications, error } = await supabase
       .from("designer_applications")
       .select(
-        "id, brand_name, designer_name, email, phone, website, instagram, location, category, description, year_founded, image_urls, status, notes, created_at, updated_at"
+        "id, brand_name, designer_name, email, phone, website, instagram, location, category, description, year_founded, price_range, currency, image_urls, status, notes, created_at, updated_at"
       )
       .order("created_at", { ascending: false, nullsFirst: false });
 

@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getCollectionWithBrand } from "@/lib/services/collectionService";
 import { getProductsByCatalogueWithBrand } from "@/lib/services/productService";
+import { getCataloguesPubliclyVisible } from "@/lib/services/catalogueVisibilitySetting";
 import ClientCollectionPage from "./ClientCollectionPage";
 import { isPostgrestNoRowsError } from "./collectionPageUtils";
 import type { CatalogueWithBrandForPage, CollectionProduct } from "./types";
@@ -10,6 +11,10 @@ interface CollectionPageProps {
 }
 
 export default async function CollectionPage({ params }: CollectionPageProps) {
+  if (!(await getCataloguesPubliclyVisible())) {
+    notFound();
+  }
+
   let catalogue: CatalogueWithBrandForPage | null = null;
 
   try {

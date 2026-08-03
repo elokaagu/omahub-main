@@ -29,6 +29,8 @@ export interface DesignerApplication {
   category: string;
   description: string;
   year_founded?: number;
+  price_range?: string | null;
+  currency?: string | null;
   status: ApplicationStatus;
   notes?: string;
   reviewed_by?: string;
