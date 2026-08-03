@@ -1,9 +1,10 @@
-import { StructuredData } from "@/components/seo/StructuredData";
+import type { Metadata } from "next";
 import {
   getLatestPastEdition,
   getPastEditions,
   getUpcomingEdition,
 } from "@/lib/data/editions";
+import { generateSEOMetadata, SITE_DESCRIPTION } from "@/lib/seo";
 import { getAllEditionImages } from "@/lib/services/editionImagesService";
 import { getEditorialHomeBrands } from "@/lib/home/getEditorialHomeData";
 import { EditorialHero } from "./home/editorial/EditorialHero";
@@ -14,6 +15,28 @@ import { EditorialDecorSection } from "./home/editorial/EditorialDecorSection";
 import { TwoListsSection } from "./home/editorial/TwoListsSection";
 
 export const revalidate = 120;
+
+export const metadata: Metadata = generateSEOMetadata({
+  title: "OmaHub | Curated African Fashion & Verified Designer Editions",
+  description: SITE_DESCRIPTION,
+  keywords: [
+    "OmaHub",
+    "African fashion platform",
+    "curated African designers",
+    "verified fashion brands",
+    "African fashion editions",
+    "Lagos fashion",
+    "Accra fashion",
+    "Nairobi designers",
+    "African luxury fashion",
+    "bespoke African tailoring",
+    "emerging African designers",
+    "fashion pop-up events",
+  ],
+  url: "/",
+  type: "website",
+  tags: ["homepage", "African fashion", "curated designers", "editions"],
+});
 
 export default async function Home() {
   const upcomingEdition = getUpcomingEdition();
@@ -51,25 +74,6 @@ export default async function Home() {
 
   return (
     <>
-      <StructuredData
-        type="organization"
-        data={{
-          name: "OmaHub",
-          description:
-            "Where African fashion finds its audience, storytelling-led editions spotlighting verified African designers",
-          url: "https://www.oma-hub.com",
-          logo: "https://www.oma-hub.com/logo.png",
-        }}
-      />
-      <StructuredData
-        type="website"
-        data={{
-          name: "OmaHub",
-          url: "https://www.oma-hub.com",
-          description:
-            "Where African fashion finds its audience, editorially curated editions and a verified designer directory",
-        }}
-      />
       <main className="min-h-screen bg-oma-cream">
         <EditorialHero
           upcomingEdition={upcomingEdition}

@@ -1,7 +1,13 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import type { Product } from "@/lib/supabase";
-import { generateSEOMetadata } from "@/lib/seo";
+import {
+  generateBreadcrumbStructuredData,
+  generateSEOMetadata,
+  generateStructuredData,
+  optimizeMetaDescription,
+} from "@/lib/seo";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { getCachedProductWithBrand } from "@/lib/product/getProductWithBrandCached";
 import { getProductOgImageUrl } from "@/lib/utils/productImageUtils";
 import ClientProductPage from "./ClientProductPage";
@@ -106,12 +112,59 @@ export default async function ProductPage({ params }: ProductPageProps) {
       notFound();
     }
 
+    const { product, brand } = data;
+
+    const description =
+      product.description ||
+      `Discover ${product.title} by ${brand.name}. ${product.category ? `Premium ${product.category.toLowerCase()} ` : ""}available on OmaHub.`;
+
+    const mainImage = getProductOgImageUrl(product);
+
+    const currency =
+      (product.currency && String(product.currency).trim()) ||
+      (brand.currency && String(brand.currency).trim()) ||
+      "";
+
+    const displayPrice =
+      product.sale_price != null ? product.sale_price : product.price;
+    const hasVerifiedOffer =
+      currency !== "" &&
+      typeof displayPrice === "number" &&
+      !Number.isNaN(displayPrice);
+
+    const productImages = [mainImage].filter(Boolean);
+
     return (
-      <ClientProductPage
-        productId={params.id}
-        initialProduct={data.product}
-        initialBrand={data.brand}
-      />
+      <>
+        <JsonLd
+          data={[
+            generateStructuredData("product", {
+              name: product.title,
+              description: optimizeMetaDescription(description),
+              images: productImages,
+              url: `/product/${params.id}`,
+              brandName: brand.name,
+              category: product.category,
+              ...(hasVerifiedOffer
+                ? { price: displayPrice, currency }
+                : {}),
+              availability: product.in_stock ? "in stock" : "out of stock",
+              rating: brand.rating,
+            }),
+            generateBreadcrumbStructuredData([
+              { name: "Home", url: "/" },
+              { name: "Directory", url: "/directory" },
+              { name: brand.name, url: `/brand/${brand.id}` },
+              { name: product.title, url: `/product/${params.id}` },
+            ]),
+          ]}
+        />
+        <ClientProductPage
+          productId={params.id}
+          initialProduct={data.product}
+          initialBrand={data.brand}
+        />
+      </>
     );
   } catch (error) {
     if (isNextNotFoundError(error)) {

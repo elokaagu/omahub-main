@@ -1,5 +1,25 @@
 import type { Metadata } from "next";
 
+export const SITE_NAME = "OmaHub";
+export const SITE_TAGLINE =
+  "Curated African fashion platform — verified designers, storytelling-led editions, and bespoke tailoring.";
+export const SITE_DESCRIPTION =
+  "Discover curated African fashion brands, bespoke tailors, and occasion-ready collections on OmaHub. Verified designers from Lagos, Accra, Nairobi, London and the diaspora.";
+
+/** Canonical production origin; always use for SEO URLs and JSON-LD. */
+export function getSiteUrl(): string {
+  return (
+    process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
+    "https://www.oma-hub.com"
+  );
+}
+
+export function absoluteUrl(path: string = ""): string {
+  const base = getSiteUrl();
+  if (!path) return base;
+  return path.startsWith("http") ? path : `${base}${path.startsWith("/") ? path : `/${path}`}`;
+}
+
 // SEO utility functions for generating dynamic metadata
 export interface SEOConfig {
   title: string;
@@ -41,9 +61,9 @@ export function generateSEOMetadata(config: SEOConfig): Metadata {
   } = config;
 
   /** Production site origin; joined with `url` when `url` is a path (e.g. "/about"). */
-  const baseUrl = "https://www.oma-hub.com";
-  const fullUrl = url ? `${baseUrl}${url.startsWith("/") ? url : `/${url}`}` : baseUrl;
-  const fullImageUrl = image.startsWith("http") ? image : `${baseUrl}${image}`;
+  const baseUrl = getSiteUrl();
+  const fullUrl = url ? absoluteUrl(url) : baseUrl;
+  const fullImageUrl = image.startsWith("http") ? image : absoluteUrl(image);
 
   const metadata: Metadata = {
     title,
@@ -104,52 +124,71 @@ export function generateSEOMetadata(config: SEOConfig): Metadata {
 // Generate structured data (JSON-LD) for different content types
 export function generateStructuredData(
   type: "organization" | "website" | "product" | "brand" | "collection",
-  data: any
+  data: Record<string, unknown>,
 ) {
-  const baseUrl = "https://www.oma-hub.com";
+  const baseUrl = getSiteUrl();
 
   switch (type) {
     case "organization":
       return {
         "@context": "https://schema.org",
         "@type": "Organization",
-        name: "OmaHub",
+        "@id": `${baseUrl}/#organization`,
+        name: SITE_NAME,
         url: baseUrl,
-        logo: `${baseUrl}/logo.png`,
+        logo: absoluteUrl("/lovable-uploads/omahub-logo.png"),
+        image: absoluteUrl("/OmaHubBanner.png"),
         description:
           typeof data?.description === "string" && data.description.trim()
             ? data.description
-            : "Premium fashion and tailoring platform connecting Africa's finest designers with a global audience",
+            : SITE_DESCRIPTION,
+        slogan: "Where African fashion finds its audience",
+        email: "info@oma-hub.com",
         sameAs: [
+          "https://www.instagram.com/_omahub/",
+          "https://www.tiktok.com/@_omahub",
           "https://twitter.com/omahub",
-          "https://instagram.com/omahub",
-          "https://facebook.com/omahub",
         ],
         contactPoint: {
           "@type": "ContactPoint",
-          telephone: "+1-XXX-XXX-XXXX",
+          email: "info@oma-hub.com",
           contactType: "customer service",
-          areaServed: "Worldwide",
-          availableLanguage: "English",
+          areaServed: ["NG", "GH", "KE", "GB", "Worldwide"],
+          availableLanguage: ["English"],
         },
         address: {
           "@type": "PostalAddress",
+          addressLocality: "Lagos",
           addressCountry: "NG",
         },
+        areaServed: [
+          { "@type": "City", name: "Lagos" },
+          { "@type": "City", name: "Accra" },
+          { "@type": "City", name: "Nairobi" },
+          { "@type": "City", name: "London" },
+          { "@type": "Place", name: "Worldwide" },
+        ],
+        knowsAbout: [
+          "African fashion",
+          "Emerging fashion designers",
+          "Bespoke tailoring",
+          "Fashion pop-up events",
+          "Curated designer directories",
+          "Bridal and occasion wear",
+          "Contemporary African luxury fashion",
+        ],
       };
 
     case "website":
       return {
         "@context": "https://schema.org",
         "@type": "WebSite",
-        name: "OmaHub",
+        "@id": `${baseUrl}/#website`,
+        name: SITE_NAME,
         url: baseUrl,
-        description: "Premium fashion and tailoring platform",
-        potentialAction: {
-          "@type": "SearchAction",
-          target: `${baseUrl}/search?q={search_term_string}`,
-          "query-input": "required name=search_term_string",
-        },
+        description: SITE_DESCRIPTION,
+        publisher: { "@id": `${baseUrl}/#organization` },
+        inLanguage: "en",
       };
 
     case "product":
@@ -159,6 +198,7 @@ export function generateStructuredData(
         name: data.name,
         description: data.description,
         image: data.images || [],
+        url: data.url ? absoluteUrl(String(data.url)) : undefined,
         brand: {
           "@type": "Brand",
           name: data.brandName,
@@ -172,38 +212,44 @@ export function generateStructuredData(
             data.availability === "in stock"
               ? "https://schema.org/InStock"
               : "https://schema.org/OutOfStock",
+          url: data.url ? absoluteUrl(String(data.url)) : undefined,
           seller: {
             "@type": "Organization",
-            name: "OmaHub",
+            name: SITE_NAME,
+            url: baseUrl,
           },
         },
-        aggregateRating: data.rating
+        ...(data.rating
           ? {
-              "@type": "AggregateRating",
-              ratingValue: data.rating,
-              reviewCount: data.reviewCount || 1,
+              aggregateRating: {
+                "@type": "AggregateRating",
+                ratingValue: data.rating,
+                reviewCount: data.reviewCount || 1,
+              },
             }
-          : undefined,
+          : {}),
       };
 
     case "brand":
       return {
         "@context": "https://schema.org",
         "@type": "Organization",
+        "@id": `${baseUrl}/brand/${data.id}#brand`,
         name: data.name,
         description: data.description,
         url: `${baseUrl}/brand/${data.id}`,
         logo: data.logo,
         image: data.images || [],
-        address: data.location
+        ...(data.location
           ? {
-              "@type": "PostalAddress",
-              addressLocality: data.location,
+              address: {
+                "@type": "PostalAddress",
+                addressLocality: data.location,
+              },
             }
-          : undefined,
+          : {}),
         sameAs: data.socialLinks || [],
-        foundingDate: data.foundedYear,
-        numberOfEmployees: data.employeeCount,
+        ...(data.foundedYear ? { foundingDate: String(data.foundedYear) } : {}),
       };
 
     case "collection":
@@ -229,8 +275,9 @@ export function generateStructuredData(
 
 // Generate breadcrumb structured data
 export function generateBreadcrumbStructuredData(
-  items: Array<{ name: string; url: string }>
+  items: Array<{ name: string; url: string }>,
 ) {
+  const baseUrl = getSiteUrl();
   return {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -238,7 +285,7 @@ export function generateBreadcrumbStructuredData(
       "@type": "ListItem",
       position: index + 1,
       name: item.name,
-      item: `https://www.oma-hub.com${item.url}`,
+      item: item.url.startsWith("http") ? item.url : `${baseUrl}${item.url}`,
     })),
   };
 }
@@ -258,6 +305,105 @@ export function generateFAQStructuredData(
         text: faq.answer,
       },
     })),
+  };
+}
+
+/** ItemList for directory and listing pages (SEO + AEO entity discovery). */
+export function generateItemListStructuredData(
+  name: string,
+  description: string,
+  items: Array<{ name: string; url: string; image?: string }>,
+) {
+  const baseUrl = getSiteUrl();
+  return {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name,
+    description,
+    numberOfItems: items.length,
+    itemListElement: items.map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: item.name,
+      url: item.url.startsWith("http") ? item.url : `${baseUrl}${item.url}`,
+      ...(item.image ? { image: item.image } : {}),
+    })),
+  };
+}
+
+/** Event schema for OmaHub editions (GEO: city/country + temporal signals). */
+export function generateEditionEventStructuredData(data: {
+  slug: string;
+  title: string;
+  description: string;
+  startDate: string;
+  city: string;
+  country: string;
+  venue?: string;
+  image?: string;
+  status: "past" | "upcoming";
+}) {
+  const baseUrl = getSiteUrl();
+  return {
+    "@context": "https://schema.org",
+    "@type": "Event",
+    name: data.title,
+    description: data.description,
+    startDate: data.startDate,
+    eventStatus:
+      data.status === "upcoming"
+        ? "https://schema.org/EventScheduled"
+        : "https://schema.org/EventCompleted",
+    eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
+    location: {
+      "@type": "Place",
+      name: data.venue || data.city,
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: data.city,
+        addressCountry: data.country,
+      },
+    },
+    organizer: {
+      "@type": "Organization",
+      name: SITE_NAME,
+      url: baseUrl,
+      sameAs: "https://www.instagram.com/_omahub/",
+    },
+    image: data.image ? [data.image] : [absoluteUrl("/OmaHubBanner.png")],
+    url: `${baseUrl}/editions/${data.slug}`,
+  };
+}
+
+/** WebPage + speakable hints for answer engines on key landing pages. */
+export function generateWebPageStructuredData(data: {
+  name: string;
+  description: string;
+  url: string;
+  speakableText?: string;
+}) {
+  const baseUrl = getSiteUrl();
+  const pageUrl = data.url.startsWith("http")
+    ? data.url
+    : `${baseUrl}${data.url}`;
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: data.name,
+    description: data.description,
+    url: pageUrl,
+    isPartOf: { "@id": `${baseUrl}/#website` },
+    about: { "@id": `${baseUrl}/#organization` },
+    inLanguage: "en",
+    ...(data.speakableText
+      ? {
+          speakable: {
+            "@type": "SpeakableSpecification",
+            cssSelector: ["h1", "h2", "[data-speakable]"],
+          },
+        }
+      : {}),
   };
 }
 

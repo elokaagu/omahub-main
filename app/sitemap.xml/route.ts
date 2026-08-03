@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createClient as createAnonServerClient } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase-unified";
+import { getAllEditions } from "@/lib/data/editions";
+import { getSiteUrl } from "@/lib/seo";
 
 /** Sitemap is SEO data, not user-specific - cache and refresh periodically. */
 export const revalidate = 3600;
@@ -14,67 +16,87 @@ type SitemapPage = {
 };
 
 // Static pages (verified routes under app/)
+const siteUrl = getSiteUrl();
+
 const staticPages: SitemapPage[] = [
   {
-    url: "https://www.oma-hub.com",
+    url: siteUrl,
     changeFrequency: "daily",
     priority: 1.0,
   },
   {
-    url: "https://www.oma-hub.com/about",
+    url: `${siteUrl}/about`,
     changeFrequency: "monthly",
     priority: 0.8,
   },
   {
-    url: "https://www.oma-hub.com/contact",
+    url: `${siteUrl}/contact`,
     changeFrequency: "monthly",
     priority: 0.7,
   },
   {
-    url: "https://www.oma-hub.com/faq",
+    url: `${siteUrl}/faq`,
     changeFrequency: "monthly",
+    priority: 0.7,
+  },
+  {
+    url: `${siteUrl}/how-it-works`,
+    changeFrequency: "monthly",
+    priority: 0.7,
+  },
+  {
+    url: `${siteUrl}/directory`,
+    changeFrequency: "weekly",
+    priority: 0.9,
+  },
+  {
+    url: `${siteUrl}/editions`,
+    changeFrequency: "weekly",
+    priority: 0.85,
+  },
+  {
+    url: `${siteUrl}/collections`,
+    changeFrequency: "weekly",
+    priority: 0.7,
+  },
+  {
+    url: `${siteUrl}/tailors`,
+    changeFrequency: "weekly",
+    priority: 0.7,
+  },
+  {
+    url: `${siteUrl}/tailored`,
+    changeFrequency: "weekly",
     priority: 0.6,
   },
   {
-    url: "https://www.oma-hub.com/how-it-works",
+    url: `${siteUrl}/join`,
     changeFrequency: "monthly",
     priority: 0.7,
   },
   {
-    url: "https://www.oma-hub.com/directory",
-    changeFrequency: "weekly",
-    priority: 0.8,
-  },
-  {
-    url: "https://www.oma-hub.com/collections",
-    changeFrequency: "weekly",
-    priority: 0.7,
-  },
-  {
-    url: "https://www.oma-hub.com/tailors",
-    changeFrequency: "weekly",
-    priority: 0.7,
-  },
-  {
-    url: "https://www.oma-hub.com/tailored",
-    changeFrequency: "weekly",
-    priority: 0.6,
-  },
-  {
-    url: "https://www.oma-hub.com/join",
+    url: `${siteUrl}/event-waitlist`,
     changeFrequency: "monthly",
-    priority: 0.6,
+    priority: 0.5,
   },
   {
-    url: "https://www.oma-hub.com/privacy-policy",
+    url: `${siteUrl}/privacy-policy`,
     changeFrequency: "yearly",
     priority: 0.3,
   },
   {
-    url: "https://www.oma-hub.com/terms-of-service",
+    url: `${siteUrl}/terms-of-service`,
     changeFrequency: "yearly",
     priority: 0.3,
   },
+  ...getAllEditions()
+    .filter((edition) => edition.status === "past")
+    .map((edition) => ({
+      url: `${siteUrl}/editions/${edition.slug}`,
+      lastModified: edition.sortDate,
+      changeFrequency: "monthly",
+      priority: 0.75,
+    })),
 ];
 
 function escapeXml(text: string): string {
@@ -194,7 +216,7 @@ export async function GET() {
     if (brandsResult.status === "fulfilled" && brandsResult.value.data) {
       brandsResult.value.data.forEach((brand) => {
         allPages.push({
-          url: `https://www.oma-hub.com/brand/${brand.id}`,
+          url: `${siteUrl}/brand/${brand.id}`,
           lastModified: lastModFromRow(brand.updated_at),
           changeFrequency: "weekly",
           priority: 0.8,
@@ -205,7 +227,7 @@ export async function GET() {
     if (productsResult.status === "fulfilled" && productsResult.value.data) {
       productsResult.value.data.forEach((product) => {
         allPages.push({
-          url: `https://www.oma-hub.com/product/${product.id}`,
+          url: `${siteUrl}/product/${product.id}`,
           lastModified: lastModFromRow(product.updated_at),
           changeFrequency: "weekly",
           priority: 0.7,
@@ -219,7 +241,7 @@ export async function GET() {
     ) {
       collectionsResult.value.data.forEach((collection) => {
         allPages.push({
-          url: `https://www.oma-hub.com/collection/${collection.id}`,
+          url: `${siteUrl}/collection/${collection.id}`,
           lastModified: lastModFromRow(collection.updated_at),
           changeFrequency: "weekly",
           priority: 0.6,
@@ -230,7 +252,7 @@ export async function GET() {
     if (tailorsResult.status === "fulfilled" && tailorsResult.value.data) {
       tailorsResult.value.data.forEach((tailor) => {
         allPages.push({
-          url: `https://www.oma-hub.com/tailor/${tailor.id}`,
+          url: `${siteUrl}/tailor/${tailor.id}`,
           lastModified: lastModFromRow(tailor.updated_at),
           changeFrequency: "weekly",
           priority: 0.6,

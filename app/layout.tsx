@@ -8,6 +8,7 @@ import { Toaster } from "sonner";
 import { Analytics } from "@vercel/analytics/react";
 import GoogleTagManager from "@/components/analytics/GoogleTagManager";
 import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
+import { GlobalSiteJsonLd } from "@/components/seo/GlobalSiteJsonLd";
 import { InstagramFeedSection } from "@/components/layout/InstagramFeedSection";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.oma-hub.com";
@@ -119,6 +120,7 @@ export default async function RootLayout({
         <link rel="dns-prefetch" href="https://f.vimeocdn.com" />
       </head>
       <body>
+        <GlobalSiteJsonLd />
         <Preloader>
           <RootLayoutClient
             initialAuth={initialAuth}

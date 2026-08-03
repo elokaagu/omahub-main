@@ -1,5 +1,8 @@
 import { Suspense } from "react";
 import { AnimatedSectionHeader } from "@/components/ui/animated-section-header";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { generateItemListStructuredData, generateWebPageStructuredData } from "@/lib/seo";
+import { getAllBrands } from "@/lib/services/brandService";
 import ClientWrapper from "./ClientWrapper";
 
 export { metadata } from "./metadata";
@@ -19,9 +22,42 @@ function DirectoryInteractiveFallback() {
   );
 }
 
-export default function DirectoryPage() {
+export default async function DirectoryPage() {
+  let brands: Awaited<ReturnType<typeof getAllBrands>> = [];
+  try {
+    brands = await getAllBrands(false, false);
+  } catch (e) {
+    console.error("directory_seo_brands_error", e);
+  }
+
+  const verifiedBrands = brands.filter((b) => b.is_verified).slice(0, 50);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-oma-beige/30 to-white">
+      <JsonLd
+        data={[
+          generateWebPageStructuredData({
+            name: "OmaHub Brand Directory",
+            description:
+              "Curated directory of verified African fashion designers and ateliers from Lagos, Accra, Nairobi, London and the diaspora.",
+            url: "/directory",
+            speakableText: "true",
+          }),
+          ...(verifiedBrands.length > 0
+            ? [
+                generateItemListStructuredData(
+                  "Verified African Fashion Designers on OmaHub",
+                  "Taste-led directory of designers verified in person at OmaHub editions.",
+                  verifiedBrands.map((brand) => ({
+                    name: brand.name,
+                    url: `/brand/${brand.id}`,
+                    image: brand.image || undefined,
+                  })),
+                ),
+              ]
+            : []),
+        ]}
+      />
       <div className="max-w-7xl mx-auto px-6 py-8">
         <AnimatedSectionHeader
           title="Brand Directory"

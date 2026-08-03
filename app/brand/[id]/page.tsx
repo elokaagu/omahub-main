@@ -1,7 +1,13 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getBrandCollections } from "@/lib/services/brandService";
-import { generateSEOMetadata } from "@/lib/seo";
+import {
+  generateBreadcrumbStructuredData,
+  generateSEOMetadata,
+  generateStructuredData,
+  optimizeMetaDescription,
+} from "@/lib/seo";
+import { JsonLd } from "@/components/seo/JsonLd";
 import ClientBrandProfile from "./ClientBrandProfile";
 import { getCachedBrandById } from "./cachedBrand";
 import { mapBrandToProfileData } from "./brandProfileMapper";
@@ -83,11 +89,44 @@ export default async function BrandPage({ params }: BrandPageProps) {
   const collections = await getBrandCollections(params.id);
   const initialBrandData = mapBrandToProfileData(brand as any, collections as any);
 
+  const brandImage = brand.brand_images?.[0]?.storage_path
+    ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${brand.brand_images[0].storage_path}`
+    : brand.image;
+
+  const socialLinks = [
+    brand.instagram,
+    brand.website,
+    brand.whatsapp,
+  ].filter(Boolean) as string[];
+
   return (
-    <ClientBrandProfile
+    <>
+      <JsonLd
+        data={[
+          generateStructuredData("brand", {
+            id: brand.id,
+            name: brand.name,
+            description: optimizeMetaDescription(
+              brand.long_description || brand.description || "",
+            ),
+            logo: brandImage,
+            images: brandImage ? [brandImage] : [],
+            location: brand.location,
+            socialLinks,
+            foundedYear: brand.founded_year,
+          }),
+          generateBreadcrumbStructuredData([
+            { name: "Home", url: "/" },
+            { name: "Directory", url: "/directory" },
+            { name: brand.name, url: `/brand/${params.id}` },
+          ]),
+        ]}
+      />
+      <ClientBrandProfile
       key={params.id}
       brandId={params.id}
       initialBrandData={initialBrandData}
     />
+    </>
   );
 }

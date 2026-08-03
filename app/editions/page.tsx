@@ -1,13 +1,27 @@
 import type { Metadata } from "next";
+import { generateSEOMetadata } from "@/lib/seo";
 import { getAllEditions, getLatestPastEdition } from "@/lib/data/editions";
 import { getAllEditionImages } from "@/lib/services/editionImagesService";
 import { EditionsArchiveContent } from "./EditionsArchiveContent";
 
-export const metadata: Metadata = {
-  title: "The Archive | OmaHub",
+export const metadata: Metadata = generateSEOMetadata({
+  title: "The Archive | OmaHub Editions",
   description:
-    "Every OmaHub edition: storytelling-led events spotlighting verified African designers, from London to Lagos.",
-};
+    "Every OmaHub edition: storytelling-led pop-up events spotlighting verified African designers — from London to Lagos, Accra to Nairobi.",
+  keywords: [
+    "OmaHub editions",
+    "African fashion events",
+    "fashion pop-up archive",
+    "verified African designers",
+    "Lagos fashion event",
+    "London fashion pop-up",
+    "curated fashion editions",
+  ],
+  url: "/editions",
+  type: "website",
+  section: "Editions",
+  tags: ["editions", "archive", "African fashion", "pop-up events"],
+});
 
 export const revalidate = 120;
 

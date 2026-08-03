@@ -5,6 +5,12 @@ import { getBrandsByIds, getBrandsByNames } from "@/lib/home/getEditorialHomeDat
 import { getEditionImages } from "@/lib/services/editionImagesService";
 import { getEditionLineup } from "@/lib/services/editionLineupService";
 import {
+  generateEditionEventStructuredData,
+  generateSEOMetadata,
+  optimizeMetaDescription,
+} from "@/lib/seo";
+import { JsonLd } from "@/components/seo/JsonLd";
+import {
   getStoryParagraphs,
   groupInlineStoryPhotos,
 } from "@/lib/editions/storyContent";
@@ -31,10 +37,31 @@ export function generateMetadata({
 }): Metadata {
   const edition = getEditionBySlug(params.slug);
   if (!edition) return { title: "Edition not found | OmaHub" };
-  return {
-    title: `${edition.title} | OmaHub Editions`,
-    description: edition.excerpt,
-  };
+
+  const geoLabel = [edition.city, edition.country].filter(Boolean).join(", ");
+
+  return generateSEOMetadata({
+    title: `${edition.title} | OmaHub Edition ${edition.number}`,
+    description: optimizeMetaDescription(
+      edition.excerpt ||
+        `OmaHub Edition ${edition.number} in ${geoLabel} — verified African designers, editorial storytelling, and the full brand lineup.`,
+    ),
+    keywords: [
+      "OmaHub edition",
+      edition.title.toLowerCase(),
+      edition.city.toLowerCase(),
+      edition.country.toLowerCase(),
+      "African fashion event",
+      "verified African designers",
+      "fashion pop-up",
+      "curated fashion",
+    ],
+    url: `/editions/${params.slug}`,
+    type: "article",
+    image: edition.coverImage || "/OmaHubBanner.png",
+    section: "Editions",
+    tags: [edition.city, edition.country, "African fashion", "OmaHub editions"],
+  });
 }
 
 export default async function EditionPage({
@@ -110,7 +137,21 @@ export default async function EditionPage({
   const hasStoryVideo = hasEditionVideo(edition.videoUrl);
 
   return (
-    <main className="min-h-screen bg-oma-cream">
+    <>
+      <JsonLd
+        data={generateEditionEventStructuredData({
+          slug: edition.slug,
+          title: edition.title,
+          description: edition.excerpt,
+          startDate: edition.sortDate,
+          city: edition.city,
+          country: edition.country,
+          venue: edition.venue,
+          image: edition.coverImage,
+          status: edition.status,
+        })}
+      />
+      <main className="min-h-screen bg-oma-cream">
       <EditionHero edition={edition} coverImage={edition.coverImage} />
 
       {/* Geography & event snapshot */}
@@ -290,5 +331,6 @@ export default async function EditionPage({
         </div>
       </section>
     </main>
+    </>
   );
 }
