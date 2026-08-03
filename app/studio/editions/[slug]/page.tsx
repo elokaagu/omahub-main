@@ -53,6 +53,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { BrandCard } from "@/components/ui/brand-card";
+import {
+  EditionContentSection,
+  buildInitialEditionDraft,
+  type EditionEditorDraft,
+} from "../components/EditionContentSection";
+import { plainStoryToHtml } from "@/lib/editions/storyHtml";
+import {
+  buildEditionEditorDraft,
+  getEditionContent,
+} from "@/lib/services/editionContentService";
 
 export default function EditionPhotoManagementPage({
   params,
@@ -60,7 +70,7 @@ export default function EditionPhotoManagementPage({
   params: { slug: string };
 }) {
   return (
-    <SuperAdminHeroGate capabilityPhrase="manage edition photos">
+    <SuperAdminHeroGate capabilityPhrase="manage editions">
       <EditionPhotoManagementContent slug={params.slug} />
     </SuperAdminHeroGate>
   );
@@ -88,6 +98,10 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
   const [selectedLineupBrandId, setSelectedLineupBrandId] = useState("");
   const [isAddingLineupBrand, setIsAddingLineupBrand] = useState(false);
   const [deletingLineupId, setDeletingLineupId] = useState<string | null>(null);
+  const [contentDraft, setContentDraft] = useState<EditionEditorDraft | null>(
+    null,
+  );
+  const [contentReady, setContentReady] = useState(false);
 
   const refetch = useCallback(async () => {
     const rows = await getEditionImages(slug);
@@ -138,6 +152,33 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
     });
 
   useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const saved = await getEditionContent(slug);
+        if (cancelled || !edition) return;
+        setContentDraft(
+          buildEditionEditorDraft(
+            edition,
+            saved,
+            plainStoryToHtml(edition.story),
+          ),
+        );
+      } catch (error) {
+        console.error("Error loading edition content:", error);
+        if (!cancelled && edition) {
+          setContentDraft(buildInitialEditionDraft(edition));
+        }
+      } finally {
+        if (!cancelled) setContentReady(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [slug, edition]);
+
+  useEffect(() => {
     void refetch();
   }, [refetch]);
 
@@ -175,13 +216,13 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
           Edition not found
         </h1>
         <Button asChild>
-          <NavigationLink href="/studio/editions">Back to Edition Photos</NavigationLink>
+          <NavigationLink href="/studio/editions">Back to Editions</NavigationLink>
         </Button>
       </div>
     );
   }
 
-  if (!images || lineupEntries === null) {
+  if (!images || lineupEntries === null || !contentReady || !contentDraft) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <Loading />
@@ -402,19 +443,23 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
               {edition.title}
             </h1>
             <p className="text-oma-cocoa">
-              Edition {edition.number} · {edition.dateLabel}
+              Edition {edition.number} · unified post editor
             </p>
           </div>
         </div>
-        <AutosaveIndicator
-          status={videoAutosaveStatus}
-          lastSavedAt={videoLastSavedAt}
-        />
       </div>
+
+      <section className="mb-12 border-b border-oma-cocoa/10 pb-12">
+        <EditionContentSection
+          slug={slug}
+          staticEdition={edition}
+          initialDraft={contentDraft}
+        />
+      </section>
 
       <section className="mb-12">
         <h2 className="text-lg font-semibold text-oma-black mb-1">
-          Cover photo
+          Hero cover
         </h2>
         <p className="text-sm text-oma-cocoa mb-4">
           Leads the archive card and the edition page hero. Uploading a new
@@ -608,22 +653,21 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
         </div>
       </section>
 
-      <section className="mb-12">
-        <h2 className="text-lg font-semibold text-oma-black mb-1">
-          Inline story photos
-        </h2>
-        <p className="text-sm text-oma-cocoa mb-4">
-          Placed inside &quot;The story&quot; on the edition page — between
-          paragraphs, not in the gallery grid at the bottom. Paragraphs come
-          from the story text in lib/data/editions.ts (split on blank lines).
-        </p>
-
-        {storyPhotos.length > 0 && (
-          <div className="mb-6 space-y-4">
+      {storyPhotos.length > 0 && (
+        <section className="mb-12 rounded-xl border border-amber-200 bg-amber-50/60 p-5">
+          <h2 className="text-lg font-semibold text-oma-black mb-1">
+            Legacy inline story photos
+          </h2>
+          <p className="text-sm text-oma-cocoa mb-4">
+            These were placed between plain-text paragraphs. New editions should
+            use the image button in the story editor above. Existing legacy
+            photos still render until removed.
+          </p>
+          <div className="space-y-4">
             {storyPhotos.map((image) => (
               <div
                 key={image.id}
-                className="flex flex-col gap-4 rounded-xl border border-gray-200 p-4 sm:flex-row sm:items-center"
+                className="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-4 sm:flex-row sm:items-center"
               >
                 <div className="group relative w-full max-w-[220px] shrink-0 overflow-hidden rounded-xl">
                   <AuthImage
@@ -665,97 +709,25 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
                     </AlertDialogContent>
                   </AlertDialog>
                 </div>
-
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-oma-black">
-                    {describeStoryPhotoPosition(
-                      image.display_order,
-                      storyParagraphs.length,
-                    )}
-                  </p>
-                  {storyParagraphs.length > 0 && (
-                    <label className="mt-3 block text-xs font-medium uppercase tracking-[0.12em] text-oma-cocoa">
-                      Move to
-                    </label>
+                <p className="text-sm text-oma-cocoa">
+                  {describeStoryPhotoPosition(
+                    image.display_order,
+                    storyParagraphs.length,
                   )}
-                  {storyParagraphs.length > 0 && (
-                    <select
-                      value={image.display_order}
-                      onChange={(e) =>
-                        void handleStoryPhotoMove(
-                          image.id,
-                          Number(e.target.value),
-                        )
-                      }
-                      className="mt-1 w-full max-w-md rounded-md border border-gray-300 px-3 py-2 text-sm"
-                    >
-                      <option value={-1}>Before the first paragraph</option>
-                      {storyParagraphs.map((paragraph, index) => (
-                        <option key={index} value={index}>
-                          After paragraph {index + 1}: &quot;
-                          {paragraph.slice(0, 40)}
-                          {paragraph.length > 40 ? "…" : ""}&quot;
-                        </option>
-                      ))}
-                    </select>
-                  )}
-                </div>
+                </p>
               </div>
             ))}
           </div>
-        )}
-
-        {storyParagraphs.length > 0 ? (
-          <>
-            <label className="mb-2 block text-sm font-medium text-oma-black">
-              Insert photo
-            </label>
-            <select
-              value={storyPosition}
-              onChange={(e) => setStoryPosition(Number(e.target.value))}
-              className="mb-4 w-full max-w-md rounded-md border border-gray-300 px-3 py-2 text-sm"
-            >
-              <option value={-1}>Before the first paragraph</option>
-              {storyParagraphs.map((paragraph, index) => (
-                <option key={index} value={index}>
-                  After paragraph {index + 1}: &quot;{paragraph.slice(0, 40)}
-                  {paragraph.length > 40 ? "…" : ""}&quot;
-                </option>
-              ))}
-            </select>
-            <FileUpload
-              key={`${storyPosition}-${storyPhotos.length}`}
-              onUploadComplete={handleStoryUpload}
-              bucket="edition-galleries"
-              path={`${slug}/story`}
-              accept={{
-                "image/png": [".png"],
-                "image/jpeg": [".jpg", ".jpeg"],
-                "image/webp": [".webp"],
-              }}
-              maxSize={20}
-              hidePreview
-            />
-            {isUploadingStory && (
-              <p className="mt-2 text-sm text-oma-cocoa">Adding photo…</p>
-            )}
-          </>
-        ) : (
-          <p className="text-sm text-oma-cocoa/70">
-            This edition has no story text yet, so there&apos;s nowhere to
-            place an inline photo. Add the story in lib/data/editions.ts first.
-          </p>
-        )}
-      </section>
+        </section>
+      )}
 
       <section className="mb-12">
         <h2 className="text-lg font-semibold text-oma-black mb-1">
-          Gallery grid (bottom of page)
+          In pictures (gallery)
         </h2>
         <p className="text-sm text-oma-cocoa mb-4">
-          Shown together in the &quot;In pictures&quot; section near the bottom
-          of the edition page — not inline with the story. Use &quot;Inline
-          story photos&quot; above to place images between paragraphs.
+          Photo grid near the bottom of the edition page. Add images inline in
+          the story editor above, or collect event photography here.
         </p>
 
         {gallery.length > 0 && (

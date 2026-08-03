@@ -5,6 +5,10 @@ import { getBrandsByIds, getBrandsByNames } from "@/lib/home/getEditorialHomeDat
 import { getEditionImages } from "@/lib/services/editionImagesService";
 import { getEditionLineup } from "@/lib/services/editionLineupService";
 import {
+  getEditionContent,
+  mergeEditionWithContent,
+} from "@/lib/services/editionContentService";
+import {
   generateEditionEventStructuredData,
   generateSEOMetadata,
   optimizeMetaDescription,
@@ -14,12 +18,14 @@ import {
   getStoryParagraphs,
   groupInlineStoryPhotos,
 } from "@/lib/editions/storyContent";
+import { hasRichStoryHtml } from "@/lib/editions/storyHtml";
 import { FullWidthBrandRow } from "@/components/ui/full-width-brand-row";
 import { LazyImage } from "@/components/ui/lazy-image";
 import { EmailCaptureForm } from "@/app/home/editorial/EmailCaptureForm";
 import { EditionVideo } from "./EditionVideo";
 import { EditionHero } from "./EditionHero";
 import { EditionInlinePhoto } from "./EditionInlinePhoto";
+import { EditionStoryBody } from "./EditionStoryBody";
 import { EditionPartnersSection } from "./EditionPartnersSection";
 import { hasEditionVideo } from "@/lib/editions/editionVideoUrl";
 import { cn } from "@/lib/utils";
@@ -72,6 +78,18 @@ export default async function EditionPage({
   const staticEdition = getEditionBySlug(params.slug);
   if (!staticEdition) notFound();
 
+  let editionContent = null;
+  try {
+    editionContent = await getEditionContent(params.slug);
+  } catch (e) {
+    console.error("edition_content_error", e);
+  }
+
+  const mergedEdition = mergeEditionWithContent(staticEdition, editionContent);
+  const richStoryHtml = hasRichStoryHtml(mergedEdition.storyHtml)
+    ? mergedEdition.storyHtml!
+    : null;
+
   let lineupBrands: Awaited<ReturnType<typeof getBrandsByIds>> = [];
   try {
     const lineupEntries = await getEditionLineup(params.slug);
@@ -104,17 +122,20 @@ export default async function EditionPage({
     }));
 
   const edition = {
-    ...staticEdition,
-    coverImage: adminCover || staticEdition.coverImage,
-    videoUrl: adminVideo?.image_url || staticEdition.videoUrl,
-    videoThumbnail: adminVideo?.alt_text || staticEdition.videoThumbnail,
-    gallery: [...(staticEdition.gallery || []), ...adminGallery],
+    ...mergedEdition,
+    coverImage: adminCover || mergedEdition.coverImage,
+    videoUrl: adminVideo?.image_url || mergedEdition.videoUrl,
+    videoThumbnail: adminVideo?.alt_text || mergedEdition.videoThumbnail,
+    gallery: [...(mergedEdition.gallery || []), ...adminGallery],
   };
 
-  // Inline story photos sit between paragraphs (display_order = paragraph index
-  // they follow; -1 renders before the opening paragraph).
-  const storyParagraphs = getStoryParagraphs(edition.story);
-  const inlineStoryPhotos = groupInlineStoryPhotos(adminImages);
+  // Legacy plain-text story with paragraph-indexed photos (pre–rich editor).
+  const storyParagraphs = richStoryHtml
+    ? []
+    : getStoryParagraphs(edition.story);
+  const inlineStoryPhotos = richStoryHtml
+    ? new Map<number, never[]>()
+    : groupInlineStoryPhotos(adminImages);
 
   const partnerLogos = adminImages
     .filter((i) => i.kind === "partner")
@@ -193,28 +214,34 @@ export default async function EditionPage({
                 The story
               </p>
 
-              {inlineStoryPhotos.get(-1)?.map((photo) => (
-                <EditionInlinePhoto
-                  key={photo.id}
-                  src={photo.image_url}
-                  alt={photo.alt_text || edition.title}
-                />
-              ))}
-
-              {storyParagraphs.map((paragraph, index) => (
-                <div key={index}>
-                  <p className="mt-5 font-canela text-xl leading-relaxed text-oma-black sm:mt-6 sm:text-2xl lg:text-3xl">
-                    {paragraph}
-                  </p>
-                  {inlineStoryPhotos.get(index)?.map((photo) => (
+              {richStoryHtml ? (
+                <EditionStoryBody storyHtml={richStoryHtml} />
+              ) : (
+                <>
+                  {inlineStoryPhotos.get(-1)?.map((photo) => (
                     <EditionInlinePhoto
                       key={photo.id}
                       src={photo.image_url}
                       alt={photo.alt_text || edition.title}
                     />
                   ))}
-                </div>
-              ))}
+
+                  {storyParagraphs.map((paragraph, index) => (
+                    <div key={index}>
+                      <p className="mt-5 font-canela text-xl leading-relaxed text-oma-black sm:mt-6 sm:text-2xl lg:text-3xl">
+                        {paragraph}
+                      </p>
+                      {inlineStoryPhotos.get(index)?.map((photo) => (
+                        <EditionInlinePhoto
+                          key={photo.id}
+                          src={photo.image_url}
+                          alt={photo.alt_text || edition.title}
+                        />
+                      ))}
+                    </div>
+                  ))}
+                </>
+              )}
             </div>
 
             {hasStoryVideo && (

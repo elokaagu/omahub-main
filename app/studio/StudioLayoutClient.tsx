@@ -182,7 +182,7 @@ function buildNavigationItems(
     },
     {
       href: "/studio/editions",
-      label: "Edition Photos",
+      label: "Editions",
       icon: Calendar,
       permission: "studio.hero.manage",
     },
