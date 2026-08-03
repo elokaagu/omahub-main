@@ -76,15 +76,13 @@ export function EditorialHeroContent({
 
   return (
     <section className="relative overflow-hidden bg-gradient-to-b from-[#FAF1E4] to-oma-beige text-oma-black">
-      <div className="relative z-10 mx-auto max-w-7xl px-4 pb-12 pt-[calc(3.5rem+env(safe-area-inset-top,0px))] sm:px-6 sm:pb-16 sm:pt-[calc(4rem+env(safe-area-inset-top,0px))] lg:px-8 lg:pb-24 lg:pt-24">
-        <div className="flex flex-col gap-10 lg:grid lg:min-h-[calc(100svh-6rem)] lg:grid-cols-[minmax(0,46%)_minmax(0,54%)] lg:items-center lg:gap-x-14 xl:gap-x-20">
-          <div className="flex flex-col justify-center lg:py-10">
+      <div className="relative z-10 mx-auto max-w-7xl px-4 pb-12 pt-[calc(3.5rem+2rem+env(safe-area-inset-top,0px))] sm:px-6 sm:pb-16 sm:pt-[calc(4rem+2.5rem+env(safe-area-inset-top,0px))] lg:px-8 lg:pb-24 lg:pt-[calc(4rem+3.5rem+env(safe-area-inset-top,0px))]">
+        <div className="flex flex-col gap-10 lg:grid lg:min-h-[calc(100svh-7rem)] lg:grid-cols-[minmax(0,46%)_minmax(0,54%)] lg:items-center lg:gap-x-14 xl:gap-x-20">
+          <div className="flex flex-col justify-center gap-7 sm:gap-8 lg:gap-10 lg:py-6">
             <HeroReveal delay={0.04}>
-              <div className="mb-6 sm:mb-8 lg:mb-10">
-                <p className="text-[0.65rem] font-bold uppercase leading-snug tracking-[0.25em] text-oma-cocoa sm:text-xs sm:tracking-[0.3em]">
-                  {eyebrow}
-                </p>
-              </div>
+              <p className="text-[0.65rem] font-bold uppercase leading-snug tracking-[0.25em] text-oma-cocoa sm:text-xs sm:tracking-[0.3em]">
+                {eyebrow}
+              </p>
             </HeroReveal>
 
             <HeroReveal delay={0.1}>
@@ -94,12 +92,12 @@ export function EditorialHeroContent({
               </h1>
             </HeroReveal>
 
-            <HeroFilmReveal delay={0.16} className="mt-8 w-full lg:hidden">
+            <HeroFilmReveal delay={0.16} className="w-full lg:hidden">
               <HeroFilmCard />
             </HeroFilmReveal>
 
             <HeroReveal delay={0.22}>
-              <p className="mt-6 max-w-md text-[0.9375rem] leading-relaxed text-oma-black/70 sm:mt-8 sm:text-base sm:leading-relaxed lg:text-lg">
+              <p className="max-w-md text-[0.9375rem] leading-relaxed text-oma-black/70 sm:text-base sm:leading-relaxed lg:text-lg">
                 OmaHub is between editions. The next drop spotlights African
                 designers you need to know, verified, curated, and ready to
                 wear. Get early access.
@@ -108,7 +106,7 @@ export function EditorialHeroContent({
 
             {upcomingEdition?.applicationsOpen && (
               <HeroReveal delay={0.28}>
-                <p className="mt-5 flex items-start gap-3 text-xs font-semibold uppercase leading-snug tracking-[0.18em] text-oma-plum sm:mt-6 sm:text-sm sm:tracking-[0.2em] lg:mt-8">
+                <p className="flex items-start gap-3 text-xs font-semibold uppercase leading-snug tracking-[0.18em] text-oma-plum sm:text-sm sm:tracking-[0.2em]">
                   <span
                     aria-hidden
                     className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-oma-gold"
@@ -119,21 +117,19 @@ export function EditorialHeroContent({
             )}
 
             <HeroReveal delay={0.34}>
-              <div className="mt-5 sm:mt-6 lg:mt-8">
-                <EmailCaptureForm
-                  source="website"
-                  variant="light"
-                  buttonLabel="Notify me"
-                  successMessage="You're in. Early access details land in your inbox first."
-                />
-              </div>
+              <EmailCaptureForm
+                source="website"
+                variant="light"
+                buttonLabel="Notify me"
+                successMessage="You're in. Early access details land in your inbox first."
+              />
             </HeroReveal>
 
             {latestPastEdition && (
               <HeroReveal delay={0.42} y={16}>
                 <Link
                   href={`/editions/${latestPastEdition.slug}`}
-                  className="mt-6 inline-flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-oma-cocoa transition-colors hover:text-oma-plum sm:mt-8 sm:text-sm sm:tracking-[0.2em] lg:mt-10"
+                  className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-oma-cocoa transition-colors hover:text-oma-plum sm:text-sm sm:tracking-[0.2em]"
                 >
                   Watch, OmaHub Edition {latestPastEdition.number}
                   <span aria-hidden>→</span>

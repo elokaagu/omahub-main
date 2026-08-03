@@ -3,11 +3,8 @@
 import { useRef, useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "./button";
-import { LazyImage } from "./lazy-image";
-import { CheckCircle, Star } from "@/components/ui/icons";
 import { NavigationLink } from "./navigation-link";
 import { cn } from "@/lib/utils";
-import { AnimateOnScroll } from "@/components/ui/animate-on-scroll";
 import { BrandCard } from "./brand-card";
 
 interface Brand {
@@ -121,23 +118,13 @@ export function FullWidthBrandRow({
             onScroll={updateScrollIndicators}
             className="brand-row-scroll flex snap-x snap-mandatory scroll-smooth gap-2 overflow-x-auto pb-4 pl-4 scrollbar-hide sm:gap-3 sm:pl-6 lg:pl-8"
           >
-            {brands.map((brand, index) => (
-              <AnimateOnScroll
+            {brands.map((brand) => (
+              <div
                 key={brand.id}
-                animation="slideInFromRight"
-                delay={index * 0.08}
-                duration={0.65}
+                className="flex-none w-[280px] md:w-[300px] lg:w-[320px] snap-start"
               >
-                <div
-                  className="flex-none w-[280px] md:w-[300px] lg:w-[320px] snap-start animate-fade-in"
-                  style={{
-                    animationDelay: `${index * 100}ms`,
-                    animationFillMode: "both",
-                  }}
-                >
-                  {card(brand)}
-                </div>
-              </AnimateOnScroll>
+                {card(brand)}
+              </div>
             ))}
 
             {/* Show More Card (if there are many brands) */}
