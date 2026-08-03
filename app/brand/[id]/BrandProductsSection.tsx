@@ -47,10 +47,31 @@ export function BrandProductsSection({
           ))}
         </div>
       ) : products.length === 0 ? (
-        <div className="text-center py-8 sm:py-12 text-gray-500">
-          <ShoppingBag className="w-12 h-12 sm:w-16 sm:h-16 text-oma-cocoa/30 mx-auto mb-3 sm:mb-4" />
-          <p className="text-sm sm:text-base">No products available yet.</p>
-        </div>
+        brandData.image ? (
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
+            <div className="col-span-2 md:col-span-2 lg:col-span-2">
+              <div className="overflow-hidden rounded-xl border border-black/[0.06] bg-white shadow-sm">
+                <div className="relative aspect-[3/4] w-full overflow-hidden sm:aspect-[4/5]">
+                  <LazyImage
+                    src={brandData.image}
+                    alt={brandData.name}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 448px"
+                    priority
+                    aspectRatio="portrait"
+                    quality={90}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="text-center py-8 sm:py-12 text-gray-500">
+            <ShoppingBag className="w-12 h-12 sm:w-16 sm:h-16 text-oma-cocoa/30 mx-auto mb-3 sm:mb-4" />
+            <p className="text-sm sm:text-base">No products available yet.</p>
+          </div>
+        )
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
           {products.map((product, index) => (

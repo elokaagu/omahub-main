@@ -1,4 +1,9 @@
 import type { BrandProfileData } from "./types";
+import {
+  DIRECTORY_LISTING_FALLBACK_LOGO,
+  isUsableBrandCardImageUrl,
+  resolveBrandDirectoryCardImageUrl,
+} from "@/lib/brands/directoryListingImage";
 
 type BrandRecord = {
   id: string;
@@ -18,7 +23,8 @@ type BrandRecord = {
   /** Legacy / API-resolved column when present on `brands` row */
   image?: string | null;
   logo_url?: string | null;
-  brand_images?: Array<{ storage_path?: string | null }>;
+  video_thumbnail?: string | null;
+  brand_images?: Array<{ storage_path?: string | null; role?: string | null }>;
 };
 
 type CollectionRecord = {
@@ -32,6 +38,15 @@ export function mapBrandToProfileData(
   brand: BrandRecord,
   collections: CollectionRecord[]
 ): BrandProfileData {
+  const resolvedImage = resolveBrandDirectoryCardImageUrl(brand as any);
+  const profileImage =
+    isUsableBrandCardImageUrl(resolvedImage) &&
+    resolvedImage !== DIRECTORY_LISTING_FALLBACK_LOGO
+      ? resolvedImage
+      : isUsableBrandCardImageUrl(brand.video_thumbnail)
+        ? brand.video_thumbnail!.trim()
+        : undefined;
+
   return {
     id: brand.id,
     name: brand.name,
@@ -43,9 +58,7 @@ export function mapBrandToProfileData(
     category: brand.category || undefined,
     rating: brand.rating || undefined,
     isVerified: brand.is_verified || undefined,
-    image: brand.brand_images?.[0]?.storage_path
-      ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand-assets/${brand.brand_images[0].storage_path}`
-      : brand.image || undefined,
+    image: profileImage,
     website: brand.website,
     instagram: brand.instagram || undefined,
     whatsapp: brand.whatsapp || undefined,
