@@ -9,26 +9,26 @@ const DECORATIVE_IMAGES = [
   {
     src: `${SITE_IMAGES}/Placeholder.png`,
     alt: "Continuous line drawing of three faces in profile",
+    width: 640,
+    height: 800,
     sizes: "(max-width: 1024px) 100vw, 25vw",
     wrapperClassName: "lg:col-span-3",
-    imageClassName: "object-contain object-bottom",
-    aspectClassName: "aspect-[3/4] sm:aspect-[4/5]",
   },
   {
     src: `${SITE_IMAGES}/Placeholder-2.png`,
     alt: "Illustrated portrait with bold red circle and coral accents",
+    width: 960,
+    height: 960,
     sizes: "(max-width: 1024px) 100vw, 42vw",
     wrapperClassName: "lg:col-span-5",
-    imageClassName: "object-cover object-center",
-    aspectClassName: "aspect-[4/3] sm:aspect-[5/4]",
   },
   {
     src: `${SITE_IMAGES}/Placeholder-1.png`,
     alt: "Collage of vintage postage stamp illustrations",
+    width: 960,
+    height: 640,
     sizes: "(max-width: 1024px) 100vw, 33vw",
     wrapperClassName: "lg:col-span-4",
-    imageClassName: "object-contain object-center",
-    aspectClassName: "aspect-[4/3]",
   },
 ] as const;
 
@@ -48,7 +48,7 @@ export function EditorialDecorSection() {
           </p>
         </AnimateOnScroll>
 
-        <div className="mt-8 grid grid-cols-1 items-end gap-5 sm:mt-10 sm:gap-6 lg:grid-cols-12 lg:gap-8">
+        <div className="mt-8 grid grid-cols-1 items-end gap-3 sm:mt-10 sm:gap-4 lg:grid-cols-12 lg:gap-5">
           {DECORATIVE_IMAGES.map((item, index) => (
             <AnimateOnScroll
               key={item.src}
@@ -57,15 +57,14 @@ export function EditorialDecorSection() {
               duration={0.7}
               className={item.wrapperClassName}
             >
-              <div
-                className={`relative overflow-hidden rounded-2xl bg-oma-cream/60 shadow-sm ring-1 ring-oma-cocoa/10 ${item.aspectClassName}`}
-              >
+              <div className="overflow-hidden rounded-2xl ring-1 ring-oma-cocoa/10">
                 <Image
                   src={item.src}
                   alt={item.alt}
-                  fill
+                  width={item.width}
+                  height={item.height}
                   sizes={item.sizes}
-                  className={item.imageClassName}
+                  className="block h-auto w-full"
                 />
               </div>
             </AnimateOnScroll>
