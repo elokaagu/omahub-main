@@ -23,15 +23,6 @@ export function EditorialHero({
 
   return (
     <section className="relative overflow-hidden bg-gradient-to-b from-[#FAF1E4] to-oma-beige text-oma-black">
-      <div
-        aria-hidden
-        className="absolute inset-0 opacity-[0.06]"
-        style={{
-          backgroundImage:
-            "repeating-linear-gradient(45deg, transparent, transparent 46px, #D4B285 46px, #D4B285 47px), repeating-linear-gradient(-45deg, transparent, transparent 46px, #D4B285 46px, #D4B285 47px)",
-        }}
-      />
-
       <div className="relative z-10 mx-auto max-w-7xl px-4 pb-12 pt-[calc(3.5rem+env(safe-area-inset-top,0px))] sm:px-6 sm:pb-16 sm:pt-[calc(4rem+env(safe-area-inset-top,0px))] lg:px-8 lg:pb-24 lg:pt-24">
         <div className="flex flex-col gap-10 lg:grid lg:min-h-[calc(100svh-6rem)] lg:grid-cols-[minmax(0,46%)_minmax(0,54%)] lg:items-center lg:gap-x-14 xl:gap-x-20">
           <div className="flex flex-col justify-center lg:py-10">

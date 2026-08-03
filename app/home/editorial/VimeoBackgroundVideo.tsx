@@ -9,43 +9,90 @@ type VimeoBackgroundVideoProps = {
   posterUrl?: string;
 };
 
+const QUALITY_PRIORITY = ["4K", "2K", "1080p", "720p", "540p", "360p", "240p"] as const;
+
+async function setHighestQuality(player: Player) {
+  try {
+    const qualities = await player.getQualities();
+    for (const label of QUALITY_PRIORITY) {
+      const match = qualities.find(
+        (quality) => quality.label === label || quality.id === label
+      );
+      if (match) {
+        await player.setQuality(match.id ?? label);
+        return;
+      }
+    }
+  } catch (err) {
+    console.error("vimeo_set_quality_failed", err);
+  }
+}
+
 /**
- * Full-bleed Vimeo background video: streams the actual HQ upload from
- * Vimeo (chromeless background mode: autoplay, muted, looping, no native
- * controls or branding) rather than a locally re-compressed snippet. The
- * iframe is sized with the standard vh/vw cover trick since iframes can't
- * use object-fit. A single mute/unmute icon sits in the corner, since
- * autoplay requires starting muted. An optional poster frame paints behind
- * the iframe so the first frame is instant instead of a blank/plum flash
- * while Vimeo's player boots up; the iframe itself stays transparent until
- * playback actually starts, then cross-fades in over the poster instead of
- * popping in the moment the (still-loading, often blank) player mounts.
+ * Full-bleed Vimeo background video. The iframe is deferred until the
+ * section is approaching the viewport (large root margin) so it does not
+ * compete with the hero on first paint, but still has time to buffer
+ * before the user scrolls into view. A poster frame shows immediately
+ * and cross-fades out once the player reports loaded/playing.
  */
 export function VimeoBackgroundVideo({
   videoId,
   posterUrl,
 }: VimeoBackgroundVideoProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const playerRef = useRef<Player | null>(null);
+  const [shouldLoad, setShouldLoad] = useState(false);
+  const [isReady, setIsReady] = useState(false);
   const [muted, setMuted] = useState(true);
-  const [isPlaying, setIsPlaying] = useState(false);
+
+  // Warm the poster in the browser cache as soon as this mounts.
+  useEffect(() => {
+    if (!posterUrl) return;
+    const img = new Image();
+    img.src = posterUrl;
+  }, [posterUrl]);
+
+  // Begin loading the Vimeo iframe well before the section enters view.
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          setShouldLoad(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "150% 0px 0px 0px", threshold: 0 }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
-    if (!iframeRef.current) return;
+    if (!shouldLoad || !iframeRef.current) return;
+
     const player = new Player(iframeRef.current);
     playerRef.current = player;
-    const handlePlay = () => setIsPlaying(true);
-    player.on("play", handlePlay);
-    // Deliberately no player.destroy() here: it physically removes the
-    // iframe from the DOM, which breaks the postMessage channel the moment
-    // React 18 Strict Mode's dev-only double-invoke (mount -> cleanup ->
-    // mount) runs this cleanup. React already removes the iframe node on a
-    // genuine unmount, so we just drop our reference to the player.
+
+    const markReady = () => setIsReady(true);
+    const handleLoaded = () => {
+      void setHighestQuality(player);
+      setIsReady(true);
+    };
+
+    player.on("loaded", handleLoaded);
+    player.on("play", markReady);
+
     return () => {
-      player.off("play", handlePlay);
+      player.off("loaded", handleLoaded);
+      player.off("play", markReady);
       playerRef.current = null;
     };
-  }, []);
+  }, [shouldLoad, videoId]);
 
   const toggleMute = async () => {
     const player = playerRef.current;
@@ -62,25 +109,33 @@ export function VimeoBackgroundVideo({
     }
   };
 
+  const iframeSrc = `https://player.vimeo.com/video/${videoId}?background=1&autoplay=1&loop=1&muted=1&autopause=0&playsinline=1&quality=4K&initial_quality=1080p&app_id=122963`;
+
   return (
-    <div className="absolute inset-0 overflow-hidden">
+    <div ref={containerRef} className="absolute inset-0 overflow-hidden">
       {posterUrl && (
         <div
           aria-hidden
-          className="absolute inset-0 bg-cover bg-center"
+          className={cn(
+            "absolute inset-0 bg-cover bg-center transition-opacity duration-500 ease-out",
+            isReady ? "opacity-0" : "opacity-100"
+          )}
           style={{ backgroundImage: `url(${posterUrl})` }}
         />
       )}
-      <iframe
-        ref={iframeRef}
-        src={`https://player.vimeo.com/video/${videoId}?background=1&autoplay=1&loop=1&muted=1&app_id=122963`}
-        title="Art Of Adornment, OmaHub short film"
-        allow="autoplay; fullscreen"
-        className={cn(
-          "absolute left-1/2 top-1/2 h-[56.25vw] min-h-full w-[177.78vh] min-w-full -translate-x-1/2 -translate-y-1/2 scale-[1.03] opacity-0 transition-opacity duration-700 ease-out motion-reduce:hidden",
-          isPlaying && "opacity-100"
-        )}
-      />
+
+      {shouldLoad && (
+        <iframe
+          ref={iframeRef}
+          src={iframeSrc}
+          title="Art Of Adornment, OmaHub short film"
+          allow="autoplay; fullscreen"
+          className={cn(
+            "absolute left-1/2 top-1/2 h-[56.25vw] min-h-full w-[177.78vh] min-w-full -translate-x-1/2 -translate-y-1/2 scale-[1.03] transition-opacity duration-500 ease-out motion-reduce:hidden",
+            isReady ? "opacity-100" : "opacity-0"
+          )}
+        />
+      )}
 
       <button
         type="button"

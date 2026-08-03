@@ -7,7 +7,7 @@ import { LazyImage } from "./lazy-image";
 import { CheckCircle, Star } from "@/components/ui/icons";
 import { NavigationLink } from "./navigation-link";
 import { cn } from "@/lib/utils";
-import { FadeIn } from "@/app/components/ui/animations";
+import { AnimateOnScroll } from "@/components/ui/animate-on-scroll";
 import { BrandCard } from "./brand-card";
 
 interface Brand {
@@ -103,7 +103,12 @@ export function FullWidthBrandRow({
           className="brand-row-scroll flex snap-x snap-mandatory scroll-smooth gap-2 overflow-x-auto pb-4 pl-4 scrollbar-hide sm:gap-3 sm:pl-6 lg:pl-8"
         >
           {brands.map((brand, index) => (
-            <FadeIn key={brand.id} delay={index * 0.08}>
+            <AnimateOnScroll
+              key={brand.id}
+              animation="slideInFromRight"
+              delay={index * 0.08}
+              duration={0.65}
+            >
               <div
                 className="flex-none w-[280px] md:w-[300px] lg:w-[320px] snap-start animate-fade-in"
                 style={{
@@ -124,7 +129,7 @@ export function FullWidthBrandRow({
                   brand_images={brand.brand_images}
                 />
               </div>
-            </FadeIn>
+            </AnimateOnScroll>
           ))}
 
           {/* Show More Card (if there are many brands) */}

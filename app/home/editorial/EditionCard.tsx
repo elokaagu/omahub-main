@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import type { Edition } from "@/lib/data/editions";
 
@@ -67,7 +69,7 @@ export function EditionCard({ edition }: { edition: Edition }) {
       {/* Scrim rising from the bottom so the text stays legible over any photo */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-gradient-to-t from-oma-plum/95 via-oma-plum/35 to-transparent"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-[55%] bg-gradient-to-t from-oma-plum/75 via-oma-plum/25 to-transparent"
       />
       <div
         aria-hidden
