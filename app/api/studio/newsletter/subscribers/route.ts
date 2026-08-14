@@ -9,7 +9,12 @@ const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 100;
 const MAX_SEARCH_LENGTH = 120;
 const ALLOWED_STATUSES = ["active", "unsubscribed", "bounced", "pending"] as const;
-const ALLOWED_SOURCES = ["website", "landing_page", "manual", "import", "api"] as const;
+const ALLOWED_SOURCES = [
+  "website",
+  "contact_form",
+  "studio_signup",
+  "manual_import",
+] as const;
 const SUBSCRIBER_SELECT_FIELDS =
   "id, email, first_name, last_name, subscription_status, source, subscribed_at, unsubscribed_at, email_count, last_email_sent, created_at, updated_at";
 

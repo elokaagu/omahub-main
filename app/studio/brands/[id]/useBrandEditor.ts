@@ -334,6 +334,7 @@ export function useBrandEditor(brandId: string) {
       const response = await fetch(`/api/studio/brands/${brand.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(updateData),
       });
 

@@ -3,6 +3,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useStudioInitialData } from "@/contexts/StudioInitialDataContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -60,6 +61,8 @@ const METRIC_CARD =
 
 export default function SubscriptionsPage() {
   const { user } = useAuth();
+  const initialData = useStudioInitialData();
+  const effectiveRole = initialData?.profile?.role ?? user?.role ?? null;
   const [subscribers, setSubscribers] = useState<NewsletterSubscriber[]>([]);
   const [stats, setStats] = useState<SubscriptionStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -96,12 +99,12 @@ export default function SubscriptionsPage() {
 
   // Check if user has access and fetch data
   useEffect(() => {
-    if (!user) {
+    if (!user && !initialData?.profile) {
       // User not loaded yet, keep loading
       return;
     }
 
-    if (user.role !== "super_admin") {
+    if (effectiveRole !== "super_admin") {
       toast.error(
         "Access denied. Only super admins can view newsletter subscriptions."
       );
@@ -110,15 +113,15 @@ export default function SubscriptionsPage() {
     }
 
     // User is super admin, fetch top-level stats once on auth-ready.
-    console.log("🔄 Fetching subscriber stats for super admin:", user.email);
+    console.log("🔄 Fetching subscriber stats for super admin:", user?.email);
     fetchStats();
-  }, [user]);
+  }, [user, initialData?.profile, effectiveRole]);
 
   // Fetch subscribers whenever current page changes (with applied filters).
   useEffect(() => {
-    if (!user || user.role !== "super_admin") return;
+    if (!effectiveRole || effectiveRole !== "super_admin") return;
     void fetchSubscribers(getCurrentQuery(currentPage));
-  }, [currentPage, user]);
+  }, [currentPage, effectiveRole, user]);
 
   useEffect(() => {
     return () => {
@@ -149,12 +152,12 @@ export default function SubscriptionsPage() {
       const response = await fetch(
         `/api/studio/newsletter/subscribers?${params}`,
         {
-          method: 'GET',
+          method: "GET",
+          credentials: "include",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
-          // Add timeout
-          signal: AbortSignal.timeout(10000), // 10 second timeout
+          signal: AbortSignal.timeout(10000),
         }
       );
 
@@ -165,10 +168,7 @@ export default function SubscriptionsPage() {
         console.error(`❌ Subscribers fetch failed:`, errorText);
         
         if (response.status === 401 || response.status === 403) {
-          // Auth error - try to refresh session
-          console.log("🔄 Auth error, attempting session refresh...");
-          window.location.reload();
-          return;
+          throw new Error("You do not have permission to view subscribers.");
         }
         
         throw new Error(`Failed to fetch subscribers (${response.status}): ${errorText}`);
@@ -207,11 +207,12 @@ export default function SubscriptionsPage() {
       console.log(`📊 Fetching stats (attempt ${retryCount + 1}/${maxRetries + 1})`);
 
       const response = await fetch("/api/studio/newsletter/stats", {
-        method: 'GET',
+        method: "GET",
+        credentials: "include",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        signal: AbortSignal.timeout(5000), // 5 second timeout
+        signal: AbortSignal.timeout(5000),
       });
 
       console.log(`📊 Stats response status: ${response.status}`);
@@ -251,6 +252,7 @@ export default function SubscriptionsPage() {
         `/api/studio/newsletter/subscribers/${subscriberId}`,
         {
           method: "PATCH",
+          credentials: "include",
           headers: {
             "Content-Type": "application/json",
           },
@@ -273,7 +275,9 @@ export default function SubscriptionsPage() {
 
   const exportSubscribers = async () => {
     try {
-      const response = await fetch("/api/studio/newsletter/export");
+      const response = await fetch("/api/studio/newsletter/export", {
+        credentials: "include",
+      });
 
       if (!response.ok) {
         throw new Error("Failed to export subscribers");

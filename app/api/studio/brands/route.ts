@@ -27,10 +27,12 @@ const ALLOWED_CREATE_FIELDS = new Set([
   "whatsapp",
   "founded_year",
   "contact_email",
+  "video_url",
+  "video_thumbnail",
 ]);
 
 const BRAND_SELECT_FIELDS =
-  "id, name, description, long_description, location, price_range, currency, category, categories, image, website, instagram, whatsapp, founded_year, contact_email, rating, updated_at, created_at";
+  "id, name, description, long_description, location, price_range, currency, category, categories, image, website, instagram, whatsapp, founded_year, contact_email, video_url, video_thumbnail, rating, updated_at, created_at";
 
 type CreateBrandBody = {
   name: string;
@@ -47,6 +49,8 @@ type CreateBrandBody = {
   instagram?: string;
   whatsapp?: string;
   founded_year?: string | number;
+  video_url?: string;
+  video_thumbnail?: string;
 };
 
 function normalizeText(value: unknown, maxLen: number): string | undefined {
@@ -133,6 +137,8 @@ export async function POST(request: NextRequest) {
         body.founded_year !== undefined && body.founded_year !== null
           ? String(body.founded_year).trim().slice(0, 4)
           : undefined,
+      video_url: normalizeText(body.video_url, 2000),
+      video_thumbnail: normalizeText(body.video_thumbnail, 2000),
       rating: 5.0,
     };
 

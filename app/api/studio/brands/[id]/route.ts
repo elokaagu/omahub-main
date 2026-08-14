@@ -20,6 +20,8 @@ const BRAND_SELECT_FIELDS = [
   "founded_year",
   "is_verified",
   "contact_email",
+  "video_url",
+  "video_thumbnail",
   "updated_at",
   "created_at",
 ].join(", ");
@@ -38,6 +40,10 @@ const ALLOWED_UPDATE_FIELDS = new Set([
   "instagram",
   "whatsapp",
   "founded_year",
+  "contact_email",
+  "is_verified",
+  "video_url",
+  "video_thumbnail",
 ]);
 
 type ProfileAccess = {
@@ -46,7 +52,7 @@ type ProfileAccess = {
 };
 
 type AuthzResult =
-  | { ok: true }
+  | { ok: true; role: string | null }
   | { ok: false; response: NextResponse };
 
 async function requireBrandAccess(
@@ -91,7 +97,7 @@ async function requireBrandAccess(
     };
   }
 
-  return { ok: true };
+  return { ok: true, role: typedProfile.role };
 }
 
 export async function GET(
@@ -139,6 +145,10 @@ export async function PUT(
     const updateData = await request.json().catch(() => null);
     if (!updateData || typeof updateData !== "object" || Array.isArray(updateData)) {
       return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+    }
+
+    if (authz.role !== "super_admin" && "is_verified" in updateData) {
+      delete updateData.is_verified;
     }
 
     const updateKeys = Object.keys(updateData);

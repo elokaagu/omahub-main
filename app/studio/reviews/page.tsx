@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useStudioInitialData } from "@/contexts/StudioInitialDataContext";
+import { StudioAuthPlaceholder } from "@/components/studio/StudioAuthPlaceholder";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -76,7 +78,9 @@ interface ReviewsResponse {
 }
 
 export default function ReviewManagementPage() {
-  const { user, session } = useAuth();
+  const { user, session, loading: authLoading } = useAuth();
+  const initialData = useStudioInitialData();
+  const effectiveRole = initialData?.profile?.role ?? user?.role ?? null;
   const router = useRouter();
 
   // State management
@@ -97,17 +101,15 @@ export default function ReviewManagementPage() {
   const [isSubmittingReply, setIsSubmittingReply] = useState(false);
   const [editingReply, setEditingReply] = useState<ReviewReply | null>(null);
 
-  // Check permissions
   useEffect(() => {
+    if (authLoading && !initialData?.profile) return;
     if (
-      user &&
-      user.role &&
-      !["super_admin", "brand_admin"].includes(user.role)
+      effectiveRole &&
+      !["super_admin", "brand_admin"].includes(effectiveRole)
     ) {
       router.push("/studio");
-      return;
     }
-  }, [user, router]);
+  }, [effectiveRole, authLoading, initialData?.profile, router]);
 
   // Fetch reviews
   const fetchReviews = useCallback(async (page = 1, search = "", brand = "") => {
@@ -333,12 +335,19 @@ export default function ReviewManagementPage() {
     });
   };
 
-  if (!user || !user.role) {
-    return <div>Loading...</div>;
+  if (authLoading && !initialData?.profile) {
+    return <StudioAuthPlaceholder />;
   }
 
-  if (!["super_admin", "brand_admin"].includes(user.role)) {
-    return <div>Access denied</div>;
+  if (
+    effectiveRole &&
+    !["super_admin", "brand_admin"].includes(effectiveRole)
+  ) {
+    return <StudioAuthPlaceholder />;
+  }
+
+  if (!effectiveRole) {
+    return <StudioAuthPlaceholder />;
   }
 
   return (
@@ -351,7 +360,7 @@ export default function ReviewManagementPage() {
               Review Management
             </h1>
             <p className="text-oma-cocoa mt-1">
-              {user.role === "super_admin"
+              {effectiveRole === "super_admin"
                 ? "Manage all reviews across the platform"
                 : "Manage reviews for your brands"}
             </p>

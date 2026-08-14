@@ -56,13 +56,15 @@ export default function PortfolioPage() {
   const [loading, setLoading] = useState(true);
   const [accessDenied, setAccessDenied] = useState(false);
 
-  const canManagePortfolio = permissions.includes("studio.hero.manage");
+  const canManagePortfolio = permissions.includes("studio.products.manage");
 
   const fetchPortfolioItems = useCallback(async () => {
     try {
       if (!user || !canManagePortfolio) return;
       // Fetch portfolio items from dedicated portfolio API
-      const response = await fetch("/api/studio/portfolio");
+      const response = await fetch("/api/studio/portfolio", {
+        credentials: "include",
+      });
       if (response.ok) {
         const data = await response.json();
         
@@ -116,6 +118,7 @@ export default function PortfolioPage() {
     try {
       const response = await fetch(`/api/studio/products/${id}`, {
         method: "DELETE",
+        credentials: "include",
       });
 
       if (response.ok) {

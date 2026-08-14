@@ -9,6 +9,16 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 
+const RecentAccountsWidget = dynamic(
+  () => import("@/app/studio/dashboard/RecentAccountsWidget"),
+  {
+    loading: () => (
+      <div className="h-32 bg-gray-100 rounded-lg animate-pulse" />
+    ),
+    ssr: false,
+  },
+);
+
 // Dynamic imports for heavy components
 const LeadsTrackingDashboard = dynamic(
   () => import("@/components/studio/LeadsTrackingDashboard"),
@@ -105,6 +115,20 @@ export default function StudioPage() {
             </Suspense>
           </CardContent>
         </Card>
+
+        {effectiveRole === "super_admin" && (
+          <Card className="overflow-hidden rounded-2xl border border-oma-beige/60 shadow-sm">
+            <CardContent className="bg-white px-5 py-6 sm:px-8 sm:py-8">
+              <Suspense
+                fallback={
+                  <div className="h-32 bg-gray-100 rounded-lg animate-pulse" />
+                }
+              >
+                <RecentAccountsWidget />
+              </Suspense>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );

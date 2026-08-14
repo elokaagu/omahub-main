@@ -51,7 +51,9 @@ export default function RecentAccountsWidget() {
     try {
       recentAccountsDevLog("fetching recent accounts");
 
-      const response = await fetch("/api/admin/recent-accounts");
+      const response = await fetch("/api/admin/recent-accounts", {
+        credentials: "include",
+      });
 
       if (!response.ok) {
         if (response.status === 401) {

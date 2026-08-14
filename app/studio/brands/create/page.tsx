@@ -199,7 +199,6 @@ export default function CreateBrandPage() {
       category: d.categories[0],
       categories: d.categories,
       image: d.image,
-      is_verified: false,
       website: d.website.trim() || undefined,
       instagram: d.instagram.trim() || undefined,
       whatsapp: d.whatsapp.trim() || undefined,
@@ -216,6 +215,7 @@ export default function CreateBrandPage() {
       const response = await fetch("/api/studio/brands", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(payload),
       });
 

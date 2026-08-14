@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useStudioInitialData } from "@/contexts/StudioInitialDataContext";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -175,7 +176,9 @@ function AssignedBrandsList({
 }
 
 export default function UsersPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const initialData = useStudioInitialData();
+  const effectiveRole = initialData?.profile?.role ?? user?.role ?? null;
   const router = useRouter();
   const [users, setUsers] = useState<UserWithBrands[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
@@ -191,13 +194,13 @@ export default function UsersPage() {
     selectedBrands: [] as string[],
   });
 
-  // Check if user is super admin
+  // Check if user is super admin (prefer SSR-hydrated role to avoid false redirects)
   useEffect(() => {
-    if (user && user.role !== "super_admin") {
+    if (authLoading && !initialData?.profile) return;
+    if (effectiveRole && effectiveRole !== "super_admin") {
       router.push("/studio");
-      return;
     }
-  }, [user, router]);
+  }, [effectiveRole, authLoading, initialData?.profile, router]);
 
   const fetchUsersAndBrands = useCallback(async () => {
       try {
@@ -247,10 +250,10 @@ export default function UsersPage() {
 
   // Fetch users and brands
   useEffect(() => {
-    if (user?.role === "super_admin") {
+    if (effectiveRole === "super_admin") {
       void fetchUsersAndBrands();
     }
-  }, [user, fetchUsersAndBrands]);
+  }, [effectiveRole, fetchUsersAndBrands]);
 
   const filteredUsers = useMemo(() => {
     let filtered = users;
@@ -452,7 +455,11 @@ export default function UsersPage() {
     );
   };
 
-  if (user?.role !== "super_admin") {
+  if (authLoading && !initialData?.profile) {
+    return <Loading />;
+  }
+
+  if (effectiveRole !== "super_admin") {
     return <Loading />;
   }
 

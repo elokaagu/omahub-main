@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useStudioInitialData } from "@/contexts/StudioInitialDataContext";
 import { Button } from "@/components/ui/button";
 import type { StatusFilter } from "./types";
 import { useStudioApplications } from "./useStudioApplications";
@@ -12,11 +13,13 @@ import { DeleteApplicationModal } from "./DeleteApplicationModal";
 
 export default function ApplicationsPage() {
   const { user, loading: authLoading } = useAuth();
+  const initialData = useStudioInitialData();
+  const effectiveRole = initialData?.profile?.role ?? user?.role ?? null;
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
 
-  const isSuperAdmin = user?.role === "super_admin";
+  const isSuperAdmin = effectiveRole === "super_admin";
 
   const {
     applications,
@@ -31,7 +34,9 @@ export default function ApplicationsPage() {
     deleteApplication,
   } = useStudioApplications(isSuperAdmin === true);
 
-  const accessDenied = Boolean(user && user.role !== "super_admin");
+  const accessDenied = Boolean(
+    effectiveRole && effectiveRole !== "super_admin",
+  );
 
   const filteredApplications = useMemo(() => {
     const searchLower = searchTerm.toLowerCase();
@@ -52,7 +57,7 @@ export default function ApplicationsPage() {
     });
   }, [applications, searchTerm, statusFilter]);
 
-  if (authLoading) {
+  if (authLoading && !initialData?.profile) {
     return (
       <div className="container mx-auto px-6 py-8">
         <div className="text-center">

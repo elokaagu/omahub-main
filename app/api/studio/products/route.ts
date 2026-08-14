@@ -37,6 +37,16 @@ const ALLOWED_PRODUCT_CREATE_FIELDS = new Set([
   "stock_quantity",
   "is_available",
   "metadata",
+  "in_stock",
+  "is_custom",
+  "contact_for_pricing",
+  "price_range",
+  "specialties",
+  "lead_time",
+  "consultation_fee",
+  "materials",
+  "techniques",
+  "inspiration",
 ]);
 
 type AccessResult =

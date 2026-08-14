@@ -34,6 +34,7 @@ import {
   List,
   Calendar,
   Sparkles,
+  TrendingUp,
 } from "@/lib/utils/iconImports";
 import { TailoringEventProvider } from "@/contexts/NavigationContext";
 import ErrorBoundary from "../components/ErrorBoundary";
@@ -167,7 +168,7 @@ function buildNavigationItems(
       href: "/studio/portfolio",
       label: "Portfolio",
       icon: ImageIcon,
-      permission: "studio.hero.manage",
+      permission: "studio.products.manage",
     },
     {
       href: "/studio/hero",
@@ -206,6 +207,14 @@ function buildNavigationItems(
       icon: Inbox,
       permission: "studio.products.manage",
       customLabel: role === "brand_admin" ? "Your Inbox" : "Inbox",
+    },
+    {
+      href: "/studio/leads",
+      label: "Leads",
+      icon: TrendingUp,
+      permission: "studio.products.manage",
+      customLabel: role === "brand_admin" ? "Your Leads" : "Leads",
+      showForRoles: ["super_admin", "brand_admin"],
     },
     {
       href: "/studio/applications",

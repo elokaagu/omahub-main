@@ -73,6 +73,14 @@ export async function GET(request: NextRequest) {
         currency,
         created_at,
         updated_at,
+        price_range,
+        specialties,
+        lead_time,
+        consultation_fee,
+        materials,
+        techniques,
+        inspiration,
+        contact_for_pricing,
         brand:brands(id, name, category, location)
       `
       )

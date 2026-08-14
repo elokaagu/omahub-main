@@ -7,6 +7,7 @@ export async function fetchStudioApplications(
   const response = await fetch(`/api/studio/applications?t=${timestamp}`, {
     method: "GET",
     cache: "no-store",
+    credentials: "include",
     headers: {
       "Cache-Control": "no-cache, no-store, must-revalidate",
       Pragma: "no-cache",
@@ -40,6 +41,7 @@ export async function updateStudioApplication(
   const response = await fetch(`/api/studio/applications/${applicationId}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify(body),
     signal,
   });
@@ -66,6 +68,7 @@ export async function deleteStudioApplication(
 ): Promise<{ ok: true; notFound?: boolean }> {
   const response = await fetch(`/api/studio/applications/${applicationId}`, {
     method: "DELETE",
+    credentials: "include",
     signal,
   });
 
