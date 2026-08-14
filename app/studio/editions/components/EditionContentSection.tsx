@@ -299,12 +299,10 @@ export function EditionContentSection({
           isUploadingImage={isUploadingImage}
           className="max-w-none"
         />
-        {!draft.story_html && (
-          <p className="mt-2 text-xs text-oma-cocoa/70">
-            Tip: use the image button in the toolbar to place photos anywhere in
-            the story.
-          </p>
-        )}
+        <p className="mt-2 text-xs text-oma-cocoa/70">
+          Paragraph = normal body text. H2/H3/H4 = smaller-to-larger headings.
+          Place the cursor where you want a photo, then click add photo.
+        </p>
       </div>
     </div>
   );

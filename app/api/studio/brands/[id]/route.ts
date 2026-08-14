@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase-unified";
 import { syncProductCurrencies } from "@/lib/utils/currencySync";
-import { clearBrandsCache } from "@/lib/services/brandService";
+import { revalidateBrandPublicCaches } from "@/lib/services/revalidateBrandCaches";
 
 const BRAND_SELECT_FIELDS = [
   "id",
@@ -304,11 +304,11 @@ export async function PUT(
       }
     }
 
-    // Clear the brands cache to ensure fresh data after update
+    // Bust in-memory + Next.js homepage caches so edits show on `/` immediately
     try {
-      clearBrandsCache();
+      revalidateBrandPublicCaches();
     } catch (cacheError) {
-      console.warn("⚠️ Warning: Failed to clear brands cache:", cacheError);
+      console.warn("⚠️ Warning: Failed to revalidate brand caches:", cacheError);
       // Don't fail the entire operation for this
     }
 

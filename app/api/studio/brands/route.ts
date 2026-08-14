@@ -4,7 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 import { createServerSupabaseClient } from "@/lib/supabase-unified";
 import { refreshNavigationCache } from "@/lib/services/categoryService";
 import { syncProductCurrencies } from "@/lib/utils/currencySync";
-import { clearBrandsCache } from "@/lib/services/brandService";
+import { revalidateBrandPublicCaches } from "@/lib/services/revalidateBrandCaches";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -234,11 +234,11 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Clear the brands cache to ensure fresh data after creation
+    // Bust in-memory + Next.js homepage caches so new brands appear on `/` immediately
     try {
-      clearBrandsCache();
+      revalidateBrandPublicCaches();
     } catch (cacheError) {
-      console.warn("⚠️ Warning: Failed to clear brands cache:", cacheError);
+      console.warn("⚠️ Warning: Failed to revalidate brand caches:", cacheError);
       // Don't fail the entire operation for this
     }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import { getEditionBySlug } from "@/lib/data/editions";
@@ -58,7 +58,10 @@ import {
   buildInitialEditionDraft,
   type EditionEditorDraft,
 } from "../components/EditionContentSection";
-import { plainStoryToHtml } from "@/lib/editions/storyHtml";
+import {
+  mergeLegacyStoryPhotosIntoHtml,
+  plainStoryToHtml,
+} from "@/lib/editions/storyHtml";
 import {
   buildEditionEditorDraft,
   getEditionContent,
@@ -102,6 +105,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
     null,
   );
   const [contentReady, setContentReady] = useState(false);
+  const contentInitializedRef = useRef(false);
 
   const refetch = useCallback(async () => {
     const rows = await getEditionImages(slug);
@@ -152,21 +156,31 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
     });
 
   useEffect(() => {
+    if (!edition || images === null || contentInitializedRef.current) return;
+
     let cancelled = false;
     (async () => {
       try {
         const saved = await getEditionContent(slug);
-        if (cancelled || !edition) return;
-        setContentDraft(
-          buildEditionEditorDraft(
-            edition,
-            saved,
-            plainStoryToHtml(edition.story),
-          ),
+        if (cancelled) return;
+
+        const storyPhotos = images.filter((image) => image.kind === "story");
+        const baseDraft = buildEditionEditorDraft(
+          edition,
+          saved,
+          plainStoryToHtml(edition.story),
         );
+        const mergedHtml = mergeLegacyStoryPhotosIntoHtml(
+          baseDraft.story_html,
+          storyPhotos,
+        );
+
+        contentInitializedRef.current = true;
+        setContentDraft({ ...baseDraft, story_html: mergedHtml });
       } catch (error) {
         console.error("Error loading edition content:", error);
         if (!cancelled && edition) {
+          contentInitializedRef.current = true;
           setContentDraft(buildInitialEditionDraft(edition));
         }
       } finally {
@@ -176,7 +190,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
     return () => {
       cancelled = true;
     };
-  }, [slug, edition]);
+  }, [slug, edition, images]);
 
   useEffect(() => {
     void refetch();
@@ -659,9 +673,9 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
             Legacy inline story photos
           </h2>
           <p className="text-sm text-oma-cocoa mb-4">
-            These were placed between plain-text paragraphs. New editions should
-            use the image button in the story editor above. Existing legacy
-            photos still render until removed.
+            These were placed between plain-text paragraphs. They are merged into
+            the story editor above on load — save the story to keep them on the
+            public page. Use the add photo button in the toolbar for new images.
           </p>
           <div className="space-y-4">
             {storyPhotos.map((image) => (

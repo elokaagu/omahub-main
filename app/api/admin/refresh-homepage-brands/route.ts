@@ -1,10 +1,7 @@
-import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { requireSuperAdmin } from "@/lib/auth/requireSuperAdmin";
-import {
-  clearAllBrandDependentCaches,
-  forceRefreshBrands,
-} from "@/lib/services/brandService";
+import { forceRefreshBrands } from "@/lib/services/brandService";
+import { revalidateBrandPublicCaches } from "@/lib/services/revalidateBrandCaches";
 
 export const dynamic = "force-dynamic";
 
@@ -23,9 +20,8 @@ export async function POST() {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
-    clearAllBrandDependentCaches();
+    revalidateBrandPublicCaches();
     await forceRefreshBrands(false);
-    revalidatePath("/");
 
     return NextResponse.json({
       success: true,

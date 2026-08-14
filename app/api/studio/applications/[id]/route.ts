@@ -13,7 +13,7 @@ import {
 } from "@/lib/brands/applicationBrandImages";
 import { EXPLORE_PRICING_LABEL } from "@/lib/brands/joinApplicationPricing";
 import { isUsableBrandCardImageUrl } from "@/lib/brands/directoryListingImage";
-import { invalidateBrandsCache } from "@/lib/services/brandService";
+import { revalidateBrandPublicCaches } from "@/lib/services/revalidateBrandCaches";
 
 // Force dynamic rendering for this route
 export const dynamic = "force-dynamic";
@@ -679,7 +679,7 @@ async function setupBrandAndUserAccess(
       }
     }
 
-    invalidateBrandsCache();
+    revalidateBrandPublicCaches();
 
     const siteUrl =
       process.env.NEXT_PUBLIC_SITE_URL || "https://oma-hub.com";

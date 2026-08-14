@@ -18,7 +18,7 @@ import {
   getStoryParagraphs,
   groupInlineStoryPhotos,
 } from "@/lib/editions/storyContent";
-import { hasRichStoryHtml } from "@/lib/editions/storyHtml";
+import { hasRichStoryHtml, mergeLegacyStoryPhotosIntoHtml } from "@/lib/editions/storyHtml";
 import { FullWidthBrandRow } from "@/components/ui/full-width-brand-row";
 import { LazyImage } from "@/components/ui/lazy-image";
 import { EmailCaptureForm } from "@/app/home/editorial/EmailCaptureForm";
@@ -129,11 +129,16 @@ export default async function EditionPage({
     gallery: [...(mergedEdition.gallery || []), ...adminGallery],
   };
 
+  const storyPhotos = adminImages.filter((image) => image.kind === "story");
+  const displayStoryHtml = richStoryHtml
+    ? mergeLegacyStoryPhotosIntoHtml(richStoryHtml, storyPhotos)
+    : null;
+
   // Legacy plain-text story with paragraph-indexed photos (pre–rich editor).
-  const storyParagraphs = richStoryHtml
+  const storyParagraphs = displayStoryHtml
     ? []
     : getStoryParagraphs(edition.story);
-  const inlineStoryPhotos = richStoryHtml
+  const inlineStoryPhotos = displayStoryHtml
     ? new Map<number, never[]>()
     : groupInlineStoryPhotos(adminImages);
 
@@ -214,8 +219,8 @@ export default async function EditionPage({
                 The story
               </p>
 
-              {richStoryHtml ? (
-                <EditionStoryBody storyHtml={richStoryHtml} />
+              {displayStoryHtml ? (
+                <EditionStoryBody storyHtml={displayStoryHtml} />
               ) : (
                 <>
                   {inlineStoryPhotos.get(-1)?.map((photo) => (

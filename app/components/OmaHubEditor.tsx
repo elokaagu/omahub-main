@@ -33,63 +33,70 @@ const Toolbar = ({
       <button
         type="button"
         onClick={() => editor.chain().focus().toggleBold().run()}
-        className={editor.isActive("bold") ? "is-active" : ""}
+        className={editor.isActive("bold") ? "active" : ""}
       >
         bold
       </button>
       <button
         type="button"
         onClick={() => editor.chain().focus().toggleItalic().run()}
-        className={editor.isActive("italic") ? "is-active" : ""}
+        className={editor.isActive("italic") ? "active" : ""}
       >
         italic
       </button>
       <button
         type="button"
         onClick={() => editor.chain().focus().toggleStrike().run()}
-        className={editor.isActive("strike") ? "is-active" : ""}
+        className={editor.isActive("strike") ? "active" : ""}
       >
         strike
       </button>
       <button
         type="button"
         onClick={() => editor.chain().focus().setParagraph().run()}
-        className={editor.isActive("paragraph") ? "is-active" : ""}
+        className={editor.isActive("paragraph") ? "active" : ""}
       >
         paragraph
       </button>
       <button
         type="button"
         onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-        className={editor.isActive("heading", { level: 2 }) ? "is-active" : ""}
+        className={editor.isActive("heading", { level: 2 }) ? "active" : ""}
       >
         h2
       </button>
       <button
         type="button"
         onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-        className={editor.isActive("heading", { level: 3 }) ? "is-active" : ""}
+        className={editor.isActive("heading", { level: 3 }) ? "active" : ""}
       >
         h3
       </button>
       <button
         type="button"
+        onClick={() => editor.chain().focus().toggleHeading({ level: 4 }).run()}
+        className={editor.isActive("heading", { level: 4 }) ? "active" : ""}
+      >
+        h4
+      </button>
+      <button
+        type="button"
         onClick={() => editor.chain().focus().toggleBulletList().run()}
-        className={editor.isActive("bulletList") ? "is-active" : ""}
+        className={editor.isActive("bulletList") ? "active" : ""}
       >
         bullet list
       </button>
       <button
         type="button"
         onClick={() => editor.chain().focus().toggleOrderedList().run()}
-        className={editor.isActive("orderedList") ? "is-active" : ""}
+        className={editor.isActive("orderedList") ? "active" : ""}
       >
         ordered list
       </button>
       <button
         type="button"
         onClick={() => editor.chain().focus().toggleBlockquote().run()}
-        className={editor.isActive("blockquote") ? "is-active" : ""}
+        className={editor.isActive("blockquote") ? "active" : ""}
       >
         quote
       </button>
@@ -118,7 +125,7 @@ const Toolbar = ({
             className="inline-flex items-center gap-1"
           >
             <ImageIcon className="h-4 w-4" />
-            {isUploadingImage ? "uploading…" : "image"}
+            {isUploadingImage ? "uploading…" : "add photo"}
           </button>
         </>
       )}
