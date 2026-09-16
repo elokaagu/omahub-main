@@ -242,7 +242,7 @@ export default async function EditionPage({
 
                   {storyParagraphs.map((paragraph, index) => (
                     <div key={index}>
-                      <p className="mt-5 font-canela text-xl leading-relaxed text-oma-black sm:mt-6 sm:text-2xl lg:text-3xl">
+                      <p className="mt-5 font-suisse text-base leading-relaxed text-oma-black sm:mt-6 sm:text-lg lg:text-xl">
                         {paragraph}
                       </p>
                       {inlineStoryPhotos.get(index)?.map((photo) => (

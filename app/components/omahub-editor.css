@@ -3,7 +3,7 @@
   border-radius: 16px;
   border: 1px solid #e5d6c6;
   padding: 2rem;
-  font-family: "Suisse Intl", "Canela", serif;
+  font-family: "Suisse Intl", system-ui, sans-serif;
   color: #2d1a10;
   max-width: 800px;
   margin: 0 auto;

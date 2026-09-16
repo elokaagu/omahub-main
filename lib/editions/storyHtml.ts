@@ -25,11 +25,11 @@ export function hasRichStoryHtml(html: string | null | undefined): boolean {
 /** Shared prose styling for rendered edition stories on the public site. */
 export function createEditionStoryProseClassName(): string {
   return [
-    "edition-story-prose mt-5 font-canela text-base leading-relaxed text-oma-black sm:mt-6 sm:text-lg lg:text-xl",
+    "edition-story-prose mt-5 font-suisse text-base leading-relaxed text-oma-black sm:mt-6 sm:text-lg lg:text-xl",
     "[&_p]:mb-6 [&_p:last-child]:mb-0",
-    "[&_h2]:mb-4 [&_h2]:mt-10 [&_h2]:text-2xl [&_h2]:font-normal sm:[&_h2]:text-3xl",
-    "[&_h3]:mb-3 [&_h3]:mt-8 [&_h3]:text-xl [&_h3]:font-normal sm:[&_h3]:text-2xl",
-    "[&_h4]:mb-2 [&_h4]:mt-6 [&_h4]:text-lg [&_h4]:font-normal sm:[&_h4]:text-xl",
+    "[&_h2]:mb-4 [&_h2]:mt-10 [&_h2]:font-canela [&_h2]:text-2xl [&_h2]:font-normal sm:[&_h2]:text-3xl",
+    "[&_h3]:mb-3 [&_h3]:mt-8 [&_h3]:font-canela [&_h3]:text-xl [&_h3]:font-normal sm:[&_h3]:text-2xl",
+    "[&_h4]:mb-2 [&_h4]:mt-6 [&_h4]:font-canela [&_h4]:text-lg [&_h4]:font-normal sm:[&_h4]:text-xl",
     "[&_img]:my-8 [&_img]:w-full [&_img]:rounded-2xl",
     "[&_ul]:my-6 [&_ul]:list-disc [&_ul]:pl-6",
     "[&_ol]:my-6 [&_ol]:list-decimal [&_ol]:pl-6",
