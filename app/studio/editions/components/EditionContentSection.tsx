@@ -310,11 +310,6 @@ export function EditionContentSection({
           isUploadingImage={isUploadingImage}
           className="max-w-none"
         />
-        <p className="mt-2 text-xs text-oma-cocoa/70">
-          Heading 2/3 for section titles. Image inserts after the current
-          block. Between sections inserts before the next heading. You can
-          also paste or drag a photo in.
-        </p>
       </div>
     </div>
   );

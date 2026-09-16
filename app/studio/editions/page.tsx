@@ -5,7 +5,6 @@ import { getAllEditions } from "@/lib/data/editions";
 import { getAllEditionImages, type EditionImage } from "@/lib/services/editionImagesService";
 import { getAllEditionLineupBrands } from "@/lib/services/editionLineupService";
 import { getAllEditionContent, type EditionContentRecord } from "@/lib/services/editionContentService";
-import { hasRichStoryHtml } from "@/lib/editions/storyHtml";
 import { AuthImage } from "@/components/ui/auth-image";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -28,9 +27,6 @@ function EditionsStudioContent() {
     null
   );
   const [lineupCountBySlug, setLineupCountBySlug] = useState<Record<string, number> | null>(
-    null,
-  );
-  const [savedContentSlugs, setSavedContentSlugs] = useState<Set<string> | null>(
     null,
   );
   const [contentBySlug, setContentBySlug] = useState<
@@ -56,13 +52,6 @@ function EditionsStudioContent() {
       }
       setImagesBySlug(grouped);
       setLineupCountBySlug(lineupCounts);
-      setSavedContentSlugs(
-        new Set(
-          contentRows
-            .filter((row) => hasRichStoryHtml(row.story_html))
-            .map((row) => row.edition_slug),
-        ),
-      );
       setContentBySlug(
         Object.fromEntries(contentRows.map((row) => [row.edition_slug, row])),
       );
@@ -72,7 +61,7 @@ function EditionsStudioContent() {
     };
   }, []);
 
-  if (!imagesBySlug || !lineupCountBySlug || !savedContentSlugs || !contentBySlug) {
+  if (!imagesBySlug || !lineupCountBySlug || !contentBySlug) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <Loading />
@@ -99,7 +88,6 @@ function EditionsStudioContent() {
           const lineupCount = lineupCountBySlug[edition.slug] || 0;
           const partnerCount = images.filter((i) => i.kind === "partner").length;
           const previewImage = dynamicCover || edition.coverImage;
-          const hasSavedStory = savedContentSlugs.has(edition.slug);
           const saved = contentBySlug[edition.slug];
           const displayTitle = saved?.title?.trim() || edition.title;
           const displayNumber =
@@ -134,9 +122,6 @@ function EditionsStudioContent() {
                         <Badge variant={edition.status === "past" ? "secondary" : "default"}>
                           {edition.status === "past" ? "Past" : "Upcoming"}
                         </Badge>
-                        {hasSavedStory && (
-                          <Badge variant="outline">Story in Supabase</Badge>
-                        )}
                         {dynamicCover && <Badge variant="outline">Custom cover</Badge>}
                       </div>
                       <p className="text-sm text-oma-cocoa">

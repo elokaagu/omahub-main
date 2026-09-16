@@ -1,3 +1,4 @@
+import { AnimateOnScroll } from "@/components/ui/animate-on-scroll";
 import { EditionInlinePhoto } from "./EditionInlinePhoto";
 import { parseStoryHtml, type StoryBlock } from "@/lib/editions/storyBlocks";
 import { cn } from "@/lib/utils";
@@ -92,11 +93,13 @@ export function EditionStoryBody({ storyHtml }: EditionStoryBodyProps) {
   return (
     <div className="edition-story">
       {blocks.map((block, index) => (
-        <StoryBlockView
+        <AnimateOnScroll
           key={`${block.type}-${index}`}
-          block={block}
-          isDek={index === dekIndex}
-        />
+          animation="fadeIn"
+          duration={0.8}
+        >
+          <StoryBlockView block={block} isDek={index === dekIndex} />
+        </AnimateOnScroll>
       ))}
     </div>
   );

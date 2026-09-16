@@ -28,6 +28,7 @@ import { EditionInlinePhoto } from "./EditionInlinePhoto";
 import { EditionStoryBody } from "./EditionStoryBody";
 import { EditionPartnersSection } from "./EditionPartnersSection";
 import { hasEditionVideo } from "@/lib/editions/editionVideoUrl";
+import { AnimateOnScroll } from "@/components/ui/animate-on-scroll";
 import { cn } from "@/lib/utils";
 
 export const revalidate = 120;
@@ -192,8 +193,10 @@ export default async function EditionPage({
       <section className="border-b border-oma-cocoa/15 bg-oma-beige">
         <div className="mx-auto grid max-w-7xl grid-cols-1 divide-y divide-oma-cocoa/15 sm:grid-cols-2 sm:divide-x sm:divide-y-0 md:grid-cols-5">
           {snapshot.map((item) => (
-            <div
+            <AnimateOnScroll
               key={item.label}
+              animation="fadeIn"
+              duration={0.7}
               className="px-4 py-6 sm:px-5 sm:py-8 md:px-4 md:first:pl-0 lg:px-8"
             >
               <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-oma-cocoa sm:text-[11px] sm:tracking-[0.25em]">
@@ -202,14 +205,14 @@ export default async function EditionPage({
               <p className="mt-1.5 font-canela text-lg text-oma-black sm:mt-2 sm:text-xl">
                 {item.value}
               </p>
-            </div>
+            </AnimateOnScroll>
           ))}
         </div>
       </section>
 
       {/* The story, with optional recap video in the sidebar */}
       <section className="bg-oma-cream py-12 sm:py-16 lg:py-20">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl px-6 sm:px-12 lg:px-20 xl:pl-28 xl:pr-16">
           <div
             className={cn(
               "grid gap-8 sm:gap-10 lg:gap-16",
@@ -223,25 +226,36 @@ export default async function EditionPage({
                 hasStoryVideo && videoOnLeft && "lg:order-2",
               )}
             >
-              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oma-cocoa">
-                The story
-              </p>
-              <div className="mt-3 h-px w-12 bg-oma-gold/80" />
+              <AnimateOnScroll animation="fadeIn" duration={0.7}>
+                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oma-cocoa">
+                  The story
+                </p>
+                <div className="mt-3 h-px w-12 bg-oma-gold/80" />
+              </AnimateOnScroll>
 
               {displayStoryHtml ? (
                 <EditionStoryBody storyHtml={displayStoryHtml} />
               ) : (
                 <>
                   {inlineStoryPhotos.get(-1)?.map((photo) => (
-                    <EditionInlinePhoto
+                    <AnimateOnScroll
                       key={photo.id}
-                      src={photo.image_url}
-                      alt={photo.alt_text || edition.title}
-                    />
+                      animation="fadeIn"
+                      duration={0.8}
+                    >
+                      <EditionInlinePhoto
+                        src={photo.image_url}
+                        alt={photo.alt_text || edition.title}
+                      />
+                    </AnimateOnScroll>
                   ))}
 
                   {storyParagraphs.map((paragraph, index) => (
-                    <div key={index}>
+                    <AnimateOnScroll
+                      key={index}
+                      animation="fadeIn"
+                      duration={0.8}
+                    >
                       <p className="mt-5 font-suisse text-base leading-relaxed text-oma-black sm:mt-6 sm:text-lg lg:text-xl">
                         {paragraph}
                       </p>
@@ -252,7 +266,7 @@ export default async function EditionPage({
                           alt={photo.alt_text || edition.title}
                         />
                       ))}
-                    </div>
+                    </AnimateOnScroll>
                   ))}
                 </>
               )}
@@ -283,12 +297,14 @@ export default async function EditionPage({
       {edition.gallery && edition.gallery.length > 0 && (
         <section className="bg-oma-beige py-12 sm:py-16 lg:py-20">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oma-cocoa">
-              In pictures
-            </p>
-            <h2 className="mt-3 font-canela text-3xl text-oma-black sm:text-4xl">
-              Moments from the edition
-            </h2>
+            <AnimateOnScroll animation="fadeIn" duration={0.75}>
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oma-cocoa">
+                In pictures
+              </p>
+              <h2 className="mt-3 font-canela text-3xl text-oma-black sm:text-4xl">
+                Moments from the edition
+              </h2>
+            </AnimateOnScroll>
             <div className="mt-10 grid grid-cols-2 gap-3 sm:mt-10 sm:gap-6 lg:grid-cols-4">
               {edition.gallery.map((photo, i) => (
                 <div
@@ -358,13 +374,15 @@ export default async function EditionPage({
       {/* Next-edition CTA */}
       <section className="bg-oma-plum py-12 text-white sm:py-20">
         <div className="mx-auto max-w-3xl px-4 text-center sm:px-6">
-          <h2 className="font-canela text-2xl sm:text-4xl">
-            Don&apos;t miss the next edition
-          </h2>
-          <p className="mt-3 text-sm leading-relaxed text-white/70 sm:mt-4">
-            Early access to drops, event previews, and exclusive edition
-            content, before it goes public.
-          </p>
+          <AnimateOnScroll animation="fadeIn" duration={0.75}>
+            <h2 className="font-canela text-2xl sm:text-4xl">
+              Don&apos;t miss the next edition
+            </h2>
+            <p className="mt-3 text-sm leading-relaxed text-white/70 sm:mt-4">
+              Early access to drops, event previews, and exclusive edition
+              content, before it goes public.
+            </p>
+          </AnimateOnScroll>
           <div className="mt-6 flex justify-center sm:mt-8">
             <EmailCaptureForm
               source="website"
