@@ -300,8 +300,10 @@ export function EditionContentSection({
           className="max-w-none"
         />
         <p className="mt-2 text-xs text-oma-cocoa/70">
-          Paragraph = normal body text. H2/H3/H4 = smaller-to-larger headings.
-          Place the cursor where you want a photo, then click add photo.
+          Use H2/H3 for section titles so they render as editorial headings.
+          Add photo places an image after the current paragraph. Photo between
+          sections drops it before the next heading. You can also paste or drag
+          a photo onto the editor.
         </p>
       </div>
     </div>

@@ -36,13 +36,21 @@ export function generateStaticParams() {
   return editions.map((edition) => ({ slug: edition.slug }));
 }
 
-export function generateMetadata({
+export async function generateMetadata({
   params,
 }: {
   params: { slug: string };
-}): Metadata {
-  const edition = getEditionBySlug(params.slug);
-  if (!edition) return { title: "Edition not found | OmaHub" };
+}): Promise<Metadata> {
+  const staticEdition = getEditionBySlug(params.slug);
+  if (!staticEdition) return { title: "Edition not found | OmaHub" };
+
+  let edition = staticEdition;
+  try {
+    const editionContent = await getEditionContent(params.slug);
+    edition = mergeEditionWithContent(staticEdition, editionContent);
+  } catch (e) {
+    console.error("edition_metadata_content_error", e);
+  }
 
   const geoLabel = [edition.city, edition.country].filter(Boolean).join(", ");
 
@@ -218,6 +226,7 @@ export default async function EditionPage({
               <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oma-cocoa">
                 The story
               </p>
+              <div className="mt-3 h-px w-12 bg-oma-gold/80" />
 
               {displayStoryHtml ? (
                 <EditionStoryBody storyHtml={displayStoryHtml} />

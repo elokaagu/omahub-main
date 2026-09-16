@@ -3,11 +3,22 @@ import { LazyImage } from "@/components/ui/lazy-image";
 type EditionInlinePhotoProps = {
   src: string;
   alt: string;
+  compact?: boolean;
 };
 
-export function EditionInlinePhoto({ src, alt }: EditionInlinePhotoProps) {
+export function EditionInlinePhoto({
+  src,
+  alt,
+  compact = false,
+}: EditionInlinePhotoProps) {
   return (
-    <figure className="my-8 overflow-hidden rounded-2xl sm:my-10">
+    <figure
+      className={
+        compact
+          ? "overflow-hidden rounded-2xl"
+          : "my-8 overflow-hidden rounded-2xl sm:my-10"
+      }
+    >
       <LazyImage
         src={src}
         alt={alt}

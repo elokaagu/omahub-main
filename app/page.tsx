@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import {
-  getLatestPastEdition,
-  getPastEditions,
-  getUpcomingEdition,
-} from "@/lib/data/editions";
 import { generateSEOMetadata, SITE_DESCRIPTION } from "@/lib/seo";
-import { getAllEditionImages } from "@/lib/services/editionImagesService";
+import { getAllEditions } from "@/lib/data/editions";
 import { getEditorialHomeBrands } from "@/lib/home/getEditorialHomeData";
+import {
+  getHydratedEditions,
+  pickPastEditions,
+  pickUpcomingEdition,
+} from "@/lib/editions/hydrateEditions";
 import { EditorialHero } from "./home/editorial/EditorialHero";
 import { ArchiveSection } from "./home/editorial/ArchiveSection";
 import { FilmSection } from "./home/editorial/FilmSection";
@@ -39,31 +39,23 @@ export const metadata: Metadata = generateSEOMetadata({
 });
 
 export default async function Home() {
-  const upcomingEdition = getUpcomingEdition();
-  const latestPastEdition = getLatestPastEdition();
+  let editions: Awaited<ReturnType<typeof getHydratedEditions>> = [];
+  try {
+    editions = await getHydratedEditions();
+  } catch (e) {
+    console.error("home_archive_editions_error", e);
+    editions = getAllEditions();
+  }
+
+  const upcomingEdition = pickUpcomingEdition(editions);
+  const latestPastEdition = pickPastEditions(editions, 1)[0] ?? null;
 
   // Homepage archive shows the two latest past editions plus the upcoming
   // placeholder, three cards max, older editions live at /editions.
-  const pastEditions = getPastEditions(upcomingEdition ? 2 : 3);
-  const staticArchiveEditions = upcomingEdition
+  const pastEditions = pickPastEditions(editions, upcomingEdition ? 2 : 3);
+  const archiveEditions = upcomingEdition
     ? [...pastEditions, upcomingEdition]
     : pastEditions;
-
-  let adminImages: Awaited<ReturnType<typeof getAllEditionImages>> = [];
-  try {
-    adminImages = await getAllEditionImages();
-  } catch (e) {
-    console.error("home_archive_admin_images_error", e);
-  }
-  const coverBySlug = new Map(
-    adminImages
-      .filter((i) => i.kind === "cover")
-      .map((i) => [i.edition_slug, i.image_url])
-  );
-  const archiveEditions = staticArchiveEditions.map((edition) => ({
-    ...edition,
-    coverImage: coverBySlug.get(edition.slug) || edition.coverImage,
-  }));
 
   let workedWithBrands: Awaited<ReturnType<typeof getEditorialHomeBrands>> = [];
   try {

@@ -6,6 +6,7 @@ import {
   type EditionContentInput,
 } from "@/lib/services/editionContentService";
 import { getEditionBySlug } from "@/lib/data/editions";
+import { revalidateEditionPublicCaches } from "@/lib/editions/revalidateEditionCaches";
 
 export const dynamic = "force-dynamic";
 
@@ -55,6 +56,7 @@ export async function PUT(
       body,
       authz.supabase,
     );
+    revalidateEditionPublicCaches(params.slug);
     return NextResponse.json({ success: true, content: saved });
   } catch (error) {
     console.error("edition_content_save_error", error);

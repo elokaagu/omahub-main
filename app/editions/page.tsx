@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { generateSEOMetadata } from "@/lib/seo";
-import { getAllEditions, getLatestPastEdition } from "@/lib/data/editions";
-import { getAllEditionImages } from "@/lib/services/editionImagesService";
+import { getAllEditions } from "@/lib/data/editions";
+import {
+  getHydratedEditions,
+  pickPastEditions,
+} from "@/lib/editions/hydrateEditions";
 import { EditionsArchiveContent } from "./EditionsArchiveContent";
 
 export const metadata: Metadata = generateSEOMetadata({
@@ -26,28 +29,16 @@ export const metadata: Metadata = generateSEOMetadata({
 export const revalidate = 120;
 
 export default async function EditionsArchivePage() {
-  const staticEditions = getAllEditions();
-
-  let adminImages: Awaited<ReturnType<typeof getAllEditionImages>> = [];
+  let editions: Awaited<ReturnType<typeof getHydratedEditions>> = [];
   try {
-    adminImages = await getAllEditionImages();
+    editions = await getHydratedEditions();
   } catch (e) {
-    console.error("editions_archive_admin_images_error", e);
+    console.error("editions_archive_editions_error", e);
+    editions = getAllEditions();
   }
-  const coverBySlug = new Map(
-    adminImages
-      .filter((i) => i.kind === "cover")
-      .map((i) => [i.edition_slug, i.image_url])
-  );
-  const editions = staticEditions.map((edition) => ({
-    ...edition,
-    coverImage: coverBySlug.get(edition.slug) || edition.coverImage,
-  }));
 
-  const latestPastEdition = getLatestPastEdition();
-  const heroImage = latestPastEdition
-    ? coverBySlug.get(latestPastEdition.slug) || latestPastEdition.coverImage
-    : undefined;
+  const latestPastEdition = pickPastEditions(editions, 1)[0] ?? null;
+  const heroImage = latestPastEdition?.coverImage;
 
   return (
     <EditionsArchiveContent editions={editions} heroImage={heroImage} />
