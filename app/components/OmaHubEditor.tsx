@@ -5,7 +5,24 @@ import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import "./omahub-editor.css";
 import React, { useRef } from "react";
-import { Image as ImageIcon } from "lucide-react";
+import {
+  Bold,
+  Italic,
+  Strikethrough,
+  Type,
+  Heading2,
+  Heading3,
+  Heading4,
+  List,
+  ListOrdered,
+  Quote,
+  Minus,
+  Undo2,
+  Redo2,
+  Image as ImageIcon,
+  ImagePlus,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 
 type ImagePlacement = "after-block" | "after-section" | "at-cursor";
 
@@ -46,6 +63,41 @@ function insertImageAt(
   editor.chain().focus().insertContentAt(insertPos, imageNode).run();
 }
 
+function ToolbarButton({
+  label,
+  active,
+  disabled,
+  onClick,
+  children,
+}: {
+  label: string;
+  active?: boolean;
+  disabled?: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      title={label}
+      aria-label={label}
+      aria-pressed={active}
+      disabled={disabled}
+      onClick={onClick}
+      className={cn(
+        "inline-flex h-8 items-center justify-center gap-1.5 rounded px-2 text-sm text-neutral-700 hover:bg-neutral-100 disabled:opacity-40",
+        active && "bg-neutral-200 text-neutral-900",
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
+function ToolbarDivider() {
+  return <span className="mx-1 hidden h-5 w-px bg-neutral-200 sm:block" />;
+}
+
 const Toolbar = ({
   editor,
   onUploadImage,
@@ -75,90 +127,107 @@ const Toolbar = ({
 
   return (
     <div className="omahub-toolbar">
-      <button
-        type="button"
+      <ToolbarButton
+        label="Bold"
+        active={editor.isActive("bold")}
         onClick={() => editor.chain().focus().toggleBold().run()}
-        className={editor.isActive("bold") ? "active" : ""}
       >
-        bold
-      </button>
-      <button
-        type="button"
+        <Bold className="h-4 w-4" />
+      </ToolbarButton>
+      <ToolbarButton
+        label="Italic"
+        active={editor.isActive("italic")}
         onClick={() => editor.chain().focus().toggleItalic().run()}
-        className={editor.isActive("italic") ? "active" : ""}
       >
-        italic
-      </button>
-      <button
-        type="button"
+        <Italic className="h-4 w-4" />
+      </ToolbarButton>
+      <ToolbarButton
+        label="Strikethrough"
+        active={editor.isActive("strike")}
         onClick={() => editor.chain().focus().toggleStrike().run()}
-        className={editor.isActive("strike") ? "active" : ""}
       >
-        strike
-      </button>
-      <button
-        type="button"
+        <Strikethrough className="h-4 w-4" />
+      </ToolbarButton>
+
+      <ToolbarDivider />
+
+      <ToolbarButton
+        label="Paragraph"
+        active={editor.isActive("paragraph")}
         onClick={() => editor.chain().focus().setParagraph().run()}
-        className={editor.isActive("paragraph") ? "active" : ""}
       >
-        paragraph
-      </button>
-      <button
-        type="button"
+        <Type className="h-4 w-4" />
+      </ToolbarButton>
+      <ToolbarButton
+        label="Heading 2"
+        active={editor.isActive("heading", { level: 2 })}
         onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-        className={editor.isActive("heading", { level: 2 }) ? "active" : ""}
       >
-        h2
-      </button>
-      <button
-        type="button"
+        <Heading2 className="h-4 w-4" />
+      </ToolbarButton>
+      <ToolbarButton
+        label="Heading 3"
+        active={editor.isActive("heading", { level: 3 })}
         onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-        className={editor.isActive("heading", { level: 3 }) ? "active" : ""}
       >
-        h3
-      </button>
-      <button
-        type="button"
+        <Heading3 className="h-4 w-4" />
+      </ToolbarButton>
+      <ToolbarButton
+        label="Heading 4"
+        active={editor.isActive("heading", { level: 4 })}
         onClick={() => editor.chain().focus().toggleHeading({ level: 4 }).run()}
-        className={editor.isActive("heading", { level: 4 }) ? "active" : ""}
       >
-        h4
-      </button>
-      <button
-        type="button"
+        <Heading4 className="h-4 w-4" />
+      </ToolbarButton>
+
+      <ToolbarDivider />
+
+      <ToolbarButton
+        label="Bullet list"
+        active={editor.isActive("bulletList")}
         onClick={() => editor.chain().focus().toggleBulletList().run()}
-        className={editor.isActive("bulletList") ? "active" : ""}
       >
-        bullet list
-      </button>
-      <button
-        type="button"
+        <List className="h-4 w-4" />
+      </ToolbarButton>
+      <ToolbarButton
+        label="Numbered list"
+        active={editor.isActive("orderedList")}
         onClick={() => editor.chain().focus().toggleOrderedList().run()}
-        className={editor.isActive("orderedList") ? "active" : ""}
       >
-        ordered list
-      </button>
-      <button
-        type="button"
+        <ListOrdered className="h-4 w-4" />
+      </ToolbarButton>
+      <ToolbarButton
+        label="Quote"
+        active={editor.isActive("blockquote")}
         onClick={() => editor.chain().focus().toggleBlockquote().run()}
-        className={editor.isActive("blockquote") ? "active" : ""}
       >
-        quote
-      </button>
-      <button
-        type="button"
+        <Quote className="h-4 w-4" />
+      </ToolbarButton>
+      <ToolbarButton
+        label="Divider"
         onClick={() => editor.chain().focus().setHorizontalRule().run()}
       >
-        divider
-      </button>
-      <button type="button" onClick={() => editor.chain().focus().undo().run()}>
-        undo
-      </button>
-      <button type="button" onClick={() => editor.chain().focus().redo().run()}>
-        redo
-      </button>
+        <Minus className="h-4 w-4" />
+      </ToolbarButton>
+
+      <ToolbarDivider />
+
+      <ToolbarButton
+        label="Undo"
+        onClick={() => editor.chain().focus().undo().run()}
+      >
+        <Undo2 className="h-4 w-4" />
+      </ToolbarButton>
+      <ToolbarButton
+        label="Redo"
+        onClick={() => editor.chain().focus().redo().run()}
+      >
+        <Redo2 className="h-4 w-4" />
+      </ToolbarButton>
+
       {onUploadImage && (
         <>
+          <ToolbarDivider />
           <input
             ref={fileInputRef}
             type="file"
@@ -169,26 +238,24 @@ const Toolbar = ({
               e.target.value = "";
             }}
           />
-          <button
-            type="button"
+          <ToolbarButton
+            label="Insert image after this block"
             disabled={isUploadingImage}
             onClick={() => pickImage("after-block")}
-            className="inline-flex items-center gap-1"
-            title="Insert a photo after this paragraph or heading"
           >
             <ImageIcon className="h-4 w-4" />
-            {isUploadingImage ? "uploading…" : "add photo"}
-          </button>
-          <button
-            type="button"
+            <span className="hidden sm:inline">
+              {isUploadingImage ? "Uploading…" : "Image"}
+            </span>
+          </ToolbarButton>
+          <ToolbarButton
+            label="Insert image before the next heading"
             disabled={isUploadingImage}
             onClick={() => pickImage("after-section")}
-            className="inline-flex items-center gap-1"
-            title="Insert a photo before the next heading"
           >
-            <ImageIcon className="h-4 w-4" />
-            photo between sections
-          </button>
+            <ImagePlus className="h-4 w-4" />
+            <span className="hidden sm:inline">Between sections</span>
+          </ToolbarButton>
         </>
       )}
     </div>
@@ -286,7 +353,7 @@ export default function OmaHubEditor({
   }, [content, editor]);
 
   return (
-    <div className={`omahub-editor-container ${className ?? ""}`.trim()}>
+    <div className={cn("omahub-editor-container", className)}>
       <Toolbar
         editor={editor}
         onUploadImage={onUploadImage}

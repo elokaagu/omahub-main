@@ -311,10 +311,9 @@ export function EditionContentSection({
           className="max-w-none"
         />
         <p className="mt-2 text-xs text-oma-cocoa/70">
-          Use H2/H3 for section titles so they render as editorial headings.
-          Add photo places an image after the current paragraph. Photo between
-          sections drops it before the next heading. You can also paste or drag
-          a photo onto the editor.
+          Heading 2/3 for section titles. Image inserts after the current
+          block. Between sections inserts before the next heading. You can
+          also paste or drag a photo in.
         </p>
       </div>
     </div>
