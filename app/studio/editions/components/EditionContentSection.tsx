@@ -39,6 +39,7 @@ type EditionSavePayload = Pick<
   | "venue"
   | "partner"
   | "lineup_label"
+  | "edition_number"
   | "applications_open"
   | "theme_announced"
 >;
@@ -57,6 +58,7 @@ function toSavePayload(draft: EditionEditorDraft): EditionSavePayload {
     venue: draft.venue,
     partner: draft.partner,
     lineup_label: draft.lineup_label,
+    edition_number: draft.edition_number,
     applications_open: draft.applications_open,
     theme_announced: draft.theme_announced,
   };
@@ -194,6 +196,15 @@ export function EditionContentSection({
           />
         </div>
         <div className="space-y-2">
+          <Label htmlFor="edition-number">Edition number</Label>
+          <Input
+            id="edition-number"
+            value={draft.edition_number ?? ""}
+            onChange={(e) => updateField("edition_number", e.target.value)}
+            placeholder="01"
+          />
+        </div>
+        <div className="space-y-2">
           <Label>Status</Label>
           <Select
             value={draft.status ?? staticEdition.status}
@@ -327,6 +338,7 @@ export function buildInitialEditionDraft(
     venue: staticEdition.venue ?? null,
     partner: staticEdition.partner ?? null,
     lineup_label: staticEdition.lineupLabel ?? null,
+    edition_number: staticEdition.number,
     applications_open: staticEdition.applicationsOpen ?? false,
     theme_announced: staticEdition.themeAnnounced ?? false,
   };

@@ -454,10 +454,11 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
           </Button>
           <div>
             <h1 className="text-3xl font-canela text-oma-black mb-1">
-              {edition.title}
+              {contentDraft.title || edition.title}
             </h1>
             <p className="text-oma-cocoa">
-              Edition {edition.number} · unified post editor
+              Edition {contentDraft.edition_number || edition.number} · unified
+              post editor
             </p>
           </div>
         </div>
@@ -824,11 +825,9 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
         <p className="text-sm text-oma-cocoa mb-4">
           Brands that showed at this edition — rendered as the scrolling
           &quot;The lineup&quot; row on the edition page, using the same cards
-          as the homepage brand rows. The lineup label on the archive card
-          {edition.lineupLabel
-            ? ` (${edition.lineupLabel})`
-            : ""}{" "}
-          still comes from code.
+          as the homepage brand rows. The archive card label comes from
+          Lineup label in Edition post above, or from this brand count if
+          that field is empty.
         </p>
 
         {lineupBrands.length > 0 && (

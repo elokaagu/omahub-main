@@ -16,6 +16,7 @@ export type EditionContentRecord = {
   venue: string | null;
   partner: string | null;
   lineup_label: string | null;
+  edition_number: string | null;
   applications_open: boolean | null;
   theme_announced: boolean | null;
   updated_by: string | null;
@@ -36,6 +37,7 @@ export type EditionContentInput = {
   venue?: string | null;
   partner?: string | null;
   lineup_label?: string | null;
+  edition_number?: string | null;
   applications_open?: boolean;
   theme_announced?: boolean;
 };
@@ -117,6 +119,21 @@ export async function upsertEditionContent(
     .select()
     .single();
 
+  if (
+    error &&
+    /edition_number/i.test(error.message) &&
+    "edition_number" in payload
+  ) {
+    const { edition_number: _ignored, ...withoutNumber } = payload;
+    const retry = await db
+      .from("edition_content")
+      .upsert(withoutNumber, { onConflict: "edition_slug" })
+      .select()
+      .single();
+    if (retry.error) throw new Error(`Database error: ${retry.error.message}`);
+    return retry.data;
+  }
+
   if (error) throw new Error(`Database error: ${error.message}`);
   return data;
 }
@@ -145,6 +162,7 @@ export function mergeEditionWithContent(
     venue: content.venue ?? staticEdition.venue,
     partner: content.partner ?? staticEdition.partner,
     lineupLabel: content.lineup_label ?? staticEdition.lineupLabel,
+    number: content.edition_number?.trim() || staticEdition.number,
     applicationsOpen:
       content.applications_open ?? staticEdition.applicationsOpen,
     themeAnnounced: content.theme_announced ?? staticEdition.themeAnnounced,
@@ -170,6 +188,7 @@ export function buildEditionEditorDraft(
     venue: content?.venue ?? staticEdition.venue ?? null,
     partner: content?.partner ?? staticEdition.partner ?? null,
     lineup_label: content?.lineup_label ?? staticEdition.lineupLabel ?? null,
+    edition_number: content?.edition_number ?? staticEdition.number,
     applications_open:
       content?.applications_open ?? staticEdition.applicationsOpen ?? false,
     theme_announced:
