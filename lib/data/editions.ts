@@ -82,68 +82,6 @@ export const editions: Edition[] = [
       "Our first full pop-up, in Lagos. Eight brands from across the diaspora came together for a day of discovery: every piece curated, every designer verified in person. Summer Experience set the template for how OmaHub editions run: theme first, campaign second, community always.",
     coverImage:
       "https://gswduyodzdgucjscjtvz.supabase.co/storage/v1/object/public/hero-images/2a14c31f_1755989245289.jpg",
-    gallery: [
-      {
-        src: "/images/editions/summer-gallery/summer-19.jpg",
-        alt: "The OmaHub team and guests together at the pop-up",
-        downloadSrc:
-          "https://gswduyodzdgucjscjtvz.supabase.co/storage/v1/object/public/edition-galleries/summer-experience/summer-19-original.jpg?download=summer-19.jpg",
-      },
-      {
-        src: "/images/editions/summer-gallery/summer-04.jpg",
-        alt: "A guest in a red taffeta gown backstage at the pop-up",
-        downloadSrc:
-          "https://gswduyodzdgucjscjtvz.supabase.co/storage/v1/object/public/edition-galleries/summer-experience/summer-04-original.jpg?download=summer-04.jpg",
-      },
-      {
-        src: "/images/editions/summer-gallery/summer-22.jpg",
-        alt: "A guest mid-story, gesturing beside a tablet",
-        downloadSrc:
-          "https://gswduyodzdgucjscjtvz.supabase.co/storage/v1/object/public/edition-galleries/summer-experience/summer-22-original.jpg?download=summer-22.jpg",
-      },
-      {
-        src: "/images/editions/summer-gallery/summer-20.jpg",
-        alt: "Two guests in conversation at the pop-up",
-        downloadSrc:
-          "https://gswduyodzdgucjscjtvz.supabase.co/storage/v1/object/public/edition-galleries/summer-experience/summer-20-original.jpg?download=summer-20.jpg",
-      },
-      {
-        src: "/images/editions/summer-gallery/summer-11.jpg",
-        alt: "A guest speaking mid-conversation in a red off-shoulder gown",
-        downloadSrc:
-          "https://gswduyodzdgucjscjtvz.supabase.co/storage/v1/object/public/edition-galleries/summer-experience/summer-11-original.jpg?download=summer-11.jpg",
-      },
-      {
-        src: "/images/editions/summer-gallery/summer-37.jpg",
-        alt: "Two guests catching up beside the styling rail",
-        downloadSrc:
-          "https://gswduyodzdgucjscjtvz.supabase.co/storage/v1/object/public/edition-galleries/summer-experience/summer-37-original.jpg?download=summer-37.jpg",
-      },
-      {
-        src: "/images/editions/summer-gallery/summer-06.jpg",
-        alt: "Wide view of the pop-up as the OmaHub team films",
-        downloadSrc:
-          "https://gswduyodzdgucjscjtvz.supabase.co/storage/v1/object/public/edition-galleries/summer-experience/summer-06-original.jpg?download=summer-06.jpg",
-      },
-      {
-        src: "/images/editions/summer-gallery/summer-33.jpg",
-        alt: "A candid moment between guests and the OmaHub team",
-        downloadSrc:
-          "https://gswduyodzdgucjscjtvz.supabase.co/storage/v1/object/public/edition-galleries/summer-experience/summer-33-original.jpg?download=summer-33.jpg",
-      },
-      {
-        src: "/images/editions/summer-gallery/summer-35.jpg",
-        alt: "A guest smiling backstage as the photographer works",
-        downloadSrc:
-          "https://gswduyodzdgucjscjtvz.supabase.co/storage/v1/object/public/edition-galleries/summer-experience/summer-35-original.jpg?download=summer-35.jpg",
-      },
-      {
-        src: "/images/editions/summer-gallery/summer-31.jpg",
-        alt: "Behind the scenes on the styling rack",
-        downloadSrc:
-          "https://gswduyodzdgucjscjtvz.supabase.co/storage/v1/object/public/edition-galleries/summer-experience/summer-31-original.jpg?download=summer-31.jpg",
-      },
-    ],
     brandNames: [],
   },
   {

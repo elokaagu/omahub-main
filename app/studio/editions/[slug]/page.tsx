@@ -112,6 +112,17 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
     setImages(rows);
   }, [slug]);
 
+  const bustPublicEdition = useCallback(async () => {
+    try {
+      await fetch(`/api/studio/editions/${slug}/revalidate`, {
+        method: "POST",
+        credentials: "include",
+      });
+    } catch (error) {
+      console.error("edition_revalidate_error", error);
+    }
+  }, [slug]);
+
   const refetchLineup = useCallback(async () => {
     const rows = await getEditionLineup(slug);
     setLineupEntries(rows);
@@ -152,6 +163,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
           position: draft.position,
         });
         await refetch();
+        await bustPublicEdition();
       },
     });
 
@@ -267,6 +279,15 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
     if (!user) return;
     try {
       setIsUploadingCover(true);
+      if (!url.trim()) {
+        if (cover) {
+          await deleteEditionImage(user.id, cover.id);
+          toast.success("Cover photo removed");
+          await refetch();
+          await bustPublicEdition();
+        }
+        return;
+      }
       await addEditionImage(user.id, {
         edition_slug: slug,
         image_url: url,
@@ -274,6 +295,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
       });
       toast.success("Cover photo updated");
       await refetch();
+      await bustPublicEdition();
     } catch (error) {
       console.error("Error setting cover photo:", error);
       toast.error(
@@ -296,6 +318,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
       });
       toast.success("Photo added to gallery");
       await refetch();
+      await bustPublicEdition();
     } catch (error) {
       console.error("Error adding gallery photo:", error);
       toast.error(
@@ -319,6 +342,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
       });
       toast.success("Photo added to the story");
       await refetch();
+      await bustPublicEdition();
     } catch (error) {
       console.error("Error adding story photo:", error);
       toast.error(
@@ -342,6 +366,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
       toast.success("Partner logo added");
       setPartnerName("");
       await refetch();
+      await bustPublicEdition();
     } catch (error) {
       console.error("Error adding partner logo:", error);
       toast.error(
@@ -362,6 +387,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
       setVideoPosition(0);
       toast.success("Video removed");
       await refetch();
+      await bustPublicEdition();
     } catch (error) {
       console.error("Error removing edition video:", error);
       toast.error(
@@ -378,6 +404,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
       await updateEditionImage(user.id, id, { position });
       toast.success("Photo placement updated");
       await refetch();
+      await bustPublicEdition();
     } catch (error) {
       console.error("Error moving story photo:", error);
       toast.error(
@@ -393,6 +420,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
       await deleteEditionImage(user.id, id);
       toast.success("Photo removed");
       await refetch();
+      await bustPublicEdition();
     } catch (error) {
       console.error("Error deleting photo:", error);
       toast.error(
@@ -415,6 +443,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
       toast.success("Brand added to lineup");
       setSelectedLineupBrandId("");
       await refetchLineup();
+      await bustPublicEdition();
     } catch (error) {
       console.error("Error adding lineup brand:", error);
       toast.error(
@@ -432,6 +461,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
       await deleteEditionLineupBrand(user.id, id);
       toast.success("Brand removed from lineup");
       await refetchLineup();
+      await bustPublicEdition();
     } catch (error) {
       console.error("Error removing lineup brand:", error);
       toast.error(
@@ -481,25 +511,34 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
           one replaces the current cover.
         </p>
         {effectiveCover && (
-          <div className="mb-4 max-w-sm overflow-hidden rounded-xl">
-            <AuthImage
-              src={effectiveCover}
-              alt={edition.title}
-              aspectRatio="portrait"
-              className="w-full"
-              sizes="400px"
-              quality={80}
-            />
+          <div className="mb-4 max-w-sm">
+            <div className="overflow-hidden rounded-xl">
+              <AuthImage
+                src={effectiveCover}
+                alt={edition.title}
+                aspectRatio="portrait"
+                className="w-full"
+                sizes="400px"
+                quality={80}
+              />
+            </div>
+            <label
+              htmlFor="edition-cover-upload"
+              className="mt-3 inline-flex cursor-pointer text-sm font-medium text-oma-plum hover:underline"
+            >
+              Replace cover photo
+            </label>
           </div>
         )}
         <FileUpload
           key={cover?.id ?? "no-cover"}
+          inputId="edition-cover-upload"
           onUploadComplete={handleCoverUpload}
           bucket="edition-galleries"
           path={`${slug}/cover`}
           accept={{
             "image/png": [".png"],
-            "image/jpeg": [".jpg", ".jpeg"],
+            "image/jpeg": [".jpg", ".jpeg", ".JPG", ".JPEG"],
             "image/webp": [".webp"],
           }}
           maxSize={20}
@@ -596,7 +635,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
           path={`${slug}/video-thumbnail`}
           accept={{
             "image/png": [".png"],
-            "image/jpeg": [".jpg", ".jpeg"],
+            "image/jpeg": [".jpg", ".jpeg", ".JPG", ".JPEG"],
             "image/webp": [".webp"],
           }}
           maxSize={10}
@@ -799,7 +838,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
           path={`${slug}/gallery`}
           accept={{
             "image/png": [".png"],
-            "image/jpeg": [".jpg", ".jpeg"],
+            "image/jpeg": [".jpg", ".jpeg", ".JPG", ".JPEG"],
             "image/webp": [".webp"],
           }}
           maxSize={20}
@@ -807,14 +846,6 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
         />
         {isUploadingGallery && (
           <p className="mt-2 text-sm text-oma-cocoa">Adding photo…</p>
-        )}
-
-        {edition.gallery && edition.gallery.length > 0 && (
-          <p className="mt-6 text-xs text-oma-cocoa/70">
-            {edition.gallery.length} additional gallery{" "}
-            {edition.gallery.length === 1 ? "photo is" : "photos are"} seeded
-            in code (lib/data/editions.ts) and always shown alongside these.
-          </p>
         )}
       </section>
 
@@ -1012,7 +1043,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
           path={`${slug}/partners`}
           accept={{
             "image/png": [".png"],
-            "image/jpeg": [".jpg", ".jpeg"],
+            "image/jpeg": [".jpg", ".jpeg", ".JPG", ".JPEG"],
             "image/webp": [".webp"],
             "image/svg+xml": [".svg"],
           }}

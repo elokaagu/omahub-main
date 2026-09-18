@@ -23,6 +23,7 @@ import {
   ImagePlus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { isLikelyImageFile } from "@/lib/uploads/acceptedMedia";
 
 type ImagePlacement = "after-block" | "after-section" | "at-cursor";
 
@@ -231,7 +232,7 @@ const Toolbar = ({
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/png,image/jpeg,image/webp"
+            accept="image/png,image/jpeg,image/jpg,image/webp,.jpg,.jpeg,.png,.webp"
             className="hidden"
             onChange={(e) => {
               void handleImagePick(e.target.files?.[0]);
@@ -301,7 +302,7 @@ export default function OmaHubEditor({
       handlePaste(_view, event) {
         const file = event.clipboardData?.files?.[0];
         const upload = uploadRef.current;
-        if (!file || !file.type.startsWith("image/") || !upload) return false;
+        if (!file || !isLikelyImageFile(file) || !upload) return false;
         event.preventDefault();
         void upload(file).then((url) => {
           const activeEditor = editorRef.current;
@@ -314,7 +315,7 @@ export default function OmaHubEditor({
       handleDrop(view, event, _slice, moved) {
         const file = event.dataTransfer?.files?.[0];
         const upload = uploadRef.current;
-        if (moved || !file || !file.type.startsWith("image/") || !upload) {
+        if (moved || !file || !isLikelyImageFile(file) || !upload) {
           return false;
         }
         event.preventDefault();

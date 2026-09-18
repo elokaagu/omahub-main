@@ -6,6 +6,13 @@ import { Upload, X, Image as ImageIcon } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { AuthImage } from "./auth-image";
+import {
+  acceptAttribute,
+  fileExtension,
+  inferredContentType,
+  isAcceptedFile,
+  storagePathForUpload,
+} from "@/lib/uploads/acceptedMedia";
 
 interface FileUploadProps {
   onUploadComplete: (url: string) => void;
@@ -18,6 +25,7 @@ interface FileUploadProps {
   maxSize?: number;
   className?: string;
   hidePreview?: boolean;
+  inputId?: string;
 }
 
 export function FileUpload({
@@ -31,6 +39,7 @@ export function FileUpload({
   maxSize = 5,
   className = "",
   hidePreview = false,
+  inputId,
 }: FileUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState<string | null>(defaultValue || null);
@@ -46,13 +55,7 @@ export function FileUpload({
     setIsTemporaryPreview(false);
   }, [defaultValue]);
 
-  // Process accept parameter to handle both string and object formats
-  const acceptString =
-    typeof accept === "string"
-      ? accept
-      : Object.entries(accept)
-          .map(([mimeType, extensions]) => extensions.join(", "))
-          .join(", ");
+  const acceptString = acceptAttribute(accept);
 
   // Helper function to ensure valid session before upload
   const ensureValidSession = async (retries = 2): Promise<void> => {
@@ -240,23 +243,25 @@ export function FileUpload({
       }
     }
 
-    // Create unique filename with user ID prefix
-    const fileExtension = file.name.split(".").pop() || "jpg";
-    const uniqueFileName = `${user.id.substring(0, 8)}_${Date.now()}.${fileExtension}`;
+    const extension = (fileExtension(file) || ".jpg").replace(/^\./, "") || "jpg";
+    const uniqueFileName = `${user.id.substring(0, 8)}_${Date.now()}.${extension}`;
+    const storagePath = storagePathForUpload(path, uniqueFileName);
+    const contentType = inferredContentType(file);
 
     console.log("Starting upload:", {
-      fileName: uniqueFileName,
+      fileName: storagePath,
       fileSize: file.size,
-      fileType: file.type,
+      fileType: contentType,
       bucket: bucket,
     });
 
     // Upload with timeout
     const uploadPromise = supabase.storage
       .from(bucket)
-      .upload(uniqueFileName, file, {
+      .upload(storagePath, file, {
         cacheControl: "3600",
         upsert: false,
+        contentType,
       });
 
     const timeoutPromise = new Promise((_, reject) =>
@@ -332,20 +337,21 @@ export function FileUpload({
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    const input = e.currentTarget;
+    const file = input.files?.[0];
     if (!file) return;
 
     // Validate file size
     const fileSizeMB = file.size / (1024 * 1024);
     if (fileSizeMB > maxSize) {
       toast.error(`File is too large. Maximum size is ${maxSize}MB.`);
+      input.value = "";
       return;
     }
 
-    // Validate file type
-    const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
-    if (!validTypes.includes(file.type)) {
-      toast.error("Please select a valid image file (JPEG, PNG, or WebP).");
+    if (!isAcceptedFile(file, accept)) {
+      toast.error("That file type isn’t supported. Try a JPG, JPEG, PNG, or WebP.");
+      input.value = "";
       return;
     }
 
@@ -407,8 +413,8 @@ export function FileUpload({
       onUploadProgress?.(0);
     } finally {
       setUploading(false);
-      // Clean up the temporary object URL
       URL.revokeObjectURL(objectUrl);
+      input.value = "";
     }
   };
 
@@ -439,6 +445,7 @@ export function FileUpload({
   return (
     <div className={`space-y-4 ${className}`}>
       <input
+        id={inputId}
         ref={fileInputRef}
         type="file"
         accept={acceptString}

@@ -19,6 +19,7 @@ import type { Edition, EditionStatus } from "@/lib/data/editions";
 import type { EditionContentInput } from "@/lib/services/editionContentService";
 import { plainStoryToHtml } from "@/lib/editions/storyHtml";
 import { supabase } from "@/lib/supabase";
+import { inferredContentType, isLikelyImageFile } from "@/lib/uploads/acceptedMedia";
 import { toast } from "sonner";
 
 export type EditionEditorDraft = EditionContentInput & {
@@ -76,12 +77,20 @@ async function uploadStoryImage(slug: string, file: File): Promise<string | null
     return null;
   }
 
+  if (!isLikelyImageFile(file)) {
+    toast.error("Please choose a JPG, PNG, or WebP image.");
+    return null;
+  }
+
   const ext = file.name.split(".").pop() || "jpg";
   const filePath = `${slug}/story/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
   const { error } = await supabase.storage
     .from("edition-galleries")
-    .upload(filePath, file, { upsert: true });
+    .upload(filePath, file, {
+      upsert: true,
+      contentType: inferredContentType(file),
+    });
 
   if (error) {
     console.error("story image upload error", error);

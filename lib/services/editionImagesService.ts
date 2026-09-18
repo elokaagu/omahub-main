@@ -97,15 +97,6 @@ export async function addEditionImage(
 
   await assertSuperAdmin(userId);
 
-  if (data.kind === "cover" || data.kind === "video") {
-    const { error: deleteError } = await supabase
-      .from("edition_images")
-      .delete()
-      .eq("edition_slug", data.edition_slug)
-      .eq("kind", data.kind);
-    if (deleteError) throw deleteError;
-  }
-
   let displayOrder = data.position ?? 0;
   if (data.kind === "gallery" || data.kind === "partner") {
     const { data: existing, error: existingError } = await supabase
@@ -127,6 +118,17 @@ export async function addEditionImage(
     .single();
 
   if (error) throw new Error(`Database error: ${error.message}`);
+
+  if (data.kind === "cover" || data.kind === "video") {
+    const { error: deleteError } = await supabase
+      .from("edition_images")
+      .delete()
+      .eq("edition_slug", data.edition_slug)
+      .eq("kind", data.kind)
+      .neq("id", inserted.id);
+    if (deleteError) throw deleteError;
+  }
+
   return inserted;
 }
 

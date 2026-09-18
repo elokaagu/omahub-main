@@ -53,6 +53,16 @@ export async function generateMetadata({
     console.error("edition_metadata_content_error", e);
   }
 
+  let coverImage = edition.coverImage || "/OmaHubBanner.png";
+  try {
+    const adminImages = await getEditionImages(params.slug);
+    coverImage =
+      adminImages.find((image) => image.kind === "cover")?.image_url ||
+      coverImage;
+  } catch (e) {
+    console.error("edition_metadata_cover_error", e);
+  }
+
   const geoLabel = [edition.city, edition.country].filter(Boolean).join(", ");
 
   return generateSEOMetadata({
@@ -73,7 +83,7 @@ export async function generateMetadata({
     ],
     url: `/editions/${params.slug}`,
     type: "article",
-    image: edition.coverImage || "/OmaHubBanner.png",
+    image: coverImage,
     section: "Editions",
     tags: [edition.city, edition.country, "African fashion", "OmaHub editions"],
   });
@@ -113,8 +123,9 @@ export default async function EditionPage({
     console.error("edition_lineup_brands_error", e);
   }
 
-  // Admin-managed photos (Studio > Edition Photos) overlay the codebase's
-  // seed data: a new cover replaces the static one, gallery photos append.
+  // Admin-managed photos (Studio) overlay the seed: a new cover replaces
+  // the static one. Gallery photos come only from Studio so they can be
+  // removed without leftover seed images from another event.
   let adminImages: Awaited<ReturnType<typeof getEditionImages>> = [];
   try {
     adminImages = await getEditionImages(params.slug);
@@ -135,7 +146,7 @@ export default async function EditionPage({
     coverImage: adminCover || mergedEdition.coverImage,
     videoUrl: adminVideo?.image_url || mergedEdition.videoUrl,
     videoThumbnail: adminVideo?.alt_text || mergedEdition.videoThumbnail,
-    gallery: [...(mergedEdition.gallery || []), ...adminGallery],
+    gallery: adminGallery,
   };
 
   const storyPhotos = adminImages.filter((image) => image.kind === "story");
