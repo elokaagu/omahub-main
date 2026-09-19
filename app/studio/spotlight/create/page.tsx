@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useStudioEffectiveRole } from "@/hooks/useStudioEffectiveRole";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,6 +42,7 @@ type VideoType = NonNullable<CreateSpotlightData["video_type"]>;
 
 export default function CreateSpotlightPage() {
   const { user, loading: authLoading } = useAuth();
+  const { isSuperAdmin } = useStudioEffectiveRole();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingBrands, setIsLoadingBrands] = useState(false);
@@ -114,10 +116,10 @@ export default function CreateSpotlightPage() {
 
   // Check if user is super admin
   useEffect(() => {
-    if (!authLoading && user && user.role !== "super_admin") {
+    if (!authLoading && user && !isSuperAdmin) {
       router.push("/studio");
     }
-  }, [authLoading, user, router]);
+  }, [authLoading, user, isSuperAdmin, router]);
 
   const handleInputChange = (
     field: keyof CreateSpotlightData,
@@ -326,7 +328,7 @@ export default function CreateSpotlightPage() {
     return <Loading />;
   }
 
-  if (user.role !== "super_admin") {
+  if (!isSuperAdmin) {
     return <Loading />;
   }
 
@@ -344,7 +346,7 @@ export default function CreateSpotlightPage() {
             Create Spotlight Content
           </h1>
           <p className="text-oma-cocoa">
-            Create new featured brand content for the homepage spotlight section
+            Create a brand film for product pages
           </p>
         </div>
       </div>

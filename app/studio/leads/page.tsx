@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { useAuth } from "@/contexts/AuthContext";
+import { useStudioEffectiveRole } from "@/hooks/useStudioEffectiveRole";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,8 +20,7 @@ import { DeleteLeadDialog } from "./components/DeleteLeadDialog";
 import { StudioAuthPlaceholder } from "@/components/studio/StudioAuthPlaceholder";
 
 export default function StudioLeadsPage() {
-  const { user, loading: authLoading } = useAuth();
-  const isSuperAdmin = user?.role === "super_admin";
+  const { user, loading: authLoading, isSuperAdmin } = useStudioEffectiveRole();
 
   const {
     leads,

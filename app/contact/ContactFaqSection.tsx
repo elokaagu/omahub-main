@@ -5,9 +5,11 @@ import {
   StaggerOnScroll,
   StaggerOnScrollItem,
 } from "@/components/ui/animate-on-scroll";
-import { CONTACT_FAQ_ITEMS } from "./faqData";
+import { CONTACT_FAQ_ITEMS, type FaqItem } from "./faqData";
 
-export function ContactFaqSection() {
+export function ContactFaqSection({ items }: { items?: FaqItem[] }) {
+  const faqs = items && items.length > 0 ? items : CONTACT_FAQ_ITEMS;
+
   return (
     <div className="mt-24">
       <AnimatedSectionHeader
@@ -21,7 +23,7 @@ export function ContactFaqSection() {
         className="grid grid-cols-1 gap-8 md:grid-cols-2"
         staggerDelay={0.1}
       >
-        {CONTACT_FAQ_ITEMS.map((item) => (
+        {faqs.map((item) => (
           <StaggerOnScrollItem key={item.id} animation="slideUp">
             <div className="rounded-lg border border-oma-gold/20 bg-white p-8 transition-colors duration-300 hover:border-oma-gold/40">
               <h4 className="mb-3 font-source text-xl text-oma-black">

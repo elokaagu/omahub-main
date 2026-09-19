@@ -5,7 +5,11 @@ import { AnimateOnScroll } from "@/components/ui/animate-on-scroll";
 import { JoinApplicationForm } from "./JoinApplicationForm";
 import { JoinPageSidebar } from "./JoinPageSidebar";
 
-export function JoinPageContent() {
+export function JoinPageContent({
+  faqItems,
+}: {
+  faqItems?: { question: string; answer: string }[];
+}) {
   return (
     <>
       <section className="bg-gradient-to-r from-oma-gold/20 to-oma-cocoa/20 px-6 pb-16 pt-24">
@@ -47,7 +51,7 @@ export function JoinPageContent() {
               duration={0.7}
               className="lg:col-span-2"
             >
-              <JoinPageSidebar />
+              <JoinPageSidebar items={faqItems} />
             </AnimateOnScroll>
           </div>
         </div>

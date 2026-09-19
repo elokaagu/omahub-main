@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/contexts/AuthContext";
+import { useStudioEffectiveRole } from "@/hooks/useStudioEffectiveRole";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -76,15 +76,15 @@ const categories = [
 ];
 
 const pageLocations = [
-  { value: "general", label: "General" },
-  { value: "how-it-works", label: "How It Works" },
+  { value: "general", label: "FAQ page" },
+  { value: "how-it-works", label: "How It Works (also on FAQ page)" },
   { value: "contact", label: "Contact" },
   { value: "join", label: "Join" },
-  { value: "all", label: "All Pages" },
+  { value: "all", label: "All of the above" },
 ];
 
 export default function FAQManagementPage() {
-  const { user } = useAuth();
+  const { user, isSuperAdmin } = useStudioEffectiveRole();
   const router = useRouter();
   const [faqs, setFaqs] = useState<FAQ[]>([]);
   const [loading, setLoading] = useState(true);
@@ -109,11 +109,11 @@ export default function FAQManagementPage() {
 
   // Check if user is super admin
   useEffect(() => {
-    if (user && user.role !== "super_admin") {
+    if (user && !isSuperAdmin) {
       router.push("/studio");
       return;
     }
-  }, [user, router]);
+  }, [user, isSuperAdmin, router]);
 
   const fetchFAQs = useCallback(async () => {
     try {
@@ -140,10 +140,10 @@ export default function FAQManagementPage() {
   }, [showInactive]);
 
   useEffect(() => {
-    if (user?.role === "super_admin") {
+    if (isSuperAdmin) {
       void fetchFAQs();
     }
-  }, [user, showInactive, fetchFAQs]);
+  }, [isSuperAdmin, showInactive, fetchFAQs]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

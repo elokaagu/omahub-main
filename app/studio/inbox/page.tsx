@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useAuth } from "@/contexts/AuthContext";
+import { useStudioEffectiveRole } from "@/hooks/useStudioEffectiveRole";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -35,7 +35,7 @@ import type { StudioInquiry, StudioNotification } from "./types";
 import { useStudioInbox } from "./useStudioInbox";
 
 export default function StudioInboxPage() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, isSuperAdmin } = useStudioEffectiveRole();
   const [selectedInquiry, setSelectedInquiry] = useState<StudioInquiry | null>(null);
   const [selectedNotification, setSelectedNotification] =
     useState<StudioNotification | null>(null);
@@ -61,8 +61,6 @@ export default function StudioInboxPage() {
     authLoading,
     pausePolling,
   });
-
-  const isSuperAdmin = user?.role === "super_admin";
 
   const markAsRead = async (inquiryId: string) => {
     try {

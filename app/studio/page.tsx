@@ -100,21 +100,22 @@ export default function StudioPage() {
 
       {/* Main Dashboard Components */}
       <div className="grid grid-cols-1 gap-8">
-        {/* Leads Dashboard */}
-        <Card className="overflow-hidden rounded-2xl border border-oma-beige/60 shadow-sm">
-          <CardContent className="bg-white px-5 py-6 sm:px-8 sm:py-8">
-            <Suspense
-              fallback={
-                <div className="h-64 bg-gray-100 rounded-lg animate-pulse" />
-              }
-            >
-              <LeadsTrackingDashboard
-                userRole={effectiveRole}
-                ownedBrandIds={ownedBrandIds}
-              />
-            </Suspense>
-          </CardContent>
-        </Card>
+        {effectiveRole === "super_admin" && (
+          <Card className="overflow-hidden rounded-2xl border border-oma-beige/60 shadow-sm">
+            <CardContent className="bg-white px-5 py-6 sm:px-8 sm:py-8">
+              <Suspense
+                fallback={
+                  <div className="h-64 bg-gray-100 rounded-lg animate-pulse" />
+                }
+              >
+                <LeadsTrackingDashboard
+                  userRole={effectiveRole}
+                  ownedBrandIds={ownedBrandIds}
+                />
+              </Suspense>
+            </CardContent>
+          </Card>
+        )}
 
         {effectiveRole === "super_admin" && (
           <Card className="overflow-hidden rounded-2xl border border-oma-beige/60 shadow-sm">

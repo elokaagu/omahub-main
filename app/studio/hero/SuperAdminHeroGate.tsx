@@ -2,6 +2,7 @@
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useStudioPermissions } from "@/hooks/useStudioPermissions";
+import { useStudioEffectiveRole } from "@/hooks/useStudioEffectiveRole";
 import { Button } from "@/components/ui/button";
 import { StudioAuthPlaceholder } from "@/components/studio/StudioAuthPlaceholder";
 import { NavigationLink } from "@/components/ui/navigation-link";
@@ -13,23 +14,28 @@ type SuperAdminHeroGateProps = {
 };
 
 /**
- * Resolves auth before rendering hero studio surfaces.
- * Avoids masking unauthorized users behind a long-lived loading state.
+ * Resolves auth before rendering super-admin studio surfaces.
+ * Uses the SSR profile role so a stale AuthContext "user" role does not
+ * flash Access Denied.
  */
 export function SuperAdminHeroGate({
   children,
   capabilityPhrase = "manage hero slides",
 }: SuperAdminHeroGateProps) {
   const { user, loading: authLoading } = useAuth();
+  const { isSuperAdmin } = useStudioEffectiveRole();
   const { permissions, loading: permissionsLoading } = useStudioPermissions(
     user?.id
   );
 
-  if (authLoading || permissionsLoading) {
+  const canManageHero =
+    isSuperAdmin || permissions.includes("studio.hero.manage");
+
+  if ((authLoading && !isSuperAdmin) || (permissionsLoading && !canManageHero)) {
     return <StudioAuthPlaceholder />;
   }
 
-  if (!user) {
+  if (!user && !isSuperAdmin) {
     return (
       <div className="max-w-lg mx-auto px-6 py-24 text-center">
         <h1 className="text-2xl font-canela text-oma-black mb-2">
@@ -44,9 +50,6 @@ export function SuperAdminHeroGate({
       </div>
     );
   }
-
-  const canManageHero =
-    user.role === "super_admin" || permissions.includes("studio.hero.manage");
 
   if (!canManageHero) {
     return (

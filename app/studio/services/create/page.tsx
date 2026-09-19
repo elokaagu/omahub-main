@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useStudioEffectiveRole } from "@/hooks/useStudioEffectiveRole";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -110,6 +111,7 @@ interface CreateServiceFormData {
 
 export default function CreateServicePage() {
   const { user } = useAuth();
+  const { role, isSuperAdmin } = useStudioEffectiveRole();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [brands, setBrands] = useState<Brand[]>([]);
@@ -154,9 +156,13 @@ export default function CreateServicePage() {
         console.log("Fetched tailoring brands:", brandsData);
 
         // Filter brands based on user role
-        if (user?.role === "super_admin") {
+        if (isSuperAdmin) {
           setBrands(brandsData);
-        } else if (user?.role === "brand_admin") {
+        } else if (role === "brand_admin") {
+          if (!user?.id) {
+            setBrands([]);
+            return;
+          }
           if (!supabase) {
             console.error("Supabase client not available");
             setBrands([]);
@@ -187,7 +193,7 @@ export default function CreateServicePage() {
       }
     };
 
-    if (user?.role === "super_admin" || user?.role === "brand_admin") {
+    if (isSuperAdmin || role === "brand_admin") {
       fetchData();
     }
 
@@ -196,7 +202,7 @@ export default function CreateServicePage() {
       fetchData();
     });
     return () => unsubscribe();
-  }, [user, tailoringEvent]);
+  }, [user, isSuperAdmin, role, tailoringEvent]);
 
   const handleInputChange = (name: string, value: string | boolean) => {
     setFormData((prev) => ({
@@ -384,7 +390,7 @@ export default function CreateServicePage() {
     );
   }
 
-  if (!["super_admin", "brand_admin"].includes(user.role ?? "")) {
+  if (!["super_admin", "brand_admin"].includes(role ?? "")) {
     return (
       <div className="text-center py-12 text-gray-600">
         You do not have permission to create services.
@@ -411,7 +417,7 @@ export default function CreateServicePage() {
         </div>
         <Card className="border border-oma-gold/10 bg-white">
           <CardContent className="py-8 text-center text-gray-600">
-            {user.role === "brand_admin"
+            {role === "brand_admin"
               ? "No owned tailoring brands are available for your account yet."
               : "Create or configure a tailoring brand first, then add services."}
           </CardContent>

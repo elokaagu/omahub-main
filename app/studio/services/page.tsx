@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { useStudioEffectiveRole } from "@/hooks/useStudioEffectiveRole";
 import { getAllBrands } from "@/lib/services/brandService";
 import {
   getProductsByBrand,
@@ -150,6 +151,7 @@ const getServiceTypeLabel = (service: ServiceWithBrand): string => {
 
 export default function ServicesPage() {
   const { user } = useAuth();
+  const { role, isSuperAdmin } = useStudioEffectiveRole();
   const router = useRouter();
   const nextRouter = useNextRouter();
   const pathname = usePathname();
@@ -179,9 +181,10 @@ export default function ServicesPage() {
 
       // Filter brands based on user role
       let userBrands: Brand[] = [];
-      if (user?.role === "super_admin") {
+      if (isSuperAdmin) {
         userBrands = tailorBrands;
-      } else if (user?.role === "brand_admin") {
+      } else if (role === "brand_admin") {
+        if (!user?.id) return;
         if (!supabase) {
           console.error("Supabase client not available");
           return;
@@ -236,7 +239,7 @@ export default function ServicesPage() {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, isSuperAdmin, role]);
 
   const filterServices = useCallback(() => {
     let filtered = [...services];

@@ -336,7 +336,7 @@ export default function SubscriptionsPage() {
   };
 
   // Check access after user is loaded
-  if (user && !loading && user.role !== "super_admin") {
+  if (effectiveRole && effectiveRole !== "super_admin") {
     return (
       <div className="container mx-auto px-6 py-8">
         <div className="text-center">

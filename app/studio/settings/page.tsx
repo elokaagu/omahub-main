@@ -30,6 +30,7 @@ import {
 import Link from "next/link";
 import { toast } from "sonner";
 import { useStudioPermissions } from "@/hooks/useStudioPermissions";
+import { useStudioEffectiveRole } from "@/hooks/useStudioEffectiveRole";
 import { HomepageHeroMediaCard } from "./HomepageHeroMediaCard";
 
 export default function SettingsPage() {
@@ -63,8 +64,9 @@ export default function SettingsPage() {
     useState(false);
 
   // Check if user has super admin permissions
+  const { isSuperAdmin: isSuperAdminRole } = useStudioEffectiveRole();
   const hasSettingsPermission = permissions.includes("studio.settings.manage");
-  const isSuperAdmin = user?.role === "super_admin" || hasSettingsPermission;
+  const isSuperAdmin = isSuperAdminRole || hasSettingsPermission;
 
   const fetchVideoSettings = useCallback(async () => {
     try {

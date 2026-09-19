@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useStudioEffectiveRole } from "@/hooks/useStudioEffectiveRole";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -30,7 +30,7 @@ import { toast } from "sonner";
 import { Loading } from "@/components/ui/loading";
 
 export default function SpotlightManagementPage() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, isSuperAdmin } = useStudioEffectiveRole();
   const router = useRouter();
   const [spotlightContent, setSpotlightContent] = useState<SpotlightContent[]>(
     []
@@ -42,11 +42,11 @@ export default function SpotlightManagementPage() {
 
   // Check if user is super admin
   useEffect(() => {
-    if (!authLoading && user && user.role !== "super_admin") {
+    if (!authLoading && user && !isSuperAdmin) {
       router.push("/studio");
       return;
     }
-  }, [authLoading, user, router]);
+  }, [authLoading, user, isSuperAdmin, router]);
 
   // Fetch spotlight content
   useEffect(() => {
@@ -65,10 +65,10 @@ export default function SpotlightManagementPage() {
       }
     };
 
-    if (user?.role === "super_admin") {
+    if (isSuperAdmin) {
       fetchSpotlightContent();
     }
-  }, [user]);
+  }, [isSuperAdmin]);
 
   const retryFetch = async () => {
     try {
@@ -129,7 +129,7 @@ export default function SpotlightManagementPage() {
     return <Loading />;
   }
 
-  if (user.role !== "super_admin") {
+  if (!isSuperAdmin) {
     return (
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
         <Card>
@@ -183,7 +183,8 @@ export default function SpotlightManagementPage() {
             Spotlight Management
           </h1>
           <p className="text-oma-cocoa">
-            Manage the featured brand spotlight section on the homepage
+            Manage brand films used on product pages. Active entries supply the
+            spotlight video for that designer.
           </p>
         </div>
         <Button
@@ -208,8 +209,8 @@ export default function SpotlightManagementPage() {
               No spotlight content yet
             </h3>
             <p className="text-oma-cocoa text-center mb-6">
-              Create your first spotlight content to feature a brand on the
-              homepage
+              Create your first spotlight to attach a brand film for product
+              pages
             </p>
             <Button
               asChild
@@ -350,7 +351,7 @@ export default function SpotlightManagementPage() {
                         Are you sure you want to delete "{item.title}"? This
                         action cannot be undone.
                         {item.is_active
-                          ? " This spotlight is currently active and deleting it will remove the active homepage spotlight until another entry is activated."
+                          ? " This spotlight is currently active. Deleting it removes the brand film from product pages until another entry is activated."
                           : ""}
                       </AlertDialogDescription>
                     </AlertDialogHeader>

@@ -34,6 +34,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
+import { useStudioEffectiveRole } from "@/hooks/useStudioEffectiveRole";
 
 interface LegalDocument {
   id: string;
@@ -49,6 +50,7 @@ interface LegalDocument {
 
 export default function LegalDocumentsPage() {
   const { user, loading: authLoading } = useAuth();
+  const { isSuperAdmin } = useStudioEffectiveRole();
   const router = useRouter();
   const [documents, setDocuments] = useState<LegalDocument[]>([]);
   const [loading, setLoading] = useState(true);
@@ -68,14 +70,14 @@ export default function LegalDocumentsPage() {
   });
 
   useEffect(() => {
-    if (!authLoading && user && user.role !== "super_admin") {
+    if (!authLoading && user && !isSuperAdmin) {
       router.push("/studio");
       return;
     }
-    if (!authLoading && user?.role === "super_admin") {
+    if (!authLoading && isSuperAdmin) {
       fetchDocuments();
     }
-  }, [authLoading, user, router]);
+  }, [authLoading, user, isSuperAdmin, router]);
 
   const fetchDocuments = async () => {
     try {
@@ -285,7 +287,7 @@ export default function LegalDocumentsPage() {
     );
   }
 
-  if (user.role !== "super_admin") {
+  if (!isSuperAdmin) {
     return (
       <div className="max-w-7xl mx-auto px-6 py-8 text-gray-600">
         You do not have permission to manage legal documents.

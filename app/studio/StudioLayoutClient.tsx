@@ -226,18 +226,18 @@ function buildNavigationItems(
     },
     {
       href: "/studio/subscriptions",
-      label: "Subscriptions",
+      label: "Newsletter",
       icon: Mail,
       permission: "studio.users.manage",
-      customLabel: "Subscriptions",
+      customLabel: "Newsletter",
       showForRoles: ["super_admin"],
     },
     {
       href: "/studio/waitlist",
-      label: "Waitlist",
+      label: "Event Waitlist",
       icon: List,
       permission: "studio.users.manage",
-      customLabel: "Waitlist",
+      customLabel: "Event Waitlist",
       showForRoles: ["super_admin"],
     },
     {

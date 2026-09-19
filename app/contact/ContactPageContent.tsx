@@ -6,8 +6,9 @@ import { ContactFaqSection } from "./ContactFaqSection";
 import { ContactFormSection } from "./ContactFormSection";
 import { ContactInfoSection } from "./ContactInfoSection";
 import { NewsletterSignupCard } from "./NewsletterSignupCard";
+import type { FaqItem } from "./faqData";
 
-export function ContactPageContent() {
+export function ContactPageContent({ faqItems }: { faqItems?: FaqItem[] }) {
   return (
     <div className="container mx-auto max-w-7xl px-6 py-12 md:py-24">
       <AnimatedSectionHeader
@@ -34,7 +35,7 @@ export function ContactPageContent() {
         </div>
       </div>
 
-      <ContactFaqSection />
+      <ContactFaqSection items={faqItems} />
     </div>
   );
 }

@@ -1,12 +1,19 @@
 import { joinFaqItems } from "./joinFaqData";
 
-export function JoinPageSidebar() {
+type JoinFaqItem = {
+  question: string;
+  answer: string;
+};
+
+export function JoinPageSidebar({ items }: { items?: JoinFaqItem[] }) {
+  const faqs = items && items.length > 0 ? items : [...joinFaqItems];
+
   return (
     <div className="lg:col-span-2">
       <div className="sticky top-24">
         <h2 className="heading-sm mb-6">Frequently Asked Questions</h2>
         <div className="space-y-2">
-          {joinFaqItems.map((item) => (
+          {faqs.map((item) => (
             <details
               key={item.question}
               className="group rounded-lg border border-oma-gold/20 bg-white/60 px-4 open:bg-white open:shadow-sm"

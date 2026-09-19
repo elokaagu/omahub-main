@@ -8,6 +8,7 @@ export type Permission =
   | "studio.catalogues.manage"
   | "studio.catalogues.create"
   | "studio.products.manage"
+  | "studio.hero.manage"
   | "studio.settings.manage"
   | "studio.users.manage";
 
@@ -29,6 +30,7 @@ const rolePermissions: Record<Role, Permission[]> = {
     "studio.catalogues.manage",
     "studio.catalogues.create",
     "studio.products.manage",
+    "studio.hero.manage",
     "studio.settings.manage",
     "studio.users.manage",
   ],

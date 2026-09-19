@@ -10,6 +10,7 @@ import {
   type HeroSlide,
 } from "@/lib/services/heroService";
 import { toast } from "sonner";
+import { useStudioEffectiveRole } from "@/hooks/useStudioEffectiveRole";
 
 type ListLoadState =
   | { status: "loading" }
@@ -51,10 +52,12 @@ export function useHeroSlidesAdmin(user: User | null) {
     }
   }, []);
 
+  const { isSuperAdmin } = useStudioEffectiveRole();
+
   useEffect(() => {
-    if (!user || user.role !== "super_admin") return;
+    if (!user || !isSuperAdmin) return;
     void fetchSlides();
-  }, [user, fetchSlides]);
+  }, [user, isSuperAdmin, fetchSlides]);
 
   const handleDelete = async (id: string) => {
     if (!user) return;

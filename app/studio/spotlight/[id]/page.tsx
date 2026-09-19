@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useStudioEffectiveRole } from "@/hooks/useStudioEffectiveRole";
 import { useRouter, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,6 +41,7 @@ type VideoType = NonNullable<SpotlightContent["video_type"]>;
 
 export default function EditSpotlightPage() {
   const { user } = useAuth();
+  const { isSuperAdmin } = useStudioEffectiveRole();
   const router = useRouter();
   const params = useParams();
   const spotlightId = params.id as string;
@@ -67,11 +69,11 @@ export default function EditSpotlightPage() {
 
   // Check if user is super admin
   useEffect(() => {
-    if (user && user.role !== "super_admin") {
+    if (user && !isSuperAdmin) {
       router.push("/studio");
       return;
     }
-  }, [user, router]);
+  }, [user, isSuperAdmin, router]);
 
   // Fetch spotlight content
   useEffect(() => {
@@ -114,10 +116,10 @@ export default function EditSpotlightPage() {
       }
     };
 
-    if (user?.role === "super_admin") {
+    if (isSuperAdmin) {
       fetchSpotlightContent();
     }
-  }, [spotlightId, user, router]);
+  }, [spotlightId, isSuperAdmin, router]);
 
   const handleInputChange = (
     field: keyof UpdateSpotlightData,
@@ -323,7 +325,7 @@ export default function EditSpotlightPage() {
     );
   }
 
-  if (user.role !== "super_admin") {
+  if (!isSuperAdmin) {
     return (
       <div className="max-w-4xl mx-auto px-6 py-8">
         <div className="text-center">
@@ -378,7 +380,7 @@ export default function EditSpotlightPage() {
             Edit Spotlight Content
           </h1>
           <p className="text-oma-cocoa">
-            Update the featured brand content for the homepage spotlight section
+            Update the brand film used on this designer&apos;s product pages
           </p>
         </div>
       </div>
