@@ -6,6 +6,8 @@ const videoIdField = z
   .string()
   .trim()
   .regex(/^\d+$/, "Enter just the numeric Vimeo video ID");
+/** Public URL for the top homepage still or looping film. Empty restores the default. */
+const heroMediaUrlField = z.string().trim().max(2000);
 
 export const platformSettingsUpdateSchema = z
   .object({
@@ -14,6 +16,7 @@ export const platformSettingsUpdateSchema = z
     tailoredServices: contentField.optional(),
     heroVideoId: videoIdField.optional(),
     welcomeVideoId: videoIdField.optional(),
+    heroMediaUrl: heroMediaUrlField.optional(),
     customerSignupEnabled: z.enum(["true", "false"]).optional(),
     cataloguesPubliclyVisible: z.enum(["true", "false"]).optional(),
   })
@@ -25,6 +28,7 @@ export const platformSettingsUpdateSchema = z
       data.tailoredServices !== undefined ||
       data.heroVideoId !== undefined ||
       data.welcomeVideoId !== undefined ||
+      data.heroMediaUrl !== undefined ||
       data.customerSignupEnabled !== undefined ||
       data.cataloguesPubliclyVisible !== undefined,
     { message: "At least one setting field is required" }

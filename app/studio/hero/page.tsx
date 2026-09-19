@@ -95,7 +95,15 @@ function HeroManagementContent() {
             Hero Carousel Management
           </h1>
           <p className="text-oma-cocoa">
-            Manage the hero slides displayed on the homepage
+            These slides are for the older carousel layout. The live homepage
+            portrait card is edited in{" "}
+            <NavigationLink
+              href="/studio/settings"
+              className="underline underline-offset-4 hover:text-oma-plum"
+            >
+              Studio Settings → Homepage Hero
+            </NavigationLink>
+            .
           </p>
         </div>
         <Button

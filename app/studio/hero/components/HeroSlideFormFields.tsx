@@ -95,7 +95,7 @@ export function HeroSlideFormFields({
               path="slides"
               accept={{
                 "image/png": [".png"],
-                "image/jpeg": [".jpg", ".jpeg"],
+                "image/jpeg": [".jpg", ".jpeg", ".jpe", ".jfif"],
                 "image/webp": [".webp"],
               }}
               maxSize={20}

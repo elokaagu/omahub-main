@@ -11,6 +11,13 @@ const IMAGE_EXTENSIONS = new Set([
   ".webp",
   ".gif",
 ]);
+const VIDEO_EXTENSIONS = new Set([".mp4", ".webm", ".mov", ".m4v"]);
+const VIDEO_MIME_TYPES = new Set([
+  "video/mp4",
+  "video/webm",
+  "video/quicktime",
+  "video/x-m4v",
+]);
 
 type AcceptValue = string | Record<string, string[]>;
 
@@ -67,17 +74,33 @@ export function isLikelyImageFile(file: File): boolean {
   return IMAGE_EXTENSIONS.has(ext);
 }
 
+export function isLikelyVideoFile(file: File): boolean {
+  const mime = (file.type || "").toLowerCase();
+  const ext = fileExtension(file);
+  if (mime.startsWith("video/") || VIDEO_MIME_TYPES.has(mime)) return true;
+  return VIDEO_EXTENSIONS.has(ext);
+}
+
 export function isAcceptedFile(file: File, accept: AcceptValue): boolean {
   const { mimeTypes, extensions } = parseAccept(accept);
   const mime = (file.type || "").toLowerCase();
   const ext = fileExtension(file);
   const allowsAnyImage = mimeTypes.includes("image/*");
+  const allowsAnyVideo = mimeTypes.includes("video/*");
   const allowsJpeg =
     mimeTypes.some((type) => JPEG_MIME_TYPES.has(type)) ||
     extensions.some((item) => JPEG_EXTENSIONS.has(item)) ||
     allowsAnyImage;
+  const allowsVideo =
+    mimeTypes.some((type) => type.startsWith("video/") || VIDEO_MIME_TYPES.has(type)) ||
+    extensions.some((item) => VIDEO_EXTENSIONS.has(item)) ||
+    allowsAnyVideo;
 
   if (allowsJpeg && (JPEG_MIME_TYPES.has(mime) || JPEG_EXTENSIONS.has(ext))) {
+    return true;
+  }
+
+  if (allowsVideo && (VIDEO_MIME_TYPES.has(mime) || VIDEO_EXTENSIONS.has(ext) || mime.startsWith("video/"))) {
     return true;
   }
 

@@ -30,6 +30,7 @@ import {
 import Link from "next/link";
 import { toast } from "sonner";
 import { useStudioPermissions } from "@/hooks/useStudioPermissions";
+import { HomepageHeroMediaCard } from "./HomepageHeroMediaCard";
 
 export default function SettingsPage() {
   const { user, loading } = useAuth();
@@ -45,6 +46,7 @@ export default function SettingsPage() {
   const [isLoadingStatus, setIsLoadingStatus] = useState(true);
   const [statusError, setStatusError] = useState<string | null>(null);
   const [heroVideoId, setHeroVideoId] = useState("");
+  const [heroMediaUrl, setHeroMediaUrl] = useState("");
   const [isLoadingVideoId, setIsLoadingVideoId] = useState(true);
   const [isSavingVideoId, setIsSavingVideoId] = useState(false);
   const [welcomeVideoId, setWelcomeVideoId] = useState("");
@@ -75,6 +77,9 @@ export default function SettingsPage() {
       if (response.ok) {
         if (typeof data.heroVideoId === "string") {
           setHeroVideoId(data.heroVideoId);
+        }
+        if (typeof data.heroMediaUrl === "string") {
+          setHeroMediaUrl(data.heroMediaUrl);
         }
         if (typeof data.welcomeVideoId === "string") {
           setWelcomeVideoId(data.welcomeVideoId);
@@ -165,9 +170,9 @@ export default function SettingsPage() {
       });
       const data = await response.json();
       if (response.ok && data.success) {
-        toast.success("Homepage video updated");
+        toast.success("Homepage film section updated");
       } else {
-        toast.error(data.error || "Failed to update the homepage video");
+        toast.error(data.error || "Failed to update the homepage film");
       }
     } catch (error) {
       console.error("Error saving hero video id:", error);
@@ -488,23 +493,29 @@ export default function SettingsPage() {
             </CardFooter>
           </Card>
 
-          {/* Homepage Video */}
+          <HomepageHeroMediaCard
+            mediaUrl={heroMediaUrl}
+            loading={isLoadingVideoId}
+            onSaved={setHeroMediaUrl}
+          />
+
+          {/* Homepage Film Section */}
           <Card className="border-oma-beige">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-oma-plum font-canela">
                 <Film className="h-5 w-5" />
-                Homepage Video
+                Homepage Film Section
               </CardTitle>
               <CardDescription className="text-oma-cocoa">
-                Swap the film playing in the homepage hero
+                Swap the mid-page Vimeo film on the public homepage
               </CardDescription>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-oma-cocoa/80 mb-4">
                 Paste the numeric video ID from the film&apos;s Vimeo URL
                 (e.g. the <code>1206857643</code> in
-                vimeo.com/1206857643). Update this whenever you have a new
-                campaign or edition recap ready.
+                vimeo.com/1206857643). This plays in the full-bleed section
+                below the archive, not the portrait card at the top.
               </p>
               {isLoadingVideoId ? (
                 <div className="text-center py-2">

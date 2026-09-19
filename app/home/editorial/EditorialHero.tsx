@@ -1,4 +1,5 @@
 import type { Edition } from "@/lib/data/editions";
+import { getHeroMediaUrl } from "@/lib/services/heroVideoSetting";
 import { EditorialHeroContent } from "./EditorialHeroContent";
 
 type EditorialHeroProps = {
@@ -11,14 +12,17 @@ type EditorialHeroProps = {
  * (~46%) and a tall film card on the right (~54%). On mobile the film
  * card stacks beneath the headline. The only CTA is email capture.
  */
-export function EditorialHero({
+export async function EditorialHero({
   upcomingEdition,
   latestPastEdition,
 }: EditorialHeroProps) {
+  const heroMediaUrl = await getHeroMediaUrl();
+
   return (
     <EditorialHeroContent
       upcomingEdition={upcomingEdition}
       latestPastEdition={latestPastEdition}
+      heroMediaUrl={heroMediaUrl}
     />
   );
 }

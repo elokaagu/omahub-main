@@ -64,11 +64,13 @@ function HeroFilmReveal({
 type EditorialHeroContentProps = {
   upcomingEdition: Edition | null;
   latestPastEdition: Edition | null;
+  heroMediaUrl?: string | null;
 };
 
 export function EditorialHeroContent({
   upcomingEdition,
   latestPastEdition,
+  heroMediaUrl,
 }: EditorialHeroContentProps) {
   const eyebrow = upcomingEdition
     ? `Edition ${upcomingEdition.number}, coming ${upcomingEdition.dateLabel}`
@@ -93,7 +95,7 @@ export function EditorialHeroContent({
             </HeroReveal>
 
             <HeroFilmReveal delay={0.16} className="w-full lg:hidden">
-              <HeroFilmCard />
+              <HeroFilmCard src={heroMediaUrl} />
             </HeroFilmReveal>
 
             <HeroReveal delay={0.22}>
@@ -139,7 +141,7 @@ export function EditorialHeroContent({
           </div>
 
           <HeroFilmReveal delay={0.12} className="hidden w-full lg:flex lg:items-center lg:justify-end">
-            <HeroFilmCard />
+            <HeroFilmCard src={heroMediaUrl} />
           </HeroFilmReveal>
         </div>
       </div>

@@ -23,7 +23,7 @@ async function getVimeoPosterUrl(videoId: string): Promise<string | undefined> {
 /**
  * Full-bleed mid-page film section: a short highlight clip from the
  * events, filling the screen the same way the old hero video did. The
- * clip is swappable from Studio > Settings (Homepage Video).
+ * clip is swappable from Studio > Settings (Homepage Film Section).
  */
 export async function FilmSection() {
   const videoId = await getHeroVideoId();

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { createServerSupabaseClient } from "@/lib/supabase-unified";
 import { parsePlatformSettingsUpdate } from "@/lib/validation/platformSettingsBody";
 
@@ -8,6 +9,7 @@ const SETTING_KEYS = [
   "tailored_services",
   "hero_video_id",
   "welcome_video_id",
+  "hero_media_url",
   "customer_signup_enabled",
   "catalogues_publicly_visible",
 ] as const;
@@ -19,6 +21,7 @@ const MAP_DB_TO_API: Record<
   | "tailoredServices"
   | "heroVideoId"
   | "welcomeVideoId"
+  | "heroMediaUrl"
   | "customerSignupEnabled"
   | "cataloguesPubliclyVisible"
 > = {
@@ -27,6 +30,7 @@ const MAP_DB_TO_API: Record<
   tailored_services: "tailoredServices",
   hero_video_id: "heroVideoId",
   welcome_video_id: "welcomeVideoId",
+  hero_media_url: "heroMediaUrl",
   customer_signup_enabled: "customerSignupEnabled",
   catalogues_publicly_visible: "cataloguesPubliclyVisible",
 };
@@ -61,6 +65,7 @@ export async function GET() {
       tailoredServices: "",
       heroVideoId: "",
       welcomeVideoId: "",
+      heroMediaUrl: "",
       customerSignupEnabled: DEFAULT_CUSTOMER_SIGNUP_ENABLED,
       cataloguesPubliclyVisible: DEFAULT_CATALOGUES_PUBLICLY_VISIBLE,
     };
@@ -129,6 +134,7 @@ export async function POST(req: NextRequest) {
       tailoredServices,
       heroVideoId,
       welcomeVideoId,
+      heroMediaUrl,
       customerSignupEnabled,
       cataloguesPubliclyVisible,
     } = parsed.data;
@@ -150,6 +156,9 @@ export async function POST(req: NextRequest) {
     }
     if (welcomeVideoId !== undefined) {
       updates.push({ key: "welcome_video_id", value: welcomeVideoId, updated_at: now });
+    }
+    if (heroMediaUrl !== undefined) {
+      updates.push({ key: "hero_media_url", value: heroMediaUrl, updated_at: now });
     }
     if (customerSignupEnabled !== undefined) {
       updates.push({
@@ -177,6 +186,9 @@ export async function POST(req: NextRequest) {
         { status: 500 }
       );
     }
+
+    revalidatePath("/");
+    revalidatePath("/editions");
 
     return NextResponse.json({ success: true });
   } catch (err) {

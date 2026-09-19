@@ -5,6 +5,11 @@ import { Button } from "./button";
 import { Upload, X, Video, AlertCircle } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import {
+  inferredContentType,
+  isAcceptedFile,
+  isLikelyVideoFile,
+} from "@/lib/uploads/acceptedMedia";
 
 interface VideoUploadProps {
   onUploadComplete: (url: string) => void;
@@ -109,6 +114,7 @@ export function VideoUpload({
         .upload(filePath, file, {
           cacheControl: "3600",
           upsert: false,
+          contentType: inferredContentType(file),
         });
 
       if (error) {
@@ -178,9 +184,7 @@ export function VideoUpload({
       return;
     }
 
-    // Validate file type
-    const validTypes = accept.split(",").map((type) => type.trim());
-    if (!validTypes.includes(file.type)) {
+    if (!isAcceptedFile(file, accept) && !isLikelyVideoFile(file)) {
       const errorMsg =
         "Please select a valid video file (MP4, WebM, or QuickTime).";
       setError(errorMsg);
