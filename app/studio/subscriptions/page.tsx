@@ -16,6 +16,7 @@ import {
   Calendar,
   Download,
   Filter,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -71,6 +72,9 @@ export default function SubscriptionsPage() {
   const [sourceFilter, setSourceFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [updatingSubscriberId, setUpdatingSubscriberId] = useState<string | null>(
+    null,
+  );
   const loadingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const clearLoadingTimeout = () => {
@@ -248,6 +252,7 @@ export default function SubscriptionsPage() {
     newStatus: string
   ) => {
     try {
+      setUpdatingSubscriberId(subscriberId);
       const response = await fetch(
         `/api/studio/newsletter/subscribers/${subscriberId}`,
         {
@@ -260,16 +265,67 @@ export default function SubscriptionsPage() {
         }
       );
 
+      const result = await response.json().catch(() => ({}));
       if (!response.ok) {
-        throw new Error("Failed to update status");
+        throw new Error(
+          typeof result.error === "string"
+            ? result.error
+            : "Failed to update status",
+        );
       }
 
-      toast.success("Subscription status updated successfully");
-      await fetchSubscribers(getCurrentQuery(currentPage)); // Refresh the list
-      fetchStats(); // Refresh stats
+      toast.success("Subscription status updated");
+      await fetchSubscribers(getCurrentQuery(currentPage));
+      void fetchStats();
     } catch (error) {
       console.error("Error updating status:", error);
-      toast.error("Failed to update subscription status");
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to update subscription status",
+      );
+    } finally {
+      setUpdatingSubscriberId(null);
+    }
+  };
+
+  const handleDeleteSubscriber = async (subscriber: NewsletterSubscriber) => {
+    const confirmed = window.confirm(
+      `Delete ${subscriber.email} from the newsletter list? This cannot be undone.`,
+    );
+    if (!confirmed) return;
+
+    try {
+      setUpdatingSubscriberId(subscriber.id);
+      const response = await fetch(
+        `/api/studio/newsletter/subscribers/${subscriber.id}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        },
+      );
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(
+          typeof result.error === "string"
+            ? result.error
+            : "Failed to delete subscriber",
+        );
+      }
+
+      setSubscribers((prev) =>
+        prev.filter((row) => row.id !== subscriber.id),
+      );
+      toast.success("Subscriber deleted");
+      await fetchSubscribers(getCurrentQuery(currentPage));
+      void fetchStats();
+    } catch (error) {
+      console.error("Error deleting subscriber:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to delete subscriber",
+      );
+    } finally {
+      setUpdatingSubscriberId(null);
     }
   };
 
@@ -596,13 +652,15 @@ export default function SubscriptionsPage() {
                           </div>
                         </td>
                         <td className="px-4 py-3">
-                          <div className="flex gap-2">
+                          <div className="flex flex-wrap gap-2">
                             {subscriber.subscription_status === "active" ? (
                               <Button
+                                type="button"
                                 size="sm"
                                 variant="outline"
+                                disabled={updatingSubscriberId === subscriber.id}
                                 onClick={() =>
-                                  handleStatusChange(
+                                  void handleStatusChange(
                                     subscriber.id,
                                     "unsubscribed"
                                   )
@@ -613,16 +671,29 @@ export default function SubscriptionsPage() {
                               </Button>
                             ) : (
                               <Button
+                                type="button"
                                 size="sm"
                                 variant="outline"
+                                disabled={updatingSubscriberId === subscriber.id}
                                 onClick={() =>
-                                  handleStatusChange(subscriber.id, "active")
+                                  void handleStatusChange(subscriber.id, "active")
                                 }
                                 className="border-green-200 text-green-600 hover:bg-green-50"
                               >
                                 Reactivate
                               </Button>
                             )}
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              disabled={updatingSubscriberId === subscriber.id}
+                              onClick={() => void handleDeleteSubscriber(subscriber)}
+                              className="border-red-200 text-red-700 hover:bg-red-50"
+                            >
+                              <Trash2 className="mr-1 h-3.5 w-3.5" />
+                              Delete
+                            </Button>
                           </div>
                         </td>
                       </tr>

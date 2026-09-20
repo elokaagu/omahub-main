@@ -3,7 +3,7 @@ import { getAdminClient } from "@/lib/supabase-admin";
 import { requireSuperAdmin } from "@/lib/auth/requireSuperAdmin";
 
 const SUBSCRIBER_SELECT_FIELDS =
-  "id, email, first_name, last_name, subscription_status, preferences, subscribed_at, unsubscribed_at, created_at, updated_at";
+  "id, email, first_name, last_name, subscription_status, subscribed_at, unsubscribed_at, created_at, updated_at";
 const VALID_SUBSCRIPTION_STATUSES = [
   "active",
   "unsubscribed",
@@ -162,14 +162,10 @@ export async function DELETE(
       );
     }
 
-    // Soft-delete behavior: suppress subscriber rather than hard-delete the row.
-    const { data: updatedSubscriber, error: deleteError } = await supabase
+    // Hard-delete the subscriber so Studio can remove test and stale rows.
+    const { data: deletedSubscriber, error: deleteError } = await supabase
       .from("newsletter_subscribers")
-      .update({
-        subscription_status: "unsubscribed",
-        unsubscribed_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      })
+      .delete()
       .eq("id", id)
       .select("id")
       .single();
@@ -178,21 +174,21 @@ export async function DELETE(
       if (deleteError.code === "PGRST116") {
         return NextResponse.json({ error: "Subscriber not found" }, { status: 404 });
       }
-      console.error("❌ Error suppressing subscriber:", deleteError.code);
+      console.error("❌ Error deleting subscriber:", deleteError.code, deleteError.message);
       return NextResponse.json(
-        { error: "Failed to update subscriber status" },
+        { error: "Failed to delete subscriber" },
         { status: 500 }
       );
     }
 
-    console.info("Newsletter subscriber suppressed", {
+    console.info("Newsletter subscriber deleted", {
       actorUserId: authz.userId,
-      subscriberId: updatedSubscriber.id,
+      subscriberId: deletedSubscriber.id,
     });
 
     return NextResponse.json({
       success: true,
-      message: "Subscriber unsubscribed successfully"
+      message: "Subscriber deleted"
     });
 
   } catch (error) {
