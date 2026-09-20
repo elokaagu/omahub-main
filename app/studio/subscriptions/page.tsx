@@ -19,6 +19,17 @@ import {
   Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface NewsletterSubscriber {
   id: string;
@@ -290,11 +301,6 @@ export default function SubscriptionsPage() {
   };
 
   const handleDeleteSubscriber = async (subscriber: NewsletterSubscriber) => {
-    const confirmed = window.confirm(
-      `Delete ${subscriber.email} from the newsletter list? This cannot be undone.`,
-    );
-    if (!confirmed) return;
-
     try {
       setUpdatingSubscriberId(subscriber.id);
       const response = await fetch(
@@ -357,39 +363,49 @@ export default function SubscriptionsPage() {
   };
 
   const getStatusBadge = (status: string) => {
-    const statusConfig = {
-      active: { color: "bg-green-100 text-green-800", label: "Active" },
-      unsubscribed: { color: "bg-red-100 text-red-800", label: "Unsubscribed" },
-      bounced: { color: "bg-yellow-100 text-yellow-800", label: "Bounced" },
-      pending: { color: "bg-blue-100 text-blue-800", label: "Pending" },
-    };
-
-    const config =
-      statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
-    return <Badge className={config.color}>{config.label}</Badge>;
+    if (status === "active") {
+      return (
+        <Badge className="border-0 bg-oma-plum text-white hover:bg-oma-plum">
+          Active
+        </Badge>
+      );
+    }
+    if (status === "unsubscribed") {
+      return (
+        <Badge variant="outline" className="text-oma-cocoa">
+          Paused
+        </Badge>
+      );
+    }
+    if (status === "bounced") {
+      return (
+        <Badge variant="outline" className="border-red-200 text-red-700">
+          Bounced
+        </Badge>
+      );
+    }
+    return (
+      <Badge variant="outline" className="text-oma-cocoa">
+        Pending
+      </Badge>
+    );
   };
 
-  const getSourceBadge = (source: string) => {
-    const sourceConfig = {
-      website: { color: "bg-blue-100 text-blue-800", label: "Website" },
-      contact_form: {
-        color: "bg-purple-100 text-purple-800",
-        label: "Contact Form",
-      },
-      studio_signup: {
-        color: "bg-indigo-100 text-indigo-800",
-        label: "Studio Signup",
-      },
-      manual_import: {
-        color: "bg-gray-100 text-gray-800",
-        label: "Manual Import",
-      },
+  const sourceLabel = (source: string) => {
+    const labels: Record<string, string> = {
+      website: "Website",
+      contact_form: "Contact",
+      studio_signup: "Studio",
+      manual_import: "Import",
     };
-
-    const config =
-      sourceConfig[source as keyof typeof sourceConfig] || sourceConfig.website;
-    return <Badge className={config.color}>{config.label}</Badge>;
+    return labels[source] ?? source;
   };
+
+  const displayName = (subscriber: NewsletterSubscriber) =>
+    [subscriber.first_name, subscriber.last_name]
+      .filter(Boolean)
+      .join(" ")
+      .trim();
 
   // Check access after user is loaded
   if (effectiveRole && effectiveRole !== "super_admin") {
@@ -575,136 +591,130 @@ export default function SubscriptionsPage() {
         </CardHeader>
         <CardContent className="p-0">
           {loading ? (
-            <div className="text-center py-8">
+            <div className="py-12 text-center">
               <div className="mx-auto h-8 w-8 rounded-full border-b-2 border-oma-plum"></div>
-              <p className="mt-2 text-oma-cocoa">Loading subscribers...</p>
+              <p className="mt-2 text-oma-cocoa">Loading subscribers…</p>
             </div>
           ) : subscribers.length === 0 ? (
-            <div className="text-center py-8">
-              <Mail className="mx-auto mb-4 h-12 w-12 text-oma-cocoa" />
+            <div className="py-12 text-center">
+              <Mail className="mx-auto mb-4 h-10 w-10 text-oma-cocoa/50" />
               <p className="text-oma-cocoa">No subscribers found</p>
             </div>
           ) : (
             <>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-oma-beige/60 bg-oma-cream/15">
-                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-oma-cocoa">
-                        Email
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-oma-cocoa">
-                        Name
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-oma-cocoa">
-                        Status
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-oma-cocoa">
-                        Source
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-oma-cocoa">
-                        Subscribed
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-oma-cocoa">
-                        Emails Sent
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-oma-cocoa">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {subscribers.map((subscriber) => (
-                      <tr
-                        key={subscriber.id}
-                        className="border-b border-oma-beige/60 hover:bg-oma-cream/10"
-                      >
-                        <td className="px-4 py-3">
-                          <div className="font-medium text-oma-black">
+              <ul className="divide-y divide-oma-beige/70">
+                {subscribers.map((subscriber) => {
+                  const name = displayName(subscriber);
+                  const subscribed = new Date(
+                    subscriber.subscribed_at,
+                  ).toLocaleDateString("en-GB", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  });
+                  const busy = updatingSubscriberId === subscriber.id;
+
+                  return (
+                    <li
+                      key={subscriber.id}
+                      className="flex flex-col gap-4 px-5 py-4 sm:flex-row sm:items-center sm:justify-between"
+                    >
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="truncate text-sm font-medium text-oma-black">
                             {subscriber.email}
-                          </div>
-                        </td>
-                        <td className="px-4 py-3">
-                          {subscriber.first_name || subscriber.last_name ? (
-                            <div className="text-oma-black">
-                              {subscriber.first_name} {subscriber.last_name}
-                            </div>
-                          ) : (
-                            <span className="text-oma-cocoa">-</span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3">
+                          </p>
                           {getStatusBadge(subscriber.subscription_status)}
-                        </td>
-                        <td className="px-4 py-3">
-                          {getSourceBadge(subscriber.source)}
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="text-sm text-oma-cocoa">
-                            {new Date(
-                              subscriber.subscribed_at
-                            ).toLocaleDateString("en-GB")}
-                          </div>
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="text-sm text-oma-cocoa">
-                            {subscriber.email_count}
-                          </div>
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex flex-wrap gap-2">
-                            {subscriber.subscription_status === "active" ? (
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="outline"
-                                disabled={updatingSubscriberId === subscriber.id}
-                                onClick={() =>
-                                  void handleStatusChange(
-                                    subscriber.id,
-                                    "unsubscribed"
-                                  )
-                                }
-                                className="border-red-200 text-red-600 hover:bg-red-50"
-                              >
-                                Unsubscribe
-                              </Button>
-                            ) : (
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="outline"
-                                disabled={updatingSubscriberId === subscriber.id}
-                                onClick={() =>
-                                  void handleStatusChange(subscriber.id, "active")
-                                }
-                                className="border-green-200 text-green-600 hover:bg-green-50"
-                              >
-                                Reactivate
-                              </Button>
-                            )}
+                        </div>
+                        <p className="mt-1 text-sm text-oma-cocoa">
+                          {[
+                            name || null,
+                            sourceLabel(subscriber.source),
+                            subscribed,
+                            subscriber.email_count
+                              ? `${subscriber.email_count} sent`
+                              : null,
+                          ]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </p>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-2">
+                        {subscriber.subscription_status === "active" ? (
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            disabled={busy}
+                            onClick={() =>
+                              void handleStatusChange(
+                                subscriber.id,
+                                "unsubscribed",
+                              )
+                            }
+                            className="border-oma-beige text-oma-cocoa hover:bg-oma-beige/40"
+                          >
+                            Pause
+                          </Button>
+                        ) : (
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            disabled={busy}
+                            onClick={() =>
+                              void handleStatusChange(subscriber.id, "active")
+                            }
+                            className="border-oma-beige text-oma-plum hover:bg-oma-beige/40"
+                          >
+                            Restore
+                          </Button>
+                        )}
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
                             <Button
                               type="button"
                               size="sm"
                               variant="outline"
-                              disabled={updatingSubscriberId === subscriber.id}
-                              onClick={() => void handleDeleteSubscriber(subscriber)}
+                              disabled={busy}
+                              aria-label={`Delete ${subscriber.email}`}
                               className="border-red-200 text-red-700 hover:bg-red-50"
                             >
-                              <Trash2 className="mr-1 h-3.5 w-3.5" />
-                              Delete
+                              <Trash2 className="h-3.5 w-3.5" />
+                              <span className="sr-only">Delete</span>
                             </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>
+                                Delete this subscriber?
+                              </AlertDialogTitle>
+                              <AlertDialogDescription>
+                                {subscriber.email} will be removed from the
+                                newsletter list. This cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                className="bg-red-600 hover:bg-red-700"
+                                onClick={() =>
+                                  void handleDeleteSubscriber(subscriber)
+                                }
+                              >
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
 
-              {/* Pagination */}
               {totalPages > 1 && (
-                <div className="mt-6 flex items-center justify-between border-t border-oma-beige/60 px-6 py-4">
+                <div className="flex items-center justify-between border-t border-oma-beige/60 px-5 py-4">
                   <div className="text-sm text-oma-cocoa">
                     Page {currentPage} of {totalPages}
                   </div>
