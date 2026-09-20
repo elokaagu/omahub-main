@@ -172,7 +172,7 @@ export function EditionContentSection({
           </h2>
           <p className="text-sm text-oma-cocoa">
             Write the edition like a blog post — title, excerpt, and story with
-            images placed wherever you need them. Changes autosave to Supabase.
+            images placed wherever you need them. Changes autosave.
           </p>
         </div>
         <AutosaveIndicator status={status} lastSavedAt={lastSavedAt} />

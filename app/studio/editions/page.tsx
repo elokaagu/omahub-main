@@ -75,8 +75,7 @@ function EditionsStudioContent() {
         <h1 className="text-3xl font-canela text-oma-black mb-2">Editions</h1>
         <p className="text-oma-cocoa">
           Create and edit each edition like a blog post — story, metadata, cover,
-          gallery, lineup, and partners in one place. Content autosaves to
-          Supabase.
+          gallery, lineup, and partners in one place.
         </p>
       </div>
 

@@ -559,7 +559,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
           <strong>Vimeo link</strong> (e.g. vimeo.com/1206857643), a direct{" "}
           <strong>.mp4 URL</strong>, or upload a video file. Add an optional
           thumbnail for mp4 files — it shows before playback starts. Changes
-          save automatically to Supabase.
+          save automatically.
         </p>
 
         {video?.image_url && (() => {
