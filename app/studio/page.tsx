@@ -8,6 +8,7 @@ import { useStudioInitialData } from "@/contexts/StudioInitialDataContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Link from "next/link";
+import { StudioHomeOverview } from "@/components/studio/StudioHomeOverview";
 
 const RecentAccountsWidget = dynamic(
   () => import("@/app/studio/dashboard/RecentAccountsWidget"),
@@ -88,6 +89,8 @@ export default function StudioPage() {
 
       {/* Main Dashboard Components */}
       <div className="grid grid-cols-1 gap-8">
+        <StudioHomeOverview />
+
         {effectiveRole === "super_admin" && (
           <Card className="overflow-hidden rounded-2xl border border-oma-beige/60 shadow-sm">
             <CardContent className="bg-white px-5 py-6 sm:px-8 sm:py-8">
