@@ -68,10 +68,13 @@ export async function GET(_request: NextRequest) {
       );
     }
 
-    let { data: applications, error } = await supabase
+    const fullSelect = await supabase
       .from("designer_applications")
       .select(`${CORE_COLUMNS}, ${OPTIONAL_COLUMNS}`)
       .order("created_at", { ascending: false });
+
+    let applications = fullSelect.data as ApplicationRow[] | null;
+    let error = fullSelect.error;
 
     if (error && isMissingColumnError(error)) {
       console.warn(
@@ -82,7 +85,7 @@ export async function GET(_request: NextRequest) {
         .from("designer_applications")
         .select(CORE_COLUMNS)
         .order("created_at", { ascending: false });
-      applications = retry.data;
+      applications = (retry.data ?? []) as ApplicationRow[];
       error = retry.error;
     }
 
@@ -99,7 +102,7 @@ export async function GET(_request: NextRequest) {
       );
     }
 
-    const appRows: ApplicationRow[] = (applications ?? []) as ApplicationRow[];
+    const appRows: ApplicationRow[] = applications ?? [];
 
     const uniqueBrandNames = [
       ...new Set(appRows.map((app) => app.brand_name).filter(Boolean)),
