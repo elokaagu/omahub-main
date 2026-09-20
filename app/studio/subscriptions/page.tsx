@@ -71,6 +71,63 @@ const DASHBOARD_SECTION =
 const METRIC_CARD =
   "flex min-h-[7.5rem] flex-col justify-center rounded-xl border border-black/[0.06] bg-white p-5 text-left shadow-sm";
 
+function applyDeleteToStats(
+  stats: SubscriptionStats,
+  subscriber: NewsletterSubscriber,
+): SubscriptionStats {
+  const subscribedAt = new Date(subscriber.subscribed_at);
+  const now = new Date();
+  const subscribedThisMonth =
+    subscribedAt.getFullYear() === now.getFullYear() &&
+    subscribedAt.getMonth() === now.getMonth();
+
+  return {
+    ...stats,
+    total: Math.max(0, stats.total - 1),
+    active:
+      subscriber.subscription_status === "active"
+        ? Math.max(0, stats.active - 1)
+        : stats.active,
+    unsubscribed:
+      subscriber.subscription_status === "unsubscribed"
+        ? Math.max(0, stats.unsubscribed - 1)
+        : stats.unsubscribed,
+    bounced:
+      subscriber.subscription_status === "bounced"
+        ? Math.max(0, stats.bounced - 1)
+        : stats.bounced,
+    pending:
+      subscriber.subscription_status === "pending"
+        ? Math.max(0, stats.pending - 1)
+        : stats.pending,
+    thisMonth: subscribedThisMonth
+      ? Math.max(0, stats.thisMonth - 1)
+      : stats.thisMonth,
+  };
+}
+
+function applyStatusToStats(
+  stats: SubscriptionStats,
+  fromStatus: NewsletterSubscriber["subscription_status"],
+  toStatus: NewsletterSubscriber["subscription_status"],
+): SubscriptionStats {
+  if (fromStatus === toStatus) return stats;
+
+  const next = { ...stats };
+  if (fromStatus === "active") next.active = Math.max(0, next.active - 1);
+  if (fromStatus === "unsubscribed")
+    next.unsubscribed = Math.max(0, next.unsubscribed - 1);
+  if (fromStatus === "bounced") next.bounced = Math.max(0, next.bounced - 1);
+  if (fromStatus === "pending") next.pending = Math.max(0, next.pending - 1);
+
+  if (toStatus === "active") next.active += 1;
+  if (toStatus === "unsubscribed") next.unsubscribed += 1;
+  if (toStatus === "bounced") next.bounced += 1;
+  if (toStatus === "pending") next.pending += 1;
+
+  return next;
+}
+
 export default function SubscriptionsPage() {
   const { user } = useAuth();
   const initialData = useStudioInitialData();
@@ -168,6 +225,7 @@ export default function SubscriptionsPage() {
         `/api/studio/newsletter/subscribers?${params}`,
         {
           method: "GET",
+          cache: "no-store",
           credentials: "include",
           headers: {
             "Content-Type": "application/json",
@@ -223,6 +281,7 @@ export default function SubscriptionsPage() {
 
       const response = await fetch("/api/studio/newsletter/stats", {
         method: "GET",
+        cache: "no-store",
         credentials: "include",
         headers: {
           "Content-Type": "application/json",
@@ -260,14 +319,39 @@ export default function SubscriptionsPage() {
 
   const handleStatusChange = async (
     subscriberId: string,
-    newStatus: string
+    newStatus: NewsletterSubscriber["subscription_status"],
   ) => {
+    const previous = subscribers.find((row) => row.id === subscriberId);
+    if (!previous) return;
+    const previousStats = stats;
+
+    setUpdatingSubscriberId(subscriberId);
+    setSubscribers((prev) =>
+      prev.map((row) =>
+        row.id === subscriberId
+          ? {
+              ...row,
+              subscription_status: newStatus,
+              unsubscribed_at:
+                newStatus === "unsubscribed"
+                  ? new Date().toISOString()
+                  : null,
+            }
+          : row,
+      ),
+    );
+    setStats((prev) =>
+      prev
+        ? applyStatusToStats(prev, previous.subscription_status, newStatus)
+        : prev,
+    );
+
     try {
-      setUpdatingSubscriberId(subscriberId);
       const response = await fetch(
         `/api/studio/newsletter/subscribers/${subscriberId}`,
         {
           method: "PATCH",
+          cache: "no-store",
           credentials: "include",
           headers: {
             "Content-Type": "application/json",
@@ -286,9 +370,12 @@ export default function SubscriptionsPage() {
       }
 
       toast.success("Subscription status updated");
-      await fetchSubscribers(getCurrentQuery(currentPage));
       void fetchStats();
     } catch (error) {
+      setSubscribers((prev) =>
+        prev.map((row) => (row.id === subscriberId ? previous : row)),
+      );
+      setStats(previousStats);
       console.error("Error updating status:", error);
       toast.error(
         error instanceof Error
@@ -301,12 +388,20 @@ export default function SubscriptionsPage() {
   };
 
   const handleDeleteSubscriber = async (subscriber: NewsletterSubscriber) => {
+    const previousSubscribers = subscribers;
+    const previousStats = stats;
+    const wasLastOnPage = subscribers.length === 1 && currentPage > 1;
+
+    setUpdatingSubscriberId(subscriber.id);
+    setSubscribers((prev) => prev.filter((row) => row.id !== subscriber.id));
+    setStats((prev) => (prev ? applyDeleteToStats(prev, subscriber) : prev));
+
     try {
-      setUpdatingSubscriberId(subscriber.id);
       const response = await fetch(
         `/api/studio/newsletter/subscribers/${subscriber.id}`,
         {
           method: "DELETE",
+          cache: "no-store",
           credentials: "include",
         },
       );
@@ -319,13 +414,14 @@ export default function SubscriptionsPage() {
         );
       }
 
-      setSubscribers((prev) =>
-        prev.filter((row) => row.id !== subscriber.id),
-      );
       toast.success("Subscriber deleted");
-      await fetchSubscribers(getCurrentQuery(currentPage));
       void fetchStats();
+      if (wasLastOnPage) {
+        setCurrentPage((page) => Math.max(1, page - 1));
+      }
     } catch (error) {
+      setSubscribers(previousSubscribers);
+      setStats(previousStats);
       console.error("Error deleting subscriber:", error);
       toast.error(
         error instanceof Error ? error.message : "Failed to delete subscriber",
