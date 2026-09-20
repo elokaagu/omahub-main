@@ -198,11 +198,6 @@ export async function createSpotlightContent(
       throw new Error("Supabase client not available");
     }
 
-    // If setting this as active, deactivate all others first
-    if (spotlightData.is_active !== false) {
-      await deactivateAllSpotlightContent();
-    }
-
     const { data, error } = await supabase
       .from("spotlight_content")
       .insert({
@@ -262,13 +257,6 @@ export async function updateSpotlightContent(
       );
     }
 
-    // If setting this as active, deactivate all others first
-    if (updates.is_active === true) {
-      console.log("🔄 Deactivating other spotlight content...");
-      await deactivateAllSpotlightContent();
-    }
-
-    console.log("🔄 Performing database update...");
     const { data, error } = await supabase
       .from("spotlight_content")
       .update(updates)
@@ -326,54 +314,24 @@ export async function deleteSpotlightContent(
 }
 
 /**
- * Set a spotlight content as active (deactivates all others)
+ * Set a spotlight film as live without turning off other brands.
+ * Product pages look up the active film by brand name.
  */
-export async function setActiveSpotlightContent(
-  userId: string,
-  id: string
+export async function setSpotlightActiveState(
+  id: string,
+  isActive: boolean
 ): Promise<SpotlightContent> {
-  try {
-    if (!supabase) {
-      throw new Error("Supabase client not available");
-    }
-
-    // First deactivate all spotlight content
-    await deactivateAllSpotlightContent();
-
-    // Then activate the selected one
-    const { data, error } = await supabase
-      .from("spotlight_content")
-      .update({ is_active: true })
-      .eq("id", id)
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    return data;
-  } catch (error) {
-    console.error("Error setting active spotlight content:", error);
-    throw error;
+  if (!supabase) {
+    throw new Error("Supabase client not available");
   }
-}
 
-/**
- * Deactivate all spotlight content
- */
-async function deactivateAllSpotlightContent(): Promise<void> {
-  try {
-    if (!supabase) {
-      throw new Error("Supabase client not available");
-    }
+  const { data, error } = await supabase
+    .from("spotlight_content")
+    .update({ is_active: isActive, updated_at: new Date().toISOString() })
+    .eq("id", id)
+    .select()
+    .single();
 
-    const { error } = await supabase
-      .from("spotlight_content")
-      .update({ is_active: false })
-      .neq("id", "00000000-0000-0000-0000-000000000000"); // Update all rows
-
-    if (error) throw error;
-  } catch (error) {
-    console.error("Error deactivating spotlight content:", error);
-    throw error;
-  }
+  if (error) throw error;
+  return data;
 }
