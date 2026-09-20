@@ -39,6 +39,7 @@ import { Loading } from "@/components/ui/loading";
 import { toast } from "sonner";
 import { useStudioOptimization } from "@/lib/hooks/useStudioOptimization";
 import { getPrimaryBrandImagePublicUrl } from "@/lib/brands/brandEditMedia";
+import { BlurIn, BlurInTableRow } from "@/components/studio/BlurIn";
 
 type ResolvedStudioAccess = {
   role: string;
@@ -237,22 +238,22 @@ export default function BrandsPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-8 gap-4">
+      <BlurIn className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-canela text-gray-900">
             {isBrandOwner ? "Your Brands" : "Brands"}
           </h1>
           {isBrandOwner && (
-            <p className="text-sm text-gray-600 mt-1">
+            <p className="mt-1 text-sm text-gray-600">
               Manage your brand information and settings
             </p>
           )}
         </div>
-        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
           {isAdmin && (
             <Button
               asChild
-              className="bg-oma-plum hover:bg-oma-plum/90 w-full sm:w-auto"
+              className="w-full bg-oma-plum hover:bg-oma-plum/90 sm:w-auto"
             >
               <Link
                 href="/studio/brands/create"
@@ -264,136 +265,145 @@ export default function BrandsPage() {
             </Button>
           )}
         </div>
-      </div>
+      </BlurIn>
 
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle>
-            {isBrandOwner ? "Your Brand Management" : "Brand Management"}
-          </CardTitle>
-          <CardDescription>
-            {isBrandOwner
-              ? "Manage your brands in the directory"
-              : "Manage all brands in the directory"}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="relative">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-            <Input
-              placeholder="Search brands by name, category, or location..."
-              className="pl-10"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-        </CardContent>
-      </Card>
+      <BlurIn delay={0.08} className="mb-8">
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              {isBrandOwner ? "Your Brand Management" : "Brand Management"}
+            </CardTitle>
+            <CardDescription>
+              {isBrandOwner
+                ? "Manage your brands in the directory"
+                : "Manage all brands in the directory"}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="relative">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Search brands by name, category, or location..."
+                className="pl-10"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      </BlurIn>
 
       {filteredBrands.length === 0 ? (
-        <div className="bg-gray-50 border border-dashed border-gray-300 rounded-lg p-8 text-center">
-          <Package className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-          <p className="text-gray-600 mb-4">
-            {searchQuery
-              ? "No brands match your search criteria"
-              : isBrandOwner
-                ? "You don't have any brands assigned to your account yet."
-                : "No brands have been added yet"}
-          </p>
-          {!searchQuery && isAdmin && (
-            <Button asChild className="bg-oma-plum hover:bg-oma-plum/90">
-              <Link href="/studio/brands/create">Create Your First Brand</Link>
-            </Button>
-          )}
-        </div>
-      ) : (
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="p-4 border-b border-gray-200">
-            <p className="text-sm text-gray-500">
-              Showing {filteredBrands.length} brand
-              {filteredBrands.length === 1 ? "" : "s"}
-              {isBrandOwner && " assigned to your account"}
+        <BlurIn delay={0.12}>
+          <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-8 text-center">
+            <Package className="mx-auto mb-4 h-12 w-12 text-gray-400" />
+            <p className="mb-4 text-gray-600">
+              {searchQuery
+                ? "No brands match your search criteria"
+                : isBrandOwner
+                  ? "You don't have any brands assigned to your account yet."
+                  : "No brands have been added yet"}
             </p>
+            {!searchQuery && isAdmin && (
+              <Button asChild className="bg-oma-plum hover:bg-oma-plum/90">
+                <Link href="/studio/brands/create">Create Your First Brand</Link>
+              </Button>
+            )}
           </div>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Brand</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Location</TableHead>
-                <TableHead>Rating</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredBrands.map((brand) => {
-                const imageUrl = getPrimaryBrandImagePublicUrl(brand);
-                return (
-                  <TableRow
-                    key={brand.id}
-                    className="cursor-pointer hover:bg-gray-50"
-                    onClick={() => handleBrandClick(brand.id)}
-                  >
-                    <TableCell className="font-medium">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-md overflow-hidden bg-gray-100 flex-shrink-0">
-                          {imageUrl ? (
-                            <AuthImage
-                              src={imageUrl}
-                              alt={brand.name}
-                              aspectRatio="square"
-                              className="w-full h-full"
-                              sizes="40px"
-                              quality={60}
-                            />
-                          ) : null}
+        </BlurIn>
+      ) : (
+        <BlurIn delay={0.12}>
+          <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+            <div className="border-b border-gray-200 p-4">
+              <p className="text-sm text-gray-500">
+                Showing {filteredBrands.length} brand
+                {filteredBrands.length === 1 ? "" : "s"}
+                {isBrandOwner && " assigned to your account"}
+              </p>
+            </div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Brand</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead>Location</TableHead>
+                  <TableHead>Rating</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredBrands.map((brand, index) => {
+                  const imageUrl = getPrimaryBrandImagePublicUrl(brand);
+                  return (
+                    <BlurInTableRow
+                      key={brand.id}
+                      delay={Math.min(index, 10) * 0.05}
+                      className="cursor-pointer hover:bg-gray-50"
+                      onClick={() => handleBrandClick(brand.id)}
+                    >
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-md bg-gray-100">
+                            {imageUrl ? (
+                              <AuthImage
+                                src={imageUrl}
+                                alt={brand.name}
+                                width={40}
+                                height={40}
+                                aspectRatio="square"
+                                className="h-full w-full"
+                                sizes="40px"
+                                quality={55}
+                              />
+                            ) : null}
+                          </div>
+                          <span>{brand.name}</span>
                         </div>
-                        <span>{brand.name}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>{brand.category}</TableCell>
-                    <TableCell>{brand.location}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center">
-                        <Star className="h-4 w-4 text-yellow-400 mr-1" />
-                        {brand.rating && brand.rating > 0 ? (
-                          brand.rating.toFixed(1)
+                      </TableCell>
+                      <TableCell>{brand.category}</TableCell>
+                      <TableCell>{brand.location}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center">
+                          <Star className="mr-1 h-4 w-4 text-yellow-400" />
+                          {brand.rating && brand.rating > 0 ? (
+                            brand.rating.toFixed(1)
+                          ) : (
+                            <span className="text-gray-400">No ratings yet</span>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {brand.is_verified ? (
+                          <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
+                            <CheckCircle className="mr-1 h-3 w-3" />
+                            Verified
+                          </span>
                         ) : (
-                          <span className="text-gray-400">No ratings yet</span>
+                          <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800">
+                            Unverified
+                          </span>
                         )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {brand.is_verified ? (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          <CheckCircle className="h-3 w-3 mr-1" />
-                          Verified
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                          Unverified
-                        </span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleBrandClick(brand.id);
-                        }}
-                      >
-                        View
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleBrandClick(brand.id);
+                          }}
+                        >
+                          View
+                        </Button>
+                      </TableCell>
+                    </BlurInTableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        </BlurIn>
       )}
     </div>
   );
