@@ -49,7 +49,6 @@ export async function sendContactEmail(formData: {
 
     // Determine recipient - use provided 'to' email or fallback to admin
     const recipientEmail = formData.to || "info@oma-hub.com";
-    const studioInboxUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "https://oma-hub.com"}/studio/inbox`;
 
     console.log("📧 Sending contact email via Resend to:", recipientEmail);
     const { data, error } = await resend.emails.send({
@@ -60,7 +59,7 @@ export async function sendContactEmail(formData: {
         preheader: `New contact submission from ${formData.name}`,
         title: "New Contact Submission",
         subtitle: formData.subject,
-        intro: "A new contact form entry has been submitted on OmaHub.",
+        intro: "A new contact form entry has been submitted on OmaHub. Reply to this email to reach the customer.",
         sections: [
           {
             title: "Submission Details",
@@ -75,8 +74,9 @@ export async function sendContactEmail(formData: {
             content: formData.message,
           },
         ],
-        ctaLabel: "Open Studio Inbox",
-        ctaUrl: studioInboxUrl,
+        ctaLabel: "Reply to customer",
+        ctaUrl: `mailto:${formData.email}`,
+        footerNote: "Reply directly to this email to continue the conversation.",
       }),
       text: `
 Name: ${formData.name}
@@ -121,7 +121,6 @@ export async function sendNewLeadNotificationToBrand(params: {
     const notesBlock = params.notes?.trim()
       ? `\nNotes:\n${params.notes.trim()}\n`
       : "";
-    const inboxUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "https://oma-hub.com"}/studio/inbox`;
 
     const { error } = await resend.emails.send({
       from: "OmaHub <info@oma-hub.com>",
@@ -132,7 +131,7 @@ export async function sendNewLeadNotificationToBrand(params: {
         preheader: `New lead for ${params.brandName}`,
         title: "New Lead",
         subtitle: params.brandName,
-        intro: "A new lead has been captured on OmaHub.",
+        intro: "A new lead has been captured on OmaHub. Reply to this email to reach the customer.",
         sections: [
           {
             title: "Lead Details",
@@ -148,8 +147,9 @@ export async function sendNewLeadNotificationToBrand(params: {
             ? [{ title: "Notes", content: params.notes.trim() }]
             : []),
         ],
-        ctaLabel: "View Inbox",
-        ctaUrl: inboxUrl,
+        ctaLabel: "Reply to customer",
+        ctaUrl: `mailto:${params.customerEmail}`,
+        footerNote: "Reply directly to this email to continue the conversation.",
       }),
       text: `You have a new lead on OmaHub.
 

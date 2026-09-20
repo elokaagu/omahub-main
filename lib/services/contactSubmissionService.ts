@@ -129,9 +129,7 @@ export async function submitBrandContact(
 Customer Email: ${email}
 Message: ${message}
 
-This inquiry has been saved to your Studio inbox. You can respond directly to the customer at ${email}.
-
-View all inquiries in your Studio: https://oma-hub.com/studio/inbox?brand=${brandId}
+Reply directly to this email to reach the customer.
 
 Best regards,
 OmaHub Team`,
@@ -147,7 +145,7 @@ OmaHub Team`,
 
   const messageOut = usedOmaHubEmailFallback
     ? "Your message has been sent! We'll forward it to the designer and get back to you soon."
-    : "Your message has been sent! The designer will receive it in their inbox and respond to you directly.";
+    : "Your message has been sent! The designer will receive it by email and can reply to you directly.";
 
   return {
     message: messageOut,
@@ -234,7 +232,7 @@ Email: ${email}
 Subject: ${subject}
 Message: ${message}
 
-View all inquiries in your Studio: https://oma-hub.com/studio/inbox`,
+Reply directly to this email to reach ${name}.`,
     });
     notificationSent = !!emailResult.success;
     if (!emailResult.success) {

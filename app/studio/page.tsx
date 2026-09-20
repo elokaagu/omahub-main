@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useStudioInitialData } from "@/contexts/StudioInitialDataContext";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import Link from "next/link";
 
 const RecentAccountsWidget = dynamic(
@@ -19,24 +19,12 @@ const RecentAccountsWidget = dynamic(
   },
 );
 
-// Dynamic imports for heavy components
-const LeadsTrackingDashboard = dynamic(
-  () => import("@/components/studio/LeadsTrackingDashboard"),
-  {
-    loading: () => (
-      <div className="h-64 bg-gray-200 rounded-lg animate-pulse" />
-    ),
-    ssr: false,
-  }
-);
-
 export default function StudioPage() {
   const router = useRouter();
   const initialData = useStudioInitialData();
   const initialProfile = initialData?.profile ?? null;
   const { user, loading: authLoading } = useAuth();
   const effectiveRole = initialProfile?.role ?? user?.role ?? null;
-  const ownedBrandIds = initialProfile?.owned_brands ?? user?.owned_brands ?? [];
 
   useEffect(() => {
     if (effectiveRole === "brand_admin") {
@@ -94,29 +82,12 @@ export default function StudioPage() {
           Welcome to OmaHub Studio
         </h1>
         <p className="text-base leading-relaxed text-omahub-secondary sm:text-lg">
-          Manage your brands, products, and business operations
+          Manage brands, editions, and the live homepage from one place
         </p>
       </header>
 
       {/* Main Dashboard Components */}
       <div className="grid grid-cols-1 gap-8">
-        {effectiveRole === "super_admin" && (
-          <Card className="overflow-hidden rounded-2xl border border-oma-beige/60 shadow-sm">
-            <CardContent className="bg-white px-5 py-6 sm:px-8 sm:py-8">
-              <Suspense
-                fallback={
-                  <div className="h-64 bg-gray-100 rounded-lg animate-pulse" />
-                }
-              >
-                <LeadsTrackingDashboard
-                  userRole={effectiveRole}
-                  ownedBrandIds={ownedBrandIds}
-                />
-              </Suspense>
-            </CardContent>
-          </Card>
-        )}
-
         {effectiveRole === "super_admin" && (
           <Card className="overflow-hidden rounded-2xl border border-oma-beige/60 shadow-sm">
             <CardContent className="bg-white px-5 py-6 sm:px-8 sm:py-8">

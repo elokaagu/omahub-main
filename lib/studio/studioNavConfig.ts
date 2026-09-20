@@ -6,6 +6,8 @@
 export const STUDIO_HIDDEN_NAV_HREFS = new Set([
   "/studio/welcome",
   "/studio/reviews",
+  "/studio/inbox",
+  "/studio/leads",
   "/studio/collections",
   "/studio/products",
   "/studio/services",
