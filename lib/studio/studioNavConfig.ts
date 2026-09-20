@@ -4,6 +4,8 @@
  * Hero carousel is hidden because the live homepage uses Settings → Homepage Hero.
  */
 export const STUDIO_HIDDEN_NAV_HREFS = new Set([
+  "/studio/welcome",
+  "/studio/reviews",
   "/studio/collections",
   "/studio/products",
   "/studio/services",

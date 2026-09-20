@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import OmaHubEditor from "@/app/components/OmaHubEditor";
 import { AutosaveIndicator } from "@/components/studio/AutosaveIndicator";
-import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
@@ -240,11 +240,10 @@ export function EditionContentSection({
         </div>
         <div className="space-y-2">
           <Label htmlFor="edition-sort-date">Sort date</Label>
-          <Input
+          <DatePicker
             id="edition-sort-date"
-            type="date"
             value={draft.sort_date ?? ""}
-            onChange={(e) => updateField("sort_date", e.target.value)}
+            onChange={(value) => updateField("sort_date", value)}
           />
         </div>
         <div className="space-y-2">

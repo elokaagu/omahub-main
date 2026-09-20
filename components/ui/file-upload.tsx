@@ -25,6 +25,7 @@ interface FileUploadProps {
   maxSize?: number;
   className?: string;
   hidePreview?: boolean;
+  compact?: boolean;
   inputId?: string;
 }
 
@@ -35,10 +36,15 @@ export function FileUpload({
   defaultValue,
   bucket = "brand-assets",
   path = "",
-  accept = "image/jpeg, image/png, image/webp",
+  accept = {
+    "image/jpeg": [".jpg", ".jpeg", ".jpe", ".jfif"],
+    "image/png": [".png"],
+    "image/webp": [".webp"],
+  },
   maxSize = 5,
   className = "",
   hidePreview = false,
+  compact = false,
   inputId,
 }: FileUploadProps) {
   const [uploading, setUploading] = useState(false);
@@ -489,13 +495,15 @@ export function FileUpload({
       ) : (
         <div
           onClick={handleButtonClick}
-          className="border-2 border-dashed border-gray-300 rounded-md p-8 text-center cursor-pointer hover:bg-gray-50 transition-colors"
+          className={`border-2 border-dashed border-gray-300 rounded-md text-center cursor-pointer hover:bg-gray-50 transition-colors ${
+            compact ? "p-4" : "p-8"
+          }`}
         >
           <div className="flex flex-col items-center justify-center gap-2">
-            <ImageIcon className="h-10 w-10 text-gray-400" />
-            <div className="mt-2">
+            <ImageIcon className={compact ? "h-7 w-7 text-gray-400" : "h-10 w-10 text-gray-400"} />
+            <div className={compact ? "" : "mt-2"}>
               <p className="text-sm font-medium text-gray-900">
-                Click to upload an image
+                {preview && hidePreview ? "Replace image" : "Click to upload an image"}
               </p>
               <p className="text-xs text-gray-500 mt-1">
                 PNG, JPG or WEBP (max. {maxSize}MB)
@@ -527,8 +535,12 @@ export function FileUpload({
                 type="button"
                 className="mt-4 bg-oma-plum hover:bg-oma-plum/90"
                 disabled={uploading}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  handleButtonClick();
+                }}
               >
-                Select Image
+                {preview && hidePreview ? "Change Image" : "Select Image"}
               </Button>
             )}
           </div>

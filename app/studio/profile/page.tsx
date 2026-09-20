@@ -17,7 +17,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { User as UserIcon, Save } from "lucide-react";
 import { FileUpload } from "@/components/ui/file-upload";
-import { AuthImage } from "@/components/ui/auth-image";
 
 interface ProfileData extends User {
   // Extends the User type from authService
@@ -179,17 +178,17 @@ export default function ProfilePage() {
         Profile Settings
       </h1>
 
-      <div className="grid grid-cols-1 items-stretch gap-8 lg:grid-cols-3">
+      <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <Card className="h-full">
+          <Card>
             <CardHeader>
               <CardTitle>Personal Information</CardTitle>
               <CardDescription>
                 Update your personal details and profile
               </CardDescription>
             </CardHeader>
-            <form onSubmit={handleSubmit} className="flex h-full flex-col">
-              <CardContent className="flex-1 space-y-4">
+            <form onSubmit={handleSubmit}>
+              <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <Input
@@ -260,27 +259,24 @@ export default function ProfilePage() {
         </div>
 
         <div>
-          <Card className="h-full">
+          <Card>
             <CardHeader>
               <CardTitle>Profile Picture</CardTitle>
               <CardDescription>
                 Upload a profile picture to personalize your account
               </CardDescription>
             </CardHeader>
-            <CardContent className="flex h-full flex-col">
-              <div className="flex flex-col items-center justify-center mb-6">
+            <CardContent className="space-y-6">
+              <div className="flex flex-col items-center justify-center">
                 {profileData.avatar_url ? (
-                  <AuthImage
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
                     src={profileData.avatar_url}
                     alt={`${profileData.first_name} ${profileData.last_name}`}
-                    aspectRatio="square"
-                    className="w-32 h-32 rounded-full mb-4"
-                    sizes="128px"
-                    quality={85}
-                    priority
+                    className="mb-4 h-32 w-32 rounded-full object-cover"
                   />
                 ) : (
-                  <div className="w-32 h-32 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+                  <div className="mb-4 flex h-32 w-32 items-center justify-center rounded-full bg-gray-100">
                     <UserIcon className="h-12 w-12 text-gray-400" />
                   </div>
                 )}
@@ -290,15 +286,20 @@ export default function ProfilePage() {
                 <p className="text-xs text-gray-500">{profileData.email}</p>
               </div>
 
-              <div className="mt-auto">
-                <FileUpload
-                  onUploadComplete={handleAvatarUpload}
-                  defaultValue={profileData.avatar_url}
-                  bucket="profiles"
-                  path="avatars"
-                  hidePreview
-                />
-              </div>
+              <FileUpload
+                onUploadComplete={handleAvatarUpload}
+                defaultValue={profileData.avatar_url}
+                bucket="brand-assets"
+                path="avatars"
+                accept={{
+                  "image/jpeg": [".jpg", ".jpeg", ".jpe", ".jfif"],
+                  "image/png": [".png"],
+                  "image/webp": [".webp"],
+                }}
+                maxSize={10}
+                hidePreview
+                compact
+              />
             </CardContent>
           </Card>
         </div>

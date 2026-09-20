@@ -634,8 +634,8 @@ export default function LeadsTrackingDashboard({
           </header>
 
           {platformLoading ? (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-4 lg:grid-cols-5">
-              {[...Array(5)].map((_, i) => (
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-4 lg:grid-cols-4">
+              {[...Array(4)].map((_, i) => (
                 <Card key={i} className="p-4">
                   <div className="animate-pulse">
                     <div className="h-4 bg-gray-200 rounded mb-2"></div>
@@ -660,7 +660,7 @@ export default function LeadsTrackingDashboard({
               </Button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-4 lg:grid-cols-5">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-4 lg:grid-cols-4">
               <Card className={cn(METRIC_CARD, "border-l-4 border-l-oma-plum")}>
                 <h3 className="text-sm font-medium text-oma-cocoa">
                   Total Brands
@@ -682,19 +682,6 @@ export default function LeadsTrackingDashboard({
                   {platformAnalytics?.totalProducts || 0}
                 </p>
                 <p className="mt-1 text-sm text-oma-cocoa">Across all brands</p>
-              </Card>
-              <Card
-                className={cn(METRIC_CARD, "border-l-4 border-l-green-500")}
-              >
-                <h3 className="text-sm font-medium text-oma-cocoa">
-                  Total Reviews
-                </h3>
-                <p className="mt-1 text-2xl font-canela tabular-nums text-oma-plum">
-                  {platformAnalytics?.totalReviews || 0}
-                </p>
-                <p className="mt-1 text-sm text-oma-cocoa">
-                  {platformAnalytics?.recentReviews || 0} this month
-                </p>
               </Card>
               <Card className={cn(METRIC_CARD, "border-l-4 border-l-blue-500")}>
                 <PageViewsCard
@@ -807,19 +794,6 @@ export default function LeadsTrackingDashboard({
                 <p className="mt-1 text-sm text-oma-cocoa">
                   Across your{" "}
                   {effectiveOwnedBrands.length > 1 ? "brands" : "brand"}
-                </p>
-              </Card>
-              <Card
-                className={cn(METRIC_CARD, "border-l-4 border-l-green-500")}
-              >
-                <h3 className="text-sm font-medium text-oma-cocoa">
-                  Total Reviews
-                </h3>
-                <p className="mt-1 text-2xl font-canela tabular-nums text-oma-plum">
-                  {brandOwnerAnalytics?.totalReviews || 0}
-                </p>
-                <p className="mt-1 text-sm text-oma-cocoa">
-                  {brandOwnerAnalytics?.recentReviews || 0} this month
                 </p>
               </Card>
               <Card
