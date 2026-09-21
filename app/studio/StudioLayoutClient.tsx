@@ -18,12 +18,7 @@ import {
   Home,
   Package,
   ImageIcon,
-  ShoppingBag,
-  Scissors,
-  Monitor,
   Users,
-  MessageSquare,
-  Inbox,
   User,
   Settings,
   LogOut,
@@ -34,7 +29,6 @@ import {
   List,
   Calendar,
   Sparkles,
-  TrendingUp,
 } from "@/lib/utils/iconImports";
 import { TailoringEventProvider } from "@/contexts/NavigationContext";
 import ErrorBoundary from "../components/ErrorBoundary";
@@ -42,6 +36,7 @@ import type { Database } from "@/lib/types/supabase";
 import { StudioInitialDataProvider } from "@/contexts/StudioInitialDataContext";
 import { PageTransition } from "@/components/ui/page-transition";
 import { isStudioNavItemHidden } from "@/lib/studio/studioNavConfig";
+import type { LucideIcon } from "lucide-react";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
@@ -61,7 +56,7 @@ type StudioInitialUser = {
 type NavigationItem = {
   href: string;
   label: string;
-  icon: any;
+  icon: LucideIcon;
   permission: string;
   customLabel?: string;
   showForRoles?: string[];
@@ -90,28 +85,11 @@ function useStudioDiagnostics() {
       }
     };
 
-    const handleLoad = () => {
-      if (typeof window !== "undefined" && window.performance) {
-        const navigation = performance.getEntriesByType("navigation")[0] as any;
-        if (navigation) {
-          console.log("📊 Studio Load Performance:", {
-            domContentLoaded:
-              navigation.domContentLoadedEventEnd -
-              navigation.domContentLoadedEventStart,
-            loadComplete: navigation.loadEventEnd - navigation.loadEventStart,
-            total: navigation.loadEventEnd - navigation.navigationStart,
-          });
-        }
-      }
-    };
-
     window.addEventListener("error", handleError);
     window.addEventListener("unhandledrejection", handleUnhandledRejection);
-    window.addEventListener("load", handleLoad);
     return () => {
       window.removeEventListener("error", handleError);
       window.removeEventListener("unhandledrejection", handleUnhandledRejection);
-      window.removeEventListener("load", handleLoad);
     };
   }, []);
 }
@@ -144,39 +122,6 @@ function buildNavigationItems(
       customLabel: role === "brand_admin" ? "Your Brands" : "Brands",
     },
     {
-      href: "/studio/collections",
-      label: "Collections",
-      icon: ImageIcon,
-      permission: "studio.catalogues.manage",
-      customLabel: role === "brand_admin" ? "Your Collections" : "Collections",
-    },
-    {
-      href: "/studio/products",
-      label: "Products",
-      icon: ShoppingBag,
-      permission: "studio.products.manage",
-      customLabel: role === "brand_admin" ? "Your Products" : "Products",
-    },
-    {
-      href: "/studio/services",
-      label: "Services",
-      icon: Scissors,
-      permission: "studio.products.manage",
-      customLabel: role === "brand_admin" ? "Your Services" : "Services",
-    },
-    {
-      href: "/studio/portfolio",
-      label: "Portfolio",
-      icon: ImageIcon,
-      permission: "studio.products.manage",
-    },
-    {
-      href: "/studio/hero",
-      label: "Hero Carousel",
-      icon: Monitor,
-      permission: "studio.hero.manage",
-    },
-    {
       href: "/studio/spotlight",
       label: "Spotlight",
       icon: ImageIcon,
@@ -193,28 +138,6 @@ function buildNavigationItems(
       label: "Users",
       icon: Users,
       permission: "studio.users.manage",
-    },
-    {
-      href: "/studio/reviews",
-      label: "Reviews",
-      icon: MessageSquare,
-      permission: "studio.products.manage",
-      customLabel: role === "brand_admin" ? "Your Reviews" : "Reviews",
-    },
-    {
-      href: "/studio/inbox",
-      label: "Inbox",
-      icon: Inbox,
-      permission: "studio.products.manage",
-      customLabel: role === "brand_admin" ? "Your Inbox" : "Inbox",
-    },
-    {
-      href: "/studio/leads",
-      label: "Leads",
-      icon: TrendingUp,
-      permission: "studio.products.manage",
-      customLabel: role === "brand_admin" ? "Your Leads" : "Leads",
-      showForRoles: ["super_admin", "brand_admin"],
     },
     {
       href: "/studio/applications",
@@ -342,7 +265,8 @@ export default function StudioLayoutClient({
         }
         sessionRecoveryAttemptedRef.current = false;
         setIsCheckingAccess(false);
-        router.push("/login?redirect=/studio");
+        const returnTo = `${window.location.pathname}${window.location.search}`;
+        router.push(`/login?redirect_to=${encodeURIComponent(returnTo)}`);
         return;
       }
 
@@ -587,8 +511,6 @@ export default function StudioLayoutClient({
             className={`lg:hidden bg-white w-4/5 max-w-xs border-r border-gray-200 fixed inset-y-0 left-0 z-40 transition-transform duration-300 ease-smooth ${
               sidebarOpen ? "translate-x-0" : "-translate-x-full"
             } mt-16 shadow-xl`}
-            aria-modal="true"
-            role="dialog"
             aria-label="Studio navigation menu"
             aria-hidden={!sidebarOpen}
           >
@@ -611,22 +533,17 @@ export default function StudioLayoutClient({
               </div>
               <nav
                 className="space-y-1 flex-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-                role="navigation"
-                aria-label="Studio navigation"
               >
                 {navigationItems.map((item) => (
-                  <button
+                  <NavigationLink
                     key={item.href}
-                    onClick={() => {
-                      router.push(item.href);
-                      setSidebarOpen(false);
-                    }}
+                    href={item.href}
+                    onClick={() => setSidebarOpen(false)}
                     className="flex items-center space-x-3 px-0 py-3 text-gray-700 rounded-md hover:bg-gray-100 w-full text-left transition-[background-color,color,transform] duration-200 ease-smooth active:scale-[0.99] focus:outline-none focus-visible:outline-none focus-visible:ring-0"
-                    aria-label={`Navigate to ${item.customLabel || item.label}`}
                   >
                     <item.icon className="h-5 w-5" aria-hidden="true" />
                     <span>{item.customLabel || item.label}</span>
-                  </button>
+                  </NavigationLink>
                 ))}
 
                 {/* Mobile Back to Site in sidebar */}
@@ -649,8 +566,7 @@ export default function StudioLayoutClient({
             className={`hidden lg:block bg-white w-64 border-r border-gray-200 fixed inset-y-0 left-0 z-40 transition-all duration-500 ease-smooth lg:translate-x-0 mt-16 shadow-xl ${
               fadeIn ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4"
             }`}
-            aria-modal="true"
-            role="dialog"
+            aria-label="Studio navigation"
           >
             <div className="px-8 pt-8 pb-6 h-full flex flex-col overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {/* Studio title only */}

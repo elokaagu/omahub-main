@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { NavigationLink } from "@/components/ui/navigation-link";
 import { Loading } from "@/components/ui/loading";
-import { SuperAdminHeroGate } from "@/app/studio/hero/SuperAdminHeroGate";
+import { SuperAdminHeroGate } from "@/components/studio/SuperAdminGate";
 import { BlurIn, blurStagger } from "@/components/studio/BlurIn";
 
 export default function EditionsStudioPage() {

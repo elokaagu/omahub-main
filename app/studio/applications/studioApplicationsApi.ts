@@ -33,6 +33,23 @@ export async function fetchStudioApplications(
   return data.applications ?? [];
 }
 
+/** Counts only - for dashboards that don't need the rows themselves. */
+export async function fetchStudioApplicationCounts(
+  signal?: AbortSignal
+): Promise<{ total: number; new: number }> {
+  const response = await fetch("/api/studio/applications?summary=1", {
+    method: "GET",
+    cache: "no-store",
+    credentials: "include",
+    signal,
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to fetch application counts (${response.status})`);
+  }
+  const data = (await response.json()) as { total?: number; new?: number };
+  return { total: data.total ?? 0, new: data.new ?? 0 };
+}
+
 export async function updateStudioApplication(
   applicationId: string,
   body: { status: ApplicationStatus; notes?: string },

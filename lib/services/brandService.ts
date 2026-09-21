@@ -306,6 +306,14 @@ export async function getAllBrandsWithProductCounts(): Promise<
 }
 
 /**
+ * Browser-only: brands with just the fields a brand card / picker renders.
+ * Use this for dropdowns and lineups instead of `getAllBrands()`.
+ */
+export async function getBrandCardList(): Promise<Brand[]> {
+  return fetchBrandsFromPublicApi({ fields: "card" });
+}
+
+/**
  * Fetch all brands, optionally filtering out those with no products
  */
 export async function getAllBrands(

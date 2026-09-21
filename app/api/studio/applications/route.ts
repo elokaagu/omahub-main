@@ -51,7 +51,7 @@ function isMissingColumnError(error: { code?: string; message?: string } | null)
   );
 }
 
-export async function GET(_request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
     const authz = await requireSuperAdmin();
     if (!authz.ok) {
@@ -65,6 +65,33 @@ export async function GET(_request: NextRequest) {
       return NextResponse.json(
         { error: "Internal server error" },
         { status: 500 },
+      );
+    }
+
+    // `?summary=1`: counts only (Studio home). No rows are transferred.
+    if (request.nextUrl.searchParams.get("summary") === "1") {
+      const [all, fresh] = await Promise.all([
+        supabase
+          .from("designer_applications")
+          .select("id", { count: "exact", head: true }),
+        supabase
+          .from("designer_applications")
+          .select("id", { count: "exact", head: true })
+          .eq("status", "new"),
+      ]);
+      if (all.error || fresh.error) {
+        console.error(
+          "studio/applications summary:",
+          all.error?.message ?? fresh.error?.message
+        );
+        return NextResponse.json(
+          { error: "Failed to count applications" },
+          { status: 500 },
+        );
+      }
+      return NextResponse.json(
+        { total: all.count ?? 0, new: fresh.count ?? 0 },
+        { headers: { "Cache-Control": "no-store" } },
       );
     }
 

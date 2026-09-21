@@ -29,6 +29,25 @@ export async function GET(request: NextRequest) {
     }
 
     const brands = await getAllBrands(filterEmpty, refresh);
+
+    // `?fields=card`: just what a brand card / picker renders, instead of
+    // every column (long descriptions, contact details, etc.).
+    if (searchParams.get("fields") === "card") {
+      return NextResponse.json({
+        brands: brands.map((b) => ({
+          id: b.id,
+          name: b.name,
+          image: b.image,
+          category: b.category,
+          location: b.location,
+          is_verified: b.is_verified,
+          rating: b.rating,
+          video_url: b.video_url,
+          video_thumbnail: b.video_thumbnail,
+        })),
+      });
+    }
+
     return NextResponse.json({ brands });
   } catch (error) {
     console.error("GET /api/brands/public:", error);

@@ -51,6 +51,16 @@ import {
   Download,
 } from "lucide-react";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { BlurIn, BlurInTableRow, blurStagger } from "@/components/studio/BlurIn";
 
 interface UserProfile {
@@ -189,6 +199,10 @@ export default function UsersPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [editingUser, setEditingUser] = useState<UserWithBrands | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<{
+    id: string;
+    email: string;
+  } | null>(null);
   const [formData, setFormData] = useState({
     email: "",
     role: "user",
@@ -389,10 +403,14 @@ export default function UsersPage() {
     }
   };
 
-  const handleDeleteUser = async (userId: string, userEmail: string) => {
-    if (!confirm(`Are you sure you want to delete user ${userEmail}?`)) {
-      return;
-    }
+  const handleDeleteUser = (userId: string, userEmail: string) => {
+    setPendingDelete({ id: userId, email: userEmail });
+  };
+
+  const confirmDeleteUser = async () => {
+    if (!pendingDelete) return;
+    const userId = pendingDelete.id;
+    setPendingDelete(null);
 
     try {
       const response = await fetch(`/api/admin/users?id=${userId}`, {
@@ -906,6 +924,32 @@ export default function UsersPage() {
         </CardContent>
       </Card>
       </BlurIn>
+
+      <AlertDialog
+        open={pendingDelete !== null}
+        onOpenChange={(open) => {
+          if (!open) setPendingDelete(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete user</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete{" "}
+              <strong>{pendingDelete?.email}</strong>? This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => void confirmDeleteUser()}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

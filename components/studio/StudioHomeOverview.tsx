@@ -6,7 +6,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { FileText, Image as ImageIcon, Package, Settings } from "lucide-react";
 import { getAllEditions } from "@/lib/data/editions";
 import { supabase } from "@/lib/supabase";
-import { fetchStudioApplications } from "@/app/studio/applications/studioApplicationsApi";
+import { fetchStudioApplicationCounts } from "@/app/studio/applications/studioApplicationsApi";
 
 type OverviewCounts = {
   brands: number | null;
@@ -74,7 +74,7 @@ export function StudioHomeOverview() {
         supabase
           ? supabase.from("brands").select("id", { count: "exact", head: true })
           : Promise.resolve({ count: null, error: null }),
-        fetchStudioApplications().catch(() => []),
+        fetchStudioApplicationCounts().catch(() => null),
       ]);
 
       if (cancelled) return;
@@ -82,9 +82,8 @@ export function StudioHomeOverview() {
       setCounts({
         brands: brandResult.error ? null : (brandResult.count ?? 0),
         editions: getAllEditions().length,
-        applications: applications.length,
-        newApplications: applications.filter((app) => app.status === "new")
-          .length,
+        applications: applications?.total ?? null,
+        newApplications: applications?.new ?? null,
       });
       setReady(true);
     }

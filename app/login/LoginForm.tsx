@@ -11,7 +11,11 @@ import {
   clearRememberMe,
 } from "@/lib/utils/rememberMe";
 import { Eye, EyeOff } from "lucide-react";
-import { deriveLoginUrlState } from "./loginSearchParams";
+import {
+  deriveLoginUrlState,
+  getSafeRedirectPath,
+  withQueryParam,
+} from "./loginSearchParams";
 import { describeSignInFailure } from "./describeSignInFailure";
 import { LoginAuthBanners } from "./LoginAuthBanners";
 import { useCustomerSignupEnabled } from "@/hooks/useCustomerSignupEnabled";
@@ -54,11 +58,13 @@ function LoginFormInner() {
       saveRememberMe(email, rememberMe);
 
       // Full navigation: new cookies are visible to the server and `AuthContext` can read `session_refresh`.
-      if (refreshSession) {
-        window.location.assign("/?session_refresh=true");
-      } else {
-        window.location.assign("/");
-      }
+      // Send the user back to where they were headed (e.g. a Studio page after a session expiry).
+      const destination = getSafeRedirectPath(searchParams);
+      window.location.assign(
+        refreshSession
+          ? withQueryParam(destination, "session_refresh", "true")
+          : destination
+      );
     } catch (err) {
       console.error("Login error:", err);
       setSubmitError(describeSignInFailure(err));

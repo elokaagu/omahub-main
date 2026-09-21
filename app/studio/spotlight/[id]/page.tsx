@@ -260,14 +260,6 @@ export default function EditSpotlightPage() {
     try {
       setIsSaving(true);
 
-      console.log("🔄 Updating spotlight content...", {
-        spotlightId,
-        userId: user.id,
-        formData: {
-          ...formData,
-          featured_products: formData.featured_products?.length || 0,
-        },
-      });
 
       await updateSpotlightContent(user.id, spotlightId, formData);
       toast.success("Spotlight content updated successfully");

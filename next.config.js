@@ -136,69 +136,10 @@ function supabaseStorageRemotePatterns() {
 const nextConfig = {
   // Ensure consistent trailing slash handling to prevent duplicate content
   trailingSlash: false,
-  // Phase 2C: Advanced webpack optimizations
-  webpack: (config, { dev, isServer }) => {
-    if (!dev && !isServer) {
-      // Advanced chunk splitting for better caching
-      config.optimization.splitChunks = {
-        chunks: "all",
-        cacheGroups: {
-          // Vendor chunks with granular splitting
-          vendor: {
-            test: /[\\/]node_modules[\\/]/,
-            name: "vendors",
-            chunks: "all",
-            priority: 10,
-            enforce: true,
-          },
-          // React specific chunk
-          react: {
-            test: /[\\/]node_modules[\\/](react|react-dom)[\\/]/,
-            name: "react",
-            chunks: "all",
-            priority: 20,
-            enforce: true,
-          },
-          // UI components chunk
-          ui: {
-            test: /[\\/]node_modules[\\/](@radix-ui|lucide-react|framer-motion)[\\/]/,
-            name: "ui",
-            chunks: "all",
-            priority: 15,
-            enforce: true,
-          },
-          // Common chunks
-          common: {
-            name: "common",
-            minChunks: 2,
-            chunks: "all",
-            priority: 5,
-            reuseExistingChunk: true,
-          },
-          // Runtime chunk optimization
-          runtime: {
-            name: "runtime",
-            chunks: "all",
-            priority: 1,
-            enforce: true,
-          },
-        },
-      };
-
-      // Enable advanced optimizations
-      config.optimization.usedExports = true;
-      config.optimization.sideEffects = false;
-      config.optimization.concatenateModules = true;
-      config.optimization.minimize = true;
-
-      // Separate runtime chunk for better caching
-      config.optimization.runtimeChunk = {
-        name: "runtime",
-      };
-    }
-
-    return config;
-  },
+  // No custom webpack splitChunks: Next.js's default per-route code splitting
+  // keeps each page's code out of the shared bundle. (A previous custom
+  // config forced all app code - including the whole Studio - into one chunk
+  // loaded on every page, and disabled sideEffects-based tree-shaking.)
 
   // Phase 2C: Enhanced image optimization
   images: {

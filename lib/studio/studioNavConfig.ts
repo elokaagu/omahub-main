@@ -1,19 +1,13 @@
 /**
- * Studio sidebar items hidden while the platform focuses on brand profiles
- * and editions. Routes remain reachable by direct URL for later re-enable.
- * Hero carousel is hidden because the live homepage uses Settings → Homepage Hero.
+ * Studio sidebar items hidden from navigation but still reachable by URL.
+ * The designer welcome page is linked to directly (e.g. from onboarding)
+ * rather than listed in the sidebar.
+ *
+ * Retired sections (products, services, inbox, leads, collections,
+ * portfolio, reviews, hero carousel) were removed; they're preserved on the
+ * `archive/studio-hidden-sections` git branch.
  */
-export const STUDIO_HIDDEN_NAV_HREFS = new Set([
-  "/studio/welcome",
-  "/studio/reviews",
-  "/studio/inbox",
-  "/studio/leads",
-  "/studio/collections",
-  "/studio/products",
-  "/studio/services",
-  "/studio/portfolio",
-  "/studio/hero",
-]);
+export const STUDIO_HIDDEN_NAV_HREFS = new Set(["/studio/welcome"]);
 
 export function isStudioNavItemHidden(href: string): boolean {
   return STUDIO_HIDDEN_NAV_HREFS.has(href);

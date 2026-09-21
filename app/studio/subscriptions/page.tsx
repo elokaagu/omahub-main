@@ -186,7 +186,6 @@ export default function SubscriptionsPage() {
     }
 
     // User is super admin, fetch top-level stats once on auth-ready.
-    console.log("🔄 Fetching subscriber stats for super admin:", user?.email);
     fetchStats();
   }, [user, initialData?.profile, effectiveRole]);
 
@@ -210,7 +209,6 @@ export default function SubscriptionsPage() {
     const retryDelay = Math.pow(2, retryCount) * 1000; // Exponential backoff
 
     try {
-      console.log(`🔄 Fetching subscribers (attempt ${retryCount + 1}/${maxRetries + 1})`);
       setLoading(true);
       startLoadingTimeout();
 
@@ -235,7 +233,6 @@ export default function SubscriptionsPage() {
         }
       );
 
-      console.log(`📊 Subscribers response status: ${response.status}`);
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -249,7 +246,6 @@ export default function SubscriptionsPage() {
       }
 
       const data = await response.json();
-      console.log(`✅ Subscribers fetched successfully:`, data);
       
       setSubscribers(data.subscribers || []);
       setTotalPages(Math.ceil((data.total || 0) / query.limit));
@@ -258,7 +254,6 @@ export default function SubscriptionsPage() {
       console.error(`❌ Error fetching subscribers (attempt ${retryCount + 1}):`, error);
       
       if (retryCount < maxRetries) {
-        console.log(`🔄 Retrying in ${retryDelay}ms...`);
         setTimeout(() => {
           void fetchSubscribers(query, retryCount + 1);
         }, retryDelay);
@@ -278,7 +273,6 @@ export default function SubscriptionsPage() {
     const retryDelay = Math.pow(2, retryCount) * 1000; // Exponential backoff
 
     try {
-      console.log(`📊 Fetching stats (attempt ${retryCount + 1}/${maxRetries + 1})`);
 
       const response = await fetch("/api/studio/newsletter/stats", {
         method: "GET",
@@ -290,7 +284,6 @@ export default function SubscriptionsPage() {
         signal: AbortSignal.timeout(5000),
       });
 
-      console.log(`📊 Stats response status: ${response.status}`);
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -299,14 +292,12 @@ export default function SubscriptionsPage() {
       }
 
       const data = await response.json();
-      console.log(`✅ Stats fetched successfully:`, data);
       setStats(data.stats);
       
     } catch (error) {
       console.error(`❌ Error fetching stats (attempt ${retryCount + 1}):`, error);
       
       if (retryCount < maxRetries) {
-        console.log(`🔄 Retrying stats fetch in ${retryDelay}ms...`);
         setTimeout(() => {
           fetchStats(retryCount + 1);
         }, retryDelay);

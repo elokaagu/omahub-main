@@ -259,18 +259,6 @@ export default function ProfilePage() {
                   >
                     <Link href="/studio">Open Studio</Link>
                   </Button>
-                  {(permissions.includes("studio.catalogues.manage") ||
-                    permissions.includes("studio.catalogues.create")) && (
-                    <Button
-                      asChild
-                      variant="outline"
-                      className="w-full border-oma-plum text-oma-plum hover:bg-oma-plum/5 sm:w-auto"
-                    >
-                      <Link href="/studio/collections/create">
-                        Create a collection
-                      </Link>
-                    </Button>
-                  )}
                 </div>
               </>
             ) : (

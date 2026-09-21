@@ -50,13 +50,19 @@ export async function middleware(request: NextRequest) {
     if (error) {
       console.log("🔧 Auth error in middleware:", error.message);
       const redirectUrl = new URL("/login", request.url);
-      redirectUrl.searchParams.set("redirect_to", request.nextUrl.pathname);
+      redirectUrl.searchParams.set(
+        "redirect_to",
+        request.nextUrl.pathname + request.nextUrl.search
+      );
       return NextResponse.redirect(redirectUrl);
     }
 
     if (!user) {
       const redirectUrl = new URL("/login", request.url);
-      redirectUrl.searchParams.set("redirect_to", request.nextUrl.pathname);
+      redirectUrl.searchParams.set(
+        "redirect_to",
+        request.nextUrl.pathname + request.nextUrl.search
+      );
       return NextResponse.redirect(redirectUrl);
     }
 
@@ -65,7 +71,10 @@ export async function middleware(request: NextRequest) {
     console.error("🚨 Middleware error:", error);
     // On any error, redirect to login for protected routes
     const redirectUrl = new URL("/login", request.url);
-    redirectUrl.searchParams.set("redirect_to", request.nextUrl.pathname);
+    redirectUrl.searchParams.set(
+        "redirect_to",
+        request.nextUrl.pathname + request.nextUrl.search
+      );
     return NextResponse.redirect(redirectUrl);
   }
 }

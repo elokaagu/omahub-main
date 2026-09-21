@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { Lead } from "../leads/types";
-import { normalizeLeads } from "../leads/types";
+import type { Lead } from "./types";
+import { normalizeLeads } from "./types";
 
 const POLL_MS = 60_000;
 

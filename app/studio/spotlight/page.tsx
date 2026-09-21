@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { SuperAdminHeroGate } from "@/app/studio/hero/SuperAdminHeroGate";
+import { SuperAdminHeroGate } from "@/components/studio/SuperAdminGate";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";

@@ -12,14 +12,6 @@ import {
   type EditionImage,
 } from "@/lib/services/editionImagesService";
 import {
-  getEditionLineup,
-  addEditionLineupBrand,
-  deleteEditionLineupBrand,
-  type EditionLineupBrand,
-} from "@/lib/services/editionLineupService";
-import { getAllBrands } from "@/lib/services/brandService";
-import type { Brand } from "@/lib/supabase";
-import {
   describeStoryPhotoPosition,
   getStoryParagraphs,
 } from "@/lib/editions/storyContent";
@@ -45,20 +37,13 @@ import {
 } from "@/components/ui/alert-dialog";
 import { ArrowLeft, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { SuperAdminHeroGate } from "@/app/studio/hero/SuperAdminHeroGate";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { BrandCard } from "@/components/ui/brand-card";
+import { SuperAdminHeroGate } from "@/components/studio/SuperAdminGate";
 import {
   EditionContentSection,
   buildInitialEditionDraft,
   type EditionEditorDraft,
 } from "../components/EditionContentSection";
+import { EditionLineupSection } from "../components/EditionLineupSection";
 import {
   mergeLegacyStoryPhotosIntoHtml,
   plainStoryToHtml,
@@ -95,13 +80,6 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
   const [videoThumbnailInput, setVideoThumbnailInput] = useState("");
   const [videoPosition, setVideoPosition] = useState<0 | 1>(0);
   const [isRemovingVideo, setIsRemovingVideo] = useState(false);
-  const [lineupEntries, setLineupEntries] = useState<EditionLineupBrand[] | null>(
-    null,
-  );
-  const [allBrands, setAllBrands] = useState<Brand[]>([]);
-  const [selectedLineupBrandId, setSelectedLineupBrandId] = useState("");
-  const [isAddingLineupBrand, setIsAddingLineupBrand] = useState(false);
-  const [deletingLineupId, setDeletingLineupId] = useState<string | null>(null);
   const [contentDraft, setContentDraft] = useState<EditionEditorDraft | null>(
     null,
   );
@@ -122,11 +100,6 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
     } catch (error) {
       console.error("edition_revalidate_error", error);
     }
-  }, [slug]);
-
-  const refetchLineup = useCallback(async () => {
-    const rows = await getEditionLineup(slug);
-    setLineupEntries(rows);
   }, [slug]);
 
   const videoDraft = useMemo(
@@ -209,31 +182,37 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
     void refetch();
   }, [refetch]);
 
+  // Prefill the video fields from the server - but only when the saved video
+  // itself changes, and never over unsaved edits. `images` is refetched after
+  // every cover/gallery/story/partner upload or delete; resetting the fields on
+  // each of those used to wipe a video URL the user hadn't finished saving.
+  const syncedVideoRef = useRef<string | null>(null);
+  const videoInputsRef = useRef({ url: "", thumbnail: "", position: 0 });
+  videoInputsRef.current = {
+    url: videoUrlInput,
+    thumbnail: videoThumbnailInput,
+    position: videoPosition,
+  };
   useEffect(() => {
-    void refetchLineup();
-  }, [refetchLineup]);
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const brands = await getAllBrands();
-        if (!cancelled) setAllBrands(brands);
-      } catch (error) {
-        console.error("Error loading brands for lineup:", error);
-      }
-    })();
-    return () => {
-      cancelled = true;
+    if (images === null) return;
+    const video = images.find((i) => i.kind === "video");
+    const server = {
+      url: video?.image_url || "",
+      thumbnail: video?.alt_text || "",
+      position: (video?.display_order === 1 ? 1 : 0) as 0 | 1,
     };
-  }, []);
+    const serverKey = JSON.stringify(server);
+    const previous = syncedVideoRef.current;
+    if (serverKey === previous) return;
 
-  // Prefill the video fields once the current one loads (or changes).
-  useEffect(() => {
-    const video = images?.find((i) => i.kind === "video");
-    setVideoUrlInput(video?.image_url || "");
-    setVideoThumbnailInput(video?.alt_text || "");
-    setVideoPosition(video?.display_order === 1 ? 1 : 0);
+    const inputsKey = JSON.stringify(videoInputsRef.current);
+    const hasUnsavedEdits = previous !== null && inputsKey !== previous;
+    syncedVideoRef.current = serverKey;
+    if (hasUnsavedEdits) return;
+
+    setVideoUrlInput(server.url);
+    setVideoThumbnailInput(server.thumbnail);
+    setVideoPosition(server.position);
   }, [images]);
 
   if (!edition) {
@@ -243,13 +222,15 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
           Edition not found
         </h1>
         <Button asChild>
-          <NavigationLink href="/studio/editions">Back to Editions</NavigationLink>
+          <NavigationLink href="/studio/editions">
+            Back to Editions
+          </NavigationLink>
         </Button>
       </div>
     );
   }
 
-  if (!images || lineupEntries === null || !contentReady || !contentDraft) {
+  if (!images || !contentReady || !contentDraft) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <Loading />
@@ -268,13 +249,6 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
     .sort((a, b) => a.display_order - b.display_order);
   const effectiveCover = cover?.image_url || edition.coverImage;
   const storyParagraphs = getStoryParagraphs(edition.story);
-  const lineupBrandIds = new Set(lineupEntries.map((entry) => entry.brand_id));
-  const lineupBrands = lineupEntries
-    .map((entry) => allBrands.find((brand) => brand.id === entry.brand_id))
-    .filter((brand): brand is Brand => Boolean(brand));
-  const availableLineupBrands = allBrands.filter(
-    (brand) => !lineupBrandIds.has(brand.id),
-  );
 
   const handleCoverUpload = async (url: string) => {
     if (!user) return;
@@ -300,7 +274,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
     } catch (error) {
       console.error("Error setting cover photo:", error);
       toast.error(
-        error instanceof Error ? error.message : "Failed to update cover photo"
+        error instanceof Error ? error.message : "Failed to update cover photo",
       );
     } finally {
       setIsUploadingCover(false);
@@ -323,7 +297,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
     } catch (error) {
       console.error("Error adding gallery photo:", error);
       toast.error(
-        error instanceof Error ? error.message : "Failed to add photo"
+        error instanceof Error ? error.message : "Failed to add photo",
       );
     } finally {
       setIsUploadingGallery(false);
@@ -347,7 +321,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
     } catch (error) {
       console.error("Error adding story photo:", error);
       toast.error(
-        error instanceof Error ? error.message : "Failed to add photo"
+        error instanceof Error ? error.message : "Failed to add photo",
       );
     } finally {
       setIsUploadingStory(false);
@@ -371,7 +345,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
     } catch (error) {
       console.error("Error adding partner logo:", error);
       toast.error(
-        error instanceof Error ? error.message : "Failed to add partner logo"
+        error instanceof Error ? error.message : "Failed to add partner logo",
       );
     } finally {
       setIsUploadingPartner(false);
@@ -392,7 +366,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
     } catch (error) {
       console.error("Error removing edition video:", error);
       toast.error(
-        error instanceof Error ? error.message : "Failed to remove video"
+        error instanceof Error ? error.message : "Failed to remove video",
       );
     } finally {
       setIsRemovingVideo(false);
@@ -409,7 +383,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
     } catch (error) {
       console.error("Error moving story photo:", error);
       toast.error(
-        error instanceof Error ? error.message : "Failed to update placement"
+        error instanceof Error ? error.message : "Failed to update placement",
       );
     }
   };
@@ -425,51 +399,10 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
     } catch (error) {
       console.error("Error deleting photo:", error);
       toast.error(
-        error instanceof Error ? error.message : "Failed to remove photo"
+        error instanceof Error ? error.message : "Failed to remove photo",
       );
     } finally {
       setDeletingId(null);
-    }
-  };
-
-  const handleAddLineupBrand = async (brandId?: string) => {
-    const targetBrandId = brandId || selectedLineupBrandId;
-    if (!user || !targetBrandId) return;
-    try {
-      setIsAddingLineupBrand(true);
-      await addEditionLineupBrand(user.id, {
-        edition_slug: slug,
-        brand_id: targetBrandId,
-      });
-      toast.success("Brand added to lineup");
-      setSelectedLineupBrandId("");
-      await refetchLineup();
-      await bustPublicEdition();
-    } catch (error) {
-      console.error("Error adding lineup brand:", error);
-      toast.error(
-        error instanceof Error ? error.message : "Failed to add brand",
-      );
-    } finally {
-      setIsAddingLineupBrand(false);
-    }
-  };
-
-  const handleRemoveLineupBrand = async (id: string) => {
-    if (!user) return;
-    try {
-      setDeletingLineupId(id);
-      await deleteEditionLineupBrand(user.id, id);
-      toast.success("Brand removed from lineup");
-      await refetchLineup();
-      await bustPublicEdition();
-    } catch (error) {
-      console.error("Error removing lineup brand:", error);
-      toast.error(
-        error instanceof Error ? error.message : "Failed to remove brand",
-      );
-    } finally {
-      setDeletingLineupId(null);
     }
   };
 
@@ -508,8 +441,8 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
           Hero cover
         </h2>
         <p className="text-sm text-oma-cocoa mb-4">
-          Leads the archive card and the edition page hero. Uploading a new
-          one replaces the current cover.
+          Leads the archive card and the edition page hero. Uploading a new one
+          replaces the current cover.
         </p>
         {effectiveCover && (
           <div className="mb-4 max-w-sm">
@@ -555,39 +488,39 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
           Story sidebar video
         </h2>
         <p className="text-sm text-oma-cocoa mb-4">
-          Appears to the right of &quot;The story&quot; on the edition page
-          (or left, if you choose below). Paste a{" "}
-          <strong>Vimeo link</strong> (e.g. vimeo.com/1206857643), a direct{" "}
-          <strong>.mp4 URL</strong>, or upload a video file. Add an optional
-          thumbnail for mp4 files — it shows before playback starts. Changes
-          save automatically.
+          Appears to the right of &quot;The story&quot; on the edition page (or
+          left, if you choose below). Paste a <strong>Vimeo link</strong> (e.g.
+          vimeo.com/1206857643), a direct <strong>.mp4 URL</strong>, or upload a
+          video file. Add an optional thumbnail for mp4 files — it shows before
+          playback starts. Changes save automatically.
         </p>
 
-        {video?.image_url && (() => {
-          const parsed = parseEditionVideo(video.image_url);
-          return (
-            <div className="mb-4 max-w-md overflow-hidden rounded-xl bg-oma-black ring-1 ring-oma-cocoa/10">
-              {parsed?.type === "vimeo" ? (
-                <div className="aspect-video w-full">
-                  <iframe
-                    src={parsed.embedUrl}
-                    title="Edition video preview"
-                    allow="autoplay; fullscreen; picture-in-picture"
-                    className="h-full w-full border-0"
+        {video?.image_url &&
+          (() => {
+            const parsed = parseEditionVideo(video.image_url);
+            return (
+              <div className="mb-4 max-w-md overflow-hidden rounded-xl bg-oma-black ring-1 ring-oma-cocoa/10">
+                {parsed?.type === "vimeo" ? (
+                  <div className="aspect-video w-full">
+                    <iframe
+                      src={parsed.embedUrl}
+                      title="Edition video preview"
+                      allow="autoplay; fullscreen; picture-in-picture"
+                      className="h-full w-full border-0"
+                    />
+                  </div>
+                ) : (
+                  <video
+                    key={video.id}
+                    src={video.image_url}
+                    poster={video.alt_text || undefined}
+                    controls
+                    className="aspect-video w-full"
                   />
-                </div>
-              ) : (
-                <video
-                  key={video.id}
-                  src={video.image_url}
-                  poster={video.alt_text || undefined}
-                  controls
-                  className="aspect-video w-full"
-                />
-              )}
-            </div>
-          );
-        })()}
+                )}
+              </div>
+            );
+          })()}
 
         <label className="mb-2 block text-sm font-medium text-oma-black">
           Video URL
@@ -654,7 +587,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
               "rounded-md border px-3 py-2 text-sm",
               videoPosition === 0
                 ? "border-oma-black bg-oma-black text-white"
-                : "border-gray-300 text-oma-black hover:bg-gray-50"
+                : "border-gray-300 text-oma-black hover:bg-gray-50",
             )}
           >
             Right of the text
@@ -666,7 +599,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
               "rounded-md border px-3 py-2 text-sm",
               videoPosition === 1
                 ? "border-oma-black bg-oma-black text-white"
-                : "border-gray-300 text-oma-black hover:bg-gray-50"
+                : "border-gray-300 text-oma-black hover:bg-gray-50",
             )}
           >
             Left of the text
@@ -681,7 +614,11 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
           {video && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button type="button" variant="outline" disabled={isRemovingVideo}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={isRemovingVideo}
+                >
                   Remove
                 </Button>
               </AlertDialogTrigger>
@@ -714,9 +651,10 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
             Legacy inline story photos
           </h2>
           <p className="text-sm text-oma-cocoa mb-4">
-            These were placed between plain-text paragraphs. They are merged into
-            the story editor above on load — save the story to keep them on the
-            public page. Use the add photo button in the toolbar for new images.
+            These were placed between plain-text paragraphs. They are merged
+            into the story editor above on load — save the story to keep them on
+            the public page. Use the add photo button in the toolbar for new
+            images.
           </p>
           <div className="space-y-4">
             {storyPhotos.map((image) => (
@@ -788,7 +726,10 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
         {gallery.length > 0 && (
           <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
             {gallery.map((image) => (
-              <div key={image.id} className="group relative overflow-hidden rounded-xl">
+              <div
+                key={image.id}
+                className="group relative overflow-hidden rounded-xl"
+              >
                 <AuthImage
                   src={image.image_url}
                   alt={image.alt_text || edition.title}
@@ -850,119 +791,11 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
         )}
       </BlurIn>
 
-      <BlurIn className="mb-12">
-        <h2 className="text-lg font-semibold text-oma-black mb-1">
-          Lineup brands
-        </h2>
-        <p className="text-sm text-oma-cocoa mb-4">
-          Brands that showed at this edition — rendered as the scrolling
-          &quot;The lineup&quot; row on the edition page, using the same cards
-          as the homepage brand rows. The archive card label comes from
-          Lineup label in Edition post above, or from this brand count if
-          that field is empty.
-        </p>
-
-        {lineupBrands.length > 0 && (
-          <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {lineupEntries.map((entry) => {
-              const brand = allBrands.find((b) => b.id === entry.brand_id);
-              if (!brand) return null;
-
-              return (
-                <div key={entry.id} className="group relative">
-                  <BrandCard
-                    id={brand.id}
-                    name={brand.name}
-                    image={brand.image || "/placeholder-image.jpg"}
-                    category={brand.category}
-                    location={brand.location}
-                    isVerified={brand.is_verified}
-                    rating={brand.rating}
-                    video_url={brand.video_url || undefined}
-                    video_thumbnail={brand.video_thumbnail || undefined}
-                  />
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <button
-                        type="button"
-                        aria-label={`Remove ${brand.name} from lineup`}
-                        disabled={deletingLineupId === entry.id}
-                        className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-oma-black/60 text-white opacity-0 backdrop-blur-sm transition-opacity duration-200 hover:bg-red-600 focus-visible:opacity-100 group-hover:opacity-100"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Remove from lineup</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          {brand.name} will no longer appear in the edition&apos;s
-                          brand row. This action cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => void handleRemoveLineupBrand(entry.id)}
-                          className="bg-red-600 hover:bg-red-700"
-                        >
-                          Remove
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-          <div className="flex-1 max-w-md">
-            <label className="mb-2 block text-sm font-medium text-oma-black">
-              Add brand from directory
-            </label>
-            <Select
-              value={selectedLineupBrandId || "__none"}
-              onValueChange={(value) => {
-                if (value === "__none") {
-                  setSelectedLineupBrandId("");
-                  return;
-                }
-                setSelectedLineupBrandId(value);
-                void handleAddLineupBrand(value);
-              }}
-              disabled={isAddingLineupBrand || availableLineupBrands.length === 0}
-            >
-              <SelectTrigger>
-                <SelectValue
-                  placeholder={
-                    isAddingLineupBrand ? "Adding…" : "Select a brand"
-                  }
-                />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__none">Select a brand</SelectItem>
-                {availableLineupBrands.map((brand) => (
-                  <SelectItem key={brand.id} value={brand.id}>
-                    {brand.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <p className="mt-2 text-xs text-oma-cocoa/70">
-              Selecting a brand adds it to the lineup and saves immediately.
-            </p>
-          </div>
-        </div>
-
-        {lineupBrands.length === 0 && (
-          <p className="mt-4 text-sm text-oma-cocoa/70">
-            No lineup brands yet. Add brands above to populate the scrolling row
-            at the bottom of the edition page.
-          </p>
-        )}
-      </BlurIn>
+      <EditionLineupSection
+        slug={slug}
+        userId={user?.id ?? null}
+        onChanged={bustPublicEdition}
+      />
 
       <BlurIn className="mb-12">
         <h2 className="text-lg font-semibold text-oma-black mb-1">
@@ -1007,8 +840,8 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
                     <AlertDialogHeader>
                       <AlertDialogTitle>Remove partner</AlertDialogTitle>
                       <AlertDialogDescription>
-                        This removes the logo from the edition&apos;s
-                        partners strip. This action cannot be undone.
+                        This removes the logo from the edition&apos;s partners
+                        strip. This action cannot be undone.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>

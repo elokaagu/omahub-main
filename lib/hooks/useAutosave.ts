@@ -18,13 +18,18 @@ interface UseAutosaveOptions<T> {
   baseline?: T;
 }
 
-function shallowEqual<T>(a: T, b: T): boolean {
-  return JSON.stringify(a) === JSON.stringify(b);
+/** Structural snapshot used to compare drafts (deep, via JSON). */
+function snapshot<T>(value: T): string {
+  return JSON.stringify(value);
 }
 
 /**
  * Debounced autosave for Studio forms. Watches `data`, saves after idle
  * period, and tracks pending/saving/saved/error state for UI feedback.
+ *
+ * All callbacks read the latest values through refs, so:
+ * - an edit made while a save is in flight is saved afterwards (not dropped);
+ * - callers don't need to memoise `onSave` / `shouldSkip`.
  */
 export function useAutosave<T>({
   data,
@@ -36,24 +41,36 @@ export function useAutosave<T>({
 }: UseAutosaveOptions<T>) {
   const [status, setStatus] = useState<AutosaveStatus>("idle");
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
-  const savedRef = useRef<T>(data);
+
+  const dataKey = snapshot(data);
+  const baselineKey = baseline === undefined ? undefined : snapshot(baseline);
+
+  const dataRef = useRef(data);
+  dataRef.current = data;
+  const onSaveRef = useRef(onSave);
+  onSaveRef.current = onSave;
+  const shouldSkipRef = useRef(shouldSkip);
+  shouldSkipRef.current = shouldSkip;
+  const enabledRef = useRef(enabled);
+  enabledRef.current = enabled;
+
+  const savedKeyRef = useRef<string>(dataKey);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const savingRef = useRef(false);
   const queuedRef = useRef(false);
-  const onSaveRef = useRef(onSave);
-
-  onSaveRef.current = onSave;
 
   useEffect(() => {
-    if (baseline !== undefined) {
-      savedRef.current = baseline;
-      setStatus("idle");
-    }
-  }, [baseline]);
+    if (baselineKey === undefined) return;
+    savedKeyRef.current = baselineKey;
+    if (!savingRef.current) setStatus("idle");
+  }, [baselineKey]);
 
-  const saveNow = useCallback(async () => {
-    if (!enabled || shouldSkip?.(data)) return;
-    if (shallowEqual(data, savedRef.current)) return;
+  const saveNow = useCallback(async (): Promise<void> => {
+    if (!enabledRef.current) return;
+    const current = dataRef.current;
+    if (shouldSkipRef.current?.(current)) return;
+    const key = snapshot(current);
+    if (key === savedKeyRef.current) return;
 
     if (savingRef.current) {
       queuedRef.current = true;
@@ -64,10 +81,10 @@ export function useAutosave<T>({
     setStatus("saving");
 
     try {
-      await onSaveRef.current(data);
-      savedRef.current = data;
+      await onSaveRef.current(current);
+      savedKeyRef.current = key;
       setLastSavedAt(new Date());
-      setStatus("saved");
+      setStatus(snapshot(dataRef.current) === key ? "saved" : "pending");
     } catch (error) {
       console.error("Autosave failed:", error);
       setStatus("error");
@@ -75,20 +92,21 @@ export function useAutosave<T>({
       savingRef.current = false;
       if (queuedRef.current) {
         queuedRef.current = false;
+        // Reads dataRef, so this saves the newest edit rather than a stale copy.
         void saveNow();
       }
     }
-  }, [data, enabled, shouldSkip]);
+  }, []);
 
   useEffect(() => {
     if (!enabled) return;
 
-    if (shouldSkip?.(data)) {
+    if (shouldSkipRef.current?.(dataRef.current)) {
       setStatus("idle");
       return;
     }
 
-    if (shallowEqual(data, savedRef.current)) return;
+    if (dataKey === savedKeyRef.current) return;
 
     setStatus("pending");
     if (timerRef.current) clearTimeout(timerRef.current);
@@ -99,7 +117,7 @@ export function useAutosave<T>({
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [data, enabled, debounceMs, saveNow, shouldSkip]);
+  }, [dataKey, enabled, debounceMs, saveNow]);
 
   return { status, lastSavedAt, saveNow };
 }

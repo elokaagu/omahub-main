@@ -4,8 +4,7 @@ import { CheckCircle, Star } from "@/components/ui/icons";
 import { cn } from "@/lib/utils";
 import { VideoPlayer } from "./video-player";
 import { AuthImage } from "./auth-image";
-import { useEffect, useState } from "react";
-import { brandImageService } from "@/lib/services/brandImageService";
+import { brandAssetsPublicUrl } from "@/lib/brands/applicationBrandImages";
 
 interface BrandCardProps {
   id: string;
@@ -51,51 +50,15 @@ export function BrandCard({
   showUnfavouriteButton,
 }: BrandCardProps) {
   const { user } = useAuth();
-  const [imageUrl, setImageUrl] = useState<string>(image || "/placeholder.svg");
 
-  // Use new image service if brand_images are provided
-  useEffect(() => {
-    async function loadImageUrl() {
-      if (brand_images && brand_images.length > 0) {
-        // Find cover image or use first available
-        const coverImage =
-          brand_images.find((img) => img.role === "cover") || brand_images[0];
-        if (coverImage) {
-          try {
-            const url = await brandImageService.getBrandImageUrl(
-              coverImage.storage_path
-            );
-            if (url) {
-              setImageUrl(url);
-            }
-          } catch (error) {
-            console.warn(`Failed to load image for ${name}:`, error);
-            // Fallback to old image prop
-            setImageUrl(image || "/placeholder.svg");
-          }
-        }
-      }
-    }
-
-    loadImageUrl();
-  }, [brand_images, image, name]);
-
-  // Debug logging for slow loading issues
-  useEffect(() => {
-    if (process.env.NODE_ENV === "development") {
-      console.log("BrandCard debug:", {
-        brandName: name,
-        image: imageUrl,
-        video_url,
-        video_thumbnail,
-        hasVideo: !!video_url,
-        videoUrlType: typeof video_url,
-        videoUrlLength: video_url?.length,
-        willShowVideo: !!video_url && video_url.trim() !== "",
-        brand_images: brand_images?.length || 0,
-      });
-    }
-  }, [name, imageUrl, video_url, video_thumbnail, brand_images]);
+  // `brand-assets` is a public bucket, so the cover URL is built at render
+  // time - no per-card signed-URL request, and the image can start loading
+  // immediately instead of after hydration.
+  const coverImage =
+    brand_images?.find((img) => img.role === "cover") ?? brand_images?.[0];
+  const imageUrl = coverImage?.storage_path
+    ? brandAssetsPublicUrl(coverImage.storage_path)
+    : image || "/placeholder.svg";
 
   return (
     <NavigationLink
