@@ -32,6 +32,7 @@ import { toast } from "sonner";
 import { useStudioPermissions } from "@/hooks/useStudioPermissions";
 import { useStudioEffectiveRole } from "@/hooks/useStudioEffectiveRole";
 import { HomepageHeroMediaCard } from "./HomepageHeroMediaCard";
+import { BlurIn } from "@/components/studio/BlurIn";
 
 export default function SettingsPage() {
   const { user, loading } = useAuth();
@@ -332,6 +333,7 @@ export default function SettingsPage() {
   return (
     <div className="max-w-7xl mx-auto px-6 py-8">
       <div className="space-y-8">
+        <BlurIn>
         <div>
           <h1 className="text-3xl font-canela text-oma-plum">
             Studio Settings
@@ -340,8 +342,9 @@ export default function SettingsPage() {
             Manage your studio configuration and content
           </p>
         </div>
+        </BlurIn>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <BlurIn delay={0.08} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card className="border-oma-beige">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-oma-plum font-canela">
@@ -869,7 +872,7 @@ export default function SettingsPage() {
               </div>
             </CardContent>
           </Card>
-        </div>
+        </BlurIn>
       </div>
     </div>
   );

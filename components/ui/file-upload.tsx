@@ -8,11 +8,13 @@ import { toast } from "sonner";
 import { AuthImage } from "./auth-image";
 import {
   acceptAttribute,
-  fileExtension,
-  inferredContentType,
   isAcceptedFile,
-  storagePathForUpload,
+  isHeicLikeFile,
 } from "@/lib/uploads/acceptedMedia";
+import {
+  ensureValidSession,
+  uploadPublicFile,
+} from "@/lib/uploads/studioStorageUpload";
 
 interface FileUploadProps {
   onUploadComplete: (url: string) => void;
@@ -63,283 +65,55 @@ export function FileUpload({
 
   const acceptString = acceptAttribute(accept);
 
-  // Helper function to ensure valid session before upload
-  const ensureValidSession = async (retries = 2): Promise<void> => {
+  const assertBucketPermission = async (userId: string) => {
     if (!supabase) {
-      throw new Error("Supabase client not available");
+      throw new Error("Upload unavailable. Sign in again and retry.");
     }
 
-    for (let attempt = 0; attempt <= retries; attempt++) {
-      try {
-        // First, check current session
-        const {
-          data: { session: currentSession },
-          error: sessionCheckError,
-        } = await supabase.auth.getSession();
-
-        // If we have a valid session, verify it's still active
-        if (currentSession && !sessionCheckError) {
-          const {
-            data: { user },
-            error: userError,
-          } = await supabase.auth.getUser();
-
-          if (!userError && user) {
-            console.log("✅ Valid session confirmed:", {
-              userId: user.id,
-              email: user.email,
-            });
-            return; // Session is valid, proceed
-          }
-        }
-
-        // If no session or invalid, try to refresh
-        console.log(`🔄 Attempting session refresh (attempt ${attempt + 1}/${retries + 1})...`);
-        const { data: refreshData, error: refreshError } =
-          await supabase.auth.refreshSession();
-
-        if (refreshError) {
-          console.error("Session refresh failed:", refreshError);
-          
-          // If this is the last attempt, throw error
-          if (attempt === retries) {
-            throw new Error(
-              `Session expired. Please refresh the page and sign in again. ${refreshError.message}`
-            );
-          }
-          
-          // Wait a bit before retrying
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-          continue;
-        }
-
-        // Verify the refreshed session
-        if (refreshData.session) {
-          const {
-            data: { user },
-            error: userError,
-          } = await supabase.auth.getUser();
-
-          if (!userError && user) {
-            console.log("✅ Session refreshed successfully:", {
-              userId: user.id,
-              email: user.email,
-            });
-            return; // Session refreshed successfully
-          }
-        }
-
-        // If we get here, session refresh didn't work
-        if (attempt === retries) {
-          throw new Error(
-            "Unable to maintain session. Please refresh the page and sign in again."
-          );
-        }
-
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-      } catch (error) {
-        if (attempt === retries) {
-          throw error;
-        }
-        console.warn(`⚠️ Session check attempt ${attempt + 1} failed, retrying...`);
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-      }
-    }
-  };
-
-  // Simplified upload to Supabase with timeout
-  const uploadToSupabase = async (file: File): Promise<string> => {
-    // Check if supabase client is available
-    if (!supabase) {
-      throw new Error("Supabase client not available");
+    if (bucket !== "spotlight-images" && bucket !== "product-images") {
+      return;
     }
 
-    // Ensure we have a valid session before starting upload
-    await ensureValidSession();
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", userId)
+      .single();
 
-    // Double-check user authentication after session validation
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      console.error("Authentication check failed after session validation:", {
-        authError,
-        hasUser: !!user,
-      });
+    if (profileError || !profile) {
       throw new Error(
-        `Authentication required: Please log in to upload files. ${authError?.message || "No user session found"}`
+        profileError
+          ? `Profile check failed: ${profileError.message}`
+          : "User profile not found",
       );
     }
 
-    console.log("Upload authentication successful:", {
-      userId: user.id,
-      email: user.email,
-      bucket: bucket,
+    if (bucket === "spotlight-images" && profile.role !== "super_admin") {
+      throw new Error(
+        `Only super admins can upload spotlight images. Your role: ${profile.role}`,
+      );
+    }
+
+    if (
+      bucket === "product-images" &&
+      !["super_admin", "admin", "brand_admin"].includes(profile.role)
+    ) {
+      throw new Error(
+        `Only super admins, admins, and brand admins can upload product images. Your role: ${profile.role}`,
+      );
+    }
+  };
+
+  const uploadToSupabase = async (file: File): Promise<string> => {
+    const { userId } = await ensureValidSession();
+    await assertBucketPermission(userId);
+
+    return uploadPublicFile({
+      file,
+      bucket,
+      path,
+      fallbackBuckets: bucket === "edition-galleries" ? ["brand-assets"] : [],
     });
-
-    // Special handling for spotlight-images bucket
-    if (bucket === "spotlight-images") {
-      console.log("🎯 Spotlight upload: Checking user permissions...");
-      try {
-        const { data: profile, error: profileError } = await supabase
-          .from("profiles")
-          .select("role, email")
-          .eq("id", user.id)
-          .single();
-
-        if (profileError) {
-          console.error("Profile check failed:", profileError);
-          throw new Error(`Profile check failed: ${profileError.message}`);
-        }
-
-        if (!profile) {
-          throw new Error("User profile not found");
-        }
-
-        console.log("User profile:", profile);
-
-        // Check if user has permission to upload spotlight images
-        const canUploadSpotlight = profile.role === "super_admin";
-
-        if (!canUploadSpotlight) {
-          throw new Error(
-            `Insufficient permissions: Only super admins can upload spotlight images. Your role: ${profile.role}`
-          );
-        }
-
-        console.log("✅ Spotlight upload permission verified");
-      } catch (permissionError) {
-        console.error("Permission check error:", permissionError);
-        throw permissionError;
-      }
-    }
-
-    // Check user profile and permissions for product uploads
-    if (bucket === "product-images") {
-      try {
-        const { data: profile, error: profileError } = await supabase
-          .from("profiles")
-          .select("role, owned_brands")
-          .eq("id", user.id)
-          .single();
-
-        if (profileError) {
-          throw new Error(`Profile check failed: ${profileError.message}`);
-        }
-
-        if (!profile) {
-          throw new Error("User profile not found");
-        }
-
-        // Check if user has permission to upload product images
-        const canUploadProducts =
-          profile.role === "super_admin" ||
-          profile.role === "admin" ||
-          profile.role === "brand_admin";
-
-        if (!canUploadProducts) {
-          throw new Error(
-            `Insufficient permissions: Only super admins, admins, and brand admins can upload product images. Your role: ${profile.role}`
-          );
-        }
-      } catch (permissionError) {
-        throw permissionError;
-      }
-    }
-
-    const extension = (fileExtension(file) || ".jpg").replace(/^\./, "") || "jpg";
-    const uniqueFileName = `${user.id.substring(0, 8)}_${Date.now()}.${extension}`;
-    const storagePath = storagePathForUpload(path, uniqueFileName);
-    const contentType = inferredContentType(file);
-
-    console.log("Starting upload:", {
-      fileName: storagePath,
-      fileSize: file.size,
-      fileType: contentType,
-      bucket: bucket,
-    });
-
-    // Upload with timeout
-    const uploadPromise = supabase.storage
-      .from(bucket)
-      .upload(storagePath, file, {
-        cacheControl: "3600",
-        upsert: false,
-        contentType,
-      });
-
-    const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(
-        () => reject(new Error("Upload timeout after 30 seconds")),
-        30000
-      )
-    );
-
-    const { data, error } = (await Promise.race([
-      uploadPromise,
-      timeoutPromise,
-    ])) as any;
-
-    if (error) {
-      console.error("Upload error:", error);
-
-      // Provide more specific error messages
-      if (
-        error.message.includes("403") ||
-        error.message.includes("Unauthorized")
-      ) {
-        throw new Error(
-          `Upload unauthorized: You may not have permission to upload to the ${bucket} bucket. Please ensure you are logged in with the correct permissions.`
-        );
-      } else if (
-        error.message.includes("404") ||
-        error.message.includes("not found")
-      ) {
-        throw new Error(
-          `Storage bucket '${bucket}' not found. Please contact support to set up the storage bucket.`
-        );
-      } else if (error.message.includes("row-level security")) {
-        // Special handling for RLS errors
-        if (bucket === "spotlight-images") {
-          throw new Error(
-            `Database security policy blocked the spotlight upload. This usually means you need to sign out and sign back in to refresh your session. Your current role should be 'super_admin'.`
-          );
-        } else {
-          throw new Error(
-            `Database security policy blocked the upload. Please ensure you have the correct permissions for ${bucket} bucket.`
-          );
-        }
-      } else if (
-        error.message.includes("mime type") &&
-        error.message.includes("not supported")
-      ) {
-        throw new Error(
-          `File type not supported. Please upload a valid image file (JPEG, PNG, or WebP).`
-        );
-      } else {
-        throw new Error(`Upload failed: ${error.message}`);
-      }
-    }
-
-    if (!data?.path) {
-      throw new Error("Upload succeeded but no file path returned");
-    }
-
-    console.log("Upload successful:", data);
-
-    // Get the public URL
-    const { data: urlData } = supabase.storage
-      .from(bucket)
-      .getPublicUrl(data.path);
-
-    if (!urlData?.publicUrl) {
-      throw new Error("Failed to get public URL for uploaded file");
-    }
-
-    console.log("Public URL generated:", urlData.publicUrl);
-    return urlData.publicUrl;
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -351,6 +125,14 @@ export function FileUpload({
     const fileSizeMB = file.size / (1024 * 1024);
     if (fileSizeMB > maxSize) {
       toast.error(`File is too large. Maximum size is ${maxSize}MB.`);
+      input.value = "";
+      return;
+    }
+
+    if (isHeicLikeFile(file)) {
+      toast.error(
+        "iPhone HEIC photos aren’t supported. Export or share the image as JPG or PNG, then upload that file.",
+      );
       input.value = "";
       return;
     }
@@ -399,19 +181,11 @@ export function FileUpload({
       onUploadComplete(url);
       toast.success("Image uploaded successfully!");
     } catch (error) {
-      // More specific error messages
-      let errorMessage = "Failed to upload image. Please try again.";
-      if (error instanceof Error) {
-        if (error.message.includes("timeout")) {
-          errorMessage =
-            "Upload timed out. Please check your connection and try again.";
-        } else if (error.message.includes("storage")) {
-          errorMessage = "Storage error. Please try again or contact support.";
-        } else {
-          errorMessage = `Upload error: ${error.message}`;
-        }
-      }
-
+      console.error("image upload error", error);
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Failed to upload image. Please try again.";
       toast.error(errorMessage);
       setPreview(defaultValue || null);
       setIsTemporaryPreview(false);

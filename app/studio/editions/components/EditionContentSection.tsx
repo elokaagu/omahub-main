@@ -19,8 +19,7 @@ import { useAutosave } from "@/lib/hooks/useAutosave";
 import type { Edition, EditionStatus } from "@/lib/data/editions";
 import type { EditionContentInput } from "@/lib/services/editionContentService";
 import { plainStoryToHtml } from "@/lib/editions/storyHtml";
-import { supabase } from "@/lib/supabase";
-import { inferredContentType, isLikelyImageFile } from "@/lib/uploads/acceptedMedia";
+import { uploadPublicFile } from "@/lib/uploads/studioStorageUpload";
 import { toast } from "sonner";
 
 export type EditionEditorDraft = EditionContentInput & {
@@ -73,37 +72,22 @@ type EditionContentSectionProps = {
 };
 
 async function uploadStoryImage(slug: string, file: File): Promise<string | null> {
-  if (!supabase) {
-    toast.error("Upload unavailable — sign in again");
-    return null;
-  }
-
-  if (!isLikelyImageFile(file)) {
-    toast.error("Please choose a JPG, PNG, or WebP image.");
-    return null;
-  }
-
-  const ext = file.name.split(".").pop() || "jpg";
-  const filePath = `${slug}/story/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-
-  const { error } = await supabase.storage
-    .from("edition-galleries")
-    .upload(filePath, file, {
-      upsert: true,
-      contentType: inferredContentType(file),
+  try {
+    return await uploadPublicFile({
+      file,
+      bucket: "edition-galleries",
+      path: `${slug}/story`,
+      fallbackBuckets: ["brand-assets"],
+      maxSizeMb: 20,
+      requireImage: true,
     });
-
-  if (error) {
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Failed to upload image";
     console.error("story image upload error", error);
-    toast.error("Failed to upload image");
+    toast.error(message);
     return null;
   }
-
-  const { data } = supabase.storage
-    .from("edition-galleries")
-    .getPublicUrl(filePath);
-
-  return data.publicUrl;
 }
 
 export function EditionContentSection({

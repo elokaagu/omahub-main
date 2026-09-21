@@ -3,7 +3,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Button } from "./button";
 import { Upload, X, Image as ImageIcon, AlertCircle } from "lucide-react";
-import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { AuthImage } from "./auth-image";
 import {
@@ -11,6 +10,11 @@ import {
   generateBrandImagePath,
   ImageNamingConfig,
 } from "@/lib/services/imageNamingService";
+import {
+  isAcceptedFile,
+  isHeicLikeFile,
+} from "@/lib/uploads/acceptedMedia";
+import { uploadPublicFile } from "@/lib/uploads/studioStorageUpload";
 
 interface SimpleFileUploadProps {
   onUploadComplete: (url: string) => void;
@@ -53,146 +57,45 @@ export function SimpleFileUpload({
     setIsTemporaryPreview(false);
   }, [defaultValue]);
 
-  // Simple upload function with better error handling
   const uploadToSupabase = async (file: File): Promise<string> => {
+    setUploadProgress(0);
+    setError(null);
+
+    const progressInterval = setInterval(() => {
+      setUploadProgress((prev) => {
+        if (prev >= 90) return prev;
+        return prev + Math.random() * 10;
+      });
+    }, 200);
+
     try {
-      // Prevent multiple simultaneous uploads
-      if (uploading) {
-        console.log("🔄 Upload already in progress, ignoring...");
-        return preview || "";
-      }
-
-      setUploading(true);
-      setUploadProgress(0);
-      setError(null);
-
-      // Check if supabase client is available
-      if (!supabase) {
-        throw new Error("Supabase client not available");
-      }
-
-      // Get current user
-      const {
-        data: { user },
-        error: authError,
-      } = await supabase.auth.getUser();
-
-      if (authError || !user) {
-        throw new Error("Please log in to upload files");
-      }
-
-      // Create filename using naming convention if brand info is provided
-      let filename: string;
-      let filePath: string;
+      let storagePath: string | undefined;
 
       if (brandId && brandName && imageType === "brand") {
-        // Use structured naming convention for brand images
         const namingConfig: ImageNamingConfig = {
           brandId,
           brandName,
           imageRole,
           imageType,
-          userId: user.id,
         };
-
-        filename = generateBrandImageFilename(namingConfig, file);
-        filePath = generateBrandImagePath(namingConfig, filename);
-
-        console.log("🏷️ Using structured naming:", {
-          originalName: file.name,
-          newFilename: filename,
-          storagePath: filePath,
-          brandId,
-          brandName,
-          imageRole,
-        });
-      } else {
-        // Fallback to legacy naming for non-brand images
-        const fileExtension = file.name.split(".").pop() || "jpg";
-        filename = `${user.id.substring(0, 8)}_${Date.now()}.${fileExtension}`;
-        filePath = path ? `${path}/${filename}` : filename;
-
-        console.log("📁 Using legacy naming:", {
-          originalName: file.name,
-          newFilename: filename,
-          storagePath: filePath,
-        });
+        const filename = generateBrandImageFilename(namingConfig, file);
+        storagePath = generateBrandImagePath(namingConfig, filename);
       }
 
-      console.log("🔄 Starting upload:", {
-        fileName: filename,
-        fileSize: `${(file.size / 1024 / 1024).toFixed(2)} MB`,
-        fileType: file.type,
-        bucket: bucket,
-        path: filePath,
+      const url = await uploadPublicFile({
+        file,
+        bucket,
+        path,
+        storagePath,
+        fallbackBuckets: bucket === "edition-galleries" ? ["brand-assets"] : [],
+        maxSizeMb: maxSize,
+        requireImage: true,
       });
 
-      // Simulate upload progress
-      const progressInterval = setInterval(() => {
-        setUploadProgress(prev => {
-          if (prev >= 90) return prev;
-          return prev + Math.random() * 10;
-        });
-      }, 200);
-
-      // Upload file
-      const { data, error } = await supabase.storage
-        .from(bucket)
-        .upload(filePath, file, {
-          cacheControl: "3600",
-          upsert: false,
-        });
-
-      clearInterval(progressInterval);
       setUploadProgress(100);
-
-      if (error) {
-        console.error("❌ Upload error:", error);
-
-        // Provide specific error messages
-        if (
-          error.message.includes("403") ||
-          error.message.includes("Unauthorized")
-        ) {
-          throw new Error(
-            "Upload permission denied. Please check your account permissions."
-          );
-        } else if (
-          error.message.includes("404") ||
-          error.message.includes("not found")
-        ) {
-          throw new Error(
-            `Storage bucket '${bucket}' not found. Please contact support.`
-          );
-        } else if (error.message.includes("row-level security")) {
-          throw new Error(
-            "Database security policy blocked the upload. Please contact support."
-          );
-        } else if (error.message.includes("duplicate")) {
-          throw new Error("File already exists. Please try again.");
-        } else {
-          throw new Error(`Upload failed: ${error.message}`);
-        }
-      }
-
-      if (!data?.path) {
-        throw new Error("Upload succeeded but no file path returned");
-      }
-
-      // Get the public URL
-      const { data: urlData } = supabase.storage
-        .from(bucket)
-        .getPublicUrl(data.path);
-
-      if (!urlData?.publicUrl) {
-        throw new Error("Failed to get public URL for uploaded file");
-      }
-
-      console.log("✅ Upload successful:", urlData.publicUrl);
-      return urlData.publicUrl;
-    } catch (error) {
-      console.error("❌ Upload error:", error);
-      throw error;
+      return url;
+    } finally {
+      clearInterval(progressInterval);
     }
   };
 
@@ -212,9 +115,15 @@ export function SimpleFileUpload({
       return;
     }
 
-    // Validate file type
-    const validTypes = accept.split(",").map((type) => type.trim());
-    if (!validTypes.includes(file.type)) {
+    if (isHeicLikeFile(file)) {
+      const errorMsg =
+        "iPhone HEIC photos aren’t supported. Export or share the image as JPG or PNG, then upload that file.";
+      setError(errorMsg);
+      toast.error(errorMsg);
+      return;
+    }
+
+    if (!isAcceptedFile(file, accept)) {
       const errorMsg = "Please select a valid image file (JPEG, PNG, or WebP).";
       setError(errorMsg);
       toast.error(errorMsg);

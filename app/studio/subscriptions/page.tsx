@@ -30,6 +30,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { BlurIn, BlurInLi, blurStagger } from "@/components/studio/BlurIn";
 
 interface NewsletterSubscriber {
   id: string;
@@ -521,6 +522,7 @@ export default function SubscriptionsPage() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-8 px-4 py-8 sm:px-6 sm:py-10">
+      <BlurIn>
       <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div className="max-w-2xl space-y-1.5">
           <h1 className="font-canela text-3xl tracking-tight text-oma-plum sm:text-4xl">
@@ -540,9 +542,11 @@ export default function SubscriptionsPage() {
           Export CSV
         </Button>
       </header>
+      </BlurIn>
 
       {/* Stats Cards */}
       {stats && (
+        <BlurIn delay={0.08}>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card className={METRIC_CARD}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0">
@@ -617,9 +621,11 @@ export default function SubscriptionsPage() {
             </CardContent>
           </Card>
         </div>
+        </BlurIn>
       )}
 
       {/* Filters and Search */}
+      <BlurIn delay={0.12}>
       <Card className={DASHBOARD_SECTION}>
         <CardContent className="p-0">
           <div className="flex flex-col gap-4 lg:flex-row">
@@ -677,8 +683,10 @@ export default function SubscriptionsPage() {
           </div>
         </CardContent>
       </Card>
+      </BlurIn>
 
       {/* Subscribers Table */}
+      <BlurIn delay={0.16}>
       <Card className="overflow-hidden rounded-2xl border border-oma-beige/80 shadow-sm">
         <CardHeader className="border-b border-oma-beige/60 bg-oma-cream/20">
           <CardTitle className="font-canela text-2xl text-oma-plum">
@@ -699,7 +707,7 @@ export default function SubscriptionsPage() {
           ) : (
             <>
               <ul className="divide-y divide-oma-beige/70">
-                {subscribers.map((subscriber) => {
+                {subscribers.map((subscriber, index) => {
                   const name = displayName(subscriber);
                   const subscribed = new Date(
                     subscriber.subscribed_at,
@@ -711,8 +719,9 @@ export default function SubscriptionsPage() {
                   const busy = updatingSubscriberId === subscriber.id;
 
                   return (
-                    <li
+                    <BlurInLi
                       key={subscriber.id}
+                      delay={blurStagger(index)}
                       className="flex flex-col gap-4 px-5 py-4 sm:flex-row sm:items-center sm:justify-between"
                     >
                       <div className="min-w-0">
@@ -804,7 +813,7 @@ export default function SubscriptionsPage() {
                           </AlertDialogContent>
                         </AlertDialog>
                       </div>
-                    </li>
+                    </BlurInLi>
                   );
                 })}
               </ul>
@@ -842,6 +851,7 @@ export default function SubscriptionsPage() {
           )}
         </CardContent>
       </Card>
+      </BlurIn>
     </div>
   );
 }

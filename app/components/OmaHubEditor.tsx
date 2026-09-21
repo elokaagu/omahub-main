@@ -23,7 +23,7 @@ import {
   ImagePlus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { isLikelyImageFile } from "@/lib/uploads/acceptedMedia";
+import { isSupportedStudioImageFile } from "@/lib/uploads/acceptedMedia";
 
 type ImagePlacement = "after-block" | "after-section" | "at-cursor";
 
@@ -302,7 +302,7 @@ export default function OmaHubEditor({
       handlePaste(_view, event) {
         const file = event.clipboardData?.files?.[0];
         const upload = uploadRef.current;
-        if (!file || !isLikelyImageFile(file) || !upload) return false;
+        if (!file || !isSupportedStudioImageFile(file) || !upload) return false;
         event.preventDefault();
         void upload(file).then((url) => {
           const activeEditor = editorRef.current;
@@ -315,7 +315,7 @@ export default function OmaHubEditor({
       handleDrop(view, event, _slice, moved) {
         const file = event.dataTransfer?.files?.[0];
         const upload = uploadRef.current;
-        if (moved || !file || !isLikelyImageFile(file) || !upload) {
+        if (moved || !file || !isSupportedStudioImageFile(file) || !upload) {
           return false;
         }
         event.preventDefault();

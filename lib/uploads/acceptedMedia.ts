@@ -111,6 +111,52 @@ export function isAcceptedFile(file: File, accept: AcceptValue): boolean {
   return false;
 }
 
+export const STUDIO_IMAGE_ACCEPT: Record<string, string[]> = {
+  "image/jpeg": [".jpg", ".jpeg", ".jpe", ".jfif"],
+  "image/png": [".png"],
+  "image/webp": [".webp"],
+};
+
+const HEIC_EXTENSIONS = new Set([".heic", ".heif"]);
+
+export function isHeicLikeFile(file: File): boolean {
+  const mime = (file.type || "").toLowerCase();
+  const ext = fileExtension(file);
+  return mime.includes("heic") || mime.includes("heif") || HEIC_EXTENSIONS.has(ext);
+}
+
+/** JPEG / PNG / WebP only — HEIC and other camera formats are rejected. */
+export function isSupportedStudioImageFile(file: File): boolean {
+  if (isHeicLikeFile(file)) return false;
+  return isAcceptedFile(file, STUDIO_IMAGE_ACCEPT);
+}
+
+export function safeStorageExtension(file: File, fallback = "jpg"): string {
+  const ext = fileExtension(file).replace(/^\./, "").toLowerCase();
+  if (/^[a-z0-9]{1,5}$/.test(ext) && !["heic", "heif"].includes(ext)) {
+    return ext;
+  }
+
+  switch (inferredContentType(file)) {
+    case "image/jpeg":
+      return "jpg";
+    case "image/png":
+      return "png";
+    case "image/webp":
+      return "webp";
+    case "image/gif":
+      return "gif";
+    case "video/mp4":
+      return "mp4";
+    case "video/webm":
+      return "webm";
+    case "video/quicktime":
+      return "mov";
+    default:
+      return fallback;
+  }
+}
+
 export function inferredContentType(file: File): string {
   const mime = (file.type || "").toLowerCase();
   const ext = fileExtension(file);

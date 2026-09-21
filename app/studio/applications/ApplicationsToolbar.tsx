@@ -9,6 +9,7 @@ import {
 import { Search, X } from "lucide-react";
 import type { StatusFilter } from "./types";
 import { isStatusFilter } from "./types";
+import { BlurIn } from "@/components/studio/BlurIn";
 
 type ApplicationsToolbarProps = {
   totalCount: number;
@@ -29,7 +30,7 @@ export function ApplicationsToolbar({
 }: ApplicationsToolbarProps) {
   return (
     <>
-      <div className="mb-8">
+      <BlurIn className="mb-8">
         <div>
           <h1 className="text-3xl font-canela text-oma-plum mb-2">
             Designer Applications
@@ -44,9 +45,9 @@ export function ApplicationsToolbar({
             )}
           </p>
         </div>
-      </div>
+      </BlurIn>
 
-      <div className="mb-6 flex flex-col sm:flex-row gap-4">
+      <BlurIn delay={0.08} className="mb-6 flex flex-col sm:flex-row gap-4">
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
@@ -82,7 +83,7 @@ export function ApplicationsToolbar({
             <SelectItem value="rejected">Rejected</SelectItem>
           </SelectContent>
         </Select>
-      </div>
+      </BlurIn>
     </>
   );
 }

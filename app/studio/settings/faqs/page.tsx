@@ -53,6 +53,7 @@ import {
 import { toast } from "sonner";
 import OmaHubEditor from "@/app/components/OmaHubEditor";
 import { faqAnswerLooksLikeHtml } from "@/lib/faqAnswerRendering";
+import { BlurIn, blurStagger } from "@/components/studio/BlurIn";
 
 interface FAQ {
   id: string;
@@ -329,7 +330,7 @@ export default function FAQManagementPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <BlurIn className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-canela text-gray-900 mb-2">
             FAQ Management
@@ -483,10 +484,10 @@ export default function FAQManagementPage() {
             </form>
           </DialogContent>
         </Dialog>
-      </div>
+      </BlurIn>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
+      <BlurIn delay={0.08} className="mb-6 flex flex-wrap gap-4 rounded-lg bg-gray-50 p-4">
         <div className="flex items-center space-x-2">
           <Label htmlFor="filter-category">Category:</Label>
           <Select value={filterCategory} onValueChange={setFilterCategory}>
@@ -527,11 +528,12 @@ export default function FAQManagementPage() {
           />
           <Label htmlFor="show-inactive">Show Inactive</Label>
         </div>
-      </div>
+      </BlurIn>
 
       {/* FAQ List */}
       <div className="space-y-4">
         {filteredFaqs.length === 0 ? (
+          <BlurIn delay={0.12}>
           <Card>
             <CardContent className="p-8 text-center">
               <HelpCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -557,9 +559,11 @@ export default function FAQManagementPage() {
               )}
             </CardContent>
           </Card>
+          </BlurIn>
         ) : (
-          filteredFaqs.map((faq) => (
-            <Card key={faq.id} className={!faq.is_active ? "opacity-60" : ""}>
+          filteredFaqs.map((faq, index) => (
+            <BlurIn key={faq.id} delay={blurStagger(index)}>
+            <Card className={!faq.is_active ? "opacity-60" : ""}>
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -635,6 +639,7 @@ export default function FAQManagementPage() {
                 </div>
               </CardContent>
             </Card>
+            </BlurIn>
           ))
         )}
       </div>

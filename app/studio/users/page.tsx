@@ -51,6 +51,7 @@ import {
   Download,
 } from "lucide-react";
 import { toast } from "sonner";
+import { BlurIn, BlurInTableRow, blurStagger } from "@/components/studio/BlurIn";
 
 interface UserProfile {
   id: string;
@@ -523,6 +524,7 @@ export default function UsersPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-12 gap-4">
+        <BlurIn>
         <div>
           <h1 className="text-3xl font-canela text-gray-900 mb-2">
             User Management
@@ -531,6 +533,7 @@ export default function UsersPage() {
             Manage user accounts and assign brands to users
           </p>
         </div>
+        </BlurIn>
         <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
@@ -654,7 +657,7 @@ export default function UsersPage() {
       </div>
 
       {/* Search and Filter Controls */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-8">
+      <BlurIn delay={0.08} className="mb-8 flex flex-col gap-4 sm:flex-row">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-oma-cocoa/60" />
           <Input
@@ -693,10 +696,10 @@ export default function UsersPage() {
             Export CSV
           </Button>
         </div>
-      </div>
+      </BlurIn>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+      <BlurIn delay={0.12} className="mb-12 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
         <Card className="border-l-4 border-l-oma-plum border-oma-beige">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-black">
@@ -757,9 +760,10 @@ export default function UsersPage() {
             </div>
           </CardContent>
         </Card>
-      </div>
+      </BlurIn>
 
       {/* Users Table */}
+      <BlurIn delay={0.16}>
       <Card className="border border-oma-gold/10 bg-white">
         <CardHeader>
           <CardTitle className="text-black">
@@ -799,8 +803,11 @@ export default function UsersPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredUsers.map((user) => (
-                    <TableRow key={user.id}>
+                  {filteredUsers.map((user, index) => (
+                    <BlurInTableRow
+                      key={user.id}
+                      delay={blurStagger(index)}
+                    >
                       <TableCell className="font-medium">
                         <div className="flex items-center gap-2">
                           <Mail className="h-4 w-4 text-oma-cocoa/60" />
@@ -841,15 +848,16 @@ export default function UsersPage() {
                           </Button>
                         </div>
                       </TableCell>
-                    </TableRow>
+                    </BlurInTableRow>
                   ))}
                 </TableBody>
               </Table>
               {/* Mobile card layout */}
               <div className="sm:hidden flex flex-col gap-4">
-                {filteredUsers.map((user) => (
-                  <div
+                {filteredUsers.map((user, index) => (
+                  <BlurIn
                     key={user.id}
+                    delay={blurStagger(index)}
                     className="rounded-lg border border-oma-gold/10 bg-white p-4 flex flex-col gap-2 shadow-sm"
                   >
                     <div className="flex items-center gap-2 text-base font-medium">
@@ -890,13 +898,14 @@ export default function UsersPage() {
                         <span className="ml-1">Delete</span>
                       </Button>
                     </div>
-                  </div>
+                  </BlurIn>
                 ))}
               </div>
             </div>
           )}
         </CardContent>
       </Card>
+      </BlurIn>
     </div>
   );
 }

@@ -31,6 +31,7 @@ import { Button } from "@/components/ui/button";
 import { FileUpload } from "@/components/ui/file-upload";
 import { Loading } from "@/components/ui/loading";
 import { NavigationLink } from "@/components/ui/navigation-link";
+import { BlurIn } from "@/components/studio/BlurIn";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -474,7 +475,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
-      <div className="flex flex-wrap items-start justify-between gap-4 mb-8">
+      <BlurIn className="mb-8 flex flex-wrap items-start justify-between gap-4">
         <div className="flex items-center gap-4">
           <Button asChild variant="outline" size="sm">
             <NavigationLink href="/studio/editions">
@@ -492,17 +493,17 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
             </p>
           </div>
         </div>
-      </div>
+      </BlurIn>
 
-      <section className="mb-12 border-b border-oma-cocoa/10 pb-12">
+      <BlurIn className="mb-12 border-b border-oma-cocoa/10 pb-12">
         <EditionContentSection
           slug={slug}
           staticEdition={edition}
           initialDraft={contentDraft}
         />
-      </section>
+      </BlurIn>
 
-      <section className="mb-12">
+      <BlurIn className="mb-12">
         <h2 className="text-lg font-semibold text-oma-black mb-1">
           Hero cover
         </h2>
@@ -547,9 +548,9 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
         {isUploadingCover && (
           <p className="mt-2 text-sm text-oma-cocoa">Saving cover photo…</p>
         )}
-      </section>
+      </BlurIn>
 
-      <section className="mb-12">
+      <BlurIn className="mb-12">
         <h2 className="text-lg font-semibold text-oma-black mb-1">
           Story sidebar video
         </h2>
@@ -612,7 +613,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
             "video/webm": [".webm"],
             "video/quicktime": [".mov"],
           }}
-          maxSize={150}
+          maxSize={50}
           hidePreview
         />
 
@@ -705,10 +706,10 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
             </AlertDialog>
           )}
         </div>
-      </section>
+      </BlurIn>
 
       {storyPhotos.length > 0 && (
-        <section className="mb-12 rounded-xl border border-amber-200 bg-amber-50/60 p-5">
+        <BlurIn className="mb-12 rounded-xl border border-amber-200 bg-amber-50/60 p-5">
           <h2 className="text-lg font-semibold text-oma-black mb-1">
             Legacy inline story photos
           </h2>
@@ -772,10 +773,10 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
               </div>
             ))}
           </div>
-        </section>
+        </BlurIn>
       )}
 
-      <section className="mb-12">
+      <BlurIn className="mb-12">
         <h2 className="text-lg font-semibold text-oma-black mb-1">
           In pictures (gallery)
         </h2>
@@ -847,9 +848,9 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
         {isUploadingGallery && (
           <p className="mt-2 text-sm text-oma-cocoa">Adding photo…</p>
         )}
-      </section>
+      </BlurIn>
 
-      <section className="mb-12">
+      <BlurIn className="mb-12">
         <h2 className="text-lg font-semibold text-oma-black mb-1">
           Lineup brands
         </h2>
@@ -961,9 +962,9 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
             at the bottom of the edition page.
           </p>
         )}
-      </section>
+      </BlurIn>
 
-      <section className="mb-12">
+      <BlurIn className="mb-12">
         <h2 className="text-lg font-semibold text-oma-black mb-1">
           Partners (bottom of page)
         </h2>
@@ -1053,7 +1054,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
         {isUploadingPartner && (
           <p className="mt-2 text-sm text-oma-cocoa">Adding partner logo…</p>
         )}
-      </section>
+      </BlurIn>
     </div>
   );
 }

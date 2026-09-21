@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { NavigationLink } from "@/components/ui/navigation-link";
 import { Loading } from "@/components/ui/loading";
 import { SuperAdminHeroGate } from "@/app/studio/hero/SuperAdminHeroGate";
+import { BlurIn, blurStagger } from "@/components/studio/BlurIn";
 
 export default function EditionsStudioPage() {
   return (
@@ -71,16 +72,16 @@ function EditionsStudioContent() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
-      <div className="mb-8">
+      <BlurIn className="mb-8">
         <h1 className="text-3xl font-canela text-oma-black mb-2">Editions</h1>
         <p className="text-oma-cocoa">
           Create and edit each edition like a blog post — story, metadata, cover,
           gallery, lineup, and partners in one place.
         </p>
-      </div>
+      </BlurIn>
 
       <div className="space-y-4">
-        {editions.map((edition) => {
+        {editions.map((edition, index) => {
           const images = imagesBySlug[edition.slug] || [];
           const dynamicCover = images.find((i) => i.kind === "cover")?.image_url;
           const galleryCount = images.filter((i) => i.kind === "gallery").length;
@@ -94,7 +95,8 @@ function EditionsStudioContent() {
           const displayDate = saved?.date_label?.trim() || edition.dateLabel;
 
           return (
-            <Card key={edition.slug} className="overflow-hidden">
+            <BlurIn key={edition.slug} delay={blurStagger(index)}>
+            <Card className="overflow-hidden">
               <div className="flex flex-col sm:flex-row">
                 <div className="sm:w-48 shrink-0">
                   <div className="aspect-video sm:aspect-square relative bg-oma-plum/10">
@@ -144,6 +146,7 @@ function EditionsStudioContent() {
                 </CardContent>
               </div>
             </Card>
+            </BlurIn>
           );
         })}
       </div>

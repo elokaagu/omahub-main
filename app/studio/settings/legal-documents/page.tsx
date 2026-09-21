@@ -35,6 +35,7 @@ import {
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { useStudioEffectiveRole } from "@/hooks/useStudioEffectiveRole";
+import { BlurIn, blurStagger } from "@/components/studio/BlurIn";
 
 interface LegalDocument {
   id: string;
@@ -399,7 +400,7 @@ export default function LegalDocumentsPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-8">
-      <div className="flex justify-between items-center mb-6">
+      <BlurIn className="mb-6 flex items-center justify-between">
         <div>
           <Link href="/studio/settings">
             <Button variant="ghost" className="mb-4">
@@ -416,7 +417,7 @@ export default function LegalDocumentsPage() {
           <Plus className="h-4 w-4 mr-2" />
           Create Document
         </Button>
-      </div>
+      </BlurIn>
 
       {setupRequired && (
         <Card className="mb-6 border-orange-200 bg-orange-50">
@@ -453,7 +454,7 @@ export default function LegalDocumentsPage() {
       )}
 
       <div className="grid gap-6">
-        {["terms_of_service", "privacy_policy"].map((type) => {
+        {["terms_of_service", "privacy_policy"].map((type, index) => {
           const typeDocuments = documents.filter(
             (doc) => doc.document_type === type
           );
@@ -463,7 +464,8 @@ export default function LegalDocumentsPage() {
           );
 
           return (
-            <Card key={type}>
+            <BlurIn key={type} delay={blurStagger(index)}>
+            <Card>
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -572,6 +574,7 @@ export default function LegalDocumentsPage() {
                 )}
               </CardContent>
             </Card>
+            </BlurIn>
           );
         })}
       </div>

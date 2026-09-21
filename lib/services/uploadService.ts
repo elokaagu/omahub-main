@@ -1,3 +1,4 @@
+import { uploadPublicFile } from "@/lib/uploads/studioStorageUpload";
 import { supabase } from "../supabase";
 
 /**
@@ -10,39 +11,14 @@ import { supabase } from "../supabase";
 export async function uploadFile(
   file: File,
   bucket: string = "brand-assets",
-  path: string = ""
+  path: string = "",
 ): Promise<string> {
-  try {
-    // Create a unique file name with original extension
-    const fileExt = file.name.split(".").pop();
-    const fileName = `${Math.random()
-      .toString(36)
-      .substring(2, 15)}_${Date.now()}.${fileExt}`;
-    const filePath = path ? `${path}/${fileName}` : fileName;
-
-    // Upload the file
-    const { data, error } = await supabase.storage
-      .from(bucket)
-      .upload(filePath, file, {
-        cacheControl: "3600",
-        upsert: true,
-      });
-
-    if (error) {
-      console.error("Error uploading file:", error);
-      throw error;
-    }
-
-    // Get the public URL
-    const { data: urlData } = supabase.storage
-      .from(bucket)
-      .getPublicUrl(data.path);
-
-    return urlData.publicUrl;
-  } catch (error) {
-    console.error("Error in uploadFile:", error);
-    throw error;
-  }
+  return uploadPublicFile({
+    file,
+    bucket,
+    path,
+    fallbackBuckets: bucket === "edition-galleries" ? ["brand-assets"] : [],
+  });
 }
 
 /**
@@ -52,10 +28,9 @@ export async function uploadFile(
  */
 export async function deleteFile(
   filePath: string,
-  bucket: string = "brand-assets"
+  bucket: string = "brand-assets",
 ): Promise<void> {
   try {
-    // Extract the file path from the URL
     const path = filePath.split(`${bucket}/`)[1];
 
     if (!path) {

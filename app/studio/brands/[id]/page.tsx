@@ -12,6 +12,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { brandIsListedInPublicDirectory } from "@/lib/brands/directoryListingImage";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import type { User } from "@/lib/services/authService";
+import { BlurIn } from "@/components/studio/BlurIn";
 
 function canSeeDirectoryListingStudioNotice(
   user: User | null,
@@ -70,13 +71,13 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-      <div className="flex items-center mb-8">
+      <BlurIn className="mb-8 flex items-center">
         <Button variant="ghost" onClick={() => router.back()} className="mr-4">
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back
         </Button>
         <h1 className="text-3xl font-canela text-gray-900">Edit Brand</h1>
-      </div>
+      </BlurIn>
 
       {showDirectoryImageNotice ? (
         <Alert className="mb-6 sm:mb-8 border-oma-gold/35 bg-oma-beige/60 text-oma-cocoa shadow-sm">
@@ -102,13 +103,13 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
       ) : null}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2">
+        <BlurIn delay={0.08} className="lg:col-span-2">
           <BrandEditDetailsForm editor={editor} />
-        </div>
-        <div>
+        </BlurIn>
+        <BlurIn delay={0.16}>
           <BrandEditMediaPreviewColumn editor={editor} />
           <BrandEditTailoringSection editor={editor} />
-        </div>
+        </BlurIn>
       </div>
     </div>
   );

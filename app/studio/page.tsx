@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Link from "next/link";
 import { StudioHomeOverview } from "@/components/studio/StudioHomeOverview";
+import { BlurIn } from "@/components/studio/BlurIn";
 
 const RecentAccountsWidget = dynamic(
   () => import("@/app/studio/dashboard/RecentAccountsWidget"),
@@ -78,6 +79,7 @@ export default function StudioPage() {
   return (
     <div className="mx-auto max-w-7xl space-y-10 px-4 py-8 sm:px-6 sm:py-10">
       {/* Welcome Header */}
+      <BlurIn>
       <header className="mx-auto max-w-2xl text-center">
         <h1 className="mb-3 font-canela text-3xl tracking-tight text-omahub-primary sm:text-4xl">
           Welcome to OmaHub Studio
@@ -86,12 +88,14 @@ export default function StudioPage() {
           Manage brands, editions, and the live homepage from one place
         </p>
       </header>
+      </BlurIn>
 
       {/* Main Dashboard Components */}
       <div className="grid grid-cols-1 gap-8">
         <StudioHomeOverview />
 
         {effectiveRole === "super_admin" && (
+          <BlurIn delay={0.16}>
           <Card className="overflow-hidden rounded-2xl border border-oma-beige/60 shadow-sm">
             <CardContent className="bg-white px-5 py-6 sm:px-8 sm:py-8">
               <Suspense
@@ -103,6 +107,7 @@ export default function StudioPage() {
               </Suspense>
             </CardContent>
           </Card>
+          </BlurIn>
         )}
       </div>
     </div>

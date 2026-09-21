@@ -37,6 +37,7 @@ import { ArrowLeft, Plus, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Loading } from "@/components/ui/loading";
 import Link from "next/link";
+import { BlurIn } from "@/components/studio/BlurIn";
 
 type VideoType = NonNullable<CreateSpotlightData["video_type"]>;
 
@@ -334,7 +335,7 @@ export default function CreateSpotlightPage() {
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-8">
-      <div className="flex items-center gap-4 mb-8">
+      <BlurIn className="mb-8 flex items-center gap-4">
         <Button asChild variant="outline" size="sm">
           <Link href="/studio/spotlight">
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -349,8 +350,9 @@ export default function CreateSpotlightPage() {
             Create a brand film for product pages
           </p>
         </div>
-      </div>
+      </BlurIn>
 
+      <BlurIn delay={0.08}>
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* Basic Information */}
         <Card>
@@ -734,6 +736,7 @@ export default function CreateSpotlightPage() {
           </Button>
         </div>
       </form>
+      </BlurIn>
     </div>
   );
 }

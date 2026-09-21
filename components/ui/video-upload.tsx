@@ -6,10 +6,10 @@ import { Upload, X, Video, AlertCircle } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import {
-  inferredContentType,
   isAcceptedFile,
   isLikelyVideoFile,
 } from "@/lib/uploads/acceptedMedia";
+import { uploadPublicFile } from "@/lib/uploads/studioStorageUpload";
 
 interface VideoUploadProps {
   onUploadComplete: (url: string) => void;
@@ -95,72 +95,13 @@ export function VideoUpload({
         }
       }
 
-      // Create unique filename
-      const fileExtension = file.name.split(".").pop() || "mp4";
-      const uniqueFileName = `${user.id.substring(0, 8)}_${Date.now()}.${fileExtension}`;
-      const filePath = path ? `${path}/${uniqueFileName}` : uniqueFileName;
-
-      console.log("🎬 Starting video upload:", {
-        fileName: uniqueFileName,
-        fileSize: `${(file.size / 1024 / 1024).toFixed(2)} MB`,
-        fileType: file.type,
-        bucket: bucket,
-        path: filePath,
+      return uploadPublicFile({
+        file,
+        bucket,
+        path,
+        fallbackBuckets: bucket === "edition-galleries" ? ["brand-assets"] : [],
+        maxSizeMb: maxSize,
       });
-
-      // Upload file with progress tracking
-      const { data, error } = await supabase.storage
-        .from(bucket)
-        .upload(filePath, file, {
-          cacheControl: "3600",
-          upsert: false,
-          contentType: inferredContentType(file),
-        });
-
-      if (error) {
-        console.error("❌ Video upload error:", error);
-
-        // Provide specific error messages
-        if (
-          error.message.includes("403") ||
-          error.message.includes("Unauthorized")
-        ) {
-          throw new Error(
-            "Upload permission denied. Please check your account permissions."
-          );
-        } else if (
-          error.message.includes("404") ||
-          error.message.includes("not found")
-        ) {
-          throw new Error(
-            `Storage bucket '${bucket}' not found. Please contact support.`
-          );
-        } else if (error.message.includes("row-level security")) {
-          throw new Error(
-            "Database security policy blocked the upload. Please contact support."
-          );
-        } else if (error.message.includes("duplicate")) {
-          throw new Error("File already exists. Please try again.");
-        } else {
-          throw new Error(`Upload failed: ${error.message}`);
-        }
-      }
-
-      if (!data?.path) {
-        throw new Error("Upload succeeded but no file path returned");
-      }
-
-      // Get the public URL
-      const { data: urlData } = supabase.storage
-        .from(bucket)
-        .getPublicUrl(data.path);
-
-      if (!urlData?.publicUrl) {
-        throw new Error("Failed to get public URL for uploaded video");
-      }
-
-      console.log("✅ Video upload successful:", urlData.publicUrl);
-      return urlData.publicUrl;
     } catch (error) {
       console.error("❌ Video upload error:", error);
       throw error;

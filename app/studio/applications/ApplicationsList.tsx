@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import type { DesignerApplication } from "./types";
 import { ApplicationCard } from "./ApplicationCard";
+import { BlurIn, blurStagger } from "@/components/studio/BlurIn";
 
 type ApplicationsListProps = {
   applications: DesignerApplication[];
@@ -53,17 +54,18 @@ export function ApplicationsList({
 
   return (
     <div className="grid gap-6">
-      {filteredApplications.map((application) => (
-        <ApplicationCard
-          key={application.id}
-          application={application}
-          onViewDetails={onViewDetails}
-          onApprove={onApprove}
-          onReject={onReject}
-          onRequestDelete={onRequestDelete}
-          updatingApplicationId={updatingApplicationId}
-          deletingApplicationId={deletingApplicationId}
-        />
+      {filteredApplications.map((application, index) => (
+        <BlurIn key={application.id} delay={blurStagger(index)}>
+          <ApplicationCard
+            application={application}
+            onViewDetails={onViewDetails}
+            onApprove={onApprove}
+            onReject={onReject}
+            onRequestDelete={onRequestDelete}
+            updatingApplicationId={updatingApplicationId}
+            deletingApplicationId={deletingApplicationId}
+          />
+        </BlurIn>
       ))}
     </div>
   );

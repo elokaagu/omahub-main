@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/select";
 import { ArrowLeft, Save, Globe, Instagram } from "lucide-react";
 import Link from "next/link";
+import { BlurIn } from "@/components/studio/BlurIn";
 import { SimpleFileUpload } from "@/components/ui/simple-file-upload";
 import { VideoUpload } from "@/components/ui/video-upload";
 import { MultiSelect } from "@/components/ui/multi-select";
@@ -264,15 +265,16 @@ export default function CreateBrandPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-      <div className="flex items-center gap-4 mb-8">
+      <BlurIn className="mb-8 flex items-center gap-4">
         <Button variant="outline" size="icon" asChild className="h-8 w-8">
           <Link href="/studio/brands">
             <ArrowLeft className="h-4 w-4" />
           </Link>
         </Button>
         <h1 className="text-3xl font-canela text-gray-900">Create New Brand</h1>
-      </div>
+      </BlurIn>
 
+      <BlurIn delay={0.08}>
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
@@ -642,6 +644,7 @@ export default function CreateBrandPage() {
           </div>
         </div>
       </form>
+      </BlurIn>
     </div>
   );
 }

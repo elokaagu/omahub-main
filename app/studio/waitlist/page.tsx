@@ -15,6 +15,7 @@ import { LeadsList } from "../leads/components/LeadsList";
 import { DeleteLeadDialog } from "../leads/components/DeleteLeadDialog";
 import { StudioAuthPlaceholder } from "@/components/studio/StudioAuthPlaceholder";
 import { useStudioEventWaitlist } from "./useStudioEventWaitlist";
+import { BlurIn } from "@/components/studio/BlurIn";
 
 export default function StudioEventWaitlistPage() {
   const { user, loading: authLoading, isSuperAdmin } = useStudioEffectiveRole();
@@ -211,7 +212,7 @@ export default function StudioEventWaitlistPage() {
   return (
     <div className="min-h-screen bg-oma-cream">
       <div className="max-w-7xl mx-auto px-6 py-8">
-        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <BlurIn className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h1 className="text-3xl font-canela text-oma-plum mb-2">
               Product preorder waitlist
@@ -235,9 +236,9 @@ export default function StudioEventWaitlistPage() {
             />
             Refresh
           </Button>
-        </div>
+        </BlurIn>
 
-        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <BlurIn delay={0.08} className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <Input
             type="search"
             placeholder="Search by name, email, phone, or notes…"
@@ -248,7 +249,7 @@ export default function StudioEventWaitlistPage() {
           <p className="text-sm text-oma-cocoa">
             Showing {filteredLeads.length} of {leads.length} signups
           </p>
-        </div>
+        </BlurIn>
 
         {error && (
           <Alert variant="destructive" className="mb-6">

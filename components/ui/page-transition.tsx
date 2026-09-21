@@ -24,18 +24,29 @@ export function PageTransition({
 }: PageTransitionProps) {
   const reduce = useReducedMotion();
   const y = variant === "studio" ? 8 : 12;
+  const studioBlur = variant === "studio";
 
   return (
     <motion.div
       key={routeKey}
       className={cn(className)}
-      initial={reduce ? false : { opacity: 0, y }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={
+        reduce
+          ? false
+          : studioBlur
+            ? { opacity: 0, y, filter: "blur(12px)" }
+            : { opacity: 0, y }
+      }
+      animate={
+        studioBlur
+          ? { opacity: 1, y: 0, filter: "blur(0px)" }
+          : { opacity: 1, y: 0 }
+      }
       transition={
         reduce
           ? { duration: 0 }
           : {
-              duration: variant === "studio" ? 0.28 : 0.34,
+              duration: variant === "studio" ? 0.5 : 0.34,
               ease: MOTION_EASE,
             }
       }

@@ -117,6 +117,42 @@ const bucketsConfig = [
       },
     ],
   },
+  {
+    name: "edition-galleries",
+    config: {
+      public: true,
+      fileSizeLimit: 52428800, // 50MB — project storage cap rejects 150MB
+      allowedMimeTypes: [
+        "image/jpeg",
+        "image/jpg",
+        "image/pjpeg",
+        "image/png",
+        "image/webp",
+        "image/gif",
+        "video/mp4",
+        "video/webm",
+        "video/quicktime",
+      ],
+    },
+    policies: [
+      {
+        name: "edition-galleries_public_select",
+        sql: `CREATE POLICY "edition-galleries_public_select" ON storage.objects FOR SELECT USING (bucket_id = 'edition-galleries');`,
+      },
+      {
+        name: "edition-galleries_auth_insert",
+        sql: `CREATE POLICY "edition-galleries_auth_insert" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'edition-galleries' AND auth.role() = 'authenticated');`,
+      },
+      {
+        name: "edition-galleries_auth_update",
+        sql: `CREATE POLICY "edition-galleries_auth_update" ON storage.objects FOR UPDATE USING (bucket_id = 'edition-galleries' AND auth.role() = 'authenticated');`,
+      },
+      {
+        name: "edition-galleries_auth_delete",
+        sql: `CREATE POLICY "edition-galleries_auth_delete" ON storage.objects FOR DELETE USING (bucket_id = 'edition-galleries' AND auth.role() = 'authenticated');`,
+      },
+    ],
+  },
 ];
 
 async function createBucketWithPolicies(bucketConfig) {

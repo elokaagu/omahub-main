@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { User as UserIcon, Save } from "lucide-react";
 import { FileUpload } from "@/components/ui/file-upload";
+import { BlurIn } from "@/components/studio/BlurIn";
 
 interface ProfileData extends User {
   // Extends the User type from authService
@@ -174,12 +175,14 @@ export default function ProfilePage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+      <BlurIn>
       <h1 className="text-3xl font-canela text-gray-900 mb-8">
         Profile Settings
       </h1>
+      </BlurIn>
 
       <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-3">
-        <div className="lg:col-span-2">
+        <BlurIn delay={0.08} className="lg:col-span-2">
           <Card>
             <CardHeader>
               <CardTitle>Personal Information</CardTitle>
@@ -256,9 +259,9 @@ export default function ProfilePage() {
               </CardFooter>
             </form>
           </Card>
-        </div>
+        </BlurIn>
 
-        <div>
+        <BlurIn delay={0.16}>
           <Card>
             <CardHeader>
               <CardTitle>Profile Picture</CardTitle>
@@ -302,7 +305,7 @@ export default function ProfilePage() {
               />
             </CardContent>
           </Card>
-        </div>
+        </BlurIn>
       </div>
     </div>
   );

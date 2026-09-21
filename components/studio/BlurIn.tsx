@@ -6,6 +6,10 @@ import { TableRow } from "@/components/ui/table";
 
 export const BLUR_IN_EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
+export function blurStagger(index: number, cap = 10, each = 0.05) {
+  return Math.min(index, cap) * each;
+}
+
 const MotionTableRow = motion(TableRow);
 
 type BlurInProps = {
@@ -92,5 +96,42 @@ export function BlurInTableRow({
     >
       {children}
     </MotionTableRow>
+  );
+}
+
+type BlurInLiProps = {
+  children: ReactNode;
+  className?: string;
+  delay?: number;
+};
+
+export function BlurInLi({ children, className, delay = 0 }: BlurInLiProps) {
+  const reduceMotion = useReducedMotion();
+  const ref = useRef<HTMLLIElement>(null);
+  const inView = useInView(ref, {
+    once: true,
+    amount: 0.2,
+    margin: "140px 0px",
+  });
+  const skip = reduceMotion === true;
+
+  return (
+    <motion.li
+      ref={ref}
+      className={className}
+      initial={skip ? false : { opacity: 0, filter: "blur(14px)" }}
+      animate={
+        skip || inView
+          ? { opacity: 1, filter: "blur(0px)" }
+          : { opacity: 0.35, filter: "blur(14px)" }
+      }
+      transition={{
+        duration: skip ? 0 : 0.55,
+        delay: skip || !inView ? 0 : delay,
+        ease: BLUR_IN_EASE,
+      }}
+    >
+      {children}
+    </motion.li>
   );
 }

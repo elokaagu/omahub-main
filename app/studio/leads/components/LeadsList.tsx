@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/select";
 import { Trash2 } from "lucide-react";
 import type { Lead } from "../types";
+import { BlurIn, blurStagger } from "@/components/studio/BlurIn";
 
 function getStatusColor(status: string) {
   switch (status) {
@@ -64,9 +65,9 @@ export function LeadsList({
 }: LeadsListProps) {
   return (
     <div className="space-y-4">
-      {leads.map((lead) => (
+      {leads.map((lead, index) => (
+        <BlurIn key={lead.id} delay={blurStagger(index)}>
         <Card
-          key={lead.id}
           className="border border-oma-gold/10 bg-white hover:shadow-md transition-shadow"
         >
           <CardContent className="pt-6">
@@ -156,6 +157,7 @@ export function LeadsList({
             </div>
           </CardContent>
         </Card>
+        </BlurIn>
       ))}
     </div>
   );

@@ -27,6 +27,7 @@ import {
   type SpotlightContent,
 } from "@/lib/services/spotlightService";
 import { useStudioEffectiveRole } from "@/hooks/useStudioEffectiveRole";
+import { BlurIn, blurStagger } from "@/components/studio/BlurIn";
 
 export default function SpotlightManagementPage() {
   return (
@@ -116,7 +117,7 @@ function SpotlightStudioContent() {
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
-      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <BlurIn className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="mb-2 font-canela text-3xl text-oma-black">
             Brand films
@@ -132,9 +133,10 @@ function SpotlightStudioContent() {
             New film
           </Link>
         </Button>
-      </div>
+      </BlurIn>
 
       {items.length === 0 ? (
+        <BlurIn delay={0.08}>
         <Card>
           <CardContent className="py-16 text-center">
             <p className="mb-2 font-canela text-xl text-oma-black">
@@ -148,12 +150,14 @@ function SpotlightStudioContent() {
             </Button>
           </CardContent>
         </Card>
+        </BlurIn>
       ) : (
         <div className="space-y-4">
-          {items.map((item) => {
+          {items.map((item, index) => {
             const preview = item.video_thumbnail || item.main_image;
             return (
-              <Card key={item.id} className="overflow-hidden border-oma-beige/80">
+              <BlurIn key={item.id} delay={blurStagger(index)}>
+              <Card className="overflow-hidden border-oma-beige/80">
                 <div className="flex flex-col sm:flex-row">
                   <div className="relative aspect-[4/5] bg-oma-beige/40 sm:aspect-auto sm:w-40 sm:shrink-0">
                     {preview ? (
@@ -161,6 +165,7 @@ function SpotlightStudioContent() {
                       <img
                         src={preview}
                         alt=""
+                        loading="lazy"
                         className="h-full w-full object-cover"
                       />
                     ) : (
@@ -252,6 +257,7 @@ function SpotlightStudioContent() {
                   </CardContent>
                 </div>
               </Card>
+              </BlurIn>
             );
           })}
         </div>
