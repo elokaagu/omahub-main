@@ -8,7 +8,7 @@ export default defineConfig({
     alias: { "@": path.resolve(__dirname, ".") },
   },
   test: {
-    environment: "jsdom",
+    environment: "happy-dom",
     include: ["tests/**/*.test.{ts,tsx}"],
   },
 });
