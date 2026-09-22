@@ -8,7 +8,7 @@ const videoIdField = z
   .regex(/^\d+$/, "Enter just the numeric Vimeo video ID");
 /** Public URL for the top homepage still or looping film. Empty restores the default. */
 const heroMediaUrlField = z.string().trim().max(2000);
-/** Public URL for the editions archive banner. Empty falls back to the latest cover. */
+/** Public URL for an uploaded asset (archive banner, homepage film). Empty clears it. */
 const imageUrlField = z.string().trim().max(2000);
 
 export const platformSettingsUpdateSchema = z
@@ -17,8 +17,8 @@ export const platformSettingsUpdateSchema = z
     ourStory: contentField.optional(),
     tailoredServices: contentField.optional(),
     heroVideoId: videoIdField.optional(),
-    welcomeVideoId: videoIdField.optional(),
     heroMediaUrl: heroMediaUrlField.optional(),
+    homepageFilmUrl: imageUrlField.optional(),
     customerSignupEnabled: z.enum(["true", "false"]).optional(),
     cataloguesPubliclyVisible: z.enum(["true", "false"]).optional(),
     archiveHeroImage: imageUrlField.optional(),
@@ -30,8 +30,8 @@ export const platformSettingsUpdateSchema = z
       data.ourStory !== undefined ||
       data.tailoredServices !== undefined ||
       data.heroVideoId !== undefined ||
-      data.welcomeVideoId !== undefined ||
       data.heroMediaUrl !== undefined ||
+      data.homepageFilmUrl !== undefined ||
       data.customerSignupEnabled !== undefined ||
       data.cataloguesPubliclyVisible !== undefined ||
       data.archiveHeroImage !== undefined,

@@ -16,6 +16,7 @@ import UserProfile from "@/components/auth/UserProfile";
 // Phase 2B: Selective icon imports instead of large lucide-react bundle
 import {
   Home,
+  LayoutTemplate,
   Package,
   ImageIcon,
   Users,
@@ -132,6 +133,12 @@ function buildNavigationItems(
       label: "Editions",
       icon: Calendar,
       permission: "studio.hero.manage",
+    },
+    {
+      href: "/studio/homepage",
+      label: "Homepage",
+      icon: LayoutTemplate,
+      permission: "studio.settings.manage",
     },
     {
       href: "/studio/users",

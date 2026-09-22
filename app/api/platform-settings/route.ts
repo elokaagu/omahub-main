@@ -63,8 +63,8 @@ export async function POST(req: NextRequest) {
       ourStory,
       tailoredServices,
       heroVideoId,
-      welcomeVideoId,
       heroMediaUrl,
+      homepageFilmUrl,
       customerSignupEnabled,
       cataloguesPubliclyVisible,
       archiveHeroImage,
@@ -85,11 +85,15 @@ export async function POST(req: NextRequest) {
     if (heroVideoId !== undefined) {
       updates.push({ key: "hero_video_id", value: heroVideoId, updated_at: now });
     }
-    if (welcomeVideoId !== undefined) {
-      updates.push({ key: "welcome_video_id", value: welcomeVideoId, updated_at: now });
-    }
     if (heroMediaUrl !== undefined) {
       updates.push({ key: "hero_media_url", value: heroMediaUrl, updated_at: now });
+    }
+    if (homepageFilmUrl !== undefined) {
+      updates.push({
+        key: "homepage_film_url",
+        value: homepageFilmUrl,
+        updated_at: now,
+      });
     }
     if (customerSignupEnabled !== undefined) {
       updates.push({

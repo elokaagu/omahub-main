@@ -7,6 +7,7 @@
 // Re-export from lucide-react for now (will be optimized in Phase 2C)
 export {
   Home,
+  LayoutTemplate,
   Package,
   Image as ImageIcon,
   ShoppingBag,

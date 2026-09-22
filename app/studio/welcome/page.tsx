@@ -1,35 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loading } from "@/components/ui/loading";
 import { Mail, CalendarClock, Sparkles } from "lucide-react";
 
 export default function StudioWelcomePage() {
   const { user, loading } = useAuth();
-  const [videoId, setVideoId] = useState<string | null>(null);
-  const [isLoadingVideo, setIsLoadingVideo] = useState(true);
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await fetch("/api/platform-settings");
-        const data = await res.json();
-        if (!cancelled && typeof data.welcomeVideoId === "string") {
-          setVideoId(data.welcomeVideoId || null);
-        }
-      } catch (error) {
-        console.error("Error fetching welcome video:", error);
-      } finally {
-        if (!cancelled) setIsLoadingVideo(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
   if (loading || !user) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -48,20 +24,6 @@ export default function StudioWelcomePage() {
           Here&apos;s how OmaHub works
         </h1>
       </div>
-
-      {!isLoadingVideo && videoId && (
-        <div className="mb-8 overflow-hidden rounded-2xl bg-black">
-          <div className="aspect-video">
-            <iframe
-              src={`https://player.vimeo.com/video/${videoId}`}
-              title="Welcome to OmaHub"
-              allow="autoplay; fullscreen; picture-in-picture"
-              allowFullScreen
-              className="h-full w-full"
-            />
-          </div>
-        </div>
-      )}
 
       <div className="rounded-2xl border border-oma-gold/20 bg-oma-beige/40 p-6 sm:p-8">
         <p className="text-sm leading-relaxed text-oma-black/80">

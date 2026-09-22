@@ -62,12 +62,12 @@ export function EditionHero({
             both ends so it leaves no visible edge against the fade below. */}
         <div
           aria-hidden
-          className="absolute inset-0 bg-[linear-gradient(to_top,rgba(0,0,0,0)_0%,rgba(0,0,0,0.72)_20%,rgba(0,0,0,0.38)_42%,rgba(0,0,0,0)_72%)]"
+          className="absolute inset-0 bg-[linear-gradient(to_top,rgba(0,0,0,0.35)_0%,rgba(0,0,0,0.45)_22%,rgba(0,0,0,0.25)_45%,rgba(0,0,0,0)_72%)]"
         />
-        {/* Photo dissolves into the facts bar below. */}
+        {/* Photo deepens into shadow at the bottom edge. */}
         <div
           aria-hidden
-          className="absolute inset-x-0 bottom-0 z-10 h-28 bg-gradient-to-b from-transparent via-oma-beige/70 to-oma-beige sm:h-36"
+          className="absolute inset-x-0 bottom-0 z-10 h-40 bg-gradient-to-b from-transparent via-black/55 to-black/95 sm:h-48"
         />
 
         {/* Bottom padding clears the fade, so the title stays on the photo. */}

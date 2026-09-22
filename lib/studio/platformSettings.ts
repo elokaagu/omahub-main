@@ -9,8 +9,8 @@ const SETTING_KEYS = [
   "our_story",
   "tailored_services",
   "hero_video_id",
-  "welcome_video_id",
   "hero_media_url",
+  "homepage_film_url",
   "customer_signup_enabled",
   "catalogues_publicly_visible",
   "archive_hero_image",
@@ -22,8 +22,8 @@ const MAP_DB_TO_API: Record<
   | "ourStory"
   | "tailoredServices"
   | "heroVideoId"
-  | "welcomeVideoId"
   | "heroMediaUrl"
+  | "homepageFilmUrl"
   | "customerSignupEnabled"
   | "cataloguesPubliclyVisible"
   | "archiveHeroImage"
@@ -32,8 +32,8 @@ const MAP_DB_TO_API: Record<
   our_story: "ourStory",
   tailored_services: "tailoredServices",
   hero_video_id: "heroVideoId",
-  welcome_video_id: "welcomeVideoId",
   hero_media_url: "heroMediaUrl",
+  homepage_film_url: "homepageFilmUrl",
   customer_signup_enabled: "customerSignupEnabled",
   catalogues_publicly_visible: "cataloguesPubliclyVisible",
   archive_hero_image: "archiveHeroImage",
@@ -70,8 +70,8 @@ export async function readPlatformSettings(
     ourStory: "",
     tailoredServices: "",
     heroVideoId: "",
-    welcomeVideoId: "",
     heroMediaUrl: "",
+    homepageFilmUrl: "",
     customerSignupEnabled: DEFAULT_CUSTOMER_SIGNUP_ENABLED,
     cataloguesPubliclyVisible: DEFAULT_CATALOGUES_PUBLICLY_VISIBLE,
     archiveHeroImage: "",

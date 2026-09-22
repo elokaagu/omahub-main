@@ -23,10 +23,8 @@ import {
   type PlatformSettings,
   type PlatformVisibility,
 } from "@/lib/studio/platformSettings";
-import { HomepageHeroMediaCard } from "./HomepageHeroMediaCard";
 import { PlatformVisibilityCard } from "./PlatformVisibilityCard";
 import { SettingToggleCard } from "./SettingToggleCard";
-import { VimeoVideoIdCard } from "./VimeoVideoIdCard";
 import { SettingsToolLinkCard } from "./SettingsInfoCards";
 
 export const dynamic = "force-dynamic";
@@ -94,37 +92,6 @@ export default async function SettingsPage() {
           <PlatformVisibilityCard
             initialVisibility={visibility}
             loadError={visibility ? null : "Failed to read platform status"}
-          />
-
-          <HomepageHeroMediaCard initialMediaUrl={settings.heroMediaUrl} />
-
-          <VimeoVideoIdCard
-            title="Homepage Film Section"
-            description="Swap the mid-page Vimeo film on the public homepage"
-            help={
-              <>
-                Paste the numeric video ID from the film&apos;s Vimeo URL (e.g.
-                the <code>1206857643</code> in vimeo.com/1206857643). This plays
-                in the full-bleed section below the archive, not the portrait
-                card at the top.
-              </>
-            }
-            settingKey="heroVideoId"
-            initialValue={settings.heroVideoId}
-            successMessage="Homepage film section updated"
-            errorMessage="Failed to update the homepage film"
-          />
-
-          <VimeoVideoIdCard
-            title="Designer Welcome Video"
-            description={
-              <>Shown to designers on the &quot;Welcome&quot; page in Studio</>
-            }
-            help="Introduces how OmaHub works and sets expectations for new designers. Paste the numeric Vimeo video ID, same as the homepage video above."
-            settingKey="welcomeVideoId"
-            initialValue={settings.welcomeVideoId}
-            successMessage="Designer welcome video updated"
-            errorMessage="Failed to update the welcome video"
           />
 
           <SettingToggleCard

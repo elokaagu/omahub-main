@@ -1,6 +1,10 @@
 import { VimeoBackgroundVideo } from "./VimeoBackgroundVideo";
 import { FilmSectionCopy } from "./FilmSectionCopy";
-import { getHeroVideoId } from "@/lib/services/heroVideoSetting";
+import {
+  getHeroVideoId,
+  getHomepageFilmUrl,
+} from "@/lib/services/heroVideoSetting";
+import { UploadedBackgroundVideo } from "./UploadedBackgroundVideo";
 
 async function getVimeoPosterUrl(videoId: string): Promise<string | undefined> {
   try {
@@ -23,15 +27,21 @@ async function getVimeoPosterUrl(videoId: string): Promise<string | undefined> {
 /**
  * Full-bleed mid-page film section: a short highlight clip from the
  * events, filling the screen the same way the old hero video did. The
- * clip is swappable from Studio > Settings (Homepage Film Section).
+ * clip is swappable from Studio > Homepage: either an uploaded video file
+ * or a Vimeo ID.
  */
 export async function FilmSection() {
-  const videoId = await getHeroVideoId();
-  const posterUrl = await getVimeoPosterUrl(videoId);
+  const uploadedFilmUrl = await getHomepageFilmUrl();
+  const videoId = uploadedFilmUrl ? null : await getHeroVideoId();
+  const posterUrl = videoId ? await getVimeoPosterUrl(videoId) : undefined;
 
   return (
     <section className="relative min-h-[min(100svh,820px)] overflow-hidden bg-black sm:min-h-screen">
-      <VimeoBackgroundVideo videoId={videoId} posterUrl={posterUrl} />
+      {uploadedFilmUrl ? (
+        <UploadedBackgroundVideo src={uploadedFilmUrl} />
+      ) : (
+        <VimeoBackgroundVideo videoId={videoId!} posterUrl={posterUrl} />
+      )}
 
       <div className="relative z-10 flex min-h-[min(100svh,820px)] flex-col items-start justify-end px-4 pb-12 pt-16 sm:min-h-screen sm:px-6 sm:pb-20 sm:pt-24 lg:px-8">
         <FilmSectionCopy />
