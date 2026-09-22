@@ -1,23 +1,13 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { EditionFactsBar, type EditionFact } from "./EditionFactsBar";
 import {
   editionDisplayTitle,
   getAdjacentEditions,
   type Edition,
 } from "@/lib/data/editions";
 
-export type EditionFact = { label: string; value: string };
-
-/** One column per fact on wider screens (Tailwind needs literal classes). */
-const FACT_COLUMNS: Record<number, string> = {
-  1: "md:grid-cols-1",
-  2: "md:grid-cols-2",
-  3: "md:grid-cols-3",
-  4: "md:grid-cols-4",
-  5: "md:grid-cols-5",
-};
 
 type EditionHeroProps = {
   edition: Edition;
@@ -59,17 +49,25 @@ export function EditionHero({ edition, coverImage, facts }: EditionHeroProps) {
             className="absolute inset-0 bg-gradient-to-br from-[#735048] to-oma-plum"
           />
         )}
-        {/* Top scrim for the breadcrumb, bottom scrim for the title. */}
+        {/* Scrim for the breadcrumb. */}
         <div
           aria-hidden
           className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-black/45 to-transparent"
         />
+        {/* Scrim behind the title, stopping where the fade begins so the two
+            don't stack into a muddy band. */}
         <div
           aria-hidden
-          className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"
+          className="absolute inset-x-0 bottom-24 top-1/3 bg-gradient-to-t from-black/75 via-black/35 to-transparent sm:bottom-32"
+        />
+        {/* Photo dissolves into the facts bar below. */}
+        <div
+          aria-hidden
+          className="absolute inset-x-0 bottom-0 z-10 h-24 bg-gradient-to-b from-transparent via-oma-beige/75 to-oma-beige sm:h-32"
         />
 
-        <div className="relative z-10 mx-auto flex h-full w-full max-w-7xl flex-col justify-between px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
+        {/* Bottom padding clears the fade, so the title stays on the photo. */}
+        <div className="relative z-20 mx-auto flex h-full w-full max-w-7xl flex-col justify-between px-4 pb-24 pt-5 sm:px-6 sm:pb-32 sm:pt-7 lg:px-8">
           <nav aria-label="Breadcrumb">
             <ol className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-white/80">
               <li>
@@ -118,36 +116,7 @@ export function EditionHero({ edition, coverImage, facts }: EditionHeroProps) {
         </div>
       </div>
 
-      <div className="border-b border-oma-cocoa/15 bg-oma-beige">
-        {/* Same content width as the title, so the columns line up with it.
-            1px gaps over a tinted background draw the dividers. */}
-        <dl
-          className={cn(
-            "mx-auto grid max-w-7xl grid-cols-2 gap-px bg-oma-cocoa/15 sm:px-2 lg:px-4",
-            FACT_COLUMNS[Math.min(facts.length, 5)],
-          )}
-        >
-          {facts.map((fact, index) => (
-            <div
-              key={fact.label}
-              className={cn(
-                "bg-oma-beige px-4 py-3.5 sm:py-5",
-                // A lone last cell spans the row instead of leaving a gap.
-                facts.length % 2 === 1 &&
-                  index === facts.length - 1 &&
-                  "col-span-2 md:col-span-1",
-              )}
-            >
-              <dt className="text-[10px] font-semibold uppercase tracking-[0.22em] text-oma-cocoa sm:text-[11px]">
-                {fact.label}
-              </dt>
-              <dd className="mt-1 font-canela text-base text-oma-black sm:mt-1.5 sm:text-xl">
-                {fact.value}
-              </dd>
-            </div>
-          ))}
-        </dl>
-      </div>
+      <EditionFactsBar facts={facts} />
     </section>
   );
 }
