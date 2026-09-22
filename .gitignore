@@ -70,3 +70,6 @@ deployment-backup/
 build-override.js
 vercel-build.js
 simplified-*.js
+
+# Local event photo originals (uploaded to Supabase via Studio when needed)
+/public/events/
