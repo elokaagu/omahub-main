@@ -6,6 +6,7 @@ import { Upload, X, Image as ImageIcon } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { AuthImage } from "./auth-image";
+import { MediaPicker } from "@/components/studio/MediaPicker";
 import {
   acceptAttribute,
   isAcceptedFile,
@@ -29,10 +30,13 @@ interface FileUploadProps {
   hidePreview?: boolean;
   compact?: boolean;
   inputId?: string;
+  /** Studio only: offer images already uploaded to OmaHub as well. */
+  allowLibrary?: boolean;
 }
 
 export function FileUpload({
   onUploadComplete,
+  allowLibrary = false,
   onUploadStart,
   onUploadProgress,
   defaultValue,
@@ -53,6 +57,7 @@ export function FileUpload({
   const [preview, setPreview] = useState<string | null>(defaultValue || null);
   const [imageError, setImageError] = useState(false);
   const [isTemporaryPreview, setIsTemporaryPreview] = useState(false);
+  const [libraryOpen, setLibraryOpen] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -198,6 +203,14 @@ export function FileUpload({
     }
   };
 
+  const handleLibrarySelect = (url: string) => {
+    setPreview(url);
+    setImageError(false);
+    setIsTemporaryPreview(false);
+    onUploadComplete(url);
+    toast.success("Image selected");
+  };
+
   const handleButtonClick = () => {
     fileInputRef.current?.click();
   };
@@ -224,6 +237,14 @@ export function FileUpload({
 
   return (
     <div className={`space-y-4 ${className}`}>
+      {allowLibrary && (
+        <MediaPicker
+          open={libraryOpen}
+          onOpenChange={setLibraryOpen}
+          onSelect={handleLibrarySelect}
+          preferredBucket={bucket}
+        />
+      )}
       <input
         id={inputId}
         ref={fileInputRef}
@@ -305,17 +326,33 @@ export function FileUpload({
                 </p>
               </div>
             ) : (
-              <Button
-                type="button"
-                className="mt-4 bg-oma-plum hover:bg-oma-plum/90"
-                disabled={uploading}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  handleButtonClick();
-                }}
-              >
-                {preview && hidePreview ? "Change Image" : "Select Image"}
-              </Button>
+              <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+                <Button
+                  type="button"
+                  className="bg-oma-plum hover:bg-oma-plum/90"
+                  disabled={uploading}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    handleButtonClick();
+                  }}
+                >
+                  {preview && hidePreview ? "Change Image" : "Select Image"}
+                </Button>
+                {allowLibrary && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={uploading}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setLibraryOpen(true);
+                    }}
+                  >
+                    <ImageIcon className="mr-2 h-4 w-4" aria-hidden />
+                    Choose existing
+                  </Button>
+                )}
+              </div>
             )}
           </div>
         </div>

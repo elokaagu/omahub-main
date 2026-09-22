@@ -77,6 +77,7 @@ export function ArchiveHeroCard({
         )}
 
         <FileUpload
+          allowLibrary
           key={`archive-hero-${imageUrl || "empty"}`}
           onUploadComplete={(url) => void save(url, "Archive banner updated")}
           defaultValue={imageUrl}

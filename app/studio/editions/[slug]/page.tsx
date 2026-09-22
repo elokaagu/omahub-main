@@ -497,6 +497,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
           </div>
         )}
         <FileUpload
+          allowLibrary
           key={cover?.id ?? "no-cover"}
           inputId="edition-cover-upload"
           onUploadComplete={handleCoverUpload}
@@ -567,6 +568,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
 
         <p className="mb-2 text-xs text-gray-600">Or upload a video file</p>
         <FileUpload
+          allowLibrary
           key={`video-upload-${video?.id ?? "none"}`}
           onUploadComplete={(url) => {
             setVideoUrlInput(url);
@@ -593,6 +595,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
           className="mb-3 w-full max-w-lg rounded-md border border-gray-300 px-3 py-2 text-sm"
         />
         <FileUpload
+          allowLibrary
           key={`video-thumb-${video?.id ?? "none"}-${videoThumbnailInput}`}
           onUploadComplete={(url) => {
             setVideoThumbnailInput(url);
@@ -806,6 +809,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
         )}
 
         <FileUpload
+          allowLibrary
           key={gallery.length}
           onUploadComplete={handleGalleryUpload}
           bucket="edition-galleries"
@@ -903,6 +907,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
           className="mb-4 w-full max-w-xs rounded-md border border-gray-300 px-3 py-2 text-sm"
         />
         <FileUpload
+          allowLibrary
           key={partners.length}
           onUploadComplete={handlePartnerUpload}
           bucket="edition-galleries"

@@ -106,6 +106,7 @@ export function HomepageHeroMediaCard({
             <div className="space-y-2">
               <p className="text-sm font-medium text-gray-900">Still</p>
               <FileUpload
+          allowLibrary
                 key={`hero-image-${imageValue || "empty"}`}
                 onUploadComplete={(url) => {
                   void save(url, "Homepage hero image updated");

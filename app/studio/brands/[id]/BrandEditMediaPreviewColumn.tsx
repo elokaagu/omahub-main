@@ -49,6 +49,7 @@ export function BrandEditMediaPreviewColumn({
         </CardHeader>
         <CardContent>
           <FileUpload
+          allowLibrary
             onUploadComplete={handleImageUpload}
             onUploadStart={handleImageUploadStart}
             onUploadProgress={handleImageUploadProgress}
