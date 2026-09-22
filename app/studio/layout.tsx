@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 import { permissionsForProfileRole } from "@/lib/services/permissionsService";
-import { createServerSupabaseClient } from "@/lib/supabase-unified";
+import { getStudioSession } from "@/lib/studio/session";
 import StudioLayoutClient from "./StudioLayoutClient";
 import type { Database } from "@/lib/types/supabase";
 
@@ -18,31 +18,12 @@ export default async function StudioLayout({
 }: {
   children: ReactNode;
 }) {
-  const supabase = await createServerSupabaseClient();
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser();
-  if (authError) {
-    console.error("[studio/layout] auth.getUser failed:", authError.message);
-  }
+  const { user, profile, profileError } = await getStudioSession();
 
   let initialProfile: Profile | null = null;
   let initialUser: StudioInitialUser | null = null;
 
   if (user) {
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", user.id)
-      .maybeSingle();
-    if (profileError) {
-      console.error(
-        "[studio/layout] profiles lookup failed:",
-        profileError.message
-      );
-    }
-
     // Server-side role gate: a signed-in account whose profile role has no
     // Studio access never receives the Studio shell. (Middleware already
     // sends signed-out visitors to /login.) Only enforced when the lookup

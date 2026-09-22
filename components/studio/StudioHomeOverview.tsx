@@ -1,14 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import { FileText, Image as ImageIcon, Package, Settings } from "lucide-react";
-import { getAllEditions } from "@/lib/data/editions";
-import { supabase } from "@/lib/supabase";
-import { fetchStudioApplicationCounts } from "@/app/studio/applications/studioApplicationsApi";
-
-type OverviewCounts = {
+export type OverviewCounts = {
   brands: number | null;
   editions: number;
   applications: number | null;
@@ -53,48 +48,9 @@ function formatCount(value: number | null | undefined): string {
 
 const BLUR_EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
-export function StudioHomeOverview() {
+/** Shortcut cards for Studio home. Counts are fetched on the server. */
+export function StudioHomeOverview({ counts }: { counts: OverviewCounts }) {
   const reduceMotion = useReducedMotion();
-  const [ready, setReady] = useState(false);
-  const [counts, setCounts] = useState<OverviewCounts>({
-    brands: null,
-    editions: getAllEditions().length,
-    applications: null,
-    newApplications: null,
-  });
-
-  useEffect(() => {
-    let cancelled = false;
-    const revealFallback = window.setTimeout(() => {
-      if (!cancelled) setReady(true);
-    }, 2200);
-
-    async function load() {
-      const [brandResult, applications] = await Promise.all([
-        supabase
-          ? supabase.from("brands").select("id", { count: "exact", head: true })
-          : Promise.resolve({ count: null, error: null }),
-        fetchStudioApplicationCounts().catch(() => null),
-      ]);
-
-      if (cancelled) return;
-
-      setCounts({
-        brands: brandResult.error ? null : (brandResult.count ?? 0),
-        editions: getAllEditions().length,
-        applications: applications?.total ?? null,
-        newApplications: applications?.new ?? null,
-      });
-      setReady(true);
-    }
-
-    void load();
-    return () => {
-      cancelled = true;
-      window.clearTimeout(revealFallback);
-    };
-  }, []);
-
   const skipMotion = reduceMotion === true;
 
   return (
@@ -121,14 +77,10 @@ export function StudioHomeOverview() {
                   ? false
                   : { opacity: 0, filter: "blur(18px)", y: 12 }
               }
-              animate={
-                skipMotion || ready
-                  ? { opacity: 1, filter: "blur(0px)", y: 0 }
-                  : { opacity: 0.45, filter: "blur(18px)", y: 12 }
-              }
+              animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
               transition={{
                 duration: skipMotion ? 0 : 0.7,
-                delay: skipMotion || !ready ? 0 : index * 0.12,
+                delay: skipMotion ? 0 : index * 0.12,
                 ease: BLUR_EASE,
               }}
             >
@@ -154,7 +106,7 @@ export function StudioHomeOverview() {
                       }}
                       transition={{
                         duration: skipMotion ? 0 : 0.55,
-                        delay: skipMotion || !ready ? 0 : index * 0.12 + 0.08,
+                        delay: skipMotion ? 0 : index * 0.12 + 0.08,
                         ease: BLUR_EASE,
                       }}
                       className="font-canela text-2xl tabular-nums text-oma-plum"

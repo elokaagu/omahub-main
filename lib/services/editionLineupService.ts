@@ -1,3 +1,4 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 
 export interface EditionLineupBrand {
@@ -32,11 +33,14 @@ async function assertSuperAdmin(userId: string): Promise<void> {
 }
 
 /** Public read of all edition lineups (for Studio list stats). */
-export async function getAllEditionLineupBrands(): Promise<EditionLineupBrand[]> {
+export async function getAllEditionLineupBrands(
+  client?: SupabaseClient,
+): Promise<EditionLineupBrand[]> {
   try {
-    if (!supabase) return [];
+    const db = client ?? supabase;
+    if (!db) return [];
 
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from("edition_lineup_brands")
       .select("*")
       .order("display_order", { ascending: true });

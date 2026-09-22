@@ -1,114 +1,75 @@
-"use client";
-
-import dynamic from "next/dynamic";
-import { Suspense, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/contexts/AuthContext";
-import { useStudioInitialData } from "@/contexts/StudioInitialDataContext";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import Link from "next/link";
+import { redirect } from "next/navigation";
+import { getAllEditions } from "@/lib/data/editions";
+import { getAdminClient } from "@/lib/supabase-admin";
+import { countStudioApplications } from "@/lib/studio/applicationCounts";
+import { getStudioSession } from "@/lib/studio/session";
 import { StudioHomeOverview } from "@/components/studio/StudioHomeOverview";
 import { BlurIn } from "@/components/studio/BlurIn";
+import { StudioRecentAccountsCard } from "./StudioRecentAccountsCard";
 
-const RecentAccountsWidget = dynamic(
-  () => import("@/app/studio/dashboard/RecentAccountsWidget"),
-  {
-    loading: () => (
-      <div className="h-32 bg-gray-100 rounded-lg animate-pulse" />
-    ),
-    ssr: false,
-  },
-);
+export const dynamic = "force-dynamic";
 
-export default function StudioPage() {
-  const router = useRouter();
-  const initialData = useStudioInitialData();
-  const initialProfile = initialData?.profile ?? null;
-  const { user, loading: authLoading } = useAuth();
-  const effectiveRole = initialProfile?.role ?? user?.role ?? null;
-
-  useEffect(() => {
-    if (effectiveRole === "brand_admin") {
-      router.replace("/studio/brands");
-    }
-  }, [effectiveRole, router]);
-
-  if (effectiveRole === "brand_admin") {
+async function countBrands(
+  supabase: Awaited<ReturnType<typeof getStudioSession>>["supabase"],
+): Promise<number | null> {
+  const { count, error } = await supabase
+    .from("brands")
+    .select("id", { count: "exact", head: true });
+  if (error) {
+    console.error("[studio] brand count:", error.message);
     return null;
   }
+  return count ?? 0;
+}
 
-  if (authLoading && !initialProfile) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8">
-        <div className="space-y-3">
-          <div className="h-10 bg-gray-200 rounded-lg animate-pulse"></div>
-          <div className="h-5 bg-gray-200 rounded w-1/2 animate-pulse"></div>
-        </div>
-        <div className="h-64 bg-gray-200 rounded-lg animate-pulse"></div>
-        <div className="h-48 bg-gray-200 rounded-lg animate-pulse"></div>
-      </div>
-    );
-  }
+async function countApplications() {
+  const admin = await getAdminClient();
+  return admin ? countStudioApplications(admin) : null;
+}
 
-  if (!authLoading && !user && !initialProfile) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
-          <p className="mb-4">You must be logged in to access the studio.</p>
-          <Button asChild>
-            <Link href="/login">Log In</Link>
-          </Button>
-        </div>
-      </div>
-    );
-  }
+/**
+ * Studio home, rendered on the server: the counts arrive with the page
+ * instead of loading after it opens. (The layout has already checked that
+ * the viewer may use Studio.)
+ */
+export default async function StudioPage() {
+  const { supabase, user, profile } = await getStudioSession();
+  if (!user) redirect("/login?redirect_to=%2Fstudio");
 
-  if (!effectiveRole) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Loading Studio</h1>
-          <p className="mb-4">Finalizing your studio access.</p>
-        </div>
-      </div>
-    );
-  }
+  const role = profile?.role ?? null;
+  if (role === "brand_admin") redirect("/studio/brands");
+  const isSuperAdmin = role === "super_admin";
+
+  const [brands, applications] = await Promise.all([
+    countBrands(supabase),
+    // Application counts use the service role, so only super admins get them.
+    isSuperAdmin ? countApplications() : Promise.resolve(null),
+  ]);
 
   return (
     <div className="mx-auto max-w-7xl space-y-10 px-4 py-8 sm:px-6 sm:py-10">
-      {/* Welcome Header */}
       <BlurIn>
-      <header className="mx-auto max-w-2xl text-center">
-        <h1 className="mb-3 font-canela text-3xl tracking-tight text-omahub-primary sm:text-4xl">
-          Welcome to OmaHub Studio
-        </h1>
-        <p className="text-base leading-relaxed text-omahub-secondary sm:text-lg">
-          Manage brands, editions, and the live homepage from one place
-        </p>
-      </header>
+        <header className="mx-auto max-w-2xl text-center">
+          <h1 className="mb-3 font-canela text-3xl tracking-tight text-omahub-primary sm:text-4xl">
+            Welcome to OmaHub Studio
+          </h1>
+          <p className="text-base leading-relaxed text-omahub-secondary sm:text-lg">
+            Manage brands, editions, and the live homepage from one place
+          </p>
+        </header>
       </BlurIn>
 
-      {/* Main Dashboard Components */}
       <div className="grid grid-cols-1 gap-8">
-        <StudioHomeOverview />
+        <StudioHomeOverview
+          counts={{
+            brands,
+            editions: getAllEditions().length,
+            applications: applications?.total ?? null,
+            newApplications: applications?.new ?? null,
+          }}
+        />
 
-        {effectiveRole === "super_admin" && (
-          <BlurIn delay={0.16}>
-          <Card className="overflow-hidden rounded-2xl border border-oma-beige/60 shadow-sm">
-            <CardContent className="bg-white px-5 py-6 sm:px-8 sm:py-8">
-              <Suspense
-                fallback={
-                  <div className="h-32 bg-gray-100 rounded-lg animate-pulse" />
-                }
-              >
-                <RecentAccountsWidget />
-              </Suspense>
-            </CardContent>
-          </Card>
-          </BlurIn>
-        )}
+        {isSuperAdmin && <StudioRecentAccountsCard />}
       </div>
     </div>
   );

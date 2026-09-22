@@ -1,74 +1,59 @@
-"use client";
-
-import { useEffect, useState } from "react";
 import { getAllEditions } from "@/lib/data/editions";
 import { getAllEditionImages, type EditionImage } from "@/lib/services/editionImagesService";
 import { getAllEditionLineupBrands } from "@/lib/services/editionLineupService";
-import { getAllEditionContent, type EditionContentRecord } from "@/lib/services/editionContentService";
+import { getAllEditionContent } from "@/lib/services/editionContentService";
+import { getStudioSession } from "@/lib/studio/session";
 import { AuthImage } from "@/components/ui/auth-image";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { NavigationLink } from "@/components/ui/navigation-link";
-import { Loading } from "@/components/ui/loading";
-import { SuperAdminHeroGate } from "@/components/studio/SuperAdminGate";
 import { BlurIn, blurStagger } from "@/components/studio/BlurIn";
 
-export default function EditionsStudioPage() {
-  return (
-    <SuperAdminHeroGate capabilityPhrase="manage editions">
-      <EditionsStudioContent />
-    </SuperAdminHeroGate>
-  );
-}
+export const dynamic = "force-dynamic";
 
-function EditionsStudioContent() {
-  const editions = getAllEditions();
-  const [imagesBySlug, setImagesBySlug] = useState<Record<string, EditionImage[]> | null>(
-    null
-  );
-  const [lineupCountBySlug, setLineupCountBySlug] = useState<Record<string, number> | null>(
-    null,
-  );
-  const [contentBySlug, setContentBySlug] = useState<
-    Record<string, EditionContentRecord> | null
-  >(null);
+/**
+ * Editions list, rendered on the server: images, lineup counts and saved
+ * titles are fetched before the page is sent, so it opens fully drawn.
+ */
+export default async function EditionsStudioPage() {
+  const { supabase, profile } = await getStudioSession();
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const [images, lineupRows, contentRows] = await Promise.all([
-        getAllEditionImages(),
-        getAllEditionLineupBrands(),
-        getAllEditionContent(),
-      ]);
-      if (cancelled) return;
-      const grouped: Record<string, EditionImage[]> = {};
-      for (const image of images) {
-        (grouped[image.edition_slug] ??= []).push(image);
-      }
-      const lineupCounts: Record<string, number> = {};
-      for (const row of lineupRows) {
-        lineupCounts[row.edition_slug] = (lineupCounts[row.edition_slug] ?? 0) + 1;
-      }
-      setImagesBySlug(grouped);
-      setLineupCountBySlug(lineupCounts);
-      setContentBySlug(
-        Object.fromEntries(contentRows.map((row) => [row.edition_slug, row])),
-      );
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  if (!imagesBySlug || !lineupCountBySlug || !contentBySlug) {
+  if (profile?.role !== "super_admin") {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <Loading />
+      <div className="max-w-lg mx-auto px-6 py-24 text-center">
+        <h1 className="text-2xl font-canela text-oma-black mb-2">
+          Access denied
+        </h1>
+        <p className="text-oma-cocoa mb-6">
+          Only super admins can manage editions.
+        </p>
+        <Button asChild>
+          <NavigationLink href="/studio">Back to Studio</NavigationLink>
+        </Button>
       </div>
     );
   }
+
+  const editions = getAllEditions();
+  const [images, lineupRows, contentRows] = await Promise.all([
+    getAllEditionImages(supabase),
+    getAllEditionLineupBrands(supabase),
+    getAllEditionContent(supabase),
+  ]);
+
+  const imagesBySlug: Record<string, EditionImage[]> = {};
+  for (const image of images) {
+    (imagesBySlug[image.edition_slug] ??= []).push(image);
+  }
+  const lineupCountBySlug: Record<string, number> = {};
+  for (const row of lineupRows) {
+    lineupCountBySlug[row.edition_slug] =
+      (lineupCountBySlug[row.edition_slug] ?? 0) + 1;
+  }
+  const contentBySlug = Object.fromEntries(
+    contentRows.map((row) => [row.edition_slug, row]),
+  );
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">

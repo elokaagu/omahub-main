@@ -1,3 +1,4 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 
 export type EditionImageKind =
@@ -50,11 +51,14 @@ export async function getEditionImages(
 }
 
 /** Every admin-managed image across all editions, for merging into archive listings. */
-export async function getAllEditionImages(): Promise<EditionImage[]> {
+export async function getAllEditionImages(
+  client?: SupabaseClient,
+): Promise<EditionImage[]> {
   try {
-    if (!supabase) return [];
+    const db = client ?? supabase;
+    if (!db) return [];
 
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from("edition_images")
       .select("*")
       .order("display_order", { ascending: true });

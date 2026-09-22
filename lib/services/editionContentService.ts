@@ -79,10 +79,13 @@ export async function getEditionContent(
   return data;
 }
 
-export async function getAllEditionContent(): Promise<EditionContentRecord[]> {
-  if (!supabase) return [];
+export async function getAllEditionContent(
+  client?: SupabaseClient,
+): Promise<EditionContentRecord[]> {
+  const db = client ?? supabase;
+  if (!db) return [];
 
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("edition_content")
     .select("*")
     .order("sort_date", { ascending: false, nullsFirst: false });
