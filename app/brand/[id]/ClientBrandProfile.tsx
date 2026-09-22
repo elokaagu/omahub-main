@@ -2,7 +2,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import ContactDesignerModal from "@/components/ContactDesignerModal";
-import useReviews from "@/lib/hooks/useReviews";
 import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
 import { getProductsByBrand } from "@/lib/services/productService";
@@ -12,14 +11,12 @@ import {
   getApplicationImageUrlsForBrand,
 } from "@/lib/services/brandService";
 import { toast } from "sonner";
-import { Review } from "@/lib/hooks/useReviews";
 import { mapBrandToProfileData } from "./brandProfileMapper";
 import { resolveBrandProfileImageUrl } from "@/lib/brands/directoryListingImage";
 import { BrandHeaderSection } from "./BrandHeaderSection";
 import { BrandProductsSection } from "./BrandProductsSection";
 import { BrandCollectionsSection } from "./BrandCollectionsSection";
 import { BrandInfoSection } from "./BrandInfoSection";
-import { BrandReviewsSection } from "./BrandReviewsSection";
 import type { BrandProduct, BrandProfileData } from "./types";
 
 interface ClientBrandProfileProps {
@@ -28,14 +25,12 @@ interface ClientBrandProfileProps {
   initialBrandData?: BrandProfileData;
   /** When false, collections and products stay hidden until a pop-up/edition launch. */
   cataloguesPubliclyVisible?: boolean;
-  onReviewSubmitted?: () => Promise<void>;
 }
 
 export default function ClientBrandProfile({
   brandId,
   initialBrandData,
   cataloguesPubliclyVisible = false,
-  onReviewSubmitted,
 }: ClientBrandProfileProps) {
   const { user } = useAuth();
 
@@ -46,27 +41,9 @@ export default function ClientBrandProfile({
   const [error, setError] = useState<Error | null>(null);
 
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
-  const {
-    reviews: hookReviews,
-    loading: reviewsLoading,
-    error: reviewsError,
-    fetchReviews,
-  } = useReviews(brandId);
-  const [optimisticReviews, setOptimisticReviews] = useState<Review[]>([]);
-  const [showReviewForm, setShowReviewForm] = useState(false);
   const [showAllProducts, setShowAllProducts] = useState(false);
   const [products, setProducts] = useState<BrandProduct[]>([]);
   const [productsLoading, setProductsLoading] = useState(false);
-
-  const reviews = useMemo(() => {
-    const hookIds = new Set(
-      hookReviews.map((r) => r.id).filter(Boolean) as string[]
-    );
-    const pending = optimisticReviews.filter(
-      (r) => !r.id || !hookIds.has(r.id)
-    );
-    return [...pending, ...hookReviews];
-  }, [optimisticReviews, hookReviews]);
 
   // Scroll to collections function
   const scrollToCollections = () => {
@@ -98,13 +75,6 @@ export default function ClientBrandProfile({
       setProductsLoading(false);
     }
   }, [brandId]);
-
-  // Fetch reviews when component mounts
-  useEffect(() => {
-    if (brandId) {
-      fetchReviews();
-    }
-  }, [fetchReviews, brandId]);
 
   // Show products by default if there are no collections (only when catalogues are public)
   useEffect(() => {
@@ -166,46 +136,6 @@ export default function ClientBrandProfile({
     fetchBrandData();
   }, [brandId, initialBrandData]);
 
-  const handleReviewSubmitted = () => {
-    // Hide the review form and refresh reviews
-    setShowReviewForm(false);
-
-    if (brandId) {
-      fetchReviews();
-    }
-
-    // Refresh parent brand data (including reviews)
-    if (onReviewSubmitted) {
-      onReviewSubmitted();
-    }
-
-    // Show success message
-    toast.success(
-      "Review submitted successfully! Thank you for sharing your experience."
-    );
-  };
-
-  const handleReviewAdded = (newReview: Review) => {
-    setOptimisticReviews((prev) => [newReview, ...prev]);
-
-    // Hide the review form
-    setShowReviewForm(false);
-
-    // Show success message
-    toast.success(
-      "Review submitted successfully! Thank you for sharing your experience."
-    );
-
-    // Refresh parent brand data (including reviews)
-    if (onReviewSubmitted) {
-      onReviewSubmitted();
-    }
-  };
-
-  const handleShowReviewForm = () => {
-    setShowReviewForm(true);
-  };
-
   const handleOpenContactModal = () => {
     setIsContactModalOpen(true);
   };
@@ -250,7 +180,6 @@ export default function ClientBrandProfile({
       <div className="max-w-7xl mx-auto">
         <BrandHeaderSection
           brandData={brandData}
-          reviewsCount={reviews.length}
           showAllProducts={showAllProducts}
           cataloguesPubliclyVisible={cataloguesPubliclyVisible}
           onScrollToCollections={scrollToCollections}
@@ -276,18 +205,6 @@ export default function ClientBrandProfile({
           onOpenContactModal={handleOpenContactModal}
         />
 
-        <BrandReviewsSection
-          user={user}
-          showReviewForm={showReviewForm}
-          brandId={brandId}
-          reviewsLoading={reviewsLoading}
-          reviewsError={reviewsError}
-          reviews={reviews}
-          onShowReviewForm={handleShowReviewForm}
-          onCancelReviewForm={() => setShowReviewForm(false)}
-          onReviewSubmitted={handleReviewSubmitted}
-          onReviewAdded={handleReviewAdded}
-        />
       </div>
 
       <ContactDesignerModal

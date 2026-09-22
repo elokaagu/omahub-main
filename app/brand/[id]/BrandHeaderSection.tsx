@@ -10,7 +10,6 @@ import type { BrandProfileData } from "./types";
 
 interface BrandHeaderSectionProps {
   brandData: BrandProfileData;
-  reviewsCount: number;
   showAllProducts: boolean;
   cataloguesPubliclyVisible?: boolean;
   onScrollToCollections: () => void;
@@ -20,7 +19,6 @@ interface BrandHeaderSectionProps {
 
 export function BrandHeaderSection({
   brandData,
-  reviewsCount,
   showAllProducts,
   cataloguesPubliclyVisible = false,
   onScrollToCollections,
@@ -58,7 +56,7 @@ export function BrandHeaderSection({
           <div className="flex items-center sm:ml-6">
             <Star size={14} className="mr-1 text-oma-gold flex-shrink-0" />
             <span className="text-sm sm:text-base">
-              {brandData.rating} ({reviewsCount} reviews)
+              {brandData.rating}
             </span>
           </div>
         )}
