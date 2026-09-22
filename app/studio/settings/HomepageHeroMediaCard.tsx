@@ -63,24 +63,24 @@ export function HomepageHeroMediaCard({
   };
 
   return (
-    <Card className="border-oma-beige">
+    <Card className="border-gray-200">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-oma-plum font-canela">
+        <CardTitle className="flex items-center gap-2 text-gray-900 font-canela">
           <ImageIcon className="h-5 w-5" />
           Homepage Hero
         </CardTitle>
-        <CardDescription className="text-oma-cocoa">
+        <CardDescription className="text-gray-600">
           The portrait still or looping film at the top of the public homepage
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <p className="text-sm text-oma-cocoa/80">
+        <p className="text-sm text-gray-600">
           Upload a photo or an MP4. This is the card beside the headline, not
           the mid-page Vimeo film below.
         </p>
 
         <>
-          <div className="relative w-full max-w-sm overflow-hidden rounded-xl border border-oma-gold/40 bg-oma-black/10">
+          <div className="relative w-full max-w-sm overflow-hidden rounded-xl border border-gray-200 bg-gray-100">
             {previewIsVideo ? (
               <video
                 key={previewSrc}
@@ -104,7 +104,7 @@ export function HomepageHeroMediaCard({
 
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <div className="space-y-2">
-              <p className="text-sm font-medium text-oma-black">Still</p>
+              <p className="text-sm font-medium text-gray-900">Still</p>
               <FileUpload
                 key={`hero-image-${imageValue || "empty"}`}
                 onUploadComplete={(url) => {
@@ -120,12 +120,12 @@ export function HomepageHeroMediaCard({
                 }}
                 maxSize={20}
               />
-              <p className="text-xs text-oma-cocoa/70">
+              <p className="text-xs text-gray-500">
                 JPG, PNG, or WebP. Max 20MB.
               </p>
             </div>
             <div className="space-y-2">
-              <p className="text-sm font-medium text-oma-black">Film</p>
+              <p className="text-sm font-medium text-gray-900">Film</p>
               <VideoUpload
                 key={`hero-video-${videoValue || "empty"}`}
                 onUploadComplete={(url) => {
@@ -138,7 +138,7 @@ export function HomepageHeroMediaCard({
                 accept="video/mp4,.mp4,video/webm,.webm,video/quicktime,.mov"
                 maxSize={80}
               />
-              <p className="text-xs text-oma-cocoa/70">
+              <p className="text-xs text-gray-500">
                 MP4, WebM, or MOV. Max 80MB.
               </p>
             </div>

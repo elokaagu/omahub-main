@@ -61,14 +61,14 @@ export function ApplicationCard({
       <CardHeader className="space-y-3 pb-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <CardTitle className="truncate text-xl font-canela text-oma-plum">
+            <CardTitle className="truncate text-xl font-canela text-gray-900">
               {application.brand_name}
             </CardTitle>
-            <p className="mt-1 text-sm text-oma-cocoa">by {application.designer_name}</p>
+            <p className="mt-1 text-sm text-gray-600">by {application.designer_name}</p>
           </div>
           <div className="ml-2 flex flex-wrap items-center justify-end gap-2">
             <ApplicationStatusBadge status={application.status} />
-            <span className="whitespace-nowrap text-sm text-oma-cocoa">
+            <span className="whitespace-nowrap text-sm text-gray-600">
               {createdOn}
             </span>
           </div>
@@ -76,47 +76,47 @@ export function ApplicationCard({
       </CardHeader>
       <CardContent className="space-y-4">
         {hasContactMeta && (
-          <div className="grid grid-cols-1 gap-2 rounded-xl border border-oma-beige/70 bg-oma-cream/20 p-3 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-2 rounded-xl border border-gray-200 bg-gray-50 p-3 sm:grid-cols-2">
             {email && (
-              <div className="flex items-center gap-2 text-sm text-oma-cocoa">
-                <Mail className="h-4 w-4 shrink-0 text-oma-gold" />
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <Mail className="h-4 w-4 shrink-0 text-gray-400" />
                 <span className="truncate">{email}</span>
               </div>
             )}
             {location && (
-              <div className="flex items-center gap-2 text-sm text-oma-cocoa">
-                <MapPin className="h-4 w-4 shrink-0 text-oma-gold" />
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <MapPin className="h-4 w-4 shrink-0 text-gray-400" />
                 <span className="truncate">{location}</span>
               </div>
             )}
             {phone && (
-              <div className="flex items-center gap-2 text-sm text-oma-cocoa">
-                <Phone className="h-4 w-4 shrink-0 text-oma-gold" />
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <Phone className="h-4 w-4 shrink-0 text-gray-400" />
                 <span className="truncate">{phone}</span>
               </div>
             )}
             {website && (
-              <div className="flex items-center gap-2 text-sm text-oma-cocoa">
-                <Globe className="h-4 w-4 shrink-0 text-oma-gold" />
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <Globe className="h-4 w-4 shrink-0 text-gray-400" />
                 <a
                   href={website}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="truncate text-oma-plum hover:underline"
+                  className="truncate text-gray-900 hover:underline"
                 >
                   {website}
                 </a>
               </div>
             )}
             {instagram && (
-              <div className="flex items-center gap-2 text-sm text-oma-cocoa">
-                <Instagram className="h-4 w-4 shrink-0 text-oma-gold" />
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <Instagram className="h-4 w-4 shrink-0 text-gray-400" />
                 <span>@{instagram.replace(/^@/, "")}</span>
               </div>
             )}
             {yearFounded && (
-              <div className="flex items-center gap-2 text-sm text-oma-cocoa">
-                <Building className="h-4 w-4 shrink-0 text-oma-gold" />
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <Building className="h-4 w-4 shrink-0 text-gray-400" />
                 <span>Founded {yearFounded}</span>
               </div>
             )}
@@ -131,14 +131,14 @@ export function ApplicationCard({
               </Badge>
             )}
             {description && (
-              <p className="line-clamp-3 text-sm leading-relaxed text-oma-cocoa">
+              <p className="line-clamp-3 text-sm leading-relaxed text-gray-600">
                 {description}
               </p>
             )}
           </div>
         )}
 
-        <div className="flex flex-wrap gap-2 border-t border-oma-beige/60 pt-3">
+        <div className="flex flex-wrap gap-2 border-t border-gray-200 pt-3">
           <Button
             variant="outline"
             size="sm"

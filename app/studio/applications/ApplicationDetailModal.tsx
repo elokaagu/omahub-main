@@ -56,11 +56,11 @@ export function ApplicationDetailModal({
         <DialogHeader className="text-left space-y-2 mb-6">
           <DialogTitle
             id="application-modal-title"
-            className="text-2xl font-canela text-oma-plum pr-8"
+            className="text-2xl font-canela text-gray-900 pr-8"
           >
             {application.brand_name}
           </DialogTitle>
-          <p className="text-lg text-oma-cocoa font-normal">
+          <p className="text-lg text-gray-600 font-normal">
             by {application.designer_name}
           </p>
         </DialogHeader>
@@ -68,20 +68,20 @@ export function ApplicationDetailModal({
         <div className="space-y-4 mb-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <span className="block text-sm font-medium text-oma-cocoa mb-1">
+              <span className="block text-sm font-medium text-gray-600 mb-1">
                 Email
               </span>
               <p className="text-sm">{application.email}</p>
             </div>
             <div>
-              <span className="block text-sm font-medium text-oma-cocoa mb-1">
+              <span className="block text-sm font-medium text-gray-600 mb-1">
                 Location
               </span>
               <p className="text-sm">{application.location}</p>
             </div>
             {application.phone && (
               <div>
-                <span className="block text-sm font-medium text-oma-cocoa mb-1">
+                <span className="block text-sm font-medium text-gray-600 mb-1">
                   Phone
                 </span>
                 <p className="text-sm">{application.phone}</p>
@@ -89,14 +89,14 @@ export function ApplicationDetailModal({
             )}
             {application.website && (
               <div>
-                <span className="block text-sm font-medium text-oma-cocoa mb-1">
+                <span className="block text-sm font-medium text-gray-600 mb-1">
                   Website
                 </span>
                 <a
                   href={application.website}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-oma-plum hover:underline text-sm"
+                  className="text-gray-900 hover:underline text-sm"
                 >
                   {application.website}
                 </a>
@@ -104,7 +104,7 @@ export function ApplicationDetailModal({
             )}
             {application.instagram && (
               <div>
-                <span className="block text-sm font-medium text-oma-cocoa mb-1">
+                <span className="block text-sm font-medium text-gray-600 mb-1">
                   Instagram
                 </span>
                 <p className="text-sm">
@@ -114,7 +114,7 @@ export function ApplicationDetailModal({
             )}
             {application.year_founded && (
               <div>
-                <span className="block text-sm font-medium text-oma-cocoa mb-1">
+                <span className="block text-sm font-medium text-gray-600 mb-1">
                   Year Founded
                 </span>
                 <p className="text-sm">{application.year_founded}</p>
@@ -123,7 +123,7 @@ export function ApplicationDetailModal({
           </div>
 
           <div>
-            <span className="block text-sm font-medium text-oma-cocoa mb-1">
+            <span className="block text-sm font-medium text-gray-600 mb-1">
               Category
             </span>
             <Badge variant="outline">{application.category}</Badge>
@@ -133,7 +133,7 @@ export function ApplicationDetailModal({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {application.price_range && (
                 <div>
-                  <span className="block text-sm font-medium text-oma-cocoa mb-1">
+                  <span className="block text-sm font-medium text-gray-600 mb-1">
                     Price Range
                   </span>
                   <p className="text-sm">{application.price_range}</p>
@@ -141,7 +141,7 @@ export function ApplicationDetailModal({
               )}
               {application.currency && (
                 <div>
-                  <span className="block text-sm font-medium text-oma-cocoa mb-1">
+                  <span className="block text-sm font-medium text-gray-600 mb-1">
                     Currency
                   </span>
                   <p className="text-sm">{application.currency}</p>
@@ -151,7 +151,7 @@ export function ApplicationDetailModal({
           )}
 
           <div>
-            <span className="block text-sm font-medium text-oma-cocoa mb-1">
+            <span className="block text-sm font-medium text-gray-600 mb-1">
               Description
             </span>
             <p className="text-sm whitespace-pre-wrap">{application.description}</p>
@@ -159,7 +159,7 @@ export function ApplicationDetailModal({
 
           {application.image_urls && application.image_urls.length > 0 && (
             <div>
-              <span className="block text-sm font-medium text-oma-cocoa mb-1">
+              <span className="block text-sm font-medium text-gray-600 mb-1">
                 Photos
               </span>
               <div className="flex flex-wrap gap-3">
@@ -180,19 +180,19 @@ export function ApplicationDetailModal({
                   </a>
                 ))}
               </div>
-              <p className="mt-1 text-xs text-oma-cocoa/60">
+              <p className="mt-1 text-xs text-gray-500">
                 These become the brand&apos;s profile photos on approval.
               </p>
             </div>
           )}
 
           <div>
-            <span className="block text-sm font-medium text-oma-cocoa mb-1">
+            <span className="block text-sm font-medium text-gray-600 mb-1">
               Status
             </span>
             <div className="flex items-center gap-2">
               <ApplicationStatusBadge status={application.status} />
-              <span className="text-sm text-oma-cocoa">
+              <span className="text-sm text-gray-600">
                 {application.reviewed_at
                   ? `Reviewed on ${new Date(application.reviewed_at).toLocaleDateString("en-GB")}`
                   : `Submitted on ${new Date(application.created_at).toLocaleDateString("en-GB")}`}
@@ -201,17 +201,17 @@ export function ApplicationDetailModal({
           </div>
 
           {application.brand_id && (
-            <div className="bg-oma-beige/50 border border-oma-gold/30 rounded-lg p-4">
+            <div className="bg-gray-100 border border-gray-200 rounded-lg p-4">
               <div className="flex items-center justify-between gap-3 flex-wrap">
                 <div className="flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5 text-oma-gold" />
+                  <CheckCircle className="h-5 w-5 text-gray-400" />
                   <div>
-                    <span className="block text-sm font-medium text-oma-plum mb-1">
+                    <span className="block text-sm font-medium text-gray-900 mb-1">
                       {application.status === "approved"
                         ? "Live Brand Profile"
                         : "Brand Created"}
                     </span>
-                    <p className="text-xs text-oma-cocoa">
+                    <p className="text-xs text-gray-600">
                       {application.brand_verified ? "Verified" : "Unverified"}
                       {application.status === "approved"
                         ? " • Public profile on OmaHub"
@@ -254,10 +254,10 @@ export function ApplicationDetailModal({
 
           {application.notes && (
             <div>
-              <span className="block text-sm font-medium text-oma-cocoa mb-1">
+              <span className="block text-sm font-medium text-gray-600 mb-1">
                 Notes
               </span>
-              <p className="text-sm bg-oma-beige/30 p-3 rounded whitespace-pre-wrap">
+              <p className="text-sm bg-gray-50 p-3 rounded whitespace-pre-wrap">
                 {application.notes}
               </p>
             </div>
@@ -265,7 +265,7 @@ export function ApplicationDetailModal({
         </div>
 
         <div className="border-t pt-4">
-          <h3 className="text-lg font-medium text-oma-plum mb-3">Update Status</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-3">Update Status</h3>
           <div className="space-y-3">
             <Select
               value={application.status}

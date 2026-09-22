@@ -50,10 +50,10 @@ export default async function StudioPage() {
     <div className="mx-auto max-w-7xl space-y-10 px-4 py-8 sm:px-6 sm:py-10">
       <BlurIn>
         <header className="mx-auto max-w-2xl text-center">
-          <h1 className="mb-3 font-canela text-3xl tracking-tight text-omahub-primary sm:text-4xl">
+          <h1 className="mb-3 font-canela text-3xl tracking-tight text-gray-900 sm:text-4xl">
             Welcome to OmaHub Studio
           </h1>
-          <p className="text-base leading-relaxed text-omahub-secondary sm:text-lg">
+          <p className="text-base leading-relaxed text-gray-600 sm:text-lg">
             Manage brands, editions, and the live homepage from one place
           </p>
         </header>

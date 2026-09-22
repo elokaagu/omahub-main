@@ -43,7 +43,7 @@ function BrandBadge({ name, faded }: { name: string; faded?: boolean }) {
   return (
     <Badge
       variant="secondary"
-      className={`text-xs ${faded ? "bg-oma-beige/50" : "bg-oma-beige"} text-oma-plum max-w-[120px] truncate`}
+      className={`text-xs ${faded ? "bg-gray-100" : "bg-gray-100"} text-gray-900 max-w-[120px] truncate`}
     >
       <Building className="h-3 w-3 mr-1 flex-shrink-0" />
       <span className="truncate">{name}</span>
@@ -71,7 +71,7 @@ function AssignedBrandsList({
 
   if (user.brand_names.length === 0) {
     return (
-      <span className="text-oma-cocoa/60 text-sm">No brands assigned</span>
+      <span className="text-gray-500 text-sm">No brands assigned</span>
     );
   }
 
@@ -87,14 +87,14 @@ function AssignedBrandsList({
         <div className="flex items-center gap-2">
           <Badge
             variant="outline"
-            className="text-xs text-oma-cocoa/60 border-oma-cocoa/20"
+            className="text-xs text-gray-500 border-gray-200"
           >
             +{user.brand_names.length - 2} more
           </Badge>
           <button
             type="button"
             onClick={() => onToggleExpanded(user.id)}
-            className="text-xs text-oma-plum hover:text-oma-plum/80 underline cursor-pointer"
+            className="text-xs text-gray-900 hover:text-gray-900 underline cursor-pointer"
           >
             {expanded ? "Show less" : "Show all"}
           </button>
@@ -102,7 +102,7 @@ function AssignedBrandsList({
       )}
 
       {expanded && user.brand_names.length > 2 && (
-        <div className="flex flex-wrap gap-1 pt-1 border-t border-oma-cocoa/10">
+        <div className="flex flex-wrap gap-1 pt-1 border-t border-gray-200">
           {user.brand_names.slice(2).map((name, index) => (
             <BrandBadge key={index + 2} name={name} faded />
           ))}
@@ -147,7 +147,7 @@ export function UsersTable({
             <BlurInTableRow key={user.id} delay={blurStagger(index)}>
               <TableCell className="font-medium">
                 <div className="flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-oma-cocoa/60" />
+                  <Mail className="h-4 w-4 text-gray-500" />
                   {user.email}
                 </div>
               </TableCell>
@@ -161,7 +161,7 @@ export function UsersTable({
                   onToggleExpanded={onToggleExpanded}
                 />
               </TableCell>
-              <TableCell className="text-oma-cocoa/70">
+              <TableCell className="text-gray-500">
                 {formatDate(user.created_at)}
               </TableCell>
               <TableCell>
@@ -194,15 +194,15 @@ export function UsersTable({
           <BlurIn
             key={user.id}
             delay={blurStagger(index)}
-            className="rounded-lg border border-oma-gold/10 bg-white p-4 flex flex-col gap-2 shadow-sm"
+            className="rounded-lg border border-gray-200 bg-white p-4 flex flex-col gap-2 shadow-sm"
           >
             <div className="flex items-center gap-2 text-base font-medium">
-              <Mail className="h-4 w-4 text-oma-cocoa/60" />
+              <Mail className="h-4 w-4 text-gray-500" />
               <span className="break-all">{user.email}</span>
             </div>
             <div className="flex items-center gap-2">
               <RoleBadge role={user.role} />
-              <span className="text-xs text-oma-cocoa/60 ml-2">
+              <span className="text-xs text-gray-500 ml-2">
                 {formatDate(user.created_at)}
               </span>
             </div>

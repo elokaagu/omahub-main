@@ -66,13 +66,13 @@ export function SettingToggleCard({
   };
 
   return (
-    <Card className="border-oma-beige">
+    <Card className="border-gray-200">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-oma-plum font-canela">
+        <CardTitle className="flex items-center gap-2 text-gray-900 font-canela">
           {icon}
           {title}
         </CardTitle>
-        <CardDescription className="text-oma-cocoa">
+        <CardDescription className="text-gray-600">
           {description}
         </CardDescription>
       </CardHeader>
@@ -88,7 +88,7 @@ export function SettingToggleCard({
             {current.badge}
           </div>
         </div>
-        <p className="text-sm text-oma-cocoa/80">{current.explanation}</p>
+        <p className="text-sm text-gray-600">{current.explanation}</p>
       </CardContent>
       <CardFooter className="flex gap-2">
         <Button

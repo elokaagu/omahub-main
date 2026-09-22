@@ -158,7 +158,7 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full"></div>
+        <div className="h-8 w-8 border-4 border-gray-300 border-t-transparent rounded-full"></div>
       </div>
     );
   }

@@ -23,10 +23,10 @@ export default async function EditionsStudioPage() {
   if (profile?.role !== "super_admin") {
     return (
       <div className="max-w-lg mx-auto px-6 py-24 text-center">
-        <h1 className="text-2xl font-canela text-oma-black mb-2">
+        <h1 className="text-2xl font-canela text-gray-900 mb-2">
           Access denied
         </h1>
-        <p className="text-oma-cocoa mb-6">
+        <p className="text-gray-600 mb-6">
           Only super admins can manage editions.
         </p>
         <Button asChild>
@@ -59,8 +59,8 @@ export default async function EditionsStudioPage() {
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
       <BlurIn className="mb-8">
-        <h1 className="text-3xl font-canela text-oma-black mb-2">Editions</h1>
-        <p className="text-oma-cocoa">
+        <h1 className="text-3xl font-canela text-gray-900 mb-2">Editions</h1>
+        <p className="text-gray-600">
           Create and edit each edition like a blog post — story, metadata, cover,
           gallery, lineup, and partners in one place.
         </p>
@@ -85,7 +85,7 @@ export default async function EditionsStudioPage() {
             <Card className="overflow-hidden">
               <div className="flex flex-col sm:flex-row">
                 <div className="sm:w-48 shrink-0">
-                  <div className="aspect-video sm:aspect-square relative bg-oma-plum/10">
+                  <div className="aspect-video sm:aspect-square relative bg-gray-100">
                     {previewImage ? (
                       <AuthImage
                         src={previewImage}
@@ -103,7 +103,7 @@ export default async function EditionsStudioPage() {
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
                     <div>
                       <div className="flex flex-wrap items-center gap-2 mb-2">
-                        <h3 className="text-xl font-semibold text-oma-black">
+                        <h3 className="text-xl font-semibold text-gray-900">
                           {displayTitle}
                         </h3>
                         <Badge variant={edition.status === "past" ? "secondary" : "default"}>
@@ -111,10 +111,10 @@ export default async function EditionsStudioPage() {
                         </Badge>
                         {dynamicCover && <Badge variant="outline">Custom cover</Badge>}
                       </div>
-                      <p className="text-sm text-oma-cocoa">
+                      <p className="text-sm text-gray-600">
                         Edition {displayNumber} · {displayDate}
                       </p>
-                      <p className="mt-2 text-sm text-oma-cocoa">
+                      <p className="mt-2 text-sm text-gray-600">
                         {galleryCount} gallery · {lineupCount} lineup · {partnerCount}{" "}
                         {partnerCount === 1 ? "partner" : "partners"}
                       </p>

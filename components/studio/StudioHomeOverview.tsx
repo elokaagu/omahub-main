@@ -86,10 +86,10 @@ export function StudioHomeOverview({ counts }: { counts: OverviewCounts }) {
             >
               <Link
                 href={item.href}
-                className="group flex h-full flex-col rounded-2xl border border-oma-beige/70 bg-white p-5 shadow-sm transition-colors hover:border-oma-gold/50 hover:bg-oma-cream/40"
+                className="group flex h-full flex-col rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition-colors hover:border-gray-300 hover:bg-gray-50"
               >
                 <div className="mb-4 flex items-start justify-between gap-3">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-oma-beige/60 text-oma-plum">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-900">
                     <Icon className="h-5 w-5" />
                   </span>
                   {item.countKey ? (
@@ -109,26 +109,26 @@ export function StudioHomeOverview({ counts }: { counts: OverviewCounts }) {
                         delay: skipMotion ? 0 : index * 0.12 + 0.08,
                         ease: BLUR_EASE,
                       }}
-                      className="font-canela text-2xl tabular-nums text-oma-plum"
+                      className="font-canela text-2xl tabular-nums text-gray-900"
                     >
                       {formatCount(count)}
                     </motion.span>
                   ) : null}
                 </div>
-                <h2 className="font-canela text-xl text-oma-black">
+                <h2 className="font-canela text-xl text-gray-900">
                   {item.title}
                 </h2>
-                <p className="mt-1 text-sm leading-relaxed text-oma-cocoa">
+                <p className="mt-1 text-sm leading-relaxed text-gray-600">
                   {item.description}
                 </p>
                 {item.countKey === "applications" &&
                 counts.newApplications != null &&
                 counts.newApplications > 0 ? (
-                  <p className="mt-3 text-xs font-medium text-oma-plum">
+                  <p className="mt-3 text-xs font-medium text-gray-900">
                     {counts.newApplications} new to review
                   </p>
                 ) : (
-                  <p className="mt-3 text-xs text-oma-cocoa/80 group-hover:text-oma-plum">
+                  <p className="mt-3 text-xs text-gray-600 group-hover:text-gray-900">
                     Open
                   </p>
                 )}

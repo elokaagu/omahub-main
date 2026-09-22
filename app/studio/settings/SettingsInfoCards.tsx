@@ -38,22 +38,22 @@ export function SettingsToolLinkCard({
   cta: string;
 }) {
   return (
-    <Card className="border-oma-beige">
+    <Card className="border-gray-200">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-oma-plum font-canela">
+        <CardTitle className="flex items-center gap-2 text-gray-900 font-canela">
           <Icon className="h-5 w-5" />
           {title}
         </CardTitle>
-        <CardDescription className="text-oma-cocoa">
+        <CardDescription className="text-gray-600">
           {description}
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <p className="text-sm text-oma-cocoa/80 mb-4">{summary}</p>
-        <div className="space-y-2 text-xs text-oma-cocoa/70">
+        <p className="text-sm text-gray-600 mb-4">{summary}</p>
+        <div className="space-y-2 text-xs text-gray-500">
           {bullets.map((bullet) => (
             <div key={bullet} className="flex items-center gap-2">
-              <BulletIcon className="h-3 w-3 text-oma-plum" />
+              <BulletIcon className="h-3 w-3 text-gray-900" />
               <span>{bullet}</span>
             </div>
           ))}
@@ -111,21 +111,21 @@ const OVERVIEW: {
 /** Static explainer at the end of the settings grid. */
 export function ContentOverviewCard() {
   return (
-    <Card className="border-oma-beige bg-oma-cream/30">
+    <Card className="border-gray-200 bg-gray-50">
       <CardHeader>
-        <CardTitle className="text-oma-plum font-canela">
+        <CardTitle className="text-gray-900 font-canela">
           Content Management
         </CardTitle>
-        <CardDescription className="text-oma-cocoa">
+        <CardDescription className="text-gray-600">
           Overview of access and publishing controls
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="space-y-3 text-sm text-oma-cocoa">
+        <div className="space-y-3 text-sm text-gray-600">
           {OVERVIEW.map(({ icon: Icon, iconClass, label, text }) => (
             <div key={label} className="flex items-start gap-2">
               <Icon
-                className={`h-4 w-4 mt-0.5 flex-shrink-0 ${iconClass ?? "text-oma-plum"}`}
+                className={`h-4 w-4 mt-0.5 flex-shrink-0 ${iconClass ?? "text-gray-900"}`}
               />
               <p>
                 <strong>{label}:</strong> {text}

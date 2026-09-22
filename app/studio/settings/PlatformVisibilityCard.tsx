@@ -74,9 +74,9 @@ export function PlatformVisibilityCard({
   );
 
   return (
-    <Card className="border-oma-beige">
+    <Card className="border-gray-200">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-oma-plum font-canela">
+        <CardTitle className="flex items-center gap-2 text-gray-900 font-canela">
           {isPublic ? (
             <Globe className="h-5 w-5" />
           ) : (
@@ -84,7 +84,7 @@ export function PlatformVisibilityCard({
           )}
           Platform Visibility
         </CardTitle>
-        <CardDescription className="text-oma-cocoa">
+        <CardDescription className="text-gray-600">
           Control public access to the platform
         </CardDescription>
       </CardHeader>
@@ -113,14 +113,14 @@ export function PlatformVisibilityCard({
           </div>
         </div>
 
-        <p className="text-sm text-oma-cocoa/80 mb-4">
+        <p className="text-sm text-gray-600 mb-4">
           {isPublic
             ? "The platform is currently accessible to all visitors without a password. Anyone can browse and explore your content."
             : "The platform is currently password-protected for internal testing. Visitors need the access password to view content."}
         </p>
 
         {visibility?.fallback === "missing_row_defaults_to_private" && (
-          <p className="text-xs text-oma-cocoa/75 mb-3 rounded-md bg-oma-beige/50 px-2.5 py-2">
+          <p className="text-xs text-gray-500 mb-3 rounded-md bg-gray-100 px-2.5 py-2">
             No database row for platform visibility yet - effective status is
             private until you use Make Public or Make Private.
           </p>
@@ -133,9 +133,9 @@ export function PlatformVisibilityCard({
           </p>
         )}
 
-        <div className="space-y-2 text-xs text-oma-cocoa/70">
+        <div className="space-y-2 text-xs text-gray-500">
           <div className="flex items-center gap-2">
-            <Shield className="h-3 w-3 text-oma-plum" />
+            <Shield className="h-3 w-3 text-gray-900" />
             <span>
               {isPublic
                 ? "Open access for all visitors"
@@ -143,7 +143,7 @@ export function PlatformVisibilityCard({
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <Globe className="h-3 w-3 text-oma-plum" />
+            <Globe className="h-3 w-3 text-gray-900" />
             <span>
               {isPublic
                 ? "SEO friendly and discoverable"

@@ -16,7 +16,7 @@ const RecentAccountsWidget = dynamic(
 export function StudioRecentAccountsCard() {
   return (
     <BlurIn delay={0.16}>
-      <Card className="overflow-hidden rounded-2xl border border-oma-beige/60 shadow-sm">
+      <Card className="overflow-hidden rounded-2xl border border-gray-200 shadow-sm">
         <CardContent className="bg-white px-5 py-6 sm:px-8 sm:py-8">
           <RecentAccountsWidget />
         </CardContent>

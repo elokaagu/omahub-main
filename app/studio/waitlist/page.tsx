@@ -171,14 +171,14 @@ export default function StudioEventWaitlistPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-oma-cream flex items-center justify-center px-4">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
         <Card className="w-full max-w-md">
           <CardContent className="pt-6">
             <div className="text-center">
-              <h2 className="text-xl font-canela text-oma-plum mb-2">
+              <h2 className="text-xl font-canela text-gray-900 mb-2">
                 Authentication required
               </h2>
-              <p className="text-oma-cocoa mb-4">Sign in to open Studio.</p>
+              <p className="text-gray-600 mb-4">Sign in to open Studio.</p>
               <Button asChild className="bg-oma-plum hover:bg-oma-plum/90">
                 <Link href="/login">Log in</Link>
               </Button>
@@ -191,16 +191,16 @@ export default function StudioEventWaitlistPage() {
 
   if (!isSuperAdmin) {
     return (
-      <div className="min-h-screen bg-oma-cream">
+      <div className="min-h-screen bg-gray-50">
         <div className="max-w-2xl mx-auto px-6 py-16 text-center">
-          <h1 className="text-2xl font-canela text-oma-plum mb-2">Waitlist</h1>
-          <p className="text-oma-cocoa mb-6">
+          <h1 className="text-2xl font-canela text-gray-900 mb-2">Waitlist</h1>
+          <p className="text-gray-600 mb-6">
             Only super admins can view sitewide product preorder signups.
           </p>
           <Button
             asChild
             variant="outline"
-            className="border-oma-plum text-oma-plum"
+            className="border-gray-300 text-gray-900"
           >
             <Link href="/studio">Back to Studio</Link>
           </Button>
@@ -210,14 +210,14 @@ export default function StudioEventWaitlistPage() {
   }
 
   return (
-    <div className="min-h-screen bg-oma-cream">
+    <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-6 py-8">
         <BlurIn className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h1 className="text-3xl font-canela text-oma-plum mb-2">
+            <h1 className="text-3xl font-canela text-gray-900 mb-2">
               Product preorder waitlist
             </h1>
-            <p className="text-oma-cocoa max-w-2xl">
+            <p className="text-gray-600 max-w-2xl">
               Everyone who submitted the sitewide product preorder form. Each row
               is a platform lead with designer, item, size, and notes in the
               details block.
@@ -227,7 +227,7 @@ export default function StudioEventWaitlistPage() {
             type="button"
             variant="outline"
             size="sm"
-            className="border-oma-plum text-oma-plum shrink-0"
+            className="border-gray-300 text-gray-900 shrink-0"
             onClick={() => void loadAll()}
             disabled={loading || refreshing}
           >
@@ -244,9 +244,9 @@ export default function StudioEventWaitlistPage() {
             placeholder="Search by name, email, phone, or notes…"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="max-w-md bg-white border-oma-gold/20"
+            className="max-w-md bg-white border-gray-200"
           />
-          <p className="text-sm text-oma-cocoa">
+          <p className="text-sm text-gray-600">
             Showing {filteredLeads.length} of {leads.length} signups
           </p>
         </BlurIn>
@@ -272,30 +272,30 @@ export default function StudioEventWaitlistPage() {
         )}
 
         {loading && (
-          <p className="py-8 text-center text-sm text-oma-cocoa">
+          <p className="py-8 text-center text-sm text-gray-600">
             Loading waitlist…
           </p>
         )}
 
         {!loading && filteredLeads.length === 0 && (
-          <Card className="border border-oma-gold/10 bg-white">
+          <Card className="border border-gray-200 bg-white">
             <CardContent className="pt-6">
               <div className="text-center py-8">
-                <div className="w-16 h-16 bg-oma-cocoa/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   {error && leads.length === 0 ? (
-                    <AlertCircle className="h-8 w-8 text-oma-cocoa/50" />
+                    <AlertCircle className="h-8 w-8 text-gray-500" />
                   ) : (
-                    <Filter className="h-8 w-8 text-oma-cocoa/50" />
+                    <Filter className="h-8 w-8 text-gray-500" />
                   )}
                 </div>
-                <h3 className="text-lg font-canela text-oma-plum mb-2">
+                <h3 className="text-lg font-canela text-gray-900 mb-2">
                   {error && leads.length === 0
                     ? "Unable to load signups"
                     : leads.length === 0
                       ? "No signups yet"
                       : "No matches"}
                 </h3>
-                <p className="text-oma-cocoa mb-4 max-w-md mx-auto">
+                <p className="text-gray-600 mb-4 max-w-md mx-auto">
                   {error && leads.length === 0
                     ? "Use the banner above or try again when your connection is stable."
                     : leads.length === 0
@@ -306,7 +306,7 @@ export default function StudioEventWaitlistPage() {
                   <Button
                     type="button"
                     variant="outline"
-                    className="border-oma-plum text-oma-plum"
+                    className="border-gray-300 text-gray-900"
                     onClick={() => void loadAll()}
                     disabled={loading || refreshing}
                   >

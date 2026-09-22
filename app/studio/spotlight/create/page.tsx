@@ -343,10 +343,10 @@ export default function CreateSpotlightPage() {
           </Link>
         </Button>
         <div>
-          <h1 className="text-3xl font-canela text-oma-black mb-2">
+          <h1 className="text-3xl font-canela text-gray-900 mb-2">
             Create Spotlight Content
           </h1>
-          <p className="text-oma-cocoa">
+          <p className="text-gray-600">
             Create a brand film for product pages
           </p>
         </div>
@@ -412,7 +412,7 @@ export default function CreateSpotlightPage() {
               {brandLoadError && (
                 <p className="text-xs text-red-600 mt-1">{brandLoadError}</p>
               )}
-              <p className="text-xs text-oma-cocoa/70 mt-1">
+              <p className="text-xs text-gray-500 mt-1">
                 Optional: selecting a brand pre-fills brand fields and enables
                 product pickers.
               </p>
@@ -482,7 +482,7 @@ export default function CreateSpotlightPage() {
                   accept="image/png,image/jpeg,image/webp"
                   maxSize={10}
                 />
-                <p className="text-xs text-oma-cocoa/70 mt-1">
+                <p className="text-xs text-gray-500 mt-1">
                   High-resolution main spotlight image
                 </p>
               </div>
@@ -537,7 +537,7 @@ export default function CreateSpotlightPage() {
                   accept="video/mp4,video/webm,video/quicktime"
                   maxSize={50}
                 />
-                <p className="text-xs text-oma-cocoa/70 mt-1">
+                <p className="text-xs text-gray-500 mt-1">
                   Upload brand campaign, interview, or behind-the-scenes video
                   (max 50MB)
                 </p>
@@ -554,7 +554,7 @@ export default function CreateSpotlightPage() {
                   accept="image/png,image/jpeg,image/webp"
                   maxSize={5}
                 />
-                <p className="text-xs text-oma-cocoa/70 mt-1">
+                <p className="text-xs text-gray-500 mt-1">
                   Custom thumbnail for video preview (falls back to main image)
                 </p>
               </div>
@@ -615,7 +615,7 @@ export default function CreateSpotlightPage() {
           </CardHeader>
           <CardContent>
             {formData.featured_products.length === 0 ? (
-              <div className="text-center py-8 text-oma-cocoa">
+              <div className="text-center py-8 text-gray-600">
                 <Upload className="h-12 w-12 mx-auto mb-4 opacity-40" />
                 <p>No featured products added yet</p>
                 <p className="text-sm">

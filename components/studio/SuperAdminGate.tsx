@@ -38,10 +38,10 @@ export function SuperAdminHeroGate({
   if (!user && !isSuperAdmin) {
     return (
       <div className="max-w-lg mx-auto px-6 py-24 text-center">
-        <h1 className="text-2xl font-canela text-oma-black mb-2">
+        <h1 className="text-2xl font-canela text-gray-900 mb-2">
           Sign in required
         </h1>
-        <p className="text-oma-cocoa mb-6">
+        <p className="text-gray-600 mb-6">
           You need to be signed in to {capabilityPhrase}.
         </p>
         <Button asChild>
@@ -54,10 +54,10 @@ export function SuperAdminHeroGate({
   if (!canManageHero) {
     return (
       <div className="max-w-lg mx-auto px-6 py-24 text-center">
-        <h1 className="text-2xl font-canela text-oma-black mb-2">
+        <h1 className="text-2xl font-canela text-gray-900 mb-2">
           Access denied
         </h1>
-        <p className="text-oma-cocoa mb-6">
+        <p className="text-gray-600 mb-6">
           Only super admins can {capabilityPhrase}.
         </p>
         <Button asChild>

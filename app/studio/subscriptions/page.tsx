@@ -68,7 +68,7 @@ type SubscriberQuery = {
 
 const ITEMS_PER_PAGE = 20;
 const DASHBOARD_SECTION =
-  "rounded-2xl border border-oma-beige/70 bg-gradient-to-br from-white via-oma-cream/30 to-oma-beige/15 p-5 shadow-sm sm:p-6";
+  "rounded-2xl border border-gray-200 bg-gradient-to-br from-white via-gray-50 to-gray-50 p-5 shadow-sm sm:p-6";
 const METRIC_CARD =
   "flex min-h-[7.5rem] flex-col justify-center rounded-xl border border-black/[0.06] bg-white p-5 text-left shadow-sm";
 
@@ -460,7 +460,7 @@ export default function SubscriptionsPage() {
     }
     if (status === "unsubscribed") {
       return (
-        <Badge variant="outline" className="text-oma-cocoa">
+        <Badge variant="outline" className="text-gray-600">
           Paused
         </Badge>
       );
@@ -473,7 +473,7 @@ export default function SubscriptionsPage() {
       );
     }
     return (
-      <Badge variant="outline" className="text-oma-cocoa">
+      <Badge variant="outline" className="text-gray-600">
         Pending
       </Badge>
     );
@@ -516,10 +516,10 @@ export default function SubscriptionsPage() {
       <BlurIn>
       <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div className="max-w-2xl space-y-1.5">
-          <h1 className="font-canela text-3xl tracking-tight text-oma-plum sm:text-4xl">
+          <h1 className="font-canela text-3xl tracking-tight text-gray-900 sm:text-4xl">
             Newsletter Subscriptions
           </h1>
-          <p className="text-sm leading-relaxed text-oma-cocoa sm:text-base">
+          <p className="text-sm leading-relaxed text-gray-600 sm:text-base">
             Manage and monitor newsletter subscribers across OmaHub.
           </p>
         </div>
@@ -527,7 +527,7 @@ export default function SubscriptionsPage() {
         <Button
           onClick={exportSubscribers}
           variant="outline"
-          className="w-full gap-2 border-oma-beige text-oma-cocoa hover:bg-oma-beige/40 sm:w-auto"
+          className="w-full gap-2 border-gray-200 text-gray-600 hover:bg-gray-50 sm:w-auto"
         >
           <Download className="h-4 w-4" />
           Export CSV
@@ -541,16 +541,16 @@ export default function SubscriptionsPage() {
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card className={METRIC_CARD}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0">
-              <CardTitle className="text-sm font-medium text-oma-cocoa">
+              <CardTitle className="text-sm font-medium text-gray-600">
                 Total Subscribers
               </CardTitle>
-              <Users className="h-4 w-4 text-oma-cocoa" />
+              <Users className="h-4 w-4 text-gray-600" />
             </CardHeader>
             <CardContent className="p-0 pt-2">
-              <div className="text-2xl font-canela tabular-nums text-oma-plum">
+              <div className="text-2xl font-canela tabular-nums text-gray-900">
                 {stats.total}
               </div>
-              <p className="text-xs text-oma-cocoa">
+              <p className="text-xs text-gray-600">
                 {stats.growth > 0 ? "+" : ""}
                 {stats.growth}% from last month
               </p>
@@ -559,16 +559,16 @@ export default function SubscriptionsPage() {
 
           <Card className={METRIC_CARD}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0">
-              <CardTitle className="text-sm font-medium text-oma-cocoa">
+              <CardTitle className="text-sm font-medium text-gray-600">
                 Active Subscribers
               </CardTitle>
-              <Mail className="h-4 w-4 text-oma-cocoa" />
+              <Mail className="h-4 w-4 text-gray-600" />
             </CardHeader>
             <CardContent className="p-0 pt-2">
-              <div className="text-2xl font-canela tabular-nums text-oma-plum">
+              <div className="text-2xl font-canela tabular-nums text-gray-900">
                 {stats.active}
               </div>
-              <p className="text-xs text-oma-cocoa">
+              <p className="text-xs text-gray-600">
                 {stats.total > 0
                   ? ((stats.active / stats.total) * 100).toFixed(1)
                   : "0.0"}
@@ -579,31 +579,31 @@ export default function SubscriptionsPage() {
 
           <Card className={METRIC_CARD}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0">
-              <CardTitle className="text-sm font-medium text-oma-cocoa">
+              <CardTitle className="text-sm font-medium text-gray-600">
                 This Month
               </CardTitle>
-              <Calendar className="h-4 w-4 text-oma-cocoa" />
+              <Calendar className="h-4 w-4 text-gray-600" />
             </CardHeader>
             <CardContent className="p-0 pt-2">
-              <div className="text-2xl font-canela tabular-nums text-oma-plum">
+              <div className="text-2xl font-canela tabular-nums text-gray-900">
                 {stats.thisMonth}
               </div>
-              <p className="text-xs text-oma-cocoa">New subscriptions this month</p>
+              <p className="text-xs text-gray-600">New subscriptions this month</p>
             </CardContent>
           </Card>
 
           <Card className={METRIC_CARD}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0">
-              <CardTitle className="text-sm font-medium text-oma-cocoa">
+              <CardTitle className="text-sm font-medium text-gray-600">
                 Unsubscribed
               </CardTitle>
-              <TrendingUp className="h-4 w-4 text-oma-cocoa" />
+              <TrendingUp className="h-4 w-4 text-gray-600" />
             </CardHeader>
             <CardContent className="p-0 pt-2">
-              <div className="text-2xl font-canela tabular-nums text-oma-plum">
+              <div className="text-2xl font-canela tabular-nums text-gray-900">
                 {stats.unsubscribed}
               </div>
-              <p className="text-xs text-oma-cocoa">
+              <p className="text-xs text-gray-600">
                 {stats.total > 0
                   ? ((stats.unsubscribed / stats.total) * 100).toFixed(1)
                   : "0.0"}
@@ -622,12 +622,12 @@ export default function SubscriptionsPage() {
           <div className="flex flex-col gap-4 lg:flex-row">
             <div className="flex-1">
               <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-oma-cocoa" />
+                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-600" />
                 <Input
                   placeholder="Search by email, name..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="border-oma-beige bg-white pl-10 text-oma-black placeholder:text-oma-cocoa/70"
+                  className="border-gray-200 bg-white pl-10 text-gray-900 placeholder:text-gray-400"
                 />
               </div>
             </div>
@@ -636,7 +636,7 @@ export default function SubscriptionsPage() {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="rounded-md border border-oma-beige bg-white px-3 py-2 text-sm text-oma-black"
+                className="rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900"
               >
                 <option value="all">All Statuses</option>
                 <option value="active">Active</option>
@@ -648,7 +648,7 @@ export default function SubscriptionsPage() {
               <select
                 value={sourceFilter}
                 onChange={(e) => setSourceFilter(e.target.value)}
-                className="rounded-md border border-oma-beige bg-white px-3 py-2 text-sm text-oma-black"
+                className="rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900"
               >
                 <option value="all">All Sources</option>
                 <option value="website">Website</option>
@@ -678,26 +678,26 @@ export default function SubscriptionsPage() {
 
       {/* Subscribers Table */}
       <BlurIn delay={0.16}>
-      <Card className="overflow-hidden rounded-2xl border border-oma-beige/80 shadow-sm">
-        <CardHeader className="border-b border-oma-beige/60 bg-oma-cream/20">
-          <CardTitle className="font-canela text-2xl text-oma-plum">
+      <Card className="overflow-hidden rounded-2xl border border-gray-200 shadow-sm">
+        <CardHeader className="border-b border-gray-200 bg-gray-50">
+          <CardTitle className="font-canela text-2xl text-gray-900">
             Subscribers
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           {loading ? (
             <div className="py-12 text-center">
-              <div className="mx-auto h-8 w-8 rounded-full border-b-2 border-oma-plum"></div>
-              <p className="mt-2 text-oma-cocoa">Loading subscribers…</p>
+              <div className="mx-auto h-8 w-8 rounded-full border-b-2 border-gray-300"></div>
+              <p className="mt-2 text-gray-600">Loading subscribers…</p>
             </div>
           ) : subscribers.length === 0 ? (
             <div className="py-12 text-center">
-              <Mail className="mx-auto mb-4 h-10 w-10 text-oma-cocoa/50" />
-              <p className="text-oma-cocoa">No subscribers found</p>
+              <Mail className="mx-auto mb-4 h-10 w-10 text-gray-500" />
+              <p className="text-gray-600">No subscribers found</p>
             </div>
           ) : (
             <>
-              <ul className="divide-y divide-oma-beige/70">
+              <ul className="divide-y divide-gray-200">
                 {subscribers.map((subscriber, index) => {
                   const name = displayName(subscriber);
                   const subscribed = new Date(
@@ -717,12 +717,12 @@ export default function SubscriptionsPage() {
                     >
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
-                          <p className="truncate text-sm font-medium text-oma-black">
+                          <p className="truncate text-sm font-medium text-gray-900">
                             {subscriber.email}
                           </p>
                           {getStatusBadge(subscriber.subscription_status)}
                         </div>
-                        <p className="mt-1 text-sm text-oma-cocoa">
+                        <p className="mt-1 text-sm text-gray-600">
                           {[
                             name || null,
                             sourceLabel(subscriber.source),
@@ -748,7 +748,7 @@ export default function SubscriptionsPage() {
                                 "unsubscribed",
                               )
                             }
-                            className="border-oma-beige text-oma-cocoa hover:bg-oma-beige/40"
+                            className="border-gray-200 text-gray-600 hover:bg-gray-50"
                           >
                             Pause
                           </Button>
@@ -761,7 +761,7 @@ export default function SubscriptionsPage() {
                             onClick={() =>
                               void handleStatusChange(subscriber.id, "active")
                             }
-                            className="border-oma-beige text-oma-plum hover:bg-oma-beige/40"
+                            className="border-gray-200 text-gray-900 hover:bg-gray-50"
                           >
                             Restore
                           </Button>
@@ -810,8 +810,8 @@ export default function SubscriptionsPage() {
               </ul>
 
               {totalPages > 1 && (
-                <div className="flex items-center justify-between border-t border-oma-beige/60 px-5 py-4">
-                  <div className="text-sm text-oma-cocoa">
+                <div className="flex items-center justify-between border-t border-gray-200 px-5 py-4">
+                  <div className="text-sm text-gray-600">
                     Page {currentPage} of {totalPages}
                   </div>
                   <div className="flex gap-2">

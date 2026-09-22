@@ -31,7 +31,7 @@ export function ApplicationsList({
       <div className="text-center py-12">
         {applications.length === 0 ? (
           <>
-            <p className="text-oma-cocoa mb-2">
+            <p className="text-gray-600 mb-2">
               No applications found in the database.
             </p>
             <p className="text-sm text-gray-500">
@@ -40,7 +40,7 @@ export function ApplicationsList({
           </>
         ) : (
           <>
-            <p className="text-oma-cocoa mb-2">
+            <p className="text-gray-600 mb-2">
               No applications match your filters.
             </p>
             <Button variant="outline" size="sm" onClick={onClearFilters}>

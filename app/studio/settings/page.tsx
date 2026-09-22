@@ -43,16 +43,16 @@ export default async function SettingsPage() {
   ) {
     return (
       <div className="max-w-4xl mx-auto px-6 py-12">
-        <Card className="border-oma-beige">
+        <Card className="border-gray-200">
           <CardHeader>
-            <CardTitle className="text-oma-plum font-canela">
+            <CardTitle className="text-gray-900 font-canela">
               Super Admin Access Required
             </CardTitle>
-            <CardDescription className="text-oma-cocoa">
+            <CardDescription className="text-gray-600">
               Studio settings tools are limited to super admin accounts.
             </CardDescription>
           </CardHeader>
-          <CardContent className="text-sm text-oma-cocoa/80">
+          <CardContent className="text-sm text-gray-600">
             Contact a super admin if you need updates to legal documents, FAQs,
             or platform visibility.
           </CardContent>
@@ -81,10 +81,10 @@ export default async function SettingsPage() {
       <div className="space-y-8">
         <BlurIn>
           <div>
-            <h1 className="text-3xl font-canela text-oma-plum">
+            <h1 className="text-3xl font-canela text-gray-900">
               Studio Settings
             </h1>
-            <p className="text-oma-cocoa mt-2">
+            <p className="text-gray-600 mt-2">
               Manage your studio configuration and content
             </p>
           </div>

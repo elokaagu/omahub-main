@@ -17,16 +17,16 @@ function StatCard({
   note?: string;
 }) {
   return (
-    <Card className={`border-l-4 ${accent} border-oma-beige`}>
+    <Card className={`border-l-4 ${accent} border-gray-200`}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium text-black">
           {title}
         </CardTitle>
-        <Icon className="h-4 w-4 text-oma-cocoa" />
+        <Icon className="h-4 w-4 text-gray-600" />
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-canela text-oma-plum">{value}</div>
-        {note && <p className="text-xs text-oma-cocoa/60 mt-1">{note}</p>}
+        <div className="text-2xl font-canela text-gray-900">{value}</div>
+        {note && <p className="text-xs text-gray-500 mt-1">{note}</p>}
       </CardContent>
     </Card>
   );

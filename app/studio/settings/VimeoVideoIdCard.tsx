@@ -56,18 +56,18 @@ export function VimeoVideoIdCard({
   };
 
   return (
-    <Card className="border-oma-beige">
+    <Card className="border-gray-200">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-oma-plum font-canela">
+        <CardTitle className="flex items-center gap-2 text-gray-900 font-canela">
           <Film className="h-5 w-5" />
           {title}
         </CardTitle>
-        <CardDescription className="text-oma-cocoa">
+        <CardDescription className="text-gray-600">
           {description}
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <p className="text-sm text-oma-cocoa/80 mb-4">{help}</p>
+        <p className="text-sm text-gray-600 mb-4">{help}</p>
         <Input
           value={value}
           onChange={(e) => setValue(e.target.value)}

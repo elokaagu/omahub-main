@@ -82,11 +82,11 @@ export function BrandEditTailoringSection({
       <CardContent>
         {tailor ? (
           <div className="space-y-4">
-            <div className="p-4 bg-oma-beige border border-oma-plum rounded-lg">
+            <div className="p-4 bg-gray-100 border border-gray-300 rounded-lg">
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-oma-plum mr-2" />
-                  <span className="text-oma-plum font-medium">
+                  <CheckCircle className="h-5 w-5 text-gray-900 mr-2" />
+                  <span className="text-gray-900 font-medium">
                     Tailoring Enabled
                   </span>
                 </div>
@@ -94,12 +94,12 @@ export function BrandEditTailoringSection({
                   variant="outline"
                   size="sm"
                   onClick={() => setTailorModalOpen(true)}
-                  className="text-oma-plum border-oma-plum hover:bg-oma-beige"
+                  className="text-gray-900 border-gray-300 hover:bg-gray-100"
                 >
                   Edit
                 </Button>
               </div>
-              <div className="mt-2 text-sm text-oma-plum">
+              <div className="mt-2 text-sm text-gray-900">
                 <p>
                   Specialties:{" "}
                   {tailorSpecialties.length > 0
@@ -114,7 +114,7 @@ export function BrandEditTailoringSection({
               <AlertDialogTrigger asChild>
                 <Button
                   variant="outline"
-                  className="w-full text-oma-plum border-oma-plum hover:bg-oma-beige"
+                  className="w-full text-gray-900 border-gray-300 hover:bg-gray-100"
                   disabled={disableTailoring}
                 >
                   {disableTailoring ? "Disabling..." : "Disable Tailoring"}
@@ -150,7 +150,7 @@ export function BrandEditTailoringSection({
             <Button
               variant="outline"
               onClick={() => setTailorModalOpen(true)}
-              className="w-full text-oma-plum border-oma-plum hover:bg-oma-beige"
+              className="w-full text-gray-900 border-gray-300 hover:bg-gray-100"
             >
               Enable Tailoring
             </Button>

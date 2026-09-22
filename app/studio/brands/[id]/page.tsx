@@ -42,7 +42,7 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="h-8 w-8 border-4 border-oma-plum border-t-transparent rounded-full" />
+        <div className="h-8 w-8 border-4 border-gray-300 border-t-transparent rounded-full" />
       </div>
     );
   }
@@ -80,16 +80,16 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
       </BlurIn>
 
       {showDirectoryImageNotice ? (
-        <Alert className="mb-6 sm:mb-8 border-oma-gold/35 bg-oma-beige/60 text-oma-cocoa shadow-sm">
-          <ImageIcon className="h-4 w-4 text-oma-plum" aria-hidden />
-          <AlertTitle className="text-oma-plum font-canela text-base">
+        <Alert className="mb-6 sm:mb-8 border-gray-200 bg-gray-100 text-gray-600 shadow-sm">
+          <ImageIcon className="h-4 w-4 text-gray-900" aria-hidden />
+          <AlertTitle className="text-gray-900 font-canela text-base">
             Not listed in the Brand Directory yet
           </AlertTitle>
-          <AlertDescription className="text-oma-cocoa/90 text-sm mt-1">
+          <AlertDescription className="text-gray-600 text-sm mt-1">
             This profile is still visible at{" "}
             <Link
               href={`/brand/${params.id}`}
-              className="font-medium text-oma-plum underline underline-offset-2 hover:text-oma-plum/90"
+              className="font-medium text-gray-900 underline underline-offset-2 hover:text-gray-900"
               target="_blank"
               rel="noopener noreferrer"
             >

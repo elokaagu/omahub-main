@@ -66,23 +66,23 @@ export default function PageViewsCard({
 
   return (
     <div className="flex min-h-[7.25rem] flex-col justify-center text-left">
-      <h3 className="text-sm font-medium text-oma-cocoa">Page Views</h3>
+      <h3 className="text-sm font-medium text-gray-600">Page Views</h3>
       {loading ? (
-        <div className="mt-2 h-8 w-1/2 min-w-[5rem] animate-pulse rounded bg-oma-beige/80" />
+        <div className="mt-2 h-8 w-1/2 min-w-[5rem] animate-pulse rounded bg-gray-100" />
       ) : (
-        <p className="mt-1 text-2xl font-canela tabular-nums text-oma-plum">
+        <p className="mt-1 text-2xl font-canela tabular-nums text-gray-900">
           {isReal && pageViews !== null
             ? pageViews.toLocaleString()
             : `${estimated.toLocaleString()}*`}
         </p>
       )}
-      <p className="mt-1 text-sm leading-snug text-oma-cocoa">
+      <p className="mt-1 text-sm leading-snug text-gray-600">
         {isReal && pageViews !== null
           ? "Last 30 days (Vercel)"
           : "Estimated from catalogue size"}
       </p>
       {!loading && !isReal && fallbackReason ? (
-        <p className="mt-1 text-xs leading-snug text-oma-cocoa/80">
+        <p className="mt-1 text-xs leading-snug text-gray-600">
           {fallbackReason}
         </p>
       ) : null}

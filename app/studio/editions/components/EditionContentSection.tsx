@@ -151,10 +151,10 @@ export function EditionContentSection({
     <div className="space-y-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-lg font-semibold text-oma-black">
+          <h2 className="text-lg font-semibold text-gray-900">
             Edition post
           </h2>
-          <p className="text-sm text-oma-cocoa">
+          <p className="text-sm text-gray-600">
             Write the edition like a blog post — title, excerpt, and story with
             images placed wherever you need them. Changes autosave.
           </p>
@@ -162,7 +162,7 @@ export function EditionContentSection({
         <AutosaveIndicator status={status} lastSavedAt={lastSavedAt} />
       </div>
 
-      <div className="grid gap-4 rounded-xl border border-oma-cocoa/15 bg-white p-5 sm:grid-cols-2 sm:p-6">
+      <div className="grid gap-4 rounded-xl border border-gray-200 bg-white p-5 sm:grid-cols-2 sm:p-6">
         <div className="space-y-2 sm:col-span-2">
           <Label htmlFor="edition-title">Title</Label>
           <Input
@@ -272,7 +272,7 @@ export function EditionContentSection({
             placeholder="e.g. 8 brands"
           />
         </div>
-        <div className="flex items-center justify-between rounded-lg border border-oma-cocoa/10 px-3 py-2">
+        <div className="flex items-center justify-between rounded-lg border border-gray-200 px-3 py-2">
           <Label htmlFor="edition-applications-open">Applications open</Label>
           <Switch
             id="edition-applications-open"
@@ -282,7 +282,7 @@ export function EditionContentSection({
             }
           />
         </div>
-        <div className="flex items-center justify-between rounded-lg border border-oma-cocoa/10 px-3 py-2">
+        <div className="flex items-center justify-between rounded-lg border border-gray-200 px-3 py-2">
           <Label htmlFor="edition-theme-announced">Theme announced</Label>
           <Switch
             id="edition-theme-announced"

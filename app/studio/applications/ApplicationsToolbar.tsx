@@ -32,10 +32,10 @@ export function ApplicationsToolbar({
     <>
       <BlurIn className="mb-8">
         <div>
-          <h1 className="text-3xl font-canela text-oma-plum mb-2">
+          <h1 className="text-3xl font-canela text-gray-900 mb-2">
             Designer Applications
           </h1>
-          <p className="text-oma-cocoa">
+          <p className="text-gray-600">
             Review and manage designer applications for the platform
             {totalCount > 0 && (
               <span className="ml-2 text-sm">

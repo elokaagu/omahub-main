@@ -107,7 +107,7 @@ function SpotlightStudioContent() {
   if (error) {
     return (
       <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
-        <p className="mb-4 text-oma-cocoa">{error}</p>
+        <p className="mb-4 text-gray-600">{error}</p>
         <Button type="button" variant="outline" onClick={() => void load()}>
           Try again
         </Button>
@@ -119,10 +119,10 @@ function SpotlightStudioContent() {
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
       <BlurIn className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="mb-2 font-canela text-3xl text-oma-black">
+          <h1 className="mb-2 font-canela text-3xl text-gray-900">
             Brand films
           </h1>
-          <p className="max-w-xl text-oma-cocoa">
+          <p className="max-w-xl text-gray-600">
             Still and film used on a designer&apos;s product pages. Live films
             can run at the same time for different brands.
           </p>
@@ -139,10 +139,10 @@ function SpotlightStudioContent() {
         <BlurIn delay={0.08}>
         <Card>
           <CardContent className="py-16 text-center">
-            <p className="mb-2 font-canela text-xl text-oma-black">
+            <p className="mb-2 font-canela text-xl text-gray-900">
               No brand films yet
             </p>
-            <p className="mb-6 text-sm text-oma-cocoa">
+            <p className="mb-6 text-sm text-gray-600">
               Add a still and optional film, then set it live for that designer.
             </p>
             <Button asChild className="bg-oma-plum hover:bg-oma-plum/90">
@@ -157,9 +157,9 @@ function SpotlightStudioContent() {
             const preview = item.video_thumbnail || item.main_image;
             return (
               <BlurIn key={item.id} delay={blurStagger(index)}>
-              <Card className="overflow-hidden border-oma-beige/80">
+              <Card className="overflow-hidden border-gray-200">
                 <div className="flex flex-col sm:flex-row">
-                  <div className="relative aspect-[4/5] bg-oma-beige/40 sm:aspect-auto sm:w-40 sm:shrink-0">
+                  <div className="relative aspect-[4/5] bg-gray-50 sm:aspect-auto sm:w-40 sm:shrink-0">
                     {preview ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
@@ -169,7 +169,7 @@ function SpotlightStudioContent() {
                         className="h-full w-full object-cover"
                       />
                     ) : (
-                      <div className="flex h-full min-h-[10rem] items-center justify-center text-xs text-oma-cocoa">
+                      <div className="flex h-full min-h-[10rem] items-center justify-center text-xs text-gray-600">
                         No still
                       </div>
                     )}
@@ -177,7 +177,7 @@ function SpotlightStudioContent() {
                   <CardContent className="flex flex-1 flex-col justify-between gap-4 p-5 sm:flex-row sm:items-center">
                     <div className="min-w-0 space-y-1.5">
                       <div className="flex flex-wrap items-center gap-2">
-                        <h2 className="font-canela text-xl text-oma-black">
+                        <h2 className="font-canela text-xl text-gray-900">
                           {item.title || item.brand_name}
                         </h2>
                         {item.is_active ? (
@@ -185,7 +185,7 @@ function SpotlightStudioContent() {
                             Live
                           </Badge>
                         ) : (
-                          <Badge variant="outline" className="text-oma-cocoa">
+                          <Badge variant="outline" className="text-gray-600">
                             Hidden
                           </Badge>
                         )}
@@ -195,9 +195,9 @@ function SpotlightStudioContent() {
                           <Badge variant="outline">Still only</Badge>
                         )}
                       </div>
-                      <p className="text-sm text-oma-cocoa">{item.brand_name}</p>
+                      <p className="text-sm text-gray-600">{item.brand_name}</p>
                       {item.subtitle ? (
-                        <p className="line-clamp-2 text-sm text-oma-cocoa/80">
+                        <p className="line-clamp-2 text-sm text-gray-600">
                           {item.subtitle}
                         </p>
                       ) : null}

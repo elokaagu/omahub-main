@@ -143,7 +143,7 @@ export function UsersManager({
             <h1 className="text-3xl font-canela text-gray-900 mb-2">
               User Management
             </h1>
-            <p className="text-oma-cocoa/80 mb-8">
+            <p className="text-gray-600 mb-8">
               Manage user accounts and assign brands to users
             </p>
           </div>
@@ -159,7 +159,7 @@ export function UsersManager({
 
       <BlurIn delay={0.08} className="mb-8 flex flex-col gap-4 sm:flex-row">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-oma-cocoa/60" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
           <Input
             placeholder="Search by email or brand name..."
             value={searchTerm}
@@ -197,7 +197,7 @@ export function UsersManager({
             variant="outline"
             onClick={exportCsv}
             disabled={filteredUsers.length === 0}
-            className="text-oma-plum border-oma-plum hover:bg-oma-plum/10"
+            className="text-gray-900 border-gray-300 hover:bg-gray-50"
           >
             <Download className="h-4 w-4 mr-2" />
             Export CSV
@@ -217,12 +217,12 @@ export function UsersManager({
       </BlurIn>
 
       <BlurIn delay={0.16}>
-        <Card className="border border-oma-gold/10 bg-white">
+        <Card className="border border-gray-200 bg-white">
           <CardHeader>
             <CardTitle className="text-black">
               {roleHeading}
               {searchTerm && (
-                <span className="text-sm font-normal text-oma-cocoa/70 ml-2">
+                <span className="text-sm font-normal text-gray-500 ml-2">
                   matching &quot;{searchTerm}&quot;
                 </span>
               )}
@@ -231,11 +231,11 @@ export function UsersManager({
           <CardContent>
             {filteredUsers.length === 0 ? (
               <div className="text-center py-12">
-                <Users className="h-12 w-12 text-oma-cocoa/30 mx-auto mb-4" />
+                <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-black mb-2">
                   No users found
                 </h3>
-                <p className="text-oma-cocoa/60">
+                <p className="text-gray-500">
                   {hasFilters
                     ? "Try adjusting your search or filter criteria."
                     : "No users have been created yet."}

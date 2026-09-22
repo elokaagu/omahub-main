@@ -335,7 +335,7 @@ export default function FAQManagementPage() {
           <h1 className="text-3xl font-canela text-gray-900 mb-2">
             FAQ Management
           </h1>
-          <p className="text-oma-cocoa/80">
+          <p className="text-gray-600">
             Manage frequently asked questions across the platform
           </p>
         </div>
@@ -627,7 +627,7 @@ export default function FAQManagementPage() {
               <CardContent>
                 {faqAnswerLooksLikeHtml(faq.answer) ? (
                   <div
-                    className="text-gray-700 markdown-content max-w-none [&_a]:text-oma-plum [&_a]:underline [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:mb-3 [&_p:last-child]:mb-0 [&_ul]:list-disc [&_ul]:pl-5"
+                    className="text-gray-700 markdown-content max-w-none [&_a]:text-gray-900 [&_a]:underline [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:mb-3 [&_p:last-child]:mb-0 [&_ul]:list-disc [&_ul]:pl-5"
                     dangerouslySetInnerHTML={{ __html: faq.answer }}
                   />
                 ) : (

@@ -322,10 +322,10 @@ export default function EditSpotlightPage() {
     return (
       <div className="max-w-4xl mx-auto px-6 py-8">
         <div className="text-center">
-          <h1 className="text-2xl font-canela text-oma-black mb-2">
+          <h1 className="text-2xl font-canela text-gray-900 mb-2">
             Access Denied
           </h1>
-          <p className="text-oma-cocoa mb-4">
+          <p className="text-gray-600 mb-4">
             You need super admin access to edit spotlight content.
           </p>
           <Button asChild variant="outline">
@@ -348,7 +348,7 @@ export default function EditSpotlightPage() {
     return (
       <div className="max-w-4xl mx-auto px-6 py-8">
         <div className="text-center">
-          <h1 className="text-2xl font-canela text-oma-black mb-4">
+          <h1 className="text-2xl font-canela text-gray-900 mb-4">
             Spotlight Content Not Found
           </h1>
           <Button asChild>
@@ -369,10 +369,10 @@ export default function EditSpotlightPage() {
           </Link>
         </Button>
         <div>
-          <h1 className="text-3xl font-canela text-oma-black mb-2">
+          <h1 className="text-3xl font-canela text-gray-900 mb-2">
             Edit Spotlight Content
           </h1>
-          <p className="text-oma-cocoa">
+          <p className="text-gray-600">
             Update the brand film used on this designer&apos;s product pages
           </p>
         </div>
@@ -475,7 +475,7 @@ export default function EditSpotlightPage() {
                   accept="image/png,image/jpeg,image/webp"
                   maxSize={10}
                 />
-                <p className="text-xs text-oma-cocoa/70 mt-1">
+                <p className="text-xs text-gray-500 mt-1">
                   High-resolution main spotlight image
                 </p>
               </div>
@@ -530,7 +530,7 @@ export default function EditSpotlightPage() {
                   accept="video/mp4,video/webm,video/quicktime"
                   maxSize={50}
                 />
-                <p className="text-xs text-oma-cocoa/70 mt-1">
+                <p className="text-xs text-gray-500 mt-1">
                   Upload brand campaign, interview, or behind-the-scenes video
                   (max 50MB)
                 </p>
@@ -547,7 +547,7 @@ export default function EditSpotlightPage() {
                   accept="image/png,image/jpeg,image/webp"
                   maxSize={5}
                 />
-                <p className="text-xs text-oma-cocoa/70 mt-1">
+                <p className="text-xs text-gray-500 mt-1">
                   Custom thumbnail for video preview (falls back to main image)
                 </p>
               </div>
@@ -608,7 +608,7 @@ export default function EditSpotlightPage() {
           <CardContent>
             {!formData.featured_products ||
             formData.featured_products.length === 0 ? (
-              <div className="text-center py-8 text-oma-cocoa">
+              <div className="text-center py-8 text-gray-600">
                 <Upload className="h-12 w-12 mx-auto mb-4 opacity-40" />
                 <p>No featured products added yet</p>
                 <p className="text-sm">

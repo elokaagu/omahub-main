@@ -218,7 +218,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
   if (!edition) {
     return (
       <div className="max-w-2xl mx-auto px-6 py-24 text-center">
-        <h1 className="text-2xl font-canela text-oma-black mb-2">
+        <h1 className="text-2xl font-canela text-gray-900 mb-2">
           Edition not found
         </h1>
         <Button asChild>
@@ -417,10 +417,10 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
             </NavigationLink>
           </Button>
           <div>
-            <h1 className="text-3xl font-canela text-oma-black mb-1">
+            <h1 className="text-3xl font-canela text-gray-900 mb-1">
               {contentDraft.title || edition.title}
             </h1>
-            <p className="text-oma-cocoa">
+            <p className="text-gray-600">
               Edition {contentDraft.edition_number || edition.number} · unified
               post editor
             </p>
@@ -428,7 +428,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
         </div>
       </BlurIn>
 
-      <BlurIn className="mb-12 border-b border-oma-cocoa/10 pb-12">
+      <BlurIn className="mb-12 border-b border-gray-200 pb-12">
         <EditionContentSection
           slug={slug}
           staticEdition={edition}
@@ -437,10 +437,10 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
       </BlurIn>
 
       <BlurIn className="mb-12">
-        <h2 className="text-lg font-semibold text-oma-black mb-1">
+        <h2 className="text-lg font-semibold text-gray-900 mb-1">
           Hero cover
         </h2>
-        <p className="text-sm text-oma-cocoa mb-4">
+        <p className="text-sm text-gray-600 mb-4">
           Leads the archive card and the edition page hero. Uploading a new one
           replaces the current cover.
         </p>
@@ -458,7 +458,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
             </div>
             <label
               htmlFor="edition-cover-upload"
-              className="mt-3 inline-flex cursor-pointer text-sm font-medium text-oma-plum hover:underline"
+              className="mt-3 inline-flex cursor-pointer text-sm font-medium text-gray-900 hover:underline"
             >
               Replace cover photo
             </label>
@@ -479,15 +479,15 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
           hidePreview
         />
         {isUploadingCover && (
-          <p className="mt-2 text-sm text-oma-cocoa">Saving cover photo…</p>
+          <p className="mt-2 text-sm text-gray-600">Saving cover photo…</p>
         )}
       </BlurIn>
 
       <BlurIn className="mb-12">
-        <h2 className="text-lg font-semibold text-oma-black mb-1">
+        <h2 className="text-lg font-semibold text-gray-900 mb-1">
           Story sidebar video
         </h2>
-        <p className="text-sm text-oma-cocoa mb-4">
+        <p className="text-sm text-gray-600 mb-4">
           Appears to the right of &quot;The story&quot; on the edition page (or
           left, if you choose below). Paste a <strong>Vimeo link</strong> (e.g.
           vimeo.com/1206857643), a direct <strong>.mp4 URL</strong>, or upload a
@@ -499,7 +499,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
           (() => {
             const parsed = parseEditionVideo(video.image_url);
             return (
-              <div className="mb-4 max-w-md overflow-hidden rounded-xl bg-oma-black ring-1 ring-oma-cocoa/10">
+              <div className="mb-4 max-w-md overflow-hidden rounded-xl bg-oma-black ring-1 ring-gray-200">
                 {parsed?.type === "vimeo" ? (
                   <div className="aspect-video w-full">
                     <iframe
@@ -522,7 +522,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
             );
           })()}
 
-        <label className="mb-2 block text-sm font-medium text-oma-black">
+        <label className="mb-2 block text-sm font-medium text-gray-900">
           Video URL
         </label>
         <input
@@ -533,7 +533,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
           className="mb-4 w-full max-w-lg rounded-md border border-gray-300 px-3 py-2 text-sm"
         />
 
-        <p className="mb-2 text-xs text-oma-cocoa/80">Or upload a video file</p>
+        <p className="mb-2 text-xs text-gray-600">Or upload a video file</p>
         <FileUpload
           key={`video-upload-${video?.id ?? "none"}`}
           onUploadComplete={(url) => {
@@ -550,7 +550,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
           hidePreview
         />
 
-        <label className="mb-2 mt-6 block text-sm font-medium text-oma-black">
+        <label className="mb-2 mt-6 block text-sm font-medium text-gray-900">
           Thumbnail URL (optional, for mp4 files)
         </label>
         <input
@@ -576,7 +576,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
           hidePreview
         />
 
-        <label className="mb-2 mt-6 block text-sm font-medium text-oma-black">
+        <label className="mb-2 mt-6 block text-sm font-medium text-gray-900">
           Position next to the story
         </label>
         <div className="mb-4 flex gap-2">
@@ -587,7 +587,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
               "rounded-md border px-3 py-2 text-sm",
               videoPosition === 0
                 ? "border-oma-black bg-oma-black text-white"
-                : "border-gray-300 text-oma-black hover:bg-gray-50",
+                : "border-gray-300 text-gray-900 hover:bg-gray-50",
             )}
           >
             Right of the text
@@ -599,7 +599,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
               "rounded-md border px-3 py-2 text-sm",
               videoPosition === 1
                 ? "border-oma-black bg-oma-black text-white"
-                : "border-gray-300 text-oma-black hover:bg-gray-50",
+                : "border-gray-300 text-gray-900 hover:bg-gray-50",
             )}
           >
             Left of the text
@@ -647,10 +647,10 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
 
       {storyPhotos.length > 0 && (
         <BlurIn className="mb-12 rounded-xl border border-amber-200 bg-amber-50/60 p-5">
-          <h2 className="text-lg font-semibold text-oma-black mb-1">
+          <h2 className="text-lg font-semibold text-gray-900 mb-1">
             Legacy inline story photos
           </h2>
-          <p className="text-sm text-oma-cocoa mb-4">
+          <p className="text-sm text-gray-600 mb-4">
             These were placed between plain-text paragraphs. They are merged
             into the story editor above on load — save the story to keep them on
             the public page. Use the add photo button in the toolbar for new
@@ -702,7 +702,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
                     </AlertDialogContent>
                   </AlertDialog>
                 </div>
-                <p className="text-sm text-oma-cocoa">
+                <p className="text-sm text-gray-600">
                   {describeStoryPhotoPosition(
                     image.display_order,
                     storyParagraphs.length,
@@ -715,10 +715,10 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
       )}
 
       <BlurIn className="mb-12">
-        <h2 className="text-lg font-semibold text-oma-black mb-1">
+        <h2 className="text-lg font-semibold text-gray-900 mb-1">
           In pictures (gallery)
         </h2>
-        <p className="text-sm text-oma-cocoa mb-4">
+        <p className="text-sm text-gray-600 mb-4">
           Photo grid near the bottom of the edition page. Add images inline in
           the story editor above, or collect event photography here.
         </p>
@@ -787,7 +787,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
           hidePreview
         />
         {isUploadingGallery && (
-          <p className="mt-2 text-sm text-oma-cocoa">Adding photo…</p>
+          <p className="mt-2 text-sm text-gray-600">Adding photo…</p>
         )}
       </BlurIn>
 
@@ -798,10 +798,10 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
       />
 
       <BlurIn className="mb-12">
-        <h2 className="text-lg font-semibold text-oma-black mb-1">
+        <h2 className="text-lg font-semibold text-gray-900 mb-1">
           Partners (bottom of page)
         </h2>
-        <p className="text-sm text-oma-cocoa mb-4">
+        <p className="text-sm text-gray-600 mb-4">
           Logos and names shown in the &quot;Our partners&quot; section at the
           very bottom of the edition page — after the story, gallery, and brand
           lineup. Any partner name set in lib/data/editions.ts also appears
@@ -820,9 +820,9 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
                   alt={partner.alt_text || "Partner"}
                   className="h-10 w-20 shrink-0 object-contain"
                 />
-                <p className="text-sm text-oma-black">
+                <p className="text-sm text-gray-900">
                   {partner.alt_text || (
-                    <span className="italic text-oma-cocoa/60">Unnamed</span>
+                    <span className="italic text-gray-500">Unnamed</span>
                   )}
                 </p>
                 <AlertDialog>
@@ -831,7 +831,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
                       type="button"
                       aria-label="Remove partner"
                       disabled={deletingId === partner.id}
-                      className="flex h-7 w-7 items-center justify-center rounded-full text-oma-cocoa/60 transition-colors hover:bg-red-50 hover:text-red-600"
+                      className="flex h-7 w-7 items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-red-50 hover:text-red-600"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -860,7 +860,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
           </div>
         )}
 
-        <label className="mb-2 block text-sm font-medium text-oma-black">
+        <label className="mb-2 block text-sm font-medium text-gray-900">
           Partner name
         </label>
         <input
@@ -885,7 +885,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
           hidePreview
         />
         {isUploadingPartner && (
-          <p className="mt-2 text-sm text-oma-cocoa">Adding partner logo…</p>
+          <p className="mt-2 text-sm text-gray-600">Adding partner logo…</p>
         )}
       </BlurIn>
     </div>

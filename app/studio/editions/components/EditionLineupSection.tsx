@@ -137,10 +137,10 @@ export function EditionLineupSection({
 
   return (
     <BlurIn className="mb-12">
-      <h2 className="text-lg font-semibold text-oma-black mb-1">
+      <h2 className="text-lg font-semibold text-gray-900 mb-1">
         Lineup brands
       </h2>
-      <p className="text-sm text-oma-cocoa mb-4">
+      <p className="text-sm text-gray-600 mb-4">
         Brands that showed at this edition — rendered as the scrolling &quot;The
         lineup&quot; row on the edition page, using the same cards as the
         homepage brand rows. The archive card label comes from Lineup label in
@@ -204,7 +204,7 @@ export function EditionLineupSection({
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
         <div className="flex-1 max-w-md">
-          <label className="mb-2 block text-sm font-medium text-oma-black">
+          <label className="mb-2 block text-sm font-medium text-gray-900">
             Add brand from directory
           </label>
           <Select
@@ -233,14 +233,14 @@ export function EditionLineupSection({
               ))}
             </SelectContent>
           </Select>
-          <p className="mt-2 text-xs text-oma-cocoa/70">
+          <p className="mt-2 text-xs text-gray-500">
             Selecting a brand adds it to the lineup and saves immediately.
           </p>
         </div>
       </div>
 
       {lineupBrands.length === 0 && (
-        <p className="mt-4 text-sm text-oma-cocoa/70">
+        <p className="mt-4 text-sm text-gray-500">
           No lineup brands yet. Add brands above to populate the scrolling row
           at the bottom of the edition page.
         </p>

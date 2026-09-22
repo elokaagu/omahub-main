@@ -107,13 +107,13 @@ export default function ManagementStatistics({
     return (
       <div className={`space-y-6 ${className}`}>
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-canela text-oma-plum">
+          <h2 className="text-2xl font-canela text-gray-900">
             Platform Statistics
           </h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
           {[...Array(5)].map((_, i) => (
-            <Card key={i} className="border-oma-beige animate-pulse">
+            <Card key={i} className="border-gray-200 animate-pulse">
               <CardContent className="p-6">
                 <div className="h-4 bg-gray-200 rounded mb-2"></div>
                 <div className="h-8 bg-gray-200 rounded mb-2"></div>
@@ -130,17 +130,17 @@ export default function ManagementStatistics({
     return (
       <div className={`space-y-6 ${className}`}>
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-canela text-oma-plum">
+          <h2 className="text-2xl font-canela text-gray-900">
             Platform Statistics
           </h2>
           <Button onClick={() => fetchStatistics(false)} variant="outline">
             Retry
           </Button>
         </div>
-        <Card className="border-oma-beige">
+        <Card className="border-gray-200">
           <CardContent className="p-6 text-center">
-            <AlertTriangle className="h-12 w-12 text-oma-cocoa mx-auto mb-4" />
-            <p className="text-oma-cocoa">
+            <AlertTriangle className="h-12 w-12 text-gray-600 mx-auto mb-4" />
+            <p className="text-gray-600">
               {error || "Failed to load statistics"}
             </p>
           </CardContent>
@@ -154,7 +154,7 @@ export default function ManagementStatistics({
       title: "Total Brands",
       value: statistics.total_brands,
       icon: Users,
-      color: "text-oma-plum",
+      color: "text-gray-900",
     },
     {
       title: "Verified Brands",
@@ -198,10 +198,10 @@ export default function ManagementStatistics({
     <div className={`space-y-6 ${className}`}>
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-canela text-oma-plum">
+          <h2 className="text-2xl font-canela text-gray-900">
             Platform Statistics
           </h2>
-          <p className="text-sm text-oma-cocoa mt-1">
+          <p className="text-sm text-gray-600 mt-1">
             Last updated: {formatLastUpdated(statistics.last_updated)}
             <Badge
               variant="outline"
@@ -230,10 +230,10 @@ export default function ManagementStatistics({
           return (
             <Card
               key={index}
-              className="border-oma-beige hover:shadow-md transition-shadow"
+              className="border-gray-200 hover:shadow-md transition-shadow"
             >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-oma-cocoa">
+                <CardTitle className="text-sm font-medium text-gray-600">
                   {card.title}
                 </CardTitle>
                 <Icon className={`h-4 w-4 ${card.color}`} />
@@ -243,7 +243,7 @@ export default function ManagementStatistics({
                   {card.value.toLocaleString()}
                 </div>
                 {card.percentage !== undefined && (
-                  <p className="text-xs text-oma-cocoa mt-1">
+                  <p className="text-xs text-gray-600 mt-1">
                     {card.percentage}% of total
                   </p>
                 )}
@@ -254,19 +254,19 @@ export default function ManagementStatistics({
       </div>
 
       {/* Information Card */}
-      <Card className="border-oma-beige">
+      <Card className="border-gray-200">
         <CardHeader>
-          <CardTitle className="text-oma-plum font-canela">
+          <CardTitle className="text-gray-900 font-canela">
             Real-time Statistics
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div>
-              <h4 className="font-medium text-oma-plum mb-2">
+              <h4 className="font-medium text-gray-900 mb-2">
                 Automatic Updates
               </h4>
-              <ul className="space-y-1 text-oma-cocoa">
+              <ul className="space-y-1 text-gray-600">
                 <li>
                   • Statistics update automatically when brands are
                   added/deleted
@@ -277,8 +277,8 @@ export default function ManagementStatistics({
               </ul>
             </div>
             <div>
-              <h4 className="font-medium text-oma-plum mb-2">Definitions</h4>
-              <ul className="space-y-1 text-oma-cocoa">
+              <h4 className="font-medium text-gray-900 mb-2">Definitions</h4>
+              <ul className="space-y-1 text-gray-600">
                 <li>
                   • <strong>Active Brands:</strong> Brands with reviews or
                   created in last 90 days

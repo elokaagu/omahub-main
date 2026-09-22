@@ -68,20 +68,20 @@ export function LeadsList({
       {leads.map((lead, index) => (
         <BlurIn key={lead.id} delay={blurStagger(index)}>
         <Card
-          className="border border-oma-gold/10 bg-white hover:shadow-md transition-shadow"
+          className="border border-gray-200 bg-white hover:shadow-md transition-shadow"
         >
           <CardContent className="pt-6">
             <div className="flex items-start justify-between">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-3 mb-2 flex-wrap">
-                  <h3 className="text-lg font-semibold text-oma-plum">
+                  <h3 className="text-lg font-semibold text-gray-900">
                     {lead.customer_name}
                   </h3>
                   <Badge className={getStatusColor(lead.status)}>{lead.status}</Badge>
                   <Badge className={getPriorityColor(lead.priority)}>{lead.priority}</Badge>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-oma-cocoa">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-gray-600">
                   <div>
                     <span className="font-medium">Email:</span>{" "}
                     {lead.contact_email?.trim() ? lead.contact_email : "-"}
@@ -120,8 +120,8 @@ export function LeadsList({
 
                 {lead.notes && (
                   <div className="mt-3">
-                    <span className="font-medium text-oma-cocoa">Notes:</span>
-                    <p className="text-sm text-oma-cocoa/80 mt-1">{lead.notes}</p>
+                    <span className="font-medium text-gray-600">Notes:</span>
+                    <p className="text-sm text-gray-600 mt-1">{lead.notes}</p>
                   </div>
                 )}
               </div>
@@ -132,7 +132,7 @@ export function LeadsList({
                   onValueChange={(value) => onStatusChange(lead.id, value)}
                   disabled={updatingLeadId === lead.id}
                 >
-                  <SelectTrigger className="w-32 border-oma-cocoa/20 focus:border-oma-plum">
+                  <SelectTrigger className="w-32 border-gray-200 focus:border-gray-400">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>

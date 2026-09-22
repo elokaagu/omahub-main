@@ -46,7 +46,7 @@ export function AutosaveIndicator({
           ? "bg-red-50 text-red-700 ring-1 ring-red-200"
           : status === "pending"
             ? "bg-amber-50 text-amber-800 ring-1 ring-amber-200"
-            : "bg-oma-cream/80 text-oma-cocoa ring-1 ring-oma-cocoa/10",
+            : "bg-gray-50 text-gray-600 ring-1 ring-gray-200",
         className,
       )}
       aria-live="polite"

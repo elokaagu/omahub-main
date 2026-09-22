@@ -59,8 +59,8 @@ export function ApplicationsManager({
     return (
       <div className="container mx-auto px-6 py-8">
         <div className="text-center">
-          <div className="rounded-full h-12 w-12 border-b-2 border-oma-plum mx-auto" />
-          <p className="mt-4 text-oma-cocoa">Loading applications…</p>
+          <div className="rounded-full h-12 w-12 border-b-2 border-gray-300 mx-auto" />
+          <p className="mt-4 text-gray-600">Loading applications…</p>
         </div>
       </div>
     );
