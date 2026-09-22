@@ -10,7 +10,11 @@ import {
 import { resolveBrandProfileImageUrl } from "@/lib/brands/directoryListingImage";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { getCataloguesPubliclyVisible } from "@/lib/services/catalogueVisibilitySetting";
-import ClientBrandProfile from "./ClientBrandProfile";
+import { getProductsByBrand } from "@/lib/services/productService";
+import { BrandHero } from "./BrandHero";
+import { BrandAbout } from "./BrandAbout";
+import { BrandCatalogueGrid } from "./BrandCatalogueGrid";
+import { BrandProductGrid } from "./BrandProductGrid";
 import { getCachedBrandById } from "./cachedBrand";
 import { mapBrandToProfileData } from "./brandProfileMapper";
 
@@ -111,6 +115,16 @@ export default async function BrandPage({ params }: BrandPageProps) {
   );
   const cataloguesPubliclyVisible = await getCataloguesPubliclyVisible();
 
+  // Products only load when catalogues are public (Studio > Settings).
+  let products: Awaited<ReturnType<typeof getProductsByBrand>> = [];
+  if (cataloguesPubliclyVisible) {
+    try {
+      products = await getProductsByBrand(params.id);
+    } catch (error) {
+      console.error("brand_products_error", error);
+    }
+  }
+
   const brandImage =
     resolveBrandProfileImageUrl(brand as any, applicationImageUrls) ||
     brand.image;
@@ -144,12 +158,23 @@ export default async function BrandPage({ params }: BrandPageProps) {
           ]),
         ]}
       />
-      <ClientBrandProfile
-      key={params.id}
-      brandId={params.id}
-      initialBrandData={initialBrandData}
-      cataloguesPubliclyVisible={cataloguesPubliclyVisible}
-    />
+      <main className="min-h-screen bg-white">
+        <BrandHero brand={initialBrandData} />
+        <BrandAbout brand={initialBrandData} />
+        {cataloguesPubliclyVisible && (
+          <>
+            <BrandCatalogueGrid collections={initialBrandData.collections} />
+            <BrandProductGrid
+              products={products}
+              brand={{
+                price_range: brand.price_range ?? undefined,
+                location: brand.location ?? undefined,
+                currency: brand.currency ?? undefined,
+              }}
+            />
+          </>
+        )}
+      </main>
     </>
   );
 }
