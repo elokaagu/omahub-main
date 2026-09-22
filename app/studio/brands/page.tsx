@@ -1,228 +1,37 @@
-"use client";
+import { Package } from "lucide-react";
+import { permissionsForProfileRole } from "@/lib/services/permissionsService";
+import { getStudioSession } from "@/lib/studio/session";
+import { brandAssetsPublicUrl } from "@/lib/brands/applicationBrandImages";
+import { StudioLoadError } from "@/components/studio/StudioLoadError";
+import { BrandsTable, type StudioBrandRow } from "./BrandsTable";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
-import {
-  getUserPermissions,
-  Permission,
-} from "@/lib/services/permissionsService";
-import { useAuth } from "@/contexts/AuthContext";
-import { createClient } from "@/lib/supabase-unified";
-import Link from "next/link";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Brand } from "@/lib/supabase";
-import {
-  PlusCircle,
-  Search,
-  Star,
-  CheckCircle,
-  Package,
-} from "@/components/ui/icons";
-import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { useRouter } from "next/navigation";
-import { AuthImage } from "@/components/ui/auth-image";
-import { Loading } from "@/components/ui/loading";
-import { toast } from "sonner";
-import { useStudioOptimization } from "@/lib/hooks/useStudioOptimization";
-import { getPrimaryBrandImagePublicUrl } from "@/lib/brands/brandEditMedia";
-import { BlurIn, BlurInTableRow } from "@/components/studio/BlurIn";
+export const dynamic = "force-dynamic";
 
-type ResolvedStudioAccess = {
-  role: string;
-  owned_brands: string[];
+const LIST_COLUMNS =
+  "id, name, description, category, location, rating, is_verified, brand_images(storage_path)";
+
+type BrandListQueryRow = Omit<StudioBrandRow, "imageUrl"> & {
+  brand_images: { storage_path: string | null }[] | null;
 };
 
-function inferRoleFromPermissions(
-  permissions: Permission[],
-  fallbackRole?: string | null
-): string {
-  if (fallbackRole) return fallbackRole;
-  if (permissions.includes("studio.settings.manage")) return "super_admin";
-  // Brand admins can manage products; plain admins cannot.
-  if (permissions.includes("studio.products.manage")) return "brand_admin";
-  if (permissions.includes("studio.brands.manage")) return "admin";
-  return "user";
+function toRow(brand: BrandListQueryRow): StudioBrandRow {
+  const storagePath = brand.brand_images?.[0]?.storage_path;
+  const { brand_images: _images, ...rest } = brand;
+  return {
+    ...rest,
+    imageUrl: storagePath ? brandAssetsPublicUrl(storagePath) : "",
+  };
 }
 
-export default function BrandsPage() {
-  const { user } = useAuth();
-  const supabase = createClient();
-  const [brands, setBrands] = useState<Brand[]>([]);
-  const [userPermissions, setUserPermissions] = useState<Permission[]>([]);
-  const [resolvedAccess, setResolvedAccess] =
-    useState<ResolvedStudioAccess | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
-  const router = useRouter();
+/**
+ * Studio brands list, rendered on the server. Admins see every brand;
+ * brand admins see the brands assigned to them.
+ */
+export default async function BrandsPage() {
+  const { supabase, profile } = await getStudioSession();
+  const role = profile?.role ?? "user";
 
-  const { controlledRefresh, forceRefresh } = useStudioOptimization({
-    debounceMs: 1000,
-    maxRefreshIntervalMs: 30000,
-    enableRealTimeUpdates: true,
-  });
-
-  const fetchData = useCallback(async () => {
-    if (!user) {
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-    setLoadError(null);
-    try {
-      const [permissions, profileResult] = await Promise.all([
-        getUserPermissions(user.id),
-        supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
-      ]);
-
-      setUserPermissions(permissions);
-
-      if (profileResult.error) {
-        console.error("Error fetching profile:", profileResult.error);
-      }
-
-      const profile = profileResult.error ? null : profileResult.data;
-      const effectiveRole = inferRoleFromPermissions(
-        permissions,
-        profile?.role ?? user.role ?? null
-      );
-      const effectiveOwned = profile?.owned_brands ?? user.owned_brands ?? [];
-
-      setResolvedAccess({
-        role: String(effectiveRole),
-        owned_brands: Array.isArray(effectiveOwned) ? [...effectiveOwned] : [],
-      });
-
-      if (!permissions.includes("studio.brands.manage")) {
-        setBrands([]);
-        return;
-      }
-
-      const isAdmin = effectiveRole === "admin" || effectiveRole === "super_admin";
-      const isBrandOwner = effectiveRole === "brand_admin";
-      const ownedBrandIds = effectiveOwned || [];
-
-      if (isAdmin) {
-        const { data: fetchedBrands, error } = await supabase
-          .from("brands")
-          .select("*, brand_images(*)")
-          .order("name");
-
-        if (error) throw error;
-        setBrands(fetchedBrands || []);
-      } else if (isBrandOwner && ownedBrandIds.length > 0) {
-        const { data: fetchedBrands, error } = await supabase
-          .from("brands")
-          .select("*, brand_images(*)")
-          .in("id", ownedBrandIds)
-          .order("name");
-
-        if (error) throw error;
-        setBrands(fetchedBrands || []);
-      } else {
-        setBrands([]);
-      }
-    } catch (error) {
-      console.error("Error fetching data:", error);
-      const message =
-        "We couldn’t load brands. Check your connection and try again.";
-      setLoadError(message);
-      toast.error("Failed to load data");
-    } finally {
-      setLoading(false);
-    }
-  }, [user, supabase]);
-
-  useEffect(() => {
-    controlledRefresh(fetchData);
-  }, [fetchData, controlledRefresh]);
-
-  useEffect(() => {
-    if (!user) {
-      setLoadError(null);
-      setResolvedAccess(null);
-    }
-  }, [user]);
-
-  const filteredBrands = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
-    if (!query) return brands;
-    return brands.filter(
-      (brand) =>
-        brand.name.toLowerCase().includes(query) ||
-        (brand.description?.toLowerCase() || "").includes(query) ||
-        brand.category.toLowerCase().includes(query) ||
-        brand.location.toLowerCase().includes(query)
-    );
-  }, [brands, searchQuery]);
-
-  const handleBrandClick = (brandId: string) => {
-    router.push(`/studio/brands/${encodeURIComponent(brandId.trim())}`);
-  };
-
-  const roleForUi = resolvedAccess?.role ?? user?.role ?? "user";
-  const isBrandOwner = roleForUi === "brand_admin";
-  const isAdmin = roleForUi === "admin" || roleForUi === "super_admin";
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <Loading />
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center">
-          <Package className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-4 text-lg font-semibold">Please Sign In</h3>
-          <p className="mt-2 text-gray-500">
-            You need to be signed in to manage brands.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  if (loadError) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh] px-4">
-        <div className="text-center max-w-md">
-          <Package className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-4 text-lg font-semibold text-gray-900">
-            Something went wrong
-          </h3>
-          <p className="mt-2 text-gray-600">{loadError}</p>
-          <Button
-            className="mt-6"
-            variant="outline"
-            onClick={() => void forceRefresh(fetchData)}
-          >
-            Try again
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  if (!userPermissions.includes("studio.brands.manage")) {
+  if (!permissionsForProfileRole(role).includes("studio.brands.manage")) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
@@ -236,175 +45,30 @@ export default function BrandsPage() {
     );
   }
 
+  const isAdmin = role === "admin" || role === "super_admin";
+  const isBrandOwner = role === "brand_admin";
+  const ownedBrandIds = profile?.owned_brands ?? [];
+
+  let brands: StudioBrandRow[] = [];
+  if (isAdmin || (isBrandOwner && ownedBrandIds.length > 0)) {
+    let query = supabase.from("brands").select(LIST_COLUMNS).order("name");
+    if (!isAdmin) query = query.in("id", ownedBrandIds);
+
+    const { data, error } = await query;
+    if (error) {
+      console.error("[studio/brands]", error.message);
+      return (
+        <StudioLoadError message="We couldn’t load brands. Check your connection and try again." />
+      );
+    }
+    brands = ((data ?? []) as unknown as BrandListQueryRow[]).map(toRow);
+  }
+
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-      <BlurIn className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-canela text-gray-900">
-            {isBrandOwner ? "Your Brands" : "Brands"}
-          </h1>
-          {isBrandOwner && (
-            <p className="mt-1 text-sm text-gray-600">
-              Manage your brand information and settings
-            </p>
-          )}
-        </div>
-        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
-          {isAdmin && (
-            <Button
-              asChild
-              className="w-full bg-oma-plum hover:bg-oma-plum/90 sm:w-auto"
-            >
-              <Link
-                href="/studio/brands/create"
-                className="flex items-center justify-center gap-2"
-              >
-                <PlusCircle className="h-4 w-4" />
-                Add New Brand
-              </Link>
-            </Button>
-          )}
-        </div>
-      </BlurIn>
-
-      <BlurIn delay={0.08} className="mb-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              {isBrandOwner ? "Your Brand Management" : "Brand Management"}
-            </CardTitle>
-            <CardDescription>
-              {isBrandOwner
-                ? "Manage your brands in the directory"
-                : "Manage all brands in the directory"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder="Search brands by name, category, or location..."
-                className="pl-10"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-          </CardContent>
-        </Card>
-      </BlurIn>
-
-      {filteredBrands.length === 0 ? (
-        <BlurIn delay={0.12}>
-          <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-8 text-center">
-            <Package className="mx-auto mb-4 h-12 w-12 text-gray-400" />
-            <p className="mb-4 text-gray-600">
-              {searchQuery
-                ? "No brands match your search criteria"
-                : isBrandOwner
-                  ? "You don't have any brands assigned to your account yet."
-                  : "No brands have been added yet"}
-            </p>
-            {!searchQuery && isAdmin && (
-              <Button asChild className="bg-oma-plum hover:bg-oma-plum/90">
-                <Link href="/studio/brands/create">Create Your First Brand</Link>
-              </Button>
-            )}
-          </div>
-        </BlurIn>
-      ) : (
-        <BlurIn delay={0.12}>
-          <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-            <div className="border-b border-gray-200 p-4">
-              <p className="text-sm text-gray-500">
-                Showing {filteredBrands.length} brand
-                {filteredBrands.length === 1 ? "" : "s"}
-                {isBrandOwner && " assigned to your account"}
-              </p>
-            </div>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Brand</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Location</TableHead>
-                  <TableHead>Rating</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredBrands.map((brand, index) => {
-                  const imageUrl = getPrimaryBrandImagePublicUrl(brand);
-                  return (
-                    <BlurInTableRow
-                      key={brand.id}
-                      delay={Math.min(index, 10) * 0.05}
-                      className="cursor-pointer hover:bg-gray-50"
-                      onClick={() => handleBrandClick(brand.id)}
-                    >
-                      <TableCell className="font-medium">
-                        <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-md bg-gray-100">
-                            {imageUrl ? (
-                              <AuthImage
-                                src={imageUrl}
-                                alt={brand.name}
-                                width={40}
-                                height={40}
-                                aspectRatio="square"
-                                className="h-full w-full"
-                                sizes="40px"
-                                quality={55}
-                              />
-                            ) : null}
-                          </div>
-                          <span>{brand.name}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>{brand.category}</TableCell>
-                      <TableCell>{brand.location}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center">
-                          <Star className="mr-1 h-4 w-4 text-yellow-400" />
-                          {brand.rating && brand.rating > 0 ? (
-                            brand.rating.toFixed(1)
-                          ) : (
-                            <span className="text-gray-400">No ratings yet</span>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {brand.is_verified ? (
-                          <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
-                            <CheckCircle className="mr-1 h-3 w-3" />
-                            Verified
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800">
-                            Unverified
-                          </span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleBrandClick(brand.id);
-                          }}
-                        >
-                          View
-                        </Button>
-                      </TableCell>
-                    </BlurInTableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
-        </BlurIn>
-      )}
-    </div>
+    <BrandsTable
+      brands={brands}
+      isBrandOwner={isBrandOwner}
+      canCreate={isAdmin}
+    />
   );
 }

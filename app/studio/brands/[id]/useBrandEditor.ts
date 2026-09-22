@@ -358,6 +358,9 @@ export function useBrandEditor(brandId: string) {
       if (result.brand) {
         setBrand(result.brand as Brand);
       }
+      // The brands list is server-rendered; drop the router's cached copy
+      // so going back to it shows this change.
+      router.refresh();
     } catch (error) {
       console.error("Error updating brand:", error);
       toast.error(
@@ -379,6 +382,7 @@ export function useBrandEditor(brandId: string) {
       await deleteBrand(user.id, brand.id);
       toast.success("Brand deleted successfully");
       router.push("/studio/brands");
+      router.refresh();
     } catch (error) {
       console.error("Error deleting brand:", error);
       toast.error("Failed to delete brand");

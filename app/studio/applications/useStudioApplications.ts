@@ -8,10 +8,18 @@ import {
 } from "./studioApplicationsApi";
 import { devLog, devWarn } from "./devLog";
 
-export function useStudioApplications(fetchEnabled: boolean) {
-  const [applications, setApplications] = useState<DesignerApplication[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+/**
+ * Applications list state. The first page of data is rendered on the server
+ * and passed in; the API is only called to refresh after a change or retry.
+ */
+export function useStudioApplications(
+  initialApplications: DesignerApplication[],
+  initialError: string | null = null,
+) {
+  const [applications, setApplications] =
+    useState<DesignerApplication[]>(initialApplications);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(initialError);
   const [selectedApplication, setSelectedApplication] =
     useState<DesignerApplication | null>(null);
   const [updatingApplicationId, setUpdatingApplicationId] = useState<
@@ -66,15 +74,6 @@ export function useStudioApplications(fetchEnabled: boolean) {
   useEffect(() => {
     return () => fetchAbortRef.current?.abort();
   }, []);
-
-  useEffect(() => {
-    if (!fetchEnabled) {
-      fetchAbortRef.current?.abort();
-      setLoading(false);
-      return;
-    }
-    fetchApplications();
-  }, [fetchEnabled, fetchApplications]);
 
   const updateApplicationStatus = useCallback(
     async (

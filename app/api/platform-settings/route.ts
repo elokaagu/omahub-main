@@ -2,82 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { createServerSupabaseClient } from "@/lib/supabase-unified";
 import { parsePlatformSettingsUpdate } from "@/lib/validation/platformSettingsBody";
-
-const SETTING_KEYS = [
-  "about_omahub",
-  "our_story",
-  "tailored_services",
-  "hero_video_id",
-  "welcome_video_id",
-  "hero_media_url",
-  "customer_signup_enabled",
-  "catalogues_publicly_visible",
-] as const;
-
-const MAP_DB_TO_API: Record<
-  (typeof SETTING_KEYS)[number],
-  | "about"
-  | "ourStory"
-  | "tailoredServices"
-  | "heroVideoId"
-  | "welcomeVideoId"
-  | "heroMediaUrl"
-  | "customerSignupEnabled"
-  | "cataloguesPubliclyVisible"
-> = {
-  about_omahub: "about",
-  our_story: "ourStory",
-  tailored_services: "tailoredServices",
-  hero_video_id: "heroVideoId",
-  welcome_video_id: "welcomeVideoId",
-  hero_media_url: "heroMediaUrl",
-  customer_signup_enabled: "customerSignupEnabled",
-  catalogues_publicly_visible: "cataloguesPubliclyVisible",
-};
-
-/**
- * No row yet = customer signup is off: OmaHub isn't selling directly through
- * the site yet, so there's no reason to push customers to create accounts
- * until preorders launch with the next edition.
- */
-const DEFAULT_CUSTOMER_SIGNUP_ENABLED = "false";
-const DEFAULT_CATALOGUES_PUBLICLY_VISIBLE = "false";
+import { readPlatformSettings } from "@/lib/studio/platformSettings";
 
 export async function GET() {
   try {
     const supabase = await createServerSupabaseClient();
-    const { data, error } = await supabase
-      .from("platform_settings")
-      .select("key, value")
-      .in("key", [...SETTING_KEYS]);
-
-    if (error) {
-      console.error("platform_settings_get_failed", error.message);
-      return NextResponse.json(
-        { error: "Failed to fetch platform settings" },
-        { status: 500 }
-      );
-    }
-
-    const response = {
-      about: "",
-      ourStory: "",
-      tailoredServices: "",
-      heroVideoId: "",
-      welcomeVideoId: "",
-      heroMediaUrl: "",
-      customerSignupEnabled: DEFAULT_CUSTOMER_SIGNUP_ENABLED,
-      cataloguesPubliclyVisible: DEFAULT_CATALOGUES_PUBLICLY_VISIBLE,
-    };
-
-    for (const row of data ?? []) {
-      const key = row.key as (typeof SETTING_KEYS)[number];
-      const apiKey = MAP_DB_TO_API[key];
-      if (!apiKey) continue;
-      response[apiKey] = typeof row.value === "string" ? row.value : "";
-    }
-
-    return NextResponse.json(response);
+    return NextResponse.json(await readPlatformSettings(supabase));
   } catch (err) {
     console.error(
       "platform_settings_get_exception",

@@ -242,6 +242,7 @@ export default function CreateBrandPage() {
 
       toast.success("Brand created successfully!");
       router.push(`/studio/brands/${data.brand.id}`);
+      router.refresh();
     } catch (error) {
       console.error("Error creating brand:", error);
       if (error instanceof Error) {
