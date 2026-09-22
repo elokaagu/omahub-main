@@ -67,6 +67,7 @@ export async function POST(req: NextRequest) {
       heroMediaUrl,
       customerSignupEnabled,
       cataloguesPubliclyVisible,
+      archiveHeroImage,
     } = parsed.data;
     const now = new Date().toISOString();
 
@@ -101,6 +102,13 @@ export async function POST(req: NextRequest) {
       updates.push({
         key: "catalogues_publicly_visible",
         value: cataloguesPubliclyVisible,
+        updated_at: now,
+      });
+    }
+    if (archiveHeroImage !== undefined) {
+      updates.push({
+        key: "archive_hero_image",
+        value: archiveHeroImage,
         updated_at: now,
       });
     }

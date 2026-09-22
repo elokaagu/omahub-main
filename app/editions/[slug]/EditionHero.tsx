@@ -2,11 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { EditionFactsBar, type EditionFact } from "./EditionFactsBar";
-import {
-  editionDisplayTitle,
-  getAdjacentEditions,
-  type Edition,
-} from "@/lib/data/editions";
+import { editionDisplayTitle, type Edition } from "@/lib/data/editions";
 
 
 type EditionHeroProps = {
@@ -14,6 +10,9 @@ type EditionHeroProps = {
   coverImage?: string;
   /** City / Country / Venue / Date / Lineup - shown in the strip under the image. */
   facts: EditionFact[];
+  /** Neighbouring editions for the prev/next controls; null hides one. */
+  previous?: Edition | null;
+  next?: Edition | null;
 };
 
 /**
@@ -21,9 +20,14 @@ type EditionHeroProps = {
  * previous/next edition controls, plus the facts strip - sized together so
  * both fit in the first screen below the site header.
  */
-export function EditionHero({ edition, coverImage, facts }: EditionHeroProps) {
+export function EditionHero({
+  edition,
+  coverImage,
+  facts,
+  previous,
+  next,
+}: EditionHeroProps) {
   const title = editionDisplayTitle(edition);
-  const { previous, next } = getAdjacentEditions(edition.slug);
 
   return (
     <section

@@ -1,6 +1,7 @@
 import "server-only";
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { getAllEditions } from "@/lib/data/editions";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { publicSupabaseClient } from "@/lib/supabase-public";
+import { getHydratedEditions } from "@/lib/editions/hydrateEditions";
 import { filterUnapprovedBrands } from "@/lib/services/brandService";
 import { brandAssetsPublicUrl } from "@/lib/brands/applicationBrandImages";
 import { CATALOGUES_PUBLICLY_VISIBLE_KEY } from "@/lib/services/catalogueVisibilitySetting";
@@ -44,20 +45,6 @@ type CatalogueRow = {
 
 type ProductRow = CatalogueRow & { category: string | null };
 
-let anonClient: SupabaseClient | null = null;
-
-/** Signed-out client: search only ever returns public data. */
-function publicClient(): SupabaseClient {
-  if (!anonClient) {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    if (!url || !key) throw new Error("Supabase environment is not configured");
-    anonClient = createClient(url, key, {
-      auth: { persistSession: false, autoRefreshToken: false },
-    });
-  }
-  return anonClient;
-}
 
 function brandCover(brand: BrandRow): string | undefined {
   const images = brand.brand_images ?? [];
@@ -172,8 +159,10 @@ async function searchCatalogueItems(
   };
 }
 
-function searchEditions(query: string): SearchHit[] {
-  const matches = getAllEditions().filter((edition) =>
+/** Includes editions created in Studio, not just the seeded ones. */
+async function searchEditions(query: string): Promise<SearchHit[]> {
+  const editions = await getHydratedEditions();
+  const matches = editions.filter((edition) =>
     matchesAllTerms(
       `${edition.title} edition ${edition.number} ${edition.city} ${edition.country} ${edition.venue ?? ""}`,
       query,
@@ -198,15 +187,16 @@ function searchEditions(query: string): SearchHit[] {
  * A failing source is logged and skipped rather than failing the search.
  */
 export async function searchSite(query: string): Promise<SearchResponse> {
-  const db = publicClient();
+  const db = publicSupabaseClient();
 
-  const [brands, catalogueItems] = await Promise.allSettled([
+  const [brands, catalogueItems, editionHits] = await Promise.allSettled([
     searchBrands(db, query),
     cataloguesArePublic(db).then((visible) =>
       visible
         ? searchCatalogueItems(db, query)
         : { collections: [], products: [] },
     ),
+    searchEditions(query),
   ]);
 
   const settled = <T,>(result: PromiseSettledResult<T>, fallback: T): T => {
@@ -223,7 +213,7 @@ export async function searchSite(query: string): Promise<SearchResponse> {
     ["brand", settled(brands, [])],
     ["collection", collections],
     ["product", products],
-    ["edition", searchEditions(query)],
+    ["edition", settled(editionHits, [])],
     ["page", searchSitePages(query, LIMITS.page)],
   ];
 

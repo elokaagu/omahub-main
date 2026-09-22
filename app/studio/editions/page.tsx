@@ -1,4 +1,8 @@
-import { getAllEditions } from "@/lib/data/editions";
+import { getHydratedEditions } from "@/lib/editions/hydrateEditions";
+import { readPlatformSettings } from "@/lib/studio/platformSettings";
+import { pickPastEditions } from "@/lib/editions/hydrateEditions";
+import { NewEditionButton } from "./NewEditionButton";
+import { ArchiveHeroCard } from "./ArchiveHeroCard";
 import { getAllEditionImages, type EditionImage } from "@/lib/services/editionImagesService";
 import { getAllEditionLineupBrands } from "@/lib/services/editionLineupService";
 import { getAllEditionContent } from "@/lib/services/editionContentService";
@@ -36,12 +40,15 @@ export default async function EditionsStudioPage() {
     );
   }
 
-  const editions = getAllEditions();
-  const [images, lineupRows, contentRows] = await Promise.all([
-    getAllEditionImages(supabase),
-    getAllEditionLineupBrands(supabase),
-    getAllEditionContent(supabase),
-  ]);
+  // Hydrated, so editions created in Studio appear alongside the seeded ones.
+  const [editions, images, lineupRows, contentRows, settings] =
+    await Promise.all([
+      getHydratedEditions(),
+      getAllEditionImages(supabase),
+      getAllEditionLineupBrands(supabase),
+      getAllEditionContent(supabase),
+      readPlatformSettings(supabase).catch(() => null),
+    ]);
 
   const imagesBySlug: Record<string, EditionImage[]> = {};
   for (const image of images) {
@@ -58,12 +65,22 @@ export default async function EditionsStudioPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
-      <BlurIn className="mb-8">
-        <h1 className="text-3xl font-canela text-gray-900 mb-2">Editions</h1>
-        <p className="text-gray-600">
-          Create and edit each edition like a blog post — story, metadata, cover,
-          gallery, lineup, and partners in one place.
-        </p>
+      <BlurIn className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-canela text-gray-900 mb-2">Editions</h1>
+          <p className="text-gray-600">
+            Create and edit each edition like a blog post — story, metadata,
+            cover, gallery, lineup, and partners in one place.
+          </p>
+        </div>
+        <NewEditionButton />
+      </BlurIn>
+
+      <BlurIn delay={0.06} className="mb-8">
+        <ArchiveHeroCard
+          initialImageUrl={settings?.archiveHeroImage ?? ""}
+          fallbackImageUrl={pickPastEditions(editions, 1)[0]?.coverImage}
+        />
       </BlurIn>
 
       <div className="space-y-4">

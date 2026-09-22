@@ -13,6 +13,7 @@ const SETTING_KEYS = [
   "hero_media_url",
   "customer_signup_enabled",
   "catalogues_publicly_visible",
+  "archive_hero_image",
 ] as const;
 
 const MAP_DB_TO_API: Record<
@@ -25,6 +26,7 @@ const MAP_DB_TO_API: Record<
   | "heroMediaUrl"
   | "customerSignupEnabled"
   | "cataloguesPubliclyVisible"
+  | "archiveHeroImage"
 > = {
   about_omahub: "about",
   our_story: "ourStory",
@@ -34,6 +36,7 @@ const MAP_DB_TO_API: Record<
   hero_media_url: "heroMediaUrl",
   customer_signup_enabled: "customerSignupEnabled",
   catalogues_publicly_visible: "cataloguesPubliclyVisible",
+  archive_hero_image: "archiveHeroImage",
 };
 
 /**
@@ -71,6 +74,7 @@ export async function readPlatformSettings(
     heroMediaUrl: "",
     customerSignupEnabled: DEFAULT_CUSTOMER_SIGNUP_ENABLED,
     cataloguesPubliclyVisible: DEFAULT_CATALOGUES_PUBLICLY_VISIBLE,
+    archiveHeroImage: "",
   };
 
   for (const row of data ?? []) {

@@ -3,7 +3,8 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
-import { getEditionBySlug } from "@/lib/data/editions";
+import { getEditionBySlug, type Edition } from "@/lib/data/editions";
+import { editionFromContent } from "@/lib/editions/editionFromContent";
 import {
   getEditionImages,
   addEditionImage,
@@ -67,7 +68,30 @@ export default function EditionPhotoManagementPage({
 
 function EditionPhotoManagementContent({ slug }: { slug: string }) {
   const { user } = useAuth();
-  const edition = getEditionBySlug(slug);
+  // Seeded editions come from the file; ones created in Studio are rebuilt
+  // from their saved content row.
+  const seededEdition = getEditionBySlug(slug);
+  const [createdEdition, setCreatedEdition] = useState<Edition | null>(null);
+  const [editionResolved, setEditionResolved] = useState(!!seededEdition);
+  const edition = seededEdition ?? createdEdition;
+
+  useEffect(() => {
+    if (seededEdition) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const saved = await getEditionContent(slug);
+        if (!cancelled && saved) setCreatedEdition(editionFromContent(saved));
+      } catch (error) {
+        console.error("Error loading edition:", error);
+      } finally {
+        if (!cancelled) setEditionResolved(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [slug, seededEdition]);
   const [images, setImages] = useState<EditionImage[] | null>(null);
   const [isUploadingCover, setIsUploadingCover] = useState(false);
   const [isUploadingGallery, setIsUploadingGallery] = useState(false);
@@ -214,6 +238,14 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
     setVideoThumbnailInput(server.thumbnail);
     setVideoPosition(server.position);
   }, [images]);
+
+  if (!edition && !editionResolved) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <Loading />
+      </div>
+    );
+  }
 
   if (!edition) {
     return (

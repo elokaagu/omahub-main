@@ -6,6 +6,7 @@ import {
   type EditionContentInput,
 } from "@/lib/services/editionContentService";
 import { getEditionBySlug } from "@/lib/data/editions";
+import { editionFromContent } from "@/lib/editions/editionFromContent";
 import { revalidateEditionPublicCaches } from "@/lib/editions/revalidateEditionCaches";
 
 export const dynamic = "force-dynamic";
@@ -19,12 +20,14 @@ export async function GET(
     return NextResponse.json({ error: authz.error }, { status: authz.status });
   }
 
-  const staticEdition = getEditionBySlug(params.slug);
+  const content = await getEditionContent(params.slug, authz.supabase);
+  // Studio-created editions have no entry in lib/data/editions.ts.
+  const staticEdition =
+    getEditionBySlug(params.slug) ?? (content ? editionFromContent(content) : null);
   if (!staticEdition) {
     return NextResponse.json({ error: "Edition not found" }, { status: 404 });
   }
 
-  const content = await getEditionContent(params.slug, authz.supabase);
   return NextResponse.json({ content, staticEdition });
 }
 
@@ -37,9 +40,12 @@ export async function PUT(
     return NextResponse.json({ error: authz.error }, { status: authz.status });
   }
 
-  const staticEdition = getEditionBySlug(params.slug);
-  if (!staticEdition) {
-    return NextResponse.json({ error: "Edition not found" }, { status: 404 });
+  if (!getEditionBySlug(params.slug)) {
+    // Not seeded: only allow saving against an edition created in Studio.
+    const existing = await getEditionContent(params.slug, authz.supabase);
+    if (!existing) {
+      return NextResponse.json({ error: "Edition not found" }, { status: 404 });
+    }
   }
 
   let body: EditionContentInput;

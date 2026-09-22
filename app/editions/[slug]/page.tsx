@@ -1,6 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { editions, getEditionBySlug } from "@/lib/data/editions";
+import {
+  getHydratedEditionBySlug,
+  getHydratedEditions,
+  pickAdjacentEditions,
+} from "@/lib/editions/hydrateEditions";
 import { getBrandsByIds, getBrandsByNames } from "@/lib/home/getEditorialHomeData";
 import { getEditionImages } from "@/lib/services/editionImagesService";
 import { getEditionLineup } from "@/lib/services/editionLineupService";
@@ -43,15 +48,20 @@ export async function generateMetadata({
   params: { slug: string };
 }): Promise<Metadata> {
   const staticEdition = getEditionBySlug(params.slug);
-  if (!staticEdition) return { title: "Edition not found | OmaHub" };
 
   let edition = staticEdition;
   try {
-    const editionContent = await getEditionContent(params.slug);
-    edition = mergeEditionWithContent(staticEdition, editionContent);
+    if (staticEdition) {
+      const editionContent = await getEditionContent(params.slug);
+      edition = mergeEditionWithContent(staticEdition, editionContent);
+    } else {
+      // Created in Studio - it only exists in the database.
+      edition = await getHydratedEditionBySlug(params.slug);
+    }
   } catch (e) {
     console.error("edition_metadata_content_error", e);
   }
+  if (!edition) return { title: "Edition not found | OmaHub" };
 
   let coverImage = edition.coverImage || "/OmaHubBanner.png";
   try {
@@ -94,8 +104,7 @@ export default async function EditionPage({
 }: {
   params: { slug: string };
 }) {
-  const staticEdition = getEditionBySlug(params.slug);
-  if (!staticEdition) notFound();
+  const seededEdition = getEditionBySlug(params.slug);
 
   let editionContent = null;
   try {
@@ -104,7 +113,14 @@ export default async function EditionPage({
     console.error("edition_content_error", e);
   }
 
-  const mergedEdition = mergeEditionWithContent(staticEdition, editionContent);
+  // Studio-created editions have no seed entry; rebuild them from the database.
+  const staticEdition =
+    seededEdition ?? (await getHydratedEditionBySlug(params.slug));
+  if (!staticEdition) notFound();
+
+  const mergedEdition = seededEdition
+    ? mergeEditionWithContent(seededEdition, editionContent)
+    : { ...staticEdition, storyHtml: editionContent?.story_html ?? null };
   const richStoryHtml = hasRichStoryHtml(mergedEdition.storyHtml)
     ? mergedEdition.storyHtml!
     : null;
@@ -182,6 +198,20 @@ export default async function EditionPage({
 
   const hasStoryVideo = hasEditionVideo(edition.videoUrl);
 
+  // Neighbours come from the live list, so Studio-created editions are included.
+  let neighbours: ReturnType<typeof pickAdjacentEditions> = {
+    previous: null,
+    next: null,
+  };
+  try {
+    neighbours = pickAdjacentEditions(
+      await getHydratedEditions(),
+      params.slug,
+    );
+  } catch (e) {
+    console.error("edition_neighbours_error", e);
+  }
+
   return (
     <>
       <JsonLd
@@ -202,6 +232,8 @@ export default async function EditionPage({
         edition={edition}
         coverImage={edition.coverImage}
         facts={snapshot}
+        previous={neighbours.previous}
+        next={neighbours.next}
       />
 
       {/* The story, with optional recap video in the sidebar */}

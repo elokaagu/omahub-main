@@ -6,6 +6,7 @@ import {
 } from "@/lib/services/editionContentService";
 import { getAllEditionImages } from "@/lib/services/editionImagesService";
 import { getAllEditionLineupBrands } from "@/lib/services/editionLineupService";
+import { editionFromContent } from "./editionFromContent";
 
 function lineupCountLabel(count: number): string {
   return `${count} designer${count === 1 ? "" : "s"}`;
@@ -37,7 +38,7 @@ export function applyStudioEditionOverlays(
     );
   }
 
-  return staticEditions.map((edition) => {
+  const overlaySeeded = staticEditions.map((edition) => {
     const content = contentBySlug.get(edition.slug) ?? null;
     const merged = mergeEditionWithContent(edition, content);
     const lineupCount = lineupCountBySlug.get(edition.slug) ?? 0;
@@ -51,6 +52,26 @@ export function applyStudioEditionOverlays(
         (lineupCount > 0 ? lineupCountLabel(lineupCount) : merged.lineupLabel),
     };
   });
+
+  // Editions created in Studio have no entry in lib/data/editions.ts.
+  const seededSlugs = new Set(staticEditions.map((edition) => edition.slug));
+  const studioCreated = contentRows
+    .filter((row) => !seededSlugs.has(row.edition_slug))
+    .map((row) => {
+      const edition = editionFromContent(row);
+      const lineupCount = lineupCountBySlug.get(row.edition_slug) ?? 0;
+      return {
+        ...edition,
+        coverImage: coverBySlug.get(row.edition_slug) || edition.coverImage,
+        lineupLabel:
+          edition.lineupLabel ||
+          (lineupCount > 0 ? lineupCountLabel(lineupCount) : undefined),
+      };
+    });
+
+  return [...overlaySeeded, ...studioCreated].sort((a, b) =>
+    b.sortDate.localeCompare(a.sortDate),
+  );
 }
 
 export async function getHydratedEditions(): Promise<Edition[]> {
@@ -68,6 +89,30 @@ export async function getHydratedEditions(): Promise<Edition[]> {
     imageRows,
     lineupRows,
   );
+}
+
+/** One hydrated edition, including Studio-created ones. */
+export async function getHydratedEditionBySlug(
+  slug: string,
+): Promise<Edition | null> {
+  const editions = await getHydratedEditions();
+  return editions.find((edition) => edition.slug === slug) ?? null;
+}
+
+/** The editions either side of `slug` in date order (oldest -> newest). */
+export function pickAdjacentEditions(
+  editions: Edition[],
+  slug: string,
+): { previous: Edition | null; next: Edition | null } {
+  const oldestFirst = [...editions].sort((a, b) =>
+    a.sortDate.localeCompare(b.sortDate),
+  );
+  const index = oldestFirst.findIndex((edition) => edition.slug === slug);
+  if (index < 0) return { previous: null, next: null };
+  return {
+    previous: oldestFirst[index - 1] ?? null,
+    next: oldestFirst[index + 1] ?? null,
+  };
 }
 
 export function pickUpcomingEdition(editions: Edition[]): Edition | null {

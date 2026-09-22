@@ -5,6 +5,8 @@ import {
   getHydratedEditions,
   pickPastEditions,
 } from "@/lib/editions/hydrateEditions";
+import { readPlatformSettings } from "@/lib/studio/platformSettings";
+import { publicSupabaseClient } from "@/lib/supabase-public";
 import { EditionsArchiveContent } from "./EditionsArchiveContent";
 
 export const metadata: Metadata = generateSEOMetadata({
@@ -37,8 +39,17 @@ export default async function EditionsArchivePage() {
     editions = getAllEditions();
   }
 
+  // Banner set in Studio > Editions; falls back to the newest past cover.
+  let archiveHeroImage = "";
+  try {
+    const settings = await readPlatformSettings(publicSupabaseClient());
+    archiveHeroImage = settings.archiveHeroImage;
+  } catch (e) {
+    console.error("editions_archive_hero_setting_error", e);
+  }
+
   const latestPastEdition = pickPastEditions(editions, 1)[0] ?? null;
-  const heroImage = latestPastEdition?.coverImage;
+  const heroImage = archiveHeroImage || latestPastEdition?.coverImage;
 
   return (
     <EditionsArchiveContent editions={editions} heroImage={heroImage} />
