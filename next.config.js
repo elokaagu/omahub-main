@@ -220,15 +220,22 @@ const nextConfig = {
           },
         ],
       },
-      {
-        source: "/_next/static/(.*)",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "public, max-age=31536000, immutable",
-          },
-        ],
-      },
+      // Production static files have content-hashed URLs, so caching them
+      // forever is safe. In `next dev` the URLs are NOT hashed - caching them
+      // "immutable" makes the browser keep running old code after edits.
+      ...(process.env.NODE_ENV === "production"
+        ? [
+            {
+              source: "/_next/static/(.*)",
+              headers: [
+                {
+                  key: "Cache-Control",
+                  value: "public, max-age=31536000, immutable",
+                },
+              ],
+            },
+          ]
+        : []),
       {
         source: "/images/(.*)",
         headers: [

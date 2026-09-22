@@ -6,7 +6,7 @@ import { useNavigation } from "@/contexts/NavigationContext";
 import Header from "./Header";
 import Footer from "./Footer";
 import { NavigationProgressBar } from "@/components/ui/navigation-progress-bar";
-import { SearchModal } from "@/components/ui/search-modal";
+import { SearchDialog } from "@/components/search/SearchDialog";
 import { PageTransition } from "@/components/ui/page-transition";
 
 export default function LayoutContent({
@@ -61,7 +61,7 @@ export default function LayoutContent({
       </main>
       {!isStudioPage && instagramFeed}
       {!isStudioPage && <Footer />}
-      <SearchModal />
+      <SearchDialog />
     </>
   );
 }

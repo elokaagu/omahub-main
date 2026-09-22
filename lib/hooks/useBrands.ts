@@ -7,7 +7,6 @@ import {
   getBrandsByCategory,
   getBrandReviews,
   getBrandCollections,
-  searchBrands,
   forceRefreshBrands,
 } from "../services/brandService";
 import { Brand, Review, Catalogue } from "../supabase";
@@ -136,39 +135,4 @@ export function useBrandCollections(brandId: string) {
   }, [brandId]);
 
   return { catalogues, loading, error };
-}
-
-export function useSearchBrands(query: string) {
-  const [brands, setBrands] = useState<Brand[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-
-  useEffect(() => {
-    async function performSearch() {
-      if (!query || query.trim() === "") {
-        setBrands([]);
-        return;
-      }
-
-      setLoading(true);
-
-      try {
-        const data = await searchBrands(query);
-        setBrands(data);
-      } catch (err) {
-        setError(err as Error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    // Debounce search
-    const timeoutId = setTimeout(() => {
-      performSearch();
-    }, 300);
-
-    return () => clearTimeout(timeoutId);
-  }, [query]);
-
-  return { brands, loading, error };
 }

@@ -17,7 +17,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigation } from "@/contexts/NavigationContext";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useRouter, usePathname } from "next/navigation";
-import { triggerSearchModal } from "@/components/ui/search-modal";
+import { openSearch } from "@/lib/search/openSearch";
 import { useStudioPermissions } from "@/hooks/useStudioPermissions";
 import { useCustomerSignupEnabled } from "@/hooks/useCustomerSignupEnabled";
 
@@ -187,7 +187,7 @@ export default function Header() {
         <div className="flex min-w-0 flex-1 items-center justify-end gap-0.5 sm:gap-1">
           <button
             type="button"
-            onClick={triggerSearchModal}
+            onClick={openSearch}
             className={iconBtn}
             aria-label="Search"
           >
@@ -269,7 +269,7 @@ export default function Header() {
             type="button"
             onClick={() => {
               closeMenu();
-              triggerSearchModal();
+              openSearch();
             }}
             className="flex w-full items-center gap-3 rounded-full border border-white/15 bg-white/5 px-4 py-3 text-left text-sm text-oma-cream/60 transition-colors hover:border-oma-gold/50 hover:text-oma-cream focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-oma-gold/50 sm:px-5 sm:py-3.5"
           >

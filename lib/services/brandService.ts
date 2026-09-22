@@ -88,24 +88,6 @@ async function fetchBrandsFromPublicApi(
   return json.brands ?? [];
 }
 
-async function fetchSearchBrandsFromApi(query: string): Promise<Brand[]> {
-  const q = query.trim();
-  if (!q) return [];
-  const res = await fetch(`/api/brands/search?${new URLSearchParams({ q })}`, {
-    credentials: "same-origin",
-  });
-  if (!res.ok) {
-    const err = (await res.json().catch(() => ({}))) as { error?: string };
-    throw new Error(
-      typeof err.error === "string"
-        ? err.error
-        : `Brand search failed (${res.status})`
-    );
-  }
-  const json = (await res.json()) as { brands?: Brand[] };
-  return json.brands ?? [];
-}
-
 /**
  * Get set of brand keys (name + email) that have unapproved applications
  * A brand is unapproved if it has an application with status != 'approved'
@@ -171,7 +153,8 @@ async function isBrandUnapproved(
 /**
  * Filter out brands that have unapproved applications
  */
-async function filterUnapprovedBrands<T extends { name: string; contact_email?: string | null }>(
+/** Drop brands whose designer application isn't approved yet (server only). */
+export async function filterUnapprovedBrands<T extends { name: string; contact_email?: string | null }>(
   brands: T[]
 ): Promise<T[]> {
   if (brands.length === 0) {
@@ -946,35 +929,6 @@ export async function addReview(
   }
 
   return data;
-}
-
-/**
- * Search brands by name or description
- */
-export async function searchBrands(query: string): Promise<Brand[]> {
-  if (typeof window !== "undefined") {
-    return fetchSearchBrandsFromApi(query);
-  }
-  if (!supabase) {
-    throw new Error("Supabase client not available");
-  }
-
-  const { data, error } = await supabase
-    .from("brands")
-    .select("*, brand_images(*)")
-    .or(`name.ilike.%${query}%,description.ilike.%${query}%`);
-
-  if (error) {
-    console.error(`Error searching brands with query ${query}:`, error);
-    throw error;
-  }
-
-  if (!data || data.length === 0) {
-    return [];
-  }
-
-  // Filter out brands with unapproved applications
-  return await filterUnapprovedBrands(data);
 }
 
 /**
