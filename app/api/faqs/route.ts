@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getPublicFaqs } from "@/lib/services/publicFaqService";
+import { PUBLIC_CDN_CACHE_HEADERS } from "@/lib/http/cacheHeaders";
 
 export const dynamic = "force-dynamic";
 
@@ -17,5 +18,5 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error }, { status: 500 });
   }
 
-  return NextResponse.json({ faqs });
+  return NextResponse.json({ faqs }, { headers: PUBLIC_CDN_CACHE_HEADERS });
 }

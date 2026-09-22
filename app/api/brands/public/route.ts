@@ -4,6 +4,10 @@ import {
   getAllBrands,
   getBrandsByCategory,
 } from "@/lib/services/brandService";
+import {
+  NO_STORE_HEADERS,
+  PUBLIC_CDN_CACHE_HEADERS,
+} from "@/lib/http/cacheHeaders";
 
 export const dynamic = "force-dynamic";
 
@@ -22,10 +26,12 @@ export async function GET(request: NextRequest) {
     if (refresh) {
       clearBrandsCache();
     }
+    // A forced refresh must not be served from (or stored in) the CDN cache.
+    const headers = refresh ? NO_STORE_HEADERS : PUBLIC_CDN_CACHE_HEADERS;
 
     if (category) {
       const brands = await getBrandsByCategory(category);
-      return NextResponse.json({ brands });
+      return NextResponse.json({ brands }, { headers });
     }
 
     const brands = await getAllBrands(filterEmpty, refresh);
@@ -45,10 +51,10 @@ export async function GET(request: NextRequest) {
           video_url: b.video_url,
           video_thumbnail: b.video_thumbnail,
         })),
-      });
+      }, { headers });
     }
 
-    return NextResponse.json({ brands });
+    return NextResponse.json({ brands }, { headers });
   } catch (error) {
     console.error("GET /api/brands/public:", error);
     return NextResponse.json(

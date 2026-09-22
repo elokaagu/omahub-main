@@ -3,15 +3,10 @@ import type { ApplicationStatus, DesignerApplication } from "./types";
 export async function fetchStudioApplications(
   signal?: AbortSignal
 ): Promise<DesignerApplication[]> {
-  const timestamp = Date.now();
-  const response = await fetch(`/api/studio/applications?t=${timestamp}`, {
+  const response = await fetch("/api/studio/applications", {
     method: "GET",
     cache: "no-store",
     credentials: "include",
-    headers: {
-      "Cache-Control": "no-cache, no-store, must-revalidate",
-      Pragma: "no-cache",
-    },
     signal,
   });
 

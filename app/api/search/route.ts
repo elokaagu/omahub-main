@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { PUBLIC_CDN_CACHE_HEADERS } from "@/lib/http/cacheHeaders";
 import { normaliseSearchQuery } from "@/lib/search/searchQuery";
 import { searchSite } from "@/lib/search/siteSearch";
 import type { SearchResponse } from "@/lib/search/types";
@@ -18,11 +19,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const results = await searchSite(query);
-    return NextResponse.json(results, {
-      headers: {
-        "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
-      },
-    });
+    return NextResponse.json(results, { headers: PUBLIC_CDN_CACHE_HEADERS });
   } catch (error) {
     console.error("GET /api/search:", error);
     return NextResponse.json({ error: "Search failed" }, { status: 500 });

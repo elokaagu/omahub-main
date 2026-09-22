@@ -133,6 +133,28 @@ function supabaseStorageRemotePatterns() {
 }
 
 /** @type {import('next').NextConfig} */
+// Content-Security-Policy. Google Tag Manager + GA4 (components/analytics)
+// load from *.googletagmanager.com; their beacons go to Google hosts, which
+// `img-src` / `connect-src https:` already allow. Vercel Analytics uses
+// same-origin /_vercel/insights in production, and va.vercel-scripts.com
+// for its debug script in development only.
+const CONTENT_SECURITY_POLICY = [
+  "default-src 'self'",
+  [
+    "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
+    "https://*.googletagmanager.com",
+    process.env.NODE_ENV === "production" ? "" : "https://va.vercel-scripts.com",
+  ]
+    .filter(Boolean)
+    .join(" "),
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: https:",
+  "media-src 'self' https: data:",
+  "font-src 'self' data:",
+  "frame-src 'self' https://player.vimeo.com https://www.googletagmanager.com",
+  "connect-src 'self' https: wss: https://gswduyodzdgucjscjtvz.supabase.co",
+].join("; ") + ";";
+
 const nextConfig = {
   // Ensure consistent trailing slash handling to prevent duplicate content
   trailingSlash: false,
@@ -206,20 +228,12 @@ const nextConfig = {
           },
           {
             key: "Content-Security-Policy",
-            value:
-              "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; media-src 'self' https: data:; font-src 'self' data:; frame-src 'self' https://player.vimeo.com; connect-src 'self' https: wss: https://gswduyodzdgucjscjtvz.supabase.co;",
+            value: CONTENT_SECURITY_POLICY,
           },
         ],
       },
-      {
-        source: "/api/(.*)",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "public, max-age=300, stale-while-revalidate=600",
-          },
-        ],
-      },
+      // No blanket Cache-Control for /api: most API routes are per-user or
+      // signed-in. Public routes set their own (lib/http/cacheHeaders.ts).
       // Production static files have content-hashed URLs, so caching them
       // forever is safe. In `next dev` the URLs are NOT hashed - caching them
       // "immutable" makes the browser keep running old code after edits.
