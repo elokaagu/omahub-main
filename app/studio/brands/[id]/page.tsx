@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ImageIcon } from "lucide-react";
+import { ArrowLeft, ExternalLink, ImageIcon } from "lucide-react";
 import { useBrandEditor } from "./useBrandEditor";
 import { BrandEditDetailsForm } from "./BrandEditDetailsForm";
 import { BrandEditMediaPreviewColumn } from "./BrandEditMediaPreviewColumn";
@@ -71,12 +71,35 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-      <BlurIn className="mb-8 flex items-center">
-        <Button variant="ghost" onClick={() => router.back()} className="mr-4">
-          <ArrowLeft className="h-4 w-4 mr-2" />
+      <BlurIn className="mb-8">
+        <Button
+          variant="ghost"
+          onClick={() => router.back()}
+          className="-ml-3 mb-3 text-gray-600 hover:text-gray-900"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
           Back
         </Button>
-        <h1 className="text-3xl font-canela text-gray-900">Edit Brand</h1>
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500">
+              Edit brand
+            </p>
+            <h1 className="mt-1 text-3xl font-canela text-gray-900">
+              {brand.name}
+            </h1>
+          </div>
+          <Button asChild variant="outline">
+            <Link
+              href={`/brand/${params.id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              View public page
+              <ExternalLink className="ml-2 h-4 w-4" aria-hidden />
+            </Link>
+          </Button>
+        </div>
       </BlurIn>
 
       {showDirectoryImageNotice ? (
@@ -102,11 +125,11 @@ export default function BrandEditPage({ params }: { params: { id: string } }) {
         </Alert>
       ) : null}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-3">
         <BlurIn delay={0.08} className="lg:col-span-2">
           <BrandEditDetailsForm editor={editor} />
         </BlurIn>
-        <BlurIn delay={0.16}>
+        <BlurIn delay={0.16} className="space-y-6 lg:sticky lg:top-24 lg:self-start">
           <BrandEditMediaPreviewColumn editor={editor} />
           <BrandEditTailoringSection editor={editor} />
         </BlurIn>
