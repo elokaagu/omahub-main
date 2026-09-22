@@ -4,11 +4,9 @@ import { useRef, type ReactNode } from "react";
 import { motion, useInView, useReducedMotion } from "framer-motion";
 import { TableRow } from "@/components/ui/table";
 
-export const BLUR_IN_EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
+import { BLUR_IN_EASE } from "./blurTiming";
 
-export function blurStagger(index: number, cap = 10, each = 0.05) {
-  return Math.min(index, cap) * each;
-}
+export { BLUR_IN_EASE, blurStagger } from "./blurTiming";
 
 const MotionTableRow = motion(TableRow);
 

@@ -8,7 +8,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { NavigationLink } from "@/components/ui/navigation-link";
-import { BlurIn, blurStagger } from "@/components/studio/BlurIn";
+import { BlurIn } from "@/components/studio/BlurIn";
+import { blurStagger } from "@/components/studio/blurTiming";
 
 export const dynamic = "force-dynamic";
 
