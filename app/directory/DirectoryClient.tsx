@@ -13,6 +13,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { BrandCard } from "@/components/ui/brand-card";
 import { cn } from "@/lib/utils";
 import { Search, Filter, LayoutGrid, LayoutList } from "@/components/ui/icons";
@@ -24,6 +31,10 @@ import {
   mapBrandsToDisplay,
 } from "./directoryBrandMap";
 import { filterDirectoryBrands } from "./directoryFilters";
+
+/** Directory filter dropdowns, in the site palette rather than the OS default. */
+const FILTER_TRIGGER_CLASS =
+  "w-full mt-1 min-h-[44px] border-oma-gold/20 bg-white text-sm text-oma-black focus:ring-oma-plum/30 data-[placeholder]:text-oma-cocoa/60 sm:text-base";
 
 export default function DirectoryClient() {
   const searchParams = useSearchParams();
@@ -202,34 +213,50 @@ export default function DirectoryClient() {
                 <Label className="text-oma-cocoa text-sm sm:text-base">
                   Category
                 </Label>
-                <select
+                <Select
                   value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="w-full mt-1 p-2 sm:p-3 border rounded-md border-oma-gold/20 focus:border-oma-plum min-h-[44px] text-sm sm:text-base bg-white"
+                  onValueChange={setSelectedCategory}
                 >
-                  <option value="All Categories">All Categories</option>
-                  {getAllCategoryNames().map((category) => (
-                    <option key={category} value={category}>
-                      {category}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger
+                    aria-label="Category"
+                    className={FILTER_TRIGGER_CLASS}
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="All Categories">
+                      All Categories
+                    </SelectItem>
+                    {getAllCategoryNames().map((category) => (
+                      <SelectItem key={category} value={category}>
+                        {category}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="min-w-0">
                 <Label className="text-oma-cocoa text-sm sm:text-base">
                   Location
                 </Label>
-                <select
+                <Select
                   value={selectedLocation}
-                  onChange={(e) => setSelectedLocation(e.target.value)}
-                  className="w-full mt-1 p-2 sm:p-3 border rounded-md border-oma-gold/20 focus:border-oma-plum min-h-[44px] text-sm sm:text-base bg-white"
+                  onValueChange={setSelectedLocation}
                 >
-                  {locations.map((location) => (
-                    <option key={location} value={location}>
-                      {location}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger
+                    aria-label="Location"
+                    className={FILTER_TRIGGER_CLASS}
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {locations.map((location) => (
+                      <SelectItem key={location} value={location}>
+                        {location}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </FadeIn>

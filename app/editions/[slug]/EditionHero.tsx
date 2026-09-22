@@ -54,20 +54,20 @@ export function EditionHero({ edition, coverImage, facts }: EditionHeroProps) {
           aria-hidden
           className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-black/45 to-transparent"
         />
-        {/* Scrim behind the title, stopping where the fade begins so the two
-            don't stack into a muddy band. */}
+        {/* Scrim behind the title: darkest where the text sits, transparent at
+            both ends so it leaves no visible edge against the fade below. */}
         <div
           aria-hidden
-          className="absolute inset-x-0 bottom-24 top-1/3 bg-gradient-to-t from-black/75 via-black/35 to-transparent sm:bottom-32"
+          className="absolute inset-0 bg-[linear-gradient(to_top,rgba(0,0,0,0)_0%,rgba(0,0,0,0.72)_20%,rgba(0,0,0,0.38)_42%,rgba(0,0,0,0)_72%)]"
         />
         {/* Photo dissolves into the facts bar below. */}
         <div
           aria-hidden
-          className="absolute inset-x-0 bottom-0 z-10 h-24 bg-gradient-to-b from-transparent via-oma-beige/75 to-oma-beige sm:h-32"
+          className="absolute inset-x-0 bottom-0 z-10 h-28 bg-gradient-to-b from-transparent via-oma-beige/70 to-oma-beige sm:h-36"
         />
 
         {/* Bottom padding clears the fade, so the title stays on the photo. */}
-        <div className="relative z-20 mx-auto flex h-full w-full max-w-7xl flex-col justify-between px-4 pb-24 pt-5 sm:px-6 sm:pb-32 sm:pt-7 lg:px-8">
+        <div className="relative z-20 mx-auto flex h-full w-full max-w-7xl flex-col justify-between px-4 pb-28 pt-5 sm:px-6 sm:pb-36 sm:pt-7 lg:px-8">
           <nav aria-label="Breadcrumb">
             <ol className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-white/80">
               <li>

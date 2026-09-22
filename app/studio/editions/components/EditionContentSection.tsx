@@ -272,7 +272,7 @@ export function EditionContentSection({
             placeholder="e.g. 8 brands"
           />
         </div>
-        <div className="flex items-center justify-between rounded-lg border border-gray-200 px-3 py-2">
+        <div className="flex h-fit self-start items-center justify-between rounded-lg border border-gray-200 px-3 py-2">
           <Label htmlFor="edition-applications-open">Applications open</Label>
           <Switch
             id="edition-applications-open"
@@ -282,7 +282,7 @@ export function EditionContentSection({
             }
           />
         </div>
-        <div className="flex items-center justify-between rounded-lg border border-gray-200 px-3 py-2">
+        <div className="flex h-fit self-start items-center justify-between rounded-lg border border-gray-200 px-3 py-2">
           <Label htmlFor="edition-theme-announced">Theme announced</Label>
           <Switch
             id="edition-theme-announced"
