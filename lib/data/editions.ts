@@ -126,6 +126,32 @@ export function getUpcomingEdition(): Edition | null {
   return upcoming[0] ?? null;
 }
 
+/**
+ * The editions either side of `slug` in date order: `previous` is the one
+ * before it (older), `next` the one after it (newer, possibly upcoming).
+ */
+export function getAdjacentEditions(slug: string): {
+  previous: Edition | null;
+  next: Edition | null;
+} {
+  const oldestFirst = [...editions].sort((a, b) =>
+    a.sortDate.localeCompare(b.sortDate),
+  );
+  const index = oldestFirst.findIndex((e) => e.slug === slug);
+  if (index < 0) return { previous: null, next: null };
+  return {
+    previous: oldestFirst[index - 1] ?? null,
+    next: oldestFirst[index + 1] ?? null,
+  };
+}
+
+/** Public display title: an upcoming edition without a theme shows "TBA". */
+export function editionDisplayTitle(edition: Edition): string {
+  return edition.status === "upcoming" && !edition.themeAnnounced
+    ? `Edition ${edition.number}: TBA`
+    : edition.title;
+}
+
 export function getEditionBySlug(slug: string): Edition | null {
   return editions.find((e) => e.slug === slug) ?? null;
 }

@@ -198,28 +198,11 @@ export default async function EditionPage({
         })}
       />
       <main className="min-h-screen bg-oma-cream">
-      <EditionHero edition={edition} coverImage={edition.coverImage} />
-
-      {/* Geography & event snapshot */}
-      <section className="border-b border-oma-cocoa/15 bg-oma-beige">
-        <div className="mx-auto grid max-w-7xl grid-cols-1 divide-y divide-oma-cocoa/15 sm:grid-cols-2 sm:divide-x sm:divide-y-0 md:grid-cols-5">
-          {snapshot.map((item) => (
-            <AnimateOnScroll
-              key={item.label}
-              animation="fadeIn"
-              duration={0.7}
-              className="px-4 py-6 sm:px-5 sm:py-8 md:px-4 md:first:pl-0 lg:px-8"
-            >
-              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-oma-cocoa sm:text-[11px] sm:tracking-[0.25em]">
-                {item.label}
-              </p>
-              <p className="mt-1.5 font-canela text-lg text-oma-black sm:mt-2 sm:text-xl">
-                {item.value}
-              </p>
-            </AnimateOnScroll>
-          ))}
-        </div>
-      </section>
+      <EditionHero
+        edition={edition}
+        coverImage={edition.coverImage}
+        facts={snapshot}
+      />
 
       {/* The story, with optional recap video in the sidebar */}
       <section className="bg-oma-cream py-12 sm:py-16 lg:py-20">

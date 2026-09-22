@@ -20,11 +20,7 @@ export default function LayoutContent({
   const { isNavigating, forceReset } = useNavigation();
   const isHomePage = pathname === "/";
   const isStudioPage = pathname?.startsWith("/studio") || false;
-  // Editions pages run full-bleed cinematic banners with their own
-  // in-page back links, so the fixed site header is hidden here too.
-  const isEditionPage =
-    pathname === "/editions" || pathname?.startsWith("/editions/") || false;
-  const hideHeader = isStudioPage || isEditionPage;
+  const hideHeader = isStudioPage;
 
   // Emergency reset for stuck navigation states
   useEffect(() => {
