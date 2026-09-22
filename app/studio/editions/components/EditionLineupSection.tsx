@@ -172,7 +172,7 @@ export function EditionLineupSection({
                       type="button"
                       aria-label={`Remove ${brand.name} from lineup`}
                       disabled={deletingLineupId === entry.id}
-                      className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-oma-black/60 text-white opacity-0 backdrop-blur-sm transition-opacity duration-200 hover:bg-red-600 focus-visible:opacity-100 group-hover:opacity-100"
+                      className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-gray-900/70 text-white shadow-sm backdrop-blur-sm transition-colors duration-200 hover:bg-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>

@@ -27,7 +27,7 @@ import { HomepageHeroMediaCard } from "./HomepageHeroMediaCard";
 import { PlatformVisibilityCard } from "./PlatformVisibilityCard";
 import { SettingToggleCard } from "./SettingToggleCard";
 import { VimeoVideoIdCard } from "./VimeoVideoIdCard";
-import { ContentOverviewCard, SettingsToolLinkCard } from "./SettingsInfoCards";
+import { SettingsToolLinkCard } from "./SettingsInfoCards";
 
 export const dynamic = "force-dynamic";
 
@@ -203,7 +203,6 @@ export default async function SettingsPage() {
             cta="Manage FAQs"
           />
 
-          <ContentOverviewCard />
         </BlurIn>
       </div>
     </div>

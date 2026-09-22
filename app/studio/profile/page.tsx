@@ -174,7 +174,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
       <BlurIn>
       <h1 className="text-3xl font-canela text-gray-900 mb-8">
         Profile Settings

@@ -1,12 +1,6 @@
 import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
-import {
-  ArrowRight,
-  Lock,
-  MessageSquare,
-  Settings,
-  Shield,
-} from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -70,70 +64,6 @@ export function SettingsToolLinkCard({
           </Link>
         </Button>
       </CardFooter>
-    </Card>
-  );
-}
-
-const OVERVIEW: {
-  icon: LucideIcon;
-  iconClass?: string;
-  label: string;
-  text: string;
-}[] = [
-  {
-    icon: Lock,
-    label: "Platform Access",
-    text: "Control whether the platform requires a password for access. Remove the password gate when you're ready to launch publicly.",
-  },
-  {
-    icon: Shield,
-    label: "Legal + FAQ Controls",
-    text: "Use dedicated tools for legal documents and FAQs to manage versions, page visibility, and published content quality.",
-  },
-  {
-    icon: Shield,
-    label: "Legal Documents",
-    text: "Keep your Terms of Service and Privacy Policy up to date with version control and effective date tracking.",
-  },
-  {
-    icon: MessageSquare,
-    label: "FAQ Management",
-    text: "Organise helpful information for your users with categorised questions and rich text answers.",
-  },
-  {
-    icon: Settings,
-    iconClass: "text-amber-600",
-    label: "Access Control",
-    text: "These management tools require super admin privileges to ensure content security and compliance.",
-  },
-];
-
-/** Static explainer at the end of the settings grid. */
-export function ContentOverviewCard() {
-  return (
-    <Card className="border-gray-200 bg-gray-50">
-      <CardHeader>
-        <CardTitle className="text-gray-900 font-canela">
-          Content Management
-        </CardTitle>
-        <CardDescription className="text-gray-600">
-          Overview of access and publishing controls
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-3 text-sm text-gray-600">
-          {OVERVIEW.map(({ icon: Icon, iconClass, label, text }) => (
-            <div key={label} className="flex items-start gap-2">
-              <Icon
-                className={`h-4 w-4 mt-0.5 flex-shrink-0 ${iconClass ?? "text-gray-900"}`}
-              />
-              <p>
-                <strong>{label}:</strong> {text}
-              </p>
-            </div>
-          ))}
-        </div>
-      </CardContent>
     </Card>
   );
 }
