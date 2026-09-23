@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { permissionsForProfileRole } from "@/lib/services/permissionsService";
 import { getStudioSession } from "@/lib/studio/session";
 import { readPlatformSettings } from "@/lib/studio/platformSettings";
+import { DEFAULT_HERO_VIDEO_ID } from "@/lib/services/heroVideoSetting";
 import { StudioLoadError } from "@/components/studio/StudioLoadError";
 import { BlurIn } from "@/components/studio/BlurIn";
 import { HomepageHeroMediaCard } from "./HomepageHeroMediaCard";
@@ -44,6 +45,7 @@ export default async function StudioHomepagePage() {
           <HomepageFilmCard
             initialVideoId={settings.heroVideoId}
             initialFilmUrl={settings.homepageFilmUrl}
+            defaultVideoId={DEFAULT_HERO_VIDEO_ID}
           />
         </BlurIn>
       </div>

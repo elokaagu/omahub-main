@@ -22,6 +22,8 @@ type HomepageFilmCardProps = {
   initialVideoId: string;
   /** Uploaded video URL; when set it replaces the Vimeo film. */
   initialFilmUrl: string;
+  /** The film the public site falls back to when nothing has been set. */
+  defaultVideoId: string;
 };
 
 type Source = "upload" | "vimeo";
@@ -33,6 +35,7 @@ type Source = "upload" | "vimeo";
 export function HomepageFilmCard({
   initialVideoId,
   initialFilmUrl,
+  defaultVideoId,
 }: HomepageFilmCardProps) {
   const [filmUrl, setFilmUrl] = useState(initialFilmUrl);
   const [videoId, setVideoId] = useState(initialVideoId);
@@ -103,11 +106,16 @@ export function HomepageFilmCard({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
+        {/* With nothing set the site still plays its built-in film, so say
+            which one rather than "not set". */}
         <p className="text-sm text-gray-600">
           Currently playing:{" "}
           <span className="font-medium text-gray-900">
-            {filmUrl ? "an uploaded video" : `Vimeo ${videoId || "(not set)"}`}
+            {filmUrl
+              ? "an uploaded video"
+              : `Vimeo ${videoId.trim() || defaultVideoId}`}
           </span>
+          {!filmUrl && !videoId.trim() && " (the built-in film)"}
         </p>
 
         {filmUrl && (
