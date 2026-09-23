@@ -3,6 +3,7 @@ import {
   editionDisplayTitle,
   getAdjacentEditions,
   getAllEditions,
+  getEditionBySlug,
 } from "@/lib/data/editions";
 
 describe("getAdjacentEditions", () => {
@@ -18,6 +19,20 @@ describe("getAdjacentEditions", () => {
 
   it("has no neighbours for an unknown slug", () => {
     expect(getAdjacentEditions("nope")).toEqual({ previous: null, next: null });
+  });
+});
+
+describe("built-in editions", () => {
+  // DELETE /api/studio/editions/[slug] refuses any slug this resolves, so a
+  // built-in edition can never be deleted from Studio.
+  it("are all resolvable by slug", () => {
+    getAllEditions().forEach((edition) => {
+      expect(getEditionBySlug(edition.slug)).toBeTruthy();
+    });
+  });
+
+  it("does not resolve a Studio-created slug", () => {
+    expect(getEditionBySlug("delete-button-test")).toBeFalsy();
   });
 });
 

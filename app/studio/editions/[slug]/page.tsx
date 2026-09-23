@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import { getEditionBySlug, type Edition } from "@/lib/data/editions";
@@ -68,6 +69,7 @@ export default function EditionPhotoManagementPage({
 
 function EditionPhotoManagementContent({ slug }: { slug: string }) {
   const { user } = useAuth();
+  const router = useRouter();
   // Seeded editions come from the file; ones created in Studio are rebuilt
   // from their saved content row.
   const seededEdition = getEditionBySlug(slug);
@@ -100,6 +102,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
   const [isUploadingPartner, setIsUploadingPartner] = useState(false);
   const [partnerName, setPartnerName] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [isDeletingEdition, setIsDeletingEdition] = useState(false);
   const [videoUrlInput, setVideoUrlInput] = useState("");
   const [videoThumbnailInput, setVideoThumbnailInput] = useState("");
   const [videoPosition, setVideoPosition] = useState<0 | 1>(0);
@@ -420,6 +423,29 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
     }
   };
 
+  const handleDeleteEdition = async () => {
+    try {
+      setIsDeletingEdition(true);
+      const response = await fetch(`/api/studio/editions/${slug}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(payload.error || "Failed to delete edition");
+      }
+      toast.success("Edition deleted");
+      router.push("/studio/editions");
+      router.refresh();
+    } catch (error) {
+      console.error("Error deleting edition:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to delete edition",
+      );
+      setIsDeletingEdition(false);
+    }
+  };
+
   const handleDelete = async (id: string) => {
     if (!user) return;
     try {
@@ -458,6 +484,46 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
             </p>
           </div>
         </div>
+
+        {/* Only editions created in Studio can be removed - the original ones
+            are defined in code, so deleting their rows would change nothing. */}
+        {!seededEdition && (
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={isDeletingEdition}
+                className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                {isDeletingEdition ? "Deleting…" : "Delete edition"}
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>
+                  Delete “{contentDraft.title || edition.title}”?
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  This removes the edition from the archive and deletes its
+                  story, cover, gallery, video and brand lineup. Photos stay in
+                  your media library. This cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => void handleDeleteEdition()}
+                  className="bg-red-600 hover:bg-red-700"
+                >
+                  Delete edition
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
       </BlurIn>
 
       <BlurIn className="mb-12 border-b border-gray-200 pb-12">
