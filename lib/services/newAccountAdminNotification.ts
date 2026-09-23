@@ -46,7 +46,7 @@ async function sendNewAccountEmails(
 
     for (const adminEmail of adminEmails) {
       try {
-        await resend.emails.send({
+        const sent = await resend.emails.send({
           from: "OmaHub <info@oma-hub.com>",
           to: [adminEmail],
           subject: `🎉 New Account Created - ${user.email}`,
@@ -72,6 +72,29 @@ async function sendNewAccountEmails(
               "You received this because you are an OmaHub admin.",
           }),
         });
+
+        // Resend reports a rejected key or address in `error` rather than
+        // throwing, so without this a misconfigured key sends nothing and
+        // leaves no trace at all.
+        if (sent.error) {
+          console.error(
+            JSON.stringify({
+              event: "new_account_email_recipient_failed",
+              adminEmail,
+              message: sent.error.message,
+            })
+          );
+          continue;
+        }
+
+        // Logged so it is possible to tell afterwards who was notified.
+        console.log(
+          JSON.stringify({
+            event: "new_account_email_sent",
+            adminEmail,
+            emailId: sent.data?.id ?? null,
+          })
+        );
       } catch (emailError) {
         console.error(
           JSON.stringify({

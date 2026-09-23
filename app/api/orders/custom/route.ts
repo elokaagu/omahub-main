@@ -219,7 +219,25 @@ export async function POST(request: NextRequest) {
       const resend = new Resend(process.env.RESEND_API_KEY);
       const amountLabel = `${currency} ${orderTotal}`;
 
-      await resend.emails.send({
+      // Resend reports a rejected key or address in `error` instead of
+      // throwing, so an unchecked send fails silently.
+      const send = async (
+        recipient: string,
+        payload: Parameters<typeof resend.emails.send>[0]
+      ) => {
+        const result = await resend.emails.send(payload);
+        if (result.error) {
+          console.error(
+            JSON.stringify({
+              event: "custom_order_email_failed",
+              recipient,
+              message: result.error.message,
+            })
+          );
+        }
+      };
+
+      await send("admin", {
         from: "OmaHub <info@oma-hub.com>",
         to: ["info@oma-hub.com"],
         subject: `New Custom Order Request - ${product.title}`,
@@ -243,7 +261,7 @@ export async function POST(request: NextRequest) {
       });
 
       if (brand.contact_email && brand.contact_email !== "info@oma-hub.com") {
-        await resend.emails.send({
+        await send("brand", {
           from: "OmaHub <info@oma-hub.com>",
           to: [brand.contact_email],
           subject: `New Custom Order Request - ${product.title}`,
@@ -268,7 +286,7 @@ export async function POST(request: NextRequest) {
         });
       }
 
-      await resend.emails.send({
+      await send("customer", {
         from: "OmaHub <info@oma-hub.com>",
         to: [delivery_address.email],
         subject: `Order Confirmation - ${product.title} from ${brand.name}`,
