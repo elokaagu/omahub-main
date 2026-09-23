@@ -49,7 +49,7 @@ async function sendNewAccountEmails(
         const sent = await resend.emails.send({
           from: "OmaHub <info@oma-hub.com>",
           to: [adminEmail],
-          subject: `🎉 New Account Created - ${user.email}`,
+          subject: `New account created - ${user.email}`,
           html: buildOmaHubEmailHtml({
             preheader: `New account created for ${user.email}`,
             title: "New Account Alert",

@@ -576,7 +576,7 @@ export async function sendNewApplicationNotification(
         const { data, error } = await resend.emails.send({
           from: "OmaHub <info@oma-hub.com>",
           to: [adminEmail],
-          subject: `📝 New Designer Application - ${application.brand_name}`,
+          subject: `New designer application - ${application.brand_name}`,
           html: buildOmaHubEmailHtml({
             preheader: `New application from ${application.brand_name}`,
             title: "New Designer Application",
@@ -780,7 +780,7 @@ export async function sendApplicationApprovalEmail(data: {
     const { data: emailData, error } = await resend.emails.send({
       from: "OmaHub <info@oma-hub.com>",
       to: [email],
-      subject: `🎉 Your Application Has Been Approved - Welcome to OmaHub!`,
+      subject: `Your application has been approved - welcome to OmaHub`,
       html: buildOmaHubEmailHtml({
         preheader: `Your ${brandName} application has been approved`,
         title: "Application Approved",
@@ -835,7 +835,7 @@ You can log in immediately using these credentials:
 Email: ${email}
 Temporary Password: ${temporaryPassword}
 
-⚠️ Important: Please change your password after your first login for security.
+Important: Please change your password after your first login for security.
 
 ${passwordResetLink ? "\n" : ""}`
     : ""
