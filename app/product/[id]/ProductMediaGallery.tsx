@@ -10,6 +10,7 @@ import {
   imageIndexForSelection,
 } from "@/lib/product/productMediaSelection";
 import { isImageLikeUrl } from "@/lib/product/mediaUrl";
+import { IMAGE_QUALITY, IMAGE_SIZES } from "@/lib/images/imageSizing";
 
 type SpotlightVideo = { url: string; thumbnail?: string };
 
@@ -113,6 +114,9 @@ export function ProductMediaGallery({
             alt={product.title}
             width={600}
             height={600}
+            sizes={IMAGE_SIZES.half}
+            quality={IMAGE_QUALITY.hero}
+            focal="figure"
             className="h-full w-full object-cover"
             aspectRatio="portrait"
           />

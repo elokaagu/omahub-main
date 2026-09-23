@@ -1,4 +1,5 @@
 import { LazyImage } from "./lazy-image";
+import { IMAGE_QUALITY, type FocalPoint } from "@/lib/images/imageSizing";
 
 interface AuthImageProps {
   src: string;
@@ -10,6 +11,8 @@ interface AuthImageProps {
   aspectRatio?: "square" | "video" | "portrait" | "landscape" | string;
   quality?: number;
   sizes?: string;
+  /** Where the crop holds - see FOCAL_POINTS. */
+  focal?: FocalPoint | string;
   fill?: boolean;
   isUploading?: boolean;
   uploadProgress?: number;
@@ -23,8 +26,9 @@ export function AuthImage({
   className = "",
   priority = false,
   aspectRatio,
-  quality = 75,
+  quality = IMAGE_QUALITY.standard,
   sizes,
+  focal,
   fill = false,
   isUploading = false,
   uploadProgress = 0,
@@ -40,6 +44,7 @@ export function AuthImage({
       aspectRatio={aspectRatio}
       quality={quality}
       sizes={sizes}
+      focal={focal}
       fill={fill}
       isUploading={isUploading}
       uploadProgress={uploadProgress}

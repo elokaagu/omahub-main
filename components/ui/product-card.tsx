@@ -2,6 +2,7 @@ import { NavigationLink } from "./navigation-link";
 import { Badge } from "./badge";
 import { AuthImage } from "./auth-image";
 import { formatProductPrice } from "@/lib/utils/priceFormatter";
+import { IMAGE_SIZES } from "@/lib/images/imageSizing";
 import { cn } from "@/lib/utils";
 
 interface ProductCardProps {
@@ -44,6 +45,8 @@ export function ProductCard({
           alt={title}
           width={400}
           height={400}
+          sizes={IMAGE_SIZES.productGrid}
+          focal="portrait"
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
         />
         {sale_price && (

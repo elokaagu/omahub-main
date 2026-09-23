@@ -29,6 +29,7 @@ import {
   Star,
 } from "@/components/ui/icons";
 import { BlurIn, BlurInTableRow } from "@/components/studio/BlurIn";
+import { IMAGE_QUALITY } from "@/lib/images/imageSizing";
 
 /** One row of the Studio brands list - only what the table shows. */
 export type StudioBrandRow = {
@@ -189,7 +190,8 @@ export function BrandsTable({
                               aspectRatio="square"
                               className="h-full w-full"
                               sizes="40px"
-                              quality={55}
+                              quality={IMAGE_QUALITY.thumbnail}
+                              focal="portrait"
                             />
                           ) : null}
                         </div>

@@ -1,6 +1,12 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
+import {
+  FOCAL_POINTS,
+  IMAGE_QUALITY,
+  IMAGE_SIZES,
+} from "@/lib/images/imageSizing";
 import type { Edition } from "@/lib/data/editions";
 import { EditionCard } from "@/app/home/editorial/EditionCard";
 import {
@@ -23,10 +29,18 @@ export function EditionsArchiveContent({
       <section className="relative flex min-h-[55dvh] min-h-[55svh] flex-col justify-end overflow-hidden bg-oma-plum pb-12 pt-8 text-white sm:min-h-[70vh] sm:pb-20 sm:pt-14">
         {heroImage && (
           <>
-            <div
-              aria-hidden
-              className="absolute inset-0 bg-cover bg-[center_20%] sm:bg-top"
-              style={{ backgroundImage: `url(${heroImage})` }}
+            {/* next/image rather than a CSS background: the banner is the
+                largest photo on the page, and a background downloads the
+                full-size original at every width. */}
+            <Image
+              src={heroImage}
+              alt=""
+              fill
+              priority
+              sizes={IMAGE_SIZES.fullBleed}
+              quality={IMAGE_QUALITY.hero}
+              className="object-cover"
+              style={{ objectPosition: FOCAL_POINTS.portrait }}
             />
             <div
               aria-hidden

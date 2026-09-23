@@ -3,6 +3,11 @@
 import { NavigationLink } from "./navigation-link";
 import Image from "next/image";
 import { CheckCircle } from "@/components/ui/icons";
+import {
+  FOCAL_POINTS,
+  IMAGE_QUALITY,
+  IMAGE_SIZES,
+} from "@/lib/images/imageSizing";
 
 interface AnimatedBrandCardProps {
   id: string;
@@ -37,7 +42,10 @@ export function AnimatedBrandCard({
           src={image || "/placeholder-image.jpg"}
           alt={name}
           fill
+          sizes={IMAGE_SIZES.cardGrid}
+          quality={IMAGE_QUALITY.standard}
           className="object-cover transition-transform duration-300 group-hover:scale-105"
+          style={{ objectPosition: FOCAL_POINTS.portrait }}
         />
       </div>
       <div className={`p-6 ${isPortrait ? "w-2/3" : ""}`}>

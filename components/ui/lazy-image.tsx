@@ -3,6 +3,11 @@
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import {
+  IMAGE_QUALITY,
+  objectPositionFor,
+  type FocalPoint,
+} from "@/lib/images/imageSizing";
 
 const BLUR_DATA_URL =
   "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0nMTYnIGhlaWdodD0nMTYnIHhtbG5zPSdodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2Zyc+PHJlY3Qgd2lkdGg9JzE2JyBoZWlnaHQ9JzE2JyBmaWxsPScjZTdlNWUyJy8+PC9zdmc+";
@@ -17,6 +22,11 @@ interface LazyImageProps {
   aspectRatio?: "square" | "video" | "portrait" | "landscape" | string;
   quality?: number;
   sizes?: string;
+  /**
+   * Where the crop holds when the photo is cut to a different shape. Named
+   * point ("portrait", "figure") or a raw CSS object-position.
+   */
+  focal?: FocalPoint | string;
   fill?: boolean;
   fallback?: React.ReactNode;
   onLoad?: () => void;
@@ -33,8 +43,9 @@ export function LazyImage({
   className = "",
   priority = false,
   aspectRatio,
-  quality = 75,
+  quality = IMAGE_QUALITY.standard,
   sizes,
+  focal,
   fill = false,
   fallback,
   onLoad,
@@ -219,6 +230,7 @@ export function LazyImage({
             : "opacity-100 blur-0 scale-100",
           fill ? "object-cover" : "w-full h-full object-cover"
         )}
+        style={{ objectPosition: objectPositionFor(focal) }}
         placeholder="blur"
         blurDataURL={BLUR_DATA_URL}
         priority={priority}

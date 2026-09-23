@@ -1,7 +1,13 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import type { Edition } from "@/lib/data/editions";
+import {
+  FOCAL_POINTS,
+  IMAGE_QUALITY,
+  IMAGE_SIZES,
+} from "@/lib/images/imageSizing";
 import { cn } from "@/lib/utils";
 
 type EditionCardProps = {
@@ -19,14 +25,7 @@ export function EditionCard({ edition, compact = false }: EditionCardProps) {
   const href = isUpcoming ? "/#join-the-list" : `/editions/${edition.slug}`;
   const ctaLabel = isUpcoming ? "Join the list" : "Read the edition";
 
-  const coverStyle =
-    !isUpcoming && edition.coverImage
-      ? {
-          backgroundImage: `url(${edition.coverImage})`,
-          backgroundSize: "cover",
-          backgroundPosition: "top center",
-        }
-      : undefined;
+  const coverImage = isUpcoming ? undefined : edition.coverImage;
 
   return (
     <article
@@ -37,12 +36,21 @@ export function EditionCard({ edition, compact = false }: EditionCardProps) {
           : "bg-gradient-to-b from-[#735048] to-[#613C3A]"
       )}
     >
-      {!isUpcoming && (
+      {coverImage && (
         <div
           aria-hidden
           className="absolute inset-0 transition-transform duration-700 ease-out group-hover:scale-105"
-          style={coverStyle}
-        />
+        >
+          <Image
+            src={coverImage}
+            alt=""
+            fill
+            sizes={IMAGE_SIZES.featureGrid}
+            quality={IMAGE_QUALITY.standard}
+            className="object-cover"
+            style={{ objectPosition: FOCAL_POINTS.portrait }}
+          />
+        </div>
       )}
 
       {/* Dark scrim — tall enough to protect text on bright photography */}
