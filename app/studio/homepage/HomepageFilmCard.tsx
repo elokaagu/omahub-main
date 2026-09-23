@@ -152,7 +152,7 @@ export function HomepageFilmCard({
               key={`homepage-film-${filmUrl || "empty"}`}
               onUploadComplete={(url) => void saveUpload(url)}
               defaultValue={filmUrl}
-              bucket="hero-images"
+              bucket="spotlight-videos"
               path="homepage-film"
               maxSize={80}
             />

@@ -8,6 +8,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { getAllBrands, getAverageRatingsByBrandIds } from "@/lib/services/brandService";
 import { mapBrandsToDisplay } from "./directoryBrandMap";
+import { BlurIn } from "@/components/studio/BlurIn";
+import { blurStagger } from "@/components/studio/blurTiming";
 import { DirectoryBrandCard } from "./DirectoryBrandCard";
 import { DirectoryFilters } from "./DirectoryFilters";
 import {
@@ -125,6 +127,8 @@ export default async function DirectoryPage({
           </div>
         ) : (
           <>
+            {/* Cards blur in as the grid scrolls into view; images below the
+                first row load lazily. */}
             <div
               className={
                 query.view === "grid"
@@ -133,12 +137,13 @@ export default async function DirectoryPage({
               }
             >
               {visible.map((brand, index) => (
-                <DirectoryBrandCard
-                  key={brand.id}
-                  brand={brand}
-                  view={query.view}
-                  priority={index < 4}
-                />
+                <BlurIn key={brand.id} delay={blurStagger(index)}>
+                  <DirectoryBrandCard
+                    brand={brand}
+                    view={query.view}
+                    priority={index < 4}
+                  />
+                </BlurIn>
               ))}
             </div>
 
