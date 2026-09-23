@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { AuthImage } from "./auth-image";
 import { MediaPicker } from "@/components/studio/MediaPicker";
+import { MediaDropzone } from "./media-dropzone";
 import {
   acceptAttribute,
   isAcceptedFile,
@@ -288,74 +289,65 @@ export function FileUpload({
           )}
         </div>
       ) : (
-        <div
-          onClick={handleButtonClick}
-          className={`border-2 border-dashed border-gray-300 rounded-md text-center cursor-pointer hover:bg-gray-50 transition-colors ${
-            compact ? "p-4" : "p-8"
-          }`}
+        <MediaDropzone
+          icon={ImageIcon}
+          title={
+            preview && hidePreview ? "Replace image" : "Click to upload an image"
+          }
+          hint={`PNG, JPG or WEBP (max. ${maxSize}MB)`}
+          compact={compact}
+          onClick={uploading ? undefined : handleButtonClick}
         >
-          <div className="flex flex-col items-center justify-center gap-2">
-            <ImageIcon className={compact ? "h-7 w-7 text-gray-400" : "h-10 w-10 text-gray-400"} />
-            <div className={compact ? "" : "mt-2"}>
-              <p className="text-sm font-medium text-gray-900">
-                {preview && hidePreview ? "Replace image" : "Click to upload an image"}
+          {uploading ? (
+            <div className="w-full space-y-3">
+              <p className="text-sm font-medium text-oma-plum">
+                Image is uploading...
               </p>
-              <p className="text-xs text-gray-500 mt-1">
-                PNG, JPG or WEBP (max. {maxSize}MB)
-              </p>
-              {imageError && preview && !isTemporaryPreview && (
-                <p className="text-xs text-red-500 mt-1">
-                  Image failed to load. Please upload a new one.
-                </p>
-              )}
-            </div>
-
-            {uploading ? (
-              <div className="w-full mt-4 space-y-3">
-                <p className="text-sm text-oma-plum font-medium">
-                  Image is uploading...
-                </p>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-oma-plum h-2 rounded-full transition-all duration-300 ease-out"
-                    style={{ width: `${uploadProgress}%` }}
-                  ></div>
-                </div>
-                <p className="text-xs text-gray-500">
-                  {Math.round(uploadProgress)}% complete
-                </p>
+              <div className="h-2 w-full rounded-full bg-gray-200">
+                <div
+                  className="h-2 rounded-full bg-oma-plum transition-all duration-300 ease-out"
+                  style={{ width: `${uploadProgress}%` }}
+                ></div>
               </div>
-            ) : (
-              <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+              <p className="text-xs text-gray-500">
+                {Math.round(uploadProgress)}% complete
+              </p>
+            </div>
+          ) : (
+            <>
+              <Button
+                type="button"
+                className="bg-oma-plum hover:bg-oma-plum/90"
+                disabled={uploading}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  handleButtonClick();
+                }}
+              >
+                {preview && hidePreview ? "Change Image" : "Select Image"}
+              </Button>
+              {allowLibrary && (
                 <Button
                   type="button"
-                  className="bg-oma-plum hover:bg-oma-plum/90"
+                  variant="outline"
                   disabled={uploading}
                   onClick={(event) => {
                     event.stopPropagation();
-                    handleButtonClick();
+                    setLibraryOpen(true);
                   }}
                 >
-                  {preview && hidePreview ? "Change Image" : "Select Image"}
+                  <ImageIcon className="mr-2 h-4 w-4" aria-hidden />
+                  Choose existing
                 </Button>
-                {allowLibrary && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    disabled={uploading}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      setLibraryOpen(true);
-                    }}
-                  >
-                    <ImageIcon className="mr-2 h-4 w-4" aria-hidden />
-                    Choose existing
-                  </Button>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
+              )}
+            </>
+          )}
+        </MediaDropzone>
+      )}
+      {imageError && preview && !isTemporaryPreview && (
+        <p className="text-xs text-red-500">
+          Image failed to load. Please upload a new one.
+        </p>
       )}
     </div>
   );

@@ -10,6 +10,7 @@ import {
   isLikelyVideoFile,
 } from "@/lib/uploads/acceptedMedia";
 import { uploadPublicFile } from "@/lib/uploads/studioStorageUpload";
+import { MediaDropzone } from "./media-dropzone";
 
 interface VideoUploadProps {
   onUploadComplete: (url: string) => void;
@@ -236,14 +237,20 @@ export function VideoUpload({
           </Button>
         </div>
       ) : (
-        <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
-          <Video className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+        <MediaDropzone
+          icon={Video}
+          title="Click to upload a video"
+          hint={`MP4, WebM or MOV (max. ${maxSize}MB)`}
+          onClick={uploading ? undefined : handleButtonClick}
+        >
           <Button
             type="button"
             variant="outline"
-            onClick={handleButtonClick}
             disabled={uploading}
-            className="mb-2"
+            onClick={(event) => {
+              event.stopPropagation();
+              handleButtonClick();
+            }}
           >
             {uploading ? (
               "Uploading..."
@@ -254,10 +261,7 @@ export function VideoUpload({
               </>
             )}
           </Button>
-          <p className="text-sm text-muted-foreground">
-            Max size: {maxSize}MB. Supported: MP4, WebM, QuickTime
-          </p>
-        </div>
+        </MediaDropzone>
       )}
 
       {error && (
