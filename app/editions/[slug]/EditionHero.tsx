@@ -32,9 +32,9 @@ export function EditionHero({
   return (
     <section
       aria-labelledby="edition-title"
-      // Viewport minus the fixed site header; a floor keeps very short
-      // (landscape phone) screens from squashing the title.
-      className="flex h-[calc(100svh-3.5rem-env(safe-area-inset-top,0px))] min-h-[32rem] flex-col sm:h-[calc(100svh-4rem-env(safe-area-inset-top,0px))]"
+      // Full viewport: the site header floats over this hero. A floor keeps
+      // very short (landscape phone) screens from squashing the title.
+      className="flex h-[100svh] min-h-[32rem] flex-col"
     >
       <div className="relative min-h-0 flex-1 overflow-hidden bg-oma-plum">
         {coverImage ? (
@@ -71,7 +71,7 @@ export function EditionHero({
         />
 
         {/* Bottom padding clears the fade, so the title stays on the photo. */}
-        <div className="relative z-20 mx-auto flex h-full w-full max-w-7xl flex-col justify-between px-4 pb-28 pt-5 sm:px-6 sm:pb-36 sm:pt-7 lg:px-8">
+        <div className="relative z-20 mx-auto flex h-full w-full max-w-7xl flex-col justify-between px-4 pb-28 pt-[calc(3.5rem+env(safe-area-inset-top,0px)+0.5rem)] sm:px-6 sm:pb-36 sm:pt-[calc(4rem+env(safe-area-inset-top,0px)+0.75rem)] lg:px-8">
           <nav aria-label="Breadcrumb">
             <ol className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-white/80">
               <li>

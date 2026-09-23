@@ -34,6 +34,10 @@ const primaryLinks: { name: string; href: string; accent?: boolean }[] = [
 const iconBtn =
   "inline-flex size-9 shrink-0 items-center justify-center rounded-full text-oma-black transition-colors duration-200 hover:bg-oma-beige/30 hover:text-oma-plum focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-oma-plum/35 sm:size-10";
 
+/** Same button, inverted for use over a dark photograph. */
+const iconBtnOnPhoto =
+  "inline-flex size-9 shrink-0 items-center justify-center rounded-full text-white transition-colors duration-200 hover:bg-white/15 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/60 sm:size-10";
+
 export default function Header() {
   const { user, signOut } = useAuth();
   const customerSignupEnabled = useCustomerSignupEnabled();
@@ -47,12 +51,20 @@ export default function Header() {
   const router = useRouter();
   const pathname = usePathname();
   const isHomePage = pathname === "/";
+  // Brand and edition pages open on a full-bleed photograph, so the bar sits
+  // over the image until you scroll.
+  const isPhotoHero =
+    /^\/brand\/[^/]+$/.test(pathname ?? "") ||
+    /^\/editions\/[^/]+$/.test(pathname ?? "");
   const [menuOpen, setMenuOpen] = useState(false);
   const [isNavigatingToStudio, setIsNavigatingToStudio] = useState(false);
   const [hasScrolled, setHasScrolled] = useState(false);
   const drawerRef = useRef<HTMLDivElement>(null);
 
-  const isTransparent = isHomePage && !hasScrolled && !menuOpen;
+  const isTransparent =
+    (isHomePage || isPhotoHero) && !hasScrolled && !menuOpen;
+  /** Over a dark photo the logo and icons have to invert to stay legible. */
+  const onDarkPhoto = isPhotoHero && !hasScrolled && !menuOpen;
   const closeMenu = () => setMenuOpen(false);
 
   useEffect(() => {
@@ -62,7 +74,7 @@ export default function Header() {
   }, [menuOpen]);
 
   useEffect(() => {
-    if (!isHomePage) {
+    if (!isHomePage && !isPhotoHero) {
       setHasScrolled(true);
       return;
     }
@@ -71,7 +83,7 @@ export default function Header() {
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, [isHomePage]);
+  }, [isHomePage, isPhotoHero]);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -158,7 +170,7 @@ export default function Header() {
         <div className="flex min-w-0 flex-1 items-center justify-start">
           <button
             type="button"
-            className={iconBtn}
+            className={onDarkPhoto ? iconBtnOnPhoto : iconBtn}
             onClick={() => setMenuOpen(true)}
             aria-expanded={menuOpen}
             aria-controls="site-menu"
@@ -173,7 +185,10 @@ export default function Header() {
           <NavigationLink href="/" className="block py-1">
             <span className="sr-only">OmaHub</span>
             <Image
-              className="h-[1.125rem] w-auto brightness-0 sm:h-6"
+              className={cn(
+                "h-[1.125rem] w-auto transition-[filter] duration-300 sm:h-6",
+                onDarkPhoto ? "brightness-0 invert" : "brightness-0",
+              )}
               src="/lovable-uploads/omahub-logo.png"
               alt="OmaHub"
               width={126}
@@ -188,7 +203,7 @@ export default function Header() {
           <button
             type="button"
             onClick={openSearch}
-            className={iconBtn}
+            className={onDarkPhoto ? iconBtnOnPhoto : iconBtn}
             aria-label="Search"
           >
             <Search className="size-[1.125rem] sm:size-5" aria-hidden />
@@ -205,7 +220,7 @@ export default function Header() {
             <NavigationLink
               href="/login"
               aria-label="Sign in"
-              className={iconBtn}
+              className={onDarkPhoto ? iconBtnOnPhoto : iconBtn}
             >
               <User className="size-[1.125rem] sm:size-5" aria-hidden />
             </NavigationLink>
@@ -214,7 +229,7 @@ export default function Header() {
           <NavigationLink
             href="/directory"
             aria-label="Explore brands"
-            className={iconBtn}
+            className={onDarkPhoto ? iconBtnOnPhoto : iconBtn}
           >
             <ShoppingBag className="size-[1.125rem] sm:size-5" aria-hidden />
           </NavigationLink>

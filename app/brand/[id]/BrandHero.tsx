@@ -39,7 +39,7 @@ export function BrandHero({ brand }: { brand: BrandProfileData }) {
         className="absolute inset-0 bg-[linear-gradient(to_top,rgba(0,0,0,0.85)_0%,rgba(0,0,0,0.55)_28%,rgba(0,0,0,0.15)_55%,rgba(0,0,0,0)_80%)]"
       />
 
-      <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+      <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 pb-6 pt-[calc(3.5rem+env(safe-area-inset-top,0px)+1rem)] sm:px-6 sm:pb-8 sm:pt-[calc(4rem+env(safe-area-inset-top,0px)+1.25rem)] lg:px-8">
         <nav aria-label="Breadcrumb">
           <Link
             href="/directory"

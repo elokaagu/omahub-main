@@ -20,6 +20,10 @@ export default function LayoutContent({
   const { isNavigating, forceReset } = useNavigation();
   const isHomePage = pathname === "/";
   const isStudioPage = pathname?.startsWith("/studio") || false;
+  // These open on a full-bleed photograph with the header floating over it.
+  const isPhotoHeroPage =
+    /^\/brand\/[^/]+$/.test(pathname ?? "") ||
+    /^\/editions\/[^/]+$/.test(pathname ?? "");
   const hideHeader = isStudioPage;
 
   // Emergency reset for stuck navigation states
@@ -42,7 +46,7 @@ export default function LayoutContent({
       {!hideHeader && <Header />}
       <main
         className={
-          isHomePage || hideHeader
+          isHomePage || hideHeader || isPhotoHeroPage
             ? ""
             : "pt-[calc(3.5rem+env(safe-area-inset-top,0px))] sm:pt-[calc(4rem+env(safe-area-inset-top,0px))]"
         }

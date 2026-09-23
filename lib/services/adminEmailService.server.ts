@@ -1,4 +1,5 @@
 import { createServerSupabaseClient } from "@/lib/supabase-unified";
+import { getAdminClient } from "@/lib/supabase-admin";
 
 export interface AdminEmailConfig {
   super_admin_emails: string[];
@@ -126,7 +127,10 @@ export class AdminEmailServiceServer {
         count: config.super_admin_emails?.length || 0,
         isArray: Array.isArray(config.super_admin_emails)
       });
-      return config.super_admin_emails;
+      if (config.super_admin_emails.length > 0) {
+        return config.super_admin_emails;
+      }
+      return this.getSuperAdminEmailsFromProfiles();
     } catch (error) {
       console.error("❌ [ADMIN EMAIL SERVICE] Error in getSuperAdminEmails():", error);
       throw error;
@@ -142,11 +146,43 @@ export class AdminEmailServiceServer {
   }
 
   /**
-   * Get all webhook admin emails
+   * Get all webhook admin emails. When none are configured these fall back to
+   * the super admins, so new-account notifications always reach someone.
    */
   async getWebhookAdminEmails(): Promise<string[]> {
     const config = await this.getAdminEmailConfig();
-    return config.webhook_admin_emails;
+    if (config.webhook_admin_emails.length > 0) {
+      return config.webhook_admin_emails;
+    }
+    console.log(
+      "ℹ️ [ADMIN EMAIL SERVICE] No webhook admins configured; using super admins",
+    );
+    return this.getSuperAdminEmails();
+  }
+
+  /**
+   * Every super admin account's email, straight from `profiles`. Used when
+   * the configured list is empty so a new super admin is never missed.
+   */
+  private async getSuperAdminEmailsFromProfiles(): Promise<string[]> {
+    try {
+      const admin = await getAdminClient();
+      if (!admin) return [];
+      const { data, error } = await admin
+        .from("profiles")
+        .select("email")
+        .eq("role", "super_admin");
+      if (error) throw error;
+      return (data ?? [])
+        .map((row: { email: string | null }) => row.email?.trim())
+        .filter((email): email is string => Boolean(email));
+    } catch (error) {
+      console.error(
+        "❌ [ADMIN EMAIL SERVICE] Could not read super admins from profiles:",
+        error,
+      );
+      return [];
+    }
   }
 
   /**
