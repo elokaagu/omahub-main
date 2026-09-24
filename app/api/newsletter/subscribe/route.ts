@@ -73,6 +73,16 @@ export async function POST(request: NextRequest) {
 
   try {
     if (existingSubscriber?.subscription_status === "active") {
+      // The form promises "you're in", so confirm it rather than going quiet.
+      // The response stays the same generic message either way - saying
+      // "already subscribed" on screen would reveal who is on the list.
+      void sendNewsletterConfirmationEmail({
+        email,
+        firstName: firstName || "there",
+        lastName: lastName || "",
+        kind: "already",
+      });
+
       return NextResponse.json({ success: true, message: GENERIC_SUCCESS_MESSAGE });
     }
 
@@ -101,7 +111,7 @@ export async function POST(request: NextRequest) {
         email,
         firstName: firstName || "there",
         lastName: lastName || "",
-        isReactivation: true,
+        kind: "reactivation",
       });
 
       return NextResponse.json({ success: true, message: GENERIC_SUCCESS_MESSAGE });
@@ -135,7 +145,7 @@ export async function POST(request: NextRequest) {
       email,
       firstName: firstName || "there",
       lastName: lastName || "",
-      isReactivation: false,
+      kind: "new",
     });
 
     return NextResponse.json({ success: true, message: GENERIC_SUCCESS_MESSAGE });

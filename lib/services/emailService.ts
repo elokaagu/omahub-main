@@ -1,5 +1,9 @@
 import { Resend } from "resend";
 import { buildOmaHubEmailHtml } from "@/lib/services/omahubEmailTemplate";
+import {
+  newsletterConfirmationCopy,
+  type NewsletterConfirmationKind,
+} from "@/lib/newsletter/confirmationCopy";
 
 // Lazy initialization helper - get Resend instance when needed
 function getResendInstance(): Resend | null {
@@ -368,7 +372,7 @@ export async function sendNewsletterConfirmationEmail(formData: {
   email: string;
   firstName: string;
   lastName: string;
-  isReactivation?: boolean;
+  kind: NewsletterConfirmationKind;
 }) {
   try {
     // Get Resend instance (lazy initialization)
@@ -392,17 +396,13 @@ export async function sendNewsletterConfirmationEmail(formData: {
       };
     }
 
-    const { email, firstName, lastName, isReactivation = false } = formData;
+    const { email, firstName, lastName, kind } = formData;
 
     const displayName =
       firstName === "there" ? "there" : `${firstName} ${lastName}`.trim();
-    const subject = isReactivation
-      ? "Welcome back to OmaHub Newsletter!"
-      : "Welcome to OmaHub Newsletter!";
 
-    const welcomeMessage = isReactivation
-      ? "Welcome back! We're thrilled to have you back in our community."
-      : "Welcome to our community! We're excited to have you join us.";
+    const { subject, welcome: welcomeMessage, detail } =
+      newsletterConfirmationCopy(kind);
 
     console.log("📧 Sending newsletter confirmation email to:", email);
 
@@ -412,42 +412,25 @@ export async function sendNewsletterConfirmationEmail(formData: {
       subject: subject,
       html: buildOmaHubEmailHtml({
         preheader: subject,
-        title: "Newsletter Subscription",
-        subtitle: "Welcome to OmaHub",
+        title: "You're on the list",
+        subtitle: "OmaHub newsletter",
         intro: `Hi ${displayName},`,
-        sections: [
-          {
-            content: `${welcomeMessage}\n\nYou're now subscribed and will receive product drops, designer highlights, and curated updates from OmaHub.`,
-          },
-        ],
+        sections: [{ content: `${welcomeMessage}\n\n${detail}` }],
         ctaLabel: "Explore OmaHub",
         ctaUrl: process.env.NEXT_PUBLIC_SITE_URL || "https://oma-hub.com",
         footerNote:
           "You can unsubscribe at any time from the link in future newsletter emails.",
       }),
-      text: `
-Dear ${displayName},
+      text: `Hi ${displayName},
 
 ${welcomeMessage}
 
-You're now subscribed to our newsletter and will receive:
-• Early access to new designer collections
-• Exclusive designer interviews and behind-the-scenes content
-• Special event invitations and fashion industry updates
-• Platform updates and new features
+${detail}
 
-We're committed to bringing you the best in emerging fashion design and will only send you content that adds value to your experience.
+You can unsubscribe at any time from the link in any newsletter email.
 
-If you ever want to unsubscribe, you can do so at any time by clicking the unsubscribe link in any of our emails.
-
-Thank you for joining our community!
-
-Best regards,
 The OmaHub Team
-
----
-This is an automated confirmation email. Please do not reply to this message.
-  `,
+`,
       replyTo: "newsletter@oma-hub.com",
     });
 
