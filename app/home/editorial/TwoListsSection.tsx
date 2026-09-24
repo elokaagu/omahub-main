@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import type { Edition } from "@/lib/data/editions";
 import { EmailCaptureForm } from "./EmailCaptureForm";
 import { AnimateOnScroll } from "@/components/ui/animate-on-scroll";
 
@@ -8,7 +9,17 @@ import { AnimateOnScroll } from "@/components/ui/animate-on-scroll";
  * Two lists, two journeys: community members get early access to drops and
  * edition previews; designers get application windows and industry news.
  */
-export function TwoListsSection() {
+export function TwoListsSection({
+  upcomingEdition,
+}: {
+  upcomingEdition?: Edition | null;
+}) {
+  // Naming the edition makes the ask concrete when applications are open.
+  const applyLabel =
+    upcomingEdition?.applicationsOpen && upcomingEdition.number
+      ? `Apply for Edition ${upcomingEdition.number}`
+      : "Apply to join OmaHub";
+
   return (
     <section id="join-the-list" className="bg-oma-cream py-14 sm:py-20 lg:py-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -59,12 +70,20 @@ export function TwoListsSection() {
                 Apply for upcoming editions. Get application windows, industry
                 insights, and edition themes, before anyone else.
               </p>
-              <div className="mt-8">
+              {/* One ask per button: applying is the action, reading up on
+                  it is the quieter alternative. */}
+              <div className="mt-8 flex flex-col items-start gap-4">
                 <Link
                   href="/join"
                   className="inline-flex min-h-[44px] items-center gap-2 border border-oma-gold px-6 text-xs font-semibold uppercase tracking-[0.2em] text-oma-gold transition-colors hover:bg-oma-gold hover:text-oma-plum"
                 >
-                  Apply / Join the designer list <span aria-hidden>→</span>
+                  {applyLabel} <span aria-hidden>→</span>
+                </Link>
+                <Link
+                  href="/how-it-works"
+                  className="text-xs uppercase tracking-[0.18em] text-white/60 transition-colors hover:text-oma-gold sm:tracking-[0.2em]"
+                >
+                  See how it works
                 </Link>
               </div>
             </div>

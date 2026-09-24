@@ -75,7 +75,7 @@ export default async function Home() {
         <FilmSection />
         <WorkedWithSection brands={workedWithBrands} />
         <EditorialDecorSection />
-        <TwoListsSection />
+        <TwoListsSection upcomingEdition={upcomingEdition} />
       </main>
     </>
   );

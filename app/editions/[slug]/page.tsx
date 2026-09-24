@@ -413,7 +413,6 @@ export default async function EditionPage({
             <EmailCaptureForm
               source="website"
               variant="dark"
-              buttonLabel="Notify me"
               className="w-full"
             />
           </div>

@@ -16,7 +16,10 @@ type EmailCaptureFormProps = {
 export function EmailCaptureForm({
   source = "website",
   variant = "dark",
-  buttonLabel = "Notify me",
+  // One label everywhere. The hero, the homepage card and the edition page
+  // all subscribe to the same list, so three different verbs read as three
+  // different offers.
+  buttonLabel = "Join the list",
   placeholder = "Your email address",
   successMessage = "You're on the list. Watch your inbox.",
   className,

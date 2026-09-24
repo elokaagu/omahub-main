@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   AnimateOnScroll,
 } from "@/components/ui/animate-on-scroll";
@@ -22,6 +23,17 @@ export function FilmSectionCopy() {
           The designers behind the diaspora&apos;s most exciting labels, in
           their own words.
         </p>
+      </AnimateOnScroll>
+      {/* A full screen of film with nowhere to go afterwards was wasting the
+          one moment someone is most curious about the designers. */}
+      <AnimateOnScroll animation="slideUp" delay={0.24} duration={0.7}>
+        <Link
+          href="/directory"
+          className="mt-5 inline-flex min-h-[44px] items-center gap-2 border-b border-oma-gold/50 pb-0.5 text-xs font-semibold uppercase tracking-[0.2em] text-oma-gold transition-colors hover:border-oma-gold hover:text-white sm:mt-6 sm:text-sm"
+        >
+          Meet the designers
+          <span aria-hidden>→</span>
+        </Link>
       </AnimateOnScroll>
     </div>
   );

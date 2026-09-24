@@ -99,10 +99,23 @@ export function EditorialHeroContent({
             </HeroFilmReveal>
 
             <HeroReveal delay={0.22}>
+              {/* The next edition is what we are selling, so name it rather
+                  than opening with "between editions". */}
               <p className="max-w-md text-[0.9375rem] leading-relaxed text-oma-black/70 sm:text-base sm:leading-relaxed lg:text-lg">
-                OmaHub is between editions. The next drop spotlights African
-                designers you need to know, verified, curated, and ready to
-                wear. Get early access.
+                {upcomingEdition ? (
+                  // The eyebrow above already names the edition and the date.
+                  <>
+                    The next edition spotlights African designers you need to
+                    know, verified, curated, and ready to wear. The list gets
+                    the designers, the drop and the invite first.
+                  </>
+                ) : (
+                  <>
+                    OmaHub is between editions. The next drop spotlights African
+                    designers you need to know, verified, curated, and ready to
+                    wear. Get early access.
+                  </>
+                )}
               </p>
             </HeroReveal>
 
@@ -122,22 +135,32 @@ export function EditorialHeroContent({
               <EmailCaptureForm
                 source="website"
                 variant="light"
-                buttonLabel="Notify me"
                 successMessage="You're in. Early access details land in your inbox first."
               />
             </HeroReveal>
 
-            {latestPastEdition && (
-              <HeroReveal delay={0.42} y={16}>
+            {/* Somewhere to go for anyone not ready to hand over an email -
+                deliberately quieter than the list. */}
+            <HeroReveal delay={0.42} y={16}>
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-xs uppercase tracking-[0.18em] sm:text-sm sm:tracking-[0.2em]">
                 <Link
-                  href={`/editions/${latestPastEdition.slug}`}
-                  className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-oma-cocoa transition-colors hover:text-oma-plum sm:text-sm sm:tracking-[0.2em]"
+                  href="/directory"
+                  className="inline-flex items-center gap-2 border-b border-oma-plum/40 pb-0.5 font-semibold text-oma-plum transition-colors hover:border-oma-plum hover:text-oma-cocoa"
                 >
-                  Watch, OmaHub Edition {latestPastEdition.number}
+                  Explore designers
                   <span aria-hidden>→</span>
                 </Link>
-              </HeroReveal>
-            )}
+                {latestPastEdition && (
+                  <Link
+                    href={`/editions/${latestPastEdition.slug}`}
+                    className="inline-flex items-center gap-2 text-oma-cocoa transition-colors hover:text-oma-plum"
+                  >
+                    Watch Edition {latestPastEdition.number}
+                    <span aria-hidden>→</span>
+                  </Link>
+                )}
+              </div>
+            </HeroReveal>
           </div>
 
           <HeroFilmReveal delay={0.12} className="hidden w-full lg:flex lg:items-center lg:justify-end">
