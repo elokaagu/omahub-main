@@ -507,7 +507,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
                   Delete “{contentDraft.title || edition.title}”?
                 </AlertDialogTitle>
                 <AlertDialogDescription>
-                  This removes the edition from the archive and deletes its
+                  This removes the edition from Experiences and deletes its
                   story, cover, gallery, video and brand lineup. Photos stay in
                   your media library. This cannot be undone.
                 </AlertDialogDescription>
@@ -539,7 +539,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
           Hero cover
         </h2>
         <p className="text-sm text-gray-600 mb-4">
-          Leads the archive card and the edition page hero. Uploading a new one
+          Leads the experiences card and the edition page hero. Uploading a new
           replaces the current cover.
         </p>
         {effectiveCover && (

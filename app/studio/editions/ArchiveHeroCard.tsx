@@ -35,7 +35,7 @@ export function ArchiveHeroCard({
     setSaving(true);
     const error = await savePlatformSetting(
       { archiveHeroImage: url },
-      "Failed to update the archive banner",
+      "Failed to update the experiences banner",
     );
     setSaving(false);
     if (error) {
@@ -51,17 +51,17 @@ export function ArchiveHeroCard({
       <CardHeader>
         <CardTitle className="flex items-center gap-2 font-canela text-gray-900">
           <ImageIcon className="h-5 w-5" />
-          Archive banner
+          Experiences banner
         </CardTitle>
         <CardDescription className="text-gray-600">
-          The photo behind &ldquo;The Archive&rdquo; on the public editions page
+          The photo behind &ldquo;Experiences&rdquo; on the public editions page
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
         <p className="text-sm text-gray-600">
           {imageUrl
-            ? "This photo is set for the archive banner."
-            : "No banner set - the archive is using the newest past edition's cover."}
+            ? "This photo is set for the experiences banner."
+            : "No banner set - the page is using the newest past edition's cover."}
         </p>
 
         {preview && (
@@ -70,7 +70,7 @@ export function ArchiveHeroCard({
             <img
               key={preview}
               src={preview}
-              alt="Current archive banner"
+              alt="Current experiences banner"
               className="h-48 w-full object-cover"
             />
           </div>
@@ -79,7 +79,7 @@ export function ArchiveHeroCard({
         <FileUpload
           allowLibrary
           key={`archive-hero-${imageUrl || "empty"}`}
-          onUploadComplete={(url) => void save(url, "Archive banner updated")}
+          onUploadComplete={(url) => void save(url, "Experiences banner updated")}
           defaultValue={imageUrl}
           bucket="hero-images"
           path="editions-archive"
@@ -99,7 +99,10 @@ export function ArchiveHeroCard({
             variant="outline"
             disabled={saving}
             onClick={() =>
-              void save("", "Archive banner reset to the latest edition cover")
+              void save(
+                "",
+                "Experiences banner reset to the latest edition cover"
+              )
             }
             className="w-full"
           >

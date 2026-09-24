@@ -16,10 +16,10 @@ export const SITE_PAGES: SitePage[] = [
   {
     id: "page-editions",
     type: "page",
-    title: "Editions",
+    title: "Experiences",
     subtitle: "Past and upcoming OmaHub editions",
     url: "/editions",
-    keywords: "events pop-up shows archive",
+    keywords: "events pop-up shows archive editions experiences",
   },
   {
     id: "page-how-it-works",

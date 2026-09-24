@@ -63,7 +63,7 @@ export function EditionsArchiveContent({
               OmaHub editions
             </p>
             <h1 className="mt-2 font-canela text-4xl text-white sm:mt-3 sm:text-6xl">
-              The Archive
+              Experiences
             </h1>
           </AnimateOnScroll>
 

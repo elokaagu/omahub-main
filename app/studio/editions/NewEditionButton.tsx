@@ -181,7 +181,7 @@ export function NewEditionButton() {
                   value={form.sortDate}
                   onChange={(value) => set("sortDate", value)}
                 />
-                <p className="text-xs text-gray-500">Orders the archive.</p>
+                <p className="text-xs text-gray-500">Orders the experiences list.</p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="new-edition-city">City</Label>

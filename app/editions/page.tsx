@@ -10,11 +10,12 @@ import { publicSupabaseClient } from "@/lib/supabase-public";
 import { EditionsArchiveContent } from "./EditionsArchiveContent";
 
 export const metadata: Metadata = generateSEOMetadata({
-  title: "The Archive | OmaHub Editions",
+  title: "Experiences | OmaHub Editions",
   description:
     "Every OmaHub edition: storytelling-led pop-up events spotlighting verified African designers — from London to Lagos, Accra to Nairobi.",
   keywords: [
     "OmaHub editions",
+    "OmaHub experiences",
     "African fashion events",
     "fashion pop-up archive",
     "verified African designers",

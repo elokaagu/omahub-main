@@ -23,7 +23,7 @@ export function ArchiveSection({ editions }: ArchiveSectionProps) {
                 OmaHub editions
               </p>
               <h2 className="mt-2 font-canela text-3xl text-oma-black sm:text-4xl lg:text-5xl">
-                The Archive
+                Experiences
               </h2>
             </div>
             <Link

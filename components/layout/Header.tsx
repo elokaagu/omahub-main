@@ -25,7 +25,7 @@ const isDev = process.env.NODE_ENV === "development";
 
 const primaryLinks: { name: string; href: string; accent?: boolean }[] = [
   { name: "Home", href: "/" },
-  { name: "Archive", href: "/editions" },
+  { name: "Experiences", href: "/editions" },
   { name: "How It Works", href: "/how-it-works" },
   { name: "About", href: "/about" },
   { name: "Explore Brands", href: "/directory", accent: true },

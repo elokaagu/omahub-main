@@ -102,7 +102,7 @@ export function HomepageFilmCard({
           Homepage film
         </CardTitle>
         <CardDescription className="text-gray-600">
-          The full-width film below the archive on the public homepage
+          The full-width film below Experiences on the public homepage
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">

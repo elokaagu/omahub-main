@@ -172,7 +172,7 @@ export function EditionContentSection({
           />
         </div>
         <div className="space-y-2 sm:col-span-2">
-          <Label htmlFor="edition-card-title">Archive card title</Label>
+          <Label htmlFor="edition-card-title">Experiences card title</Label>
           <Input
             id="edition-card-title"
             value={draft.card_title ?? ""}
