@@ -10,6 +10,7 @@ import {
   type EditionLineupBrand,
 } from "@/lib/services/editionLineupService";
 import { getBrandCardList } from "@/lib/services/brandService";
+import { brandIsListedInPublicDirectory } from "@/lib/brands/directoryListingImage";
 import type { Brand } from "@/lib/supabase";
 import { BlurIn } from "@/components/studio/BlurIn";
 import { BrandCard } from "@/components/ui/brand-card";
@@ -87,7 +88,23 @@ export function EditionLineupSection({
         edition_slug: slug,
         brand_id: targetBrandId,
       });
-      toast.success("Brand added to lineup");
+      const added = allBrands.find((brand) => brand.id === targetBrandId);
+      if (added && !brandIsListedInPublicDirectory(added)) {
+        toast.warning(
+          `${added.name} has no photo yet, so it will stay hidden on the public lineup.`,
+        );
+        void fetch("/api/studio/editions/missing-image-alert", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            brandName: added.name,
+            editionSlug: slug,
+          }),
+        });
+      } else {
+        toast.success("Brand added to lineup");
+      }
       setSelectedLineupBrandId("");
       await refetchLineup();
       await onChanged();
@@ -131,6 +148,9 @@ export function EditionLineupSection({
   const lineupBrands = lineupEntries
     .map((entry) => allBrands.find((brand) => brand.id === entry.brand_id))
     .filter((brand): brand is Brand => Boolean(brand));
+  const missingPhotos = lineupBrands.filter(
+    (brand) => !brandIsListedInPublicDirectory(brand),
+  );
   const availableLineupBrands = allBrands.filter(
     (brand) => !lineupBrandIds.has(brand.id),
   );
@@ -146,6 +166,13 @@ export function EditionLineupSection({
         homepage brand rows. The archive card label comes from Lineup label in
         Edition post above, or from this brand count if that field is empty.
       </p>
+
+      {missingPhotos.length > 0 && (
+        <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+          Hidden on the public lineup until a photo is added:{" "}
+          {missingPhotos.map((brand) => brand.name).join(", ")}.
+        </div>
+      )}
 
       {lineupBrands.length > 0 && (
         <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

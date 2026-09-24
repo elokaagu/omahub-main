@@ -597,7 +597,7 @@ export default function CreateBrandPage() {
                   defaultValue={formData.image}
                   bucket="brand-assets"
                   accept="image/png,image/jpeg,image/jpg,image/webp"
-                  maxSize={5}
+                  maxSize={20}
                   imageType="brand"
                   imageRole="cover"
                 />
@@ -618,7 +618,7 @@ export default function CreateBrandPage() {
                     bucket="brand-assets"
                     path="thumbnails"
                     accept="image/png,image/jpeg,image/jpg,image/webp"
-                    maxSize={5}
+                    maxSize={20}
                   />
                 </div>
               </CardContent>

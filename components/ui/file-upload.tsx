@@ -48,7 +48,7 @@ export function FileUpload({
     "image/png": [".png"],
     "image/webp": [".webp"],
   },
-  maxSize = 5,
+  maxSize = 20,
   className = "",
   hidePreview = false,
   compact = false,

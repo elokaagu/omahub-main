@@ -13,6 +13,13 @@ export type WorkedWithBrand = {
   isVerified: boolean;
   video_url?: string;
   video_thumbnail?: string;
+  brand_images?: Array<{
+    id: string;
+    role: string;
+    storage_path: string;
+    created_at: string;
+    updated_at: string;
+  }>;
 };
 
 type WorkedWithSectionProps = {

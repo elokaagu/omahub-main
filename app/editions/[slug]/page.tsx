@@ -381,12 +381,11 @@ export default async function EditionPage({
         <section className="border-t border-oma-cocoa/10 bg-white py-12 sm:py-16 lg:py-20">
           <FullWidthBrandRow
             title="The lineup"
-            subtitle={
-              edition.lineupLabel
-                ? `${edition.lineupLabel} from ${edition.title}`
-                : `The brands that showed at ${edition.title}`
-            }
+            subtitle={`${lineupBrands.length} ${
+              lineupBrands.length === 1 ? "brand" : "brands"
+            } from ${edition.title}`}
             brands={lineupBrands}
+            align="center"
           />
         </section>
       )}

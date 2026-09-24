@@ -1,4 +1,8 @@
 import { unstable_cache } from "next/cache";
+import {
+  brandIsListedInPublicDirectory,
+  resolveBrandDirectoryCardImageUrl,
+} from "@/lib/brands/directoryListingImage";
 import { getAllBrands } from "@/lib/services/brandService";
 import type { Brand } from "@/lib/supabase";
 import type { WorkedWithBrand } from "@/app/home/editorial/WorkedWithSection";
@@ -7,26 +11,24 @@ function toWorkedWithBrand(brand: Brand): WorkedWithBrand {
   return {
     id: brand.id,
     name: brand.name,
-    image: brand.image || "/placeholder-image.jpg",
+    image: resolveBrandDirectoryCardImageUrl(brand),
     category: brand.category,
     location: brand.location,
     rating: brand.rating,
     isVerified: brand.is_verified,
     video_url: brand.video_url || undefined,
     video_thumbnail: brand.video_thumbnail || undefined,
+    brand_images: brand.brand_images,
   };
-}
-
-function hasRealImage(brand: Brand): boolean {
-  return !!brand.image && /^https?:\/\//.test(brand.image);
 }
 
 async function buildEditorialHomeBrands(): Promise<WorkedWithBrand[]> {
   const brands = await getAllBrands(false, false);
-  const verified = brands.filter((brand) => brand.is_verified);
-  // Keep the row visual: brands with a film first, then brands with a photo.
-  const withVideo = verified.filter((b) => b.video_url && hasRealImage(b));
-  const withImage = verified.filter((b) => !b.video_url && hasRealImage(b));
+  const verified = brands.filter(
+    (brand) => brand.is_verified && brandIsListedInPublicDirectory(brand),
+  );
+  const withVideo = verified.filter((brand) => brand.video_url);
+  const withImage = verified.filter((brand) => !brand.video_url);
   return [...withVideo, ...withImage].slice(0, 14).map(toWorkedWithBrand);
 }
 
@@ -53,6 +55,7 @@ export async function getBrandsByNames(
   const brands = await getAllBrands(false, false);
   return brands
     .filter((brand) => wanted.has(brand.name.trim().toLowerCase()))
+    .filter(brandIsListedInPublicDirectory)
     .map(toWorkedWithBrand);
 }
 
@@ -71,5 +74,6 @@ export async function getBrandsByIds(
   return ids
     .map((id) => byId.get(id))
     .filter((brand): brand is Brand => Boolean(brand))
+    .filter(brandIsListedInPublicDirectory)
     .map(toWorkedWithBrand);
 }

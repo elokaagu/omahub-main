@@ -6,6 +6,10 @@ import { getStudioSession } from "@/lib/studio/session";
 import { StudioHomeOverview } from "@/components/studio/StudioHomeOverview";
 import { BlurIn } from "@/components/studio/BlurIn";
 import { StudioRecentAccountsCard } from "./StudioRecentAccountsCard";
+import { getAllEditionLineupBrands } from "@/lib/services/editionLineupService";
+import { getAllBrands } from "@/lib/services/brandService";
+import { findMissingLineupImages } from "@/lib/editions/missingLineupImages";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
@@ -40,10 +44,18 @@ export default async function StudioPage() {
   if (role === "brand_admin") redirect("/studio/brands");
   const isSuperAdmin = role === "super_admin";
 
-  const [brands, applications] = await Promise.all([
+  const [brands, applications, missingLineupPhotos] = await Promise.all([
     countBrands(supabase),
     // Application counts use the service role, so only super admins get them.
     isSuperAdmin ? countApplications() : Promise.resolve(null),
+    isSuperAdmin
+      ? Promise.all([
+          getAllEditionLineupBrands(supabase),
+          getAllBrands(false, true),
+        ]).then(([lineupRows, allBrands]) =>
+          findMissingLineupImages(lineupRows, allBrands),
+        )
+      : Promise.resolve([]),
   ]);
 
   return (
@@ -58,6 +70,31 @@ export default async function StudioPage() {
           </p>
         </header>
       </BlurIn>
+
+      {isSuperAdmin && missingLineupPhotos.length > 0 && (
+        <BlurIn>
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-950">
+            <p className="font-medium">
+              {missingLineupPhotos.length} lineup{" "}
+              {missingLineupPhotos.length === 1 ? "brand is" : "brands are"}{" "}
+              hidden on the public site until a photo is added.
+            </p>
+            <ul className="mt-2 space-y-1">
+              {missingLineupPhotos.map((item) => (
+                <li key={`${item.editionSlug}-${item.brandId}`}>
+                  <Link
+                    href={`/studio/editions/${item.editionSlug}`}
+                    className="underline underline-offset-2 hover:text-amber-800"
+                  >
+                    {item.brandName}
+                  </Link>{" "}
+                  on {item.editionSlug}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </BlurIn>
+      )}
 
       <div className="grid grid-cols-1 gap-8">
         <StudioHomeOverview

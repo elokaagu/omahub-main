@@ -407,7 +407,7 @@ export async function sendNewsletterConfirmationEmail(formData: {
     console.log("📧 Sending newsletter confirmation email to:", email);
 
     const { data, error } = await resend.emails.send({
-      from: "OmaHub <newsletter@oma-hub.com>",
+      from: "OmaHub <info@oma-hub.com>",
       to: [email],
       subject: subject,
       html: buildOmaHubEmailHtml({
@@ -431,7 +431,7 @@ You can unsubscribe at any time from the link in any newsletter email.
 
 The OmaHub Team
 `,
-      replyTo: "newsletter@oma-hub.com",
+      replyTo: "info@oma-hub.com",
     });
 
     if (error) {
@@ -1082,5 +1082,61 @@ Visit us: ${websiteUrl}
       success: false,
       error: errorMessage,
     };
+  }
+}
+
+export async function sendMissingLineupImageAlert(params: {
+  to: string[];
+  brandName: string;
+  editionSlug: string;
+}): Promise<{ success: boolean; error?: unknown }> {
+  try {
+    const resend = getResendInstance();
+    if (!resend) {
+      return { success: false, error: "Email service not configured" };
+    }
+
+    const recipients = params.to.filter((email) => email.includes("@"));
+    if (recipients.length === 0) {
+      return { success: false, error: "No recipients" };
+    }
+
+    const studioUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "https://oma-hub.com"}/studio/brands`;
+    const editionUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "https://oma-hub.com"}/studio/editions/${params.editionSlug}`;
+
+    const { data, error } = await resend.emails.send({
+      from: "OmaHub <info@oma-hub.com>",
+      to: recipients,
+      subject: `${params.brandName} is missing a lineup photo`,
+      html: buildOmaHubEmailHtml({
+        preheader: `${params.brandName} will stay hidden on the public lineup until a photo is added.`,
+        title: "Lineup photo needed",
+        subtitle: params.brandName,
+        intro: `${params.brandName} is on an edition lineup but has no published photo, so it is hidden on the public site.`,
+        sections: [
+          {
+            title: "What to do",
+            content:
+              "Add a cover photo on the brand in Studio. Once it is there, the card will appear in The lineup.",
+          },
+        ],
+        ctaLabel: "Open brand photos",
+        ctaUrl: studioUrl,
+        footerNote: `Edition: ${params.editionSlug}. ${editionUrl}`,
+      }),
+      text: `${params.brandName} is on the ${params.editionSlug} lineup but has no published photo, so it is hidden on the public site.\n\nAdd a cover photo: ${studioUrl}\nEdition: ${editionUrl}`,
+      replyTo: "info@oma-hub.com",
+    });
+
+    if (error) {
+      console.error("missing_lineup_image_email_failed", error);
+      return { success: false, error };
+    }
+
+    console.log("missing_lineup_image_email_sent", data?.id);
+    return { success: true };
+  } catch (error) {
+    console.error("missing_lineup_image_email_unhandled", error);
+    return { success: false, error };
   }
 }

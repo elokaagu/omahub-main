@@ -984,7 +984,7 @@ function EditionPhotoManagementContent({ slug }: { slug: string }) {
             "image/webp": [".webp"],
             "image/svg+xml": [".svg"],
           }}
-          maxSize={5}
+          maxSize={20}
           hidePreview
         />
         {isUploadingPartner && (

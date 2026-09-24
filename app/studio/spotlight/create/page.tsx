@@ -552,7 +552,7 @@ export default function CreateSpotlightPage() {
                   bucket="spotlight-images"
                   path="thumbnails"
                   accept="image/png,image/jpeg,image/webp"
-                  maxSize={5}
+                  maxSize={20}
                 />
                 <p className="text-xs text-gray-500 mt-1">
                   Custom thumbnail for video preview (falls back to main image)
@@ -703,7 +703,7 @@ export default function CreateSpotlightPage() {
                           bucket="spotlight-images"
                           path="products"
                           accept="image/png,image/jpeg,image/webp"
-                          maxSize={5}
+                          maxSize={20}
                           className="h-32"
                         />
                       </div>

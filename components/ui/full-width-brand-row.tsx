@@ -33,6 +33,7 @@ interface FullWidthBrandRowProps {
   className?: string;
   /** When false, brands render in a contained grid instead of a horizontal scroll row. */
   scrollable?: boolean;
+  align?: "left" | "center";
 }
 
 export function FullWidthBrandRow({
@@ -41,6 +42,7 @@ export function FullWidthBrandRow({
   brands,
   className,
   scrollable = true,
+  align = "left",
 }: FullWidthBrandRowProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -99,12 +101,22 @@ export function FullWidthBrandRow({
   return (
     <div className={cn("w-full", scrollable ? "overflow-hidden" : "", className)}>
       {/* Section Header left-aligned with logo and cards */}
-      <div className="mx-auto mb-4 max-w-7xl px-4 sm:px-6 lg:px-8">
-        <h2 className="mb-2 text-left font-canela text-2xl text-oma-black sm:text-3xl md:text-4xl">
+      <div
+        className={cn(
+          "mx-auto mb-8 max-w-7xl px-4 sm:px-6 lg:px-8",
+          align === "center" && "text-center",
+        )}
+      >
+        <h2 className="font-canela text-3xl text-oma-black sm:text-4xl md:text-5xl">
           {title}
         </h2>
         {subtitle && (
-          <p className="max-w-2xl text-left text-sm text-oma-cocoa/80 sm:text-base">
+          <p
+            className={cn(
+              "mt-3 text-sm text-oma-cocoa/70 sm:text-base",
+              align === "center" ? "mx-auto max-w-xl" : "max-w-2xl",
+            )}
+          >
             {subtitle}
           </p>
         )}

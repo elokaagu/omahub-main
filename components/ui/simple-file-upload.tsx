@@ -38,7 +38,7 @@ export function SimpleFileUpload({
   bucket = "brand-assets",
   path = "",
   accept = "image/jpeg,image/png,image/webp",
-  maxSize = 5,
+  maxSize = 20,
   className = "",
   brandId,
   brandName,
