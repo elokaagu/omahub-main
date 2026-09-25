@@ -53,7 +53,7 @@ export function BrandHero({ brand }: { brand: BrandProfileData }) {
         <div className="[text-shadow:0_2px_18px_rgb(0_0_0_/_45%)]">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
             {brand.category && (
-              <span className="rounded-full border border-white/30 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white backdrop-blur-sm">
+              <span className="rounded-full border border-white/30 bg-white/10 px-3 py-1 text-[0.6875rem] font-semibold uppercase tracking-[0.18em] text-white backdrop-blur-sm">
                 {brand.category}
               </span>
             )}

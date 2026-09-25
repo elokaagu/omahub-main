@@ -37,7 +37,7 @@ export function EditionFactsBar({ facts }: { facts: EditionFact[] }) {
               "col-span-2 md:col-span-1",
           )}
         >
-          <dt className="text-[10px] font-semibold uppercase tracking-[0.22em] text-oma-cocoa sm:text-[11px]">
+          <dt className="text-[0.625rem] font-semibold uppercase tracking-[0.22em] text-oma-cocoa sm:text-[0.6875rem]">
             {fact.label}
           </dt>
           <dd className="mt-1 font-canela text-base text-oma-black sm:mt-1.5 sm:text-xl">

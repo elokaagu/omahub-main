@@ -57,7 +57,7 @@ export function BrandRow({ title, subtitle, brands }: BrandRowProps) {
           {brands.map((brand) => (
             <div
               key={brand.id}
-              className="w-[240px] sm:w-[300px] flex-none snap-start"
+              className="w-[15rem] sm:w-[18.75rem] flex-none snap-start"
             >
               <BrandCard
                 {...brand}

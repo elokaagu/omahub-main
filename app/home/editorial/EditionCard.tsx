@@ -30,7 +30,7 @@ export function EditionCard({ edition, compact = false }: EditionCardProps) {
   return (
     <article
       className={cn(
-        "group relative flex min-h-[440px] flex-col justify-end overflow-hidden rounded-2xl shadow-sm ring-1 ring-oma-cocoa/10 transition-shadow duration-300 hover:shadow-lg sm:min-h-[520px] lg:min-h-[560px]",
+        "group relative flex min-h-[27.5rem] flex-col justify-end overflow-hidden rounded-2xl shadow-sm ring-1 ring-oma-cocoa/10 transition-shadow duration-300 hover:shadow-lg sm:min-h-[32.5rem] lg:min-h-[35rem]",
         isUpcoming
           ? "bg-gradient-to-br from-[#735048] to-oma-plum"
           : "bg-gradient-to-b from-[#735048] to-[#613C3A]"
@@ -70,7 +70,7 @@ export function EditionCard({ edition, compact = false }: EditionCardProps) {
       />
 
       <div className="relative flex flex-col p-6 text-white [text-shadow:0_2px_14px_rgb(0_0_0_/_50%)] sm:p-8">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-oma-gold">
+        <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.25em] text-oma-gold">
           Edition {edition.number} ·{" "}
           {isUpcoming ? `Coming ${edition.dateLabel}` : edition.dateLabel}
         </p>
@@ -82,7 +82,7 @@ export function EditionCard({ edition, compact = false }: EditionCardProps) {
         </h3>
 
         {!isUpcoming && (edition.city || edition.lineupLabel) && (
-          <div className="mt-4 flex flex-col gap-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-white/75">
+          <div className="mt-4 flex flex-col gap-1 text-[0.6875rem] font-semibold uppercase tracking-[0.2em] text-white/75">
             {(edition.city || edition.venue) && (
               <span>
                 {edition.city}

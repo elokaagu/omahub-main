@@ -341,7 +341,7 @@ export default function TailorsClient() {
                         transition={{ duration: 0.2 }}
                       >
                         <Card className="group flex h-full cursor-pointer flex-col overflow-hidden">
-                          <div className="h-[500px] w-full overflow-hidden bg-gray-100">
+                          <div className="h-[31.25rem] w-full overflow-hidden bg-gray-100">
                             <BrandCard
                               id={tailor.brand.id}
                               name={tailor.brand.name}

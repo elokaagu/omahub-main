@@ -105,7 +105,7 @@ export function BrandAbout({ brand }: { brand: BrandProfileData }) {
                   key={detail.label}
                   className="flex items-baseline justify-between gap-4 py-3"
                 >
-                  <dt className="text-[11px] font-semibold uppercase tracking-[0.18em] text-oma-cocoa/70">
+                  <dt className="text-[0.6875rem] font-semibold uppercase tracking-[0.18em] text-oma-cocoa/70">
                     {detail.label}
                   </dt>
                   <dd className="min-w-0 break-words text-right font-canela text-lg text-oma-black">

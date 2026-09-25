@@ -18,7 +18,7 @@ const VideoPlayer = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="h-[500px] w-full animate-pulse bg-oma-beige/40 rounded-2xl" />
+      <div className="h-[31.25rem] w-full animate-pulse bg-oma-beige/40 rounded-2xl" />
     ),
   },
 );
@@ -50,7 +50,7 @@ export default function HomeLowerSections({
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FadeIn delay={0.1}>
-              <div className="relative group overflow-hidden rounded-lg bg-gray-100 min-h-[400px]">
+              <div className="relative group overflow-hidden rounded-lg bg-gray-100 min-h-[25rem]">
                 <Link href="/collections">
                   <div className="relative aspect-[3/4]">
                     {categoryImages.collectionImage ? (
@@ -77,7 +77,7 @@ export default function HomeLowerSections({
             </FadeIn>
 
             <FadeIn delay={0.2}>
-              <div className="relative group overflow-hidden rounded-lg bg-gray-100 min-h-[400px]">
+              <div className="relative group overflow-hidden rounded-lg bg-gray-100 min-h-[25rem]">
                 <Link href="/tailored">
                   <div className="relative aspect-[3/4]">
                     {categoryImages.tailoredImage ? (
@@ -142,9 +142,9 @@ export default function HomeLowerSections({
                           : "/placeholder.jpg"
                       }
                       alt={`${spotlightContent.brand_name} collection`}
-                      className="w-full h-[500px] transition-transform duration-700 group-hover:scale-105"
+                      className="w-full h-[31.25rem] transition-transform duration-700 group-hover:scale-105"
                       aspectRatio="3/4"
-                      sizes="(max-width: 768px) 100vw, 800px"
+                      sizes="(max-width: 768px) 100vw, 1000px"
                       quality={95}
                       priority={true}
                       autoPlay={true}
@@ -164,9 +164,9 @@ export default function HomeLowerSections({
                       alt={`${spotlightContent?.brand_name || "Brand"} collection`}
                       width={800}
                       height={1000}
-                      className="w-full h-[500px] object-cover transition-transform duration-700 group-hover:scale-105"
+                      className="w-full h-[31.25rem] object-cover transition-transform duration-700 group-hover:scale-105"
                       aspectRatio="3/4"
-                      sizes="(max-width: 768px) 100vw, 800px"
+                      sizes="(max-width: 768px) 100vw, 1000px"
                       quality={85}
                     />
                   )}

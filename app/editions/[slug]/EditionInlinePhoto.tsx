@@ -23,7 +23,7 @@ export function EditionInlinePhoto({
         src={src}
         alt={alt}
         aspectRatio="landscape"
-        sizes="(max-width: 1024px) 100vw, 720px"
+        sizes="(max-width: 1024px) 100vw, 900px"
         quality={85}
       />
     </figure>

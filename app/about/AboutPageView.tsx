@@ -72,7 +72,7 @@ export function AboutPageView({
             </Button>
           </motion.div>
           <motion.div variants={scaleIn} className="order-1 lg:order-2">
-            <div className="relative w-full aspect-[4/5] max-h-[600px] min-h-[280px] rounded-2xl shadow-lg overflow-hidden">
+            <div className="relative w-full aspect-[4/5] max-h-[37.5rem] min-h-[17.5rem] rounded-2xl shadow-lg overflow-hidden">
               {slides.map((slide, idx) => (
                 <Image
                   key={`${slide.brandId}-${idx}`}
@@ -208,7 +208,7 @@ export function AboutPageView({
           <div className="relative rounded-3xl border border-white/35 bg-white/40 p-5 sm:p-7 lg:p-9 shadow-[0_22px_48px_rgba(60,34,36,0.14)] backdrop-blur-sm">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-10 items-center">
               <motion.div variants={scaleIn}>
-                <div className="relative w-full aspect-[4/3] max-h-[420px] min-h-[240px] rounded-2xl shadow-lg overflow-hidden ring-1 ring-black/5">
+                <div className="relative w-full aspect-[4/3] max-h-[26.25rem] min-h-[15rem] rounded-2xl shadow-lg overflow-hidden ring-1 ring-black/5">
                   <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
                   <div className="absolute left-4 top-4 z-10 rounded-full border border-white/40 bg-black/25 px-3 py-1 text-xs uppercase tracking-[0.18em] text-white/95 backdrop-blur">
                     Community

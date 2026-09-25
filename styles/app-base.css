@@ -59,6 +59,17 @@ html {
   scroll-behavior: smooth;
 }
 
+/*
+ * Layout is rem-based and tuned for ~1440px. On wide desktops (24"/27" iMacs,
+ * external monitors) scale the root size so type, spacing and container widths
+ * grow together instead of leaving a narrow column: 16px at 1920px → 20px cap.
+ */
+@media (min-width: 1920px) {
+  html {
+    font-size: min(calc(100vw / 120), 20px);
+  }
+}
+
 html:has([data-studio-page]) {
   scroll-behavior: auto;
 }

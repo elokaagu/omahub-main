@@ -280,7 +280,7 @@ export function SearchDialog() {
                 )}
                 {groups.map((group) => (
                   <div key={group.label} role="group" aria-label={group.label} className="py-1">
-                    <p className="px-3 pb-1.5 pt-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-oma-cocoa/55">
+                    <p className="px-3 pb-1.5 pt-2 text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-oma-cocoa/55">
                       {group.label}
                     </p>
                     {group.hits.map((hit) => {

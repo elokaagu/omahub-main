@@ -74,7 +74,7 @@ export function BrandCard({
           "relative w-full h-full",
           isPortrait
             ? "w-32 h-32 sm:w-48 sm:h-48 flex-shrink-0"
-            : "aspect-[4/5] min-h-[440px]"
+            : "aspect-[4/5] min-h-[27.5rem]"
         )}
       >
         {/* Prioritize video over image - show video if available */}
@@ -89,7 +89,7 @@ export function BrandCard({
               isPortrait ? "object-center object-top" : ""
             )}
             aspectRatio={isPortrait ? "square" : "3/4"}
-            sizes="(max-width: 768px) 100vw, 400px"
+            sizes="(max-width: 768px) 100vw, 500px"
             quality={85}
             priority={false}
             autoPlay={true}

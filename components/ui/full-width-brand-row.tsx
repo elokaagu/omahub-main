@@ -133,7 +133,7 @@ export function FullWidthBrandRow({
             {brands.map((brand) => (
               <div
                 key={brand.id}
-                className="flex-none w-[280px] md:w-[300px] lg:w-[320px] snap-start"
+                className="flex-none w-[17.5rem] md:w-[18.75rem] lg:w-[20rem] snap-start"
               >
                 {card(brand)}
               </div>
@@ -141,12 +141,12 @@ export function FullWidthBrandRow({
 
             {/* Show More Card (if there are many brands) */}
             {brands.length > 8 && (
-              <div className="flex-none w-[280px] md:w-[300px] lg:w-[320px] snap-start">
+              <div className="flex-none w-[17.5rem] md:w-[18.75rem] lg:w-[20rem] snap-start">
                 <NavigationLink
                   href={`/directory?category=${encodeURIComponent(title)}`}
                   className="block h-full"
                 >
-                  <div className="bg-gradient-to-br from-oma-plum/10 to-oma-gold/10 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 h-full flex items-center justify-center min-h-[400px] border-2 border-dashed border-oma-plum/30 hover:border-oma-plum/60">
+                  <div className="bg-gradient-to-br from-oma-plum/10 to-oma-gold/10 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 h-full flex items-center justify-center min-h-[25rem] border-2 border-dashed border-oma-plum/30 hover:border-oma-plum/60">
                     <div className="text-center p-6">
                       <div className="w-16 h-16 rounded-full bg-oma-plum/20 flex items-center justify-center mx-auto mb-4">
                         <ChevronRight className="h-8 w-8 text-oma-plum" />

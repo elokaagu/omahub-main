@@ -288,7 +288,7 @@ export default function TailoredClient() {
                   <Link
                     key={tailor.id}
                     href={tailor.brand ? `/brand/${tailor.brand.id}` : "#"}
-                    className="group block flex-shrink-0 w-[280px] sm:w-[320px] md:w-96 max-w-full bg-gradient-to-br from-white via-oma-beige/30 to-white rounded-2xl shadow-lg border border-oma-beige/40 hover:border-oma-gold/60 hover:shadow-2xl transition-all duration-300 overflow-hidden cursor-pointer focus:ring-2 focus:ring-oma-gold mobile-scroll-item"
+                    className="group block flex-shrink-0 w-[17.5rem] sm:w-[20rem] md:w-96 max-w-full bg-gradient-to-br from-white via-oma-beige/30 to-white rounded-2xl shadow-lg border border-oma-beige/40 hover:border-oma-gold/60 hover:shadow-2xl transition-all duration-300 overflow-hidden cursor-pointer focus:ring-2 focus:ring-oma-gold mobile-scroll-item"
                     tabIndex={0}
                   >
                     <div className="relative w-full aspect-[3/4] bg-oma-beige/20 overflow-hidden">

@@ -104,7 +104,7 @@ export function InstagramFeedRow({ posts }: InstagramFeedRowProps) {
                     ? `View Instagram post: ${truncateCaption(post.caption, 60)}`
                     : "View Instagram post"
                 }
-                className="group relative block w-[220px] flex-none snap-start overflow-hidden rounded-2xl bg-oma-plum/5 ring-1 ring-oma-cocoa/10 transition-shadow duration-300 hover:shadow-lg sm:w-[240px] lg:w-[260px]"
+                className="group relative block w-[13.75rem] flex-none snap-start overflow-hidden rounded-2xl bg-oma-plum/5 ring-1 ring-oma-cocoa/10 transition-shadow duration-300 hover:shadow-lg sm:w-[15rem] lg:w-[16.25rem]"
               >
                 <div className="relative aspect-square overflow-hidden">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -132,12 +132,12 @@ export function InstagramFeedRow({ posts }: InstagramFeedRowProps) {
                     />
                   </div>
                   {post.mediaType === "VIDEO" && (
-                    <span className="absolute right-3 top-3 rounded-full bg-oma-black/60 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-white backdrop-blur-sm">
+                    <span className="absolute right-3 top-3 rounded-full bg-oma-black/60 px-2 py-1 text-[0.625rem] font-semibold uppercase tracking-[0.15em] text-white backdrop-blur-sm">
                       Reel
                     </span>
                   )}
                   {post.mediaType === "CAROUSEL_ALBUM" && (
-                    <span className="absolute right-3 top-3 rounded-full bg-oma-black/60 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-white backdrop-blur-sm">
+                    <span className="absolute right-3 top-3 rounded-full bg-oma-black/60 px-2 py-1 text-[0.625rem] font-semibold uppercase tracking-[0.15em] text-white backdrop-blur-sm">
                       Album
                     </span>
                   )}

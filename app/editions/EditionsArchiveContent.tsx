@@ -59,7 +59,7 @@ export function EditionsArchiveContent({
           </AnimateOnScroll>
 
           <AnimateOnScroll animation="slideUp" delay={0.08} duration={0.7}>
-            <p className="mt-5 text-[10px] font-semibold uppercase tracking-[0.28em] text-oma-gold sm:mt-8 sm:text-xs sm:tracking-[0.3em]">
+            <p className="mt-5 text-[0.625rem] font-semibold uppercase tracking-[0.28em] text-oma-gold sm:mt-8 sm:text-xs sm:tracking-[0.3em]">
               OmaHub editions
             </p>
             <h1 className="mt-2 font-canela text-4xl text-white sm:mt-3 sm:text-6xl">

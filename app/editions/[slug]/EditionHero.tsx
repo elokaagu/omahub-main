@@ -94,7 +94,7 @@ export function EditionHero({
 
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div className="[text-shadow:0_2px_18px_rgb(0_0_0_/_45%)]">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-oma-gold sm:text-xs">
+              <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.28em] text-oma-gold sm:text-xs">
                 Edition {edition.number} · {edition.dateLabel}
               </p>
               <h1
@@ -146,7 +146,7 @@ function EditionStepLink({
         <Arrow className="size-4 shrink-0 transition-transform group-hover:-translate-x-0.5" aria-hidden />
       )}
       <span className={`min-w-0 ${isPrevious ? "text-left" : "ml-auto text-right"}`}>
-        <span className="block text-[10px] font-semibold uppercase tracking-[0.22em] text-white/70">
+        <span className="block text-[0.625rem] font-semibold uppercase tracking-[0.22em] text-white/70">
           {isPrevious ? "Previous" : "Next"}
         </span>
         <span className="block truncate text-sm">{title}</span>

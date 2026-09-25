@@ -182,7 +182,7 @@ function ProductCarouselSection({
         {products.map((product) => (
           <div
             key={product.id}
-            className="flex-none w-[280px] md:w-[300px] lg:w-[320px] snap-start"
+            className="flex-none w-[17.5rem] md:w-[18.75rem] lg:w-[20rem] snap-start"
           >
             <Link
               href={`/product/${product.id}`}
@@ -196,7 +196,7 @@ function ProductCarouselSection({
                   className="object-cover"
                   aspectRatio="square"
                   quality={80}
-                  sizes="(max-width: 768px) 280px, (max-width: 1200px) 300px, 320px"
+                  sizes="(max-width: 768px) 280px, (max-width: 1200px) 300px, 400px"
                 />
               </div>
               <div className="p-4">
@@ -243,7 +243,7 @@ function CollectionCarouselSection({
         {catalogues.map((catalogue) => (
           <div
             key={catalogue.id}
-            className="flex-none w-[280px] md:w-[300px] lg:w-[320px] snap-start"
+            className="flex-none w-[17.5rem] md:w-[18.75rem] lg:w-[20rem] snap-start"
           >
             <Link
               href={`/collection/${catalogue.id}`}
@@ -255,7 +255,7 @@ function CollectionCarouselSection({
                   alt={catalogue.title}
                   fill
                   className={`${COLLECTION_CARD_IMAGE_CLASS} group-hover:scale-105 transition-transform duration-300`}
-                  sizes="(max-width: 768px) 280px, (max-width: 1200px) 300px, 320px"
+                  sizes="(max-width: 768px) 280px, (max-width: 1200px) 300px, 400px"
                   aspectRatio="4/5"
                   quality={80}
                 />

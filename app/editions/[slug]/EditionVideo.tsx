@@ -52,7 +52,7 @@ export function EditionVideo({
         alt={`${title}, edition film`}
         className="aspect-video w-full"
         aspectRatio="16/9"
-        sizes="(max-width: 1024px) 100vw, 480px"
+        sizes="(max-width: 1024px) 100vw, 600px"
         quality={90}
         muted
         loop={false}
