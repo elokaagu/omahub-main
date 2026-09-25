@@ -91,7 +91,7 @@ export function EditionStoryBody({ storyHtml }: EditionStoryBodyProps) {
   if (blocks.length === 0) return null;
 
   return (
-    <div className="edition-story">
+    <div className="edition-story [&_a]:break-words [&_a]:font-medium [&_a]:text-oma-plum [&_a]:underline [&_a]:decoration-oma-plum/40 [&_a]:underline-offset-4 [&_a]:transition-colors [&_a:hover]:decoration-oma-plum">
       {blocks.map((block, index) => (
         <AnimateOnScroll
           key={`${block.type}-${index}`}

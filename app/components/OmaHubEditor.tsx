@@ -3,8 +3,9 @@
 import { useEditor, EditorContent, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
+import Link from "@tiptap/extension-link";
 import "./omahub-editor.css";
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import {
   Bold,
   Italic,
@@ -21,6 +22,9 @@ import {
   Redo2,
   Image as ImageIcon,
   ImagePlus,
+  Link2,
+  Unlink,
+  ExternalLink,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { isSupportedStudioImageFile } from "@/lib/uploads/acceptedMedia";
@@ -95,6 +99,114 @@ function ToolbarButton({
   );
 }
 
+function normalizeLinkUrl(raw: string): string | null {
+  const value = raw.trim();
+  if (!value) return null;
+  if (/^(https?:|mailto:|tel:)/i.test(value)) return value;
+  if (value.startsWith("/") || value.startsWith("#")) return value;
+  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return `mailto:${value}`;
+  if (/^[^\s]+\.[^\s]+/.test(value)) return `https://${value}`;
+  return null;
+}
+
+function LinkField({
+  editor,
+  onClose,
+}: {
+  editor: Editor;
+  onClose: () => void;
+}) {
+  const existing = (editor.getAttributes("link").href as string | undefined) ?? "";
+  const [value, setValue] = useState(existing);
+  const [error, setError] = useState<string | null>(null);
+
+  const apply = () => {
+    const href = normalizeLinkUrl(value);
+    if (!href) {
+      setError("Enter a web address, e.g. https://rb.gy/x98mho");
+      return;
+    }
+    const chain = editor.chain().focus().extendMarkRange("link");
+    if (editor.state.selection.empty && !editor.isActive("link")) {
+      chain
+        .insertContent({
+          type: "text",
+          text: value.trim(),
+          marks: [{ type: "link", attrs: { href } }],
+        })
+        .run();
+    } else {
+      chain.setLink({ href }).run();
+    }
+    onClose();
+  };
+
+  const remove = () => {
+    editor.chain().focus().extendMarkRange("link").unsetLink().run();
+    onClose();
+  };
+
+  return (
+    <div className="omahub-link-field">
+      <Link2 className="h-4 w-4 shrink-0 text-neutral-500" />
+      <input
+        autoFocus
+        type="text"
+        inputMode="url"
+        placeholder="Paste or type a link, e.g. https://…"
+        value={value}
+        onChange={(e) => {
+          setValue(e.target.value);
+          setError(null);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            apply();
+          }
+          if (e.key === "Escape") {
+            e.preventDefault();
+            onClose();
+          }
+        }}
+        className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-neutral-400"
+      />
+      <button type="button" onClick={apply} className="omahub-link-apply">
+        {existing ? "Update" : "Add link"}
+      </button>
+      {existing && (
+        <>
+          <a
+            href={existing}
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Open link"
+            className="inline-flex h-8 w-8 items-center justify-center rounded text-neutral-600 hover:bg-neutral-100"
+          >
+            <ExternalLink className="h-4 w-4" />
+          </a>
+          <button
+            type="button"
+            onClick={remove}
+            title="Remove link"
+            className="inline-flex h-8 w-8 items-center justify-center rounded text-neutral-600 hover:bg-neutral-100"
+          >
+            <Unlink className="h-4 w-4" />
+          </button>
+        </>
+      )}
+      <button
+        type="button"
+        onClick={onClose}
+        className="text-xs text-neutral-500 hover:text-neutral-800"
+      >
+        Cancel
+      </button>
+      {error && <p className="basis-full text-xs text-red-600">{error}</p>}
+    </div>
+  );
+}
+
 function ToolbarDivider() {
   return <span className="mx-1 hidden h-5 w-px bg-neutral-200 sm:block" />;
 }
@@ -110,6 +222,7 @@ const Toolbar = ({
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const placementRef = useRef<ImagePlacement>("after-block");
+  const [linkOpen, setLinkOpen] = useState(false);
 
   if (!editor) return null;
 
@@ -148,6 +261,14 @@ const Toolbar = ({
         onClick={() => editor.chain().focus().toggleStrike().run()}
       >
         <Strikethrough className="h-4 w-4" />
+      </ToolbarButton>
+      <ToolbarButton
+        label="Add or edit link"
+        active={editor.isActive("link") || linkOpen}
+        onClick={() => setLinkOpen((open) => !open)}
+      >
+        <Link2 className="h-4 w-4" />
+        <span className="hidden sm:inline">Link</span>
       </ToolbarButton>
 
       <ToolbarDivider />
@@ -259,6 +380,10 @@ const Toolbar = ({
           </ToolbarButton>
         </>
       )}
+
+      {linkOpen && (
+        <LinkField editor={editor} onClose={() => setLinkOpen(false)} />
+      )}
     </div>
   );
 };
@@ -286,6 +411,16 @@ export default function OmaHubEditor({
     immediatelyRender: false,
     extensions: [
       StarterKit,
+      Link.configure({
+        openOnClick: false,
+        autolink: true,
+        linkOnPaste: true,
+        defaultProtocol: "https",
+        HTMLAttributes: {
+          target: "_blank",
+          rel: "noopener noreferrer",
+        },
+      }),
       Image.configure({
         inline: false,
         allowBase64: false,

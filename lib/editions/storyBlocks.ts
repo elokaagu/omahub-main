@@ -30,6 +30,34 @@ function decodeEntities(value: string): string {
     .replace(/&#39;/g, "'");
 }
 
+const BARE_URL = /\b((?:https?:\/\/|www\.)[^\s<]+[^\s<.,;:!?)"'\]])/gi;
+
+/** Turns bare URLs into links and makes every link open safely in a new tab. */
+export function linkifyStoryHtml(html: string): string {
+  let insideAnchor = 0;
+  return html
+    .split(/(<[^>]+>)/g)
+    .map((part) => {
+      if (part.startsWith("<")) {
+        if (/^<a\b/i.test(part)) {
+          insideAnchor += 1;
+          let tag = part;
+          if (!/\btarget=/i.test(tag)) tag = tag.replace(/^<a\b/i, '<a target="_blank"');
+          if (!/\brel=/i.test(tag)) tag = tag.replace(/^<a\b/i, '<a rel="noopener noreferrer"');
+          return tag;
+        }
+        if (/^<\/a>/i.test(part)) insideAnchor = Math.max(0, insideAnchor - 1);
+        return part;
+      }
+      if (insideAnchor > 0) return part;
+      return part.replace(BARE_URL, (url) => {
+        const href = url.startsWith("www.") ? `https://${url}` : url;
+        return `<a href="${href.replace(/"/g, "&quot;")}" target="_blank" rel="noopener noreferrer">${url}</a>`;
+      });
+    })
+    .join("");
+}
+
 function stripTags(html: string): string {
   return decodeEntities(html.replace(/<[^>]+>/g, " "))
     .replace(/\s+/g, " ")
@@ -154,17 +182,17 @@ function toStoryBlocks(blocks: RawBlock[]): StoryBlock[] {
     }
 
     if (block.type === "paragraph") {
-      result.push({ type: "paragraph", html: block.html });
+      result.push({ type: "paragraph", html: linkifyStoryHtml(block.html) });
       continue;
     }
 
     if (block.type === "list") {
-      result.push({ type: "list", html: block.html });
+      result.push({ type: "list", html: linkifyStoryHtml(block.html) });
       continue;
     }
 
     if (block.type === "quote") {
-      result.push({ type: "quote", html: block.html });
+      result.push({ type: "quote", html: linkifyStoryHtml(block.html) });
       continue;
     }
 
