@@ -26,6 +26,7 @@ import {
 } from "@/lib/brands/studioBrandFormConstants";
 import { formatPriceRange } from "@/lib/utils/priceFormatter";
 import ApplicationConfirmationModal from "@/components/ApplicationConfirmationModal";
+import { optimizeImageForUpload } from "@/lib/uploads/optimizeImage";
 
 const MAX_PHOTOS = 3;
 
@@ -235,9 +236,9 @@ export function JoinApplicationForm() {
       prev.map((s, i) => (i === index ? { ...s, uploading: true } : s)),
     );
 
-    const body = new FormData();
-    body.append("file", file);
     try {
+      const body = new FormData();
+      body.append("file", await optimizeImageForUpload(file));
       const res = await fetch("/api/designer-application/upload-image", {
         method: "POST",
         body,

@@ -15,6 +15,7 @@ import {
   isHeicLikeFile,
 } from "@/lib/uploads/acceptedMedia";
 import { uploadPublicFile } from "@/lib/uploads/studioStorageUpload";
+import { exceedsPickerSizeLimit } from "@/lib/uploads/optimizeImage";
 import { MediaDropzone } from "./media-dropzone";
 
 interface SimpleFileUploadProps {
@@ -107,9 +108,8 @@ export function SimpleFileUpload({
     // Clear previous errors
     setError(null);
 
-    // Validate file size
     const fileSizeMB = file.size / (1024 * 1024);
-    if (fileSizeMB > maxSize) {
+    if (exceedsPickerSizeLimit(file, maxSize)) {
       const errorMsg = `File is too large. Maximum size is ${maxSize}MB.`;
       setError(errorMsg);
       toast.error(errorMsg);

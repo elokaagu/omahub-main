@@ -7,6 +7,7 @@ import {
   safeStorageExtension,
   storagePathForUpload,
 } from "@/lib/uploads/acceptedMedia";
+import { optimizeImageForUpload } from "@/lib/uploads/optimizeImage";
 
 export const DEFAULT_UPLOAD_BUCKET = "brand-assets";
 
@@ -207,7 +208,7 @@ export type StudioUploadOptions = {
 };
 
 export async function uploadPublicFile({
-  file,
+  file: originalFile,
   bucket = DEFAULT_UPLOAD_BUCKET,
   path = "",
   storagePath: storagePathOverride,
@@ -216,15 +217,19 @@ export async function uploadPublicFile({
   requireImage = false,
 }: StudioUploadOptions): Promise<string> {
   if (requireImage) {
-    if (isHeicLikeFile(file)) {
+    if (isHeicLikeFile(originalFile)) {
       throw new Error(
         "iPhone HEIC photos aren’t supported. Export or share the image as JPG or PNG, then upload that file.",
       );
     }
-    if (!isSupportedStudioImageFile(file)) {
+    if (!isSupportedStudioImageFile(originalFile)) {
       throw new Error("Please choose a JPG, PNG, or WebP image.");
     }
   }
+
+  const file = originalFile.type.startsWith("image/")
+    ? await optimizeImageForUpload(originalFile)
+    : originalFile;
 
   if (maxSizeMb && file.size > maxSizeMb * 1024 * 1024) {
     throw new Error(`That file is too large. Maximum size is ${maxSizeMb}MB.`);

@@ -17,6 +17,7 @@ import {
   ensureValidSession,
   uploadPublicFile,
 } from "@/lib/uploads/studioStorageUpload";
+import { exceedsPickerSizeLimit } from "@/lib/uploads/optimizeImage";
 
 interface FileUploadProps {
   onUploadComplete: (url: string) => void;
@@ -119,6 +120,7 @@ export function FileUpload({
       bucket,
       path,
       fallbackBuckets: bucket === "edition-galleries" ? ["brand-assets"] : [],
+      maxSizeMb: maxSize,
     });
   };
 
@@ -127,9 +129,7 @@ export function FileUpload({
     const file = input.files?.[0];
     if (!file) return;
 
-    // Validate file size
-    const fileSizeMB = file.size / (1024 * 1024);
-    if (fileSizeMB > maxSize) {
+    if (exceedsPickerSizeLimit(file, maxSize)) {
       toast.error(`File is too large. Maximum size is ${maxSize}MB.`);
       input.value = "";
       return;
