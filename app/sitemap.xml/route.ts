@@ -3,6 +3,7 @@ import { createClient as createAnonServerClient } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase-unified";
 import { getAllEditions } from "@/lib/data/editions";
 import { getSiteUrl } from "@/lib/seo";
+import { getCataloguesPubliclyVisible } from "@/lib/services/catalogueVisibilitySetting";
 
 /** Sitemap is SEO data, not user-specific - cache and refresh periodically. */
 export const revalidate = 3600;
@@ -187,6 +188,9 @@ export async function GET() {
   try {
     const supabase = createSitemapSupabaseClient();
     const allPages: SitemapPage[] = [...staticPages];
+    // Match the public product/collection route gate. Hidden catalogues must
+    // not be advertised to crawlers, even when their records are in stock.
+    const cataloguesPubliclyVisible = await getCataloguesPubliclyVisible();
 
     const [brandsResult, productsResult, collectionsResult, tailorsResult] =
       await Promise.allSettled([
@@ -196,16 +200,20 @@ export async function GET() {
           .eq("is_verified", true)
           .order("updated_at", { ascending: false }),
 
-        supabase
-          .from("products")
-          .select("id, updated_at")
-          .eq("in_stock", true)
-          .order("updated_at", { ascending: false }),
+        cataloguesPubliclyVisible
+          ? supabase
+              .from("products")
+              .select("id, updated_at")
+              .eq("in_stock", true)
+              .order("updated_at", { ascending: false })
+          : Promise.resolve({ data: [], error: null }),
 
-        supabase
-          .from("catalogues")
-          .select("id, updated_at")
-          .order("updated_at", { ascending: false }),
+        cataloguesPubliclyVisible
+          ? supabase
+              .from("catalogues")
+              .select("id, updated_at")
+              .order("updated_at", { ascending: false })
+          : Promise.resolve({ data: [], error: null }),
 
         supabase
           .from("tailors")
