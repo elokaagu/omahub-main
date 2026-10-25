@@ -25,10 +25,12 @@ export function BlurIn({
 }: BlurInProps) {
   const reduceMotion = useReducedMotion();
   const ref = useRef<HTMLDivElement>(null);
+  // amount: 0 = any visible pixel. A fractional amount (e.g. 0.12) on tall
+  // lists can never be satisfied, which left Studio tables stuck faded/blurred.
   const inView = useInView(ref, {
     once: true,
-    amount: 0.12,
-    margin: "80px 0px",
+    amount: 0,
+    margin: "120px 0px",
   });
   const skip = reduceMotion === true;
 
@@ -40,7 +42,7 @@ export function BlurIn({
       animate={
         skip || inView
           ? { opacity: 1, filter: "blur(0px)", y: 0 }
-          : { opacity: 0.4, filter: "blur(16px)", y: 10 }
+          : { opacity: 0, filter: "blur(16px)", y: 10 }
       }
       transition={{
         duration: skip ? 0 : duration,
@@ -70,8 +72,8 @@ export function BlurInTableRow({
   const ref = useRef<HTMLTableRowElement>(null);
   const inView = useInView(ref, {
     once: true,
-    amount: 0.2,
-    margin: "140px 0px",
+    amount: 0,
+    margin: "160px 0px",
   });
   const skip = reduceMotion === true;
 
@@ -84,7 +86,7 @@ export function BlurInTableRow({
       animate={
         skip || inView
           ? { opacity: 1, filter: "blur(0px)" }
-          : { opacity: 0.35, filter: "blur(14px)" }
+          : { opacity: 0, filter: "blur(14px)" }
       }
       transition={{
         duration: skip ? 0 : 0.55,
@@ -108,8 +110,8 @@ export function BlurInLi({ children, className, delay = 0 }: BlurInLiProps) {
   const ref = useRef<HTMLLIElement>(null);
   const inView = useInView(ref, {
     once: true,
-    amount: 0.2,
-    margin: "140px 0px",
+    amount: 0,
+    margin: "160px 0px",
   });
   const skip = reduceMotion === true;
 
@@ -121,7 +123,7 @@ export function BlurInLi({ children, className, delay = 0 }: BlurInLiProps) {
       animate={
         skip || inView
           ? { opacity: 1, filter: "blur(0px)" }
-          : { opacity: 0.35, filter: "blur(14px)" }
+          : { opacity: 0, filter: "blur(14px)" }
       }
       transition={{
         duration: skip ? 0 : 0.55,
