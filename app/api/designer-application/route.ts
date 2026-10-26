@@ -110,8 +110,13 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (insertError) {
+      // Keep the client message generic; log PostgREST details for ops
+      // (e.g. missing price_range/currency columns when a migration was not applied).
       logEvent("designer_app_insert_failed", {
         code: insertError.code ?? "unknown",
+        message: insertError.message?.slice(0, 240) ?? "unknown",
+        details: insertError.details?.slice(0, 240) ?? null,
+        hint: insertError.hint?.slice(0, 240) ?? null,
       });
       return NextResponse.json(
         { error: "Failed to submit application. Please try again." },
