@@ -71,3 +71,68 @@ export const designerApplicationFormSchema =
 export type DesignerApplicationFormInput = z.input<
   typeof designerApplicationFormSchema
 >;
+
+/** Values the join form holds while someone fills it in. */
+export type JoinFormValues = {
+  brandName: string;
+  designerName: string;
+  email: string;
+  phone: string;
+  website: string;
+  instagram: string;
+  location: string;
+  category: string;
+  description: string;
+  yearFounded: string;
+  currency: string;
+  priceMin: string;
+  priceMax: string;
+  contactForPricing: boolean;
+};
+
+export const EMPTY_JOIN_FORM: JoinFormValues = {
+  brandName: "",
+  designerName: "",
+  email: "",
+  phone: "",
+  website: "",
+  instagram: "",
+  location: "",
+  category: "",
+  description: "",
+  yearFounded: "",
+  currency: "USD",
+  priceMin: "",
+  priceMax: "",
+  contactForPricing: false,
+};
+
+/**
+ * The exact JSON body the join form POSTs to /api/designer-application.
+ * Raw values only: the API does its own cleanup, so never send parsed output.
+ */
+export function buildJoinApplicationPayload(
+  values: JoinFormValues,
+  imageUrls: string[],
+) {
+  return { ...values, imageUrls };
+}
+
+/** Friendly names for API field errors shown to applicants. */
+export const JOIN_FIELD_LABELS: Record<string, string> = {
+  brandName: "Brand name",
+  designerName: "Designer name",
+  email: "Email",
+  phone: "Phone",
+  website: "Website",
+  instagram: "Instagram",
+  location: "Location",
+  category: "Category",
+  description: "Brand description",
+  yearFounded: "Year founded",
+  currency: "Currency",
+  priceMin: "Minimum price",
+  priceMax: "Maximum price",
+  contactForPricing: "Contact for pricing",
+  imageUrls: "Photos",
+};
