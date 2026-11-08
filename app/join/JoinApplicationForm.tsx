@@ -286,10 +286,8 @@ export function JoinApplicationForm() {
 
     setFieldErrors({});
     const imageUrls = photoSlots.map((s) => s.url).filter((u): u is string => !!u);
-    const parsed = designerApplicationFormSchema.safeParse({
-      ...formData,
-      imageUrls,
-    });
+    const payload = { ...formData, imageUrls };
+    const parsed = designerApplicationFormSchema.safeParse(payload);
     if (!parsed.success) {
       const next = zodFieldErrorsToRecord(parsed.error.flatten().fieldErrors);
       setFieldErrors(next);
@@ -308,7 +306,8 @@ export function JoinApplicationForm() {
       const response = await fetch("/api/designer-application", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(parsed.data),
+        // Send the raw form values; the API runs its own validation and cleanup.
+        body: JSON.stringify(payload),
       });
 
       let json: unknown;

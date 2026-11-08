@@ -6,7 +6,7 @@ const validCurrencyCodes = new Set<string>(
   STUDIO_CURRENCIES_FOR_PRICE_SELECT.map((c) => c.code),
 );
 
-const emptyToNull = (s: string | undefined) => {
+const emptyToNull = (s: string | null | undefined) => {
   if (s == null) return null;
   const t = s.trim();
   return t.length === 0 ? null : t;
@@ -14,8 +14,7 @@ const emptyToNull = (s: string | undefined) => {
 
 /** Empty or omitted → null; otherwise normalized http(s) URL or validation error. */
 const optionalWebsite = z
-  .string()
-  .max(500)
+  .union([z.string().max(500), z.null()])
   .optional()
   .transform((raw) => {
     const t = emptyToNull(raw);

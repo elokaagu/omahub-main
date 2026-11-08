@@ -4,6 +4,7 @@ import {
   parseYearFounded,
 } from "@/lib/validation/designerApplicationBody";
 import { EXPLORE_PRICING_LABEL } from "@/lib/brands/joinApplicationPricing";
+import { designerApplicationFormSchema } from "@/lib/validation/designerApplicationForm";
 
 /** Fields the API persists on designer_applications — keep in sync with the table. */
 const PERSISTED_APPLICATION_COLUMNS = [
@@ -69,6 +70,34 @@ describe("designerApplicationBodySchema", () => {
     expect(parsed.success).toBe(true);
     if (!parsed.success) return;
     expect(parsed.data.priceRange).toBe(EXPLORE_PRICING_LABEL);
+  });
+
+  it("accepts a blank or null website", () => {
+    for (const website of ["", null, undefined]) {
+      const parsed = designerApplicationBodySchema.safeParse({ ...base, website });
+      expect(parsed.success).toBe(true);
+      if (!parsed.success) return;
+      expect(parsed.data.website).toBeNull();
+    }
+  });
+
+  it("accepts what the join form sends, with or without optional fields", () => {
+    for (const website of ["", "bagsbyiwah.com"]) {
+      const formValues = { ...base, website, phone: "", yearFounded: "" };
+      // Client check passes...
+      expect(designerApplicationFormSchema.safeParse(formValues).success).toBe(true);
+      // ...and the API accepts the same values over JSON.
+      const sent = JSON.parse(JSON.stringify(formValues));
+      expect(designerApplicationBodySchema.safeParse(sent).success).toBe(true);
+    }
+  });
+
+  it("still accepts its own cleaned output (older cached form bundles send this)", () => {
+    const form = designerApplicationFormSchema.safeParse({ ...base, website: "" });
+    expect(form.success).toBe(true);
+    if (!form.success) return;
+    const resent = JSON.parse(JSON.stringify(form.data));
+    expect(designerApplicationBodySchema.safeParse(resent).success).toBe(true);
   });
 
   it("requires at least one portfolio photo", () => {
