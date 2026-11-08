@@ -1,5 +1,6 @@
 "use client";
 
+import { buildNewsletterSubscribePayload } from "@/lib/validation/newsletterSubscribeBody";
 import React, { useState } from "react";
 import { cn } from "@/lib/utils";
 import type { NewsletterSubscribeBody } from "@/lib/validation/newsletterSubscribeBody";
@@ -41,11 +42,9 @@ export function EmailCaptureForm({
       const res = await fetch("/api/newsletter/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: email.trim(),
-          source,
-          _newsletter_hp: honeypot,
-        }),
+        body: JSON.stringify(
+          buildNewsletterSubscribePayload({ email, source, honeypot }),
+        ),
       });
       if (!res.ok) throw new Error(`subscribe ${res.status}`);
       setStatus("success");

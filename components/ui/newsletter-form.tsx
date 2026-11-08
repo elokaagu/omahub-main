@@ -1,3 +1,4 @@
+import { buildNewsletterSubscribePayload } from "@/lib/validation/newsletterSubscribeBody";
 import { useState } from "react";
 import { Button } from "./button";
 import { Input } from "./input";
@@ -29,12 +30,9 @@ export function NewsletterForm({ location, className }: NewsletterFormProps) {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          email,
-          firstName: firstName.trim() || null,
-          lastName: lastName.trim() || null,
-          source: "website",
-        }),
+        body: JSON.stringify(
+          buildNewsletterSubscribePayload({ email, firstName, lastName, source: "website" }),
+        ),
       });
 
       const data = await response.json();

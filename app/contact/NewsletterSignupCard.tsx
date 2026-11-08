@@ -1,5 +1,6 @@
 "use client";
 
+import { buildNewsletterSubscribePayload } from "@/lib/validation/newsletterSubscribeBody";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,12 +40,14 @@ export function NewsletterSignupCard() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          email: newsletterEmail.trim(),
-          firstName: newsletterFirstName.trim() || null,
-          lastName: newsletterLastName.trim() || null,
-          source: "contact_form",
-        }),
+        body: JSON.stringify(
+          buildNewsletterSubscribePayload({
+            email: newsletterEmail,
+            firstName: newsletterFirstName,
+            lastName: newsletterLastName,
+            source: "contact_page",
+          }),
+        ),
       });
 
       if (!response.ok) {
