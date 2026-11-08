@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { requireSuperAdmin } from "@/lib/auth/requireSuperAdmin";
 import { createProductsTable } from "@/lib/supabase-admin";
 
 // Check if we're in a build process
@@ -9,6 +10,12 @@ const isBuildTime =
       process.env.VERCEL_BUILD_STEP === "true"));
 
 export async function GET() {
+  // One-off setup script: super admins only.
+  const auth = await requireSuperAdmin();
+  if (!auth.ok) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
+  }
+
   // Skip actual database operations during build time
   if (isBuildTime) {
     console.log("Build-time detected, skipping database setup");

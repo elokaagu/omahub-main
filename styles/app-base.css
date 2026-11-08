@@ -60,6 +60,16 @@ html {
 }
 
 /*
+ * Never let the page scroll sideways. Slide-in animations start off to the
+ * side; on phones that made the page wider than the screen and pushed the
+ * fixed header past the edge. `clip` (unlike `hidden`) keeps sticky working.
+ */
+html,
+body {
+  overflow-x: clip;
+}
+
+/*
  * Layout is rem-based and tuned for ~1440px. On wide desktops (24"/27" iMacs,
  * external monitors) scale the root size so type, spacing and container widths
  * grow together instead of leaving a narrow column: 16px at 1920px → 20px cap.

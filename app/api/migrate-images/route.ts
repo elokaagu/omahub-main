@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { requireSuperAdmin } from "@/lib/auth/requireSuperAdmin";
 import { supabase } from "@/lib/supabase";
 
 // Improved build time detection with multiple checks
@@ -32,6 +33,15 @@ export async function OPTIONS() {
 }
 
 export async function GET(request: NextRequest) {
+  // One-off migration that rewrites image URLs: super admins only.
+  const auth = await requireSuperAdmin();
+  if (!auth.ok) {
+    return new Response(JSON.stringify({ error: auth.error }), {
+      status: auth.status,
+      headers: corsHeaders,
+    });
+  }
+
   console.log("Repair images API called");
 
   // During build time, just return a dummy response

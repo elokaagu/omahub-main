@@ -5,7 +5,7 @@ const optionalText = (max: number) =>
     .string()
     .trim()
     .max(max)
-    .optional()
+    .nullish()
     .transform((v) => {
       const t = v?.trim();
       return t ? t : null;
@@ -49,7 +49,8 @@ export const customOrderBodySchema = z
     brand_id: z.string().min(1).max(200),
     customer_notes: optionalText(10000),
     delivery_address: deliveryAddressSchema,
-    total_amount: z.number().positive().max(10_000_000).optional().nullable(),
+    // 0 = "price on request" products; the route falls back to the product price.
+    total_amount: z.number().nonnegative().max(10_000_000).optional().nullable(),
     size: optionalText(80),
     color: optionalText(80),
     quantity: z.number().int().min(1).max(100).optional().default(1),

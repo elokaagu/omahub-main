@@ -45,6 +45,31 @@ describe("sitemap catalogue visibility", () => {
     expect(mocks.from.mock.calls.map(([table]) => table)).toEqual(["brands", "tailors"]);
   });
 
+  it("leaves the internal OmaHub Platform brand out", async () => {
+    mocks.visible.mockResolvedValue(false);
+    mocks.from.mockImplementation((table: string) => {
+      const query = {
+        select: () => query,
+        eq: () => query,
+        order: () =>
+          Promise.resolve({
+            data:
+              table === "brands"
+                ? [
+                    { id: "omahub-platform-0000-0000-0000-000000000000", updated_at: null },
+                    { id: "real-brand", updated_at: null },
+                  ]
+                : [],
+            error: null,
+          }),
+      };
+      return query;
+    });
+    const xml = await (await GET()).text();
+    expect(xml).toContain("/brand/real-brand");
+    expect(xml).not.toContain("omahub-platform");
+  });
+
   it("restores product and collection entries when catalogues are public", async () => {
     mocks.visible.mockResolvedValue(true);
     const xml = await (await GET()).text();

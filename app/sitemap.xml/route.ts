@@ -1,3 +1,4 @@
+import { getOmaHubPlatformBrandId } from "@/lib/config/platformBrand";
 import { NextResponse } from "next/server";
 import { createClient as createAnonServerClient } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase-unified";
@@ -222,14 +223,18 @@ export async function GET() {
       ]);
 
     if (brandsResult.status === "fulfilled" && brandsResult.value.data) {
-      brandsResult.value.data.forEach((brand) => {
-        allPages.push({
-          url: `${siteUrl}/brand/${brand.id}`,
-          lastModified: lastModFromRow(brand.updated_at),
-          changeFrequency: "weekly",
-          priority: 0.8,
+      // The internal OmaHub Platform brand only holds sitewide leads.
+      const platformBrandId = getOmaHubPlatformBrandId();
+      brandsResult.value.data
+        .filter((brand) => brand.id !== platformBrandId)
+        .forEach((brand) => {
+          allPages.push({
+            url: `${siteUrl}/brand/${brand.id}`,
+            lastModified: lastModFromRow(brand.updated_at),
+            changeFrequency: "weekly",
+            priority: 0.8,
+          });
         });
-      });
     }
 
     if (productsResult.status === "fulfilled" && productsResult.value.data) {
