@@ -17,8 +17,11 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { X, Loader2, ImagePlus } from "lucide-react";
 import {
+  buildJoinApplicationPayload,
   designerApplicationFormSchema,
+  EMPTY_JOIN_FORM,
   joinFormCategoryOptions,
+  type JoinFormValues,
 } from "@/lib/validation/designerApplicationForm";
 import {
   STUDIO_CURRENCIES_FOR_PRICE_SELECT,
@@ -98,39 +101,9 @@ function PhotoUploadSlot({
   );
 }
 
-const EMPTY_FORM = {
-  brandName: "",
-  designerName: "",
-  email: "",
-  phone: "",
-  website: "",
-  instagram: "",
-  location: "",
-  category: "",
-  description: "",
-  yearFounded: "",
-  currency: "USD",
-  priceMin: "",
-  priceMax: "",
-  contactForPricing: false,
-};
+const EMPTY_FORM = EMPTY_JOIN_FORM;
 
-type FormData = {
-  brandName: string;
-  designerName: string;
-  email: string;
-  phone: string;
-  website: string;
-  instagram: string;
-  location: string;
-  category: string;
-  description: string;
-  yearFounded: string;
-  currency: string;
-  priceMin: string;
-  priceMax: string;
-  contactForPricing: boolean;
-};
+type FormData = JoinFormValues;
 
 type FormFieldName = keyof FormData;
 
@@ -161,6 +134,18 @@ function zodFieldErrorsToRecord(
     if (first) out[key] = first;
   }
   return out;
+}
+
+/** Field errors the API returns (`fieldErrors: { website: "..." }`), if any. */
+function readServerFieldErrors(json: unknown): Record<string, string> | null {
+  if (!json || typeof json !== "object") return null;
+  const fe = (json as Record<string, unknown>).fieldErrors;
+  if (!fe || typeof fe !== "object") return null;
+  const out: Record<string, string> = {};
+  for (const [k, v] of Object.entries(fe as Record<string, unknown>)) {
+    if (typeof v === "string" && v) out[k] = v;
+  }
+  return Object.keys(out).length ? out : null;
 }
 
 function parseApplicationResponse(json: unknown):
@@ -286,10 +271,8 @@ export function JoinApplicationForm() {
 
     setFieldErrors({});
     const imageUrls = photoSlots.map((s) => s.url).filter((u): u is string => !!u);
-    const parsed = designerApplicationFormSchema.safeParse({
-      ...formData,
-      imageUrls,
-    });
+    const payload = buildJoinApplicationPayload(formData, imageUrls);
+    const parsed = designerApplicationFormSchema.safeParse(payload);
     if (!parsed.success) {
       const next = zodFieldErrorsToRecord(parsed.error.flatten().fieldErrors);
       setFieldErrors(next);
@@ -308,7 +291,8 @@ export function JoinApplicationForm() {
       const response = await fetch("/api/designer-application", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(parsed.data),
+        // Send the raw form values; the API runs its own validation and cleanup.
+        body: JSON.stringify(payload),
       });
 
       let json: unknown;
@@ -344,6 +328,8 @@ export function JoinApplicationForm() {
         const errorMessage = !result.ok
           ? result.error
           : "Failed to submit application.";
+        const serverFieldErrors = readServerFieldErrors(json);
+        if (serverFieldErrors) setFieldErrors(serverFieldErrors);
         toast.error("Submission error", { description: errorMessage });
       }
     } catch (error) {

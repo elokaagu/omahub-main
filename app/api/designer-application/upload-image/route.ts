@@ -9,6 +9,8 @@ import { getDesignerApplicationClientKey } from "@/lib/rate-limit/designerApplic
 const MAX_FILE_BYTES = 8 * 1024 * 1024; // 8MB
 const ALLOWED_TYPES: Record<string, string> = {
   "image/jpeg": "jpg",
+  // Some phones and browsers label JPEGs this way.
+  "image/jpg": "jpg",
   "image/png": "png",
   "image/webp": "webp",
 };
@@ -40,7 +42,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    const extension = ALLOWED_TYPES[file.type];
+    const extension = ALLOWED_TYPES[file.type.toLowerCase()];
     if (!extension) {
       return NextResponse.json(
         { error: "Only JPEG, PNG, or WebP images are allowed" },
@@ -69,7 +71,7 @@ export async function POST(request: NextRequest) {
     const { error: uploadError } = await supabase.storage
       .from("brand-assets")
       .upload(path, arrayBuffer, {
-        contentType: file.type,
+        contentType: extension === "jpg" ? "image/jpeg" : file.type.toLowerCase(),
         upsert: false,
       });
 

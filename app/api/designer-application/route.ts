@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import type { ZodError } from "zod";
 import { getAdminClient } from "@/lib/supabase-admin";
 import { adminEmailServiceServer } from "@/lib/services/adminEmailService.server";
 import {
@@ -13,8 +14,18 @@ import {
   designerApplicationBodySchema,
   parseYearFounded,
 } from "@/lib/validation/designerApplicationBody";
+import { JOIN_FIELD_LABELS } from "@/lib/validation/designerApplicationForm";
 
 const DEDUPE_WINDOW_MS = 60 * 60 * 1000;
+
+function firstErrorPerField(error: ZodError): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const issue of error.issues) {
+    const key = String(issue.path[0] ?? "");
+    if (key && !out[key]) out[key] = issue.message;
+  }
+  return out;
+}
 
 function logEvent(
   event: string,
@@ -45,8 +56,18 @@ export async function POST(request: NextRequest) {
 
     const parsed = designerApplicationBodySchema.safeParse(raw);
     if (!parsed.success) {
+      const fieldErrors = firstErrorPerField(parsed.error);
+      const fields = Object.keys(fieldErrors);
+      // Field names only, never values, so ops can spot a form/API mismatch.
+      logEvent("designer_app_invalid_body", { fields: fields.join(",") || "root" });
+      const named = fields.map((f) => JOIN_FIELD_LABELS[f] ?? f);
       return NextResponse.json(
-        { error: "Invalid request body" },
+        {
+          error: named.length
+            ? `Please check these fields and try again: ${named.join(", ")}.`
+            : "We couldn't read your application. Please refresh the page and try again.",
+          fieldErrors,
+        },
         { status: 400 }
       );
     }
