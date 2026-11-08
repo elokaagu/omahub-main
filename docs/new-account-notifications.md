@@ -1,183 +1,87 @@
-# New Account Notification System
+# New account notifications
 
-## Overview
+When someone creates an OmaHub account, admins get an email ("New Account Alert").
 
-The new account notification system automatically detects when new users sign up and sends notifications to administrators. This helps keep track of user growth and enables quick response to new registrations.
+## How it works
 
-## Components
+1. A new account creates a row in `public.profiles` (the `on_auth_user_created`
+   database trigger does this for every signup, whichever page it came from).
+2. A **Supabase Database Webhook** on `profiles` INSERT calls
+   `POST https://www.oma-hub.com/api/webhooks/new-account` with
+   `Authorization: Bearer <WEBHOOK_SECRET>`.
+3. The route (`app/api/webhooks/new-account/route.ts`) checks the secret and
+   emails admins through Resend.
 
-### 1. Webhook Endpoint (`/api/webhooks/new-account`)
+Who gets the email: the webhook admin list in `platform_settings`
+(`webhook_admin_emails`); if that list is empty, every super admin.
 
-**Location**: `app/api/webhooks/new-account/route.ts`
+The route returns **503 until `WEBHOOK_SECRET` is set**, so alerts are off until
+both steps below are done.
 
-**Purpose**: Receives notifications when new accounts are created and sends email alerts to administrators.
+> The old `create_profile_for_user()` trigger only logs a notice; it never
+> called this endpoint. The signup pages create accounts in the browser, so
+> they don't go through `/api/auth/signup` either. The Database Webhook is what
+> actually sends alerts.
 
-**Features**:
+## Setup (one time, about 5 minutes)
 
-- Validates webhook requests with bearer token authentication
-- Sends email notifications to configured admin emails
-- Logs all new account creations
-- Handles errors gracefully without affecting signup process
+### 1. Create a secret
 
-**Admin Emails**:
-
-- eloka.agu@icloud.com
-- shannonalisa@oma-hub.com
-- eloka@satellitelabs.xyz
-
-### 2. Enhanced Signup Process
-
-**Location**: `app/api/auth/signup/route.ts`
-
-**Enhancement**: The signup route now automatically triggers the new account notification webhook after successful profile creation.
-
-**Flow**:
-
-1. User submits signup form
-2. Supabase creates auth user
-3. Profile is created in database
-4. Notification webhook is triggered
-5. Admin emails are sent
-6. User receives success response
-
-### 3. Studio Dashboard Widget
-
-**Location**: `app/studio/dashboard/RecentAccountsWidget.tsx`
-
-**Purpose**: Displays recent account creations in the studio dashboard for admins and super admins.
-
-**Features**:
-
-- Shows last 10 accounts created in past 7 days
-- Real-time updates every 30 seconds
-- Color-coded roles and time indicators
-- Fallback query when database view isn't available
-- Direct link to full users management
-
-### 4. Database Components
-
-**Migration**: `supabase/migrations/20250108000000_add_new_account_notification.sql`
-
-**Components**:
-
-- Enhanced `create_profile_for_user()` trigger function
-- `recent_account_creations` view for efficient queries
-- `trigger_new_account_notification()` manual trigger function
-
-## How It Works
-
-### Automatic Flow (Production)
-
-1. **User Signs Up**: New user completes signup form
-2. **Database Trigger**: Supabase trigger creates profile and logs notification
-3. **Application Notification**: Signup API calls webhook endpoint
-4. **Email Alerts**: Webhook sends emails to all configured admins
-5. **Dashboard Update**: Studio widget shows new account in real-time
-
-### Manual Testing
-
-You can manually trigger notifications using the test script:
+In a terminal:
 
 ```bash
-node scripts/test-new-account-notification.js
+openssl rand -hex 32
 ```
 
-### Email Template
+Copy the output. Use the same value in both steps below and don't share it.
 
-The notification emails include:
+### 2. Add it to Vercel
 
-- New user's email address
-- Account creation timestamp
-- User role (typically 'user')
-- Direct link to studio users management
+Vercel → **omahub-main** → Settings → Environment Variables → Add:
 
-## Configuration
+- Key: `WEBHOOK_SECRET`
+- Value: the secret from step 1
+- Environment: **Production** (and Preview if you want alerts from previews)
 
-### Environment Variables
+Then redeploy production (Deployments → latest → ⋯ → Redeploy) so the new
+variable is picked up.
 
-```env
-WEBHOOK_SECRET=your-webhook-secret
-RESEND_API_KEY=your-resend-api-key
-NEXT_PUBLIC_SITE_URL=https://omahub.com
-```
+### 3. Create the Database Webhook in Supabase
 
-### Admin Email List
+Supabase → project `gswduyodzdgucjscjtvz` → **Database → Webhooks** → Create a
+new hook (enable webhooks first if asked):
 
-To modify admin emails, update the `ADMIN_EMAILS` array in:
-`app/api/webhooks/new-account/route.ts`
+| Field | Value |
+| --- | --- |
+| Name | `new_account_alert` |
+| Table | `public.profiles` |
+| Events | **Insert** only |
+| Type | HTTP Request |
+| Method | `POST` |
+| URL | `https://www.oma-hub.com/api/webhooks/new-account` (use `www`) |
+| HTTP Headers | `Content-Type: application/json` and `Authorization: Bearer <secret from step 1>` |
+| Timeout | 5000 ms |
 
-## Security
+Save.
 
-- Webhook endpoint requires bearer token authentication
-- Database functions use `SECURITY DEFINER` for controlled access
-- Email sending is rate-limited and error-handled
-- No sensitive user data is exposed in notifications
+### 4. Check it
 
-## Monitoring
+- Sign up with a test address (e.g. `you+alerttest@gmail.com`). Admins should
+  get "New account created - …" within a minute.
+- If nothing arrives: Supabase → Database → Webhooks → `new_account_alert` →
+  recent requests shows the response.
+  - `401` → the secret in Supabase doesn't match Vercel.
+  - `503` → `WEBHOOK_SECRET` isn't set in Vercel, or production wasn't redeployed.
+  - `200` but no email → check `RESEND_API_KEY` in Vercel and the admin list.
+- Delete the test account afterwards (Studio → Users).
 
-### Studio Dashboard
+## Tests
 
-Admins can monitor new accounts through:
+`tests/newAccountWebhook.test.ts` sends the exact body Supabase sends and checks:
+emails go out with the right secret; wrong or missing secret → 401; no secret
+configured → 503; updates and other tables are ignored.
 
-- Recent Accounts widget (shows last 7 days)
-- Full users management page
-- Real-time updates and refresh capabilities
+## Studio dashboard
 
-### Logs
-
-All notifications are logged with:
-
-- Timestamp of account creation
-- User email and ID
-- Success/failure of email sending
-- Any errors encountered
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Emails not sending**: Check RESEND_API_KEY configuration
-2. **Widget not loading**: Verify database permissions and fallback query
-3. **Webhook failures**: Check WEBHOOK_SECRET and endpoint availability
-
-### Testing Commands
-
-```bash
-# Test the notification system
-node scripts/test-new-account-notification.js
-
-# Apply database components
-node scripts/apply-new-account-notification.js
-
-# Check recent accounts directly
-node -e "
-const { createClient } = require('@supabase/supabase-js');
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
-supabase.from('profiles').select('email, created_at').order('created_at', {ascending: false}).limit(5).then(console.log);
-"
-```
-
-## Future Enhancements
-
-- Slack/Discord integration for instant notifications
-- Customizable notification preferences per admin
-- Weekly/monthly signup summary reports
-- Integration with analytics dashboard
-- User onboarding automation triggers
-
-## Status
-
-✅ **Working Components**:
-
-- Webhook endpoint for notifications
-- Email notification system
-- Studio dashboard widget
-- Application-level signup notifications
-
-⏳ **Pending Database Migration**:
-
-- Enhanced database trigger function
-- Recent accounts database view
-- Manual notification trigger function
-
-The system is fully functional at the application level. Database enhancements will be applied when migrations are properly deployed.
+`app/studio/dashboard/RecentAccountsWidget.tsx` shows accounts created in the
+last 7 days, independent of the email alerts.
