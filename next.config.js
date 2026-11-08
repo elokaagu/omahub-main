@@ -189,6 +189,23 @@ const nextConfig = {
     ],
   },
 
+  // Old URLs of duplicate brands merged in the Nov 2026 cleanup
+  // (scripts/cleanup-2026-11).
+  async redirects() {
+    return [
+      {
+        source: "/brand/ebhs-couture",
+        destination: "/brand/ehbs-couture",
+        permanent: true,
+      },
+      {
+        source: "/brand/e1aafaeb-d515-438c-91ce-c8ad49d84c42",
+        destination: "/brand/860f3268-665c-4df3-929f-5589c5ae90bb",
+        permanent: true,
+      },
+    ];
+  },
+
   // Phase 2C: Video optimization and security
   async rewrites() {
     return [
