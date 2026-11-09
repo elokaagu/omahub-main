@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createApiRouteSupabaseClient } from "@/lib/supabase-unified";
+import { getAdminClient } from "@/lib/supabase-admin";
 import {
   parsePublicReviewGet,
   parsePublicReviewPost,
@@ -103,15 +104,27 @@ export async function POST(request) {
       return NextResponse.json({ error: "Failed to add review" }, { status: 500 });
     }
 
+    // The reviewer can't write brands or notifications (row-level security),
+    // so the rating update and owner notification run with server access.
+    const admin = await getAdminClient();
+    if (!admin) {
+      console.error("reviews_admin_client_unavailable");
+      return NextResponse.json({
+        success: true,
+        message: "Review added successfully",
+        review: data,
+      });
+    }
+
     // Notify brand owner via notifications table (avoid fake inquiry records).
-    const { data: brandOwner } = await supabase
+    const { data: brandOwner } = await admin
       .from("brands")
       .select("user_id")
       .eq("id", brandId)
       .maybeSingle();
 
     if (brandOwner?.user_id) {
-      void supabase.from("notifications").insert({
+      void admin.from("notifications").insert({
         user_id: brandOwner.user_id,
         brand_id: brandId,
         type: "new_review",
@@ -126,7 +139,7 @@ export async function POST(request) {
       });
     }
 
-    await updateBrandRating(supabase, brandId);
+    await updateBrandRating(admin, brandId);
 
     return NextResponse.json({
       success: true,

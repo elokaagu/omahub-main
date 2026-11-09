@@ -11,6 +11,20 @@ export function brandAdminOwnsBrand(
   return profile.owned_brands.includes(brandId);
 }
 
+const COMMISSION_FIELDS = ["commission_rate", "commission_amount"] as const;
+
+/**
+ * Commission is what brands owe OmaHub, so only super admins may set it.
+ * Returns true when a non-super-admin tries to send commission fields.
+ */
+export function sendsCommissionWithoutPermission(
+  profile: LeadsAdminProfile,
+  data: Record<string, unknown>
+): boolean {
+  if (profile.role === "super_admin") return false;
+  return COMMISSION_FIELDS.some((field) => data[field] !== undefined);
+}
+
 export async function fetchLeadBrandId(
   supabase: Supabase,
   leadId: string

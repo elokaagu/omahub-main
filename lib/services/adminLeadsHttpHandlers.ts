@@ -5,6 +5,7 @@ import { SITEWIDE_PREORDER_WAITLIST_NOTES_FILTER } from "@/lib/validation/eventW
 import { computeFallbackLeadsAnalytics } from "@/lib/services/adminLeadsAnalytics";
 import {
   brandAdminOwnsBrand,
+  sendsCommissionWithoutPermission,
   fetchBookingBrandId,
   fetchInteractionLeadBrandId,
   fetchLeadBrandId,
@@ -259,6 +260,12 @@ export async function handlePostBooking(
   if (!parsed.success) {
     return jsonValidationError(parsed.error);
   }
+  if (sendsCommissionWithoutPermission(profile, parsed.data)) {
+    return NextResponse.json(
+      { error: "Only OmaHub can set commission" },
+      { status: 403 },
+    );
+  }
 
   let bookingData = await resolveBookingCommission(supabase, parsed.data);
 
@@ -460,6 +467,12 @@ export async function handlePutBooking(
   }
 
   const { id, data } = parsed.data;
+  if (sendsCommissionWithoutPermission(profile, data)) {
+    return NextResponse.json(
+      { error: "Only OmaHub can set commission" },
+      { status: 403 },
+    );
+  }
   const patch = normalizeBookingUpdatePatch(data);
   if (Object.keys(patch).length === 0) {
     return NextResponse.json(
